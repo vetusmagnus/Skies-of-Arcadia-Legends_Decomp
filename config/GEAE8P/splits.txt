@@ -1,0 +1,507 @@
+Sections:
+	.init       type:code align:4
+	.text       type:code align:8
+	.ctors      type:rodata align:8
+	.dtors      type:rodata align:32
+	.rodata     type:rodata align:32
+	.data       type:data align:32
+	.bss        type:bss align:4
+	.sdata      type:data align:16
+	.sbss       type:bss align:32
+	.sdata2     type:rodata align:32
+	.sbss2      type:bss align:32
+
+musyx/runtime/CheapReverb/creverb_fx.c:
+	.text       start:0x80074D78 end:0x80074D9C
+
+game/uiobj.c:
+	.text       start:0x801C2FA0 end:0x801C5758
+	.data       start:0x802EE688 end:0x802EE770
+	.bss        start:0x80308270 end:0x803082F8
+	.sdata2     start:0x8034BBA8 end:0x8034BBE0
+
+game/drawstate.c:
+	.text       start:0x801CA8D8 end:0x801CAE84
+	.bss        start:0x80308650 end:0x80308C78
+	.sbss       start:0x803471E8 end:0x803471F0
+	.sdata2     start:0x8034BCD8 end:0x8034BCE0
+
+game/text.c:
+	.text       start:0x801E1F3C end:0x801E3874
+
+dolphin/PPCArch.c:
+	.text       start:0x802319E0 end:0x80231AD0
+
+dolphin/os/OS.c:
+	.text       start:0x80231AD0 end:0x80232418
+	.data       start:0x802F93F8 end:0x802F9600
+	.bss        start:0x803171E0 end:0x80317230
+	.sdata      start:0x80346868 end:0x80346870
+	.sbss       start:0x803478E0 end:0x80347910
+
+dolphin/os/OSAlarm.c:
+	.text       start:0x80232418 end:0x80232B44
+	.sbss       start:0x80347910 end:0x80347918
+
+dolphin/os/OSArena.c:
+	.text       start:0x80232B44 end:0x80232B90
+	.sdata      start:0x80346870 end:0x80346874
+	.sbss       start:0x80347918 end:0x8034791C
+
+dolphin/os/OSAudioSystem.c:
+	.text       start:0x80232B90 end:0x80232E24
+	.data       start:0x802F9600 end:0x802F9680
+
+dolphin/os/OSCache.c:
+	.text       start:0x80232E24 end:0x80233288
+	.data       start:0x802F9680 end:0x802F98B0
+
+dolphin/os/OSContext.c:
+	.text       start:0x80233288 end:0x80233A6C
+	.data       start:0x802F98B0 end:0x802F9A88
+
+dolphin/os/OSInterrupt.c:
+	.text       start:0x80235574 end:0x80235DE0
+	.data       start:0x802FA8B8 end:0x802FA8E8
+	.sbss       start:0x80347930 end:0x80347948
+
+src/dolphin/os/OSMemory.c:
+	.text       start:0x80235E04 end:0x802360F0
+	.data       start:0x802FA8E8 end:0x802FA8F8
+
+dolphin/os/OSMutex.c:
+	.text       start:0x802360F0 end:0x80236160
+
+dolphin/os/OSReset.c:
+	.text       start:0x80236344 end:0x802367B4
+	.sbss       start:0x80347958 end:0x80347960
+
+dolphin/os/OSResetSW.c:
+	.text       start:0x802367B4 end:0x80236B40
+	.sbss       start:0x80347960 end:0x80347980
+
+dolphin/os/OSRtc.c:
+	.text       start:0x80236B40 end:0x8023757C
+	.bss        start:0x80317580 end:0x803175D4
+
+dolphin/os/OSSync.c:
+	.text       start:0x8023757C end:0x80237600
+
+dolphin/os/OSTime.c:
+	.text       start:0x80238504 end:0x80238980
+	.data       start:0x802FA8F8 end:0x802FA958
+
+dolphin/os/__ppc_eabi_init.cpp:
+	.init       start:0x80003354 end:0x800033A8
+	.text       start:0x80238980 end:0x80238A14
+
+dolphin/db.c:
+	.text       start:0x80238A14 end:0x80238B00
+	.data       start:0x802FA958 end:0x802FA970
+	.sbss       start:0x80347990 end:0x80347998
+
+dolphin/dvd/dvdlow.c:
+	.text       start:0x80239638 end:0x8023A478
+	.bss        start:0x80317FD0 end:0x803180A0
+	.sdata      start:0x803468A0 end:0x803468A8
+	.sbss       start:0x80347998 end:0x803479E0
+
+dolphin/dvd/dvdqueue.c:
+	.text       start:0x8023D360 end:0x8023D558
+	.bss        start:0x80318138 end:0x80318158
+
+dolphin/dvd/dvderror.c:
+	.text       start:0x8023D558 end:0x8023D6F0
+	.data       start:0x802FAC28 end:0x802FAC70
+
+dolphin/dvd/dvdidutils.c:
+	.text       start:0x8023D6F0 end:0x8023D7E8
+
+dolphin/dvd/fstload.c:
+	.text       start:0x8023D818 end:0x8023DA58
+	.data       start:0x802FAC70 end:0x802FACE0
+	.bss        start:0x80318158 end:0x803181C8
+	.sdata      start:0x803468C8 end:0x803468D4
+	.sbss       start:0x80347A50 end:0x80347A5C
+
+src/dolphin/pad/Pad.c:
+	.text       start:0x8023FBD0 end:0x802416A0
+	.data       start:0x802FB0B0 end:0x802FB108
+	.bss        start:0x80318310 end:0x80318360
+	.sdata      start:0x803468E8 end:0x80346908
+	.sbss       start:0x80347AB8 end:0x80347AE0
+
+src/dsp/dsp.c:
+	.text       start:0x80243DF8 end:0x80244010
+	.data       start:0x802FB1E0 end:0x802FB260
+	.sdata      start:0x80346920 end:0x80346928
+	.sbss       start:0x80347B68 end:0x80347B70
+
+dolphin/dsp/dsp_debug.c:
+	.text       start:0x80244010 end:0x80244060
+
+dolphin/dsp/dsp_task.c:
+	.text       start:0x80244060 end:0x802448E4
+	.data       start:0x802FB260 end:0x802FB3A0
+	.sbss       start:0x80347B70 end:0x80347B88
+
+dolphin/card/CARDBios.c:
+	.text       start:0x802448E4 end:0x80245BC8
+	.data       start:0x802FB3A0 end:0x802FB3F8
+	.bss        start:0x80318360 end:0x803185A0
+	.sdata      start:0x80346928 end:0x80346930
+	.sbss       start:0x80347B88 end:0x80347B90
+
+dolphin/card/CARDUnlock.c:
+	.text       start:0x80245BC8 end:0x80246E28
+	.data       start:0x802FB400 end:0x802FB560
+	.sdata      start:0x80346930 end:0x80346938
+
+src/card/CARDRdwr.c:
+	.text       start:0x80246E28 end:0x802470C0
+
+dolphin/card/CARDBlock.c:
+	.text       start:0x802470C0 end:0x802474C4
+
+dolphin/card/CARDDir.c:
+	.text       start:0x802474C4 end:0x80247728
+
+dolphin/card/CARDCheck.c:
+	.text       start:0x80247728 end:0x8024863C
+
+dolphin/card/CARDFormat.c:
+	.text       start:0x802490B4 end:0x80249898
+
+dolphin/card/CARDOpen.c:
+	.text       start:0x80249898 end:0x80249CEC
+
+dolphin/card/CARDCreate.c:
+	.text       start:0x80249CEC end:0x8024A03C
+
+dolphin/card/CARDRead.c:
+	.text       start:0x8024A03C end:0x8024A4B4
+
+dolphin/card/CARDWrite.c:
+	.text       start:0x8024A4B4 end:0x8024A7E8
+
+dolphin/card/CARDDelete.c:
+	.text       start:0x8024A7E8 end:0x8024A99C
+
+dolphin/card/CARDStat.c:
+	.text       start:0x8024A99C end:0x8024AE34
+
+dolphin/gx/GXInit.c:
+	.text       start:0x8024B210 end:0x8024C3E0
+	.data       start:0x802FB5A0 end:0x802FB6D0
+	.bss        start:0x803185A0 end:0x80318B18
+	.sdata      start:0x80346940 end:0x80346948
+	.sbss       start:0x80347B90 end:0x80347BA0
+	.sdata2     start:0x8034C818 end:0x8034C840
+
+dolphin/gx/GXFifo.c:
+	.text       start:0x8024C3E0 end:0x8024CC3C
+	.sbss       start:0x80347BA0 end:0x80347BC0
+
+dolphin/gx/GXAttr.c:
+	.text       start:0x8024CC3C end:0x8024DDAC
+	.data       start:0x802FB6D0 end:0x802FB830
+	.sdata      start:0x80346948 end:0x80346958
+
+dolphin/gx/GXGeometry.c:
+	.text       start:0x8024E3D8 end:0x8024E788
+
+dolphin/gx/GXTev.c:
+	.text       start:0x802510AC end:0x802517A8
+	.data       start:0x802FBB68 end:0x802FBBE0
+
+dolphin/gx/GXPixel.c:
+	.text       start:0x802517A8 end:0x80251D7C
+	.data       start:0x802FBBE0 end:0x802FBC00
+	.sdata2     start:0x8034C8D0 end:0x8034C900
+
+dolphin/gx/GXStubs.c:
+	.text       start:0x80251D7C end:0x80251D80
+
+src/gx/GXDisplayList.c:
+	.text       start:0x80251D80 end:0x80251F8C
+	.bss        start:0x80318B18 end:0x80319038
+	.sbss       start:0x80347BD8 end:0x80347BE0
+
+runtime/errno.c:
+	.sbss       start:0x80347C10 end:0x80347C18
+
+src/gx/GXTransform.c:
+	.text       start:0x80251F8C end:0x80252530
+	.sdata2     start:0x8034C900 end:0x8034C90C
+
+dolphin/gx/GXPerf.c:
+	.text       start:0x80252530 end:0x80252D88
+	.data       start:0x802FBC00 end:0x802FBCEC
+
+MetroTRK/usr_put.c:
+	.text       start:0x802547C0 end:0x8025484C
+
+MetroTRK/flush_cache.c:
+	.text       start:0x80257AF8 end:0x80257B30
+
+MetroTRK/mpc_7xx_603e.c:
+	.text       start:0x802595E0 end:0x80259950
+
+MetroTRK/targcont.c:
+	.text       start:0x80259E48 end:0x80259E7C
+
+MetroTRK/target_options.c:
+	.text       start:0x80259E7C end:0x80259E98
+	.bss        start:0x8031D208 end:0x8031D210
+
+MetroTRK/mslsupp.c:
+	.text       start:0x80259E98 end:0x8025A094
+
+runtime/__va_arg.c:
+	.text       start:0x8025A094 end:0x8025A15C
+
+runtime/buffer_io.c:
+	.text       start:0x8025BC74 end:0x8025BD6C
+
+src/MSL_C/PPCEABI/bare/H/direct_io.c:
+	.text       start:0x8025BD90 end:0x8025C0BC
+
+src/MSL_C/PPCEABI/bare/H/file_io.c:
+	.text       start:0x8025C0BC end:0x8025C2B4
+
+runtime/FILE_POS.c:
+	.text       start:0x8025C2B4 end:0x8025C580
+
+runtime/mem.c:
+	.text       start:0x8025C6C4 end:0x8025C834
+
+runtime/misc_io.c:
+	.text       start:0x8025CB14 end:0x8025CB24
+
+runtime/wchar_io.c:
+	.text       start:0x8025F7E0 end:0x8025F868
+
+runtime/e_acos.c:
+	.text       start:0x8025F868 end:0x8025FB78
+	.sdata2     start:0x8034C928 end:0x8034C9B8
+
+runtime/e_atan2.c:
+	.text       start:0x8025FB78 end:0x8025FE08
+	.sdata2     start:0x8034C9B8 end:0x8034CA10
+
+runtime/e_fmod.c:
+	.text       start:0x8025FE08 end:0x80260144
+	.rodata     start:0x802DA598 end:0x802DA5A8
+
+runtime/e_rem_pio2.c:
+	.text       start:0x802609D0 end:0x80260D70
+	.rodata     start:0x802DA5D8 end:0x802DA760
+	.sdata2     start:0x8034CB20 end:0x8034CB78
+
+runtime/k_cos.c:
+	.text       start:0x80260D70 end:0x80260E64
+	.sdata2     start:0x8034CB78 end:0x8034CBC0
+
+runtime/k_rem_pio2.c:
+	.text       start:0x80260E64 end:0x80261CB8
+	.rodata     start:0x802DA760 end:0x802DA7B0
+	.sdata2     start:0x8034CBC0 end:0x8034CC00
+
+runtime/k_sin.c:
+	.text       start:0x80261CB8 end:0x80261D58
+	.sdata2     start:0x8034CC00 end:0x8034CC38
+
+runtime/k_tan.c:
+	.text       start:0x80261D58 end:0x80261F6C
+	.rodata     start:0x802DA7B0 end:0x802DA818
+	.sdata2     start:0x8034CC38 end:0x8034CC70
+
+runtime/s_copysign.c:
+	.text       start:0x802622B0 end:0x802622D8
+
+runtime/s_cos.c:
+	.text       start:0x802622D8 end:0x802623AC
+	.sdata2     start:0x8034CCA8 end:0x8034CCB0
+
+runtime/s_floor.c:
+	.text       start:0x802623AC end:0x802624F4
+	.sdata2     start:0x8034CCB0 end:0x8034CCC0
+
+runtime/s_frexp.c:
+	.text       start:0x802624F4 end:0x80262580
+	.sdata2     start:0x8034CCC0 end:0x8034CCC8
+
+runtime/s_ldexp.c:
+	.text       start:0x80262580 end:0x80262744
+	.sdata2     start:0x8034CCC8 end:0x8034CCF0
+
+runtime/s_modf.c:
+	.text       start:0x80262744 end:0x80262840
+
+runtime/s_sin.c:
+	.text       start:0x80262840 end:0x80262918
+	.sdata2     start:0x8034CCF0 end:0x8034CCF8
+
+runtime/s_tan.c:
+	.text       start:0x80262918 end:0x80262990
+	.sdata2     start:0x8034CCF8 end:0x8034CD00
+
+runtime/w_acos.c:
+	.text       start:0x80262990 end:0x802629B0
+
+runtime/w_atan2.c:
+	.text       start:0x802629B0 end:0x802629D0
+
+runtime/w_fmod.c:
+	.text       start:0x802629D0 end:0x802629F0
+
+runtime/w_pow.c:
+	.text       start:0x802629F0 end:0x80262A10
+
+dolphin/exi/EXIUart.c:
+	.text       start:0x80264E10 end:0x80265080
+	.sbss       start:0x80347C38 end:0x80347C48
+
+dolphin/si/SIBios.c:
+	.text       start:0x80265080 end:0x80266770
+	.data       start:0x802FC6F0 end:0x802FC808
+	.bss        start:0x8031D708 end:0x8031D908
+	.sdata      start:0x803469D0 end:0x803469D8
+	.sbss       start:0x80347C48 end:0x80347C58
+
+dolphin/si/SISamplingRate.c:
+	.text       start:0x80266770 end:0x80266878
+	.data       start:0x802FC808 end:0x802FC8A0
+	.sbss       start:0x80347C58 end:0x80347C60
+
+musyx/runtime/seq.c:
+	.text       start:0x80266878 end:0x8026A844
+	.data       start:0x802FC8A0 end:0x802FC8F0
+	.bss        start:0x8031D908 end:0x8032B148
+	.sbss       start:0x80347C60 end:0x80347C80
+	.sdata2     start:0x8034CD00 end:0x8034CD20
+
+musyx/runtime/synth.c:
+	.text       start:0x8026A844 end:0x8026DB6C
+	.bss        start:0x8032B148 end:0x8032C730
+	.sbss       start:0x80347C80 end:0x80347CC8
+	.sdata2     start:0x8034CD20 end:0x8034CD60
+
+musyx/runtime/seq_api.c:
+	.text       start:0x8026DB6C end:0x8026DDE4
+
+musyx/runtime/snd_synthapi.c:
+	.text       start:0x8026DDE4 end:0x8026E2D4
+
+musyx/runtime/stream.c:
+	.text       start:0x8026E2D4 end:0x80271ED8
+	.bss        start:0x8032C730 end:0x8032E030
+	.sbss       start:0x80347CC8 end:0x80347CD0
+	.sdata2     start:0x8034CD60 end:0x8034CD78
+
+musyx/runtime/synthdata.c:
+	.text       start:0x80271ED8 end:0x80273C68
+	.bss        start:0x8032E030 end:0x80338668
+	.sbss       start:0x80347CD0 end:0x80347D18
+
+musyx/runtime/synthmacros.c:
+	.text       start:0x80273C68 end:0x80278904
+	.data       start:0x802FC8F0 end:0x802FCD38
+	.bss        start:0x80338668 end:0x80338688
+	.sbss       start:0x80347D18 end:0x80347D38
+	.sdata2     start:0x8034CD78 end:0x8034CDA0
+
+musyx/runtime/synthvoice.c:
+	.text       start:0x80278904 end:0x8027A43C
+	.bss        start:0x80338688 end:0x80339648
+	.sbss       start:0x80347D38 end:0x80347D50
+
+musyx/runtime/synth_ac.c:
+	.text       start:0x8027A43C end:0x8027A55C
+	.data       start:0x802FCD38 end:0x802FD138
+	.sdata2     start:0x8034CDA0 end:0x8034CDB8
+
+musyx/runtime/synth_dbtab.c:
+	.data       start:0x802FD138 end:0x802FD8C0
+
+musyx/runtime/synth_adsr.c:
+	.text       start:0x8027A55C end:0x8027AD1C
+	.sdata2     start:0x8034CDB8 end:0x8034CDE0
+
+musyx/runtime/synth_vsamples.c:
+	.text       start:0x8027AD1C end:0x8027B4D0
+	.bss        start:0x80339648 end:0x80339F98
+
+musyx/runtime/s_data.c:
+	.text       start:0x8027B4D0 end:0x8027C028
+	.bss        start:0x80339F98 end:0x8033A598
+	.sbss       start:0x80347D50 end:0x80347D58
+
+musyx/runtime/hw_dspctrl.c:
+	.text       start:0x8027C028 end:0x8027F374
+	.rodata     start:0x802DA8B0 end:0x802DA908
+	.data       start:0x802FD8C0 end:0x802FD8D8
+	.bss        start:0x8033A598 end:0x8033AC78
+	.sbss       start:0x80347D58 end:0x80347D98
+
+musyx/runtime/hw_volconv.c:
+	.text       start:0x8027F374 end:0x8027FA64
+	.data       start:0x802FD8D8 end:0x802FDB00
+	.sdata2     start:0x8034CDE0 end:0x8034CE18
+
+musyx/runtime/snd3d.c:
+	.text       start:0x8027FA64 end:0x8028134C
+	.bss        start:0x8033AC78 end:0x8033BA78
+	.sbss       start:0x80347D98 end:0x80347DB8
+	.sdata2     start:0x8034CE18 end:0x8034CE60
+
+musyx/runtime/snd_init.c:
+	.text       start:0x8028134C end:0x80281498
+
+musyx/runtime/snd_math.c:
+	.text       start:0x80281498 end:0x802815F8
+	.sdata2     start:0x8034CE60 end:0x8034CE78
+
+musyx/runtime/snd_midictrl.c:
+	.text       start:0x802815F8 end:0x802832CC
+	.rodata     start:0x802DA908 end:0x802DAA18
+	.data       start:0x802FDB00 end:0x802FDB90
+	.bss        start:0x8033BA78 end:0x80342278
+
+musyx/runtime/snd_service.c:
+	.text       start:0x802832CC end:0x80283478
+	.data       start:0x802FDB90 end:0x802FE390
+	.sdata      start:0x803469D8 end:0x803469E0
+
+musyx/runtime/hardware.c:
+	.text       start:0x80283478 end:0x80284450
+	.rodata     start:0x802DAA18 end:0x802DAB18
+	.sdata      start:0x803469E0 end:0x803469F0
+	.sbss       start:0x80347DB8 end:0x80347DC8
+	.sdata2     start:0x8034CE78 end:0x8034CE90
+
+musyx/runtime/hw_aramdma.c:
+	.text       start:0x80284450 end:0x802850C4
+	.bss        start:0x80342278 end:0x80342B80
+	.sbss       start:0x80347DC8 end:0x80347DE8
+
+musyx/runtime/hw_dolphin.c:
+	.text       start:0x802850C4 end:0x802855BC
+	.bss        start:0x80342B80 end:0x80344BE0
+	.sbss       start:0x80347DE8 end:0x80347E18
+
+musyx/runtime/hw_memory.c:
+	.text       start:0x802855BC end:0x80285610
+
+musyx/runtime/StdReverb/reverb_fx.c:
+	.text       start:0x80285610 end:0x80285728
+
+musyx/runtime/StdReverb/reverb.c:
+	.text       start:0x80285728 end:0x80286680
+	.data       start:0x802FFD80 end:0x802FFDA0
+	.sdata2     start:0x8034CE90 end:0x8034CEE0
+
+musyx/runtime/Chorus/chorus_fx.c:
+	.text       start:0x80286680 end:0x80286EE8
+	.data       start:0x802FFDA0 end:0x803005A0
+	.sdata2     start:0x8034CEE0 end:0x8034CEE8
