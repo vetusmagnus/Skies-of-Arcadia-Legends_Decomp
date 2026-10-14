@@ -142,6 +142,53 @@ Tasks are heap blocks: a 0x20-byte header (`[0]` the task's address, `[4]` size,
 `[0xC]` 0xFFFFFFFF), then the task (function pointer at `+0`).
 The backdrop (`fn_801A4B40`) tiles 64 px squares from x = 0 to 640 only.
 
+### Loading a save without the load screen
+
+Traced 2026-10-12 for the recomp's Continue (`patches/game/autoload.c` there).
+
+**Card files.** Card A's saves are `SA_LEGENDS.000` to `.006` (7 at most; the load screen's list shows
+them as #01-#07), 0x6000 bytes (3 blocks) each: header text, banner and icon up to 0x1440, then the
+save payload P (0x3200 bytes). P starts with the version string `"EA_LEGEND v1.01"` (`0x802EBDD0`) and
+ends with a 32-bit XOR of its first 0x31FC bytes at P+0x31FC (`fn_801A4684`). P+0x10 holds
+`lbl_8030B7F4` (0x16A0, party / items / flags), P+0x16B0 the map (`lbl_80311AC0`), P+0x16E8..0x171C
+positions, P+0x2370 `lbl_80310B3C` (0xD58, event flags), P+0x30C8 `lbl_80310A1C` (0x120); P+0x31E8..
+the list preview (save point, chapter, a 10-byte stamp from `lbl_80308198`).
+
+**The load path through the load screen** (steps of `lbl_802EBD30`): 0-3 open and create the parts,
+4 slot, 5-8 mount and scan (step 6 starts the list task `fn_801A343C` / `fn_801A2D60`, which reads every
+file and fills 7 entries at work+0x20+i*0x2C: status 0 empty, 1 good, 2 bad XOR, 4 wrong version),
+9 file list, 14-15 "Is this ok?", **17** `fn_8019F730` calls `fn_801A4070`, **18** `fn_8019F44C` polls
+and applies, 19 and 28-32 close; **32** `fn_8019E294` writes the result `lbl_803473C4` (1 loaded,
+2 not) and clears bit 31 of `lbl_80310B3C`+0x84 after a load.
+
+- `fn_801A4070(task)`: builds `"SA_LEGENDS" + ".%03d"` from work+7, allocates a 0x6000 buffer (its
+  descriptor `0x803081A4`, pointer at work+0x258), mounts the slot in work+4 synchronously
+  (`fn_801A2500`: a 0xA000 work area in `lbl_8034718C[slot]`, `CARDMountAsync` + `CARDCheckExAsync`,
+  waited), `CARDOpen`s the file (`0x80308164`) and starts `CARDReadAsync` of 0x6000. 0 if the mount or
+  open failed.
+- `fn_801A3A10(slot, task)`: `CARDGetResultCode`: -1 busy, 0 done (and then `CARDClose`,
+  `CARDUnmount`, the mount work freed), else a CARD error (nothing closed: `fn_801A372C` unmounts both
+  slots and frees their work areas).
+- `fn_801A4354(P)`: copies the payload into the game's data (above), resets the names from the ROM
+  tables, sets the positions, then `fn_801CAE98` (clears transient flags), `fn_801EF7E0` (party
+  totals), `fn_8021B2B4`, `lbl_803475D4 = 1`, `fn_801F7B04(20000)`.
+- `fn_801A41C0(desc)` frees the buffer.
+
+Both card functions read only the task's work (+0x24): +1 = 1 (load; 0 = save), +4 slot, +7 file
+index. So a load needs no load screen: a 0x28-byte task whose +0x24 is a zeroed 0x270 work with those
+three bytes, `fn_801A4070`, `fn_801A3A10` each frame until it isn't -1, the XOR (and the version, as the
+list does), `fn_801A4354`, `fn_801A41C0`, then what step 32 does.
+
+**Starting the game from it.** The title (mode 3, `fn_80228A20`, called from `0x801DC350`) runs a state
+machine on `lbl_80311AD4`[3] through `lbl_802F91AC`: 0 init, 1 waits for the font, then the intro
+(7 / 8: field scenes, mode 6, `fn_8022A29C` / `fn_8022A25C`) or, with `lbl_8034782C` set (after the
+intro has played once), 9 the title proper; 10-13 "Press Start" and the menu (task `fn_801D8DBC`); the
+menu's Continue sets `lbl_80347634` (`fn_801D71BC(1)`, Z counts as Start) and 16 starts the Continue task
+(`fn_801D8B2C` / `fn_801D8B94`: `SaveLoadOpenLoad(.., 1)`, waits for `lbl_803473C4`); 17
+(`fn_80228AD4`) then sets state 0x12 (an empty state) and `fn_801DBE6C(6)` (mode 6, the field, which
+starts from the loaded data), or goes back to 9 when nothing was loaded. The recomp's direct load runs
+in state 1 once the font is ready and ends the same way.
+
 ### Shops
 
 The shop screens (around `0x801BE000`-`0x801C2FA0`; "Wshop" strings) use the same widgets and park
