@@ -228,7 +228,10 @@ Found later with the recomp's deep projection trace (2026-10-10; draw tasks, all
 +0xA current; [qol_cheats.md](qol_cheats.md) *Battle records*); on the world
 map the altitude gauge `fn_8016B434` and the compass `fn_8016C204`; the dungeon minimap is drawn by
 `fn_800E23B0` through `fn_800E340C`, `fn_800E3058`, `fn_800E2D0C` and `fn_801E4F88`. The recomp's widescreen
-patch moves these to the wide edges (recomp NOTES.md *Widescreen HUD at the edges*).
+patch moves these to the wide edges, or to the edges of a narrower centred area the player picks (recomp
+NOTES.md *Widescreen HUD at the edges* and *HUD placement*). The meter and compass are drawn through the
+recorded display lists like the rest ([frame_loop.md](frame_loop.md)): while the world map's menu is
+open they're replayed, so a change of the 2D projection then shows only once it closes.
 
 Battle HUD panel per unit (2026-10-11, while checking the recomp's Invincible): `fn_8002969C(slot)` creates a
 `BattleHudDraw` task and keeps its data block in `lbl_80302AB0[slot]`: state +0x12, HP shown +0x20 (float,
