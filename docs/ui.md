@@ -189,6 +189,21 @@ menu's Continue sets `lbl_80347634` (`fn_801D71BC(1)`, Z counts as Start) and 16
 starts from the loaded data), or goes back to 9 when nothing was loaded. The recomp's direct load runs
 in state 1 once the font is ready and ends the same way.
 
+**The logos also load the resident files** (found 2026-10-17, after the direct load had shipped
+without this). On a cold boot state 1 goes to the logos first: 2 (`fn_8022A548`, logo textures and
+fade colours), 3 and 4 (`fn_8022A46C`, `fn_8022A38C`), then 5 and 6 back to 1. State 4 calls
+`fn_8022A854(&lbl_80347828)` every frame and leaves only when it returns 1: a state machine that
+checks the table `lbl_803165C8` (16 entries of 0x20 bytes, 0x204 bytes summed into `lbl_80346860`),
+and if the sum is wrong clears it, `DVDChangeDir("/")`, reads the 16 files of `lbl_802F91F8` one per
+step (`fn_801CC67C` / `fn_801CC5BC`, the disc error screen `fn_801D168C` / `fn_801D150C` meanwhile),
+copies each to ARAM from base + 0x800000 (`ARQPostRequest`, waits for its callback `fn_8022AE88`),
+records it in the table (+0x10 / +0x14 / +0x18 / +0x1C), and at the end stores the sum: state 5,
+returns 1. `fn_801DB1A4(i)` looks entry i up through `fn_8022AE04` (NULL when the sum is wrong), and
+the battle's loading (`fn_8000A118` state 3 -> `fn_801D67DC`) takes entries 0 and 3 and reads
+`+4` from them unchecked: skip the logos and the first battle reads `0x00000004`. On a normal boot the
+table is filled 5-15 s after power on. The European `fn_8022A854` (`0x8022D944`, 0x44C bytes) builds
+the names of entries 0 and 3 from the text language (`fn_801DD188`); otherwise the same.
+
 ### Shops
 
 The shop screens (around `0x801BE000`-`0x801C2FA0`; "Wshop" strings) use the same widgets and park
