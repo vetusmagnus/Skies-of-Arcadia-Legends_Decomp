@@ -109,6 +109,7 @@ Project notes
 - Menus, HUD and the 2D layer (draw state stack, text queue, layouts, the UiObj animation every menu element uses, where each screen parks hidden elements): [docs/ui.md](docs/ui.md). Game code built from C so far lives in `src/game/`.
 - Cameras per mode, the camera manager and what player camera control needs (implemented in the recomp): [docs/camera.md](docs/camera.md).
 - Random encounters, battle rewards (EXP, gold, magic EXP), battle speed, the battle unit records, damage, and the buttons each mode uses (the recomp's options and Invincible): [docs/qol_cheats.md](docs/qol_cheats.md).
+- The sound layer between the game and MusyX (banks, music lists, sound effects, streams, the Dreamcast file mapping), written for the recomp's Dreamcast music: [docs/sound.md](docs/sound.md).
 - Native static recomp (DolRecomp + ModernGekko, GPL-3, kept separate): `../SkiesOfArcadiaLegends-Recomp/`. It reads this repo's `symbols.txt` for function names, and its game patches (widescreen, camera, options) are built on the research in these docs.
 - Research notes: `../GameCube-Research/`.
 
