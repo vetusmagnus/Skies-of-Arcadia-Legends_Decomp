@@ -101,6 +101,22 @@ the suspects are what a speed change touches outside it: the emulated-CPU overcl
 the recomp's frame interpolation (stood down at speed). Recomp NOTES.md *Known issues* has the states and
 the method.
 
+Field speed
+-----------
+
+The same end-of-frame waits hold the field (game mode 6) to 30 frames a second: towns, dungeons, the
+world map and every cutscene (the game has no movie files; its cutscenes are scripted field scenes, the
+opening's included). Skipping them in mode 6 too speeds all of it up (recomp ws26, 2026-10-20: the
+frontend sets bit 0x100 of `qol_input`'s speed word outside battle). Measured in the recomp on Windows
+at 1x resolution: 2x = 60 game frames a second at full emulation speed in the opening cutscene, on the
+Valuan ship and on the world map. A world map frame takes about a retrace of the emulated CPU's time
+(like a ship battle's), so 3x there needs the CPU clocked at 2x (1.5x stayed at 60); it then reached
+~88 game frames a second, the host's limit at 0.97x, and the ship's corridors and the opening
+cutscene couldn't hold 90 either. Random encounters count frames, so at 2x they come twice as often
+in real time but at the same distance travelled. Unlike battle, Z is the game's in the field (the
+minimap on foot, the Map / To Bridge / Save menu on the world map), so the recomp switches the field
+speed with Z+X.
+
 Implemented in the recomp (2026-10-11)
 --------------------------------------
 
