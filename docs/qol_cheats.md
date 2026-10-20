@@ -112,7 +112,10 @@ at 1x resolution: 2x = 60 game frames a second at full emulation speed in the op
 Valuan ship and on the world map. A world map frame takes about a retrace of the emulated CPU's time
 (like a ship battle's), so 3x there needs the CPU clocked at 2x (1.5x stayed at 60); it then reached
 ~88 game frames a second, the host's limit at 0.97x, and the ship's corridors and the opening
-cutscene couldn't hold 90 either. Random encounters count frames, so at 2x they come twice as often
+cutscene couldn't hold 90 either. On a Retroid Pocket 5 (Snapdragon 865) plain 2x ran at only
+0.71x-0.85x emulation, so the recomp paces speeds in quarters (each frame takes 2, 1 or 0 retraces
+from a budget, averaging 2 / speed) and that device settles at 1.5x on foot, 1.25x on the world map and
+in cutscenes, at full emulation speed. Random encounters count frames, so at 2x they come twice as often
 in real time but at the same distance travelled. Unlike battle, Z is the game's in the field (the
 minimap on foot, the Map / To Bridge / Save menu on the world map), so the recomp switches the field
 speed with Z+X.
