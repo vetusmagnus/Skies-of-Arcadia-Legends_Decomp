@@ -92,6 +92,15 @@ makes Z and Start equivalent and is turned on by `fn_80228A20` (mode 3). Pressin
 the command wheel (state 02, `tools/button-probe-win.sh` in the recomp) changed nothing. So a Z tap is
 free for the speed toggle in battle (Z+Start stays the settings menu). Ship battles: not checked.
 
+**Fixed (2026-10-21), not the game's doing:** the freeze came from the recomp's CPU core under the
+emulated-CPU overclock of 3x / 4x (1.5 / 2.0). Every spell and S-move plays one stream (*Spells and
+special attacks* below) and its action waits for the stream's end; with the overclock at 1.5 or more the
+stream stalled (MusyX's `streamInfo` at `0x8032C730` never saw the play position move, so the game's
+refill callback `fn_802163FC` wasn't called again) and the battle waited forever. Dolphin's JIT with the
+same overclock played it: the recomp advanced the guest timebase by overclocked cycles inside a native
+burst (recomp `patches/recompcore-overclock-timebase.patch`, development notes *A battle can freeze*).
+The user's frozen state holds Cutlass Fury's stream (`KO0036`) stuck in both channels. Earlier notes:
+
 **Open (2026-10-11):** changing the speed while a round plays out can freeze the battle for good: the
 round stops with a damage number on screen, every battle task stays on its step, no DVD read is pending,
 and the freeze survives a savestate reload. Seen on the Retroid (Antonio fight, several Z taps plus the
@@ -100,6 +109,34 @@ mid-round speed changes, with Invincible on or off. The logic itself is a fixed 
 the suspects are what a speed change touches outside it: the emulated-CPU overclock used at 3x / 4x and
 the recomp's frame interpolation (stood down at speed). Recomp NOTES.md *Known issues* has the states and
 the method.
+
+Spells and special attacks
+--------------------------
+
+Measured 2026-10-21 (recomp, Windows, audio dumps): a spell's or an S-move's sound is **one pre-mixed
+stereo stream** from the disc, `SOUND/KO00NN_L.dsp` / `_R.dsp` (NN = the skill id: 0-35 the 36 spells,
+2.5-13 s; 36-59 the S-moves, 10-33 s; 62-67 short ones), voice and effects together: no `SePlay`
+happens while it plays. The action's last step waits for the stream's end. An enemy special plays a
+voice stream (`B702NNNN`, `fn_8003F890`). So with the end-of-frame waits skipped the animation ends
+early and the battle sits until the sound is done (Cutlass Fury, 11.6 s: animation 10.1 s at 1x,
+5.0 s at 2x, 2.5 s at 4x).
+
+What runs them:
+
+| Address | What |
+|---|---|
+| `lbl_80309174` | 12 command records, 0x20 each (party 0-3, enemies 4-11): +0 command type, +4 target, +6 skill / item id, +0xD a flag cleared at the action's start |
+| `lbl_80309700` | 12 action task pointers; the task's first word is the function it runs, +0x19 its step, +0x24 -> work (+0 the unit) |
+| `lbl_80309730` | 12 x 0x10: +0 the unit's current motion (set by `fn_80081168` / `fn_800811E4`), +4 a unit index (compared with the acting unit), +7 the skill id |
+| `lbl_80347334` | the unit acting (s8) |
+| `fn_80086C68` | the party's dispatcher, by command type: 0 `fn_80085ADC`, 1 / 2 (magic / S-move) `fn_80085064`, 3 attack `fn_80086308` (+6 != 0: `fn_80085CE0`), 4 `fn_80085C88`, 5 `fn_80084A08`, 6 `fn_800858B8`, 8 `fn_80084E38` / `fn_80084C78` |
+| `fn_8008B9E0` | the enemies' dispatcher: 1 and 0xC `fn_80087074`, 3 `fn_80087F6C` / `fn_80087844`, 4 `fn_80088ABC`, 6 `fn_80088B14`; every enemy action ends in `fn_80087054` |
+| `fn_8008A424` | enemy AI: a rule list at the unit record's +0x110 (+0x8A: kind, code, next); code 0x226 attack (type 3), 0x227 type 4, 0x228 type 6, 500+ magic (type 1, id = code - 500), others a special (type 0xC, id = code) |
+| `lbl_802C4BF0` | the skill table, 0x30 per skill (magic 0-0x23, S-moves from 0x24; Cutlass Fury 0x24) |
+| `lbl_803475A8` | the root task; the task list is linked through +4 |
+
+The recomp's game patch ws27 plays these at normal speed: `qol_fast` is false while any unit's action
+task runs `fn_80085064` or `fn_80087074` (`patches/game/qol.c`, issue #7).
 
 Field speed
 -----------
