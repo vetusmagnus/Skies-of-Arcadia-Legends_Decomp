@@ -143,6 +143,37 @@ others at (502, 74 + 40 * index); it draws through `fn_8021C62C` at `0x80158994`
 `0x8021F84C` / `0x8021F880` / `0x8021F308`). The recomp's anchors for them: patches/game/widescreen.c and
 the recomp's NOTES *Ship battle HUD*.
 
+Cutscene shots
+--------------
+
+(2026-10-21, issue #10.) Cutscenes are field scenes run by the map's script (`field/meNNNx.sct`,
+AKLZ; SPICE's `SpiceSCT` parses them, opcode names from SALSA). Some shots stand on set pieces built
+only as wide as the 4:3 camera sees (the opening, map 201: the Valuan ship's side decks end short of a
+16:9 picture's edges; the Valuan ship waits just out of the 4:3 frame while Fina's ship flies by).
+
+- **Script VM.** Handler table `lbl_802F7940`: 266 entries of 12 bytes (flags, argument info,
+  handler), indexed by opcode. A handler is `handler(flags, context)`; `fn_80210B44` and the run loop
+  call it through `bctrl`. Contexts: `lbl_8030CEA0 +0x10` points at 384 of 0x34 bytes (+0x18 the
+  opcode, +0x1C the PC, which points at the opcode word; the handler moves it past the instruction).
+  `lbl_8030CEA0 +0` is the loaded script's code (the file's data after its section index); the index
+  itself is at `+0x820` (rows of 0x14: offset from the code, name), count at `+0x824`; `fn_80210450` /
+  `fn_80210550` look a section up by name.
+- **Camera commands** (handlers): 0x21 vector path `fn_80203FFC`, 0x2D saved pose `fn_8020726C`,
+  0x2E / 0x2F turn `fn_8020549C` / `fn_80204F8C`, 0x32 pose `fn_80204CD0`, 0x34 position + look-at
+  `fn_80204BE8`, 0x79 / 0x8B / 0x9F paths `fn_802034B0` / `fn_80202DEC` / `fn_802023BC`, 0x7D stop
+  `fn_8020731C`. Lens: 0x31 / 0x7C (`fn_80204F04` / `fn_80204E28`) call `fn_8022D34C(frames, lens)`,
+  which sets the camera manager `lbl_80311970` (+0x0 mode, +0x4C frames, +0x50 / +0x54 lens). One
+  section can hold many shots (the opening's `me201aa02`).
+- **The screen.** The camera manager (`fn_8022D384`) sets Ninja's screen every frame, through
+  `njSetScreen` (`fn_802993C8`: reads only the centre at +8 / +0xC and the distance at +0x18) or,
+  from the lens, `njSetPerspective` (`fn_802992F8`, its one caller `fn_8028BAEC`): 554.3 = 320 /
+  tan(30°) for lens 60.
+
+The recomp's patch (`patches/game/cutscene.c`) notes each camera command as the shot (map + a hash of
+its words, identical in the three releases' scripts) and, for a listed shot, sets the screen again
+with a longer distance (Vert-: the 4:3 sides, top and bottom cropped), optionally moving the centre so
+the bottom or top edge stays where 4:3 has it.
+
 Frame loop
 ----------
 
