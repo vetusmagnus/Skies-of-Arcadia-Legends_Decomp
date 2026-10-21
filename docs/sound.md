@@ -464,6 +464,38 @@ the game thinks the song ended at once.
 `0x80216148`.., `0x80218A28`.., `0x802161x8`), so also zero `+0x14` of the two channels or wrap
 `sndStreamMixParameterEx` (`0x8026FED4`) and force its volume for music channels. Not tested.
 
+Region differences (European 50 Hz, Japanese voices)
+---------------------------------------------------
+
+Found 2026-10-21 by comparing the three GameCube discs' `sound/` folders (same 1799 names on each).
+
+* **A stream ends at its header's nibble count, not at the file's end.** `PcmPrepare` (`0x802159E0`)
+  copies the DSP header's coefficients (`+0x1C`) into the descriptor, its rate (`+8`) to `+4`, sets the
+  data start `+8` = `0x60` and the end `+0xC` = `(nibbles >> 1) & ~0x1F` (`0x80215E40`); the refill
+  `fn_80216744` reads up to that end and zero-fills past it. A shorter stream can keep its file's size.
+* **European release (GEAP8P), made for 50 Hz.** The game has no 50 Hz compensation in code (it runs
+  5/6 speed at 50 Hz), so its data was retimed:
+  * 223 stream pairs (`KO00NN`, most `B702NNNN`, `f71000NN`, 3 victory lines) are time-stretched,
+    pitch kept, to 1.2 times the USA length (13 re-edited longer, Cutlass Fury `KO0036` with a fade-out
+    tail); the music streams `m01`-`m04`, 25 `B702`, 54 victory lines and 2 field voices are the USA
+    files. Some European field streams are 18000 Hz where the USA ones are 22050.
+  * In every enemy bank (`e6*.info`, all 279) and `m5100000.info`, each sequence's tempo is 5/6 of the
+    USA one: the song header's initial tempo (`+0x10`, a `u32`), the tempo table at the offset in `+0xC`
+    (`{u32 tick, u32 tempo}` pairs; the `0xFFFFFFFF` terminator also holds a tempo) and a few more tempo
+    fields (120 → 100, 250 → 208, 60 → 50, 150 → 125). The `.samp` data, the field, voice, crew,
+    common and music banks are unchanged. `m0328.info`, `e6k006.info`, `e6p001.info` have a few
+    other changed bytes (not tempos).
+  * The cutscenes set to a stream (`field/me299a.sct` the intro, `me298a` / `me250a` `m03`) divide
+    their waits and motion times by 1.2 (expression words `0x04000000 x 0x04000000 0x3F99999A 0x13`).
+  The recomp undoes all three for its 60 Hz (recomp development notes *European intro in sync*,
+  *European 50 Hz audio*).
+* **Japanese release (GEAJ8P): other voices, same layout.** All the voice files differ (streams
+  `NNN`, `B702`, `KO`, `f71`, banks `stv`, `cr`, `e6`), most with other sizes; sequence counts match
+  except `e6h011` / `k8900001` (one extra at the end). The other banks' `.info` files differ only in
+  MusyX object IDs (numbered project-wide: the Japanese set has other counts), so a mix of USA and
+  Japanese banks could collide; the music `.samp` data is identical. 30 of the 66 `KO` streams have
+  other lengths (up to -1.6 / +1.2 s).
+
 Open
 ----
 
