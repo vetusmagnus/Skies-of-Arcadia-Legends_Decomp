@@ -136,7 +136,8 @@ What runs them:
 | `lbl_803475A8` | the root task; the task list is linked through +4 |
 
 The recomp's game patch ws27 plays these at normal speed: `qol_fast` is false while any unit's action
-task runs `fn_80085064` or `fn_80087074` (`patches/game/qol.c`, issue #7).
+task runs `fn_80085064` or `fn_80087074` (`patches/game/qol.c`, issue #7). Ship battles: ws28, *Ship
+battles* below.
 
 Field speed
 -----------
@@ -244,3 +245,42 @@ Invincible keeps the Little Jack at 10000 (8140 after the same turn without it),
 from the next turn; the battle won the normal way goes on to map 205 with 410 EXP / 300 gold at 100%
 (Vyse 25 -> 231) and twice that at 200% (25 -> 436, +600 gold). Setting the enemy's HP by hand doesn't
 sink it (the battle goes on, or restarts after the results): don't test the ending that way.
+
+**How a turn plays (2026-10-21).** Researched from a random encounter reached by changing the map to
+`me550a` from the Baltor state (the Black Pirates; maps 550+ are the sky's random ship battles, no
+tutorial), recomp test build on Windows. Ship battles play no streams: every caller of the battle
+streams (`KO%04dS%s` and `B702...` at `lbl_802AD328`, built in `fn_8003E464` / `fn_8003FF94`) is
+ground battle code, and the only stream the ship code asks for (`fn_80155B78`, `/SOUND/f71000NN`) is
+the debug sound test. Their spells and specials are sound effects on a timeline, so nothing waits for a
+sound; at speed the effects just run behind the picture.
+
+The command input fills the turn's phases; then the turn plays on a timeline of frames:
+
+| Address | What |
+|---|---|
+| `lbl_803472E0` | the turn's frame (a float, counted from 0; 500 per phase) |
+| `lbl_803472DC` | 1.0 while the turn plays, 0 at the command input (`fn_8015AA18` takes the input path then) |
+| `lbl_803472A4` | the phase playing's record, 0x58 each: +0x0 index, +0x4 length (500), +0x8 first frame, then the windows `fn_8015BB58` steps through: +0x8..+0xC set-up (`fn_8015C1E4` works out both sides' actions), +0xC..+0x14 the side acting first, +0x14..+0x18 the turn-around, +0x18..end the side acting second. Phase 0: 0, 10, 70, 250, 310; phase 1: 500, 510, 570, 750, 810 |
+| `lbl_803472B4` | the phase playing |
+| `lbl_80306E38` | the phase's actions **in acting order**, 0x90 each: +0 count (s16), from +0x10 0x10 each: +0 kind, +1 side (0 the party, 1 the enemy), +2 crew member / enemy ship, +5 weapon slot, +8 id. `fn_8015C1E4` fills them through `fn_80144CE4(phase, 0)` and `(phase, 1)`, which ask `fn_80147CC8` who acts first (`lbl_80347064` = 1 when the enemy does) |
+| `lbl_803063F0` + 0x298 | the party's weapons in battle, 0x22 each: name, +0x12 item id, +0x16 attack, +0x1A accuracy (0xFFFF: the S-Cannons). Slot 4 of the Little Jack held the Harpoon Cannon (0x1AE) |
+
+Who acts first changes from turn to turn: the same save state gave the party's Sacri first in some runs
+and the enemy's Focus first in others.
+
+Action kinds, from the banner name `fn_80159D48` picks: 0 Flee, 3 Evasive Action, 4 a cannon (the
+weapon's name), 5 magic (the skill table `lbl_802C4BF0`, id +8: Sacri 6), 1 a ship item
+(`lbl_802D8A2C`, id - 0x1E0: bombs, repair kits), 2 a crew item (`lbl_802C7C34`, id - 0xF0), 6 Focus /
+Taking Aim / Preparing Attack (id 0-2), 7 a crew member's special (`lbl_802D8E64`: Lawrence, Don,
+Kirala, Polly...), 8 an enemy's action by id: 0 Awaiting Orders, 1 Target Lost, 2 Assessing Damage,
+3 Hull Ram, 4 Red Ray, 5 Fist of Grendel, 6 Boulder Throw, 7 Stomp, 8 Flee. The S-Cannon fires a
+weapon like any cannon (kind 4), so it's told by the weapon: Harpoon Cannon 0x1AE, MoonStone Cannon
+0x1AF. It's offered only on a phase the turn bar marks "C!"; this battle's C! phases came at random
+and none came up in the time tested, so the S-Cannon wasn't seen playing. The European and Japanese
+code is the same (the European banner function differs only in its name tables).
+
+**In the recomp (ws28, 2026-10-21).** `qol_fast` is false while the window playing (first side: record
+0, second: record 1) has magic, a crew special, an enemy special attack (kind 8, ids 3-7) or the
+party's S-Cannon. Measured on Windows from the `me550a` state with Aika's Sacri: 29.8-30.1 frames a
+second in its window at 2x and 4x, whichever side acted first; the enemy's Focus in the same phase at
+60 / 121; 1x unchanged.
