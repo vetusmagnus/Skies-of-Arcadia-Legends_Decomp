@@ -91,6 +91,16 @@ Anything that has to cover the whole picture must be drawn with the full-width m
   (`fn_800B0278`, `fn_800AF780` / `fn_800AF8F8`) is a different transition. Other `fn_80226D14` callers:
   `fn_8002FF70` (battle task list), `fn_800D81E8` (callback set at `0x800D8514`), `ScreenWipeDraw`,
   `fn_8011CE6C`.
+- The battle's screen plane (2026-10-22, recomp issue #9: Drachma's victory pose squeezed into 4:3).
+  Some moves' camera work sets `lbl_8030A10C + 0x6C` bit `0x40000000` (`0x80056CA4` in
+  `fn_80056B6C`, `0x8005B7B0` in `fn_8005B648`); `fn_8002FF70` then draws the battle task list in two
+  passes (tasks with `+0x10` bit 31 first), copying the frame in between with `fn_80226D14` (`GXCopyTex`
+  with clear). The task `fn_8003484C` (created at `0x80056DF0`, `0x8005B798`, `0x8005B8BC`,
+  `0x8005B8E4`) draws the copy back: with a model, a unit matrix, `njTranslate` to the screen distance
+  (`lbl_803118AC + 0x18`), `njRotateXYZ`, `njScale` (the shake), then the model through `fn_801CEF30`,
+  `fn_801CF020` or `fn_801CF0F8` (`0x8003497C`, `0x80034994`, `0x800349A0`, by how it's animated; down
+  to `fn_80287B38`); without one, a 2D quad through `fn_800333A0`. The model is sized to the 4:3 field
+  of view, so it needs the unwidened aspect like the shatters.
 
 UI parked off-screen
 --------------------
