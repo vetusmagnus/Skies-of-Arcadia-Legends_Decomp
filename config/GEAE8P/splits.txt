@@ -29,6 +29,15 @@ game/drawstate.c:
 game/text.c:
 	.text       start:0x801E1F3C end:0x801E3874
 
+game/motion.c:
+	.text       start:0x801E3874 end:0x801E48A8
+
+game/flags.c:
+	.text       start:0x801E48A8 end:0x801E4C2C
+
+game/model.c:
+	.text       start:0x801E4C2C end:0x801E6148
+
 dolphin/PPCArch.c:
 	.text       start:0x802319E0 end:0x80231AD0
 

@@ -340,6 +340,15 @@ config.libs = [
             # 29 of 33 match; FontFindGlyph, TextNodeNewN, TextNodeNew and TextReadChar are
             # register allocation away. Data still comes from the asm.
             Object(NonMatching, "game/text.c"),
+            # Motion playback (Ninja NJS_MOTION keyframes). fn_801E3DE0 and fn_801E41E0 are near
+            # misses; fn_801E461C has no C yet.
+            Object(NonMatching, "game/motion.c"),
+            # Table accessors and the story-flag bitset. The file's end is a guess (no float
+            # constants to pin it); fn_801E48A8, fn_801E4984 and fn_801E4AB0 are near misses.
+            Object(NonMatching, "game/flags.c"),
+            # Model objects: draw, motion blend, per-frame update. All 17 functions so far match;
+            # the file continues past 0x801E6148 (fn_801E6148, fn_801E6438, ... share its constants).
+            Object(NonMatching, "game/model.c"),
         ],
     ),
 ]

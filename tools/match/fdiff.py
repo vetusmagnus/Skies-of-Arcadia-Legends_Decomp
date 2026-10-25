@@ -66,7 +66,7 @@ def place(name, off, syms, orig):
 
 def simp(x):
     x = re.sub(r"\s+", " ", x.strip())
-    x = re.sub(r"(\"[^\"]*\"|[A-Za-z_@$][\w@$.]*)@(ha|l|h|sda21)\b", "S", x)
+    x = re.sub(r"(\"[^\"]*\"|[A-Za-z_@$][\w@$.]*)(?:[+-]0x[0-9A-Fa-f]+)?@(ha|l|h|sda21)\b", "S", x)
     x = re.sub(r"\"[^\"]*\"", "S", x)
     x = re.sub(r"^(bl|b) (?!\.L)\S+$", r"\1 S", x)
     x = re.sub(r"\b(lbl|jumptable|fn)_[0-9A-F]+", "S", x)
