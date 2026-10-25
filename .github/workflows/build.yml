@@ -52,8 +52,7 @@ jobs:
           $log = "build_log.txt"
           # ninja comes from `pip install --user ninja`, whose user site the runner's Python doesn't see.
           $ninja = $env:SOAL_NINJA
-          if (-not $ninja) { $ninja = "$env:USERPROFILE\AppData\Roaming\Python\Python314\Scripts
-inja.exe" }
+          if (-not $ninja) { $ninja = "$env:USERPROFILE\AppData\Roaming\Python\Python314\Scripts\ninja.exe" }
           if (-not (Test-Path $ninja)) { $ninja = "ninja" }
           "python: $((Get-Command python -ErrorAction SilentlyContinue).Source), ninja: $ninja" | Tee-Object $log
           python configure.py *>&1 | Tee-Object $log -Append
