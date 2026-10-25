@@ -1,0 +1,62 @@
+name: Build and report progress
+
+# Runs on a self-hosted runner on the maintainer's PC, where the disc image lives. The disc image
+# never leaves that machine: the job hardlinks it into orig/ and uploads only the objdiff report,
+# which holds function names and match percentages, no game data.
+#
+# Safety: code from anyone else must never run on that PC.
+#  - No pull_request trigger: forks and PRs never start this workflow.
+#  - Only pushes to main (which only people with write access can do) or a manual run.
+#  - The job also refuses to run unless the push or manual run came from the repo owner.
+#  - The token is read-only.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.actor == github.repository_owner && github.triggering_actor == github.repository_owner
+    runs-on: [self-hosted, windows, soal]
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Link the disc image
+        shell: pwsh
+        run: |
+          $iso = $env:SOAL_ISO
+          if (-not $iso) { $iso = "C:\Users\Nathan\Desktop\folder folder\Roms\GC\Skies of Arcadia Legends.iso" }
+          if (-not (Test-Path $iso)) { throw "disc image not found: $iso (set SOAL_ISO in the runner's .env)" }
+          $dst = "orig\GEAE8P\GEAE8P.iso"
+          if (Test-Path $dst) { Remove-Item $dst -Force }
+          try { New-Item -ItemType HardLink -Path $dst -Target $iso -ErrorAction Stop | Out-Null }
+          catch { Copy-Item $iso $dst }
+
+      - name: Build
+        shell: pwsh
+        run: |
+          python configure.py
+          if ($LASTEXITCODE -ne 0) { throw "configure.py failed" }
+          python -m ninja all_source progress build/GEAE8P/report.json
+          if ($LASTEXITCODE -ne 0) { throw "build failed" }
+          python -m ninja
+          if ($LASTEXITCODE -ne 0) { throw "main.dol doesn't match" }
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: GEAE8P_report
+          path: build/GEAE8P/report.json
