@@ -13,6 +13,7 @@
 ###
 
 import argparse
+import re
 import sys
 from pathlib import Path
 from typing import Any, Dict, List
@@ -625,7 +626,28 @@ config.progress_categories = [
     ProgressCategory("game", "Game Code"),
     ProgressCategory("sdk", "SDK Code"),
     ProgressCategory("middleware", "Middleware"),
+    ProgressCategory("ninja", "Ninja (Sega graphics library)"),
 ]
+
+
+# Code that isn't split into a source file yet (dtk's auto_XX_ADDR_text units) still counts towards
+# the category its address falls in, so each category's total is the whole region, not just the
+# files started so far. Ranges: docs/sdk_import.md.
+def auto_unit_categories(name: str) -> List[str]:
+    m = re.match(r".*/auto_\d+_([0-9A-F]{8})_(text|init)$", name)
+    if not m:
+        return []
+    addr = int(m.group(1), 16)
+    if 0x80005600 <= addr < 0x80231A7C:
+        return ["game"]
+    if 0x80266878 <= addr < 0x80286EE8:
+        return ["middleware"]
+    if 0x80286EE8 <= addr < 0x802AC7E0:
+        return ["ninja"]
+    return ["sdk"]
+
+
+config.auto_unit_categories = auto_unit_categories
 config.progress_each_module = args.verbose
 # Optional extra arguments to `objdiff-cli report generate`
 config.progress_report_args = [
