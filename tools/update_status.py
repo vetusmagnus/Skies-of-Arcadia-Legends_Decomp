@@ -12,6 +12,7 @@ instead of repeating numbers, so nothing else goes stale.
 import datetime
 import json
 import re
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -26,7 +27,7 @@ def run(*cmd):
 
 
 def main():
-    sha = run(str(ROOT / "build/tools/dtk"), "shasum", "-c", "config/GEAE8P/build.sha1")
+    sha = run(str(ROOT / ("build/tools/dtk" + (".exe" if os.name == "nt" else ""))), "shasum", "-c", "config/GEAE8P/build.sha1")
     if not re.search(r"main\.dol: \S*OK", sha):
         sys.exit("main.dol doesn't match (or isn't built); run `ninja` and fix that first")
     progress = re.sub(r"\x1b\[[0-9;]*m", "", run(sys.executable, "configure.py", "progress"))

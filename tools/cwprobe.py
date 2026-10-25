@@ -16,6 +16,7 @@ import argparse
 import glob
 import shlex
 import struct
+import os
 import subprocess
 import sys
 import tempfile
@@ -95,8 +96,9 @@ def load_targets():
 
 def compile_c(src, mw_version, flags, out):
     cc = ROOT / "build" / "compilers" / "GC" / mw_version / "mwcceppc.exe"
-    wibo = ROOT / "build" / "tools" / "wibo"
-    cmd = [str(wibo), str(cc), *shlex.split(" ".join(flags)), "-c", str(src), "-o", str(out)]
+    cmd = [str(cc), *shlex.split(" ".join(flags)), "-c", str(src), "-o", str(out)]
+    if os.name != "nt":
+        cmd.insert(0, str(ROOT / "build" / "tools" / "wibo"))
     res = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
     if res.returncode != 0:
         return res.stdout + res.stderr

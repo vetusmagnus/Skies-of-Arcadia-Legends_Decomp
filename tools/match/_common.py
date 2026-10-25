@@ -1,5 +1,5 @@
 """Shared helpers for the variant searches: write a temporary copy of a source file, diff it."""
-import os, subprocess
+import os, subprocess, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 WORK = os.path.join(ROOT, "build", "match")
@@ -12,7 +12,7 @@ def score(text, fns, tag):
     path = os.path.join(WORK, f"_v{os.getpid()}_{tag}.c")
     with open(path, "w") as f:
         f.write(text)
-    r = subprocess.run(["python3", FDIFF, path] + list(fns), capture_output=True, text=True)
+    r = subprocess.run([sys.executable, FDIFF, path] + list(fns), capture_output=True, text=True)
     os.remove(path)
     if r.returncode or "== " not in r.stdout:
         return 999

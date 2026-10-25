@@ -186,6 +186,32 @@ if args.map:
 # Use for any additional files that should cause a re-configure when modified
 config.reconfig_deps = []
 
+# Game code must be plain C: no inline asm, pragmas or fakematch markers (tools/check_game_src.py).
+# It runs before anything compiles, so a hit stops the build.
+game_src = sorted(
+    str(p)
+    for d in ("src/game", "include/game")
+    for p in Path(d).rglob("*")
+    if p.suffix in (".c", ".cpp", ".h", ".hpp", ".inc")
+) + ["include/ninja.h"]
+config.custom_build_rules = [
+    {
+        "name": "check_game_src",
+        "command": f'"{sys.executable}" tools/check_game_src.py --stamp $out $in',
+        "description": "CHECK game code is plain C",
+    },
+]
+config.custom_build_steps = {
+    "pre-compile": [
+        {
+            "rule": "check_game_src",
+            "inputs": game_src,
+            "implicit": ["tools/check_game_src.py"],
+            "outputs": f"build/{config.version}/check_game_src.ok",
+        },
+    ],
+}
+
 # Optional numeric ID for decomp.me preset
 # Can be overridden in libraries or objects
 config.scratch_preset_id = None

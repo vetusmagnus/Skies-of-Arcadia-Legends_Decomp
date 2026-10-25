@@ -23,6 +23,7 @@ Usage:
 
 import argparse
 import json
+import os
 import re
 import shlex
 import shutil
@@ -145,8 +146,9 @@ def candidates(config):
 def compile_one(c):
     out = WORK / "obj" / (c["src"].replace("/", "__") + ".o")
     flags = " ".join(skies_flag(f) for f in c["cflags"] + c["extra"])
-    cmd = [str(ROOT / "build/tools/wibo"), str(ROOT / "build/compilers" / c["mw"] / "mwcceppc.exe"),
-           *shlex.split(flags), "-c", c["src"], "-o", str(out)]
+    cmd = [str(ROOT / "build/compilers" / c["mw"] / "mwcceppc.exe"), *shlex.split(flags), "-c", c["src"], "-o", str(out)]
+    if os.name != "nt":
+        cmd.insert(0, str(ROOT / "build/tools/wibo"))
     r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
     return out if r.returncode == 0 and out.exists() else None
 

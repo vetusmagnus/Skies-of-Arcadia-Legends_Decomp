@@ -4,6 +4,7 @@ Matching decomp of the GameCube game (GEAE8P, USA Rev 0). It's built on encounte
 
 ## Build
 - `python configure.py && ninja`. The build must end with `build/GEAE8P/main.dol: OK`. Never commit a change that breaks the match.
+- Game code (`src/game/`, `include/game/`, `include/ninja.h`) must be plain C that compiles to the original bytes: no inline asm, `#pragma`, asm includes or fakematch markers. `tools/check_game_src.py` runs before anything compiles and stops the build on a hit. Library code under `extern/` is exempt (its asm functions are asm in the original libraries).
 - The disc image in `orig/GEAE8P/` is a symlink to the user's RVZ. Never commit game data: no disc images, DOLs, extracted files, or `build/`.
 
 ## Conventions

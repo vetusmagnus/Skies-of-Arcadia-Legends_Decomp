@@ -13,9 +13,13 @@ Workflow
    is in the same file; a second `0.0f` means a new file). In `.data`, a file's strings come before
    its jump tables. `tools/match/asmindex.py` lists callers, callees, data references and strings.
 2. **Write C per function** and diff it: `tools/match/fdiff.py src/game/foo.c FN...` compiles with
-   the game's flags and diffs against the original asm (symbols and call targets masked; an empty
-   diff is a match). Run `tools/match/asmindex.py build` first, and again after `ninja` regenerates
-   the asm (renames, new splits).
+   the game's flags and diffs against the original asm (an empty diff is a match). Instructions are
+   aligned with symbols and call targets masked, then every aligned pair is checked again: a global
+   both sides can name must be the same address, and a branch must land on the aligned target, so a
+   load from the wrong global shows up as a `-reloc`/`+reloc` pair. Symbols only one side can name
+   (the compiler's `@N` literals, statics not in `symbols.txt` yet) are counted as `unplaced`;
+   the full build is the final check for those. Run `tools/match/asmindex.py build` first, and
+   again after `ninja` regenerates the asm (renames, new splits).
 3. **Search variants** when only registers or scheduling differ:
    - `tools/match/vrun.py` tries text substitutions;
    - `tools/match/perm.py` tries every order of a block of declarations;
@@ -29,6 +33,9 @@ Workflow
 5. **Name** what's understood in `symbols.txt` (`scope:global`), and grep
    `../SkiesOfArcadiaLegends-Recomp` for the old `fn_` names (its game patches resolve `fn_XXXXXXXX`
    by address, so renames are safe there).
+
+Game code is plain C: no inline asm, pragmas or fakematches. `tools/check_game_src.py` enforces
+it as the first build step.
 
 What MWCC cares about
 ---------------------
