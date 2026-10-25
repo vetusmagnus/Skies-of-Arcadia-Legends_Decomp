@@ -50,17 +50,20 @@ jobs:
         run: |
           $ErrorActionPreference = "Continue"
           $log = "build_log.txt"
-          # ninja comes from `pip install --user ninja`, whose user site the runner's Python doesn't see.
+          # ninja comes from `pip install --user ninja`, whose user site the runner's Python doesn't see,
+          # so call the exe by path (override with SOAL_NINJA in the runner's .env).
           $ninja = $env:SOAL_NINJA
-          if (-not $ninja) { $ninja = "$env:USERPROFILE\AppData\Roaming\Python\Python314\Scripts\ninja.exe" }
-          if (-not (Test-Path $ninja)) { $ninja = "ninja" }
-          "python: $((Get-Command python -ErrorAction SilentlyContinue).Source), ninja: $ninja" | Tee-Object $log
+          if (-not $ninja) { $ninja = "C:\Users\Nathan\AppData\Roaming\Python\Python314\Scripts\ninja.exe" }
+          if (-not (Test-Path $ninja)) { throw "ninja not found at $ninja (set SOAL_NINJA in the runner's .env)" }
+          "python: $((Get-Command python).Source), ninja: $ninja" | Tee-Object $log
           python configure.py *>&1 | Tee-Object $log -Append
           if ($LASTEXITCODE -ne 0) { throw "configure.py failed (exit $LASTEXITCODE), see build_log" }
           & $ninja all_source progress build/GEAE8P/report.json *>&1 | Tee-Object $log -Append
           if ($LASTEXITCODE -ne 0) { throw "build failed (exit $LASTEXITCODE), see build_log" }
           & $ninja *>&1 | Tee-Object $log -Append
-          if ($LASTEXITCODE -ne 0) { throw "main.dol doesn't match, see build_log" }
+          if ($LASTEXITCODE -ne 0) { throw "build failed (exit $LASTEXITCODE), see build_log" }
+          if (-not (Select-String -Path $log -Pattern "main.dol: OK" -Quiet)) { throw "main.dol didn't match, see build_log" }
+          if (-not (Test-Path build/GEAE8P/report.json)) { throw "report.json wasn't generated" }
 
       - name: Upload build log
         if: always()
@@ -74,3 +77,4 @@ jobs:
         with:
           name: GEAE8P_report
           path: build/GEAE8P/report.json
+          if-no-files-found: error
