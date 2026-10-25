@@ -1,46 +1,30 @@
 # GitHub Actions
 
-This repository includes [.github.example/workflows/build.yml](/.github.example/workflows/build.yml) as an example CI workflow. To use it for your project, follow the setup instructions below.
+[.github/workflows/build.yml](/.github/workflows/build.yml) builds the project and uploads the
+objdiff progress report, which [ByteMatch](https://bytematch.dev/vetusmagnus/SoAL-Decomp) reads
+from runs on `main` (artifacts named `GEAE8P_report`).
 
-- [Build Repository](#build-repository)
-- [Workflow](#workflow)
-- [decomp.dev](#decompdev)
+## Self-hosted runner
 
-## Build Repository
+The build needs the disc image, which can't be in the repository, so the job runs on a self-hosted
+runner on the maintainer's PC. It hardlinks the local disc image into `orig/GEAE8P/` and uploads
+only the report and the build log; no game data leaves that machine.
 
-This repository will be used to build and store the CI build container.
+Setup, once:
 
-> [!CAUTION]
-> This repository should be **private** to avoid exposing the game's assets.
+1. Download the Windows runner from the repository's Settings > Actions > Runners > New
+   self-hosted runner, and unpack it outside the repository.
+2. `config.cmd --url https://github.com/<owner>/SoAL-Decomp --token <token> --labels soal`
+3. `pip install --user ninja` in a normal shell.
+4. If the disc image or ninja live somewhere else than the defaults in `build.yml`, set `SOAL_ISO`
+   and `SOAL_NINJA` in the runner's `.env` file.
+5. Start it with `run.cmd`. Jobs only run while it's running.
 
-1. [Create a **private** repository from `encounter/dtk-template-build`](https://github.com/new?template_name=dtk-template-build&template_owner=encounter). A common name is your project's repository name with `-build` appended. For example, `tww-build`.
+## Safety
 
-2. Once the repository is created, add your game's assets to the `orig/GAMEID` directory. (Replace `GAMEID` with your game's ID, matching the `orig` layout in your main repository.)  
-    **Only include game files necessary for the build**, such as `sys/main.dol` and any `.rel` or `.sel` files.
+Code from anyone else must never run on the runner's PC:
 
-3. Once the build container action completes, visit the package settings:  
-    ![GitHub repository packages](images/github_build_repo_packages.png)  
-    ![GitHub package settings](images/github_package_settings.png)
-
-4. Under "Manage Actions access", add your project's main repository with the "Read" role:  
-    ![GitHub package Actions access](images/github_package_settings_access.png)
-
-## Workflow
-
-1. Rename `.github.example` to `.github`.
-
-2. In `build.yml`, update the `container:` to point to the new [build image](#build-repository).
-
-3. In `build.yml`, replace `GAMEID` with your game's ID. (Or list of IDs, for multi-version support.)
-
-4. Commit and push the changes to your repository.
-
-If everything is set up correctly, the workflow will build all versions on every push or pull request.
-
-## decomp.dev
-
-Once the build workflow is running on the main branch, you can add your game to <https://decomp.dev>.
-
-Visit <https://decomp.dev/manage/new>, select your GitHub repository and fill out the required fields.
-
-If you have questions or issues, try asking in the [GC/Wii Decompilation Discord](https://discord.gg/hKx3FJJgrV) #decomp.dev channel.
+- The workflow has no `pull_request` trigger, so forks and pull requests never start it.
+- It runs on pushes to `main` and manual runs only, and the job is skipped unless the push or run
+  came from the repository owner.
+- Merging a pull request does run its code on the next push, so review before merging.
