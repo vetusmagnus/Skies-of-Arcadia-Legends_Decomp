@@ -284,8 +284,9 @@ Open
   `UiLayoutDraw` / `UiLayoutDrawPart` (6 lines of argument scheduling), `UiSpriteDraw` (the vertex
   buffer address in a callee-saved register vs the hoisted int-to-float constant), and in
   `text.c` `FontFindGlyph`, `TextNodeNew` / `TextNodeNewN` (the 0x8197 fallback constant is
-  hoisted out of the copy loop; the original keeps it in its branch), `TextPrintNumber` and
-  `TextReadChar` (a register reused for zero, an extra mask).
+  hoisted out of the copy loop; the original keeps it in its branch) and `TextReadChar` (an extra
+  `clrlwi`/`mr` on the second byte). `TextPrintNumber` matched once `start` held `flags & 0x8000`
+  for the test (a permuter find).
 - Prototypes: the int/float order of parameters doesn't change the PowerPC calling convention, so
   it's free to choose, and it changes scheduling: `UiSpriteDrawEx` only matches with its floats
   before `texlist` and `flags`.

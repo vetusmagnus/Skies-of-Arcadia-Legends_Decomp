@@ -336,8 +336,8 @@ config.libs = [
             # register allocation / scheduling away.
             Object(NonMatching, "game/uiobj.c"),
             Object(Matching, "game/drawstate.c"),
-            # 28 of 33 match; FontFindGlyph, TextNodeNewN, TextNodeNew, TextPrintNumber and
-            # TextReadChar are register allocation away. Data still comes from the asm.
+            # 29 of 33 match; FontFindGlyph, TextNodeNewN, TextNodeNew and TextReadChar are
+            # register allocation away. Data still comes from the asm.
             Object(NonMatching, "game/text.c"),
         ],
     ),

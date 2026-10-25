@@ -455,7 +455,8 @@ TextNode* TextPrintNumber(s16 x, s16 y, u32 value, u16 flags) {
         first = i - 1;
     }
     buf[i] = 0;
-    if (flags & 0x8000) {
+    start = flags & 0x8000;
+    if (start != 0) {
         if (flags & 0x4000) {
             start = i - width;
             if (start < 0) {

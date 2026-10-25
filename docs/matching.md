@@ -25,6 +25,9 @@ Workflow
    - `tools/match/perm.py` tries every order of a block of declarations;
    - `tools/match/fvar.py` swaps in whole-function variants (`DIFF=` to check the callers of an
      inline you changed).
+   - `tools/match/permsetup.py SRC FN` sets up a [decomp-permuter](https://github.com/simonlindholm/decomp-permuter)
+     directory (`build/permuter/FN`); run `permuter.py build/permuter/FN -j8 --stop-on-zero`. Treat
+     what it finds as a hint: keep only changes that are reasonable C and don't change behaviour.
 4. **Place it.** Compile the object, `tools/tusplit.py <obj> --name game/foo.c` for the `splits.txt`
    entry, `tools/fixsplits.py`, then `Object(Matching, ...)` in `configure.py` and `ninja` must end
    with `main.dol: OK`. A file only links when every function in it matches (its constants and
