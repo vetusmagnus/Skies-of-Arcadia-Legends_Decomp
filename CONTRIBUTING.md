@@ -1,4 +1,4 @@
-# Skies of Arcadia Legends decomp: working notes
+# Contributing to the Skies of Arcadia Legends decomp
 
 Matching decomp of the GameCube game (GEAE8P, USA Rev 0). It's built on encounter's dtk-template.
 

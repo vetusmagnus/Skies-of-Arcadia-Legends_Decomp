@@ -4,7 +4,7 @@ Skies of Arcadia Legends links Nintendo's Dolphin SDK (Sep 5 2002 build, `0x2301
 runtime and MSL C library, MetroTRK, and Factor 5's MusyX sound system. That code has already been
 decompiled and matched by other projects, so it's reused here instead of being decompiled again.
 
-`musyx/` comes from [AxioDL/musyx](https://github.com/AxioDL/musyx) (CC0-1.0); see
+`musyx/` comes from [AxioDL/musyx](https://github.com/AxioDL/musyx) (MIT); see
 [musyx/README.md](musyx/README.md) for the commit and what was copied. Everything else in this
 directory was taken from **[mitsevox/tw2004](https://github.com/mitsevox/tw2004)**
 (CC0-1.0, commit `e90a46609ba8ec4d2e656aa1dc4d6c858d246ca3`). Tiger Woods PGA Tour 2004 links the

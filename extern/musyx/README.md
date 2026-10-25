@@ -1,7 +1,7 @@
 # MusyX
 
 Factor 5's MusyX sound system (2.0.0), as decompiled by [AxioDL/musyx](https://github.com/AxioDL/musyx)
-(CC0-1.0, commit `ec4697520f70bf1a5f361413c1b3d4292ecf7b90`, the one Metroid Prime's decomp pins).
+(MIT, commit `ec4697520f70bf1a5f361413c1b3d4292ecf7b90`, the one Metroid Prime's decomp pins).
 
 Copied: `include/`, `LICENSE` and the Dolphin runtime under `src/musyx/runtime/`. The PC backend
 (`hw_pc*`), the debugger, `txwin` and the test harness are left out, and so is `dsp_import.c`: it's
