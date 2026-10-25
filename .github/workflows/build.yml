@@ -48,12 +48,22 @@ jobs:
       - name: Build
         shell: pwsh
         run: |
-          python configure.py
-          if ($LASTEXITCODE -ne 0) { throw "configure.py failed" }
-          python -m ninja all_source progress build/GEAE8P/report.json
-          if ($LASTEXITCODE -ne 0) { throw "build failed" }
-          python -m ninja
-          if ($LASTEXITCODE -ne 0) { throw "main.dol doesn't match" }
+          $ErrorActionPreference = "Continue"
+          $log = "build_log.txt"
+          "python: $((Get-Command python -ErrorAction SilentlyContinue).Source)" | Tee-Object $log
+          python configure.py *>&1 | Tee-Object $log -Append
+          if ($LASTEXITCODE -ne 0) { throw "configure.py failed (exit $LASTEXITCODE), see build_log" }
+          python -m ninja all_source progress build/GEAE8P/report.json *>&1 | Tee-Object $log -Append
+          if ($LASTEXITCODE -ne 0) { throw "build failed (exit $LASTEXITCODE), see build_log" }
+          python -m ninja *>&1 | Tee-Object $log -Append
+          if ($LASTEXITCODE -ne 0) { throw "main.dol doesn't match, see build_log" }
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build_log
+          path: build_log.txt
 
       - name: Upload report
         uses: actions/upload-artifact@v4
