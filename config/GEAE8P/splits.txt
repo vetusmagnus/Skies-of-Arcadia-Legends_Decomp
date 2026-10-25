@@ -11,6 +11,9 @@ Sections:
 	.sdata2     type:rodata align:32
 	.sbss2      type:bss align:32
 
+game/tasks.c:
+	.text       start:0x80035918 end:0x8003DEE0
+
 musyx/runtime/CheapReverb/creverb_fx.c:
 	.text       start:0x80074D78 end:0x80074D9C
 

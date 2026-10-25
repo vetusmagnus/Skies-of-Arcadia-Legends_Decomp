@@ -333,6 +333,11 @@ config.libs = [
     GameLib(
         "game",
         [
+            # Event task handlers and resource chunk lists (0x80035918-0x8003DEE0): 230 of 235
+            # match. Left: fn_80035918, fn_80035C38, fn_8003D2E4 (string pool), fn_8003DBAC,
+            # fn_8003DCF4. The original keeps the strings in .rodata (needs -str reuse,readonly
+            # once linked), and a 4-byte gap before lbl_802DD238 may mean a file boundary.
+            Object(NonMatching, "game/tasks.c"),
             # 40 of 44 match; UiDrawNumber, UiLayoutDrawPart, UiLayoutDraw and UiSpriteDraw are
             # register allocation / scheduling away.
             Object(NonMatching, "game/uiobj.c"),
