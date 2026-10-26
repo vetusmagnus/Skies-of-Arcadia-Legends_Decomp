@@ -2,7 +2,6 @@
 #include "ninja.h"
 #include "game/sprite.h"
 #include <math.h>
-
 typedef struct Ent_UNIT0000 {
     u8 pad[0x1C];
     u32 x1c;
@@ -257,6 +256,90 @@ typedef struct {
     u8 padE6[0x108 - 0xE6];
     Sub8009564C* sub;  /* 0x108 */
 } Obj8009564C;
+typedef struct Data {
+    s16 id;
+    u8 pad2[0xA];
+    s8 xc;
+    s8 xd;
+} Data;
+typedef struct Obj {
+    u8 pad0[0x19];
+    u8 state;
+    u8 pad1a[0xA];
+    Data* d;
+} Obj;
+typedef struct Sub {
+    u8 pad0[4];
+    void* x4;
+} Sub;
+typedef struct Item {
+    u8 pad0[8];
+    Sub sub;
+} Item;
+typedef struct Res {
+    u8 pad0[0x20];
+    void* x20;
+} Res;
+typedef struct List {
+    s32 count;
+    Item* items[1];
+} List;
+typedef struct Info {
+    u8 pad0[0x14];
+    List* x14;
+    u8 pad18[8];
+    void* x20;
+} Info;
+typedef struct Data_8008F760 {
+    u8 pad0[0x17C];
+    void* x17c;
+    u8 pad180[0x48];
+    Info* x1c8;
+    u8 pad1cc[4];
+    struct Data_8008F760* x1d0;
+} Data_8008F760;
+typedef struct Other_8008F760 {
+    u8 pad0[0x24];
+    Data_8008F760* d;
+} Other_8008F760;
+typedef struct Obj_8008F760 {
+    u8 pad0[0x19];
+    u8 state;
+    u8 pad1a[0xA];
+    Data_8008F760* d;
+} Obj_8008F760;
+typedef struct Part {
+    u8 pad0[0x38];
+    NJS_POINT3 pos;     /* 0x38 */
+    Angle rot[3];       /* 0x44 */
+    u8 pad50[0x64];
+    NJS_POINT3 pos2;    /* 0xB4 */
+    Angle rot2[3];      /* 0xC0 */
+    u8 padcc[0xA0];
+    s16 x16c;
+} Part;
+typedef struct Part2 {
+    u8 pad0[0x1D8];
+    struct Part2* x1d8;
+} Part2;
+typedef struct Ref {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 pad19[0xB];
+    Part* d;
+} Ref;
+typedef struct Actor {
+    u8 pad0[0xE8];
+    u32 id;
+    Ref* ref;
+} Actor;
+extern void njTranslate(NJS_MATRIX m, f32 x, f32 y, f32 z);
+extern void njRotateZXY(NJS_MATRIX m, Angle x, Angle y, Angle z);
+extern Ref* fn_801094C8(u32 id);
+extern s32 fn_8015F1F0(void* p);
+extern void fn_801DBE1C(const char* fmt, ...);
+extern char lbl_802B0D78[];
+extern f32 lbl_802B0D6C[3];
 
 u32 fn_8008B55C(void* a0, Ent_UNIT0000* e) {
     return (e->x1c >> 9) & 1;
@@ -969,4 +1052,155 @@ void fn_8009564C(Obj8009564C* o, Obj8009564C* src) {
     o->fDC = 0.5f;
     o->e0 = 0x100;
     o->e4 = 0x78;
+}
+
+void fn_8008D4A4(Obj* o)
+{
+    extern s32 fn_8007FFE8(s32 id, s32 a);
+    extern void fn_800811E4(s32 id, s32 a);
+    extern void fn_8008178C(Data* d, s8 a, s8 b, s32 id);
+    extern void fn_800810FC(s32 id);
+    extern void fn_80081648(Data* d, s32 id);
+    extern void fn_80080438(Obj* o);
+    s32 id;
+    Data* d = o->d;
+    s32 a, b;
+    id = d->id;
+    switch (o->state) {
+    case 0:
+        if (fn_8007FFE8(id, 0)) {
+            o->state = 1;
+            if (d->xc == 1) {
+                if (d->xd == 1) {
+                    a = 1;
+                    b = 7;
+                } else {
+                    a = 7;
+                    b = 7;
+                }
+            } else {
+                if (d->xd == 1) {
+                    a = 1;
+                    b = 1;
+                } else {
+                    a = 7;
+                    b = 1;
+                }
+            }
+            fn_8008178C(d, a, b, id);
+            fn_800810FC(id);
+            o->state = 1;
+        }
+        break;
+    case 1:
+        if (fn_8007FFE8(id, 4)) {
+            fn_800811E4(id, 0);
+            fn_80081648(d, id);
+            fn_80080438(o);
+            fn_800811E4(id, 0);
+            o->state = 2;
+        }
+        break;
+    case 2:
+        if (fn_8007FFE8(id, 0)) {
+            fn_80080438(o);
+            o->state = 2;
+        }
+        break;
+    }
+}
+
+void fn_8008F760(Obj_8008F760* o)
+{
+    extern Other_8008F760* fn_801094C8(void* p);
+    extern void fn_80100B74(Obj_8008F760* o);
+    extern void fn_80227810(void* p);
+    extern void fn_802275A4(void* p, s32 a);
+    Data_8008F760* d = o->d;
+    Other_8008F760* p;
+    Data_8008F760* t;
+    Data_8008F760* n;
+    List* l;
+    s32 i;
+    switch (o->state) {
+    case 0:
+    case 0xFE:
+        p = fn_801094C8(d->x17c);
+        if (p == 0) {
+            fn_80100B74(o);
+            break;
+        }
+        if (d->x1c8->x20 != 0) fn_80227810(d->x1c8->x20);
+        l = d->x1c8->x14;
+        for (i = 0; i < l->count; i++) {
+            if (l->items[i] != 0) {
+                Sub* s = &l->items[i]->sub;
+                if (s->x4 != 0) fn_80227810(s);
+            }
+        }
+        t = p->d;
+        n = t->x1d0;
+        t->x1d0 = d;
+        d->x1d0 = n;
+        o->state = 0xA;
+        break;
+    case 0xA:
+        break;
+    case 0xFF:
+        p = fn_801094C8(d->x17c);
+        if (p != 0) {
+            for (t = p->d; t != 0; t = t->x1d0) {
+                if (t->x1d0 == d) {
+                    t->x1d0 = d->x1d0;
+                    break;
+                }
+            }
+        }
+        if (d->x1c8->x20 != 0) fn_802275A4(d->x1c8->x20, 0);
+        l = d->x1c8->x14;
+        for (i = 0; i < l->count; i++) {
+            if (l->items[i] != 0) {
+                Sub* s = &l->items[i]->sub;
+                if (s->x4 != 0) fn_802275A4(s, 0);
+            }
+        }
+        fn_80100B74(o);
+        break;
+    }
+}
+
+void fn_80094F90(NJS_POINT3* out, Actor* o)
+{
+    NJS_POINT3 tmp = *(NJS_POINT3*)lbl_802B0D6C;
+    NJS_MATRIX m;
+    Part* p;
+    if (o->ref != 0) {
+        if (o->ref->flags & 0x40) {
+            fn_801DBE1C(lbl_802B0D78, o->id);
+            o->ref = 0;
+            return;
+        }
+        if (*(u16*)((u8*)o->ref->d + 0x17A) != o->id) o->ref = fn_801094C8(o->id);
+    } else {
+        o->ref = fn_801094C8(o->id);
+    }
+    if (o->ref != 0) {
+        p = o->ref->d;
+        if (fn_8015F1F0(p)) {
+            Part2* q = ((Part2*)p)->x1d8;
+            if (q != 0 && *(Part**)((u8*)q + 8) != 0) p = *(Part**)((u8*)q + 8);
+        }
+        if (p->x16c != 0) {
+            njUnitMatrix(m);
+            njTranslate(m, p->pos.x, p->pos.y, p->pos.z);
+            njRotateZXY(m, p->rot[0], p->rot[1], p->rot[2]);
+            njTranslate(m, p->pos2.x, p->pos2.y, p->pos2.z);
+            njRotateZXY(m, p->rot2[0], p->rot2[1], p->rot2[2]);
+            njCalcPoint(m, &tmp, out);
+        } else {
+            out->x = p->pos.x;
+            out->y = p->pos.y;
+            out->z = p->pos.z;
+        }
+    }
 }

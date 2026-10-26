@@ -1,5 +1,5 @@
 #include "types.h"
-
+#include "game/drawstate.h"
 extern s16 lbl_803097F0[];
 extern u32 lbl_802B0830[];
 extern s32 lbl_80347330;
@@ -180,6 +180,128 @@ extern s16 lbl_8034734E;
 extern u8 lbl_80309300[0x400];
 extern s32 fn_80082AC0(s8 x, s8 y, u8* grid, s32 k);
 extern s32 fn_8008328C(void* a, void* b, s8 x, s8 y);
+typedef struct Src {
+    u8 pad0[0x15];
+    u8 x15;
+    u8 x16;
+    u8 pad17[3];
+    s16 x1a;
+    s16 x1c;
+    u8 pad1e[0x24 - 0x1E];
+    s32 x24;
+    f32 x28;
+    s16 x2c[6];
+    s16 x38[16];
+    s16 x58;
+    s16 x5a;
+    s16 x5c[5];
+    s16 x66[6];
+} Src;
+typedef struct Chr {
+    s16 x0;
+    s16 x2;
+    s8 x4;
+    s8 x5;
+    s8 x6;
+    u8 pad7;
+    s16 x8;
+    s16 xa;
+    s16 xc;
+    s16 xe;
+    s32 x10;
+    s32 x14;
+    s32 x18;
+    s32 x1c;
+    s16 x20[4];
+    s16 x28[6];
+    s16 x34[6];
+    s16 x40[16];
+    s16 x60[16];
+    s16 x80[5];
+    s16 x8a[5];
+    s16 x94[6];
+    s16 xa0[6];
+    s8 xac;
+    s8 xad;
+    s16 xae;
+    f32 xb0;
+    s16 xb4;
+    s16 xb6;
+    s8 xb8;
+    s8 xb9;
+    s16 xba;
+    s16 xbc[6];
+    s16 xc8[16];
+    s16 xe8[5];
+    s16 xf2[6];
+    u8 padfe[0x10A - 0xFE];
+    s16 x10a;
+    s16 x10c;
+    Src* x110;
+} Chr;
+typedef struct Ent {
+    u8 on;      /* 0x0 */
+    s8 id;      /* 0x1 */
+    u8 pad2[2];
+    s16 type;   /* 0x4 */
+    u8 pad6[2];
+    void* p;    /* 0x8 */
+    u32 w;      /* 0xC */
+} Ent;
+typedef struct List {
+    u8 count;   /* 0x0 */
+    u8 x1;
+    u8 x2;
+    u8 pad3[3];
+    u8 x6;
+    u8 x7;
+    Ent e[8];   /* 0x8 */
+} List;
+typedef struct Lim { u8 pad[0xA]; s16 xa; } Lim;
+extern s8 lbl_80346C0C;
+extern Lim* lbl_80347390;
+extern u32 lbl_802F6918[];
+typedef struct Eff {
+    u8 pad0[0xC];
+    f32 xc;
+    f32 x10;
+    u8 pad14[0x40 - 0x14];
+    s32 x40;
+    s32 x44;
+    f32 x48;
+} Eff;
+typedef struct Wk_8007E88C { u8 pad0[8]; void* x8; u8 pad[0x4C - 0xC]; Eff* eff; } Wk_8007E88C;
+typedef struct Tk_8007E88C { u8 pad[0x19]; u8 state; u8 pad1a[0x24 - 0x1A]; Wk_8007E88C* work; } Tk_8007E88C;
+typedef struct Tbl {
+    u8 pad0[8];
+    u32 flags;
+    u8 padc[0x14 - 0xC];
+    f32 x14;
+    s32 x18;
+    f32 x1c;
+} Tbl;
+extern int fn_80018B80(void*);
+extern void fn_80018C94(void);
+extern void fn_80299040(void*);
+extern void fn_800342BC(void*);
+extern int fn_80082840(s8 x, s8 y, u8 c, u8* grid, void* extra);
+typedef struct Obj24 {
+    u8 pad0[0xE];
+    u8 xe;
+    u8 pad0f[7];
+    u8 x16;
+} Obj24;
+typedef struct Obj {
+    u8 pad0[0x24];
+    Obj24* d;
+} Obj;
+typedef struct Slot_80083728 {
+    u8 pad0[0xAE];
+    s16 flags;
+} Slot_80083728;
+extern s32 fn_80083558(s32 a, s32 b);
+extern s32 fn_80083398(s32 a, s32 b);
+extern s32 fn_80082D8C(s32 a, s32 b);
 
 void fn_80075D24(Top *t) {
   Inner *i = t->mid->inner;
@@ -762,6 +884,198 @@ s32 fn_8008A738(void) {
         if (lbl_80309700[i] != 0) {
             sum = sum + lbl_80309DE4[i]->p110->s56;
         }
+    }
+    return 0;
+}
+
+void fn_800770B8(Chr* c, Src* s) {
+    s32 i;
+    c->x0 = 0;
+    c->xb8 = 0;
+    c->x2 = 0;
+    c->x4 = 0;
+    c->x5 = 1;
+    c->xb9 = 1;
+    c->x6 = 0;
+    c->x14 = s->x24;
+    c->x18 = s->x24;
+    c->xba = s->x1c;
+    c->x8 = s->x1c;
+    c->xa = 0;
+    c->xc = 0;
+    c->xe = 0;
+    i = 0;
+    do {
+        c->xbc[i] = s->x2c[i];
+        c->x28[i] = s->x2c[i];
+        c->x34[i] = 0;
+        i++;
+    } while (i < 6);
+    i = 0;
+    do {
+        c->xc8[i] = s->x38[i];
+        c->x40[i] = s->x38[i];
+        c->x60[i] = 0;
+        i++;
+    } while (i < 16);
+    i = 0;
+    do {
+        c->xe8[i] = s->x5c[i];
+        c->x80[i] = s->x5c[i];
+        c->x8a[i] = 0;
+        i++;
+    } while (i < 5);
+    i = 0;
+    do {
+        c->xf2[i] = s->x66[i];
+        c->x94[i] = s->x66[i];
+        c->xa0[i] = 0;
+        i++;
+    } while (i < 6);
+    c->xac = s->x15;
+    c->xad = s->x16;
+    c->xae = s->x1a;
+    c->xb4 = 0;
+    c->xb6 = 0;
+    c->x10 = 0;
+    c->x1c = 0;
+    c->xb0 = s->x28;
+    c->x10a = 0;
+    c->x10c = 0;
+    c->x110 = s;
+}
+
+void fn_8007C194(List* l) {
+    Ent* e;
+    s32 n = 0;
+    s16 v;
+    s32 i;
+    l->x1 = 0;
+    v = lbl_80347390->xa;
+    if (lbl_80346C0C == 2 || lbl_80346C0C == 5) {
+        l->e[0].type = 0x3D;
+        n = 1;
+        l->e[0].p = &(*(u8(*)[])&lbl_802C4BF0)[0xB70];
+        l->e[0].id = v;
+        l->e[0].w = lbl_802F6918[0xF4 / 4];
+        l->e[0].on = 1;
+    }
+    if (lbl_80346C0C == 3 || lbl_80346C0C == 5) {
+        e = &l->e[n];
+        e->type = 0x3C;
+        e->p = &(*(u8(*)[])&lbl_802C4BF0)[0xB40];
+        e->id = v;
+        e->w = lbl_802F6918[0xF0 / 4];
+        e->on = 1;
+        n++;
+    }
+    l->count = n;
+    for (i = n; i < 8; i++) {
+        l->e[i].type = -1;
+        l->e[i].p = 0;
+        l->e[i].id = -1;
+        l->e[i].on = 0;
+    }
+    l->x2 = 1;
+    l->x6 = 0;
+    l->x7 = 0;
+}
+
+void fn_8007E88C(Tk_8007E88C* t) {
+    Wk_8007E88C* w = t->work;
+    Eff* e = w->eff;
+    DrawState ds;
+    switch (t->state) {
+    case 0:
+        t->state = 1;
+        e->xc = 0.0f;
+        break;
+    default:
+        DrawStateDefault2D(&ds);
+        if ((*(Tbl*)&lbl_80309E5C).flags & 0x20000000) {
+            e->x10 += (*(Tbl*)&lbl_80309E5C).x14;
+            if (e->x10 <= -1.0f) {
+                e->x10 = -1.0f;
+            }
+        } else if ((*(Tbl*)&lbl_80309E5C).flags & 0x10000000) {
+            e->x10 += (*(Tbl*)&lbl_80309E5C).x14;
+            if (e->x10 >= 0.0f) {
+                e->x10 = 0.0f;
+                (*(Tbl*)&lbl_80309E5C).flags &= ~0x10000000;
+            }
+        } else {
+            e->x10 = 0.0f;
+        }
+        if ((*(Tbl*)&lbl_80309E5C).flags & 0x08000000) {
+            e->x40 = 1;
+            e->x44 = (*(Tbl*)&lbl_80309E5C).x18;
+            e->x48 = (*(Tbl*)&lbl_80309E5C).x1c;
+        } else {
+            e->x40 = 0;
+        }
+        if (fn_80018B80(&e->x10)) {
+            fn_80299040(w->x8);
+            if (e->x10 > -1.0f) {
+                fn_800342BC(w);
+            }
+            fn_80018C94();
+        }
+        break;
+    }
+}
+
+void fn_80082948(s8 x, s8 y, u8* grid, void* extra) {
+    u8 c = *(grid + y * 11 + x);
+    s8 m = 0;
+    if (!fn_80082840(x - 1, y, c, grid, extra)) {
+        m = 4;
+    }
+    if (!fn_80082840(x, y - 1, c, grid, extra)) {
+        m += 1;
+    }
+    if (!fn_80082840(x, y + 1, c, grid, extra)) {
+        m += 2;
+    }
+    if (!fn_80082840(x + 1, y, c, grid, extra)) {
+        m += 8;
+    }
+    if (!(m & 5)) {
+        fn_80082840(x - 1, y - 1, c, grid, extra);
+    }
+    if (!(m & 6)) {
+        fn_80082840(x - 1, y + 1, c, grid, extra);
+    }
+    if (!(m & 9)) {
+        fn_80082840(x + 1, y - 1, c, grid, extra);
+    }
+    if (!(m & 0xA)) {
+        fn_80082840(x + 1, y + 1, c, grid, extra);
+    }
+}
+
+s32 fn_80083728(s32 a, s32 b)
+{
+    Obj24* d = (*(Obj*(*)[12])&lbl_80309700)[a]->d;
+    d->x16 = 0;
+    if (!fn_80078610(b)) return 0;
+    if (fn_80083558(a, b)) {
+        d->x16 = 1;
+        return 1;
+    }
+    if (!fn_80083398(a, b)) return 0;
+    if (!((*(Slot_80083728*(*)[12])&lbl_80309DE4)[a]->flags & 1)) return 0;
+    if (fn_80083558(a, b)) {
+        d->x16 = 2;
+        return 2;
+    }
+    if (fn_80082D8C(a, b)) {
+        d->x16 = 4;
+        return 4;
+    }
+    d->xe = 0;
+    if (fn_80082D8C(a, b)) {
+        d->x16 = 4;
+        return 4;
     }
     return 0;
 }

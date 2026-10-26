@@ -1,7 +1,7 @@
 Progress and handoff
 ====================
 
-State of the game-code work as of 2026-10-26 (after batch 7). Numbers live in the README status block and on
+State of the game-code work as of 2026-10-26 (after batch 8). Numbers live in the README status block and on
 [ByteMatch](https://bytematch.dev/vetusmagnus/SoAL-Decomp); this page covers what's in flight.
 
 Game files
@@ -285,6 +285,67 @@ float-taking prototype with the colour argument last fixed a caller's scheduling
 Next batch: start at 0x14C bytes in 0x80050000-0x801C0000 (about 1,230 candidates left), then 0x58 bytes and up
 outside it. `docs/duplicates.txt` was not regenerated: `dupes.py` reads the dtk asm, which no longer lists the
 functions that sit in unit files, so run it from a checkout where those are still in the auto asm.
+
+Sonnet batch 8 (332-448 byte functions)
+---------------------------------------
+
+16 Sonnet agents, 20 functions each, one representative per duplicate group: the 320 smallest unmatched
+functions of 0x14C bytes and up in 0x80050000-0x801C0000 (0x14C-0x1C0; 1,326 candidates, about 1,000 remain;
+`docs/duplicates.txt` is stale, so a few groups may have been counted twice). 204 passed fdiff and the float
+check in isolation; 135 are in the unit files now (a script added them one at a time, keeping only functions
+that compile and still match; no merge agents). All 1,356 functions in the unit files pass fdiff over the whole
+file and a float-constant check (`build/agents/floatcheck.py` compares every `lfs`/`lfd` pool value with the
+original's `.sdata2`; gitignored like the other agent scripts). New units: `unit_800506B0.c`
+(0x800506B0-0x800540DC, the gap after `effect.c`) and `unit_801BEB10.c` (0x801BEB10-0x801C09A4). Both are guesses.
+
+Matched in isolation but not merged (69; the unit already declares a global or prototype with another type, and
+a cast at the use changes the code): fn_800553FC, fn_8006B46C, fn_8006E924, fn_80078478, fn_8007DFC0, fn_8007E9E0,
+fn_80080278, fn_800804B8, fn_800811E4, fn_80085414, fn_80085ADC, fn_80097B0C, fn_800C2D18, fn_800C5D78,
+fn_800D0CC8, fn_800F1264, fn_8010850C, fn_8010CF78, fn_8010D12C, fn_8010E270, fn_80111C38, fn_80113934,
+fn_8011605C, fn_80118204, fn_80122D5C, fn_8012B054, fn_8012B308, fn_80133478, fn_80144CE4, fn_80147EAC,
+fn_80150DAC, fn_80153A44, fn_801577CC, fn_80158708, fn_8015A888, fn_8015E174, fn_80168A04, fn_80169360,
+fn_8016C4C8, fn_8016C61C, fn_8016E3E0, fn_80170C64, fn_80177D7C, fn_8017A510 (needs `goto`), fn_8017A754,
+fn_8017A8A8, fn_801841DC, fn_80197838-fn_801999B4 (14 camp-menu creators, each declares
+`camp_work` with its own struct), fn_801A0E7C, fn_801A5274, fn_801A5D08, fn_801A6344, fn_801A66AC, fn_801AC2E4,
+fn_801B6950, fn_801B9810. The agents' files are in `build/agents/b9_*/` on the machine that ran the batch.
+Merging these needs one `camp_work`/`lbl_80307638` struct that covers every function's fields.
+
+Left out on purpose: fn_80148EDC and fn_8008F2CC (the original has the recursion expanded 8 deep; it only came out
+with an unreferenced `inline` plus a stand-in caller in the file, so they wait for their real callers) and
+fn_800C24CC (string offsets only; it needs the file's string pool).
+
+Near misses (agents' diff lines): fn_80064E38 (19), fn_80065498 (20), fn_80067CA4 (2, scheduling), fn_80067E8C (50),
+fn_80068190 (2 plus string offsets), fn_80069E4C (12), fn_8006AE20 (18), fn_8006C5B4 (24), fn_8006C710 (50),
+fn_80072190 (50), fn_80075DAC (20), fn_80083398 (126), fn_80083878 (119), fn_800855AC (29), fn_8008571C (16),
+fn_80088CE8 (21), fn_8008A280 (8), fn_8008F5E0 (25), fn_8009076C (4), fn_80091B4C (9), fn_80094800/949BC (8),
+fn_8009578C (22), fn_8009CFD8 (2), fn_8009D400 (4), fn_800B2800 (9), fn_800B29AC (14, `neg/or/srwi` flag),
+fn_800B2C1C (47), fn_800B444C (27), fn_800B4EEC (80), fn_800BE54C (12), fn_800BF800 (22), fn_800C0368 (88),
+fn_800C3F80 (6), fn_800D07F8 (8), fn_800D0E78 (16), fn_800D2CC4 (30), fn_800D3668 (59), fn_800D701C (5),
+fn_800DB9E4 (8), fn_800DDE98 (`psq_l` casts), fn_800DF5C0 (4), fn_800E0634 (44), fn_800E1634 (6), fn_800EB754 (46),
+fn_800F0860 (7), fn_800F13F0 (5), fn_800FF7A0 (18), fn_80107D90 (48), fn_8010C404 (80), fn_8010E41C (30),
+fn_8010EB88 (35), fn_8010F924 (26), fn_801195E4 (2), fn_8011B298 (39), fn_8012048C (28), fn_8012239C (4),
+fn_801228A0 (42), fn_80123074 (30), fn_801248C4 (186), fn_80125A08 (57), fn_8012F958 (23), fn_801300E0 (76),
+fn_80133750 (a float literal one step off), fn_80134754 (164), fn_80134D1C (6), fn_80137414 (12), fn_80138930 (3),
+fn_8013FB48 (30), fn_80147600 (16), fn_801523A4 (96), fn_801541D8 (6), fn_80154CC4 (162), fn_80155B78 (5),
+fn_801560FC (49), fn_80156768 (40), fn_80157360 (20), fn_8015CFA0 (75, dead stack stores), fn_8015E470 (78),
+fn_801607A0 (6), fn_80166BA8 (71), fn_80166EC4 (49), fn_80167034 (41), fn_801705B8 (10), fn_801719D0 (31),
+fn_801729D0 (18), fn_80178BC8 (38), fn_8017AFA0 (4), fn_8017C510 (60), fn_8017F840 (34), fn_80185864 (12),
+fn_80186A60 (25), fn_8018E3D0 (86), fn_8018E588 (12), fn_80194548 (90, r7/r8 swapped in an unrolled search),
+fn_801974B4 (8), fn_8019A21C (65, `neg/or/srwi`), fn_8019AA18 (8), fn_801A20AC (2), fn_801A2500 (5),
+fn_801A4070 (45), fn_801A41EC (104, unroll by 7), fn_801ABD40 (does not compile with the unit's headers),
+fn_801AFBE8 (56), fn_801B02F4 (39), fn_801B057C (78), fn_801B06CC (82), fn_801B571C (2), fn_801B60E8 (20),
+fn_801BE17C (5), fn_801BE2F0 (28), fn_801BE468 (90), fn_800C6E68 (not reported).
+
+Lessons: a dead `case 0xFE:` (or `case 5:`) in a state `switch` reproduces the original's extra `bge`/compare
+tree; `if (0 > v) v = -v;` gives the branchy abs while `if (v < 0)` gives the branchless one; `x += 1.0f` and
+`x = x + 1.0f` order the `fadds` operands differently; `dist = f(); dist *= 0.5f;` matches where `f() * 0.5f` does
+not; a hidden extra argument (a value already sitting in a register) is often the cause of an odd register choice;
+a pointer index written `((T**)&base[K])[i]` stops MWCC folding `(i+K)*4` into the displacement; `do { } while`
+stops a constant-range `for` from unrolling.
+
+Next batch: start at 0x1C0 bytes in 0x80050000-0x801C0000 (about 1,000 candidates left), then 0x58 bytes and up
+outside it. Merging is the bottleneck now: before the next batch, give the camp-menu code one shared `camp_work`
+struct in `unit_80193F28.c` / `unit_8015DC6C.c` so its functions can be added without a per-function type.
 
 Good next targets
 -----------------

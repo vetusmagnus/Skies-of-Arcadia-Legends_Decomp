@@ -1,7 +1,5 @@
 #include "types.h"
-
 #define PTR(p, off) (*(void**)((u8*)(p) + (off)))
-
 extern void* fn_80005B9C(void* heap);
 extern void* memset(void* dst, s32 c, u32 n);
 extern void fn_800090F8(s32 packed, s16* p);
@@ -71,6 +69,29 @@ extern void fn_8006C860(const char* s, void* p);
 typedef struct Wk_8001D1D8 { u8 pad[0x1C]; } Wk_8001D1D8;
 typedef struct Tk_8001D1D8 { u8 pad[0x24]; Wk_8001D1D8* work; } Tk_8001D1D8;
 typedef struct Ent_80020060 { s16 x0; s16 x2; u8 pad[0x14]; } Ent_80020060;
+typedef struct E0D8Anim {
+    u16 cur;
+    u16 end;
+    s16 sub;
+    u8 pad6[2];
+    u32 val;
+    u8 mat[0x14];
+    void *p20;
+    u8 pad24[8];
+    void *p2c;
+} E0D8Anim;
+typedef struct E0D8Obj {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 state;
+    u8 pad1A[10];
+    struct { void *p0; u8 pad4[0x48]; E0D8Anim *anim; } *inner;
+} E0D8Obj;
+extern void fn_80230634(void *, void *);
+extern void fn_80230280(void *, void *);
+extern s32 fn_800179E4(s16);
+extern void fn_8000B320(f32, void *, void *);
+extern void fn_801E17E0(void *);
 
 void* fn_80005B50(void* heap, u32 size) {
     void* p = fn_80005B9C(heap);
@@ -353,4 +374,45 @@ s32 fn_80020060(Ent_80020060* p) {
         i++;
     }
     return -1;
+}
+
+void fn_8000E0D8(E0D8Obj *obj) {
+    E0D8Anim *a;
+    void *p;
+    p = obj->inner->p0;
+    a = obj->inner->anim;
+    if (p == 0) {
+        obj->state = 3;
+    }
+    switch (obj->state) {
+    case 0:
+        if (a->cur >= a->end) {
+            obj->state = 1;
+            a->val = *(u32 *)((u8 *)p + 4);
+        } else {
+            a->cur = a->cur + 1;
+        }
+        break;
+    case 1:
+        fn_80230634(p, a->mat);
+        fn_80230280(p, a->mat);
+        obj->state = 2;
+        break;
+    case 2:
+        if (a->sub >= 0 && fn_800179E4(a->sub) == 0) {
+            obj->state = 3;
+        }
+        fn_8000B320((f32)a->cur, p, a->mat);
+        a->cur += 1.0f;
+        break;
+    case 3:
+        if (a->p20 != 0) {
+            fn_801E17E0(a->p20);
+        }
+        if (a->p2c != 0) {
+            fn_801E17E0(a->p2c);
+        }
+        obj->flags |= 0x40;
+        break;
+    }
 }

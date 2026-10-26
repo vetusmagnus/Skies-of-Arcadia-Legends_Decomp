@@ -1,5 +1,4 @@
 #include "types.h"
-
 extern void fn_801DBE1C(const char *fmt, ...);
 extern u8 lbl_8030B7F4[];
 extern void fn_801F2860(s16 v);
@@ -138,6 +137,15 @@ extern void fn_80186D2C(void*);
 extern void fn_8018E82C(void);
 extern void fn_8018E81C(void*, s32, s32);
 extern void fn_80191D78(void*);
+typedef struct {
+    u8 x0;
+    u8 x1;
+    u8 pad2[2];
+    s32 x4;
+    s32 x8;
+    u32 xc;
+    s32 x10, x14, x18, x1c, x20, x24, x28;
+} Ent2c;
 
 int fn_80193F28(void) {
     fn_801DBE1C("Nothing VM Tanken.");
@@ -858,4 +866,35 @@ void fn_801998B8(void) {
     b->x49 = 0;
     camp_work.n_20 = n;
     n->body->x4 = 4;
+}
+
+void fn_80195B38(s8 idx, s32 id, u8 flag)
+{
+    extern Ent2c lbl_803072E8[];
+    extern u8 fn_801F4C24(s16 id);
+    extern s32 fn_801F4AE4(s16 id);
+    extern s32 fn_801F3FD0(s32 j, s16 id);
+    extern s16 fn_801EE344(s16 id, s32 k);
+    u32 *m;
+    Ent2c *e = &lbl_803072E8[idx];
+    s32 j;
+
+    e->x0 = flag;
+    lbl_803072E8[idx].x1 = fn_801F4C24(id);
+    lbl_803072E8[idx].x4 = id;
+    lbl_803072E8[idx].x8 = fn_801F4AE4(id);
+    lbl_803072E8[idx].xc = 0;
+    m = &e->xc;
+    for (j = 0; j < 6; j++) {
+        if (fn_801F3FD0(j, id)) {
+            *m |= 1 << j;
+        }
+    }
+    lbl_803072E8[idx].x10 = fn_801EE344(id, 0x10);
+    lbl_803072E8[idx].x14 = fn_801EE344(id, 0x11);
+    lbl_803072E8[idx].x18 = fn_801EE344(id, 1);
+    lbl_803072E8[idx].x1c = fn_801EE344(id, 0x12);
+    lbl_803072E8[idx].x20 = fn_801EE344(id, 0x13);
+    lbl_803072E8[idx].x24 = fn_801EE344(id, 0x14);
+    lbl_803072E8[idx].x28 = fn_801EE344(id, 4);
 }

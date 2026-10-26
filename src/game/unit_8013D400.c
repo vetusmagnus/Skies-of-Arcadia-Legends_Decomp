@@ -1,5 +1,4 @@
 #include "types.h"
-
 extern void fn_80136A28(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f);
 extern void fn_8013DA50(s32 a, s32 b);
 typedef struct { u8 pad0[1]; s8 kind; } KindObj;
@@ -164,6 +163,77 @@ typedef struct Owner {
     s32 x18;
 } Owner;
 extern void fn_8014EE4C(Owner *o, s32 a, s32 b, s32 c, s32 d);
+typedef struct {
+    u8 x0, x1, x2, x3;
+    u8 x4, x5, x6, x7;
+    s16 x8;
+    s16 xa;
+    u8 pad_c[4];
+} Slot_8014359C;
+typedef struct {
+    u8 x0, x1, x2, x3;
+    u8 pad4;
+    s8 x5;
+    s16 x6;
+    u8 pad8;
+    u8 x9;
+    u8 padA[2];
+    s16 xc;
+    u8 padE[6];
+    s16 x14;
+} In;
+typedef struct {
+    u8 pad[0x2C];
+    s16 mode;
+    u8 pad2E[0x3E - 0x2E];
+} Ent_8014359C;
+typedef struct {
+    u8 pad[0x134];
+    Slot_8014359C slots[1];
+} Sys_8014359C;
+typedef struct {
+    u8 pad[0x3C];
+    f32 f3c;
+    f32 f40;
+} Cfg;
+extern Cfg* lbl_803472A4;
+extern s32 fn_80145E0C(Slot_8014359C* s, s32 a);
+extern void fn_80145F50(Slot_8014359C* s, s32 a);
+typedef struct {
+    u8 pad[0x24];
+    struct { u8 pad[0x23C]; void* x23c; } * x24;
+} Obj1E8;
+typedef struct {
+    s32 kind;
+    u8 pad4[0x38];
+    void* x3c;
+} Cfg_8014D1F4;
+typedef struct {
+    u8 pad[0x10];
+    Cfg_8014D1F4* x10;
+} Link_8014D1F4;
+typedef struct {
+    u8 pad00[0x100];
+    void* x100;
+    u8 pad104[0x17A - 0x104];
+    u16 id;
+    u8 pad17c[0x1C8 - 0x17C];
+    Link_8014D1F4* x1c8;
+    u8 pad1cc[0x1E8 - 0x1CC];
+    Obj1E8* x1e8;
+    u8 pad1ec[0x23C - 0x1EC];
+    struct {
+        s32 x0;
+        struct { u8 pad[0x1D4]; } * x4;
+        s32 x8;
+    } * x23c;
+} Work_8014D1F4;
+typedef struct {
+    u8 pad00[0x19];
+    u8 state;
+    u8 pad1a[0x24 - 0x1A];
+    Work_8014D1F4* work;
+} Task_8014D1F4;
 
 void fn_8013D400(s32 a, s32 b) {
     fn_80136A28(a, b, 3, -1, -1, -1);
@@ -719,5 +789,110 @@ void fn_8014ED5C(Owner *o, f32 v) {
         if (o->x8 >= 0) {
             fn_8014EE4C(o, o->x8, 1, 1, 10);
         }
+    }
+}
+
+void fn_8014359C(In* in, s32 a, s32 b)
+{
+    Slot_8014359C* d = (Slot_8014359C*)((u8*)(*(Ent_8014359C**)&lbl_8034727C) + 0x134 + a * 0x90 + b * 0x10);
+    s32 mode;
+    d->x0 = in->x0;
+    d->x1 = in->x1;
+    d->x2 = in->x2;
+    d->x3 = in->x3;
+    d->x4 = in->x5;
+    d->x5 = in->x6;
+    d->x6 = in->x9;
+    d->x8 = in->xc;
+    d->xa = in->x14;
+    if ((*(Ent_8014359C**)&lbl_8034727C)[b].mode == 2)
+        mode = (s32)lbl_803472A4->f3c;
+    else
+        mode = (s32)lbl_803472A4->f40;
+    switch (in->x5) {
+    case 1:
+        if (mode & 1) {
+            d->x7 = 4;
+        } else if (fn_80145E0C(d, a) != 0) {
+            fn_80145F50(d, a);
+        }
+        break;
+    case 0:
+        if (mode & 2) {
+            d->x7 = 4;
+        } else if (fn_80145E0C(d, a) != 0) {
+            fn_80145F50(d, a);
+        }
+        break;
+    case 2:
+        if (fn_80145E0C(d, a) != 0)
+            fn_80145F50(d, a);
+        break;
+    case 3:
+    default:
+        d->x7 = 1;
+        break;
+    }
+}
+
+void fn_8014D1F4(Task_8014D1F4* t)
+{
+    extern char lbl_802B39DC[];
+    extern void fn_80227810(void*);
+    extern void fn_8015ED90(Task_8014D1F4*);
+    extern Obj1E8* fn_8010A164(void*);
+    extern void fn_801DBE1C(const char*, ...);
+    extern void* fn_801E1A74(s32, s32);
+    extern void* memset(void*, int, u32);
+    extern void fn_801E735C(s32, Work_8014D1F4*, f32);
+    extern void fn_80156B04(void*, Work_8014D1F4*, s32, s32, void*);
+    extern s32 fn_8015E600(Work_8014D1F4*);
+    extern void fn_80156DA0(Work_8014D1F4*, void*);
+    extern void fn_801E17E0(void*);
+    extern void fn_8015EBF4(Work_8014D1F4*);
+    extern void fn_802275A4(void*, s32);
+    extern void fn_80100B74(Task_8014D1F4*);
+    Work_8014D1F4* w = t->work;
+    u8 buf[0x3C];
+
+    switch (t->state) {
+    case 0:
+    case 0xFE:
+        fn_80227810(w->x100);
+        fn_8015ED90(t);
+        t->state = 1;
+        break;
+    case 1: {
+        Cfg_8014D1F4* c = w->x1c8->x10;
+        s32* p;
+        Obj1E8* o = fn_8010A164(c->kind > 0xE ? c->x3c : NULL);
+        w->x1e8 = o;
+        if (o == NULL) {
+            fn_801DBE1C(lbl_802B39DC, w->id);
+        }
+        t->state = 2;
+        p = fn_801E1A74(1, 0xC);
+        w->x23c = (void*)p;
+        memset(p, 0, 0xC);
+        p[1] = (s32)w->x1e8->x24->x23c;
+        if (w->x1c8->x10->kind >= 0xF) {
+            p[0] = 1;
+            fn_801E735C(0, w, 1.0f);
+        }
+    }
+    case 2:
+        fn_80156B04((u8*)w->x23c->x4 + 0x1D4, w, 0, 0, buf);
+        if (fn_8015E600((Work_8014D1F4*)t->work) == 0) {
+            fn_80156DA0(w, buf);
+        }
+        break;
+    case 0xFF:
+        fn_801E17E0(w->x23c);
+        fn_8015EBF4((Work_8014D1F4*)t->work);
+        if (w->x100 != NULL) {
+            fn_802275A4(w->x100, 0);
+        }
+        fn_80100B74(t);
+        break;
     }
 }

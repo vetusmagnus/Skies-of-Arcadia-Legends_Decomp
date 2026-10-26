@@ -9,7 +9,6 @@
 #undef TextPrint
 extern void TextPrint(s32 x, s32 y, const char *str);
 #include "game/menu.h"
-
 extern u8 lbl_8030741C[];
 extern u32 lbl_80347180;
 extern u8 lbl_8034717C[2];
@@ -871,6 +870,238 @@ typedef struct {
         }* in;
     }* o;
 } TaskSel;
+typedef struct {
+    u8 pad0[0x20];
+    s32 *a0;
+    f32 *f0;
+    u8 pad28[4];
+    s32 *a1;
+    f32 *f1;
+    u8 pad34[4];
+    s32 *a2;
+    f32 *f2;
+} PosTabs;
+typedef struct Sub_8019B44C {
+    s32 mode;
+    u8 pad4[4];
+    void *w8;
+} Sub_8019B44C;
+typedef struct Ctx_8019B44C {
+    s32 w0;
+    u8 pad4[4];
+    u8 ui[0xb4];
+    Sub_8019B44C *pbc;
+} Ctx_8019B44C;
+typedef struct Self_8019B44C {
+    u8 pad0[0x18];
+    u8 flags18;
+    u8 state19;
+    u8 pad1a[0xa];
+    Ctx_8019B44C *ctx;
+} Self_8019B44C;
+typedef struct P2 {
+    void *p0;
+    void *p4;
+} P2;
+typedef struct F4 {
+    f32 f0, f4, f8, fc;
+} F4;
+typedef struct Obj48 {
+    f32 f00, f04;
+    s32 i08;
+    s32 i0c;
+    f32 f10, f14, f18, f1c;
+    P2 *p20;
+    F4 *p24;
+    u8 pad28[4];
+    P2 *p2c;
+    F4 *p30;
+    u8 pad34[0x10];
+    void *p44;
+} Obj48;
+typedef struct Holder_8019E96C {
+    u8 pad0[0x28];
+    UiObj *ui;
+} Holder_8019E96C;
+typedef struct Ctx_8019E96C {
+    u8 pad0[4];
+    u8 b4;
+    u8 pad5[3];
+    u8 b8;
+    u8 pad9[0x217];
+    Holder_8019E96C *p220;
+    Holder_8019E96C *p224;
+    u8 pad228[0x34];
+    s32 w25c[1];
+} Ctx_8019E96C;
+typedef struct Self_8019E96C {
+    u8 pad0[0x19];
+    u8 state19;
+    u8 pad1a[0xa];
+    Ctx_8019E96C *ctx;
+} Self_8019E96C;
+extern s32 fn_801A28AC(s32 obj);
+typedef struct Holder_8019EE4C {
+    u8 pad0[0x28];
+    UiObj *ui;
+} Holder_8019EE4C;
+typedef struct Ctx_8019EE4C {
+    u8 pad0[4];
+    u8 b4;
+    u8 pad5[4];
+    u8 b9;
+    u8 pad9[2];
+    s32 wc;
+    u8 pad10[8];
+    f32 f18;
+    u8 pad1c[0x1f4];
+    Holder_8019EE4C *p210;
+    u8 pad214[0x44];
+    s32 w258;
+    s32 w25c[8];
+} Ctx_8019EE4C;
+typedef struct Self_8019EE4C {
+    u8 pad0[0x19];
+    u8 state19;
+    u8 pad1a[0xa];
+    Ctx_8019EE4C *ctx;
+} Self_8019EE4C;
+typedef struct Holder_8019F730 {
+    u8 pad0[0x28];
+    UiObj *ui;
+} Holder_8019F730;
+typedef struct Ctx_8019F730 {
+    u8 pad0[1];
+    u8 b1;
+    u8 pad2[7];
+    u8 b9;
+    u8 pad9[0x206];
+    Holder_8019F730 *p210;
+    u8 pad214[0xc];
+    Holder_8019F730 *p220;
+    Holder_8019F730 *p224;
+    u8 pad228[0x30];
+    void *p258;
+} Ctx_8019F730;
+typedef struct Self_8019F730 {
+    u8 pad0[0x19];
+    u8 state19;
+    u8 pad1a[0xa];
+    Ctx_8019F730 *ctx;
+} Self_8019F730;
+extern s32 lbl_803475D0;
+extern s32 lbl_803475E0;
+extern s32 fn_801A4070(void *o);
+extern void fn_801A4060(void *o);
+extern void fn_801A41C0(void *o);
+typedef struct Holder_801A0214 {
+    u8 pad0[0x28];
+    UiObj *ui;
+} Holder_801A0214;
+typedef struct Ctx_801A0214 {
+    u8 pad0[4];
+    u8 b4;
+    u8 pad5[4];
+    u8 b9;
+    u8 pad9[0xe];
+    f32 f18;
+    u8 pad1c[0x1f0];
+    Holder_801A0214 *h[20];
+    s32 w25c[8];
+} Ctx_801A0214;
+typedef struct Self_801A0214 {
+    u8 pad0[0x19];
+    u8 state19;
+    u8 pad1a[0xa];
+    Ctx_801A0214 *ctx;
+} Self_801A0214;
+typedef struct Panel_801A54AC {
+    UiObj ui;
+    const char *label;
+    u8 pad50[4];
+    u16 slot;
+} Panel_801A54AC;
+typedef struct Ctx_801A54AC {
+    u8 pad0[7];
+    u8 b7;
+    u8 pad8[0x10];
+    f32 f18;
+} Ctx_801A54AC;
+typedef struct Parent_801A54AC {
+    u8 pad0[0x24];
+    Ctx_801A54AC *ctx;
+} Parent_801A54AC;
+typedef struct Task_801A54AC {
+    u8 pad0[8];
+    Parent_801A54AC *parent;
+    u8 pad0c[0xc];
+    u8 flags;
+    u8 state;
+    u8 pad1a[0xa];
+    u8 *flag;
+    Panel_801A54AC *pan;
+} Task_801A54AC;
+extern LayoutPart lbl_802B4B9C[6];
+s32 UiLayoutDraw(NJS_TEXLIST **texlists, LayoutPart *parts, u32 count, f32 *pos, f32 z, f32 a, f32 b);
+extern void fn_801A5600(void *t);
+#define TextPrintNumber TextPrintNumber_hdr
+#undef TextPrintNumber
+typedef struct Holder_801A6A88 {
+    u8 pad0[0x28];
+    UiObj *ui;
+} Holder_801A6A88;
+typedef struct Ctx_801A6A88 {
+    u8 pad0[4];
+    s16 h4;
+    u8 pad6[0x1f2];
+    Holder_801A6A88 *h[8];
+} Ctx_801A6A88;
+typedef struct Task_801A6A88 {
+    u8 pad0[0x24];
+    Ctx_801A6A88 *ctx;
+} Task_801A6A88;
+typedef struct Row_801AB580 {
+    u8 pad0[8];
+    s16 e[0x30];
+} Row_801AB580;
+typedef struct Out_801AB580 {
+    s8 flag;
+    s8 type;
+    s16 id;
+    u8 pad4[2];
+} Out_801AB580;
+typedef struct Buf_801AB580 {
+    u8 pad0[4];
+    s16 pages;
+    s16 count;
+    Out_801AB580 out[0x30];
+} Buf_801AB580;
+typedef struct Self_801AB580 {
+    u8 pad0[0x2c];
+    Buf_801AB580 *buf;
+} Self_801AB580;
+typedef struct Game_801AB580 {
+    u8 pad0[0x34c];
+    s32 w34c;
+} Game_801AB580;
+extern u8 fn_801F4C24(s16 id);
+extern u16 fn_801F477C(s16 id);
+extern s8 fn_801F452C(s16 id);
+typedef struct Game_801AB82C {
+    u8 pad0[0x34c];
+    u32 w34c;
+} Game_801AB82C;
+#define MenuDummy MenuDummy_hdr
+#undef MenuDummy
+typedef struct { UiObj o; const char* text; u16 h50, h52, h54, h56; } MObj;
+typedef struct { u8 pad[0x28]; MObj* obj; } MP;
+typedef struct { u8 pad[0x28]; MObj* obj; MObj* obj2; } MP2;
+typedef struct { void* parts; u32 count; } LT;
+typedef struct { u8 pad[0x10]; u32 v; } W;
+void fn_801B277C(Task* t);
+typedef struct { u8 b0; u8 pad1[3]; s16 h4; u8 pad6[2]; s32 w8; s32 wc; s32 w10; } W_801B54D4;
+typedef struct { u8 pad[0x24]; W_801B54D4* w; MObj* obj; MObj* obj2; u8 pad30[0xC]; void* p3c; } T_801B54D4;
+typedef struct { f32 a, b; } FP;
 
 void fn_80199B9C(void* p, f32 v) {
     *(f32*)((u8*)p + 0x34) = v;
@@ -2410,4 +2641,671 @@ s32 fn_801B93E8(TaskSel* t) {
         break;
     }
     return r;
+}
+
+s32 fn_80199FFC(PosTabs *t, s8 idx, s32 val, s16 x, s16 y, s8 kind)
+{
+    switch (kind) {
+    case 0:
+        t->a0[idx] = val;
+        t->f0[idx * 2] = x;
+        t->f0[idx * 2 + 1] = y;
+        break;
+    case 1:
+        t->a1[idx] = val;
+        t->f1[idx * 2] = x;
+        t->f1[idx * 2 + 1] = y;
+        break;
+    case 2:
+        t->a2[idx] = val;
+        t->f2[idx * 2] = x;
+        t->f2[idx * 2 + 1] = y;
+        break;
+    }
+    return val;
+}
+
+void fn_8019B44C(Self_8019B44C *self) {
+    extern void fn_80199F38(void *ui);
+    extern void UiObjCalcRect(void *ui);
+    extern void CampPanelDrawFrame(void);
+    extern void fn_8019BB54(Ctx_8019B44C *c);
+    extern void fn_8019B980(Ctx_8019B44C *c);
+    extern void fn_8019B59C(Ctx_8019B44C *c);
+    extern void fn_801E17E0(void *p);
+    extern void fn_80199F58(Ctx_8019B44C *c);
+    Ctx_8019B44C *ctx = self->ctx;
+    void *ui = ctx->ui;
+    Sub_8019B44C *sub = ctx->pbc;
+
+    if (lbl_803475D8 != 0) {
+        self->state19 = 0xff;
+    }
+    switch (self->state19) {
+    case 0xfe:
+    case 0:
+        self->state19 = 1;
+        sub->w8 = 0;
+    case 1:
+        fn_80199F38(ui);
+        UiObjCalcRect(ui);
+        if (self->ctx->w0 == 1) {
+            CampPanelDrawFrame();
+            switch (sub->mode) {
+            case 0:
+                fn_8019BB54(self->ctx);
+                break;
+            case 1:
+                fn_8019B980(self->ctx);
+                break;
+            case 2:
+                fn_8019B59C(self->ctx);
+                break;
+            }
+        }
+        break;
+    case 100:
+        self->state19 = 0xff;
+        break;
+    case 0xff:
+        if (sub->w8 != 0) {
+            fn_801E17E0(sub->w8);
+            sub->w8 = 0;
+        }
+        fn_80199F58(self->ctx);
+        self->flags18 |= 0x40;
+        break;
+    }
+}
+
+void fn_8019BD2C(Obj48 *o, s32 mode) {
+    extern void *lbl_803470F0, *lbl_803470E8, *lbl_803470F4;
+    extern void *fn_801D68C4(void *a, u32 n);
+    extern void fn_8019A15C(void *p, s32 a, s32 b, s32 c);
+    extern void fn_80199FFC(void *p, s32 a, void *b, s32 c, s32 d, s32 e);
+    o->f00 = -4000.0f;
+    o->f04 = 0.0f;
+    o->f10 = 1.0f;
+    o->f14 = 0.0f;
+    o->f18 = 1.0f;
+    o->f1c = 0.0f;
+    o->i08 = 0;
+    o->i0c = 0;
+    switch (mode) {
+    case 0:
+    case 1:
+        fn_8019A15C(o, 1, 1, 1);
+        fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F4, 0x4e), 0, 0, 2);
+        o->p20->p0 = fn_801D68C4(lbl_803470F0, 0x68);
+        o->p24->f0 = 0.0f;
+        o->p24->f4 = 0.0f;
+        o->p2c->p0 = fn_801D68C4(lbl_803470E8, 0xb);
+        o->p30->f0 = 0.0f;
+        o->p30->f4 = 0.0f;
+        o->p44 = fn_801D68C4(lbl_803470F0, 0x6a);
+        break;
+    case 2:
+        fn_8019A15C(o, 2, 0, 1);
+        o->p20->p0 = fn_801D68C4(lbl_803470F0, 0x20);
+        o->p24->f0 = 0.0f;
+        o->p24->f4 = 2.0f;
+        o->p20->p4 = fn_801D68C4(lbl_803470F0, 0x1f);
+        o->p24->f8 = 0.0f;
+        o->p24->fc = 330.0f;
+        o->p2c->p0 = fn_801D68C4(lbl_803470E8, 0xc);
+        o->p30->f0 = 0.0f;
+        o->p30->f4 = 0.0f;
+        o->p44 = fn_801D68C4(lbl_803470F0, 0x6b);
+        break;
+    }
+}
+
+void fn_8019E96C(Self_8019E96C *self) {
+    s32 r = fn_801A28AC(self->ctx->b4);
+    if (r == 1) {
+        self->ctx->w25c[self->ctx->b4] = r;
+        UiObjMoveToX(self->ctx->p220->ui, 6, 5, -240.0f);
+        UiObjSetCommand(self->ctx->p220->ui, 0x1a, 2);
+        UiObjMoveToX(self->ctx->p224->ui, 6, 5, -240.0f);
+        UiObjSetCommand(self->ctx->p224->ui, 0x1a, 0);
+        MenuPlaySe(3);
+        fn_801A64B4(self, 4);
+        self->state19 = 0x17;
+    } else if (fn_801A6554(self) == 0 || (*(u32 *)(lbl_80311A60[0] + 8) & 0x100) != 0) {
+        u32 cmd;
+        fn_801A64E0(self);
+        cmd = 0x14;
+        if (self->ctx->b8 == 0) {
+            cmd = 0x15;
+        }
+        UiObjSetCommand(self->ctx->p220->ui, cmd, 0);
+        cmd = 0x14;
+        if (self->ctx->b8 == 1) {
+            cmd = 0x15;
+        }
+        UiObjSetCommand(self->ctx->p224->ui, cmd, 0);
+        self->state19 = 0x19;
+    }
+}
+
+void fn_8019EE4C(Self_8019EE4C *self) {
+    extern void fn_801A64B4(void *o, u8 k);
+    extern void fn_801A1B98(void *o, s32 k);
+    extern u32 fn_801A6A58(int sub, int idx);
+    s32 k;
+    if (fn_801A6554(self) != 0) {
+        return;
+    }
+    if (self->ctx->wc != 0) {
+        self->ctx->wc--;
+    }
+    if (self->ctx->wc == 0 || (*(u32 *)(lbl_80311A60[0] + 8) & 0x300) != 0) {
+        fn_801A1B98(self, 1);
+        fn_801A4DCC(self, 1);
+        UiObjMoveToXIfChanged(self->ctx->p210->ui, 6, 4, -330.0f);
+        UiObjSetCommand(self->ctx->p210->ui, 0xf, 0);
+        self->state19 = 0x16;
+    } else if ((*(u32 *)(lbl_80311A60[0] + 8) & 0x400) != 0) {
+        self->state19 = 0x1e;
+    }
+    self->ctx->w25c[self->ctx->b4] = fn_801A28AC(self->ctx->b4);
+    if (self->ctx->w25c[self->ctx->b4] != 0) {
+        self->ctx->b9 = 0;
+        if (1.0f != self->ctx->f18) {
+            fn_801A4DCC(self, 1);
+        }
+        UiObjMoveToXIfChanged(self->ctx->p210->ui, 6, 4, -330.0f);
+        UiObjSetCommand(self->ctx->p210->ui, 0xf, 0);
+        k = fn_801A6A58(self->ctx->b4, self->ctx->w25c[self->ctx->b4]);
+        fn_801A64B4(self, k);
+        MenuPlaySe(3);
+        self->state19 = 0xb;
+    }
+}
+
+void fn_8019F730(Self_8019F730 *self) {
+    if (fn_801A6554(self) != 0) {
+        return;
+    }
+    if (self->ctx->b1 == 1) {
+        if (fn_801A4070(self) == 0) {
+            self->ctx->b9 = 0;
+            fn_801A41C0(self->ctx->p258);
+            self->ctx->p258 = 0;
+            fn_801A64B4(self, 0x28);
+            MenuPlaySe(3);
+            UiObjMoveToXIfChanged(self->ctx->p210->ui, 6, 4, -330.0f);
+            UiObjSetCommand(self->ctx->p210->ui, 0xf, 0);
+            UiObjMoveToX(self->ctx->p220->ui, 6, 5, -240.0f);
+            UiObjSetCommand(self->ctx->p220->ui, 0x1a, 2);
+            UiObjMoveToX(self->ctx->p224->ui, 6, 5, -240.0f);
+            UiObjSetCommand(self->ctx->p224->ui, 0x1a, 0);
+            fn_801A4DCC(self, 1);
+            lbl_803475D0 = 0;
+            lbl_803475E0 = 0;
+            self->state19 = 0x17;
+        } else {
+            self->state19 = 0x12;
+        }
+    } else {
+        fn_801A4060(self);
+        self->state19 = 0x14;
+    }
+}
+
+void fn_801A0214(Self_801A0214 *self) {
+    extern void fn_801A64B4(void *o, u8 k);
+    extern u32 fn_801A6A58(int sub, int idx);
+    extern s32 fn_801C09F8(s32 a, s32 b);
+    s32 i;
+    s32 k;
+    if (fn_801A6554(self) == 0 || fn_801C09F8(0, 4) != 0 || fn_801C09F8(0, 5) != 0) {
+        for (i = 0; i < 7; i++) {
+            s32 j = i + 7;
+            Holder_801A0214 *h = self->ctx->h[j];
+            if (h != 0 && h->ui != 0) {
+                UiObjFinish(h->ui);
+            }
+        }
+        self->state19 = 9;
+        self->ctx->w25c[self->ctx->b4] = fn_801A28AC(self->ctx->b4);
+        if (self->ctx->w25c[self->ctx->b4] != 0) {
+            self->ctx->b9 = 0;
+            if (1.0f != self->ctx->f18) {
+                fn_801A4DCC(self, 1);
+            }
+            UiObjMoveToXIfChanged(self->ctx->h[1]->ui, 6, 4, -330.0f);
+            UiObjSetCommand(self->ctx->h[1]->ui, 0xf, 0);
+            k = fn_801A6A58(self->ctx->b4, self->ctx->w25c[self->ctx->b4]);
+            fn_801A64B4(self, k);
+            MenuPlaySe(3);
+            self->state19 = 0xb;
+        }
+    }
+}
+
+void fn_801A54AC(Task_801A54AC *t) {
+    Parent_801A54AC *parent = t->parent;
+    f32 z;
+    switch (t->state) {
+    case 0:
+    case 0xFE:
+        if (t->flag[0] == 1) {
+            return;
+        }
+        UiObjUpdate(&t->pan->ui);
+        if (-132.0f < t->pan->ui.y && t->pan->ui.y < 370.0f) {
+            if (UiObjIsBusy(&t->pan->ui) == 0 && t->pan->slot == parent->ctx->b7) {
+                t->pan->ui.alpha = 1.0f;
+            } else {
+                t->pan->ui.alpha = 0.5f;
+            }
+            UiLayoutDraw((NJS_TEXLIST **)&menu_sprites.texlist8, lbl_802B4B9C, 6, &t->pan->ui.x, t->pan->ui.z, t->pan->ui.alpha * t->parent->ctx->f18, 1.0f);
+            TextPushColor();
+            z = TextGetZ();
+            fn_801A5600(t);
+            TextSetZ(z);
+            TextPopColor(1);
+        }
+        break;
+    case 0xFF:
+        t->flags |= 0x40;
+        break;
+    }
+}
+
+void fn_801A6A88(Task_801A6A88 *t, u16 idx, f32 off) {
+    extern void TextPrintNumber(s32 x, s32 y, s32 value, u32 flags);
+    f32 z = TextGetZ();
+    TextPushColor();
+    TextSetColor(0xFF2222F0);
+    TextSetZ(-27.5f + t->ctx->h[idx]->ui->z);
+    TextPrint((s32)(336.0f + (t->ctx->h[idx]->ui->x + t->ctx->h[idx]->ui->rdx)),
+              (s32)(off + (t->ctx->h[idx]->ui->y - t->ctx->h[idx]->ui->rdy)), "\x81\x7e");
+    TextPrintNumber((s32)(360.0f + (t->ctx->h[idx]->ui->x + t->ctx->h[idx]->ui->rdx)),
+                    (s32)(off + (t->ctx->h[idx]->ui->y - t->ctx->h[idx]->ui->rdy)), t->ctx->h4, 0xC002);
+    TextPopColor(1);
+    TextSetZ(z);
+}
+
+void fn_801AB580(Self_801AB580 *self) {
+    Row_801AB580 *row = &(*(Row_801AB580(*)[])&lbl_802EC0A0)[lbl_803473BC];
+    u32 i = 0;
+    u32 n = 0;
+    for (; i < 0x30; i++) {
+        if (row->e[i] != -1) {
+            s16 id;
+            u8 flag;
+            self->buf->out[i].id = row->e[i];
+            self->buf->out[i].type = fn_801F4C24(row->e[i]);
+            id = (u16)row->e[i];
+            if (fn_801F477C(id) == 0) {
+                flag = 1;
+            } else if ((*(Game_801AB580*)&lbl_8030B7F4).w34c / fn_801F477C(id) == 0) {
+                flag = 1;
+            } else if (fn_801F452C(id) == 99) {
+                flag = 1;
+            } else {
+                flag = 0;
+            }
+            self->buf->out[i].flag = flag;
+            n++;
+        } else {
+            self->buf->out[i].type = -1;
+            self->buf->out[i].id = -1;
+            self->buf->out[i].flag = -1;
+        }
+    }
+    self->buf->count = n;
+    self->buf->pages = n / 6 + (n % 6 != 0);
+}
+
+u8 fn_801AB82C(s32 mode, u8 cur, s32 idxp) {
+    s16 idx = idxp;
+    u32 max;
+    u32 v;
+    s32 lim;
+
+    max = (*(Game_801AB82C*)&lbl_8030B7F4).w34c / fn_801F477C(idx);
+    if (max == 0) {
+        return 0;
+    }
+    if (max > 99) {
+        max = 99;
+    }
+    lim = 99 - fn_801F452C(idx);
+    if (max > lim) {
+        max = lim;
+    }
+    v = cur;
+    switch (mode) {
+    case 4:
+        if (v > 1) {
+            v--;
+        }
+        break;
+    case 8:
+        if (v < max) {
+            v++;
+        }
+        break;
+    case 1:
+        if (max + 1 < 10) {
+            v = 1;
+        } else {
+            if (v < 10) {
+                v = 1;
+            } else {
+                v -= 10;
+            }
+            if (v == 0) {
+                v = 1;
+            }
+        }
+        break;
+    case 2:
+        if (max + 1 < 10) {
+            v = max;
+        } else {
+            v += 10;
+            if (v >= max + 1) {
+                v = max;
+            }
+        }
+        break;
+    }
+    if (v != cur) {
+        MenuPlaySe(0);
+    }
+    return v;
+}
+
+void fn_801AC16C(Task* task) {
+    extern void MenuDummy(Task* t);
+    extern TextNode* TextPrint(s32 x, s32 y, const char *str);
+    extern s32 UiLayoutDraw(NJS_TEXLIST** texlists, void* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
+    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, u16 index, f32 z, f32 a, f32 b);
+    extern void* fn_802267AC(void* a, void (*b)(Task*));
+    extern void* fn_801E1A74(s32 a, s32 b);
+    extern u8 lbl_802B7BC4[];
+    extern u8 lbl_802B7C00[];
+    MP* p = (MP*)task;
+    f32 z;
+    NJS_TEXLIST** tl;
+    switch (task->state) {
+    case 0:
+    case 0xFE:
+        if (*(u8*)task->work == 1) {
+            return;
+        }
+        UiObjUpdate(&p->obj->o);
+        UiObjCalcRect(&p->obj->o);
+        tl = (NJS_TEXLIST**)&menu_sprites.texlist8;
+        UiLayoutDraw(tl, lbl_802B7BC4, 3, p->obj->o.rect, p->obj->o.z, 1.0f, 1.0f);
+        UiLayoutDraw(tl, lbl_802B7C00, 1, &p->obj->o.rect[2], p->obj->o.z, 1.0f, 1.0f);
+        z = TextGetZ();
+        TextPushColor();
+        TextSetColor(0xFF201008);
+        TextSetZ(-27.5f + p->obj->o.z);
+        if (p->obj->text != NULL) {
+            TextPrint((s32)(24.0f + p->obj->o.rect[0]), (s32)(20.0f + p->obj->o.rect[1]), p->obj->text);
+        }
+        TextPopColor(1);
+        TextSetZ(z);
+        break;
+    case 0xFF:
+        MenuDummy(task);
+        task->flags |= 0x40;
+        break;
+    }
+}
+
+void fn_801ACE70(Task* task) {
+    extern void MenuDummy(Task* t);
+    extern TextNode* TextPrint(s32 x, s32 y, const char *str);
+    extern s32 UiLayoutDraw(NJS_TEXLIST** texlists, void* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
+    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, u16 index, f32 z, f32 a, f32 b);
+    extern void* fn_802267AC(void* a, void (*b)(Task*));
+    extern void* fn_801E1A74(s32 a, s32 b);
+    extern LT lbl_802B7B64[];
+    extern LT lbl_802B7B94[];
+    extern void fn_801AD1D4(Task* t);
+    extern s32 fn_801C09F8(s32 a, s32 b);
+    extern s32 UiLayoutDraw2(NJS_TEXLIST** t, void* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
+    MP2* p = (MP2*)task;
+    f32 z;
+    NJS_TEXLIST** tl;
+    switch (task->state) {
+    case 0:
+    case 0xFE:
+        if (*(u8*)task->work == 1) {
+            return;
+        }
+        UiObjUpdate(&p->obj->o);
+        UiObjUpdate(&p->obj2->o);
+        UiObjCalcRect(&p->obj->o);
+        UiObjCalcRect(&p->obj2->o);
+        tl = (NJS_TEXLIST**)&menu_sprites.texlist8;
+        UiLayoutDraw(tl, lbl_802B7B64[p->obj->h54].parts, lbl_802B7B64[p->obj->h54].count, p->obj->o.rect, p->obj->o.z, p->obj->o.alpha, 1.0f);
+        UiLayoutDraw(tl, lbl_802B7B94[p->obj2->h54].parts, lbl_802B7B94[p->obj2->h54].count, p->obj2->o.rect, p->obj2->o.z, p->obj2->o.alpha, 1.0f);
+        z = TextGetZ();
+        TextPushColor();
+        fn_801AD1D4(task);
+        TextPopColor(1);
+        TextSetZ(z);
+        switch (p->obj->h54) {
+        case 1:
+            if (fn_801C09F8(0, 10) != 0) {
+                ((W*)task->work)->v++;
+                ((W*)task->work)->v &= 1;
+                MenuPlaySe(4);
+            }
+            break;
+        }
+        break;
+    case 0xFF:
+        MenuDummy(task);
+        task->flags |= 0x40;
+        break;
+    }
+}
+
+void fn_801B277C(Task* task) {
+    extern void MenuDummy(Task* t);
+    extern TextNode* TextPrint(s32 x, s32 y, const char *str);
+    extern s32 UiLayoutDraw(NJS_TEXLIST** texlists, void* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
+    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, u16 index, f32 z, f32 a, f32 b);
+    extern void* fn_802267AC(void* a, void (*b)(Task*));
+    extern void* fn_801E1A74(s32 a, s32 b);
+    extern void fn_801B28D4(Task* t);
+    extern s32 fn_801C09F8(s32 a, s32 b);
+    MP* p = (MP*)task;
+    if (lbl_803475D8 != 0) {
+        task->state = 0xFF;
+    }
+    switch (task->state) {
+    case 0:
+    case 0xFE:
+        if (*(u8*)task->work == 1) {
+            return;
+        }
+        UiObjCalcRect(&p->obj->o);
+        UiObjUpdate(&p->obj->o);
+        if (p->obj->h52 != 4) {
+            fn_801B28D4(task);
+        }
+        if (p->obj->h52 == 0) {
+            if (fn_801C09F8(0, 10) != 0) {
+                ((W*)task->work)->v++;
+                if (((W*)task->work)->v == 3) {
+                    ((W*)task->work)->v = 0;
+                }
+                MenuPlaySe(4);
+            }
+        } else if (p->obj->h52 == 1 || p->obj->h52 == 2) {
+            if (fn_801C09F8(0, 10) != 0) {
+                ((W*)task->work)->v++;
+                ((W*)task->work)->v &= 1;
+                MenuPlaySe(4);
+            }
+        }
+        break;
+    case 0xFF:
+        MenuDummy(task);
+        task->flags |= 0x40;
+        break;
+    }
+}
+
+void* fn_801B54D4(void* a) {
+    extern void MenuDummy(Task* t);
+    extern TextNode* TextPrint(s32 x, s32 y, const char *str);
+    extern s32 UiLayoutDraw(NJS_TEXLIST** texlists, void* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
+    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, u16 index, f32 z, f32 a, f32 b);
+    extern void* fn_802267AC(void* a, void (*b)(Task*));
+    extern void* fn_801E1A74(s32 a, s32 b);
+    T_801B54D4* t = fn_802267AC(a, fn_801B277C);
+    t->w = fn_801E1A74(1, 0x58);
+    t->obj = fn_801E1A74(1, 0x6c);
+    t->obj2 = fn_801E1A74(1, 0x6c);
+    t->p3c = fn_801E1A74(1, 0x9c);
+    t->w->b0 = 0;
+    t->w->h4 = 0;
+    t->obj2->h54 = 0;
+    t->obj->h54 = 0;
+    t->obj2->h52 = 4;
+    t->obj->h52 = 4;
+    t->obj->o.z = -4700.0f;
+    t->obj2->o.z = -4750.0f;
+    t->obj2->o.alpha_en = 0;
+    t->obj->o.alpha_en = 0;
+    t->obj2->o.alpha = 1.0f;
+    *(f32*)((u8*)t->obj2 + 0x38) = 1.0f;
+    t->obj->o.alpha = 1.0f;
+    *(f32*)((u8*)t->obj + 0x38) = 1.0f;
+    t->obj2->o.x = -624.0f;
+    t->obj2->o.tx = -624.0f;
+    t->obj->o.x = -624.0f;
+    t->obj->o.tx = -624.0f;
+    t->obj2->o.y = 212.0f;
+    t->obj2->o.ty = 212.0f;
+    t->obj->o.y = 212.0f;
+    t->obj->o.ty = 212.0f;
+    UiObjSetLowered(&t->obj->o);
+    t->w->w8 = -1;
+    t->w->wc = 0;
+    t->w->w10 = 0;
+    return t;
+}
+
+void fn_801B6420(Task* task) {
+    extern void MenuDummy(Task* t);
+    extern TextNode* TextPrint(s32 x, s32 y, const char *str);
+    extern s32 UiLayoutDraw(NJS_TEXLIST** texlists, void* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
+    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, u16 index, f32 z, f32 a, f32 b);
+    extern void* fn_802267AC(void* a, void (*b)(Task*));
+    extern void* fn_801E1A74(s32 a, s32 b);
+    extern LT lbl_802B6DA0[];
+    extern u8 lbl_802B6D8C[];
+    extern FP lbl_802EC01C[];
+    MP* p = (MP*)task;
+    NJS_TEXLIST** tl;
+    f32 z;
+    if (lbl_803475D8 != 0) {
+        task->state = 0xFF;
+    }
+    switch (task->state) {
+    case 0:
+    case 0xFE:
+        if (*(u8*)task->work == 1) {
+            return;
+        }
+        UiObjUpdate(&p->obj->o);
+        UiObjCalcRect(&p->obj->o);
+        tl = (NJS_TEXLIST**)&menu_sprites.texlist8;
+        UiLayoutDraw(tl, lbl_802B6DA0[p->obj->h54].parts, lbl_802B6DA0[p->obj->h54].count, p->obj->o.rect, p->obj->o.z, p->obj->o.alpha, 1.0f);
+        UiLayoutDraw(tl, lbl_802B6D8C, 1, &p->obj->o.rect[2], p->obj->o.z, 1.0f, 1.0f);
+        z = TextGetZ();
+        TextPushColor();
+        TextSetColor(0xFF201008);
+        TextSetZ(-27.5f + p->obj->o.z);
+        TextPrint((s32)(p->obj->o.rect[0] + lbl_802EC01C[p->obj->h56].b), (s32)(17.0f + p->obj->o.rect[1]), p->obj->text);
+        TextPopColor(1);
+        TextSetZ(z);
+        break;
+    case 0xFF:
+        MenuDummy(task);
+        task->flags |= 0x40;
+        break;
+    }
+}
+
+s32 fn_801B8F48(s32 mode, s16* sel, s16 id) {
+    extern void MenuDummy(Task* t);
+    extern TextNode* TextPrint(s32 x, s32 y, const char *str);
+    extern s32 UiLayoutDraw(NJS_TEXLIST** texlists, void* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
+    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, u16 index, f32 z, f32 a, f32 b);
+    extern void* fn_802267AC(void* a, void (*b)(Task*));
+    extern void* fn_801E1A74(s32 a, s32 b);
+    extern u8 fn_801F464C(s32 id);
+    extern u16 fn_801F477C(s32 id);
+    extern s8 fn_801F452C(s32 id);
+    extern u16 fn_801B995C(s32 id);
+    u32 total;
+    u32 cnt = fn_801F464C(id);
+    s32 cur;
+    s32 n;
+    if (cnt == 0) {
+        total = 0;
+    } else {
+        total = cnt * fn_801F477C(id) / 100;
+    }
+    if (total == 0) {
+        return -1;
+    }
+    n = fn_801F452C(id) - fn_801B995C(id);
+    cur = *sel;
+    switch (mode) {
+    case 4:
+        if (cur > 1) {
+            *sel = cur - 1;
+        }
+        break;
+    case 8:
+        if ((u32)cur < (u32)n) {
+            *sel = cur + 1;
+        }
+        break;
+    case 1:
+        if ((u32)(n + 1) < 10) {
+            *sel = 1;
+        } else {
+            if (cur < 10) {
+                *sel = 1;
+            } else {
+                *sel = cur - 10;
+            }
+            if (*sel == 0) {
+                *sel = 1;
+            }
+        }
+        break;
+    case 2:
+        if ((u32)(n + 1) < 10) {
+            *sel = n;
+        } else {
+            *sel = cur + 10;
+            if ((u32)*sel >= (u32)(n + 1)) {
+                *sel = n;
+            }
+            if (*sel == 0) {
+                *sel = 1;
+            }
+        }
+        break;
+    }
+    if ((u32)cur != (u32)*sel) {
+        MenuPlaySe(0);
+    }
+    return total * (u16)*sel;
 }

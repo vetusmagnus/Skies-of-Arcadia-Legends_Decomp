@@ -1,7 +1,6 @@
 #include <dolphin/types.h>
 #include "types.h"
 #include <string.h>
-
 typedef struct {
     u8 pad0[0x94];
     s8 x94;
@@ -155,6 +154,13 @@ typedef struct {
     s16 v8;
 } Src;
 extern s8 *fn_80135598(void);
+typedef struct {
+    s8 x;
+    s8 y;
+    s8 a;
+    s8 b;
+    s8 c;
+} Cell;
 
 void fn_8012F6C4(s8 idx, u32 val) {
     u8* p = *(u8**)((u8*)lbl_80346F38 + 0x24);
@@ -615,4 +621,67 @@ int fn_80136B10(s8 *dst) {
         for (; i < 4; i++) dst[i] = -1;
     }
     return n;
+}
+
+s32 fn_801361B8(void* a, s32 lo, s32 y, s32 hi, s32 d)
+{
+    extern void fn_80131658(Cell* c);
+    extern void fn_8013160C(s8 x, s8 y, s32 z);
+    extern s32 fn_8013A794(void* a, s32 lo, s32 hi, s32 d);
+    Cell c3;
+    Cell c0;
+    Cell c1;
+    Cell c2;
+    s32 i;
+    s32 j;
+    s32 end;
+    s32 code;
+
+    for (i = lo; i <= hi; i++) {
+        c0.x = i;
+        c0.y = y;
+        c0.a = 1;
+        c0.c = -1;
+        c0.b = -1;
+        fn_80131658(&c0);
+        c1.x = i;
+        c1.y = y;
+        c1.a = 3;
+        c1.c = -1;
+        c1.b = -1;
+        fn_80131658(&c1);
+    }
+    end = fn_8013A794(a, lo, hi, d);
+    c2.x = lo;
+    c2.y = y;
+    c2.a = 1;
+    c2.c = 2;
+    c2.b = 1;
+    fn_80131658(&c2);
+    switch (end - lo) {
+    case 0:
+        code = 0x12;
+        break;
+    case 1:
+        code = 0x13;
+        break;
+    case 2:
+        code = 0x14;
+        break;
+    case 3:
+        code = 0x15;
+        break;
+    default:
+        code = 0x12;
+        break;
+    }
+    c3.x = lo;
+    c3.y = y;
+    c3.a = 3;
+    c3.c = 2;
+    c3.b = code;
+    fn_80131658(&c3);
+    for (j = lo + 1; j <= end; j++)
+        fn_8013160C(j, y, 0);
+    return end;
 }

@@ -1,6 +1,5 @@
 #include "types.h"
 #include "game/text.h"
-
 typedef struct {
     s8 x0;
     s8 x1;
@@ -124,6 +123,82 @@ extern void fn_8012B308(s32 n);
 extern void fn_8012BD34(void);
 extern void fn_8012B47C(void);
 extern void fn_8012F61C(void);
+typedef struct {
+    u8 pad0[4];
+    u32 x4;
+    u8 pad8[0x14 - 8];
+    f32 f14;
+    f32 f18;
+} Spr;
+typedef struct {
+    Spr* obj; /* 0x00 */
+    f32 x;    /* 0x04 */
+    f32 y;    /* 0x08 */
+    s32 z0;   /* 0x0C */
+    s32 z1;   /* 0x10 */
+    f32 one;  /* 0x14 */
+    f32 w;    /* 0x18 */
+} Req;
+typedef struct {
+    s16 x0;
+    s16 x2;
+    s8 cnt;    /* 0x04 */
+    u8 pad5[3];
+    f32 f8;
+    f32 fc;
+    u32 x10;
+} Num;
+extern Spr* fn_8012BC48(s8 digit);
+extern void fn_8012A9A8(Req* r);
+typedef struct {
+    u8 pad0[4];
+    s8 x4;
+    u8 x5;
+    u8 pad6[0x5F - 6];
+    s8 st[8]; /* 0x5F */
+} SysB_8012CE60;
+typedef struct {
+    u8 pad[0x24];
+    SysB_8012CE60* x24;
+    void** x28;
+} HolderB_8012CE60;
+extern void* fn_801D68C4(void* a, u32 n);
+extern void fn_801D4954(void* p);
+typedef struct {
+    u8 pad[0x28];
+    void** x28;
+} Holder;
+extern void* fn_801E1C7C(s32 n);
+extern void fn_8012F2EC(void);
+typedef struct {
+    u8 pad0[2];
+    u8 x2;
+    u8 pad3;
+    u16 x4;
+    u8 x6;
+    u8 x7;
+    u8 x8;
+    u8 x9;
+    u8 padA[2];
+    s32 xc;
+    s32 x10;
+    s32 x14;
+    s32 x18;
+    s32 x1c;
+    s32 x20;
+    s8 a[6];      /* 0x24 */
+    u8 b[6];      /* 0x2A */
+    u8 pad30;
+    u8 x31;
+    u8 x32;
+    s8 x33;
+    f32 f34;
+} SysC_8012F2EC;
+typedef struct {
+    u8 pad[0x24];
+    SysC_8012F2EC* x24;
+} HolderC_8012F2EC;
+
 s32 fn_8012ADB4(void) { return lbl_80346F10->x24->x14; }
 
 void fn_8012ADC4(void) {
@@ -452,4 +527,134 @@ void fn_8012F4F8(Obj *o)
         o->flags |= 0x40;
         break;
     }
+}
+
+void fn_8012BAA8(Num* n)
+{
+    Req r;
+    s8 tens = n->cnt / 10;
+    if (tens > 0) {
+        r.obj = fn_8012BC48(tens);
+        r.obj->f14 = (f32)n->x0;
+        r.obj->f18 = (f32)n->x2;
+        *(u32*)((u8*)r.obj->x4 + 0x14) = n->x10;
+        r.x = n->f8;
+        r.y = 0.0f;
+        r.z0 = 0;
+        r.z1 = 0;
+        r.one = 1.0f;
+        r.w = n->fc;
+        fn_8012A9A8(&r);
+    }
+    r.obj = fn_8012BC48((s8)(n->cnt % 10));
+    r.obj->f14 = (f32)(n->x0 + 0x10);
+    r.obj->f18 = (f32)n->x2;
+    *(u32*)((u8*)r.obj->x4 + 0x14) = n->x10;
+    r.x = n->f8;
+    r.y = 0.0f;
+    r.z0 = 0;
+    r.z1 = 0;
+    r.one = 1.0f;
+    r.w = n->fc;
+    fn_8012A9A8(&r);
+}
+
+void fn_8012CE60(void)
+{
+    s32 i;
+    for (i = 0; i < 8; i++) {
+        if ((*(HolderB_8012CE60**)&lbl_80346F20)->x24->st[i] == 1) {
+            void* r;
+            fn_801D4954((*(HolderB_8012CE60**)&lbl_80346F20)->x28[i]);
+            switch (i) {
+            case 0:
+                r = fn_801D68C4((*(void**)&lbl_80346F04), 0x10);
+                break;
+            case 1:
+                r = fn_801D68C4((*(void**)&lbl_80346F04), 0xE);
+                break;
+            case 2:
+                r = fn_801D68C4((*(void**)&lbl_80346F04), 0xC);
+                break;
+            case 3:
+                r = fn_801D68C4((*(void**)&lbl_80346F04), 0xB);
+                break;
+            case 4:
+                r = fn_801D68C4((*(void**)&lbl_80346F04), 0xF);
+                break;
+            case 5:
+                r = fn_801D68C4((*(void**)&lbl_80346F04), 0xD);
+                break;
+            case 6:
+                if ((*(HolderB_8012CE60**)&lbl_80346F20)->x24->x4 == 0)
+                    r = fn_801D68C4((*(void**)&lbl_80346F04), 0x8C);
+                else
+                    r = fn_801D68C4((*(void**)&lbl_80346F04), 0x8D);
+                break;
+            case 7:
+                r = fn_801D68C4((*(void**)&lbl_80346F04), 0x11);
+                break;
+            default:
+                r = fn_801D68C4((*(void**)&lbl_80346F04), 0x11);
+                break;
+            }
+            (*(HolderB_8012CE60**)&lbl_80346F20)->x28[i] = r;
+            fn_8012DB18();
+        }
+    }
+    (*(HolderB_8012CE60**)&lbl_80346F20)->x24->x5 = 1;
+}
+
+void fn_8012F13C(void)
+{
+    (*(Holder**)&lbl_80346F28)->x28 = fn_801E1C7C(0x40);
+    (*(Holder**)&lbl_80346F28)->x28[0] = fn_801D68C4((*(void**)&lbl_80346F04), 0x38);
+    (*(Holder**)&lbl_80346F28)->x28[1] = fn_801D68C4((*(void**)&lbl_80346F04), 0x39);
+    (*(Holder**)&lbl_80346F28)->x28[2] = fn_801D68C4((*(void**)&lbl_80346F04), 0x3A);
+    (*(Holder**)&lbl_80346F28)->x28[3] = fn_801D68C4((*(void**)&lbl_80346F04), 0x3B);
+    (*(Holder**)&lbl_80346F28)->x28[4] = fn_801D68C4((*(void**)&lbl_80346F04), 0x3C);
+    (*(Holder**)&lbl_80346F28)->x28[5] = fn_801D68C4((*(void**)&lbl_80346F04), 0x3D);
+    (*(Holder**)&lbl_80346F28)->x28[6] = fn_801D68C4((*(void**)&lbl_80346F04), 0x3E);
+    (*(Holder**)&lbl_80346F28)->x28[7] = fn_801D68C4((*(void**)&lbl_80346F04), 0x3F);
+    (*(Holder**)&lbl_80346F28)->x28[8] = fn_801D68C4((*(void**)&lbl_80346F04), 0x20);
+    (*(Holder**)&lbl_80346F28)->x28[9] = fn_801D68C4((*(void**)&lbl_80346F04), 0x1F);
+    (*(Holder**)&lbl_80346F28)->x28[10] = fn_801D68C4((*(void**)&lbl_80346F04), 0x20);
+    (*(Holder**)&lbl_80346F28)->x28[11] = fn_801D68C4((*(void**)&lbl_80346F04), 0x40);
+    (*(Holder**)&lbl_80346F28)->x28[12] = fn_801D68C4((*(void**)&lbl_80346F04), 0x34);
+    (*(Holder**)&lbl_80346F28)->x28[13] = fn_801D68C4((*(void**)&lbl_80346F04), 0x36);
+    (*(Holder**)&lbl_80346F28)->x28[14] = fn_801D68C4((*(void**)&lbl_80346F04), 0x37);
+    (*(Holder**)&lbl_80346F28)->x28[15] = fn_801D68C4((*(void**)&lbl_80346F04), 0x48);
+    fn_8012F2EC();
+}
+
+void fn_8012F2EC(void)
+{
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->x2 = 0;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->x4 = 0x3F;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->x6 = 0;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->x7 = 1;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->x8 = 0;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->x9 = 0;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->xc = 0;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->a[0] = -1;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->b[0] = 7;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->x10 = 0;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->a[1] = -1;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->b[1] = 7;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->x14 = 0;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->a[2] = -1;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->b[2] = 7;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->x18 = 0;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->a[3] = -1;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->b[3] = 7;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->x1c = 0;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->a[4] = -1;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->b[4] = 7;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->x20 = 0;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->a[5] = -1;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->b[5] = 7;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->x31 = 0;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->x32 = 0;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->x33 = -1;
+    (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->f34 = 1.0f;
 }
