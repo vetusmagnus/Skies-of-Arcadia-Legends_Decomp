@@ -3707,7 +3707,19 @@ void fn_8015596C(void *p) {
     fn_80151128((Tab_80151128*)lbl_80346FB0, (Src*)p);
 }
 
-extern void fn_8015128C(void *p, void *q);
+extern char lbl_802B3AFC[];
+void fn_8015128C(Sub_801512DC *objs, In_801512DC *in) {
+    s32 idx = in->f0;
+
+    if (idx >= 0x80) {
+        fn_8015757C((s32)lbl_802B3AFC, idx);
+        return;
+    }
+    if (idx > 0) {
+        fn_801512DC((void *)&objs[idx], in);
+    }
+}
+
 void fn_80155994(void *p) {
     fn_8015128C((void*)lbl_80346FB4, p);
 }
@@ -3854,4 +3866,20 @@ s32 fn_80150800(Obj_80150800 *o)
         }
     }
     return changed;
+}
+
+typedef struct { u8 pad[0x20]; void *texlist; } S80158B7Cb;
+typedef struct { u8 pad[0x4]; S80158B7Cb *p4; } S80158B7Ca;
+extern S80158B7Ca *fn_801DB244(char *name);
+extern char lbl_802B3F8C[];
+
+void fn_80158B7C(void) {
+    s32 i;
+
+    lbl_8034702C = (u32)(lbl_80347028 = fn_801DB244(lbl_802B3F8C));
+    lbl_80347034 = lbl_80347030 = (s32)((S80158B7Ca *)lbl_80347028)->p4->texlist;
+    fn_80227810(lbl_80347030);
+    for (i = 0; i < 8; i++) {
+        lbl_80306DB8[i] = 0;
+    }
 }

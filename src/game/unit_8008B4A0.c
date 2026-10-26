@@ -1652,3 +1652,10 @@ void fn_8008F9B8(u16 key, u8* src) {
         }
     }
 }
+
+void fn_80095360(void *p, void *q)
+{
+    if (lbl_80347450 != 0) {
+        fn_80095220(lbl_80347450, p, q);
+    }
+}

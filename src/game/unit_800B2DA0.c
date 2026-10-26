@@ -544,7 +544,8 @@ extern void *lbl_803475A8;
 void *fn_802268E8(void *list, void *fn);
 void fn_800C9144(void);
 typedef struct {
-    u8 pad0[0x8];
+    u32 a;
+    u32 b;
     u32 key;
     u8 pad1[4];
 } Entry_UNIT0000;
@@ -1619,7 +1620,9 @@ typedef struct Task_800CDEF4 {
 typedef struct Row {
     f32 f0;
     u32 w4;
-    u8 pad8[0x18];
+    u8 pad8[8];
+    u32 w10;
+    u8 pad14[0xc];
 } Row;
 typedef struct A_800CE4E8 {
     u8 pad0[4];
@@ -7812,4 +7815,30 @@ void fn_800D3C00(Task_800D3C00 *self)
         fn_800C3428((void *)(self));
         break;
     }
+}
+
+Ent_800D6E1C *fn_800CCA6C(s32 a, s32 b) {
+    Entry_UNIT0000 *e;
+    Ent_800D6E1C *result = 0;
+    u32 best = 0xFFFF;
+
+    lbl_80346D80 = 0;
+    e = (Entry_UNIT0000*)lbl_80305B08.p00;
+    while (lbl_80346D80 < lbl_80305B08.h0a) {
+        if (a == e->a && b == e->b) {
+            u32 k = (u16)e->key;
+            if (k <= best) {
+                result = (Ent_800D6E1C *)e;
+                best = k;
+            }
+        }
+        lbl_80346D80++;
+        e++;
+    }
+    return result;
+}
+
+u32 fn_800CE4B4(void) {
+    u32 v = lbl_802E1154[(s8)lbl_80310A1C[6]].w10;
+    return (v | -v) >> 31;
 }

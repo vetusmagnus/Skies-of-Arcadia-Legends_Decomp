@@ -16,7 +16,7 @@ extern const char lbl_802B4864[];
 extern u8 lbl_80310B3C[];
 extern void sndOutputMode(s32 mode);
 extern void OSSetSoundMode(s32 mode);
-extern u8 lbl_80347148;
+extern s8 lbl_80347148[4];
 extern u32 OSGetSoundMode(void);
 extern s32 fn_801EE344(s16 a, s32 b);
 extern s8 lbl_802D7E4C[];
@@ -351,10 +351,10 @@ void fn_80194268(void) {
 
 void fn_80194334(void) {
     if (OSGetSoundMode() == 1) {
-        lbl_80347148 = 0;
+        lbl_80347148[0] = 0;
         lbl_80347144 = 0;
     } else {
-        lbl_80347148 = 1;
+        lbl_80347148[0] = 1;
         lbl_80347144 = 1;
     }
 }
@@ -1976,4 +1976,14 @@ s32 fn_801956EC(s32 idx) {
         return 0xf;
     }
     return 0xd;
+}
+
+int fn_80194378(s8 i)
+{
+    return lbl_80347148[i];
+}
+
+s8 fn_80194C18(s8 idx)
+{
+    return lbl_802D8E64[idx * 0x24 + 0x11];
 }

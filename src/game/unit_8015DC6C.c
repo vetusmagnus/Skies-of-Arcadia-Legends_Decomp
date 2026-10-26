@@ -1134,7 +1134,7 @@ typedef struct {
     Key *x20;
 } Arg_8016679C;
 extern f32 lbl_802E70C8[4];
-extern void fn_802256A0(Vec *p, void *q, s32 a, u16 b);
+extern s32 fn_802256A0(Vec *p, void *q, s32 a, u16 b);
 extern void fn_802135B4(Vec *v, V3i *out);
 extern void fn_802136A8(f32 *tab, Vec *out, s32 a, s32 b, s32 c);
 typedef struct Sub_80168398 {
@@ -8075,6 +8075,22 @@ s32 fn_8017E260(void)
     return 0;
 }
 
+
+typedef struct Obj_801673D8 {
+    u8 pad0[0x38];
+    Vec p38;
+    u8 pad44[0x1b8 - 0x44];
+    void *x1b8;
+} Obj_801673D8;
+
+s32 fn_801673D8(Obj_801673D8 *o, s32 id)
+{
+    if (o != NULL && o->x1b8 != NULL) {
+        return fn_802256A0(&o->p38, o->x1b8, 0xFFFF, id);
+    }
+    return 0;
+}
+
 void fn_8017F07C(void)
 {
     UiObj* o;
@@ -8314,6 +8330,39 @@ s8 fn_80168BD4(W_80168BD4 *w)
             g = w->f28;
             r = (s32)((f32)(r + 0x7e) * ((g - fn_80291A5C(d2)) / g) + 1.0f - 127.0f);
         }
+    }
+    return r;
+}
+
+typedef struct Chr_801838C8 {
+    u8 pad0[0xe];
+    s8 xe;
+    u8 padf[0x1a - 0xf];
+    s16 x1a;
+    u8 pad1c[0x5c - 0x1c];
+} Chr_801838C8;
+typedef struct Stat_801838C8 {
+    u8 pad0[0x48];
+    s16 x48;
+    s16 x4a;
+    s16 x4c;
+    s16 x4e;
+    s16 x50;
+    u8 pad52[0x78 - 0x52];
+} Stat_801838C8;
+extern Stat_801838C8 lbl_8030B4D4[];
+s16 fn_801838C8(s32 kind, s32 idx) {
+    Chr_801838C8* c = &((Chr_801838C8*)lbl_8030B7F4)[idx];
+    Stat_801838C8* s = &lbl_8030B4D4[idx];
+    s16 r = 0;
+    switch (kind) {
+    case 0x36: r = s->x48; break;
+    case 0x37: r = s->x4a; break;
+    case 0x38: r = s->x4c; break;
+    case 0x39: r = s->x4e; break;
+    case 0x3a: r = s->x50; break;
+    case 0x3b: r = c->x1a; break;
+    case 0x3c: r = c->xe; break;
     }
     return r;
 }

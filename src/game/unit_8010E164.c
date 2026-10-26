@@ -1707,8 +1707,37 @@ extern u8 fn_801285D8(u8* t);
 extern u8 fn_801282C4(u8* t);
 extern u8 fn_801281E8(u8* t);
 extern u8 fn_80128414(u8* t);
-extern u8 fn_801283A4(u8* t);
-extern u8 fn_80128108(u8* t);
+typedef struct Ent_801283A4 {
+    u8 id;
+    u8 pad1;
+    u8 a[6];
+    u8 pad8[6];
+} Ent_801283A4;
+
+typedef struct Tbl_801283A4 {
+    Ent_801283A4 e[2];
+    u8 pad1c[0xb0 - 0x1c];
+    f32 f_b0;
+    f32 f_b4;
+    u8 padb8[4];
+    f32 f_bc;
+    f32 f_c0;
+    f32 f_c4;
+} Tbl_801283A4;
+
+typedef struct T_80128108 {
+    u8 x0;
+    u8 pad[0xaf];
+    f32 xb0;
+    f32 xb4;
+    f32 xb8;
+    f32 xbc;
+    f32 xc0;
+    f32 xc4;
+} T_80128108;
+
+extern s32 fn_801283A4(Tbl_801283A4 *t);
+extern u8 fn_80128108(T_80128108 *t);
 typedef struct {
     f32 x, y, z;
     s32 a, b, c;
@@ -5662,12 +5691,12 @@ void fn_80126BF0(Obj_80126BF0* o, In_80126BF0* in) {
         in->f24 = 0x14840;
         break;
     case 0x32:
-        in->b18 = fn_801283A4(in->tab);
+        in->b18 = fn_801283A4((void *)(in->tab));
         in->f24 = 0x2040;
         break;
     default:
         in->kind = 0;
-        in->b18 = fn_80128108(in->tab);
+        in->b18 = fn_80128108((void *)(in->tab));
         in->f24 = 0x40;
         break;
     }
@@ -6737,4 +6766,37 @@ void fn_80123A44(P_80123A44 *p) {
         if (fn_8015F218(q) == 2) p->state = 1;
         break;
     }
+}
+
+s32 fn_801283A4(Tbl_801283A4 *t)
+{
+    u8 ids[2] = { 0, 1 };
+    u8 a0[1] = { 0 };
+    u8 a1[2] = { 0, 1 };
+    s32 i;
+    for (i = 0; i < 2; i++) {
+        t->e[i].id = ids[i];
+    }
+    for (i = 0; i < 1; i++) {
+        t->e[0].a[i] = a0[i];
+    }
+    for (i = 0; i < 2; i++) {
+        t->e[1].a[i] = a1[i];
+    }
+    t->f_b0 = 31.0f;
+    t->f_b4 = 40.0f;
+    t->f_bc = 41.0f;
+    t->f_c0 = 1.0f;
+    t->f_c4 = 1.0f;
+    return 2;
+}
+
+u8 fn_80128108(T_80128108 *t) {
+    t->x0 = 0;
+    t->xb0 = 31.0f;
+    t->xb4 = 40.0f;
+    t->xbc = 41.0f;
+    t->xc0 = 1.0f;
+    t->xc4 = 1.0f;
+    return 1;
 }

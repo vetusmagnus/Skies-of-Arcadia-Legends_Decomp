@@ -63,7 +63,7 @@ extern void *fn_801A4DCC(void *a, u16 flag);
 extern void fn_801CBBAC(f32 f);
 extern void Ui2DBegin(void);
 extern void *lbl_8034718C[2];
-extern u32 lbl_80347184;
+extern u32 lbl_80347184[2];
 extern s32 CARDUnmount(s32 slot);
 extern s32 fn_8025CB24(char *, const char *, ...);
 extern void fn_8025F120(void *, const char *);
@@ -148,7 +148,16 @@ typedef struct Self_8019FDB0 {
     u8 pad1[0xa];
     Ctx_8019FDB0 *ctx;
 } Self_8019FDB0;
-extern void fn_801A6650(void *o, s32 k);
+typedef struct Work_801A6650 {
+    u8 pad[0x20c];
+    Task *slots[16];
+} Work_801A6650;
+
+typedef struct Task_801A6650 {
+    u8 pad[0x24];
+    Work_801A6650 *work;
+} Task_801A6650;
+extern void fn_801A6650(Task_801A6650 *t, u16 i);
 typedef struct Ctx_8019FE64 {
     u8 pad0[0x220];
     void *p220;
@@ -1187,7 +1196,7 @@ typedef struct Game_801AB580 {
     u8 pad0[0x34c];
     s32 w34c;
 } Game_801AB580;
-extern u8 fn_801F4C24(s16 id);
+extern s16 fn_801F4C24(s16 id);
 extern u16 fn_801F477C(s16 id);
 extern s8 fn_801F452C(s16 id);
 typedef struct Game_801AB82C {
@@ -1738,7 +1747,7 @@ void fn_801A2CC4(void) {
             lbl_8034718C[0] = 0;
         }
     }
-    lbl_80347184 = 0;
+    lbl_80347184[0] = 0;
 }
 
 void fn_801A39B4(u16 id, void *obj) {
@@ -1948,12 +1957,12 @@ void fn_8019FE64(Self_8019FE64 *o) {
     }
     if (doit) {
         if (o->ctx->p220 != 0) {
-            fn_801A6650(o, 5);
-            fn_801A6650(o, 6);
+            fn_801A6650((void *)o, 5);
+            fn_801A6650((void *)o, 6);
         }
         if (o->ctx->p228 != 0) {
             for (i = 0; i < 7; i++) {
-                fn_801A6650(o, (u16)(i + 7));
+                fn_801A6650((void *)o, (u16)(i + 7));
             }
         }
         o->state19 = 4;
@@ -4496,4 +4505,50 @@ s32 fn_801AB094(Task_801AB094* t)
     if (t->m->cur == 4) cmd = 0x15;
     UiObjSetCommand(t->m->slot[4]->obj, cmd, 0);
     return ret;
+}
+
+void fn_801A2C58(void) {
+    if (lbl_8034718C[1] != 0) {
+        s32 r;
+        fn_801DC214();
+        r = CARDUnmount(1);
+        if (r == 0 || r == -3) {
+            fn_801E17E0(lbl_8034718C[1]);
+            lbl_8034718C[1] = 0;
+        }
+    }
+    lbl_80347184[1] = 0;
+}
+
+s32 fn_801B5868(s16 id) {
+    switch (fn_801F4C24(id)) {
+    case 0:
+    case 1:
+    case 2:
+        return 0;
+    case 5:
+        return 2;
+    case 6:
+        return 1;
+    case 3:
+    case 4:
+    case 7:
+        return 3;
+    default:
+        return 4;
+    }
+}
+
+void fn_801A6650(Task_801A6650 *t, u16 i)
+{
+    if (t->work->slots[i] != NULL) {
+        TaskDelete(t->work->slots[i]);
+        t->work->slots[i] = NULL;
+    }
+}
+
+void fn_8019E3A8(Task *t)
+{
+    fn_801CBBAC(8.0f);
+    t->state = 0x1F;
 }

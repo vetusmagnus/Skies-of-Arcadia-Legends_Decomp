@@ -580,7 +580,7 @@ void fn_8013DB64(void) {
     fn_8013DA50(0, 1);
 }
 
-s32 fn_8013DB8C(s32 a, s32 b) {
+s32 fn_8013DB8C(s32 a, s32 b, s32 d) {
     s32 n = fn_8013E42C(a);
     s32 idx = b;
     if (b < 0) idx = n - 1;
@@ -1917,4 +1917,13 @@ void fn_8014654C(Obj *o)
         o->b7 = 1;
         boost(e);
     }
+}
+
+s32 fn_8013DBDC(s32 a, s32 b)
+{
+    s32 d = 0;
+    u32 f = lbl_8030A6D4[lbl_8034757C].xc;
+    if (f & 1) d = -1;
+    if (f & 2) d++;
+    return fn_8013DB8C(a, b + d, d);
 }
