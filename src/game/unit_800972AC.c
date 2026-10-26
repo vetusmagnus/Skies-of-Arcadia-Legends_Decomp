@@ -901,10 +901,10 @@ extern s32 fn_80006F1C(void* dst, s32 flag);
 extern s32 fn_80006DA0(void* dst, s32 flag);
 extern void fn_80006CE0(void);
 extern void fn_80291C44(NJS_MATRIX m);
-extern void fn_800A1690(NJS_MATRIX m, void* p);
 typedef struct {
     s32 x, y, z;
 } Ang3;
+extern void fn_800A1690(f32* m, Ang3* out);
 typedef struct Obj_800A0BA0 Obj_800A0BA0;
 typedef struct {
     u8 pad0[4];
@@ -1152,6 +1152,14 @@ typedef struct Ang3_800A1998 {
 } Ang3_800A1998;
 extern void njUnitMatrix(NJS_MATRIX m);
 extern void fn_802135B4(NJS_POINT3 *v, Ang3_800A1998 *out);
+typedef struct {
+    NJS_POINT3 v[2];
+} Pair_800A1690;
+extern NJS_POINT3 lbl_802B0E70[2];
+extern Pair_800A1690 lbl_80303450;
+extern f32* lbl_80346778;
+extern f32* lbl_8034677C;
+extern void njRotateZ(NJS_MATRIX m, Angle a);
 
 void fn_800972AC(void)
 {
@@ -3446,4 +3454,51 @@ void fn_800A1998(NJS_POINT3 *from, NJS_POINT3 *to, Ang3_800A1998 *out, s8 mode, 
     if (flags & 4) {
         out->z = ang.z;
     }
+}
+
+void fn_800A1690(f32* m, Ang3* out) {
+    NJS_MATRIX mat;
+    NJS_MATRIX mat2;
+    Pair_800A1690 tmp;
+    f32 x, y, z;
+    f32 len;
+
+    if (m != NULL) {
+        fn_802AC710(mat, m, 0x40);
+    } else {
+        fn_80291C44(mat);
+    }
+    njUnitTransPortion(mat);
+    njCalcVectors(mat, lbl_802B0E70, lbl_80303450.v, 2);
+    x = lbl_80346778[0];
+    if (fabs(x) < 1.0e-6f) {
+        x = 0.0f;
+    }
+    y = lbl_80346778[1];
+    if (fabs(y) < 1.0e-6f) {
+        y = 0.0f;
+    }
+    z = lbl_80346778[2];
+    if (fabs(z) < 1.0e-6f) {
+        z = 0.0f;
+    }
+    len = fn_80291A5C(x * x + y * y);
+    if (!x && !y) {
+        out->z = 0;
+    } else {
+        out->z = -(s32)(10430.381f * (f32)atan2(y, x));
+    }
+    fn_802AC710(mat2, lbl_802B0E30, 0x40);
+    njRotateZ(mat2, out->z);
+    njCalcPoints(mat2, lbl_80303450.v, tmp.v, 2);
+    lbl_80303450 = tmp;
+    out->y = (s32)(10430.381f * (f32)atan2(z, len));
+    fn_802AC710(mat2, lbl_802B0E30, 0x40);
+    njRotateY(mat2, out->y);
+    njCalcPoints(mat2, lbl_80303450.v, tmp.v, 2);
+    lbl_80303450 = tmp;
+    out->x = (s32)(10430.381f * (f32)atan2(lbl_8034677C[1], lbl_8034677C[2]));
+    out->x *= -1;
+    out->y *= -1;
+    out->z *= -1;
 }
