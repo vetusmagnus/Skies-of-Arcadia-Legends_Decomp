@@ -437,7 +437,7 @@ s32 fn_801DBCCC(void) {
     return lbl_803476D8;
 }
 
-void fn_801DBE1C(s32 a, ...) {
+void fn_801DBE1C(const char *fmt, ...) {
 }
 
 void fn_801DBF90(void) {
