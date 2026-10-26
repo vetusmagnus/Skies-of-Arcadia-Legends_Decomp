@@ -11,6 +11,9 @@ Sections:
 	.sdata2     type:rodata align:32
 	.sbss2      type:bss align:32
 
+game/battle.c:
+	.text       start:0x8002C010 end:0x80031254
+
 game/btlchar.c:
 	.text       start:0x80031254 end:0x80032E78
 
@@ -24,7 +27,7 @@ game/sound.c:
 	.text       start:0x8003DEE0 end:0x80040010
 
 game/effect.c:
-	.text       start:0x80040010 end:0x80041238
+	.text       start:0x80040010 end:0x80047214
 
 musyx/runtime/CheapReverb/creverb_fx.c:
 	.text       start:0x80074D78 end:0x80074D9C
@@ -57,7 +60,7 @@ game/chunk.c:
 	.text       start:0x801E7654 end:0x801E8CA4
 
 game/evobj.c:
-	.text       start:0x801E8CA4 end:0x801EA2DC
+	.text       start:0x801E8CA4 end:0x801EE324
 
 dolphin/PPCArch.c:
 	.text       start:0x802319E0 end:0x80231AD0
