@@ -2218,6 +2218,47 @@ void fn_80108CA4(Msg* a, s16 i) {
     fn_801073B4(a, i);
 }
 
+typedef struct Node { u8 pad0[4]; void *x4; u8 pad8[0x28]; struct Node *next; } Node;
+static inline s32 find(s32 id, Out_80109468 *r) {
+    u16 x = id;
+    Entry *n;
+    for (n = lbl_80347460; n != 0; n = n->next) {
+        if (fn_80109468(x, (Set_80109468 *)n->ptr, r) == 1) {
+            return 1;
+        }
+    }
+    return 0;
+}
+s32 fn_801091F8(s32 id, void **out) {
+    Out_80109468 r;
+    if (out != 0 && *out != 0 && fn_80109468((u16)id, (Set_80109468 *)*out, &r) == 1) {
+        return (s32)r.e;
+    }
+    if (find(id, &r) == 1) {
+        if (out != 0) {
+            *out = (void *)r.s;
+        }
+        return (s32)r.e;
+
+    }
+    return 0;
+}
+
+s32 fn_801092C0(s32 id, void **out) {
+    Out_80109468 r;
+    if (out != 0 && *out != 0 && fn_80109468((u16)id, (Set_80109468 *)*out, &r) == 1) {
+        return (s32)r.e;
+    }
+    if (find(id, &r) == 1) {
+        if (out != 0) {
+            *out = (void *)r.s;
+        }
+        return (s32)r.e;
+
+    }
+    return 0;
+}
+
 void fn_801097F8(s32 a, s32 b, s32 c) {
     fn_801096FC((void *)1, a, (u32)b, (const char *)c);
 }
