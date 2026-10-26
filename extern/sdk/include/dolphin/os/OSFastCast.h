@@ -57,6 +57,32 @@ static inline unsigned char __OSf32tou8(register float inF) {
 
 static inline void OSf32tou8(float* in, unsigned char* out) { *out = __OSf32tou8(*in); }
 
+static inline float __OSu16tof32(register const unsigned short* arg) {
+  register float ret;
+#ifdef __MWERKS__
+  asm
+  {
+        psq_l   ret, 0(arg), 1, OS_FASTCAST_U16
+  }
+#endif
+  return ret;
+}
+
+static inline void OSu16tof32(register const unsigned short* in, register volatile float* out) { *out = __OSu16tof32(in); }
+
+static inline float __OSs16tof32(register const short* arg) {
+  register float ret;
+#ifdef __MWERKS__
+  asm
+  {
+        psq_l   ret, 0(arg), 1, OS_FASTCAST_S16
+  }
+#endif
+  return ret;
+}
+
+static inline void OSs16tof32(register const short* in, register volatile float* out) { *out = __OSs16tof32(in); }
+
 // clang-format off
 
 #ifdef __cplusplus

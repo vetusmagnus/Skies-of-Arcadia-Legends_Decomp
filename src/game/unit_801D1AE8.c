@@ -201,6 +201,19 @@ extern void njCalcVector(f32* m, NJS_VECTOR* v, NJS_VECTOR* out);
 extern void fn_802900C0(NJS_POINT3* p, NJS_POINT3* c, NJS_POINT3* out);
 extern f32 fn_80291A5C(f32 v);
 extern f32 fn_801DFE48(NJS_POINT3* p, Box801E* box);
+typedef struct DataEntry {
+    void *base;
+    s32 offset;
+} DataEntry;
+typedef struct DataTable {
+    u8 *base;
+    s32 count;
+    s32 *offsets;
+    s32 *work;
+    s32 *data;
+} DataTable;
+extern s32 *fn_8022ACA8(s32);
+extern void *fn_801E1C7C(s32);
 
 void fn_801D1AE8(void) {
     VISetNextFrameBuffer(lbl_803476AC);
@@ -1222,4 +1235,34 @@ void fn_801E0204(Hit801E* hit, Ref801E* ref, f32* mtx, Box801E* box) {
             njCalcVector(mtx, &v, &hit->dir);
         }
     }
+}
+
+static inline void ClearWork(DataTable *t)
+{
+    s32 i;
+    for (i = 0; i < t->count; i++) {
+        t->work[i] = 0;
+    }
+}
+
+static inline void Relocate(DataTable *t)
+{
+    DataEntry *e;
+    s32 i;
+    for (i = 0; i < t->count; i++) {
+        e = (DataEntry *)(t->base + t->offsets[i]);
+        e->base = t->base;
+        e->offset += (s32)t->data;
+    }
+}
+
+void fn_801D6A74(DataTable *t, s32 id)
+{
+    t->data = fn_8022ACA8(id);
+    t->count = t->data[0];
+    t->base = (u8 *)t->data + (t->count + 1) * 4;
+    t->offsets = t->data + 1;
+    t->work = fn_801E1C7C(t->count * 4);
+    ClearWork(t);
+    Relocate(t);
 }

@@ -231,6 +231,38 @@ typedef struct HolderB_8012C474 {
     u8 pad[0x24];
     SysB_8012C474 *x24;
 } HolderB_8012C474;
+typedef struct {
+    u8 x0;
+    u8 x1;
+    u8 pad2[4];
+    s8 x6;
+    u8 pad7[0x49];
+    s32 x50;
+    f32 x54;
+    f32 x58;
+    u8 x5c;
+    u8 x5d;
+    u8 pad5e[0xe];
+} Work_8012C670;
+typedef struct {
+    u8 pad0[0x24];
+    Work_8012C670* work;
+} Task_8012C670;
+typedef struct {
+    u8 pad0[4];
+    s8 x4;
+    u8 x5;
+    u8 pad6[0x50 - 6];
+    s32 mode; /* 0x50 */
+    u8 pad54[0x5F - 0x54];
+    s8 st[8]; /* 0x5F */
+} SysB_8012CFC8;
+typedef struct {
+    u8 pad[0x24];
+    SysB_8012CFC8* x24;
+    void** x28;
+} HolderB_8012CFC8;
+extern void* fn_801D497C(void* p);
 
 s32 fn_8012ADB4(void) { return lbl_80346F10->x24->x14; }
 
@@ -806,5 +838,55 @@ void fn_8012C474(s8 mask) {
         } else {
             (*(HolderB_8012C474 **)&lbl_80346F20)->x24->alpha[i] = 0.5f;
         }
+    }
+}
+
+void fn_8012C670(void)
+{
+    (*(Task_8012C670**)&lbl_80346F20) = ((Task_8012C670*)fn_802268E8((void *)((*(void**)&lbl_803475A8)), (void *)(fn_8012C744)));
+    (*(Task_8012C670**)&lbl_80346F20)->work = fn_801E1C7C(0x6c);
+    if ((*(Task_8012C670**)&lbl_80346F20) != NULL) {
+        (*(Task_8012C670**)&lbl_80346F20)->work->x0 = 1;
+    }
+    if ((*(Task_8012C670**)&lbl_80346F20) != NULL) {
+        (*(Task_8012C670**)&lbl_80346F20)->work->x1 = 0;
+    }
+    if ((*(Task_8012C670**)&lbl_80346F20) != NULL) {
+        (*(Task_8012C670**)&lbl_80346F20)->work->x6 = -1;
+    }
+    (*(Task_8012C670**)&lbl_80346F20)->work->x54 = 1.0f;
+    (*(Task_8012C670**)&lbl_80346F20)->work->x58 = 0.0f;
+    (*(Task_8012C670**)&lbl_80346F20)->work->x5c = 3;
+    (*(Task_8012C670**)&lbl_80346F20)->work->x5d = 3;
+    (*(Task_8012C670**)&lbl_80346F20)->work->x50 = 0;
+}
+
+void fn_8012CFC8(void)
+{
+    s32 i;
+
+    for (i = 0; i < 8; i++) {
+        if ((*(HolderB_8012CFC8**)&lbl_80346F20)->x24->st[i] == 1) {
+            switch ((*(HolderB_8012CFC8**)&lbl_80346F20)->x24->mode) {
+            case 0:
+                (*(HolderB_8012CFC8**)&lbl_80346F20)->x24->x5 = 0;
+                (*(HolderB_8012CFC8**)&lbl_80346F20)->x28[i] = fn_801D497C(fn_801D68C4((*(void**)&lbl_80346F04), 0x12));
+                fn_8012DB18();
+                break;
+            case 1:
+                fn_801D4954((*(HolderB_8012CFC8**)&lbl_80346F20)->x28[i]);
+                (*(HolderB_8012CFC8**)&lbl_80346F20)->x28[i] = fn_801D497C(fn_801D68C4((*(void**)&lbl_80346F04), 0x13));
+                fn_8012DB18();
+                break;
+            case 2:
+                fn_801D4954((*(HolderB_8012CFC8**)&lbl_80346F20)->x28[i]);
+                (*(HolderB_8012CFC8**)&lbl_80346F20)->x28[i] = fn_801D497C(fn_801D68C4((*(void**)&lbl_80346F04), 8));
+                fn_8012DB18();
+                break;
+            }
+        }
+    }
+    if ((*(HolderB_8012CFC8**)&lbl_80346F20)->x24->mode == 2) {
+        (*(HolderB_8012CFC8**)&lbl_80346F20)->x24->mode = -1;
     }
 }

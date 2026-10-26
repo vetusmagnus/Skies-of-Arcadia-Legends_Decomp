@@ -1,3 +1,4 @@
+#include "types.h"
 /* Battle event handlers (0x8002A034 - 0x8002BC4C): the command-slot builder fn_8002A034, the quad
  * draw fn_8002B970, the encounter-drop roll fn_8002BA8C with its condition callbacks
  * (fn_8002BBAC .. fn_8002BC44, table lbl_802DBC4C) and the defeat handler fn_8002BC4C. The unit
@@ -83,6 +84,19 @@ extern s32 fn_8025ECC4(void);
 extern s8 lbl_80347334;
 extern void fn_8002D684(void* u);
 extern void fn_8002BA8C(s16 idx);
+typedef struct { u8 pad[0x40c]; void* cur; u8 pad2[0xf4]; } T98;
+extern T98 lbl_803098C8;
+extern u32 lbl_80302AB0[12];
+typedef struct C { u8 pad[0x20]; void* v; } C;
+typedef struct B { u8 pad[4]; C* c; } B;
+typedef struct A { u8 pad[8]; B* b; } A;
+extern void* lbl_80346BB0;
+extern char lbl_802AD0DC[];
+extern char lbl_802AD0E8[];
+extern void fn_8006EA90(char* a, char* b, void* out);
+extern void fn_8006EA70(char* a, char* b, void* out, void* arg);
+extern void fn_801E1DF8(s32 a, void* b);
+extern void fn_80227810(void* p);
 
 u8 fn_8002A034(Obj* o, s32 flag) {
     Slot* arr = o->slots;
@@ -353,5 +367,23 @@ void fn_8002BC4C(s16 idx) {
                 u->b106++;
             }
         }
+    }
+}
+
+void fn_8002B124(void) {
+    A* out;
+    s32 i;
+    void* res = lbl_803098C8.cur;
+    if (res == 0) {
+        fn_8006EA90(lbl_802AD0DC, lbl_802AD0E8, &out);
+    } else {
+        fn_801E1DF8(0, res);
+        fn_8006EA70(lbl_802AD0DC, lbl_802AD0E8, &out, res);
+        lbl_803098C8.cur = 0;
+    }
+    lbl_80346BB0 = out->b->c->v;
+    fn_80227810(lbl_80346BB0);
+    for (i = 0; i < sizeof(lbl_80302AB0) / sizeof(lbl_80302AB0[0]); i++) {
+        lbl_80302AB0[i] = 0;
     }
 }

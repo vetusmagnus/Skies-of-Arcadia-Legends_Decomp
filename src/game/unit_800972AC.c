@@ -1031,6 +1031,127 @@ extern void fn_80097294(s32);
 extern void fn_800970D8(u16, s32, f32);
 extern void fn_800970B4(u16, s32, f32);
 extern void fn_8015EBF4(Work_800AE000*);
+typedef struct Camera {
+    s16 mode;            /* 0x000 */
+    s16 flags;           /* 0x002 */
+    u8 pad_004[0x0c - 0x04];
+    f32 pos[3];          /* 0x00C */
+    u8 pad_018[0x30 - 0x18];
+    f32 tgt[3];          /* 0x030 */
+    s32 roll;            /* 0x03C */
+    u8 pad_040[0x58 - 0x40];
+    f32 v58[6];          /* 0x058 */
+    s32 ang[3];          /* 0x070 */
+    u8 pad_07c[0x94 - 0x7c];
+    NJS_VECTOR dir;      /* 0x094 */
+    NJS_VECTOR up;       /* 0x0A0 */
+    u8 pad_0ac[0xd0 - 0xac];
+    f32 fd0;             /* 0x0D0 */
+    f32 fd4;             /* 0x0D4 */
+    s32 xd8;             /* 0x0D8 */
+    u8 pad_0dc[0xe6 - 0xdc];
+    s16 xe6;             /* 0x0E6 */
+    u8 pad_0e8[0x100 - 0xe8];
+    s32 x100;            /* 0x100 */
+    s32 x104;            /* 0x104 */
+    u8 pad_108[0x16c - 0x108];
+    s8 ret_mode;         /* 0x16C */
+    u8 ret_flags;        /* 0x16D */
+    s16 ret_e6;          /* 0x16E */
+    f32 ret_pos[3];      /* 0x170 */
+    f32 ret_tgt[3];      /* 0x17C */
+    s32 ret_roll;        /* 0x188 */
+    f32 ret_v58[6];      /* 0x18C */
+    s32 ret_ang[3];      /* 0x1A4 */
+    s32 ret_rot[3];      /* 0x1B0 */
+    f32 ret_d4;          /* 0x1BC */
+    u16 ret_d8;          /* 0x1C0 */
+    u16 ret_100;         /* 0x1C2 */
+    f32 ret_d0;          /* 0x1C4 */
+} Camera;
+extern void fn_801DD334(NJS_VECTOR *dir, NJS_VECTOR *up, s32 *rot);
+typedef struct SrcRec {
+    f32 v[6];
+} SrcRec;
+typedef struct SrcHdr {
+    u8 pad0[4];
+    s16 count;      /* 0x04 */
+    u8 pad6[2];
+    SrcRec recs[1]; /* 0x08 */
+} SrcHdr;
+typedef struct Node_8009877C {
+    s16 used;       /* 0x00 */
+    u8 pad2[6];
+    SrcRec *src;    /* 0x08 */
+    u8 padc[0x8C - 0xC];
+    f32 v[6];       /* 0x8C */
+    u8 pada4[0xB4 - 0xA4];
+} Node_8009877C;
+typedef struct Owner_8009877C {
+    u8 pad0[8];
+    SrcHdr **data;  /* 0x08 */
+    u8 padc[0xBB10 - 0xC];
+    s32 id;         /* 0xBB10 */
+    s32 count;      /* 0xBB14 */
+    Node_8009877C *nodes;    /* 0xBB18 */
+} Owner_8009877C;
+extern Node_8009877C *lbl_80346CB0;
+extern void DCStoreRange(void *p, u32 n);
+typedef struct Axis {
+    s32 on;         /* 0x00 */
+    f32 spd;        /* 0x04 */
+    f32 val;        /* 0x08 */
+    f32 lim;        /* 0x0C */
+} Axis;
+typedef struct Node_80099078 {
+    s16 used;       /* 0x00 */
+    s16 delay;      /* 0x02 */
+    u8 pad4[8];
+    Axis axis[8];   /* 0x0C */
+    f32 ofs[8];     /* 0x8C */
+    u8 padac[0xB4 - 0xAC];
+} Node_80099078;
+typedef struct Key {
+    s32 time;       /* 0x00 */
+    f32 val;        /* 0x04 */
+} Key;
+typedef struct Track {
+    s16 flags;      /* 0x00 */
+    s16 count;      /* 0x02 */
+    u8 pad4[4];
+    Key keys[1];    /* 0x08 */
+} Track;
+typedef struct Leaf {
+    u8 pad0[0x24];
+    f32 val[2];     /* 0x24 */
+} Leaf;
+typedef struct Obj_8009B3F4 {
+    u8 pad0[0x202];
+    s16 idx[2];     /* 0x202 */
+    u8 pad206[0x20C - 0x206];
+    s32 timer[2];   /* 0x20C */
+    u8 pad214[0x24C - 0x214];
+    f32 target[2];  /* 0x24C */
+    u8 pad254[0x25C - 0x254];
+    Leaf *leaf;     /* 0x25C */
+    Track *track[2]; /* 0x260 */
+} Obj_8009B3F4;
+typedef struct Obj_8009B4C0 {
+    u8 pad0[0x202];
+    s16 idx[2];     /* 0x202 */
+    u8 pad206[0x20C - 0x206];
+    s32 timer[2];   /* 0x20C */
+    u8 pad214[0x24C - 0x214];
+    f32 target[2];  /* 0x24C */
+    u8 pad254[0x25C - 0x254];
+    Leaf *leaf;     /* 0x25C */
+    Track *track[2]; /* 0x260 */
+} Obj_8009B4C0;
+typedef struct Ang3_800A1998 {
+    s32 x, y, z;
+} Ang3_800A1998;
+extern void njUnitMatrix(NJS_MATRIX m);
+extern void fn_802135B4(NJS_POINT3 *v, Ang3_800A1998 *out);
 
 void fn_800972AC(void)
 {
@@ -3137,5 +3258,192 @@ void fn_800AE000(Obj_800AE000* o) {
     case 4:
         if (w->cfg->p10->n >= 10) o->state = 1;
         break;
+    }
+}
+
+void fn_80097388(Camera *cam) {
+    if (cam->ret_mode >= 15) {
+        fn_801DBE1C("ERROR(retC): NO RETURN CAMERA MODE");
+    }
+    cam->mode = cam->ret_mode;
+    if (cam->mode != 0 && cam->mode != 7) {
+        cam->flags = cam->ret_flags;
+        cam->xe6 = cam->ret_e6;
+        cam->pos[0] = cam->ret_pos[0];
+        cam->pos[1] = cam->ret_pos[1];
+        cam->pos[2] = cam->ret_pos[2];
+        cam->tgt[0] = cam->ret_tgt[0];
+        cam->tgt[1] = cam->ret_tgt[1];
+        cam->tgt[2] = cam->ret_tgt[2];
+        cam->roll = cam->ret_roll;
+        cam->v58[0] = cam->ret_v58[0];
+        cam->v58[1] = cam->ret_v58[1];
+        cam->v58[2] = cam->ret_v58[2];
+        cam->v58[3] = cam->ret_v58[3];
+        cam->v58[4] = cam->ret_v58[4];
+        cam->v58[5] = cam->ret_v58[5];
+        cam->ang[0] = cam->ret_ang[0];
+        cam->ang[1] = cam->ret_ang[1];
+        cam->ang[2] = cam->ret_ang[2];
+        fn_801DD334(&cam->dir, &cam->up, cam->ret_rot);
+        cam->fd4 = cam->ret_d4;
+        cam->xd8 = cam->ret_d8;
+        cam->x104 = cam->x100 = cam->ret_100;
+        cam->fd0 = cam->ret_d0;
+    } else {
+        cam->mode = 0;
+    }
+    cam->flags |= 4;
+}
+
+s32 fn_8009877C(Owner_8009877C *o, s32 id)
+{
+    Node_8009877C *n = lbl_80346CB0;
+    s32 count;
+    SrcRec *src;
+    s32 i;
+    SrcHdr *h;
+
+    o->id = id;
+    h = *o->data;
+    count = h->count;
+    src = h->recs;
+    for (i = 0; i < count; i++, n++, src++) {
+        memset(n, 0, sizeof(Node_8009877C));
+        n->used = 1;
+        n->src = src;
+        n->v[0] = src->v[0];
+        n->v[1] = src->v[1];
+        n->v[2] = src->v[2];
+        n->v[3] = src->v[3];
+        n->v[4] = src->v[4];
+        n->v[5] = src->v[5];
+        DCStoreRange(n, sizeof(Node_8009877C));
+    }
+    o->count = count;
+    o->nodes = lbl_80346CB0;
+    lbl_80346CB0 = n;
+    return count;
+}
+
+void fn_80099078(Node_80099078 *n, s32 count)
+{
+    s32 i;
+    s32 k;
+    Axis *a;
+    f32 *o;
+
+    for (i = 0; i < count; i++, n++) {
+        if (n->delay > 0) {
+            n->delay--;
+        } else if (n->used != 0) {
+            o = n->ofs;
+            a = n->axis;
+            for (k = 0; k < 8; k++, a++, o++) {
+                if (a->on != 0) {
+                    a->val += a->spd;
+                    *o += a->val;
+                    if (a->lim && (f32)fabs(a->val) >= a->lim) {
+                        a->spd *= 0.5;
+                    }
+                }
+            }
+        }
+    }
+}
+
+s32 fn_8009B3F4(Obj_8009B3F4 *o)
+{
+    Track *t;
+    Key *k;
+    s32 ret = 1;
+
+    o->leaf->val[0] += (o->target[0] - o->leaf->val[0]) / (f32)o->timer[0];
+    o->timer[0]--;
+    if (o->timer[0] <= 0) {
+        t = o->track[0];
+        k = t->keys;
+        o->idx[0]++;
+        if (t->count <= o->idx[0]) {
+            if (!(t->flags & 1)) {
+                o->idx[0] = t->count - 1;
+                ret = 0;
+            } else {
+                o->idx[0] = 0;
+            }
+        }
+        k += o->idx[0];
+        o->timer[0] = k->time;
+        o->target[0] = k->val;
+    }
+    return ret;
+}
+
+s32 fn_8009B4C0(Obj_8009B4C0 *o)
+{
+    Track *t;
+    Key *k;
+    s32 ret = 1;
+
+    o->leaf->val[1] += (o->target[1] - o->leaf->val[1]) / (f32)o->timer[1];
+    o->timer[1]--;
+    if (o->timer[1] <= 0) {
+        t = o->track[1];
+        k = t->keys;
+        o->idx[1]++;
+        if (t->count <= o->idx[1]) {
+            if (!(t->flags & 1)) {
+                o->idx[1] = t->count - 1;
+                ret = 0;
+            } else {
+                o->idx[1] = 0;
+            }
+        }
+        k += o->idx[1];
+        o->timer[1] = k->time;
+        o->target[1] = k->val;
+    }
+    return ret;
+}
+
+void fn_800A1998(NJS_POINT3 *from, NJS_POINT3 *to, Ang3_800A1998 *out, s8 mode, u8 flags) {
+    NJS_POINT3 d;
+    Ang3_800A1998 ang;
+
+    d.x = to->x - from->x;
+    d.y = to->y - from->y;
+    d.z = to->z - from->z;
+    switch (mode) {
+    case 1:
+        njPushMatrixEx();
+        fn_80286EE8();
+        fn_8028B498();
+        njUnitMatrix(0);
+        njTranslateEx((void *)(&d));
+        fn_800A1690(0, (void *)(&ang));
+        njPopMatrixEx();
+        break;
+    case 2:
+        njPushMatrixEx();
+        fn_80286EE8();
+        fn_8028B498();
+        njUnitMatrix(0);
+        njTranslateEx((void *)(&d));
+        fn_800A13D8(0, (void *)(&ang));
+        njPopMatrixEx();
+        break;
+    case 0:
+    default:
+        fn_802135B4(&d, &ang);
+        break;
+    }
+    if (flags & 1) {
+        out->x = ang.x;
+    }
+    if (flags & 2) {
+        out->y = ang.y;
+    }
+    if (flags & 4) {
+        out->z = ang.z;
     }
 }

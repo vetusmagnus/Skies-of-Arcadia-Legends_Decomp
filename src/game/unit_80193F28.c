@@ -1987,3 +1987,22 @@ s8 fn_80194C18(s8 idx)
 {
     return lbl_802D8E64[idx * 0x24 + 0x11];
 }
+
+/* story-flag bitset */
+
+static inline s32 FlagTest(u32 b) {
+    s32 f = (((u32*)lbl_80310B3C)[b >> 5] & (1 << (b & 31))) != 0;
+    f = f != 0;
+    return f;
+}
+
+s32 fn_80194CC8(void) {
+    s32 n = 0;
+    s32 i;
+    for (i = 0; i < 8; i++) {
+        if (FlagTest(i + 0xac8)) {
+            n++;
+        }
+    }
+    return n;
+}

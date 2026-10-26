@@ -463,6 +463,70 @@ extern char lbl_802B0D00[];
 extern char lbl_802B0D20[];
 extern s32 fn_8009014C(u8* arr, u8* key, s32 n, s32 size);
 extern int fn_8025CB24(char* buf, const char* fmt, ...);
+typedef struct Chr_8008C98C {
+    u8 pad[0xae];
+    s16 xae;
+} Chr_8008C98C;
+typedef struct Sub_8008C98C {
+    s16 idx;
+    u8 pad2[6];
+    Chr_8008C98C* chr;
+    u8 padc[0x4c - 0xc];
+    s32 x4c;
+    u8 b50;
+} Sub_8008C98C;
+typedef struct Slot_8008C98C {
+    void *fn_8008C98C;
+    u8 pad4[0x19 - 4];
+    u8 state;
+    u8 pad1a[0x24 - 0x1a];
+    Sub_8008C98C* sub;
+} Slot_8008C98C;
+typedef struct Pt {
+    f32 x;       /* 0x00 */
+    f32 y;       /* 0x04 */
+    f32 z;       /* 0x08 */
+    f32 top;     /* 0x0C */
+    f32 floor;   /* 0x10 */
+    s16 lo;      /* 0x14 */
+    s16 hi;      /* 0x16 */
+    u16 loflags; /* 0x18 */
+    u16 hiflags; /* 0x1A */
+    u8 pad1c[8];
+} Pt;
+extern void fn_8022436C(s32 a, Pt *p, s32 b);
+typedef struct CamObj CamObj;
+typedef struct CamLink {
+    u8 pad0[8];
+    CamObj *target;     /* 0x08 */
+} CamLink;
+struct CamObj {
+    u8 pad0[0x44];
+    Angle ang[3];       /* 0x44 */
+    u8 pad50[0x1D8 - 0x50];
+    CamLink *link;      /* 0x1D8 */
+};
+typedef struct CamCtrl {
+    s8 mode;            /* 0x00 */
+    u8 flags;           /* 0x01 */
+    s16 field2;         /* 0x02 */
+    u8 pad4[0x10 - 0x4];
+    f32 x10;            /* 0x10 */
+    f32 x14;            /* 0x14 */
+    f32 x18;            /* 0x18 */
+    u8 pad1c[0x40 - 0x1C];
+    Angle dir[3];       /* 0x40 */
+    u8 pad4c[0x70 - 0x4C];
+} CamCtrl;
+typedef struct Glob {
+    u8 pad0[0x84];
+    u32 x84;
+} Glob;
+extern Glob lbl_80310B3C;
+extern s32 lbl_803473DC;
+extern s32 lbl_80347408;
+extern void fn_801DD14C(Angle *out, Angle *a, Angle *b);
+extern f32 fn_80116028(void);
 
 u32 fn_8008B55C(void* a0, Ent_UNIT0000* e) {
     return (e->x1c >> 9) & 1;
@@ -1658,4 +1722,130 @@ void fn_80095360(void *p, void *q)
     if (lbl_80347450 != 0) {
         fn_80095220(lbl_80347450, p, q);
     }
+}
+
+void fn_8008C98C(Slot_8008C98C* self) {
+    s32 i;
+    Sub_8008C98C* sub;
+    Chr_8008C98C* chr;
+    sub = self->sub;
+    chr = sub->chr;
+    i = sub->idx;
+    switch (self->state) {
+    case 0:
+        if (fn_8007FFE8(i, 0x16) != 0) {
+            if ((chr->xae & 0x400) == 0) {
+                fn_800811E4(i, 0);
+                self->state = 1;
+            } else {
+                s8 r;
+                sub->x4c = 2;
+                r = fn_80083BAC(i, (i < 4) + 1);
+                lbl_80309730[i].bd = r;
+                self->state = 1;
+            }
+        }
+        break;
+    case 1:
+        if (fn_8007FFE8(i, 0) != 0) {
+            ((Slot_8008C98C**)lbl_80309700)[i]->fn_8008C98C = (void *)fn_8008C6BC;
+            ((Slot_8008C98C**)lbl_80309700)[i]->state = 0;
+        }
+        break;
+    }
+}
+
+void fn_8008FFA4(f32 *in, f32 *out) {
+    s32 cx;
+    s32 cz;
+    f32 bx;
+    f32 bz;
+    cx = (8400.0f - in[0]) / 2400.0f;
+    cz = (7200.0f - in[2]) / 2400.0f;
+    bx = 8400.0f + ((s32)-(2400.0f * cx) - 1200.0f);
+    bz = 7200.0f + ((s32)-(2400.0f * cz) - 1200.0f);
+    out[0] = in[0] - bx;
+    out[1] = in[1];
+    out[2] = in[2] - bz;
+}
+
+void fn_80091B4C(s32 n, f32 *pos, f32 *vel, Pt *p)
+{
+    f32 t = 1.0f;
+    f32 dt = t;
+    s32 cnt = n;
+    f32 y;
+    f32 f;
+
+    do {
+        p->x = pos[0] = pos[0] + vel[0];
+        y = p->y = pos[1] + vel[1] * t;
+        p->z = pos[2] = pos[2] + vel[2];
+        fn_8022436C(0, p, 1);
+        if (fn_80094C34((void *)(p))) {
+            if (p->hi != 0 && (p->hiflags & 0x400)) {
+                y = p->floor;
+            } else {
+                f = 9.0f + p->floor;
+                if (y < f) {
+                    y = f;
+                    if (p->lo != 0 && (p->loflags & 0x400) && f > p->top) {
+                        y = p->top;
+                    }
+                }
+            }
+            vel[1] = (y - pos[1]) / t;
+        } else {
+            p->hi = 0;
+        }
+        t += dt;
+        p->y = y;
+        p++;
+    } while (--cnt > 0);
+}
+
+static inline void GetCamAngles(Angle *a, Angle *b)
+{
+    CamObj *p = (*(CamObj **)&lbl_80347450);
+
+    if (p != NULL) {
+        if (fn_8015F1F0((void *)(p)) && p->link != NULL && p->link->target != NULL) {
+            p = p->link->target;
+        }
+        fn_801DD3B8((void *)(a), (void *)(b), (void *)(p->ang));
+    }
+}
+
+s32 fn_8009578C(void)
+{
+    s32 ret = 0;
+    f32 f;
+    Angle a[3];
+    Angle b[3];
+    Angle v[3];
+
+    if (lbl_80346C3C == 2) {
+        if (lbl_80302F18[0] == 1 || lbl_80302F18[0] == 9) {
+            if (!(lbl_80310B3C.x84 & 0x80000000) && !(lbl_80302F18[1] & 8) && lbl_803473DC == 0
+                && fn_8015F1F0((void *)((*(CamObj **)&lbl_80347450))) == 0 && lbl_80347408 == 0) {
+                (*(CamCtrl*)&lbl_802E0084).mode = 0xC;
+                (*(CamCtrl*)&lbl_802E0084).field2 = 0;
+                (*(CamCtrl*)&lbl_802E0084).flags = 0;
+                GetCamAngles(a, b);
+                fn_801DD14C(v, a, b);
+                (*(CamCtrl*)&lbl_802E0084).field2 |= 0x4000;
+                (*(CamCtrl*)&lbl_802E0084).dir[0] = v[0];
+                (*(CamCtrl*)&lbl_802E0084).dir[1] = v[1];
+                (*(CamCtrl*)&lbl_802E0084).dir[2] = v[2];
+                f = fn_80116028();
+                (*(CamCtrl*)&lbl_802E0084).field2 |= 4;
+                ret = 1;
+                (*(CamCtrl*)&lbl_802E0084).x10 = 0.0f;
+                (*(CamCtrl*)&lbl_802E0084).x14 = f;
+                (*(CamCtrl*)&lbl_802E0084).x18 = 4.0f;
+                (*(CamCtrl*)&lbl_802E0084).flags &= ~1;
+            }
+        }
+    }
+    return ret;
 }

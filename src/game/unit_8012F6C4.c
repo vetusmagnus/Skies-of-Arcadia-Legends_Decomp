@@ -344,6 +344,79 @@ extern s32 fn_8012FF08(void);
 extern void fn_8014093C(void *a, s32 b, s32 *c, s32 *d);
 extern void fn_801300E0(s32 *a);
 extern void fn_80130264(s32 *a);
+typedef struct {
+    u8 pad0[0xc];
+    s32 kind[8];   /* 0x0C */
+    u32 color[8];  /* 0x2C */
+    u8 pad4c[0x94 - 0x4c];
+    s8 mode;       /* 0x94 */
+} Sys_80130B64;
+typedef struct {
+    u8 pad[0x24];
+    Sys_80130B64* x24;
+} Holder_80130B64;
+void MemCopy(void* dst, const void* src, s32 size);
+typedef struct {
+    u8 b[0xb];
+    u8 bb;
+    u8 bc;
+    u8 bd;
+    u8 be;
+    u8 pad0f[0x2c - 0x0f];
+    u8 stat[8];
+    u8 pad34[0x5c - 0x34];
+} PcEnt;
+typedef struct {
+    PcEnt pc[8];
+    u8 pad[0x328 - 8 * 0x5c];
+    s8 party[4];
+} PcWork;
+typedef struct {
+    u8 pad0[0x4a];
+    s16 x4a;
+    u8 pad4c[0x78 - 0x4c];
+} PcInfo;
+typedef struct {
+    u8 name[0xb];
+    s8 id;
+    u8 c;
+    u8 d;
+    u8 e;
+    u8 stat[8];
+    u8 pad17;
+    s16 s18;
+    s16 s1a;
+} PcView;
+typedef struct {
+    PcInfo chr[6];
+    u8 pad2d0[0x320 - 0x2d0];
+} PcInfoWork;
+extern PcInfoWork lbl_8030B4D4;
+typedef struct {
+    u8 pad0[0x58];
+    u32 flags; /* 0x58 */
+} Sub;
+typedef struct {
+    u8 pad0[0x238];
+    Sub sub; /* 0x238 */
+} Sys_80137414;
+typedef struct {
+    u8 pad0[0x12];
+    s16 id;
+    s8 b14;
+    u8 pad15[0x22 - 0x15];
+} Member;
+typedef struct {
+    u8 pad0[0x60];
+    Member mem[5];
+} Party;
+typedef struct {
+    u8 pad0[4];
+    s8 idx;
+} Req;
+extern char *lbl_802F7050[];
+void fn_8012F458(s8 flag);
+void fn_8012F468(char *str);
 
 void fn_8012F6C4(s8 idx, u32 val) {
     u8* p = *(u8**)((u8*)lbl_80346F38 + 0x24);
@@ -1404,4 +1477,148 @@ void fn_801355A4(T *t) {
     case 9:
         break;
     }
+}
+
+void fn_80130B64(void)
+{
+    s32 i;
+    s32 m;
+
+    m = (*(Holder_80130B64**)&lbl_80346F40)->x24->mode;
+    for (i = m; i < 8; i++) {
+        switch ((*(Holder_80130B64**)&lbl_80346F40)->x24->kind[i - m]) {
+        case 0:
+            (*(Holder_80130B64**)&lbl_80346F40)->x24->color[i] = 0xFF40DC40;
+            break;
+        case 4:
+            (*(Holder_80130B64**)&lbl_80346F40)->x24->color[i] = 0xFF40DCDC;
+            break;
+        case 1:
+            (*(Holder_80130B64**)&lbl_80346F40)->x24->color[i] = 0xFFDCDC40;
+            break;
+        case 5:
+            (*(Holder_80130B64**)&lbl_80346F40)->x24->color[i] = 0xFFDC7040;
+            break;
+        case 2:
+            (*(Holder_80130B64**)&lbl_80346F40)->x24->color[i] = 0xFFDC4040;
+            break;
+        case 3:
+            (*(Holder_80130B64**)&lbl_80346F40)->x24->color[i] = 0;
+            break;
+        default:
+            (*(Holder_80130B64**)&lbl_80346F40)->x24->color[i] = 0xFF40DC40;
+            break;
+        }
+    }
+}
+
+void fn_80135290(PcView *v, s32 slot, s32 add)
+{
+    PcEnt *e = NULL;
+    int id;
+    PcInfo *info;
+
+    if (v == NULL) return;
+    if (slot < 0 || slot >= 4) return;
+    id = (*(PcWork*)&lbl_8030B7F4).party[slot];
+    if (id >= 0) e = &(*(PcWork*)&lbl_8030B7F4).pc[id];
+    v->id = id;
+    if (e == NULL) return;
+    MemCopy(v, e, 0xb);
+    v->c = e->bb;
+    v->d = e->be;
+    v->e = e->bd;
+    v->stat[0] = e->stat[0];
+    v->stat[1] = e->stat[1];
+    v->stat[2] = e->stat[2];
+    v->stat[3] = e->stat[3];
+    v->stat[4] = e->stat[4];
+    v->stat[5] = e->stat[5];
+    v->stat[6] = e->stat[6];
+    v->stat[7] = e->stat[7];
+    info = &lbl_8030B4D4.chr[id];
+    v->s18 = info->x4a + add;
+    v->s1a = 0;
+}
+
+inline s32 ValidIdx(s32 i)
+{
+    return i >= 0 && i < 0x16;
+}
+
+inline s32 HasFlag(s32 i)
+{
+    Sub* p;
+    s32 r = 0;
+    p = &((Sys_80137414*)fn_80135598())->sub;
+    if (p != 0) {
+        if (ValidIdx(i)) {
+            r = (p->flags & (1 << i)) != 0;
+        }
+    }
+    return r;
+}
+
+s32 fn_80137414(s8* out, s32 n)
+{
+    s32 i;
+    s32 j;
+    s32 rem;
+    s32 ret = 0;
+    s32 cnt;
+    if (out != 0) {
+        rem = n * 6;
+        for (i = 0; i < 0x16 && rem > 0; i++) {
+            if (HasFlag(i)) rem--;
+        }
+        cnt = 0;
+        for (; i < 0x16 && cnt < 6; i++) {
+            if (HasFlag(i)) {
+                out[cnt] = i;
+                cnt++;
+            }
+        }
+        ret = cnt;
+        for (j = cnt; j < 6; j++)
+            out[j] = -1;
+    }
+    return ret;
+}
+
+static inline char *ItemName(int id)
+{
+    id -= 400;
+    return lbl_802F7050[id];
+}
+
+static inline int MemberValid(int idx)
+{
+    Party *p = (Party *)(fn_80135598() + 0x238);
+    int ok = 0;
+
+    if (p != NULL && idx >= 0 && idx < 5 && p->mem[idx].b14 >= 0) {
+        ok = 1;
+    }
+    return ok;
+}
+
+void fn_8013A818(Req *r)
+{
+    int idx;
+    char *str = NULL;
+    Member *m = (Member *)(fn_80135598() + 0x298);
+    int flag;
+
+    if (r == NULL) return;
+    if (m == NULL) return;
+    idx = r->idx;
+    flag = idx >= 3;
+    if (MemberValid(idx)) {
+        str = ItemName(m[r->idx].id);
+    }
+    if (str == NULL) {
+        str = "\n";
+    }
+    fn_8012F458(flag);
+    fn_8012F468(str);
 }

@@ -566,6 +566,100 @@ typedef struct {
     u8 b29;
     u8 b2a;
 } Sys_8014654C;
+extern s32 fn_8013D718(s32 kind, u8 *tbl, s32 id);
+typedef struct {
+    s8 kind;
+    s8 key;
+    s8 member;
+    u8 pad3;
+    s8 level;
+} Rec5;
+typedef struct {
+    u8 pad0[0x14];
+    s8 state;
+    u8 pad15[0x22 - 0x15];
+} Member;
+typedef struct {
+    u8 pad0[0x60];
+    Member mem[5];
+} Party;
+typedef struct {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 pad19[0x24 - 0x19];
+    s32 x24;
+    s32 x28;
+} Task;
+typedef struct {
+    u8 pad0[0xc];
+    Task *task;
+} Struct80306738_80143060;
+extern void fn_8012AEB8(s32 a);
+extern void fn_8012AED0(s32 a);
+extern void fn_8012C648(s32 a);
+extern void fn_8012E5C0(s32 a);
+extern void fn_80130350(s32 a);
+extern void fn_801316B4(s32 a);
+extern void fn_8013312C(s32 a);
+extern void fn_8015A844(void);
+extern void fn_8012C048(s32 a);
+typedef struct {
+    u32 w[0x24];
+} Rec90;
+typedef struct {
+    u8 pad0[0xe];
+    u8 head[0x18];
+    u8 body[0x18];
+} Slot3E;
+typedef struct {
+    u8 pad0[0x28];
+    s8 count;
+    u8 pad29[3];
+    Slot3E slot[4];
+    Rec90 a[8];
+    Rec90 b[8];
+} Work_80144680;
+extern s32 lbl_80346F78;
+extern void fn_80144400(void *p, s32 idx);
+typedef struct {
+    u8 pad[0x20];
+    s32 id;
+} Cfg_80148024;
+extern s32 lbl_803472B4;
+extern s32 lbl_802E5EA8[4];
+extern s32 fn_8015C4A0(s32 a, s32 b);
+extern s32 fn_8015C468(s32 a, s32 b);
+typedef struct {
+    u8 pad0[0x24];
+    char name[1];
+} Node_80148228;
+typedef struct {
+    u8 pad0[0xe8];
+    void* motion;
+    u8 padec[0x1c8 - 0xec];
+    Node_80148228* node;
+} Model_80148228;
+typedef struct {
+    u8 pad0[0x24];
+    Model_80148228* model;
+} Path_80148228;
+typedef struct {
+    Path_80148228* ship;
+    Path_80148228* path;
+} Cam_80148228;
+typedef struct {
+    u8 pad0[0x24];
+    Cam_80148228* cam;
+} Outer_80148228;
+extern Path_80148228* fn_801094C8(s32 id);
+extern s32 fn_8025EF88(const char* a, const char* b);
+typedef struct {
+    u8 pad0[0x14];
+    u8 mask[0x80];
+    u8 pad94[0xa0 - 0x94];
+    s32 lo;
+    s32 hi;
+} Range_8014F834;
 
 void fn_8013D400(s32 a, s32 b) {
     fn_80136A28(a, b, 3, -1, -1, -1);
@@ -1926,4 +2020,278 @@ s32 fn_8013DBDC(s32 a, s32 b)
     if (f & 1) d = -1;
     if (f & 2) d++;
     return fn_8013DB8C(a, b + d, d);
+}
+
+static inline s32 KindMode(s32 kind)
+{
+    s32 mode = -1;
+
+    switch (kind) {
+    case 0:
+        mode = 1;
+        break;
+    case 1:
+        mode = 2;
+        break;
+    }
+    return mode;
+}
+
+static inline int KindUsable(s32 kind, s8 *list, s32 idx)
+{
+    u8 *tbl;
+    s32 res;
+    int ok;
+    u8 *p;
+
+    ok = 0;
+    tbl = NULL;
+    res = -1;
+
+    switch (kind) {
+    case 0:
+        p = fn_80135598();
+        if (p != NULL) {
+            tbl = p + 0x14e;
+        }
+        break;
+    case 1:
+        p = fn_80135598();
+        if (p != NULL) {
+            tbl = p + 0xe;
+        }
+        break;
+    }
+    if (tbl != NULL && list != NULL && idx >= 0 && idx < 6) {
+        res = fn_8013D718(kind, tbl, list[idx]);
+    }
+    if (res >= 0) {
+        ok = 1;
+    }
+    return ok;
+}
+
+void fn_8013D938(s32 a, s32 b, s32 kind, s8 *list, s32 idx)
+{
+    s32 mode;
+    s32 v;
+
+    if (KindUsable(kind, list, idx)) {
+        v = list[idx];
+        mode = KindMode(kind);
+        if (mode != -1) {
+            fn_80136A28(a, b, mode, v, -1, -1);
+        }
+    }
+}
+
+static inline int StateValid(Party *p, s32 m)
+{
+    int ok = 0;
+
+    if (p != NULL && m >= 0 && m < 5 && p->mem[m].state >= 0) {
+        ok = 1;
+    }
+    return ok;
+}
+
+static inline s32 MemberStatus(s32 m)
+{
+    s32 st;
+    Party *p;
+
+    p = (Party *)(fn_80135598() + 0x238);
+    st = 4;
+
+    if (StateValid(p, m)) {
+        st = p->mem[m].state;
+    }
+    return st;
+}
+
+u32 fn_8013FCF0(s32 a, s32 key, s32 n)
+{
+    s32 end;
+    u32 flags = 0;
+    s32 i;
+    s32 st;
+    s32 level;
+
+    end = a > n ? n : a;
+    for (i = -n; i < end; i++) {
+        if (((Rec5*)lbl_80308E90)[i + 4].kind == 4 && key == ((Rec5*)lbl_80308E90)[i + 4].key) {
+            st = MemberStatus(((Rec5*)lbl_80308E90)[i + 4].member);
+            level = ((Rec5*)lbl_80308E90)[i + 4].level;
+            switch (st) {
+            case 1:
+                if (a <= level) {
+                    flags |= 4;
+                }
+                break;
+            case 2:
+                if (a == level) {
+                    flags |= 8;
+                }
+                break;
+            }
+        }
+    }
+    return flags;
+}
+
+static inline void TaskStop(Task *t)
+{
+    if (t != NULL) {
+        t->x24 = 0;
+        t->x28 = 0;
+        t->flags |= 0x40;
+    }
+}
+
+static inline void Close(s32 *p)
+{
+    Struct80306738_80143060 *w;
+
+    if (p != NULL) {
+        *p = -1;
+        (*(s32 **)&lbl_80346F74) = NULL;
+        fn_8012AEB8(1);
+        fn_8012AED0(1);
+        fn_8012C648(1);
+        fn_8012E5C0(1);
+        fn_80130350(1);
+        fn_801316B4(1);
+        fn_8013312C(1);
+        fn_8015A844();
+        fn_8012C048(0x16);
+        w = &(*(Struct80306738_80143060*)&lbl_80306738);
+        if (w != NULL && w->task != NULL) {
+            TaskStop(w->task);
+            w->task = NULL;
+        }
+        lbl_80346F68 = lbl_80346F70;
+        lbl_80346F64 = lbl_80346F6C;
+        lbl_80346F70 = -1;
+        lbl_80346F6C = -1;
+        fn_80142F18();
+    }
+}
+
+void fn_80143060(s32 *p)
+{
+    if ((*(s32 **)&lbl_80346F74) != NULL) {
+        Close((*(s32 **)&lbl_80346F74));
+    }
+    (*(s32 **)&lbl_80346F74) = p;
+    *p = 0;
+    fn_80142F18();
+}
+
+void fn_80144680(void)
+{
+    s32 i;
+    s32 n;
+
+    lbl_80346F78 = 0;
+    n = (*(Work_80144680 **)&lbl_8034727C)->count;
+    for (i = 0; i < n; i++) {
+        (*(Work_80144680 **)&lbl_8034727C)->a[i] = (*(Work_80144680 **)&lbl_8034727C)->a[i + n];
+        fn_801E0FD4((void *)(&(*(Work_80144680 **)&lbl_8034727C)->a[i + n]), 0x90);
+        fn_80144400((*(Work_80144680 **)&lbl_8034727C)->slot[i].head, i);
+        (*(Work_80144680 **)&lbl_8034727C)->b[i] = (*(Work_80144680 **)&lbl_8034727C)->b[i + n];
+        fn_801E0FD4((void *)(&(*(Work_80144680 **)&lbl_8034727C)->b[i + n]), 0x90);
+        fn_80143734((void *)((*(Work_80144680 **)&lbl_8034727C)->slot[i].body), i);
+    }
+}
+
+s32 fn_80148024(s32 side, s32 id)
+{
+    s32 type;
+    s32 r;
+
+    if (lbl_80347290 == 1) {
+        return 0;
+    }
+    if (side != 0) {
+        if ((*(Cfg_80148024**)&lbl_803472A4) == NULL) {
+            return 0;
+        }
+        if ((*(Cfg_80148024**)&lbl_803472A4)->id != id) {
+            return 0;
+        }
+    }
+    type = fn_8015C4A0(side, lbl_803472B4);
+    r = 0;
+    switch (type) {
+    case 4:
+        r = lbl_802E5EA8[fn_8015C468(side, lbl_803472B4)];
+        break;
+    case 5:
+        r = 3;
+        break;
+    case 1:
+    case 2:
+        r = 4;
+        break;
+    case 3:
+    case 6:
+        r = 2;
+        break;
+    case 0:
+        r = 5;
+        break;
+    case 7:
+        r = 10;
+        break;
+    }
+    return r;
+}
+
+void fn_80148228(s32 ship, s32 path)
+{
+    char* fmt = lbl_802B3578;
+
+    if (path != 0x7fffffff) {
+        if (((*(Outer_80148228**)&lbl_803472A0)->cam->path = fn_801094C8(path)) == NULL) {
+            fn_801DBE1C(fmt + 0x34, path);
+        }
+        if (fn_8025EF88((*(Outer_80148228**)&lbl_803472A0)->cam->path->model->node->name, fmt + 0x50) != 0) {
+            fn_801DBE1C(fmt + 0x5c, path, (*(Outer_80148228**)&lbl_803472A0)->cam->path->model->node->name);
+        }
+        if ((*(Outer_80148228**)&lbl_803472A0)->cam->path->model->motion == NULL) {
+            fn_801DBE1C(fmt + 0x74, path);
+        }
+    } else {
+        (*(Outer_80148228**)&lbl_803472A0)->cam->path = NULL;
+    }
+    if (ship != 0x7fffffff) {
+        if (((*(Outer_80148228**)&lbl_803472A0)->cam->ship = fn_801094C8(ship)) != NULL) {
+            (*(Outer_80148228**)&lbl_803472A0)->cam->ship = NULL;
+        }
+    }
+}
+
+void fn_8014F834(Range_8014F834* r, u16 ang, s32 a0, s32 a1, s32 lo, s32 hi, s32 b0, s32 b1)
+{
+    s32 a = ang;
+    s32 top;
+    s32 bot;
+    s32 i;
+
+    if (a >= 0x8000) {
+        a = -(0x10000 - a);
+    }
+    top = (a + a0 + b0 + 0x7f) / 512;
+    bot = (a + a1 + b1 - 0x7f) / 512;
+    top = (top < 0x3f) ? top : 0x3f;
+    bot = (bot > -0x3f) ? bot : -0x3f;
+    top += 0x40;
+    bot += 0x40;
+    for (i = bot; i <= top; i++) {
+        r->mask[i] = 1;
+    }
+    lo = (lo > -0x3fff) ? lo : -0x3fff;
+    hi = (hi < 0x3fff) ? hi : 0x3fff;
+    r->hi = (r->hi > hi) ? r->hi : hi;
+    r->lo = (r->lo < lo) ? r->lo : lo;
 }

@@ -1077,6 +1077,15 @@ typedef struct {
 } Thing;
 extern void fn_801536E0(void);
 extern void fn_8014F714(Item *p);
+typedef struct {
+    s32 x0;
+    u8 pad4[0x14 - 0x4];
+    Key keys[31];   /* 0x14 */
+    Pair pairs[31]; /* 0x90 */
+} State_8015519C;
+extern u32 lbl_80310B3C[];
+extern s32 fn_80212050(void);
+extern Anim* fn_801552B0(s32 owner, KeyIn* in1, Pair* in2);
 
 void fn_8014F970(u8 *self) {
     fn_80153270(self + 0x95c);
@@ -3881,5 +3890,64 @@ void fn_80158B7C(void) {
     fn_80227810(lbl_80347030);
     for (i = 0; i < 8; i++) {
         lbl_80306DB8[i] = 0;
+    }
+}
+
+void fn_801525F8(Obj_801528AC* o, f32 x, f32 y, f32 z)
+{
+    if (o->f2c != 0) {
+        o->model->inner->pos.x = x;
+        o->model->inner->pos.y = y;
+        o->model->inner->pos.z = z;
+        o->model->inner->b1ec = 1;
+        o->model->inner->b1ed = o->f8;
+        o->model->inner->b1ee = 1;
+        o->model->inner->b1ef = 0;
+        o->model->inner->b1f0 = o->f48;
+        o->model->inner->b1f1 = o->f0;
+        o->model->inner->h22c = o->f34;
+        o->model->inner->h22e = o->f50;
+        o->f68->rows[o->f8].fc++;
+    }
+}
+
+void fn_8015519C(KeyIn* in1, Pair* in2)
+{
+    Key* k = (*(State_8015519C**)&lbl_80346FE0)->keys;
+    Pair* p = (*(State_8015519C**)&lbl_80346FE0)->pairs;
+    Anim* a;
+    Key* sk;
+    Pair* sp;
+    int i;
+
+    if (lbl_80310B3C[34] & 0x10) {
+        a = ((Handle*)fn_801552B0(fn_80212050(), in1, in2))->anim;
+        sk = a->keys;
+        sp = a->pairs;
+        for (i = 0; i < 31; i++) {
+            k->a = sk->a;
+            k->b = sk->b;
+            k->c = sk->c;
+            p->w[0] = sp->w[0];
+            p->w[1] = sp->w[1];
+            if (k->c == 0) {
+                return;
+            }
+            k++;
+            sk++;
+            p++;
+            sp++;
+        }
+    } else {
+        k = (*(State_8015519C**)&lbl_80346FE0)->keys;
+        p = (*(State_8015519C**)&lbl_80346FE0)->pairs;
+        for (i = 0; i < 31; i++, k++, p++) {
+            k->a = 0;
+            k->b = 0;
+            k->c = 0;
+            p->w[0] = 0;
+            p->w[1] = 0;
+        }
+        (*(State_8015519C**)&lbl_80346FE0)->x0 = 0;
     }
 }

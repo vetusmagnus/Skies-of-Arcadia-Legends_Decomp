@@ -487,6 +487,108 @@ typedef struct Work_80077D40 {
     u8 pad[0x38];
     Slot_80077D40 slots[80];
 } Work_80077D40;
+typedef struct Rec_8007DEE0 {
+    s32 x0;
+    u8 pad4[0x4c - 4];
+} Rec_8007DEE0;
+typedef struct Ent_8007E13C_8007DEE0 { Rec_8007DEE0* recs; Src8* src; u8 pad8[4]; u8 count; u8 pad0d[7]; } Ent_8007E13C_8007DEE0;
+typedef struct G_8007E13C_8007DEE0 {
+    u8 pad0[8];
+    u32 f8;
+    u8 pad0c[0x14];
+    s32 idx;
+    u8 pad24[4];
+    Ent_8007E13C_8007DEE0* tab;
+} G_8007E13C_8007DEE0;
+typedef struct Pos { u8 pad0[4]; s16 x4; s16 x6; } Pos;
+typedef struct Wk_8007DEE0 { s32 x0; u8 pad4[0x4c - 4]; Pos* pos; u8 pad50[8]; } Wk_8007DEE0;
+typedef struct Tk_8007DEE0 { u8 pad0[0x24]; Wk_8007DEE0* work; } Tk_8007DEE0;
+typedef struct Spawn { s16 i; s16 x2; s16 x4; s16 x6; } Spawn;
+typedef struct ArgDEE0 { u8 pad0[0xc]; Spawn* sp; } ArgDEE0;
+typedef struct Data {
+    u8 pad0[0xc];
+    s8 xc;
+    s8 xd;
+    s8 xe;
+    s8 xf;
+} Data;
+typedef struct BUnit {
+    u8 pad0[0xac];
+    u8 xac;
+} BUnit;
+extern void fn_80081350(Data* d, s16 id, s8 k, s8 x, s8 y);
+typedef struct Shape {
+    u8 pad0[0xAC];
+    s8 w;
+    s8 h;
+} Shape;
+typedef struct Pos_80083878 {
+    u8 pad0[0xC];
+    s8 x;
+    s8 y;
+} Pos_80083878;
+typedef struct Tk_80083878 {
+    u8 pad0[0x24];
+    Pos_80083878* work;
+} Tk_80083878;
+typedef struct Out {
+    s32 x0;
+    s32 max;
+    s32 score;
+} Out;
+typedef struct Pos_800855AC {
+    u8 pad0[0x14];
+    s8 x14;
+} Pos_800855AC;
+typedef struct Tk_800855AC {
+    u8 pad0[0x24];
+    Pos_800855AC* work;
+} Tk_800855AC;
+typedef struct Chr_UNIT0000_800855AC {
+    u8 pad0[0x1C];
+    u32 w1c;
+} Chr_UNIT0000_800855AC;
+extern s32 fn_80083728(s32 a, s32 b);
+extern s32 fn_80082340(s32 a);
+extern s32 fn_80083C50(s32 a, s32 b);
+typedef struct Chr_UNIT0000_80088E4C {
+    u8 pad0[0x1C];
+    u32 w1c;
+    u8 pad20[0x94 - 0x20];
+    s16 x94;
+} Chr_UNIT0000_80088E4C;
+typedef struct ChrState_80088E4C {
+    s32 x0;
+    u8 pad4[0x1C];
+} ChrState_80088E4C;
+typedef struct Party {
+    u8 pad0[0x328];
+    s8 x328[4];
+} Party;
+extern char lbl_802B0C80[];
+extern void fn_801DBE1C(const char* fmt, ...);
+typedef struct Chr_80089074 {
+    u8 pad[0x1c];
+    u32 w1c;
+    u8 pad20[0x82 - 0x20];
+    s16 x82;
+} Chr_80089074;
+typedef struct Chr_800899C0 {
+    u8 pad[0xe];
+    s16 xe;
+} Chr_800899C0;
+extern s32 fn_80089EC8(s32 a);
+typedef struct Chr_80089AA0 {
+    u8 pad[0x88];
+    s16 x88;
+    u8 pad8a[0x94 - 0x8a];
+    s16 x94;
+    s16 x96;
+} Chr_80089AA0;
+typedef struct Chr_8008A174 {
+    u8 pad[0x1c];
+    u32 w1c;
+} Chr_8008A174;
 
 void fn_80075040(Msg* a, s16 i) {
     fn_80075060(a, i);
@@ -2403,4 +2505,316 @@ s32 fn_800824F0(u8* pos, s8 val, u8* grid, u8* dir) {
         return 0;
     }
     return 1;
+}
+
+void fn_8007DEE0(ArgDEE0* a) {
+    Spawn* sp = a->sp;
+    Tk_8007DEE0* t;
+    Wk_8007DEE0* w;
+    if (sp->i < (*(G_8007E13C_8007DEE0*)&lbl_80309E5C).tab[(*(G_8007E13C_8007DEE0*)&lbl_80309E5C).idx].count) {
+        t = fn_802268E8((void *)((*(void**)&lbl_803475A8)), (void *)(fn_800300C4(5)));
+        fn_80061F58(&t->work, 0x58, 0);
+        w = t->work;
+        w->x0 = fn_8006C9AC((*(G_8007E13C_8007DEE0*)&lbl_80309E5C).tab[(*(G_8007E13C_8007DEE0*)&lbl_80309E5C).idx].recs[sp->i].x0, sp->x2 & 0xFFFF);
+        fn_80061F58(&w->pos, 8, 0);
+        w->pos->x4 = sp->x4;
+        w->pos->x6 = sp->x6;
+    }
+}
+
+void fn_80081648(Data* d, s16 id) {
+    s8 cx = d->xc;
+    s8 cy = d->xd;
+    s8 tx = d->xe;
+    s8 ty = d->xf;
+    s8 dx;
+    s8 dy;
+    s8 n;
+    s8 sx;
+    s8 sy;
+    u8 k;
+    s32 i;
+
+    if (cx == tx && cy == ty) {
+        return;
+    }
+    dx = tx - cx;
+    dy = ty - cy;
+    k = ((BUnit**)lbl_80309DE4)[id]->xac;
+    if (__abs(dx) > __abs(dy)) {
+        n = __abs(dx);
+        sx = dx / n;
+        sy = dy / n;
+    } else {
+        n = __abs(dy);
+        sx = dx / n;
+        sy = dy / n;
+    }
+    for (i = 0; i < n; i++) {
+        fn_80081350(d, id, k, tx - sx * i, ty - sy * i);
+    }
+}
+
+void fn_80083878(s32 unused, Out* out, s32 idx, Shape* sh, s8 px, s8 py) {
+    s16 w = sh->w;
+    s8 d;
+    s8 dx;
+    s8 h = sh->h;
+    s8 dy;
+    s8 mx;
+
+    dx = __abs(((Tk_80083878**)lbl_80309700)[idx]->work->x - px);
+    while (--w > 0) {
+        d = __abs(w + ((Tk_80083878**)lbl_80309700)[idx]->work->x - px);
+        dx = dx > d ? dx : d;
+    }
+    dy = __abs(((Tk_80083878**)lbl_80309700)[idx]->work->y - py);
+    while (--h > 0) {
+        d = __abs(((Tk_80083878**)lbl_80309700)[idx]->work->y - py);
+        dy = dy > d ? dy : d;
+    }
+    mx = dy > dx ? dy : dx;
+    out->max = mx;
+    out->score = (s8)(mx + (dy > dx ? dx / 2 : dy / 2));
+}
+
+s32 fn_800855AC(s32 i) {
+    s8 r;
+    s8 cur;
+
+    if (((Chr_UNIT0000_800855AC**)lbl_80309DE4)[i]->w1c & 0x800) {
+        r = fn_80083C50(i, 3);
+        if (r == -1) {
+            lbl_80309174[i].x6 = 1;
+            return 0;
+        }
+        lbl_80309174[i].x4 = r;
+        return 2;
+    }
+    cur = lbl_80309174[i].x4;
+    if (cur != -1 && cur > 3 && fn_80078610(cur) != 0) {
+        if (fn_80083728(i, cur) != 0 && fn_80082340(i) == 0 && ((Tk_800855AC**)lbl_80309700)[i]->work->x14 <= 4) {
+            return 1;
+        }
+        lbl_80309174[i].x6 = 1;
+        return 1;
+    }
+    r = fn_80083C50(i, 2);
+    if (r == -1) {
+        lbl_80309174[i].x6 = 1;
+        return 0;
+    }
+    lbl_80309174[i].x4 = r;
+    return 2;
+}
+
+static inline s32 PickRandomAlive(void) {
+    s32* p = ((s32*)lbl_80302C98);
+    s32 j;
+    s32 n;
+
+    p[0] = -1;
+    p[1] = -1;
+    p[2] = -1;
+    p[3] = -1;
+    n = 0;
+    for (j = 0; j <= 3; j++) {
+        if (fn_80078610(j) != 0) {
+            *p++ = j;
+            n++;
+        }
+    }
+    return ((s32*)lbl_80302C98)[fn_8025ECC4() % n];
+}
+
+s32 fn_80088E4C(s32 i) {
+    s32 j;
+
+    for (j = 0; j < 4; j++) {
+        if ((*(Party*)&lbl_8030B7F4).x328[j] == 1) {
+            if (fn_80078610(j) != 0) {
+                return j;
+            }
+            ((ChrState_80088E4C*)lbl_80309174)[i].x0 = 0x226;
+            return PickRandomAlive();
+        }
+    }
+    fn_801DBE1C(lbl_802B0C80);
+    return j;
+}
+
+static inline s32 RandomLivingAlly(void) {
+    s32 i;
+    s32 n;
+    s32* out;
+
+    out = lbl_80302C98;
+    out[0] = -1;
+    out[1] = -1;
+    out[2] = -1;
+    out[3] = -1;
+    n = 0;
+    for (i = 0; i <= 3; i++) {
+        if (fn_80078610(i)) {
+            lbl_80302C98[n] = i;
+            n++;
+        }
+    }
+    return lbl_80302C98[fn_8025ECC4() % n];
+}
+
+s32 fn_80089074(void) {
+    s32 i;
+    s32 best = -1;
+    s32 bestVal = 0;
+
+    for (i = 0; i <= 3; i++) {
+        if (fn_80078610(i) && !(((Chr_80089074**)lbl_80309DE4)[i]->w1c & 0x200) && bestVal < ((Chr_80089074**)lbl_80309DE4)[i]->x82) {
+            best = i;
+            bestVal = ((Chr_80089074**)lbl_80309DE4)[i]->x82;
+        }
+    }
+    if (best == -1) {
+        return RandomLivingAlly();
+    }
+    return best;
+}
+
+s32 fn_800899C0(s32 a) {
+    s32 i;
+    s32 n;
+
+    lbl_80302C98[0] = -1;
+    lbl_80302C98[1] = -1;
+    lbl_80302C98[2] = -1;
+    lbl_80302C98[3] = -1;
+    lbl_80302C98[4] = -1;
+    lbl_80302C98[5] = -1;
+    lbl_80302C98[6] = -1;
+    lbl_80302C98[7] = -1;
+    n = 0;
+    for (i = 4; i <= 11; i++) {
+        if (fn_80078610(i) && ((((Chr_800899C0**)lbl_80309DE4)[i]->xe >> 3) & 1) == 0 && !(((Chr_800899C0**)lbl_80309DE4)[i]->xe & 0x10)) {
+            lbl_80302C98[n] = i;
+            n++;
+        }
+    }
+    if (n != 0) {
+        return lbl_80302C98[fn_8025ECC4() % n];
+    }
+    return fn_80089EC8(a);
+}
+
+s32 fn_80089AA0(void) {
+    s32 i;
+    s32 n;
+    s32 best;
+
+    lbl_80302C98[0] = -1;
+    lbl_80302C98[1] = -1;
+    lbl_80302C98[2] = -1;
+    lbl_80302C98[3] = -1;
+    lbl_80302C98[4] = -1;
+    lbl_80302C98[5] = -1;
+    lbl_80302C98[6] = -1;
+    lbl_80302C98[7] = -1;
+    best = 0;
+    for (i = 4; i <= 11; i++) {
+        if (fn_80078610(i) && best < ((Chr_80089AA0**)lbl_80309DE4)[i]->x88) {
+            best = ((Chr_80089AA0**)lbl_80309DE4)[i]->x88;
+        }
+    }
+    n = 0;
+    for (i = 4; i <= 11; i++) {
+        if (fn_80078610(i) && best == ((Chr_80089AA0**)lbl_80309DE4)[i]->x88) {
+            lbl_80302C98[n] = i;
+            n++;
+        }
+    }
+    return lbl_80302C98[fn_8025ECC4() % n];
+}
+
+s32 fn_80089BA4(void) {
+    s32 i;
+    s32 n;
+    s32 best;
+
+    lbl_80302C98[0] = -1;
+    lbl_80302C98[1] = -1;
+    lbl_80302C98[2] = -1;
+    lbl_80302C98[3] = -1;
+    lbl_80302C98[4] = -1;
+    lbl_80302C98[5] = -1;
+    lbl_80302C98[6] = -1;
+    lbl_80302C98[7] = -1;
+    best = 0;
+    for (i = 4; i <= 11; i++) {
+        if (fn_80078610(i) && best < ((Chr_80089AA0**)lbl_80309DE4)[i]->x96) {
+            best = ((Chr_80089AA0**)lbl_80309DE4)[i]->x96;
+        }
+    }
+    n = 0;
+    for (i = 4; i <= 11; i++) {
+        if (fn_80078610(i) && best == ((Chr_80089AA0**)lbl_80309DE4)[i]->x96) {
+            lbl_80302C98[n] = i;
+            n++;
+        }
+    }
+    return lbl_80302C98[fn_8025ECC4() % n];
+}
+
+s32 fn_80089CA8(void) {
+    s32 i;
+    s32 n;
+    s32 best;
+
+    lbl_80302C98[0] = -1;
+    lbl_80302C98[1] = -1;
+    lbl_80302C98[2] = -1;
+    lbl_80302C98[3] = -1;
+    lbl_80302C98[4] = -1;
+    lbl_80302C98[5] = -1;
+    lbl_80302C98[6] = -1;
+    lbl_80302C98[7] = -1;
+    best = 0;
+    for (i = 4; i <= 11; i++) {
+        if (fn_80078610(i) && best < ((Chr_80089AA0**)lbl_80309DE4)[i]->x94) {
+            best = ((Chr_80089AA0**)lbl_80309DE4)[i]->x94;
+        }
+    }
+    n = 0;
+    for (i = 4; i <= 11; i++) {
+        if (fn_80078610(i) && best == ((Chr_80089AA0**)lbl_80309DE4)[i]->x94) {
+            lbl_80302C98[n] = i;
+            n++;
+        }
+    }
+    return lbl_80302C98[fn_8025ECC4() % n];
+}
+
+s32 fn_8008A174(s32 idx) {
+    s32 t;
+    s32 r;
+
+    if (lbl_80309DE4[idx]->w1c & 0x800) {
+        r = fn_80083C50(idx, 3);
+        if (r == -1) {
+            lbl_80309174[idx].x4 = r;
+            return 0;
+        }
+        lbl_80309174[idx].x4 = r;
+        return 2;
+    }
+    t = lbl_80309174[idx].x4;
+    if (t != -1 && t <= 3 && fn_80083728(idx, t)) {
+        lbl_80309174[idx].x4 = t;
+        return 2;
+    }
+    r = fn_80083C50(idx, 1);
+    if (r == -1) {
+        lbl_80309174[idx].x4 = -1;
+        return 0;
+    }
+    lbl_80309174[idx].x4 = r;
+    return 2;
 }

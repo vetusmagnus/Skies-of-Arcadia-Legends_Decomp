@@ -5,6 +5,7 @@
 #include "game/drawstate.h"
 #include <math.h>
 #include "game/menu.h"
+#include <dolphin/os/OSFastCast.h>
 extern void fn_80226D14(void);
 extern void fn_80226BD0(f32 a, f32 b);
 typedef struct {
@@ -2069,6 +2070,102 @@ extern void fn_80296EEC(s32 a, s32 b, s32 c);
 extern f32 fn_80291A5C(f32 x);
 extern f32 njSin(s32 a);
 extern f32 njCos(s32 a);
+typedef struct {
+    f32 x, y, z, u, v;
+    u32 colour;
+} VertexTex;
+extern void fn_80291064(VertexTex* v, s32 count, s32 mode);
+extern void fn_80298FE4(s32 i);
+typedef struct {
+    u8 pad0[0x19];
+    u8 mode;
+    u8 pad1a[0x24 - 0x1a];
+    void* ent;
+} Obj_800DF5C0;
+typedef struct { u8 pad0[0x24]; s32 w24; } X10;
+typedef struct { u8 pad0[0x10]; X10* x; } Y1c8;
+typedef struct {
+    u8 pad0[0x168];
+    s16 s168;
+    u8 pad16a[0x1c8 - 0x16a];
+    Y1c8* p1c8;
+    u8 pad1cc[0x1ec - 0x1cc];
+    u8 b1ec, b1ed;
+    s8 b1ee;
+    u8 pad1ef[0x23c - 0x1ef];
+    s32 w23c;
+    u8 pad240[0x25c - 0x240];
+    s32 w25c;
+    void* p260;
+    void** p264;
+    s32 w268;
+} Ent_800DF5C0;
+extern void PartKill(void* p);
+extern void fn_800DE9BC(Obj_800DF5C0* o);
+extern void fn_80225F58(u16 n);
+extern void fn_80109118(s32 a, u32 b);
+extern void fn_802273E0(void* p, s32 n);
+typedef struct {
+    u8 cell[24][28];
+} Grid;
+typedef struct {
+    u8 pad0[0x38];
+    s16 s38;
+    u8 pad3a[0x47c - 0x3a];
+    Grid grid[1];
+} Game6E14_800EEDD4;
+extern u8 lbl_802E4460[12][14];
+extern char lbl_802B2308[];
+extern char lbl_802B2328[];
+extern s32 fn_801F3844(s32 n);
+extern void fn_801F3E6C(s32 n);
+extern void fn_801F3CB0(s32 n);
+typedef struct {
+    u8 pad0[0xe8];
+    struct { s32 p0; u32 len; } *anim; /* 0xE8 */
+    u8 pad_ec[0x180 - 0xec];
+    s32 timer;      /* 0x180 */
+    u8 pad184[0x18c - 0x184];
+    f32 f18c;
+    f32 f190;
+    u8 pad194[4];
+    s32 state;      /* 0x198 */
+    u8 pad19c[0x20c - 0x19c];
+    s32 idx;        /* 0x20C */
+    s32 cnt;        /* 0x210 */
+    u8 pad214[0x23c - 0x214];
+    s32 state3;     /* 0x23C */
+    u8 pad240[0x24c - 0x240];
+    f32 f24c;
+    u8 pad250[0x25c - 0x250];
+    SeqTbl *tbl;    /* 0x25C */
+} Obj_80107D90;
+typedef struct {
+    u8 pad0[0x19];
+    u8 f19;
+    u8 pad1a[0x24 - 0x1a];
+    Obj_80107D90 *obj;   /* 0x24 */
+} Parent_80107D90;
+typedef struct {
+    u8 pad0[0x38];
+    f32 x38;
+    f32 x3c;
+    f32 x40;
+    u8 pad44[0x100 - 0x44];
+    void* texlist;
+    u8 pad104[0x1bc - 0x104];
+    void* x1bc;
+} Work_8010E074;
+typedef struct {
+    u8 pad0[0x19];
+    u8 state;
+    u8 pad1a[0x24 - 0x1a];
+    Work_8010E074* work;
+} Obj_8010E074;
+extern void fn_80222838(void* p);
+extern void fn_8011622C(s32 v);
+extern u32 lbl_803473FC;
+extern s32 lbl_80347400;
 
 void fn_800D81E8(void) {
     fn_80226D14();
@@ -6792,6 +6889,311 @@ void fn_8010A834(Obj_8010A834 *self) {
     case 0xff:
         if (c->p1c8->tex != 0) fn_802275A4((void *)(c->p1c8->tex), 0);
         fn_80100B74((void *)(self));
+        break;
+    }
+}
+
+/* Draws texture idx of tex as a screen rectangle (x0,y0)-(x1,y1) at depth z with the given alpha.
+ * Needs __OSs16tof32 / OSs16tof32 in <dolphin/os/OSFastCast.h>. */
+void fn_800DDE98(s16 x0, s16 y0, s16 x1, s16 y1, f32 alpha, f32 z, NJS_TEXLIST* tex, s16 idx) {
+    DrawState st;
+    VertexTex v[4];
+    f32 zz;
+    u32 col;
+    s32 i;
+    if (tex != 0) {
+        DrawStateDefault2D(&st);
+        fn_80299040(tex);
+        if (idx >= tex->nbTexture) idx = tex->nbTexture - 1;
+        fn_80298FE4(idx);
+        zz = fn_801DBD9C(z);
+        alpha *= 255.0f;
+        col = (__OSf32tou8(alpha) << 24) | 0xFFFFFF;
+        OSs16tof32(&x0, &v[0].x);
+        OSs16tof32(&y0, &v[0].y);
+        v[0].u = 0.0f;
+        v[0].v = 0.0f;
+        v[1].x = v[0].x;
+        OSs16tof32(&y1, &v[1].y);
+        v[1].u = 0.0f;
+        v[1].v = 1.0f;
+        OSs16tof32(&x1, &v[2].x);
+        v[2].y = v[0].y;
+        v[2].u = 1.0f;
+        v[2].v = 0.0f;
+        v[3].x = v[2].x;
+        v[3].y = v[1].y;
+        v[3].u = 1.0f;
+        v[3].v = 1.0f;
+        for (i = 0; i < 4; i++) {
+            v[i].z = zz;
+            v[i].colour = col;
+        }
+        if (DrawStatePush(&st) != 0) {
+            fn_80291064(v, 4, 1);
+            DrawStatePop(0);
+        }
+    }
+}
+
+static inline void ent_reset(Ent_800DF5C0* e) {
+    if (e != 0) {
+        e->w25c = 0;
+        e->p260 = 0;
+        e->p264 = 0;
+        e->w268 = 0;
+        e->w23c = 0;
+        e->b1ec = 0;
+        e->b1ed = 0;
+        e->b1ee = -1;
+    }
+}
+
+static inline void partlist_free(void** p) {
+    if (p != 0) {
+        void** q = p;
+        while (*q != 0) {
+            PartKill(*q);
+            q++;
+        }
+        fn_801E1784(p);
+    }
+}
+
+static inline void ent_free_parts(Ent_800DF5C0* e) {
+    void** p;
+    if (e != 0) {
+        p = e->p264;
+        if (p != 0) {
+            partlist_free(p);
+            e->p264 = 0;
+        }
+    }
+}
+
+static inline void ent_res(Ent_800DF5C0* e) {
+    s32 n = 0;
+    void* t;
+    if (fn_801C6068(e, 9) != 0) {
+        n = e->p1c8->x->w24 + 1;
+    }
+    if (n > 0) fn_80225F58(n);
+    t = e->p260;
+    if (t != 0) {
+        fn_80109118(-1, (u32)t);
+        fn_802273E0(e->p260, 0);
+        fn_801E17E0(e->p260);
+        e->p260 = 0;
+    }
+}
+
+void fn_800DF5C0(Obj_800DF5C0* o) {
+    Ent_800DF5C0* e;
+    void** p;
+    if (o == 0) return;
+    e = o->ent;
+    if (e == 0) return;
+    switch (o->mode) {
+    case 0:
+        ent_reset(e);
+        if (e != 0) e->s168 = 0;
+        o->mode = 1;
+        break;
+    case 1:
+        fn_800DE9BC(o);
+        break;
+    case 2:
+    case 0xFF:
+        if (e != 0) {
+            if (e != 0) {
+                p = e->p264;
+                if (p != 0) {
+                    partlist_free(p);
+                    e->p264 = 0;
+                }
+            }
+            ent_res(e);
+        }
+        fn_80100B74(o);
+        break;
+    case 0xFE:
+        break;
+    }
+}
+
+s32 fn_800EEDD4(s32 n, f32 fx, f32 fy) {
+    s32 i = n <= 0 ? 0 : n - 1;
+    s32 x;
+    s32 y;
+    s32 v;
+    if (fx > 0.0f) {
+        x = (fx - 36.0f) / 16.0f;
+    } else {
+        x = 0;
+    }
+    if (fy > 0.0f) {
+        y = (fy - 53.0f) / 16.0f;
+    } else {
+        y = 0;
+    }
+    if (x >= 28) x = 27;
+    if (y >= 24) y = 23;
+    if (lbl_802E4460[y / 2][x / 2] != 0) {
+        v = (*(Game6E14_800EEDD4**)&lbl_80346E14)->grid[i].cell[y][x];
+        if ((*(Game6E14_800EEDD4**)&lbl_80346E14)->s38 < 14) {
+            if (v == 7) v = 0;
+        } else {
+            if (v == 11) v = 7;
+        }
+    } else {
+        v = 12;
+    }
+    return v;
+}
+
+void fn_800FF4EC(s32 n) {
+    u32 b;
+    s32 set;
+    if (n < 0 || n >= 6) {
+        fn_801DBE1C(lbl_802B2308);
+    }
+    b = n + 0x408;
+    set = (lbl_80310B3C[b >> 5] & (1 << (b & 31))) != 0;
+    if (set != 0) {
+        if (fn_801F3844(n) == 0) {
+            fn_801DBE1C(lbl_802B2328);
+        }
+        lbl_80310B3C[b >> 5] &= ~(1 << (b & 31));
+        b = n + 0x402;
+        lbl_80310B3C[b >> 5] |= 1 << (b & 31);
+    }
+}
+
+void fn_800FF6B4(s32 n) {
+    s32 set;
+    u32 a;
+    u32 b;
+    u32 ma;
+    u32 mb;
+    if (n < 0 || n >= 6) {
+        fn_801DBE1C(lbl_802B2308);
+    }
+    a = n + 0x408;
+    ma = 1 << (a & 31);
+    set = (lbl_80310B3C[a >> 5] & ma) != 0;
+    if (set == 0) {
+        b = n + 0x402;
+        mb = 1 << (b & 31);
+        set = (lbl_80310B3C[b >> 5] & mb) != 0;
+        if (set == 0) {
+            fn_801F3E6C(n);
+        } else {
+            fn_801F3CB0(n);
+        }
+        lbl_80310B3C[a >> 5] |= ma;
+        lbl_80310B3C[b >> 5] |= mb;
+    }
+}
+
+static inline void SeqStart(Obj_80107D90 *o) {
+    SeqTbl *t = o->tbl;
+    o->idx = 0;
+    o->timer = t->ent[0].a;
+    fn_801E735C(t->ent[0].b, (void *)(o), (f32)t->ent[0].c / 100.0f);
+    o->f24c = o->f190;
+    o->f190 = 0.0f;
+    o->cnt = t->ent[0].d;
+}
+
+s32 fn_80107D90(Parent_80107D90 *p) {
+    Obj_80107D90 *o;
+
+    switch (fn_8015F218((void *)(p->obj))) {
+    case 1:
+        o = p->obj;
+        if (p->f19 != 1) {
+            SeqStart(o);
+        }
+        o->f190 = o->f24c;
+        o->state3 = 3;
+        p->f19 = 3;
+        return 1;
+    case 2:
+        o = p->obj;
+        SeqStart(o);
+        o->state3 = 4;
+        p->f19 = 4;
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+/* Parses a "(r,g,b)" colour after the cursor; "()" gives the default grey.
+ * On a syntax error the cursor is put back and 0 is returned. */
+u32 fn_8010B940(const u8** pp) {
+    const u8* start = *pp;
+    u32 col;
+    u8 v;
+    u16 c;
+    if (TextReadChar(pp) == '(') {
+        col = 0;
+        v = 0;
+        do {
+            c = TextReadChar(pp);
+            if (c == ')') {
+                if (start + 2 == *pp) {
+                    col = 0xFFC0C0C0;
+                } else {
+                    col <<= 8;
+                    col |= 0xFF000000 | v;
+                }
+                return col;
+            }
+            if (c == ',') {
+                col <<= 8;
+                col |= v;
+                v = 0;
+            } else if (c >= '0' && c <= '9') {
+                v = v * 10 + (u8)(c - '0');
+            } else {
+                break;
+            }
+        } while (c != 0);
+    }
+    *pp = start;
+    return 0;
+}
+
+void fn_8010E074(Obj_8010E074* o) {
+    Work_8010E074* w = o->work;
+
+    switch (o->state) {
+    case 0:
+    case 0xfe:
+        if (w->texlist != NULL) {
+            fn_80227810(w->texlist);
+        }
+        o->state = 1;
+        w->x38 = 100000.0f;
+        w->x3c = 100000.0f;
+        w->x40 = 100000.0f;
+        fn_80222838(w->x1bc);
+        fn_8015ED90(o);
+        break;
+    case 1:
+        fn_8015E600(w);
+        break;
+    case 0xff:
+        if (lbl_803473FC != 0) {
+            lbl_80347400 = 0x7FFFFFFF;
+            fn_8011622C(0x7FFFFFFF);
+        }
+        fn_8015EBF4(o->work);
+        if (w->texlist != NULL) {
+            fn_802275A4(w->texlist, 0);
+        }
+        fn_80100B74(o);
         break;
     }
 }
