@@ -796,12 +796,10 @@ typedef struct Task_800B2588 {
     u8 pad28[0x40 - 0x28];
 } Task_800B2588;
 /* Scales a 0..1 float to a u8 (x * 255) with the SDK fast cast (psq_st through GQR2).
- * The original calls the Dolphin SDK inline __OSf32tou8 from <dolphin/os/OSFastCast.h>;
- * our extern/sdk copy of that header only has OSInitFastCast, so the missing SDK inlines are
- * in OSFastCast_missing.h (SDK code, belongs in extern/sdk/include/dolphin/os/OSFastCast.h).
+ * The original calls the Dolphin SDK inline __OSf32tou8 from <dolphin/os/OSFastCast.h>.
  * The game code itself is plain C. Siblings: fn_8009E4B8 = __OSu8tof32(b) * K,
  * fn_8009E4D4 = __OSf32tou8((K0 + x) * 255). */
-#include "../build/agents/n_01/OSFastCast_missing.h"
+#include <dolphin/os/OSFastCast.h>
 typedef unsigned char u8;
 typedef float f32;
 typedef struct { u8 pad[0x19]; u8 state; } Obj_800A35E0_C;

@@ -40,6 +40,23 @@ static inline void OSInitFastCast(void) {
 
 #endif
 }
+
+static inline unsigned char __OSf32tou8(register float inF) {
+  unsigned int tmp;
+  register unsigned int* tmpPtr = &tmp;
+  register unsigned char ret;
+#ifdef __MWERKS__
+  asm
+  {
+        psq_st  inF, 0(tmpPtr), 0x1, OS_FASTCAST_U8
+        lbz     ret, 0(tmpPtr)
+  }
+#endif
+  return ret;
+}
+
+static inline void OSf32tou8(float* in, unsigned char* out) { *out = __OSf32tou8(*in); }
+
 // clang-format off
 
 #ifdef __cplusplus
