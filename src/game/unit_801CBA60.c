@@ -84,9 +84,15 @@ void fn_801CC3A4(Msg* a, s16 i) {
     fn_801CBE38(a, i);
 }
 
-extern void fn_8023AB28(Msg*, s16);
-void fn_801CC578(Msg* a, s16 i) {
+extern void fn_8023AB28();
+void fn_801CC578(Msg* a, s32 i) {
     fn_8023AB28(a, i);
+}
+
+extern char lbl_8034BD14;
+void fn_801CC598(void) {
+    fn_8023AB28(&lbl_8034BD14);
+
 }
 
 s32 fn_801CC5BC(void)
