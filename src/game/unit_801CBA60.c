@@ -16,6 +16,24 @@ extern u32 lbl_80347508;
 extern u32 lbl_80347504;
 extern s32 fn_8023A4B0(void);
 
+extern u32 lbl_803474F4;
+s32 fn_801CAE84(void) {
+    return 1;
+}
+
+void fn_801CAE8C(void) {
+}
+
+void fn_801CAE90(void) {
+}
+
+void fn_801CAE94(void) {
+}
+
+void fn_801CB738(void) {
+    lbl_803474F4 = 0;
+}
+
 void fn_801CBA60(float a, float c)
 {
     s32 i = lbl_803474F8;

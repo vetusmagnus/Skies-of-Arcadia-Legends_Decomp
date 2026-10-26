@@ -123,7 +123,7 @@ game/drawstate.c:
 	.sdata2     start:0x8034BCD8 end:0x8034BCE0
 
 game/unit_801CBA60.c:
-	.text       start:0x801CBA60 end:0x801CED24
+	.text       start:0x801CAE84 end:0x801CED24
 
 game/unit_801CED24.c:
 	.text       start:0x801CED24 end:0x801D1AE8
