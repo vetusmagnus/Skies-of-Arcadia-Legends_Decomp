@@ -1,12 +1,12 @@
 #include "types.h"
 #include "string.h"
+#include <math.h>
 
 typedef struct Obj12 {
     u8 pad_00[0x12];
     u16 v12;
 } Obj12;
 extern s16 lbl_80346C3C;
-extern s16 lbl_80302F18[];
 extern s16 lbl_80346750;
 extern u32 lbl_803473F8;
 extern u32 lbl_803473F4;
@@ -173,6 +173,18 @@ extern void fn_800A39E0(void);
 extern void fn_800B0900(void);
 extern u8 lbl_80303618[];
 extern u8 lbl_80303634[];
+extern u32 lbl_80346C40;
+extern void* lbl_80347588;
+void* fn_802267AC(void* a, void* b);
+void fn_80096DA4(void);
+typedef struct {
+    void** slots;
+    s32 count;
+} Pool;
+extern char lbl_802B0F0C[];
+void* fn_801E1A2C(s32 a, u32 size);
+void fn_801DBE1C(char* msg, ...);
+void fn_8009DCA8(u8* o, u8* p);
 
 void fn_800972AC(void)
 {
@@ -471,4 +483,80 @@ void fn_800B0F0C(void) {
     fn_800B0900();
     memset(lbl_80303618, 0, 0x1c);
     memset(lbl_80303634, 0, 0x1c);
+}
+
+s32 fn_8009766C(void) {
+    s32 r;
+    void* obj;
+    if (lbl_80346750 == 0) return 0;
+    lbl_80346C40 = 0;
+    r = 0;
+    obj = fn_802267AC(lbl_80347588, (void*)fn_80096DA4);
+    if (obj) {
+        *(u8**)((u8*)obj + 0x24) = (u8*)lbl_80302F18;
+        *(u32*)((u8*)lbl_80302F18 + 0x108) = 0;
+        *(u32*)((u8*)lbl_80302F18 + 0x128) = 0;
+        lbl_80346750 = 0;
+        r = 1;
+    }
+    return r;
+}
+
+s32 fn_8009E840(Pool* pool, u8* item, s32 n) {
+    s32 i = 0;
+    s32 idx = -1;
+    void** s;
+    if (pool == 0) return -1;
+    s = pool->slots;
+    for (; i < n; i++) {
+        if (*s == 0) {
+            *s = item;
+            idx = i;
+            pool->count++;
+            break;
+        }
+        s++;
+    }
+    if (idx == -1) item[0x19] = 0xff;
+    return idx;
+}
+
+void* fn_8009E8B0(s32 n) {
+    u8* p;
+    if (n > 0) {
+        p = fn_801E1A2C(1, n * 4 + 8);
+        if (p == 0) fn_801DBE1C(lbl_802B0F0C);
+        *(u8**)p = p + 8;
+    }
+    return p;
+}
+
+u32 fn_800A1AE8(u8* o, u32 idx) {
+    u32 cnt = 0;
+    u32* p = *(u32**)(*(u8**)(o + 0x1c8) + 0x10);
+    u32 n = p[0];
+    s32 found = 0;
+    u32 i = idx;
+    p += 1;
+    if (idx >= n) return 0;
+    p += idx;
+    while (i < n && !found) {
+        if (p[1] == 0) {
+            found = 1;
+        } else {
+            cnt++;
+            p += 2;
+            i += 2;
+        }
+    }
+    return cnt;
+}
+
+void fn_800ADF98(u8* o) {
+    u8* a = *(u8**)(o + 0x1c8);
+    u8* t = *(u8**)(a + 0x10);
+    s32 v = *(s32*)(t + 0x44);
+    if ((s32)fabsf((f32)v) == 1) {
+        fn_8009DCA8(o, t + 0x24);
+    }
 }

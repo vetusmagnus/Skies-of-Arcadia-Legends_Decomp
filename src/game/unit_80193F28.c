@@ -25,6 +25,12 @@ extern s32 fn_801EE344(s16 a, s32 b);
 extern s8 lbl_802D7E4C[];
 extern u8 lbl_80310A1C[];
 extern u8 lbl_8030B4D4[];
+extern int fn_8025CB24(char*, const char*, ...);
+extern char lbl_802B4870[];
+extern char lbl_802B4880[];
+extern s32 fn_801E4BF4(s8 a);
+extern s32 fn_801E4BBC(s8 a);
+extern s32 fn_801F3F88(void *p, s8 i);
 
 int fn_80193F28(void) {
     fn_801DBE1C("Nothing VM Tanken.");
@@ -211,4 +217,91 @@ void fn_80199B60(void) {
     *(u8 **)(camp_work + 0x0) = lbl_8030B7F4 + 0x328;
     *(u8 **)(camp_work + 0x4) = lbl_8030B7F4 + 0x1568;
     *(u8 **)(camp_work + 0x8) = lbl_8030B4D4 + 0x2dc;
+}
+
+s32 fn_801944D4(char* buf, s32 id)
+{
+    s32 mode = *(s32 *)(lbl_80307638 + 0x70c);
+    switch (mode) {
+    case 0:
+        return (s8)fn_8025CB24(buf, lbl_802B4870, id);
+    case 1:
+        return (s8)fn_8025CB24(buf, lbl_802B4880, id);
+    }
+    return (s32)buf;
+}
+
+s32 fn_80194A18(s32 a)
+{
+    s32 x = a * 2;
+    if (fn_801E4BF4((s8)x) == 0) {
+        return -1;
+    }
+    if (fn_801E4BF4((s8)(x + 1)) == 0) {
+        return -1;
+    }
+    if (fn_801E4BBC((s8)x) == 0) {
+        return x;
+    }
+    return x + 1;
+}
+
+void fn_80194B84(s8* out)
+{
+    s32 i;
+    for (i = 0; i < 0x16; i++) {
+        s8 v;
+        if (fn_801E4BF4((s8)i) == 1) {
+            if (fn_801E4BBC((s8)i) == 1) {
+                v = 1;
+            } else {
+                v = 0;
+            }
+        } else {
+            v = -1;
+        }
+        out[i] = v;
+    }
+}
+
+s32 fn_8019576C(s32 idx) {
+    s32 i = 0;
+    u8 *p = lbl_8030B7F4 + idx * 0x5C;
+
+    for (; i < 0x24; i++) {
+        if (fn_801F3F88(p, (s8)i) != 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void fn_801959F4(void) {
+    u8 *p = lbl_80307638;
+    s32 i;
+
+    for (i = 0; i < 0x16; i++) {
+        *(u32 *)(p + 0x00) = 0;
+        *(u32 *)(p + 0x04) = 0;
+        *(u32 *)(p + 0x08) = 0;
+        *(u32 *)(p + 0x0C) = 0;
+        *(u32 *)(p + 0x10) = 0;
+        *(u32 *)(p + 0x14) = 0;
+        *(u32 *)(p + 0x18) = 0;
+        *(u32 *)(p + 0x1C) = 0;
+        *(u32 *)(p + 0x20) = 0;
+        *(u32 *)(p + 0x34) = 0;
+        *(u32 *)(p + 0x38) = 0;
+        *(u32 *)(p + 0x3C) = 0;
+        *(u32 *)(p + 0x40) = 0;
+        *(u32 *)(p + 0x24) = 0;
+        *(u32 *)(p + 0x28) = 0;
+        *(u32 *)(p + 0x2C) = 0;
+        *(u32 *)(p + 0x30) = 0;
+        *(u32 *)(p + 0x44) = 0;
+        *(u32 *)(p + 0x48) = 0;
+        *(u32 *)(p + 0x4C) = 0;
+        *(u32 *)(p + 0x50) = 0;
+        p += 0x78;
+    }
 }

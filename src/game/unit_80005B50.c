@@ -5,13 +5,10 @@
 extern void* fn_80005B9C(void* heap);
 extern void* memset(void* dst, s32 c, u32 n);
 extern void fn_800090F8(s32 packed, s16* p);
-
 extern void* lbl_803475A8;
-extern void* lbl_80346AA4;
 extern void* fn_802268E8(void* a, void (*cb)(void*));
 extern void* fn_801E1C7C(u32 size);
 extern void fn_8000A3FC(void* p);
-
 extern u32 lbl_803474E4[2];
 extern void* lbl_80346AA0;
 extern void fn_801DDCA8(void* p);
@@ -20,7 +17,6 @@ extern void fn_801E17E0(void* p);
 extern void* fn_801DB1A4(u32 size);
 extern void fn_80227810(void* p);
 extern void fn_801DDD74(void* p, s32 n);
-
 typedef struct Vec3 {
     f32 x;
     f32 y;
@@ -28,27 +24,53 @@ typedef struct Vec3 {
 } Vec3;
 extern f32 fn_80291A5C(f32 v);
 extern u32 lbl_80309E5C[];
-
 extern void* lbl_80347394;
 extern void* lbl_80309DE4[];
 extern s32 fn_8000F718(void* p, s32 a, s32 b);
 extern void fn_8000F6F8(void* obj, s32 a, s32 b, s32 c, s32 d);
-
 typedef struct Entry16 {
     u8 pad[8];
     s8 mode;
     u8 pad2[7];
 } Entry16;
 extern Entry16 lbl_80309730[];
-
 extern s32 lbl_8034733C;
-
 typedef struct Pair {
     u32 a;
     u32 b;
 } Pair;
-
 extern void* lbl_80309E24[];
+extern void fn_8028AB48(void);
+extern void fn_802A9B94(s32 a, s32 b, s32 c, void (*f)(void));
+extern u32 lbl_803478A0;
+extern u32 lbl_803478A4;
+extern u8 *lbl_803478DC;
+extern void fn_8000832C(s32 a, s32 b, s32 c);
+extern void fn_800086BC(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f);
+extern u8 lbl_8030A10C[];
+typedef struct {
+    s16 id;
+    s16 pad;
+    void *ptr;
+} Ent_80009860;
+extern u8 *lbl_80346AA4;
+extern u32 lbl_802DAFA8[];
+extern u8 lbl_8030B7F4[];
+extern u8 lbl_80309EC8[];
+extern void fn_800614FC(void *p, s32 v);
+extern void fn_80071CF0(void *p, s32 v);
+extern void *fn_80021658(s8 idx);
+extern s16 lbl_80347378;
+extern u32 lbl_803472F4;
+extern void fn_80015580(void);
+typedef struct Unit { u8 pad[0xEC]; u32 xec; u32 xf0; u32 xf4; } Unit;
+typedef struct Wk_8001C31C { u8 pad[0x4C]; Unit* w; } Wk_8001C31C;
+typedef struct Tk_8001C31C { u8 pad[0x24]; Wk_8001C31C* work; } Tk_8001C31C;
+extern void fn_8001C6CC(void* a, void* b, void* c, void* d);
+extern void fn_8006C860(const char* s, void* p);
+typedef struct Wk_8001D1D8 { u8 pad[0x1C]; } Wk_8001D1D8;
+typedef struct Tk_8001D1D8 { u8 pad[0x24]; Wk_8001D1D8* work; } Tk_8001D1D8;
+typedef struct Ent_80020060 { s16 x0; s16 x2; u8 pad[0x14]; } Ent_80020060;
 
 void* fn_80005B50(void* heap, u32 size) {
     void* p = fn_80005B9C(heap);
@@ -197,4 +219,138 @@ s32 fn_8001EB6C(void* obj) {
     default:
         return 0;
     }
+}
+
+void fn_80007280(s32 a, s32 b, s32 c)
+{
+    fn_802A9B94(a, b, c, fn_8028AB48);
+}
+
+void fn_80007514(u32 *a, u32 *b)
+{
+    *b = lbl_803478A0;
+    *a = lbl_803478A4;
+}
+
+s32 fn_80008258(u32 *out)
+{
+    u32 n = *(u32 *)(lbl_803478DC + 0x34);
+    *out = (n + 0x1f) & ~0x1fu;
+    return 1;
+}
+
+void fn_80008308(s32 a, s32 b)
+{
+    fn_8000832C(a, b, 0);
+}
+
+void fn_80008694(s32 a, s32 b, s32 c, s32 d)
+{
+    fn_800086BC(a, b, c, d, 0, 0);
+}
+
+void fn_80008DE4(s16 v)
+{
+    *(s16 *)(lbl_8030A10C + 0xf0) = v;
+}
+
+void fn_80009860(void *v, Ent_80009860 *e)
+{
+    if (e->id < 0) return;
+    e->ptr = v;
+}
+
+void fn_80009FBC(u8 *p)
+{
+    if (p[0x19] == 0xff) p[0x18] |= 0x40;
+}
+
+void fn_8000A38C(void)
+{
+    if (lbl_80346AA4 != NULL) lbl_80346AA4[0x19] = 3;
+}
+
+u32 fn_8000F0A4(s16 i)
+{
+    return lbl_802DAFA8[i];
+}
+
+s16 fn_80010CBC(s16 i)
+{
+    s8 k = (s8)lbl_8030B7F4[i + 0x328];
+    return *(s16 *)(lbl_8030B7F4 + k * 0x5c + 0x1c);
+}
+
+s32 fn_80010CE4(u8 *a, u8 *b)
+{
+    return *(s32 *)(a + 4) - *(s32 *)(b + 4);
+}
+
+void fn_800120D0(s32 a)
+{
+    fn_800614FC(lbl_80309EC8 + 0x64, a);
+}
+
+void fn_80012100(s32 a)
+{
+    fn_80071CF0(lbl_80309EC8 + 0x58, a);
+}
+
+u32 fn_80012F24(s32 idx)
+{
+    u8 *p = (u8 *)fn_80021658((s8)idx);
+    u8 *q = *(u8 **)(p + 0x24);
+    u8 *r = *(u8 **)(q + 0x4c);
+    u32 v = *(u32 *)(r + 0xec);
+    return (v >> 21) & 1;
+}
+
+void fn_80014CFC(void)
+{
+    lbl_80347378 &= ~0xf;
+}
+
+void fn_80014D0C(void)
+{
+    lbl_80347378 |= 0xf;
+}
+
+s32 fn_8001552C(u8 *p)
+{
+    u32 v = *(u32 *)(p + 0xec);
+    if (v & 0x20) return 1;
+    else return (v & 0x40) ? 2 : 0;
+}
+
+void fn_80015554(void)
+{
+    if (!(lbl_803472F4 & 0x8000)) fn_80015580();
+}
+
+void fn_8001C31C(Tk_8001C31C* t) {
+    Unit* u = t->work->w;
+    u->xec &= ~0x60;
+    u->xf0 &= ~0x04000000;
+    u->xf4 = 0;
+}
+
+void fn_8001C7B8(void* a, void* b, void* c) {
+    Vec3 v;
+    fn_8001C6CC(a, b, c, &v);
+    fn_8006C860("/BEFF/", &v);
+}
+
+void fn_8001D1D8(Tk_8001D1D8* t, s32 v) {
+    fn_80071CF0((u8*)t->work + 0x1C, v);
+}
+
+s32 fn_80020060(Ent_80020060* p) {
+    s32 i = 0;
+    for (;;) {
+        if (p->x2 == 3) break;
+        if (p->x2 == 0) return i;
+        p++;
+        i++;
+    }
+    return -1;
 }

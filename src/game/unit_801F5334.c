@@ -12,7 +12,7 @@ extern u8 lbl_8030CEA0[];
 void fn_80210CE4(void *p);
 void fn_801F7500(void);
 void fn_800976EC(u32 a);
-void *SePlay(s8 id);
+void *fn_80217FF4(s8 id);
 void fn_80142C78(void *p);
 void fn_80147DCC(void *p);
 s32 fn_80219B7C(void);
@@ -23,6 +23,19 @@ void fn_802193BC(void);
 typedef struct Slot { u8 pad_00[0x10]; s32 field_10; u8 rest[0x28]; } Slot;
 extern Slot lbl_80315120[];
 s32 fn_80219834(s32 v);
+void fn_801F452C(s32 arg);
+typedef struct Cursor {
+    u8 pad0[4];
+    u32 f4;
+    u8 pad8[0x14];
+    u32 *cur;
+} Cursor;
+extern s32 lbl_8034757C;
+s32 fn_801D6E38(s32 arg);
+s32 SePlay(s32 bank, s8 arg1, s8 id);
+extern s32 lbl_803477DC;
+void fn_80217830(s32 arg);
+extern s32 lbl_803477E0;
 
 void fn_801F5334(s8 n) {
     s32 i;
@@ -116,7 +129,7 @@ s32 fn_80207368(u32 a, CmdStream *st) {
 }
 
 void fn_8020EEE8(s8 id) {
-    void *r = SePlay(id);
+    void *r = fn_80217FF4(id);
     if (r) {
         *(void **)(lbl_8030CEA0 + 0x157c) = r;
     } else {
@@ -183,4 +196,56 @@ void fn_80219324(s32 i) {
             r = fn_80219834(1);
         } while (i != r);
     }
+}
+
+void fn_801F5380(void) {
+    fn_801F452C(0x102);
+}
+
+s32 fn_801F5BB4(s32 unused, Cursor *c) {
+    u32 *p = c->cur;
+    c->f4 = 0;
+    c->cur = p + 1;
+    return 0;
+}
+
+s32 fn_801F60C4(s32 unused, Cursor *c) {
+    u32 *p = c->cur + 1;
+    while (*p != 0x1d) {
+        p++;
+    }
+    c->cur = p + 1;
+    return 0;
+}
+
+s32 fn_801FED3C(s32 flag, Cursor *c) {
+    if (flag & 1) {
+        c->cur = c->cur + 1;
+    }
+    return 0;
+}
+
+s32 fn_80212050(void) {
+    return fn_801D6E38(lbl_8034757C) != 0 ? lbl_8034757C : -1;
+}
+
+void fn_80216F1C(s8 a, s8 b) {
+    SePlay(0xf, a, b);
+}
+
+void fn_80217800(s32 v) {
+    if (v == lbl_803477DC) {
+        fn_80217830(1);
+    }
+}
+
+s32 fn_80217FD4(s32 bank, s8 arg1, s8 id) {
+    return SePlay(bank, arg1, id);
+}
+
+s32 fn_80218DC4(void) {
+    if (lbl_803477DC != 2) {
+        return -1;
+    }
+    return lbl_803477E0;
 }

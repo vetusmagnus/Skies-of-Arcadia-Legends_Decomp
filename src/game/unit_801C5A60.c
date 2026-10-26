@@ -5,6 +5,8 @@ void fn_801E5DF0(void *o);
 void fn_801E5148(void *o);
 extern u32 lbl_8030A6D4[36];
 void *memset(void *dst, int c, u32 n);
+extern s32 lbl_803471CC;
+extern s32 DVDGetDriveStatus(void);
 
 void fn_801C5A60(NJS_MATRIX m, NJS_POINT3 *p, NJS_POINT3 *out)
 {
@@ -163,4 +165,43 @@ void fn_801C78B8(void)
     lbl_8030A6D4[14] = 6;
     lbl_8030A6D4[23] = 6;
     lbl_8030A6D4[32] = 6;
+}
+
+void fn_801C5BD4(u8 *p) {
+    if (p == 0) {
+        return;
+    }
+    *(f32 *)(p + 0x1a4) = 0.0f;
+    *(u32 *)(p + 0x198) = 0;
+    *(u32 *)(p + 0x19c) = 0;
+}
+
+int fn_801C5FFC(u8 *p) {
+    u8 *q;
+    int r = 0;
+
+    if (p != 0) {
+        q = *(u8 **)(p + 0x100);
+        if (q != 0 && *(u32 *)(q + 0x4) != 0) {
+            r = 1;
+        }
+    }
+    return r;
+}
+
+int fn_801C60A4(u8 *p) {
+    int r = 0;
+
+    if (p != 0 && *(u32 *)(p + 0x1c8) != 0) {
+        r = 1;
+    }
+    return r;
+}
+
+void fn_801C6170(u8 *p) {
+    p[0x18] |= 0x40;
+}
+
+void fn_801C6224(void) {
+    lbl_803471CC = DVDGetDriveStatus();
 }

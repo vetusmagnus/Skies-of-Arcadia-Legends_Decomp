@@ -3,6 +3,8 @@
 extern u16 lbl_8030A2F4[18];
 extern char lbl_802EE634[];
 void *fn_801F4AE4(s16 idx);
+extern u8 *lbl_803471B8;
+extern u8 fn_801C0D34(void);
 
 void fn_801C09A4(void)
 {
@@ -32,4 +34,11 @@ char *fn_801C2CBC(s16 idx)
         return fn_801F4AE4(idx);
     }
     return lbl_802EE634;
+}
+
+void fn_801C0FBC(void) {
+    u8 v = fn_801C0D34();
+    u8 *q = *(u8 **)(lbl_803471B8 + 0x24);
+
+    q[0x9] = v;
 }

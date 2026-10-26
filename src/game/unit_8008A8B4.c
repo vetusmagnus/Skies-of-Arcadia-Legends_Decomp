@@ -1,10 +1,14 @@
 #include "types.h"
 
-typedef struct Chr {
-    u8 pad0[0x10];
+typedef struct Slot {
+    s16 id;
+    u8 pad2[0xE];
     u32 x10;
-} Chr;
-extern Chr* lbl_80309DE4[12];
+    s32 a; /* 0x14 */
+    s32 b; /* 0x18 */
+    u32 flags; /* 0x1C */
+} Slot;
+extern Slot* lbl_80309DE4[12];
 typedef struct Rec_8008AAD8 {
     u8 pad0[0x24];
     s16 x24;
@@ -21,10 +25,12 @@ typedef struct Rec_8008AEDC {
 } Rec_8008AEDC;
 extern u8 lbl_80347340;
 s32 fn_8025ECC4(void);
+extern s32 fn_80078610(s8 idx);
+s32 fn_80078610(s8 idx);
 
 s32 fn_8008A8B4(s32 i)
 {
-    Chr* e = lbl_80309DE4[i];
+    Slot* e = lbl_80309DE4[i];
     if (e->x10 & 0x100) {
         e->x10 &= ~0x100;
         return 1;
@@ -47,7 +53,7 @@ s32 fn_8008AAD8(s32 unused, Rec_8008AAD8* p)
 
 s32 fn_8008AD6C(s32 i)
 {
-    Chr* e = lbl_80309DE4[i];
+    Slot* e = lbl_80309DE4[i];
     if (e->x10 & 0x2000) {
         e->x10 &= ~0x2000;
         return 1;
@@ -170,4 +176,121 @@ int fn_8008B3C8(void) {
 
 int fn_8008B41C(void) {
     return !(fn_8025ECC4() % 100 > 10);
+}
+
+s32 fn_8008A8E8(void) {
+    s32 i;
+    s32 count = 0;
+    for (i = 4; i <= 11; i++) {
+        if (fn_80078610(i)) {
+            count++;
+        }
+    }
+    return !(3 - count);
+}
+
+s32 fn_8008A948(void) {
+    s32 i;
+    s32 count = 0;
+    for (i = 0; i <= 3; i++) {
+        if (fn_80078610(i)) {
+            count++;
+        }
+    }
+    return !(4 - count);
+}
+
+s32 fn_8008A9A8(void) {
+    s32 i;
+    s32 count = 0;
+    for (i = 0; i <= 3; i++) {
+        if (fn_80078610(i)) {
+            count++;
+        }
+    }
+    return !(3 - count);
+}
+
+s32 fn_8008AA08(void) {
+    s32 i;
+    s32 count = 0;
+    for (i = 0; i <= 3; i++) {
+        if (fn_80078610(i)) {
+            count++;
+        }
+    }
+    return !(2 - count);
+}
+
+s32 fn_8008AA68(void) {
+    s32 i;
+    s32 count = 0;
+    for (i = 0; i <= 3; i++) {
+        if (fn_80078610(i)) {
+            count++;
+        }
+    }
+    return !(1 - count);
+}
+
+s32 fn_8008AB00(void) {
+    s32 i;
+    for (i = 0; i <= 3; i++) {
+        if (fn_80078610(i) && lbl_80309DE4[i]->id > 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+s32 fn_8008AB74(void) {
+    s32 i;
+    for (i = 0; i <= 3; i++) {
+        if (fn_80078610(i) && (lbl_80309DE4[i]->flags & 0x200000)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+s32 fn_8008ABE8(void) {
+    s32 i;
+    for (i = 0; i <= 3; i++) {
+        if (fn_80078610(i) && (lbl_80309DE4[i]->flags & 0x100000)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+s32 fn_8008AC5C(void) {
+    s32 i;
+    for (i = 0; i <= 3; i++) {
+        if (fn_80078610(i) && !(lbl_80309DE4[i]->flags & 0x80000)) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+s32 fn_8008AFAC(void) {
+    s32 i;
+    for (i = 4; i <= 11; i++) {
+        if (fn_80078610((s8)i)) {
+            Slot* e = lbl_80309DE4[i];
+            if (e->b >= e->a * 4) return 1;
+        }
+    }
+    return 0;
+}
+
+s32 fn_8008B02C(void) {
+    s32 i;
+    for (i = 4; i <= 11; i++) {
+        if (fn_80078610((s8)i)) {
+            Slot* e = lbl_80309DE4[i];
+            if (e->b >= e->a * 2) return 1;
+        }
+    }
+    return 0;
 }

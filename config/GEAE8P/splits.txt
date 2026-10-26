@@ -143,6 +143,9 @@ game/chunk.c:
 game/evobj.c:
 	.text       start:0x801E8CA4 end:0x801F224C
 
+game/unit_801F224C.c:
+	.text       start:0x801F224C end:0x801F5334
+
 game/unit_801F5334.c:
 	.text       start:0x801F5334 end:0x80219378
 

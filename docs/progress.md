@@ -172,6 +172,30 @@ Next batch: start at 0x58 bytes (a few 0x58 representatives are still open) and 
 Functions of 0x34 bytes or less outside 0x80050000-0x801C0000 were never attempted (0x80005B50-0x80050000,
 0x801C0000 and up).
 
+Haiku batch 5 (88-140 byte functions, plus small ones outside)
+--------------------------------------------------------------
+
+16 Haiku agents, 20 functions each, one representative per duplicate group, over the unmatched game
+functions from 0x58 bytes up in 0x80050000-0x801C0000 (the 216 smallest, 0x58-0x8C) and the untried
+functions of 0x34 bytes or less outside it (104; the SDK range and batch 3's ranges were skipped).
+269 of 320 match (every one re-checked with fdiff; `main.dol` still rebuilds byte-identical). Matches went
+into the existing `unit_*.c` they fall in (28 units grew; merge fixes were Haiku passes per unit), plus a new
+`unit_801F224C.c` (0x801F224C-0x801F5334, guessed; 6 functions). Unit files now hold 821 functions that
+all pass fdiff.
+
+Near misses (diff lines): fn_80018764 (20), fn_80077D40 (13, CTR loop vs counter compare), fn_8005535C (2),
+fn_80056F30 (2), fn_80061114 (4), fn_80069150 (27), fn_8006ADAC (40), fn_8006E5BC (41), fn_8006F424 (28),
+fn_800749DC (4), fn_8008AD04 (6), fn_800A35E0 (2, repeated `li r3,2; blr`), fn_800B0F54 (33), fn_800C32D8 (2),
+fn_800C35C4 (8), fn_800C8EC0 (13), fn_800CC9EC (9), fn_800CCA6C (10), fn_800CCC48 (3, `lwzu`), fn_800CD16C (30),
+fn_800E07AC (2, dead second `beq`), fn_8010062C (10), fn_80109D74 (3), fn_8013A794 (12), fn_8013DBDC (18),
+fn_80141314 (30), fn_80143200 (6, `cntlzw` bool), fn_80149070 (4), fn_801283A4 (14), fn_80128670 (20),
+fn_8012C474 (30), fn_80131658 (20), fn_80158B7C (6), fn_8015EB8C (29), fn_80166B2C (31), fn_8016C808 (5),
+fn_801838C8 (4), fn_80194B18 (4), fn_80194E6C (26), fn_801956EC (9), fn_801A2C58 (3), fn_801A6650 (12),
+fn_801B5868 (28), fn_801B90E4 (10), fn_801BE608 (12), fn_801BEA70 (4), fn_801D13C0 (4).
+Not matched: fn_80090518 (38, unrolled memset loop), fn_8010C384 (not attempted).
+
+Next batch: start at 0x8C bytes in 0x80050000-0x801C0000 (216 of the 2,136 candidates were taken, so about
+1,900 remain, all larger), then 0x58 bytes and up outside it.
 Good next targets
 -----------------
 

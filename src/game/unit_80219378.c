@@ -1,27 +1,21 @@
+#include "types.h"
 
 
-typedef unsigned char u8;
-typedef signed char s8;
-typedef unsigned short u16;
-typedef signed short s16;
-typedef unsigned int u32;
-typedef signed int s32;
-typedef float f32;
 extern void fn_802193BC(s32 a, s32 b);
 extern s32 fn_801D168C(void);
 extern void fn_801D150C(s32 v);
 extern s32 fn_80219B7C(void);
-typedef struct Obj { u8 pad[4]; u32 count; } Obj;
+typedef struct Obj_UNIT0000 { u8 pad[4]; u32 count; } Obj_UNIT0000;
 extern void fn_80298FE4(s32 v);
 typedef void (*VoidFn)(void);
-typedef struct Node { u32 val; struct Node *next; } Node;
-typedef struct Blk {
-    Node *head;
+typedef struct Node_UNIT0000 { u32 val; struct Node_UNIT0000 *next; } Node_UNIT0000;
+typedef struct Blk_UNIT0000 {
+    Node_UNIT0000 *head;
     u32 f4;
-    Node sentinel;
-} Blk;
-extern Blk lbl_80311A78;
-typedef struct Rec {
+    Node_UNIT0000 sentinel;
+} Blk_UNIT0000;
+extern Blk_UNIT0000 lbl_80311A78;
+typedef struct Rec_UNIT0000 {
     u32 active;
     s32 a;
     f32 b;
@@ -32,8 +26,8 @@ typedef struct Rec {
     f32 f;
     f32 g;
     u8 pad[0x5c - 0x24];
-} Rec;
-typedef struct Owner { u8 pad[0x18]; Rec *recs; } Owner;
+} Rec_UNIT0000;
+typedef struct Owner_UNIT0000 { u8 pad[0x18]; Rec_UNIT0000 *recs; } Owner_UNIT0000;
 extern s32 lbl_803474A4;
 extern s32 lbl_803475CC;
 extern s32 lbl_80347808;
@@ -50,22 +44,96 @@ extern void fn_801E1D94(void);
 extern void fn_801D14F8(void);
 extern u8 lbl_802D9730[];
 extern void fn_801D0B38(s32 a);
-typedef struct Blk2 { s32 f0; s32 f4; u8 pad[0x18]; } Blk2;
-extern Blk2 lbl_803167F0;
-extern void *memset(void *s, s32 c, u32 n);
-typedef struct P { u8 pad[0x1c]; s32 f1c; } P;
-extern void fn_801CBBAC(P *p, f32 f);
-extern void fn_801CBB9C(P *p, f32 f);
+typedef struct Blk2_UNIT0000 { s32 f0; s32 f4; u8 pad[0x18]; } Blk2_UNIT0000;
+extern Blk2_UNIT0000 lbl_803167F0;
+typedef struct P_UNIT0000 { u8 pad[0x1c]; s32 f1c; } P_UNIT0000;
+extern void fn_801CBBAC(void*p, f32 f);
+extern void fn_801CBB9C(void*p, f32 f);
 extern s32 lbl_80347EB0;
 extern s32 lbl_80347EA8;
 extern s32 lbl_80347EB4;
 extern void njUnitMatrix(void *m);
 extern void fn_8028BAEC(void *p);
-typedef struct Pos { u8 pad0[0x1c]; s32 f1c; s32 f20; u8 pad1[0x10]; s32 f34; } Pos;
-extern Pos lbl_80311970;
+typedef struct Pos_UNIT0000 { u8 pad0[0x1c]; s32 f1c; s32 f20; u8 pad1[0x10]; s32 f34; } Pos_UNIT0000;
+extern Pos_UNIT0000 lbl_80311970;
 extern void njRotateZXY(void *m, s32 x, s32 y, s32 z);
 typedef struct Vec { f32 x; f32 y; f32 z; } Vec;
 extern double atan2(double y, double x);
+extern s32 lbl_80347520;
+extern s32 lbl_80347524;
+extern u16 lbl_8034751C;
+void fn_80222964(void *p);
+void fn_801E17E0(void *p);
+typedef struct Rec_80225930 {
+    u8 pad0[0x24];
+    s16 f24;
+    s16 f26;
+    s16 f28;
+    s16 f2a;
+    s16 f2c;
+    s16 f2e;
+    s16 f30;
+} Rec_80225930;
+typedef unsigned int u32_80226240;
+extern u32_80226240 lbl_80347580;
+typedef unsigned int u32_80226268;
+extern u32_80226268 lbl_80347588;
+extern void fn_80226984(void *p);
+typedef unsigned int u32_80226298;
+extern u32_80226298 lbl_8034758C;
+extern u32_80226298 lbl_803475A4;
+typedef unsigned int u32_80226318;
+extern u32_80226318 lbl_803475A4;
+extern u32_80226318 lbl_80347580;
+extern u32_80226318 lbl_8034758C;
+typedef unsigned int u32_80226334;
+extern u32_80226334 lbl_803475A8;
+extern u32_80226334 lbl_80347590;
+extern u32_80226334 lbl_80347594;
+extern u32_80226334 lbl_80347598;
+typedef int s32_80227E74;
+extern s32_80227E74 lbl_803477FC;
+typedef unsigned long u32_8022823C;
+extern void *memset(void *dst, int c, u32_8022823C n);
+typedef struct Unk_8022828C {
+    int unk0;
+    f32 f4;
+    f32 f8;
+    f32 fc;
+    f32 f10;
+    f32 f14;
+    f32 f18;
+} Unk_8022828C;
+typedef struct Unk_802282A8 {
+    int unk0;
+    int unk4;
+    int unk8;
+    int unkc;
+    f32 f10;
+} Unk_802282A8;
+typedef unsigned int u32_802282B0;
+typedef unsigned int u32_80228374;
+extern void fn_801E17E0(void *p);
+typedef struct Unk_80228418 {
+    u8 pad[0x18];
+    u8 *table;
+} Unk_80228418;
+extern u8 lbl_80316578[];
+extern void OSCancelAlarm(void *alarm);
+typedef unsigned int u32_80228B40;
+extern void fn_801D8B2C(void);
+extern void fn_8022642C(void);
+extern u32_80228B40 lbl_80311AD4[];
+typedef unsigned int u32_8022A36C;
+extern u32_8022A36C lbl_80311AD4[];
+extern u32_8022A36C lbl_80347820;
+extern u32_8022A36C lbl_80347824;
+extern void *memcpy(void *dst, const void *src, unsigned long n);
+extern u8 lbl_803165C8[];
+typedef int s32_8022B014;
+extern s32_8022B014 lbl_80347508;
+typedef int s32_8022B064;
+extern s32_8022B064 lbl_80347508;
 
 void fn_80219378(s32 a)
 {
@@ -78,7 +146,7 @@ void fn_80219378(s32 a)
     }
 }
 
-void fn_8021EDE0(Obj *p, s32 n)
+void fn_8021EDE0(Obj_UNIT0000 *p, s32 n)
 {
     if (p->count <= (u16)n) {
         n = (s16)(p->count - 1);
@@ -98,7 +166,7 @@ void fn_802260E8(void *p)
 
 void *fn_80226354(void *target)
 {
-    Node *n = &lbl_80311A78.sentinel;
+    Node_UNIT0000 *n = &lbl_80311A78.sentinel;
     lbl_80311A78.head = n;
     while ((n = n->next) != 0) {
         if (n == target) {
@@ -108,9 +176,9 @@ void *fn_80226354(void *target)
     return 0;
 }
 
-void fn_802287BC(Owner *o, s32 idx, s32 a, f32 b, s32 c, f32 d, f32 e, f32 f, f32 g, s32 h)
+void fn_802287BC(Owner_UNIT0000 *o, s32 idx, s32 a, f32 b, s32 c, f32 d, f32 e, f32 f, f32 g, s32 h)
 {
-    Rec *r = &o->recs[idx];
+    Rec_UNIT0000 *r = &o->recs[idx];
     r->active = 1;
     r->a = a;
     r->b = b;
@@ -166,13 +234,13 @@ void fn_8022AFD0(void)
     lbl_803167F0.f4 = -1;
 }
 
-void fn_8022B02C(P *p)
+void fn_8022B02C(P_UNIT0000 *p)
 {
     fn_801CBBAC(p, 20.0f);
     p->f1c = 4;
 }
 
-void fn_8022B07C(P *p)
+void fn_8022B07C(P_UNIT0000 *p)
 {
     fn_801CBB9C(p, 15.0f);
     p->f1c = 2;
@@ -206,4 +274,179 @@ s32 fn_8022BD80(Vec *a, Vec *b)
 {
     f32 ang = (f32)atan2(a->y - b->y, a->z - b->z);
     return (s32)(10430.381f * ang);
+}
+
+s32 fn_8021A09C(s32 v) {
+    s32 r = 0;
+    if (v >= 0 && v < 0x2d) {
+        r = 1;
+    }
+    return r;
+}
+
+s32 fn_8021A0DC(s32 v) {
+    s32 r = 0;
+    if (v >= 0x190 && v <= 0x1b7) {
+        r = 1;
+    }
+    return r;
+}
+
+s32 fn_8021A0FC(s32 v) {
+    s32 r = 0;
+    if (v >= 0 && v < 5) {
+        r = 1;
+    }
+    return r;
+}
+
+s32 fn_8021A5F0(s32 a, s32 b, u8 *p) {
+    s32 r = 0;
+    if (p != 0) {
+        r = *(s8 *)(p + 0x19);
+    }
+    return r;
+}
+
+s32 fn_8021A608(s32 a, s32 b, u8 *p) {
+    s32 r = 0;
+    if (p != 0) {
+        r = *(s8 *)(p + 0x18);
+    }
+    return r;
+}
+
+void fn_8022291C(void) {
+    lbl_80347520 = 0;
+    lbl_80347524 = 0;
+    lbl_8034751C = 0;
+}
+
+void fn_80222930(void *p) {
+    fn_80222964(p);
+    fn_801E17E0(p);
+}
+
+void fn_80225930(s16 a, s16 b, Rec_80225930 *r) {
+    r->f26 = 0;
+    r->f24 = 0;
+    r->f2a = b;
+    r->f28 = a;
+    r->f2e = -1;
+    r->f2c = -1;
+    r->f30 = 0;
+}
+
+void fn_80226240(void *p) {
+    if (p == 0) {
+        for (;;) {}
+    }
+    lbl_80347580 = (u32_80226240)p;
+}
+
+void fn_80226268(void *p) {
+    if (p == 0) {
+        for (;;) {}
+    }
+    lbl_80347588 = (u32_80226268)p;
+    fn_80226984(p);
+}
+
+void fn_80226298(void *p) {
+    if (p == 0) {
+        for (;;) {}
+    }
+    lbl_8034758C = (u32_80226298)p;
+    lbl_803475A4 = (u32_80226298)p;
+}
+
+void fn_80226318(void *p) {
+    if (p == 0) {
+        for (;;) {}
+    }
+    lbl_803475A4 = (u32_80226318)p;
+    lbl_80347580 = (u32_80226318)p;
+    lbl_8034758C = (u32_80226318)p;
+}
+
+void fn_80226334(void *p) {
+    if (p == 0) {
+        for (;;) {}
+    }
+    lbl_803475A8 = (u32_80226334)p;
+    lbl_80347590 = (u32_80226334)p;
+    lbl_80347594 = (u32_80226334)p;
+    lbl_80347598 = (u32_80226334)p;
+}
+
+void fn_80227E74(void) {
+    lbl_803477FC++;
+}
+
+void fn_8022823C(void *p) {
+    memset(p, 0, 0x1c);
+}
+
+void fn_8022828C(Unk_8022828C *p, f32 a, f32 b, f32 c, f32 d, f32 e, f32 g) {
+    p->f4 = a;
+    p->f8 = b;
+    p->fc = c;
+    p->f10 = d;
+    p->f14 = e;
+    p->f18 = g;
+}
+
+void fn_802282A8(Unk_802282A8 *p, f32 a) {
+    p->f10 = a;
+}
+
+void fn_802282B0(u32_802282B0 *p) {
+    *p = 1;
+}
+
+void fn_80228374(u32_80228374 *p) {
+    *p = 0;
+    fn_801E17E0(p);
+}
+
+f32 fn_80228418(Unk_80228418 *p, int i) {
+    return *(f32 *)(p->table + i * 0x5c + 8);
+}
+
+void fn_80228984(void) {
+    OSCancelAlarm(lbl_80316578);
+}
+
+void fn_80228B40(void) {
+    fn_801D8B2C();
+    fn_8022642C();
+    lbl_80311AD4[3] = 0x11;
+}
+
+void fn_8022A36C(void) {
+    lbl_80311AD4[3] = 6;
+    lbl_80347820 = 0;
+    lbl_80347824 = 0;
+}
+
+void fn_8022A7F4(void) {
+    memcpy(lbl_803165C8, (void *)0x80800000, 0x204);
+}
+
+void fn_8022A824(void) {
+    memcpy((void *)0x80800000, lbl_803165C8, 0x204);
+}
+
+void fn_8022B014(u8 *p) {
+    if (lbl_80347508 != 0) {
+        return;
+    }
+    *(s32_8022B014 *)(p + 0x1c) = 5;
+}
+
+void fn_8022B064(u8 *p) {
+    if (lbl_80347508 != 0) {
+        return;
+    }
+    *(s32_8022B064 *)(p + 0x1c) = 0;
 }

@@ -1,8 +1,14 @@
 #include "types.h"
 
-extern u8 lbl_802F6748[];
-extern s32 lbl_803476E4;
 void *fn_801E184C(void *base, s32 idx, s32 a, s32 n);
+extern u32 lbl_802F6748[4];
+extern s32 lbl_803476E4;
+extern u32 lbl_803476F8;
+extern u32 lbl_803476F4;
+extern u32 lbl_803476FC;
+extern u32 lbl_80347700;
+extern u32 lbl_803476E8;
+extern u32 lbl_803476EC;
 
 void fn_801E1A74(s32 a, u32 n) {
     void *p;
@@ -26,5 +32,29 @@ void fn_801E1C7C(s32 n) {
     lbl_803476E4 = 1;
     p = fn_801E184C(lbl_802F6748, -1, 0, n);
     *(s32 *)((u8 *)p - 0x10) = 0;
+    lbl_803476E4 = 0;
+}
+
+void fn_801E1EE4(void)
+{
+    lbl_802F6748[0] = 0;
+    lbl_803476F8 = 0;
+    lbl_802F6748[1] = 0;
+    lbl_802F6748[2] = 0;
+    lbl_803476F4 = 0;
+    lbl_803476FC = 0;
+}
+
+void fn_801E1F08(void)
+{
+    lbl_802F6748[0] = 0;
+    lbl_803476F8 = 0;
+    lbl_802F6748[1] = 0;
+    lbl_802F6748[2] = 0;
+    lbl_803476F4 = 0;
+    lbl_803476FC = 0;
+    lbl_80347700 = 0;
+    lbl_803476E8 = 0;
+    lbl_803476EC = 0;
     lbl_803476E4 = 0;
 }

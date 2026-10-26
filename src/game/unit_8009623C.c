@@ -190,3 +190,12 @@ void fn_80097294(u8 a)
     lbl_802E0084.flags = 0;
     lbl_802E0084.b1 = 0;
 }
+
+void fn_8009703C(s16 v, f32 a, f32 b) {
+    lbl_802E0084.s60 = v;
+    lbl_802E0084.flags |= 0x1000;
+    if (0.0f >= a) a = 1.0f;
+    lbl_802E0084.f54 = a;
+    if (1.0f > b) b = 1.0f;
+    lbl_802E0084.f5C = b;
+}
