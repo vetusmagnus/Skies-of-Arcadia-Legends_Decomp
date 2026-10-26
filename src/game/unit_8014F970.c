@@ -1142,6 +1142,14 @@ void fn_801539C8(void) {
 void fn_801539CC(void) {
 }
 
+void fn_801539D0(void) {
+    if (lbl_80346FB8 != 0) {
+        fn_801E17E0((s32)lbl_80346FB8);
+
+        lbl_80346FB8 = 0;
+    }
+}
+
 void fn_80153A04(void) {
     void* p = fn_801E1C7C(0x406);
     memset(p, 0, 0x406);
