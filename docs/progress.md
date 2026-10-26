@@ -1,7 +1,7 @@
 Progress and handoff
 ====================
 
-State of the game-code work as of 2026-10-26 (after batch 2). Numbers live in the README status block and on
+State of the game-code work as of 2026-10-26 (after batch 4). Numbers live in the README status block and on
 [ByteMatch](https://bytematch.dev/vetusmagnus/SoAL-Decomp); this page covers what's in flight.
 
 Game files
@@ -124,6 +124,37 @@ fn_801A2C40 (3, the first of two stores to lbl_80347170 is kept in the original)
 Stopped at size 0x34 (52 bytes): the 320 smallest representatives in the range top out there, so the
 next batch should start at 0x38 bytes in the same range (and cover 0x80050000-0x801C0000 first, then
 the regions outside it).
+
+Haiku batch 4 (56-88 byte functions)
+------------------------------------
+
+Same setup (16 Haiku agents, 20 functions each, one representative per duplicate group), over the whole
+game range 0x80005B50-0x80286EE8 except batch 3's ranges (0x8002B124-0x8004F868, 0x801EE324-0x801F1F80).
+It took the 320 smallest unmatched representatives, 0x38 to 0x58 bytes. 254 match (every one re-checked
+with fdiff, and `main.dol` still rebuilds byte-identical). Matches inside an existing `unit_*.c` range went
+into that unit (14 units grew); the rest went into 12 new units (`unit_80005B50.c`, `unit_80020B50.c`,
+`unit_800553B4.c`, `unit_801C09A4.c`, `unit_801C5A60.c`, `unit_801CBA60.c`, `unit_801CED24.c`,
+`unit_801D1AE8.c`, `unit_801E1A74.c`, `unit_801F5334.c`, `unit_80219378.c`, `unit_8022D34C.c`; ranges again
+guessed). Merging the per-function files needed a Haiku pass per unit for clashing extern types.
+
+Skipped on purpose: the SDK range (0x80231A7C and up, built with another compiler version); i16's
+matches there only work with 1.2.5n.
+
+Near misses (diff lines): fn_80012020/80012078 (2, a reloaded 0.0f), fn_80014F50 (11), fn_80018498 (19,
+`cntlzw` compare), fn_8005121C (3, a dead `cmpwi r0,0xc` guard before unrolled stores), fn_80095360 (4,
+arguments saved to r5/r6 first), fn_800BF7AC (2, doubled `beq`), fn_800CF944 (10), fn_800D2048 (6),
+fn_800D23F8/800D244C (1, a second `li r0,1`), fn_800DE554 (12, `orc` with a held constant), fn_800DE598 (2),
+fn_800E3554 (2), fn_80108DF8 (3), fn_80117B9C (20), fn_8012A900 (4), fn_8013A320 (18), fn_80143158 (16),
+fn_801464B4/80146500 (7), fn_80146DE4 (6), fn_8015128C (9), fn_801545AC (24), fn_80155CD8 (5),
+fn_80155D2C (10), fn_80157E04 (6), fn_8015C468/C4A0 (2, missing `extsb`), fn_801673D8 (3), fn_8016AA64 (18),
+fn_801940AC (13), fn_801949AC (8), fn_801954EC (6), fn_8019E3A8 (2), fn_801C2C4C/C84 (22),
+fn_801D1A40/1A94 (4/2, `stfsu` update-form stores), fn_801D6DE8 (21, `mulhwu` of a u64 product),
+fn_801DA484/DA4D0 (13/21), fn_801E0D0C (1), fn_801F3F88 (26), fn_8021A83C (13), fn_80226120 (14),
+fn_8022BA10 (11, `addc/subfe`).
+
+Next batch: start at 0x58 bytes (a few 0x58 representatives are still open) and go up, same ranges.
+Functions of 0x34 bytes or less outside 0x80050000-0x801C0000 were never attempted (0x80005B50-0x80050000,
+0x801C0000 and up).
 
 Good next targets
 -----------------

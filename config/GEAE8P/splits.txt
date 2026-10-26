@@ -11,6 +11,12 @@ Sections:
 	.sdata2     type:rodata align:32
 	.sbss2      type:bss align:32
 
+game/unit_80005B50.c:
+	.text       start:0x80005B50 end:0x80020B50
+
+game/unit_80020B50.c:
+	.text       start:0x80020B50 end:0x8002B124
+
 game/battle.c:
 	.text       start:0x8002C010 end:0x80031254
 
@@ -28,6 +34,9 @@ game/sound.c:
 
 game/effect.c:
 	.text       start:0x80040010 end:0x80047214
+
+game/unit_800553B4.c:
+	.text       start:0x800553B4 end:0x80055E94
 
 game/unit_80055E94.c:
 	.text       start:0x80055E94 end:0x80073D18
@@ -83,17 +92,35 @@ game/unit_80193F28.c:
 game/unit_80199B9C.c:
 	.text       start:0x80199B9C end:0x801BEB10
 
+game/unit_801C09A4.c:
+	.text       start:0x801C09A4 end:0x801C2FA0
+
 game/uiobj.c:
 	.text       start:0x801C2FA0 end:0x801C5758
 	.data       start:0x802EE688 end:0x802EE770
 	.bss        start:0x80308270 end:0x803082F8
 	.sdata2     start:0x8034BBA8 end:0x8034BBE0
 
+game/unit_801C5A60.c:
+	.text       start:0x801C5A60 end:0x801CA8D8
+
 game/drawstate.c:
 	.text       start:0x801CA8D8 end:0x801CAE84
 	.bss        start:0x80308650 end:0x80308C78
 	.sbss       start:0x803471E8 end:0x803471F0
 	.sdata2     start:0x8034BCD8 end:0x8034BCE0
+
+game/unit_801CBA60.c:
+	.text       start:0x801CBA60 end:0x801CED24
+
+game/unit_801CED24.c:
+	.text       start:0x801CED24 end:0x801D1AE8
+
+game/unit_801D1AE8.c:
+	.text       start:0x801D1AE8 end:0x801E1A74
+
+game/unit_801E1A74.c:
+	.text       start:0x801E1A74 end:0x801E1F3C
 
 game/text.c:
 	.text       start:0x801E1F3C end:0x801E3874
@@ -112,6 +139,15 @@ game/chunk.c:
 
 game/evobj.c:
 	.text       start:0x801E8CA4 end:0x801EE324
+
+game/unit_801F5334.c:
+	.text       start:0x801F5334 end:0x80219378
+
+game/unit_80219378.c:
+	.text       start:0x80219378 end:0x8022D34C
+
+game/unit_8022D34C.c:
+	.text       start:0x8022D34C end:0x802319E0
 
 dolphin/PPCArch.c:
 	.text       start:0x802319E0 end:0x80231AD0
