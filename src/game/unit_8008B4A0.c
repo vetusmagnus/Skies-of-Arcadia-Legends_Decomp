@@ -20,7 +20,9 @@ typedef struct {
     u8 pad5[3];
     u8 b8;
     u8 b9;
-    u8 padA[6];
+    u8 padA[3];
+    u8 bd;
+    u8 padE[2];
 } Ent80309730;
 extern Ent80309730 lbl_80309730[12];
 typedef struct {
@@ -29,7 +31,8 @@ typedef struct {
     void* chr;
     u8 padc[4];
     void* fn;
-    u8 pad14[0x50 - 0x14];
+    u8 pad14[0x4c - 0x14];
+    s32 x4c;
     u8 b50;
 } Sub80309700;
 typedef struct Slot {
@@ -350,6 +353,13 @@ typedef struct Obj_800912FC {
     u8 pad0[0x18];
     f32* p18;
 } Obj_800912FC;
+typedef struct Chr_8008CBB8 {
+    u8 pad0[0xae];
+    s16 flags;
+} Chr_8008CBB8;
+extern s32 fn_80083BAC(s32 i, s32 k);
+extern void fn_80010474(s32 i);
+extern void fn_8008CAB4(Obj_8008CAB4*);
 
 u32 fn_8008B55C(void* a0, Ent_UNIT0000* e) {
     return (e->x1c >> 9) & 1;
@@ -1271,4 +1281,49 @@ s32 fn_800912FC(f32* pos, Obj_800912FC* o) {
     }
     pos[1] = miny;
     return 1;
+}
+
+void fn_8008CBB8(Slot* self) {
+    s32 i;
+    Sub80309700* sub;
+    Chr_8008CBB8* chr;
+    sub = self->sub;
+    chr = sub->chr;
+    i = sub->idx;
+    switch (self->state) {
+    case 0:
+        sub->b50 = 0;
+        self->state = 1;
+    case 1:
+        if (fn_8007FFE8(i, 0x16) != 0) {
+            if ((chr->flags & 0x400) == 0) {
+                fn_800811E4(i, 0);
+                self->state = 2;
+            } else {
+                fn_800811E4(i, 2);
+                self->state = 10;
+                lbl_80309730[i].bd = fn_80083BAC(i, (i < 4) + 1);
+            }
+        }
+        break;
+    case 2:
+        if (fn_8007FFE8(i, 0) != 0) {
+            sub->x4c = 0;
+            lbl_80309700[i]->fn = (void (*)(Slot *))fn_8008CAB4;
+            lbl_80309700[i]->state = 0;
+            sub->b50 = 3;
+            fn_80010474(i);
+        }
+        break;
+    case 10:
+        if (fn_8007FFE8(i, 2) != 0) {
+            sub->x4c = 2;
+            lbl_80309730[i].bd = fn_80083BAC(i, (i < 4) + 1);
+            sub->b50 = 3;
+            lbl_80309700[i]->fn = (void (*)(Slot *))fn_8008CAB4;
+            lbl_80309700[i]->state = 0;
+            fn_80010474(i);
+        }
+        break;
+    }
 }
