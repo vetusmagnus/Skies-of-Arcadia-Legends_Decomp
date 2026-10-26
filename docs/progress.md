@@ -9,12 +9,13 @@ Game files
 
 | File | Range | Status |
 |---|---|---|
+| `bevent.c` | 0x8002A034-0x8002C010 | 8 of 12; near: fn_8002B124 (epilogue reloads `lwz r0` before `lwz r31`, 2 lines), fn_8002B200 (one float register swap), fn_8002B40C (the original converts its four `s16` arguments with `psq_l`/`qr5` loads, the Dolphin fast cast; plain C gives 126 instructions against 94), fn_8002BD88 (register allocation). The start is a guess |
 | `battle.c` | 0x8002C010-0x80031254 | 83 of 101; near: fn_8002C51C, fn_8002C8FC, fn_8002CA54, fn_8002CBF8 (clamp temps in swapped registers), fn_8002D72C (the original keeps a dead loop counter), fn_8002E320 (`mulli -1` vs `neg`), fn_8002E5D0 (register colouring only), fn_8002EEFC, fn_8002F35C, fn_8002F598, fn_8002F630 (base pointer folded into an `addi`), fn_8002F6D4, fn_8002F80C, fn_8002FA00, fn_80030100, fn_80030280, fn_800303EC, fn_800308FC (string offsets only; the strings sit at lbl_802AD0F8+0x78, so `-str reuse,readonly` like tasks.c). The start is a guess |
 | `btlchar.c` | 0x80031254-0x80032E78 | 22 of 23; near: fn_80032C6C (prologue registers; an inline `Lookup` for the table search gets it to 14 lines, `build/agents/r6_1/`). The start is a guess |
 | `draw2d.c` | 0x80032E78-0x80035918 | 31 of 35; near: fn_800334B8 (r0/r4 swap only in the textured branch, 96 lines in `build/agents/r6_2/`), fn_80033888 (a `frsp` from a double-typed value), fn_8003529C (saved-register order; the only fix found was a long-to-int local copy, rejected), fn_80035518 (12 lines in `build/agents/r6_2/`) |
 | `tasks.c` | 0x80035918-0x8003DEE0 | 230 of 235 |
 | `sound.c` | 0x8003DEE0-0x80040010 | 26 of 28; fn_8003E1BC and fn_8003ECF4 differ only in string offsets (see below) |
-| `effect.c` | 0x80040010-0x80047214 | 27 of 29; near: fn_80041E64 (operand order of one `add`), fn_800470F0 (register allocation in the quad loop). The end is a guess |
+| `effect.c` | 0x80040010-0x800506B0 | 60 of 62 defined; near: fn_80041E64 (operand order of one `add`), fn_800470F0 (register allocation in the quad loop). Not in the file, as near misses: fn_800472DC (a 3-iteration copy loop ends `blt`; `i < 3` unrolls, `i != 3` gives `bne`), fn_80047A68 (counter and value swap r5/r6 in the alpha loop), fn_80048570 (register naming), fn_80048654 (callee-saved colouring), fn_8004C1E4 (`node` r26 vs r27, ribbon effect; 394 lines), fn_8004DD54 (register numbering), fn_8004E474 (two pointers swap r26/r27), fn_8004E7F0 (`addi; extsh` vs `extsh; addi`, 4 lines), fn_8004EEF0 (float load scheduling, 4 lines), fn_8004F664 (one `mr` before `lfd`, 2 lines), fn_8004F868 (`lwz r5` vs r0, 2 lines), fn_8004FF8C (f30 hoist, signed vs unsigned range check). The end is a guess; the file stops after fn_8004FF8C, the next function is 0x800506B0 |
 | `drawstate.c` | 0x801CA8D8-0x801CAE84 | linked |
 | `uiobj.c` | 0x801C2FA0-0x801C5758 | 40 of 44; near: UiDrawNumber, UiLayoutDrawPart, UiLayoutDraw, UiSpriteDraw |
 | `text.c` | 0x801E1F3C-0x801E3874 | 29 of 33; near: FontFindGlyph, TextNodeNew/NewN (0x8197 constant hoisted out of the copy loop), TextReadChar (extra `clrlwi`/`mr`) |
@@ -22,7 +23,7 @@ Game files
 | `flags.c` | 0x801E48A8-0x801E4C2C | 8 of 11; near: fn_801E48A8 (unrolled loop shape), fn_801E4984 (add operand order), fn_801E4AB0 (`mr` of a shift constant). The end is a guess |
 | `model.c` | 0x801E4C2C-0x801E7654 | 38 of 39; near: fn_801E735C (one `addi` hoisted above the bounds check). Ends where a second u32-to-float constant starts (0x8034C018) |
 | `chunk.c` | 0x801E7654-0x801E8CA4 | 14 of 15; near: fn_801E85BC (two locals swap registers). The end is a guess |
-| `evobj.c` | 0x801E8CA4-0x801EE324 | 5 of 18; near: fn_801E8CA4 (camera-vector stores fold their offsets), fn_801E9AE0 (20 lines in `build/agents/r6_4/`), fn_801EB01C (6 lines, two `addi` swapped), fn_801EBC5C (8, a state store scheduled after the next compare), fn_801EE140 (3, indexed `stbx` vs a walked pointer), fn_801EDF24 (same), fn_801EC854, fn_801ECA2C, fn_801ED074, fn_801ED69C, fn_801EDAC0 (register colouring around the ObjTurn inline), fn_801EA2DC and fn_801EB330 (large, far off). The end is a guess |
+| `evobj.c` | 0x801E8CA4-0x801F224C | 26 of 39 (batch 3 added 21 from 0x801EE324: fn_801EE324/EE344, the equipment-stat and item helpers fn_801EF054-FFFC, fn_801F01E4, fn_801F039C, fn_801F0588, fn_801F11C8, fn_801F1280/1590/1774; near-misses outside the file: fn_801EE5A4 (register allocation, 15 saved registers), fn_801EF000 (MWCC turns every counted loop into `mtctr`/`bdnz`; the original uses `cmpwi`/`blt`), fn_801EF300 (a 4-byte combine into `sig`), fn_801EF7E0, fn_801EF9A8 and fn_801F0020 (an 11- and 17-byte copy loop: the original has no pre-loop guard), fn_801F0284 (one extra `mr r31`), fn_801F1F80 (unrolled 4-byte party check, plus scheduling in case 0)); older: near: fn_801E8CA4 (camera-vector stores fold their offsets), fn_801E9AE0 (20 lines in `build/agents/r6_4/`), fn_801EB01C (6 lines, two `addi` swapped), fn_801EBC5C (8, a state store scheduled after the next compare), fn_801EE140 (3, indexed `stbx` vs a walked pointer), fn_801EDF24 (same), fn_801EC854, fn_801ECA2C, fn_801ED074, fn_801ED69C, fn_801EDAC0 (register colouring around the ObjTurn inline), fn_801EA2DC and fn_801EB330 (large, far off). The end is a guess |
 
 `build/agents/` is gitignored, so the per-function work mentioned above only exists on the machine that ran
 the batch.
@@ -55,13 +56,28 @@ Agent batches
 -------------
 
 The functions above outside drawstate/uiobj/text came from parallel agent batches: batch 1 (16 agents on
-137 functions, 126 matched after Opus retries and merging) and batch 2 (16 agents on 177 functions, 103
-matched; Sonnet only).
+137 functions, 126 matched after Opus retries and merging), batch 2 (16 agents on 177 functions, 103
+matched; Sonnet only) and batch 3 (16 agents on 86 functions, 62 matched: 1 Haiku agent on the 21
+functions under 200 bytes, 20 matched, and 15 Sonnet agents on the rest, plus 3 Sonnet merge agents).
+Agent contexts stayed at 105-230k tokens. Merging into an existing file is the costly part: every new
+function brings its own `extern` types, and they conflict (one `lbl_` global declared with several struct
+types). The merge agents unified them into one declaration per global; `build/agents/merge.py` only
+renames clashing typedefs.
 
 **Model rule (from 2026-10-26, for usage):** no Opus agents or Opus retries. Haiku (`model: "haiku"`) for
 functions under 200 bytes, Sonnet (`model: "sonnet"`) for everything else, merging included; set the model
 explicitly on every Agent call. Cap each function at ~10 variants and log the rest as near misses. In batch 1
 most of the cost was five Opus retry agents and the Opus merges; agent contexts peaked at 90-230k tokens.
+
+Duplicates
+----------
+
+`python tools/match/dupes.py` masks symbols and branch targets across the asm and writes
+[duplicates.txt](duplicates.txt): of 5,844 functions, 5,357 are unique and 172 groups hold 659 functions
+(487 copies). Hand an agent one member of a group and copy the source to the others (re-run fdiff on
+each copy). Most groups are one- and two-instruction stubs; the largest is 0x12A0 bytes
+(fn_800AE4E0 / fn_800DA744). Members defined in `src/` are starred. The earlier estimate of 4,555 unique
+groups masked immediates too; these groups keep register numbers and offsets, so they are exact.
 
 What worked:
 
@@ -159,13 +175,13 @@ Functions of 0x34 bytes or less outside 0x80050000-0x801C0000 were never attempt
 Good next targets
 -----------------
 
-- Past the guessed ends: `effect.c` from 0x80047214 (fn_80047214, fn_800472DC, fn_8004754C, ...),
-  `evobj.c` from 0x801EE324 (fn_801EE324, fn_801EE344, fn_801EE5A4, ...).
-- Before 0x8002C010 (the start of `battle.c` is a guess): 0x8002B000-0x8002C010 is mostly small
-  functions, good Haiku/Sonnet work.
+- Past the guessed ends: `effect.c` from 0x800506B0, `evobj.c` from 0x801F224C. Before 0x8002A034 (the start
+  of `bevent.c` is a guess).
+- Check `duplicates.txt` before handing out a range.
 - Batch 2 lessons: a callee's real parameter type (`s8` vs `int`) removes `extsb` diffs, and the caller's
   local should have the same narrow type (fn_80033A18's `s8 mode`); single-case `switch` with `default:`
   reproduces `beq; b` layouts; declare stack `Vec` locals in reverse stack order.
+- Batch 3 lessons: `do { ... i++; p++; } while (i < n)` stops MWCC unrolling a `for`; `case 0: default:` first and an empty `case 2:` reproduce odd compare trees; a callee's real `u8`/`s8`/`s16` parameter fixes `extsb`/`extsh` diffs (fn_8022E734 takes `u8 kind`); a u8 field read into an `int` local gives `cmpwi` where a `u8` local gives `cmplwi`.
 - The near misses above, ideally with decomp-permuter (`tools/match/permsetup.py`) running in the
   background while new code is matched.
 - The Ninja library (0x80286EE8-0x802AC7E0), 0% so far; see [ninja.md](ninja.md).

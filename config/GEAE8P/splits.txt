@@ -15,7 +15,10 @@ game/unit_80005B50.c:
 	.text       start:0x80005B50 end:0x80020B50
 
 game/unit_80020B50.c:
-	.text       start:0x80020B50 end:0x8002B124
+	.text       start:0x80020B50 end:0x8002A034
+
+game/bevent.c:
+	.text       start:0x8002A034 end:0x8002C010
 
 game/battle.c:
 	.text       start:0x8002C010 end:0x80031254
@@ -33,7 +36,7 @@ game/sound.c:
 	.text       start:0x8003DEE0 end:0x80040010
 
 game/effect.c:
-	.text       start:0x80040010 end:0x80047214
+	.text       start:0x80040010 end:0x800506B0
 
 game/unit_800553B4.c:
 	.text       start:0x800553B4 end:0x80055E94
@@ -138,7 +141,7 @@ game/chunk.c:
 	.text       start:0x801E7654 end:0x801E8CA4
 
 game/evobj.c:
-	.text       start:0x801E8CA4 end:0x801EE324
+	.text       start:0x801E8CA4 end:0x801F224C
 
 game/unit_801F5334.c:
 	.text       start:0x801F5334 end:0x80219378

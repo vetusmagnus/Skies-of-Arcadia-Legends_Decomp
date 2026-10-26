@@ -333,6 +333,9 @@ config.libs = [
     GameLib(
         "game",
         [
+            # Battle event dispatch and slot helpers (0x8002A034-0x8002C010). The start is a
+            # guess; 8 of 12 match (fn_8002B124, fn_8002B200, fn_8002B40C, fn_8002BD88 are near).
+            Object(NonMatching, "game/bevent.c"),
             # Battle character state: stat block, command handlers, callback list, file-name
             # builders and the title sequence task. The start is a guess; 83 of 101 match.
             Object(NonMatching, "game/battle.c"),
@@ -350,7 +353,7 @@ config.libs = [
             # .SAMP sample, voice and stream loading. fn_8003E1BC and fn_8003ECF4 differ only in
             # string offsets: like tasks.c, the strings belong in .rodata (-str reuse,readonly).
             Object(NonMatching, "game/sound.c"),
-            # Effect and particle tasks (a new 0.0f at 0x80348638). The end is a guess. 27 of 29
+            # Effect and particle tasks (a new 0.0f at 0x80348638). The end is a guess. 60 of 62
             # match; fn_80041E64 and fn_800470F0 are near misses.
             Object(NonMatching, "game/effect.c"),
             # 40 of 44 match; UiDrawNumber, UiLayoutDrawPart, UiLayoutDraw and UiSpriteDraw are
@@ -373,7 +376,7 @@ config.libs = [
             # fn_801E85BC is a near miss.
             Object(NonMatching, "game/chunk.c"),
             # Story-flag event object and event NPC state pickers (a new 0.0f at 0x8034C020).
-            # The end is a guess; 5 of 18 match.
+            # The end is a guess; 26 of 39 match.
             Object(NonMatching, "game/evobj.c"),
             # Small functions from 0x80055E94 to 0x801BEAE4 (accessors, setters, wrappers), one
             # unit per matching batch. The ranges are guesses; the units are named after the start.
