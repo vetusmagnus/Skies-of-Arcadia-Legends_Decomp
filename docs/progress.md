@@ -95,7 +95,11 @@ What worked:
   larger ones. The near misses were register allocation and block layout, not size, so batches of
   handler-style code up to ~0x300 bytes can go to Sonnet too.
 - Each agent works only in `build/agents/<id>/`, one self-contained `fn_<addr>.c` per function, and
-  verifies with `tools/match/fdiff.py`. Nothing touches `src/`, git or the build until a person
+  verifies with `tools/match/fdiff.py`. All scratch stays in the repo's gitignored `build/`: the
+  tools in `tools/match/` already write their per-attempt files to `build/match/` and delete them,
+  and an agent's own scripts write candidates into its folder and delete each one after scoring.
+  No `tempfile.mkdtemp()` or other writes to `%TEMP%`: 16 agents scoring thousands of variants each
+  leave hundreds of thousands of folders there that nothing cleans up. Nothing touches `src/`, git or the build until a person
   (or the coordinating session) re-verifies every claimed match and integrates.
 - Integration is its own step: merge a file's functions into one translation unit with shared
   types, then re-run fdiff over every function. Shared `static inline` helpers matter: the task
@@ -113,7 +117,8 @@ list):
 > C must behave like the original. Keep unknown globals as `extern` with their label names. Tools:
 > `asmindex.py asm FN` for the original, `fdiff.py FILE FN...` for the diff (a match prints only the
 > header and maybe `unplaced N`; `-reloc`/`-branch` lines are real mismatches), `perm.py` and
-> `vrun.py` for variant searches. Read `docs/matching.md` first. Stop after ~15-20 variants on one
+> `vrun.py` for variant searches. Scripts of your own write their candidate files into your folder
+> and delete each one after scoring; never `tempfile`/`%TEMP%`. Read `docs/matching.md` first. Stop after ~15-20 variants on one
 > function. Report MATCHED / NEAR (diff lines, what differs) / SKIPPED, plus types and purposes
 > worth naming.
 
