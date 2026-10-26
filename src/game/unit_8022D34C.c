@@ -53,6 +53,19 @@ void fn_8022F030(Msg* a, s16 i) {
 }
 
 extern void fn_8023080C(Msg*, s16);
+extern void fn_8022F6B8(void*, u32);
+void fn_8022F64C(void* p, u32 arg) {
+
+    if (!(*(u32*)p & 0x80000000)) {
+        if (strncmp((const char*)p, &lbl_8034C750, 4) == 0) {
+            p = (u8*)p + 8;
+        } else {
+            return;
+        }
+    }
+    fn_8022F6B8(p, arg);
+}
+
 void fn_802307EC(Msg* a, s16 i) {
     fn_8023080C(a, i);
 }
