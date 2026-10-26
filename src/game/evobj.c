@@ -2386,6 +2386,21 @@ s16 fn_801EE344(s16 id, s32 stat) {
     return total;
 }
 
+s8 fn_801EF000(s16 id, s32 stat) {
+    s8 r = -1;
+    StatMod* m = lbl_802C6E10[id - 0xa0].mods;
+    s32 i = 0;
+    do {
+        if (m->stat == stat) {
+            r = m->val;
+            break;
+        }
+        i++;
+        m++;
+    } while (i < 4);
+    return r;
+}
+
 void fn_801EF054(Chr_801EF054 *p, s32 idx)
 {
     s16 sum = 0;

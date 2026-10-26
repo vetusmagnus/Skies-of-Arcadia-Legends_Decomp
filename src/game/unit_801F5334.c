@@ -3,7 +3,6 @@
 #include "game/task.h"
 #include <math.h>
 void fn_80217B98();
-
 void fn_801EFC88(s32 v);
 typedef struct CmdStream { u8 pad_00[0x1c]; u8 *cur; } CmdStream;
 void fn_800B0900(void *p);
@@ -40,6 +39,9 @@ s32 SePlay(s32 bank, s8 arg1, s8 id);
 extern s32 lbl_803477DC;
 void fn_80217830(s32 arg);
 extern s32 lbl_803477E0;
+float fn_801F6120(float **p);
+void fn_801EFF0C(s16 v);
+typedef struct CmdB { u8 pad_00[0x1c]; float *cur; } CmdB;
 
 void fn_801F5334(s8 n) {
     s32 i;
@@ -1135,4 +1137,16 @@ s16 fn_80207130(u32 a0, CmdStream *st) {
         }
     }
     return (a >> 3) & 1;
+}
+
+s32 fn_801F593C(s32 unused, CmdB *c) {
+    f32 *p;
+    p = c->cur;
+    p++;
+    {
+        s32 v = ReadInt(&p);
+        c->cur = p;
+        fn_801EFF0C(v);
+    }
+    return 0;
 }

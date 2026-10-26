@@ -1,12 +1,14 @@
 #include "types.h"
 #include "ninja.h"
-
 void fn_801E5DF0(void *o);
 void fn_801E5148(void *o);
 extern u32 lbl_8030A6D4[36];
 void *memset(void *dst, int c, u32 n);
 extern s32 lbl_803471CC;
 extern s32 DVDGetDriveStatus(void);
+typedef struct Table { u32 count; s32 vals[1]; } Table;
+typedef struct Sub { u8 pad[0x10]; Table *tab; } Sub;
+typedef struct Obj { u8 pad[0x1c8]; Sub *sub; } Obj;
 
 void fn_801C5A60(NJS_MATRIX m, NJS_POINT3 *p, NJS_POINT3 *out)
 {
@@ -281,4 +283,24 @@ void fn_801C588C(Vec3 *a, Vec3 *b, void *out) {
         d.z = b->z - a->z;
         fn_801D9634(&d, out);
     }
+}
+
+static inline BOOL HasVal(Obj *obj, u32 idx) {
+    return obj != NULL && obj->sub != NULL && obj->sub->tab != NULL && obj->sub->tab->count > idx;
+}
+
+f32 fn_801C5C80(Obj *obj, u32 idx) {
+    f32 result = 0.0f;
+    if (HasVal(obj, idx)) {
+        result = (f32)obj->sub->tab->vals[idx] / 100.0f;
+    }
+    return result;
+}
+
+f32 fn_801C5D04(Obj *obj, u32 idx) {
+    f32 result = 0.0f;
+    if (HasVal(obj, idx)) {
+        result = (f32)obj->sub->tab->vals[idx] / 100.0f;
+    }
+    return result;
 }

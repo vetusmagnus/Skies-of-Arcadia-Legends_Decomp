@@ -455,7 +455,6 @@ extern void fn_800794D8(void);
 extern void fn_8007B5B0(void);
 extern void fn_8007A890(void);
 extern void fn_8007BEB4(void);
-
 typedef struct Msg {
     s16 x0;
     s16 x2;
@@ -465,6 +464,16 @@ typedef struct Msg {
     s32 xc;
 } Msg;
 extern void fn_80075060(Msg*, s16);
+typedef struct Slot_80077D40 {
+    s16 id;
+    s8 count;
+    u8 pad3;
+} Slot_80077D40;
+typedef struct Work_80077D40 {
+    u8 pad[0x38];
+    Slot_80077D40 slots[80];
+} Work_80077D40;
+
 void fn_80075040(Msg* a, s16 i) {
     fn_80075060(a, i);
 }
@@ -2174,4 +2183,22 @@ void fn_80088ABC(Ctx_80085C88 *c) {
     req->flags |= 1;
     lbl_80309700[idx]->update = fp;
     lbl_80309700[idx]->flag19 = 0;
+}
+
+/* Drops one reference from the slot holding id; frees the slot (id = -1) when it reaches 0. */
+void fn_80077D40(s16 id)
+{
+    Slot_80077D40 *s = (*(Work_80077D40 **)&lbl_80347390)->slots;
+    int i = 0;
+
+    do {
+        if (id == s[i].id) {
+            s[i].count--;
+            if (s[i].count <= 0) {
+                s[i].id = -1;
+            }
+            return;
+        }
+        i++;
+    } while (i < 80);
 }

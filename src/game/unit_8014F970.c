@@ -1001,6 +1001,41 @@ typedef struct {
     Sub_801512DC sub;
 } Obj_801512DC;
 extern char lbl_802B3B18[];
+/* lbl_80346FC8[2]: the two battle sides (same layout as Obj_80154404 in unit_8014F970.c).
+ * a[8] at 0x184 are link slots: target unit + active flag; the target's +0x1EC byte
+ * marks it as linked (fn_80154404 clears both for every slot). */
+typedef struct Unit Unit;
+typedef struct Link {
+    Unit *target;    /* 0x00 */
+    s32 active;      /* 0x04 */
+    u8 pad8[0x10];
+} Link;
+struct Unit {
+    u8 pad00[0x184];
+    Link a[8];       /* 0x184 */
+    Link b[32];      /* 0x244 */
+};
+/* lbl_8034727C: rows of 0x3E bytes starting at +0x3A (fn_8015A780 reads +0x50/+0x68
+ * of the same rows). Fields come in pairs 0x18 apart, picked by a 0/1 flag. */
+typedef struct Row {
+    s8 x00;          /* +0x3A */
+    u8 pad01[0x05 - 0x01];
+    s8 x05;          /* +0x3F */
+    u8 pad06[0x18 - 0x06];
+    s8 x18;          /* +0x52 */
+    u8 pad19[0x1D - 0x19];
+    s8 x1D;          /* +0x57 */
+    u8 pad1E[0x3E - 0x1E];
+} Row;
+typedef struct RowTable {
+    u8 pad00[0x3A];
+    Row row[1];
+} RowTable;
+extern s32 lbl_80346FF4;
+typedef struct {
+    u8 a[4][2];
+    u8 b[4][2];
+} Row_80157E04;
 
 void fn_8014F970(u8 *self) {
     fn_80153270(self + 0x95c);
@@ -3634,4 +3669,57 @@ void fn_8015596C(void *p) {
 extern void fn_8015128C(void *p, void *q);
 void fn_80155994(void *p) {
     fn_8015128C((void*)lbl_80346FB4, p);
+}
+
+inline Link *GetLink(s32 side, s32 i)
+{
+    return &((Unit **)lbl_80346FC8)[side]->a[i];
+}
+
+void fn_801545AC(s32 side, s32 i)
+{
+    if (GetLink(side, i)->target != NULL) {
+        ((Unit **)lbl_80346FC8)[side]->a[i].active = 1;
+        ((Unit **)lbl_80346FC8)[side]->a[i].target->pad00[0x1EC] = 1;
+    }
+}
+
+s32 fn_8015C468(s32 which, s32 i)
+{
+    if (which == 0) {
+        return (*(RowTable **)&lbl_8034727C)->row[i].x05;
+    }
+    return (*(RowTable **)&lbl_8034727C)->row[i].x1D;
+}
+
+s32 fn_8015C4A0(s32 which, s32 i)
+{
+    if (which == 0) {
+        return (*(RowTable **)&lbl_8034727C)->row[i].x00;
+    }
+    return (*(RowTable **)&lbl_8034727C)->row[i].x18;
+}
+
+void fn_80155D2C(void)
+{
+    Ent_80155AB4 *e;
+    s32 i;
+
+    memset(lbl_80346FF8, 0, sizeof(lbl_80346FF8));
+    lbl_80346FF4 = 0;
+    lbl_80346FF0 = 0;
+    for (e = lbl_80346FF8, i = 0; i < 1; i++, e++) {
+        e->id = -1;
+        e->p = NULL;
+    }
+}
+
+void fn_80157E04(s32 i, s32 j, u8 a0, u8 a1, u8 b0, u8 b1)
+{
+    if ((*(Row_80157E04 **)&lbl_80346FD0) != NULL) {
+        (*(Row_80157E04 **)&lbl_80346FD0)[i].a[j][0] = a0;
+        (*(Row_80157E04 **)&lbl_80346FD0)[i].a[j][1] = a1;
+        (*(Row_80157E04 **)&lbl_80346FD0)[i].b[j][0] = b0;
+        (*(Row_80157E04 **)&lbl_80346FD0)[i].b[j][1] = b1;
+    }
 }

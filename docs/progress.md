@@ -1,8 +1,8 @@
 Progress and handoff
 ====================
 
-State of the work as of 2026-10-26 (after the partials batch): 26.7% of code matched (3,402 / 7,116
-functions), 3,714 functions unmatched: 2,750 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
+State of the work as of 2026-10-26 (after the Opus near-miss batch): 26.9% of code matched (3,494 / 7,116
+functions), 3,622 functions unmatched: about 2,660 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
 (the size split of the game functions predates the duplicate-copy batch: 2,193 under 632 bytes, 466 at 632-1000,
 355 at 1-2 KB, 101 at 2-5 KB, 16 over 5 KB). Numbers live in the README status block and on
 [ByteMatch](https://bytematch.dev/vetusmagnus/SoAL-Decomp); this page covers what's in flight.
@@ -17,7 +17,7 @@ Game files
 | `btlchar.c` | 0x80031254-0x80032E78 | 22 of 23; near: fn_80032C6C (prologue registers; an inline `Lookup` for the table search gets it to 14 lines, `build/agents/r6_1/`). The start is a guess |
 | `draw2d.c` | 0x80032E78-0x80035918 | 31 of 35; near: fn_800334B8 (r0/r4 swap only in the textured branch, 96 lines in `build/agents/r6_2/`), fn_80033888 (a `frsp` from a double-typed value), fn_8003529C (saved-register order; the only fix found was a long-to-int local copy, rejected), fn_80035518 (12 lines in `build/agents/r6_2/`) |
 | `chunklist.c` | 0x80035918-0x80036520 | 6 of 8; near: fn_80035918, fn_80035C38 (see "Linking tasks.c and sound.c"). The end is a guess |
-| `tasks.c` | 0x80036520-0x8003DEE0 | 224 of 226; near: fn_8003DBAC, fn_8003DCF4. Data is byte-exact, so it links the moment those two match |
+| `tasks.c` | 0x80036520-0x8003DEE0 | 225 of 226; near: fn_8003DCF4 (registers only, 12 lines: obj->type/obj->id swap r5/r0; the third TargetMatch needs the arguments in the roles the asm implies, then one local `s16 wid = c->x8;` gets it that close). fn_8003DBAC matches (`n` reused as the remainder). Data is byte-exact, so it links the moment fn_8003DCF4 matches |
 | `sound.c` | 0x8003DEE0-0x80040010 | linked |
 | `effect.c` | 0x80040010-0x800506B0 | 62 of 62 defined. Not in the file, as near misses: fn_800472DC (a 3-iteration copy loop ends `blt`; `i < 3` unrolls, `i != 3` gives `bne`), fn_80047A68 (counter and value swap r5/r6 in the alpha loop), fn_80048570 (register naming), fn_80048654 (callee-saved colouring), fn_8004C1E4 (`node` r26 vs r27, ribbon effect; 394 lines), fn_8004DD54 (register numbering), fn_8004E474 (two pointers swap r26/r27), fn_8004E7F0 (`addi; extsh` vs `extsh; addi`, 4 lines), fn_8004EEF0 (float load scheduling, 4 lines), fn_8004F664 (one `mr` before `lfd`, 2 lines), fn_8004F868 (`lwz r5` vs r0, 2 lines), fn_8004FF8C (f30 hoist, signed vs unsigned range check). The end is a guess; the file stops after fn_8004FF8C, the next function is 0x800506B0 |
 | `drawstate.c` | 0x801CA8D8-0x801CAE84 | linked |
@@ -25,7 +25,7 @@ Game files
 | `text.c` | 0x801E1F3C-0x801E3874 | 29 of 33; near: FontFindGlyph, TextNodeNew/NewN (0x8197 constant hoisted out of the copy loop), TextReadChar (extra `clrlwi`/`mr`) |
 | `motion.c` | 0x801E3874-0x801E48A8 | 9 of 11; near: fn_801E3DE0 (u8 index mask), fn_801E41E0 (one extra saved register); fn_801E461C has no C |
 | `flags.c` | 0x801E48A8-0x801E4C2C | 9 of 11; near: fn_801E48A8 (unrolled loop shape), fn_801E4AB0 (`mr` of a shift constant). The end is a guess |
-| `model.c` | 0x801E4C2C-0x801E7654 | 38 of 39; near: fn_801E735C (one `addi` hoisted above the bounds check). Ends where a second u32-to-float constant starts (0x8034C018) |
+| `model.c` | 0x801E4C2C-0x801E7654 | 39 of 39 (fn_801E735C matches with the element pointer built inside the bounds-check branch: `t = list; t += index;`; fn_801E4FD4 and fn_801E74D0 had wrong float constants that fdiff cannot see, fixed). Does not link yet: the original `.sdata2` interleaves its constants with those of neighbouring code (0.8f, 360.0f, -1.0f, 0.0f, then the u32-to-float double), so model.c's own pool (32 bytes in a different order) shifts the DOL by 32 bytes; it needs the real TU boundary (probably together with motion.c/flags.c) before it can link. Ends where a second u32-to-float constant starts (0x8034C018) |
 | `chunk.c` | 0x801E7654-0x801E8CA4 | 14 of 15; near: fn_801E85BC (two locals swap registers). The end is a guess |
 | `evobj.c` | 0x801E8CA4-0x801F224C | 26 of 39 (batch 3 added 21 from 0x801EE324: fn_801EE324/EE344, the equipment-stat and item helpers fn_801EF054-FFFC, fn_801F01E4, fn_801F039C, fn_801F0588, fn_801F11C8, fn_801F1280/1590/1774; near-misses outside the file: fn_801EE5A4 (register allocation, 15 saved registers), fn_801EF000 (MWCC turns every counted loop into `mtctr`/`bdnz`; the original uses `cmpwi`/`blt`), fn_801EF300 (a 4-byte combine into `sig`), fn_801EF7E0, fn_801EF9A8 and fn_801F0020 (an 11- and 17-byte copy loop: the original has no pre-loop guard), fn_801F0284 (one extra `mr r31`), fn_801F1F80 (unrolled 4-byte party check, plus scheduling in case 0)); older: near: fn_801E8CA4 (camera-vector stores fold their offsets), fn_801E9AE0 (20 lines in `build/agents/r6_4/`), fn_801EB01C (6 lines, two `addi` swapped), fn_801EBC5C (8, a state store scheduled after the next compare), fn_801EE140 (3, indexed `stbx` vs a walked pointer), fn_801EDF24 (same), fn_801EC854, fn_801ECA2C, fn_801ED074, fn_801ED69C, fn_801EDAC0 (register colouring around the ObjTurn inline), fn_801EA2DC and fn_801EB330 (large, far off). The end is a guess |
 
@@ -100,6 +100,56 @@ renames clashing typedefs.
 functions under 200 bytes, Sonnet (`model: "sonnet"`) for everything else, merging included; set the model
 explicitly on every Agent call. Cap each function at ~10 variants and log the rest as near misses. In batch 1
 most of the cost was five Opus retry agents and the Opus merges; agent contexts peaked at 90-230k tokens.
+
+### Opus near-miss batch (2026-10-26)
+
+Start-over pass on the logged near misses, smallest first (16 to 132 bytes), 16 Opus 5.5 agents (set explicitly) with
+about 10 tries per function, no retry or merge agents: 14 agents on 8 functions each (112 functions), one on the
+model.c/chunk.c/btlchar.c blockers, one on the tasks.c/chunklist.c blockers. 119 attempted, 92 more functions match
+(3,402 to 3,494, including a few siblings the agents solved on the way); every one re-checked with fdiff and
+`floatcheck.py`, merged by `merge6.py` in the coordinating session, `main.dol` still rebuilds byte-identical.
+The causes were mostly small and reusable:
+
+- A comparison result held in a named `int` and returned through `!x` (or `if (..) return 1; return 0;`) gives the
+  `xor/srawi/subf/srwi` forms that plain `return a == b` folds away; `return n <= c` also schedules differently from
+  the if/return form.
+- An extern array's declared size picks the addressing: 8 bytes or less is `sda21`, larger is `lis/addi`
+  (`lbl_8034718C[2]`, `lbl_80346C44` as an 8-byte struct, `lbl_80347148[4]`).
+- Return type decides where `extsb` lands and whether r3 stays live (`int f(void)` vs `s8`, a callback with no
+  `return` at all); a callee's real parameter type (`s32` vs `s16`) fixes load order.
+- A counted loop that MWCC unrolls keeps a leading `cmpwi/bge` guard: write the loop, not the unrolled stores.
+  `do { } while (i < n)` gives the `cmpwi/blt` shape instead of `mtctr`.
+- Struct-typed table access (`tbl->row[i].f`, a `Mem *m` local, a typed `work` pointer) fixes folded index math that
+  casts and flat byte offsets cannot.
+- Evaluating `lbl = fn_x(..)` chains, a held local for every field read first, and the original's argument order for
+  mixed int/float prototypes (fn_801D5DD8) fix scheduling.
+
+`floatcheck.py` caught real bugs fdiff cannot see: fn_801E4FD4 and fn_801E74D0 (model.c) used the wrong constants,
+and fn_800304DC (battle.c) passed `0.0f` where the original passes `30.0f`; all fixed.
+
+Unit blockers: model.c is now 39 of 39 but still does not link (see its row). tasks.c is down to fn_8003DCF4.
+fn_80035918 (chunklist.c) matches only as `if (p != NULL) goto start; return; loop: ...; start: e = p; goto loop;`
+(setup block placed after the loop); that was not adopted, so it stays unmatched, as does fn_80035C38 (r29/r31 swap
+between `n` and `i`, not a declaration-order problem: 5040 orders, about 3,000 permuter iterations).
+fn_801E85BC (chunk.c, `set`/`p` swap r24/r29; moving `set++` before `DCStoreRange` fixes the `addi`, but `p` always gets the
+last callee-saved register) and fn_80032C6C (btlchar.c, a `lis 0x2` temporary takes r3) are unchanged; each had about
+10 serious tries plus a permuter run.
+
+Still near after this pass: fn_80226120 (14, r4/r5 hold 0x7FFFFFFF and the table swapped), fn_80155CD8 (5, `lwz r0` +
+`mr r3,r0`), fn_801D1A40 (2, third `stfsu` store; its sibling fn_801D1A94 matches as a count-down pointer walk),
+fn_80194E6C (14), fn_801BE608 (12, `r` and the `mulli` temporary swap), fn_80141314 (30, `btn`/`d` swap r4/r5),
+fn_8002C8FC and fn_8002CA54 (battle.c `Lm` clamp inline, 6 and 12 lines; about 60 shapes and a 9,000-iteration permuter
+run), fn_8003DCF4, fn_80035C38, fn_80035918, fn_801E85BC, fn_80032C6C.
+
+Matched in isolation but not merged (the unit declares the symbol or struct differently, or the neighbour fails after the
+merge): fn_80128108, fn_801283A4 (`in->tab` is `u8[200]` in the unit), fn_8015128C, fn_80158B7C, fn_801673D8
+(prototype types), fn_801838C8 (breaks fn_80183800), fn_801A2C58 (`lbl_8034718C` is declared differently in the
+unit), fn_801B5868 (needs `s16 fn_801F4C24()` against the unit's `(short)` prototype), fn_801A6650, fn_800CE4B4,
+fn_80194378, fn_80194C18, fn_8019E3A8 and fn_80095360 (files in `build/agents/n_*`, gitignored), fn_8013DBDC (needs
+`fn_8013DB8C` to take a third argument), fn_800C35C4 (needs `fn_800C355C` to be `inline` above it), fn_800B0F54 (needs
+the three `lbl_803036xx` blocks defined, not extern, at the top of the unit so they pool into one base register),
+fn_801F58B8, fn_8009E49C and fn_8009E4B8/4D4 (need the Dolphin `__OSf32tou8`/`__OSu8tof32` fast-cast inlines added to
+`OSFastCast.h`; the agent's header is in `build/agents/n_01/`).
 
 ### Partials batch (2026-10-26)
 

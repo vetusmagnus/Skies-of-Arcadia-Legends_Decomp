@@ -272,6 +272,39 @@ typedef struct {
     s8 b;
     s8 c;
 } Cell_8013A35C;
+/* lbl_80308E90: 8 records of 5 bytes, indexed by i + 4 for i in [-4, 4);
+ * -1 marks an empty field (fn_8013D400's unit tests +0x14 == -1). */
+typedef struct Rec5 {
+    s8 a[5];
+} Rec5;
+extern Rec5 lbl_80308E90[8];
+typedef struct Inner {
+    u8 pad0[9];
+    u8 grid[8][4][4];
+    u8 sel[8][4];
+} Inner;
+typedef struct Mgr {
+    u8 pad0[0x24];
+    Inner *inner;
+} Mgr;
+typedef struct Cell_80131658 {
+    s8 a;
+    s8 b;
+    s8 c;
+    u8 v;
+    u8 w;
+} Cell_80131658;
+typedef struct Pad_8013A794 {
+    u8 pad0[0x8];
+    u32 x8; /* buttons held */
+} Pad_8013A794;
+typedef struct PadInfo_8013A794 {
+    Pad_8013A794 *pad;
+    u8 pad4[0x18 - 4];
+} PadInfo_8013A794;
+extern PadInfo_8013A794 lbl_80311A60;
+s32 fn_8013A538(s32 a, s32 b, s32 cur, s32 step, s32 d);
+extern void SePlay(s32 id, s32 a, s32 b);
 
 void fn_8012F6C4(s8 idx, u32 val) {
     u8* p = *(u8**)((u8*)lbl_80346F38 + 0x24);
@@ -1120,4 +1153,42 @@ s32 fn_8013D3F0(u8* p) {
 
 s8* fn_80135598(void) {
     return (s8*)&lbl_803063F0;
+}
+
+void fn_8013A320(s32 i)
+{
+    if (i >= -4 && i < 4) {
+        lbl_80308E90[i + 4].a[0] = -1;
+        lbl_80308E90[i + 4].a[1] = -1;
+        lbl_80308E90[i + 4].a[2] = -1;
+        lbl_80308E90[i + 4].a[3] = -1;
+        lbl_80308E90[i + 4].a[4] = -1;
+    }
+}
+
+void fn_80131658(Cell_80131658 *cell)
+{
+    s8 a = cell->a;
+    s8 b = cell->b;
+    s8 c = cell->c;
+
+    (*(Mgr **)&lbl_80346F48)->inner->grid[a][b][c] = cell->v;
+    (*(Mgr **)&lbl_80346F48)->inner->sel[a][b] = cell->w;
+}
+
+s32 fn_8013A794(s32 a, s32 b, s32 cur, s32 d) {
+    s32 r;
+    s32 step = 0;
+
+    if (lbl_80311A60.pad->x8 & 1) {
+        step = -1;
+    }
+    if (lbl_80311A60.pad->x8 & 2) {
+        step++;
+    }
+    r = fn_8013A538(a, b, cur, step, d);
+    if (r != cur) {
+        SePlay(0xf, 1, 0);
+    }
+    return r;
 }

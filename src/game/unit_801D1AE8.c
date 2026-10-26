@@ -1,7 +1,7 @@
 #include "types.h"
 #include "ninja.h"
 #include "game/drawstate.h"
-
+#include <dolphin/os.h>
 void VISetNextFrameBuffer(void *fb);
 void VIFlush(void);
 void VIWaitForRetrace(void);
@@ -57,7 +57,6 @@ void fn_801DFA9C(void *p, s32 v);
 typedef struct Mo { u8 pad0[4]; u8 m4[0x28]; u8 m2c[0x1C]; s32 x48; void *x4c; } Mo;
 void njPushMatrixEx(void);
 void njPopMatrixEx(void);
-
 void fn_80286EE8(void);
 void fn_8028B498(void);
 void fn_801E04E8(void *m, s32 a, void *b, void *c);
@@ -76,6 +75,14 @@ extern u8 *lbl_80347660;
 extern u32 lbl_80312D40[4];
 void fn_801E1A74(s32 a, s32 b);
 extern s32 lbl_80347550;
+typedef struct {
+    s32 active;
+    u8 pad4[0x14 - 4];
+    u32 x14;
+} Obj_80311C30;
+extern Obj_80311C30 lbl_80311C30;
+/* word 0 is compared as a key and also returned as a pointer */
+typedef struct ReqB { union { u32 key; void *obj; } u; void *next; } ReqB;
 
 void fn_801D1AE8(void) {
     VISetNextFrameBuffer(lbl_803476AC);
@@ -667,4 +674,55 @@ void fn_801E0D50(u32 *dst, u32 *src, s32 size)
 s32 fn_801E183C(void)
 {
     return lbl_80347550 == 0;
+}
+
+void fn_801E0D0C(char *s)
+{
+    if (s == NULL) {
+        return;
+    }
+    for (; *s != 0; s++) {
+        if (*s >= 'A' && *s <= 'Z') {
+            *s += 0x20;
+        }
+    }
+}
+
+s32 fn_801D6DE8(s32 a, s32 n)
+{
+    Obj_80311C30 *o = &lbl_80311C30;
+
+    if (o->active == 0) {
+        return -2;
+    }
+    n = (n + 1) * 250;
+    o->x14 = OSMillisecondsToTicks(n);
+    return 0;
+}
+
+/* same loop as fn_801DA66C, inlined */
+inline s16 EntFindVal(ReqB *p) {
+    s32 i = 8;
+    Ent *e = lbl_802F65C0;
+    do {
+        if (p->u.key == e->key) {
+            return e->val;
+        }
+        e++;
+    } while (--i > 0);
+    return -1;
+}
+
+void *fn_801DA484(ReqB *p) {
+    if (EntFindVal(p) < 0) {
+        return p->next;
+    }
+    return p->next;
+}
+
+void *fn_801DA4D0(ReqB *p) {
+    if (EntFindVal(p) < 0) {
+        return p->u.obj;
+    }
+    return 0;
 }

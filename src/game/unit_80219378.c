@@ -1,6 +1,4 @@
 #include "types.h"
-
-
 extern void fn_802193BC(s32 a, s32 b);
 extern s32 fn_801D168C(void);
 extern void fn_801D150C(s32 v);
@@ -134,6 +132,7 @@ typedef int s32_8022B014;
 extern s32_8022B014 lbl_80347508;
 typedef int s32_8022B064;
 extern s32_8022B064 lbl_80347508;
+extern s32 fn_801DCFA0(void *a, void *b);
 
 void fn_80219378(s32 a)
 {
@@ -621,4 +620,31 @@ void fn_8022B064(u8 *p) {
         return;
     }
     *(s32_8022B064 *)(p + 0x1c) = 0;
+}
+
+static inline s32 InRange(s32 v)
+{
+    s32 r = 0;
+    if (v >= 0 && v < 5) {
+        r = 1;
+    }
+    return r;
+}
+
+s32 fn_8021A83C(s8 *a, void *b)
+{
+    s32 ret = 0;
+
+    if (a != NULL && b != NULL) {
+        if (InRange(*a)) {
+            ret = 0;
+        }
+    }
+    return ret;
+}
+
+s32 fn_8022BA10(void *a, void *b)
+{
+    s32 x = fn_801DCFA0(b, a);
+    return (0 <= x) ? (u16)-x : 0;
 }

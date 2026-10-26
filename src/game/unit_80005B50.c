@@ -93,6 +93,36 @@ extern void fn_80230280(void *, void *);
 extern s32 fn_800179E4(s16);
 extern void fn_8000B320(f32, void *, void *);
 extern void fn_801E17E0(void *);
+typedef struct { s16 id; } Wk;
+typedef struct { u8 pad[0x24]; Wk* work; } Tk;
+/* lbl_803097F0 (.bss, 0xD8 bytes): s16 header (x0 read as a state id in battle.c),
+   then 12 per-character 16-byte entries from 0x18. */
+typedef struct { f32 x0; f32 x4; f32 x8; f32 xc; } Ent;
+typedef struct { s16 x0; u8 pad[0x16]; Ent ent[12]; } Tbl;
+extern Tbl lbl_803097F0;
+typedef struct {
+    u8 pad[0x70];
+    f32 a[3];
+    f32 b[3];
+} State_80309EC8;
+/* lbl_80309730: 12 rows of 16 bytes, one per character slot; +0x8 is the slot mode
+ * (0 = unused, see fn_80010538). */
+typedef struct Entry16B {
+    u8 pad[8];
+    s8 mode;
+    u8 pad2[7];
+} Entry16B;
+typedef struct Work {
+    s8 idx; /* 0x00: slot index */
+} Work;
+typedef struct Inner {
+    u8 pad[0x4c];
+    Work *work; /* 0x4C */
+} Inner;
+typedef struct Obj {
+    u8 pad[0x24];
+    Inner *inner; /* 0x24 */
+} Obj;
 
 void* fn_80005B50(void* heap, u32 size) {
     void* p = fn_80005B9C(heap);
@@ -551,4 +581,43 @@ void fn_8000E0D8(E0D8Obj *obj) {
 extern void fn_8000F2A0(void);
 void fn_8000F6F8(void* obj, s32 a, s32 b, s32 c, s32 d) {
     fn_8000F2A0();
+}
+
+void fn_80018764(Tk* t, f32* a, f32* b) {
+    s16 i;
+    if (t == NULL) {
+        return;
+    }
+    i = t->work->id;
+    *a = lbl_803097F0.ent[i].x4;
+    *b = lbl_803097F0.ent[i].x8;
+}
+
+void fn_80012020(f32 *v)
+{
+    f32 x;
+    x = v[0];
+    if (x) (*(State_80309EC8*)&lbl_80309EC8).b[0] = x;
+    x = v[1];
+    if (x) (*(State_80309EC8*)&lbl_80309EC8).b[1] = x;
+    x = v[2];
+    if (x) (*(State_80309EC8*)&lbl_80309EC8).b[2] = x;
+}
+
+s32 fn_80018498(f32 *v)
+{
+    if (v[0] > 67.5f) return 0;
+    if (v[0] < -67.5f) return 0;
+    if (v[2] > 67.5f) return 0;
+    return !(v[2] < -67.5f);
+}
+
+s32 fn_80014F50(Obj *o)
+{
+    switch (lbl_80309730[o->inner->work->idx].mode) {
+    case 0:
+        return 0;
+    default:
+        return 1;
+    }
 }

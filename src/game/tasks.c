@@ -1047,15 +1047,19 @@ int fn_8003DBAC(s32 n, char* buf)
     char letters[4] = "ABG";
     if (n == 9999999) return 0;
     if (n >= 10000000) {
-        s16 idx = (n - 10000000) / 1000;
-        s16 rem = (n - 10000000) % 1000;
+        s16 idx;
+        n -= 10000000;
+        idx = n / 1000;
+        n = (s16)(n % 1000);
         if (idx >= 3) idx = 0;
-        fn_8025CB24(buf, "M%c%03d.MLD", letters[idx], rem);
+        fn_8025CB24(buf, "M%c%03d.MLD", letters[idx], n);
     } else {
         s16 a = n / 100000;
-        s16 r = n % 100000;
-        s16 b = r / 100;
-        s16 c = r % 100;
+        s16 b;
+        s16 c;
+        n = (s16)(n % 100000);
+        b = n / 100;
+        c = n % 100;
         fn_8025CB24(buf, "E%02d%03d%02d.MLD", a, b, c);
     }
     return 1;

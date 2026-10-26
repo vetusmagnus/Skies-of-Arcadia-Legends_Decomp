@@ -78,6 +78,7 @@ extern f32 fn_80071E9C(V3 *, V3 *);
 extern void fn_80061F58(void *, s32, s32);
 extern Ct53F38 *fn_8003DB34(void *);
 extern void fn_80051264(void);
+extern u8 lbl_80302B38[12];
 
 void fn_80052058(O52058 *o) {
     fn_8001E05C(o->child);
@@ -178,5 +179,14 @@ void fn_80053F38(u8 id, s8 b) {
             w->parent = t;
             w->f6c |= 0x80000000;
         }
+    }
+}
+
+void fn_8005121C(void)
+{
+    s32 i;
+
+    for (i = 0; i < 12; i++) {
+        lbl_80302B38[i] = 0;
     }
 }

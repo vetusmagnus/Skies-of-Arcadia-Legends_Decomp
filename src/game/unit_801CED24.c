@@ -1,5 +1,4 @@
 #include "types.h"
-
 extern u32 lbl_80347228;
 extern u32 lbl_80347230;
 extern u32 lbl_8034723C;
@@ -23,6 +22,9 @@ extern s32 lbl_80347214;
 extern s32 lbl_80347220;
 extern void fn_801D129C(void);
 extern u8 lbl_80346820;
+/* lbl_8034720C = (lbl_80347208 != 0), and the value is returned (r3 holds the result;
+ * as a void function the compiler keeps it in r0). The one caller, fn_801DC62C, ignores it. */
+extern long lbl_80347208;
 
 void fn_801CED24(u32 a, u32 b, u32 c, f32 d, u32 e)
 {
@@ -291,4 +293,8 @@ void fn_801D14F8(void) {
 
 s32 fn_801D1504(void) {
     return lbl_80347268;
+}
+
+int fn_801D13C0(void) {
+    return lbl_8034720C = lbl_80347208 != 0;
 }

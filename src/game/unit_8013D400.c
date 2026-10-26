@@ -442,6 +442,44 @@ typedef struct {
     f32 f34;
     f32 f38;
 } Flt_80143FA4;
+typedef struct {
+    u8 b[0xc];
+    s32 xc;
+    u8 b2[6];
+    u16 h[5];
+} Struct80306738;
+extern void fn_80142F18(void);
+typedef struct {
+    u8 pad0;
+    s8 idx; /* 0x01 */
+    u8 pad2[5];
+    s8 x7;  /* 0x07 */
+} IdxArg_801464B4;
+typedef struct {
+    s16 x0;
+    s16 x2;
+    u8 pad[0x90 - 4];
+} Rec_80146DE4;
+typedef struct {
+    u8 pad[0x124];
+    Rec_80146DE4 rec[1];
+} Mgr_80146DE4;
+typedef struct {
+    u8 pad[6];
+    s16 x6;
+    s16 x8;
+} Info_80146DE4;
+typedef struct Stat {
+    u8 pad0[0x14];
+    s32 max;
+    s32 cur;
+} Stat;
+typedef struct Ent_80143200 {
+    u8 pad0[0x20];
+    Stat *stat;
+} Ent_80143200;
+typedef struct Node_80149070 Node_80149070;
+void fn_80148EDC(Node_80149070 *n);
 
 void fn_8013D400(s32 a, s32 b) {
     fn_80136A28(a, b, 3, -1, -1, -1);
@@ -1579,4 +1617,68 @@ void fn_80143FA4(u8* s, s32 idx, s32 slot) {
 
 void fn_80147DA8(s32 a, s32 b) {
     fn_80142F04(a, b);
+}
+
+void fn_80143158(void)
+{
+    lbl_80346F74 = 0;
+    (*(Struct80306738*)&lbl_80306738).xc = 0;
+    lbl_80346F70 = -1;
+    lbl_80346F6C = -1;
+    lbl_80346F68 = -1;
+    lbl_80346F64 = -1;
+    fn_80142F18();
+}
+
+void fn_801464B4(IdxArg_801464B4 *a)
+{
+    if (a->x7 != 0 && a->x7 != 4) {
+        if (a->idx == 0) {
+            (*(u8 **)&lbl_8034727C)[0x29] |= 0x4;
+        } else {
+            (*(u8 **)&lbl_8034727C)[0x2a] |= 0x4;
+        }
+    }
+}
+
+void fn_80146500(IdxArg_801464B4 *a)
+{
+    if (a->x7 != 0 && a->x7 != 4) {
+        if (a->idx == 0) {
+            (*(u8 **)&lbl_8034727C)[0x29] |= 0x2;
+        } else {
+            (*(u8 **)&lbl_8034727C)[0x2a] |= 0x2;
+        }
+    }
+}
+
+void fn_80146DE4(s32 a, s32 idx)
+{
+    Info_80146DE4 *info = ((Info_80146DE4 *)fn_80135598());
+
+    (*(Mgr_80146DE4 **)&lbl_8034727C)->rec[idx].x2 += info->x6 - info->x8;
+}
+
+/* TRUE while cur is at least 70% of max. */
+s32 fn_80143200(void) {
+    s32 low = !((f64)(*(Ent_80143200 **)&lbl_8034727C)->stat->cur >= 0.7 * (*(Ent_80143200 **)&lbl_8034727C)->stat->max);
+    return low == 0;
+}
+
+static inline void FreeSlots(s32 n) {
+    s32 i;
+    for (i = 0; i < n; i++) {
+        if ((*(Node_80149070 ***)&lbl_80346F88) != NULL) {
+            if ((*(Node_80149070 ***)&lbl_80346F88)[i] != NULL) {
+                fn_80148EDC((*(Node_80149070 ***)&lbl_80346F88)[i]);
+            }
+            (*(Node_80149070 ***)&lbl_80346F88)[i] = NULL;
+        }
+    }
+}
+
+void fn_80149070(void) {
+    FreeSlots(500);
+    fn_801E17E0((void *)((*(Node_80149070 ***)&lbl_80346F88)));
+    (*(Node_80149070 ***)&lbl_80346F88) = NULL;
 }

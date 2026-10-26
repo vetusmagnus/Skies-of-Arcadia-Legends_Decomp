@@ -65,6 +65,11 @@ extern void fn_80037FD8(E54B74 *, u8 *);
 extern P54B74 *fn_8001E05C(P54B74 *);
 extern s32 fn_80075FF0(P54B74 *, s32, s32);
 extern void fn_80008C00(P54B74 *, s32, s32, s32, s32, u32);
+typedef struct { s8 id; } Obj4C;
+typedef struct { u8 pad[0x4c]; Obj4C *p4c; } Obj24;
+typedef struct { u8 pad[0x24]; Obj24 *p24; } Task;
+extern void fn_8001D288(void *a, s32 id, f32 x, f32 y);
+extern void fn_8001D200(Task *t, void *v);
 
 f32 fn_800540DC(Par800540DC* t) {
     W800540DC* w;
@@ -152,4 +157,10 @@ void fn_80054B74(O54B74 *o) {
     }
     s->cnt = s->cnt + 1;
     fn_80037FD8(s->tab, &o->state);
+}
+
+void fn_8005535C(void *a, void *v, Task *t, f32 x)
+{
+    fn_8001D288(a, t->p24->p4c->id, x, 0.0f);
+    fn_8001D200(t, v);
 }

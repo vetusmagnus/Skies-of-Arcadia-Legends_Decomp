@@ -2500,6 +2500,68 @@ typedef struct {
     Work_800CD72C* work;
 } Obj_800CD72C;
 extern void* fn_801DDAB0(void* a, s32 b, s32 c, s32 d, s16* e);
+/* Motion callback (registered with fn_8015EB8C id 0xd): copies src+0xC0 into ctx->dst+0xC0.
+ * Declared s32 like its sibling callbacks (fn_8010A530) but the original has no return
+ * statement: r3 stays live as the result, so the dst pointer lands in r4. */
+typedef struct CbObj {
+    char pad0[0x24];
+    struct CbObj* dst; /* 0x24 */
+    char pad28[0xc0 - 0x28];
+    int valC0;         /* 0xC0 */
+} CbObj;
+typedef struct { u8 pad[0x4c]; void *x4c; } B_800BE430;
+typedef struct { u8 pad[0x10]; B_800BE430 *x10; } A_800BE430;
+typedef struct { u8 pad[0xe4]; void *xe4; u8 pad2[0x1c8 - 0xe8]; A_800BE430 *x1c8; } Obj_800BE430;
+typedef struct {
+    u8 pad[0x1BC];
+    void *unk1BC;
+} Unk80347450;
+extern s32 fn_80222B30(s32 arg, void *p);
+typedef struct {
+    u8 r, g, b, a;
+} GXColor;
+extern void GXSetFog(s32 type, f32 startz, f32 endz, f32 nearz, f32 farz, GXColor color);
+extern void fn_80296F28(void);
+typedef struct Obj_800BF7AC {
+    u8 pad0[0x25C];
+    void *f25C;
+    void *f260;
+} Obj_800BF7AC;
+typedef struct Entry_800CCC48 {
+    u32 a;
+    u32 b;
+    u32 c;
+    u32 d;
+} Entry_800CCC48;
+typedef struct Table_800CCC48 {
+    Entry_800CCC48 *entries;
+    u32 unk4;
+    s16 max;
+    s16 count;
+    s16 unkC;
+    s16 unkE;
+} Table_800CCC48;
+typedef struct { u8 pad[0x20]; void *p20; } S800C32D8b;
+typedef struct { u8 pad[0x4]; S800C32D8b *p4; } S800C32D8a;
+typedef struct Mgr_800C8EC0 {
+    u8 pad0[0x24];
+    void **tab;
+} Mgr_800C8EC0;
+s32 fn_8010038C(void *p);
+typedef struct {
+    u32 a;
+    u32 b;
+    u32 key;
+    u8 pad1[4];
+} Entry_800CC9EC;
+typedef struct Tbl_800CD16C {
+    Ent *list;      /* 0x00 */
+    Ent *pending;   /* 0x04 */
+    s16 cap;        /* 0x08 */
+    s16 count;      /* 0x0A */
+    s16 npending;   /* 0x0C */
+    s16 out;        /* 0x0E */
+} Tbl_800CD16C;
 
 void fn_800B2DA0(u8* p, u32 v) {
     u8* q = *(u8**)(p + 0x268);
@@ -6791,4 +6853,170 @@ s8 fn_800C8C54(f32* pos, Arg_800C7F64* arg) {
         return 'A';
     }
     return 'N';
+}
+
+int fn_800D1018(CbObj* ctx, CbObj* src) {
+    ctx->dst->valC0 = src->valC0;
+}
+
+s32 fn_800BE430(Obj_800BE430 *o) {
+    s32 r = 0;
+    void *p = o->x1c8->x10->x4c;
+    /* the redundant p != NULL test is what leaves the dead second beq */
+    if (p == NULL || (p != NULL && o->xe4 == NULL)) {
+        r = 1;
+    }
+    return r;
+}
+
+s32 fn_800CF944(s32 arg)
+{
+    s32 ret = 0;
+
+    if ((*(Unk80347450 **)&lbl_80347450) != NULL && (*(Unk80347450 **)&lbl_80347450)->unk1BC != NULL) {
+        ret = fn_80222B30(arg, (*(Unk80347450 **)&lbl_80347450)->unk1BC);
+    }
+    return ret;
+}
+
+void fn_800D2048(void)
+{
+    GXColor color = { 0, 0, 0, 0 };
+
+    GXSetFog(0, 0.0f, 0.0f, 0.0f, 0.0f, color);
+    fn_80296F28();
+}
+
+static inline void FreeIf(void *p)
+{
+    if (p != NULL) {
+        fn_801E1784(p);
+    }
+}
+
+void fn_800BF7AC(Obj_800BF7AC *obj)
+{
+    void *a = obj->f25C;
+    void *b = obj->f260;
+
+    if (a != NULL) {
+        FreeIf(a);
+    }
+    if (b != NULL) {
+        FreeIf(b);
+    }
+}
+
+void fn_800D23F8(s32 n, s32 m, f32 a, f32 b)
+{
+    lbl_80305B28.flag = 1;
+    lbl_80305B28.f1c = a;
+    lbl_80305B28.f20 = b;
+    lbl_80305B28.i30 = n > 1 ? n : 1;
+    if (m < 2) {
+        lbl_80305B28.f20 = 0.0f;
+    } else {
+        lbl_80305B28.i2c = 0x10000 / m;
+    }
+}
+
+void fn_800D244C(s32 n, s32 m, f32 a, f32 b)
+{
+    lbl_80305B28.mode = 1;
+    lbl_80305B28.f04 = a;
+    lbl_80305B28.f08 = b;
+    lbl_80305B28.i18 = n > 1 ? n : 1;
+    if (m < 2) {
+        lbl_80305B28.f08 = 0.0f;
+    } else {
+        lbl_80305B28.i14 = 0x10000 / m;
+    }
+}
+
+Entry_800CCC48 *fn_800CCC48(u32 a, u32 b)
+{
+    Entry_800CCC48 *e = (*(Table_800CCC48*)&lbl_80305B08).entries;
+    s16 n;
+
+    (*(int*)&lbl_80346D80) = 0;
+    n = (*(Table_800CCC48*)&lbl_80305B08).count;
+    for (; (*(int*)&lbl_80346D80) < n; (*(int*)&lbl_80346D80)++, e++) {
+        if (a == e->a && b == e->b) {
+            return e;
+        }
+    }
+    return NULL;
+}
+
+void fn_800C32D8(void) {
+    if (lbl_80346D3C != 0) {
+        fn_801D6944((void *)(lbl_80346D3C));
+        fn_801E17E0((void *)(lbl_80346D3C));
+        lbl_80346D3C = 0;
+    }
+    fn_802275A4((void *)((*(S800C32D8a **)&lbl_80346D44)->p4->p20), 0);
+    fn_801E17E0((void *)((*(S800C32D8a **)&lbl_80346D44)));
+    (*(S800C32D8a **)&lbl_80346D44) = 0;
+    fn_801E17E0((void *)(lbl_80346D40));
+    lbl_80346D40 = 0;
+}
+
+/* The original has no return on the empty-slot path: r3 still holds idx there. */
+s32 fn_800C8EC0(s32 idx) {
+    void *p;
+    void *a;
+
+    if ((*(Mgr_800C8EC0 **)&lbl_80346D70)->tab[idx] != 0) {
+        if (fn_8010038C((*(Mgr_800C8EC0 **)&lbl_80346D70)->tab[idx]) == 1) {
+            p = fn_8015F1A0(0x752f);
+            if (p != 0) {
+                a = *(void **)((u8 *)p + 0x1cc);
+                a = *(void **)((u8 *)a + 4);
+                fn_80227810((void *)(*(void **)((u8 *)a + 0x20)));
+            }
+            return idx;
+        }
+        return -1;
+    }
+}
+
+void *fn_800CC9EC(u32 a, u32 b, u32 min) {
+    Entry_800CC9EC *e;
+    void *result = 0;
+    u32 best = 0xFFFF;
+
+    lbl_80346D80 = 0;
+    e = (Entry_800CC9EC*)lbl_80305B08.p00;
+    while (lbl_80346D80 < lbl_80305B08.h0a) {
+        if (a == e->a && b == e->b) {
+            u32 k = (u16)e->key;
+            if (k >= min && k <= best) {
+                result = e;
+                best = k;
+            }
+        }
+        lbl_80346D80++;
+        e++;
+    }
+    return result;
+}
+
+void fn_800CD16C(void) {
+    Tbl_800CD16C *t = &(*(Tbl_800CD16C*)&lbl_80305B08);
+    s16 n = t->npending;
+    Ent *dst;
+    Ent *src;
+    s32 i;
+    if (n == 0) {
+        return;
+    }
+    i = n;
+    dst = t->list + t->count;
+    src = t->pending;
+    do {
+        *dst++ = *src++;
+    } while (--i > 0);
+    t->count = t->count + t->npending;
+    t->npending = 0;
+    (*(Tbl_800CD16C*)&lbl_80305B08).out = t->count;
 }

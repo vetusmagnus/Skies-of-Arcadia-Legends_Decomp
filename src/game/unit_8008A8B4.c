@@ -1,5 +1,4 @@
 #include "types.h"
-
 typedef struct Slot {
     s16 id;
     u8 pad2[0xE];
@@ -27,6 +26,13 @@ extern u8 lbl_80347340;
 s32 fn_8025ECC4(void);
 extern s32 fn_80078610(s8 idx);
 s32 fn_80078610(s8 idx);
+typedef struct Lim {
+    u8 pad[6];
+    s16 x6;
+    s16 x8;
+    s16 xa;
+} Lim;
+extern Lim* lbl_80347390;
 
 s32 fn_8008A8B4(s32 i)
 {
@@ -355,6 +361,27 @@ s32 fn_8008B02C(void) {
             Slot* e = lbl_80309DE4[i];
             if (e->b >= e->a * 2) return 1;
         }
+    }
+    return 0;
+}
+
+s32 fn_8008B470(void) {
+    Lim* l = lbl_80347390;
+    s32 over = l->x6 < l->x8 * 4;
+    return !over;
+}
+
+s32 fn_8008AD04(void) {
+    s32 i;
+    s32 n = 0;
+
+    for (i = 4; i <= 0xb; i++) {
+        if (fn_80078610(i) != 0) {
+            n++;
+        }
+    }
+    if (n <= 3) {
+        return 1;
     }
     return 0;
 }

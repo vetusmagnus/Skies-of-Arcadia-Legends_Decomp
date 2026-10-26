@@ -215,6 +215,61 @@ typedef struct CampWork_80197270 {
     Node_80197270 *objs[0xd0];
     u8 pad350[0x10];
 } CampWork_80197270;
+extern s32 lbl_803467CC;
+typedef struct Body_801957D8 {
+    u8 pad[0xbc];
+    u8* xbc;
+} Body_801957D8;
+typedef struct Node_801957D8 {
+    u8 pad[0x24];
+    Body_801957D8* body;
+} Node_801957D8;
+typedef struct CampWork_801957D8 {
+    u8 *p0;
+    u8 *p4;
+    u8 *p8;
+    u8 b0c;
+    u8 pad0d[3];
+    Node_801957D8 *objs[0xd0]; /* indexed by object kind id */
+    u8 pad350[0x10];
+} CampWork_801957D8;
+typedef struct Node_801968B8 {
+    u8 pad[0x19];
+    u8 x19;
+} Node_801968B8;
+typedef struct CampWork_801968B8 {
+    u8 *p0;
+    u8 *p4;
+    u8 *p8;
+    u8 b0c;
+    u8 pad0d[3];
+    Node_801968B8 *objs[0xd0]; /* indexed by object kind id */
+    u8 pad350[0x10];
+} CampWork_801968B8;
+typedef struct {
+    u8 pad0[8];
+    s32 x8;
+} Struct80307628;
+extern Struct80307628 lbl_80307628;
+extern s32 fn_801D6E38(s32 a);
+typedef struct Entry_80307638 {
+    u32 x0;
+    s32 x4;
+    u8 pad8[0x78 - 0x8];
+} Entry_80307638;
+typedef struct Body_801954EC {
+    Entry_80307638 *x0;
+} Body_801954EC;
+typedef struct Node_801954EC {
+    u8 pad[0x24];
+    Body_801954EC *body;
+} Node_801954EC;
+typedef struct Rec14 {
+    u8 pad0[0x10];
+    s8 x10;
+    u8 pad11[3];
+} Rec14;
+extern void fn_80195540(Rec14 *recs);
 
 int fn_80193F28(void) {
     fn_801DBE1C("Nothing VM Tanken.");
@@ -1833,4 +1888,92 @@ void fn_80197270(s8 a) {
             }
         }
     }
+}
+
+void fn_80193FF8(s32 n) {
+    lbl_803467CC = (lbl_803467CC == 0);
+    fn_801F4EA0(n, lbl_803467CC);
+}
+
+void fn_801957D8(u8 v) {
+    (*(CampWork_801957D8*)&camp_work).objs[104]->body->xbc[3] = v;
+    (*(CampWork_801957D8*)&camp_work).objs[105]->body->xbc[3] = v;
+}
+
+void fn_801968B8(void) {
+    s32 i;
+    for (i = 0; i < 157; i++) {
+        if ((*(CampWork_801968B8*)&camp_work).objs[i] != 0) {
+            (*(CampWork_801968B8*)&camp_work).objs[i]->x19 = 100;
+        }
+    }
+}
+
+s32 fn_801940AC(void)
+{
+    s32 r = fn_801D6E38(0);
+    s32 ok = (r == 1) ? 1 : 0;
+    lbl_80307628.x8 = r;
+    if (ok == 1) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+s32 fn_801949AC(void)
+{
+    u8 *p;
+    s32 n;
+    switch (*(s32 *)(lbl_80307638 + 0x70c)) {
+    case 0:
+        p = lbl_80307638 + 0x780;
+        n = 6;
+        break;
+    case 1:
+        n = 8;
+        p = lbl_80307638 + 0x780;
+        break;
+    }
+    return *(s32 *)(p + 0x4) + *(s32 *)(p + 0x44) * n;
+}
+
+s32 fn_801954EC(Rec14 *recs)
+{
+    Entry_80307638 *e = (*(Node_801954EC **)&lbl_8034710C)->body->x0;
+
+    fn_80195540(recs);
+    return recs[e->x4].x10;
+}
+
+s32 fn_80194B18(s32 id) {
+    s32 i;
+
+    for (i = 0; i < 0x16; i++) {
+        if (fn_801E4BF4(i) == 1) {
+            fn_801E4BBC(i);
+        }
+    }
+    if (fn_801E4BBC(id) == 1) {
+        return 1;
+    }
+    return 0;
+}
+
+static inline s32 HasAny(s32 idx) {
+    s32 i = 0;
+    u8 *p = lbl_8030B7F4 + idx * 0x5C;
+
+    for (; i < 0x24; i++) {
+        if (fn_801F3F88(p, (s8)i) != 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+s32 fn_801956EC(s32 idx) {
+    if (HasAny(idx) == 1) {
+        return 0xf;
+    }
+    return 0xd;
 }

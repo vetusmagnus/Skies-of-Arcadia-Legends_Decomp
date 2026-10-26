@@ -360,6 +360,20 @@ typedef struct Chr_8008CBB8 {
 extern s32 fn_80083BAC(s32 i, s32 k);
 extern void fn_80010474(s32 i);
 extern void fn_8008CAB4(Obj_8008CAB4*);
+/* Stores a 2D point and a value: lbl_80346C44 = *pos; lbl_80346C38 = n.
+ * lbl_80346C44 must be 8 bytes (an x,y pair; symbols.txt guesses 0xC) so it stays
+ * small-data and is addressed with `li r5,sym@sda21` instead of lis/stfsu. */
+typedef float f32;
+typedef struct Vec2_80346C44 { f32 x, y; } Vec2_80346C44;
+extern Vec2_80346C44 lbl_80346C44;
+extern int lbl_80346C38;
+typedef struct Lim {
+    u8 pad[6];
+    s16 x6;
+    s16 x8;
+    s16 xa;
+} Lim;
+extern Lim* lbl_80347390;
 
 u32 fn_8008B55C(void* a0, Ent_UNIT0000* e) {
     return (e->x1c >> 9) & 1;
@@ -1407,4 +1421,22 @@ void fn_8008CBB8(Slot* self) {
 
 void fn_8008B5E0(s32 a) {
     fn_8008B788(a);
+}
+
+void fn_80095630(Vec2_80346C44* pos, int n) {
+    lbl_80346C44.x = pos->x;
+    lbl_80346C44.y = pos->y;
+    lbl_80346C38 = n;
+}
+
+s32 fn_8008B4A0(void) {
+    Lim* l = lbl_80347390;
+    s32 over = l->x6 < l->x8 * 2;
+    return !over;
+}
+
+s32 fn_8008B4D0(void) {
+    Lim* l = lbl_80347390;
+    s32 differ = l->x6 != l->x8;
+    return !differ;
 }

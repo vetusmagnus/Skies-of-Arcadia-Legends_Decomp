@@ -2098,6 +2098,30 @@ typedef struct PadState_80118204 { u8 pad[8]; u32 x8; } PadState_80118204;
 typedef struct PadInfo_80118204 { PadState_80118204 *pad; u8 pad4[0x14]; } PadInfo_80118204;
 extern s32 lbl_80347508;
 extern s8 fn_8009763C(void);
+typedef struct { f32 x, y, z; } Vec3;
+typedef struct Obj_80117B9C {
+    u8 pad0[0xb4];
+    f32 xb4;
+    f32 xb8;
+    f32 xbc;
+    s32 xc0;
+    s32 xc4;
+    s32 xc8;
+    u8 padcc[0x16c - 0xcc];
+    s16 x16c;
+} Obj_80117B9C;
+typedef struct { u8 pad[0x20]; s32 x20; } Sub_8012A900;
+typedef struct { u8 pad[4]; Sub_8012A900 *x4; } Obj_8012A900;
+typedef struct {
+    s32 x0;
+    f32 x4;
+    f32 x8;
+    s32 xc;
+    s32 x10;
+    f32 x14;
+    f32 x18;
+} Arg_8012A900;
+extern void fn_801D5DD8(s32 a, f32 e, f32 f, f32 g, f32 h, s32 b, s32 c, f32 i, f32 j, s32 d);
 
 void fn_8010E164(u8 *obj) {
     if (obj[0x19] == 0xff) {
@@ -6365,4 +6389,25 @@ int fn_80118204(Chr_80118204 *c) {
 
 void fn_801264A4(void *p, s32 n, f32 f) {
     fn_80157684((Rec_80125820*)p, n, f);
+}
+
+/* out = a - b */
+void fn_8011A960(Vec3 *out, Vec3 *a, Vec3 *b) {
+    f32 ax = a->x, ay = a->y, az = a->z;
+    f32 bx = b->x, by = b->y, bz = b->z;
+    out->z = az - bz;
+    out->y = ay - by;
+    out->x = ax - bx;
+}
+
+void fn_80117B9C(Obj_80117B9C *obj)
+{
+    s32 z = 0;
+    obj->x16c = z;
+    obj->xb4 = obj->xb8 = obj->xbc = (f32)(obj->xc0 = obj->xc4 = obj->xc8 = z);
+}
+
+void fn_8012A900(Arg_8012A900 *p)
+{
+    fn_801D5DD8(p->x0, 1.0f, 1.0f, p->x4, p->x8, p->xc, p->x10, p->x14, p->x18, (*(Obj_8012A900 **)&lbl_80346EF8)->x4->x20);
 }

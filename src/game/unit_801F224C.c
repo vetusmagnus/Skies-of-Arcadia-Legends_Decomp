@@ -1,8 +1,11 @@
 #include "types.h"
-
 extern u8 lbl_8030B4D4[];
 extern u8 lbl_8030B7F4[];
 void fn_801EF7E0(void *p);
+typedef struct {
+    u8 pad[0x2c];
+    s8 bits[1];
+} BitOwner;
 
 s32 fn_801F2508(void *a, void *b)
 {
@@ -38,4 +41,9 @@ void fn_801F4E6C(s32 i, s16 v) {
     p += i * 0x5c;
     *(s16 *)(p + 0x10) = v;
     fn_801EF7E0(p);
+}
+
+s32 fn_801F3F88(BitOwner *p, s8 i)
+{
+    return (p->bits[i / 8] & (1 << (i % 8))) != 0;
 }

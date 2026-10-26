@@ -318,7 +318,7 @@ void fn_801E4FD4(ModelObj* o) {
         s.control3d &= ~0x100;
     }
     s.control3d = (s.control3d & ~0x4) | 0x800;
-    if (o->colour.a == 1.0f) {
+    if (o->colour.a == 0.0f) {
         s.attr_or &= ~0x800;
     } else {
         s.attr_or |= 0x800;
@@ -1031,11 +1031,12 @@ void fn_801E735C(u32 index, f32 speed, ModelObj* obj) {
     obj->blend = 0.0f;
     obj->looped = 0;
     obj->blendDone = 0;
-    t = obj->ext->motions->list;
     if (index < obj->ext->motions->count) {
-        if (t[index] != NULL) {
+        t = obj->ext->motions->list;
+        t += index;
+        if (*t != NULL) {
             obj->motion2 = obj->motion;
-            obj->motion = t[index];
+            obj->motion = *t;
         } else {
             obj->motion = NULL;
         }
@@ -1080,18 +1081,18 @@ void fn_801E74C8(s32 v) {
 }
 
 void fn_801E74D0(void) {
-    lbl_8030E814.z = 0.0f;
-    lbl_8030E814.y = 0.0f;
-    lbl_8030E814.x = 0.0f;
+    lbl_8030E814.z = 1.0f;
+    lbl_8030E814.y = 1.0f;
+    lbl_8030E814.x = 1.0f;
     fn_80295FEC(lbl_803475E4, 0x70000);
     lbl_80347538 = 0x80;
     lbl_80347534 = 0x80;
     lbl_80347540 = 0x80;
     fn_801CAE84(fn_801E74C4, 0);
-    lbl_8030E820.b = 0.0f;
-    lbl_8030E820.g = 0.0f;
-    lbl_8030E820.r = 0.0f;
-    lbl_8030E820.a = 0.0f;
+    lbl_8030E820.b = 1.0f;
+    lbl_8030E820.g = 1.0f;
+    lbl_8030E820.r = 1.0f;
+    lbl_8030E820.a = 1.0f;
     lbl_8034753C = 0;
 }
 

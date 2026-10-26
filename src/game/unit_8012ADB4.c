@@ -216,6 +216,21 @@ typedef struct {
     PosHolder_8012B308* x28;
 } HolderA_8012B308;
 extern void njRotate(NJS_MATRIX m, NJS_VECTOR* axis, Angle a);
+/* Returns the signed byte at +4 of the object held at lbl_80346F20->+0x24.
+ * Returning int (not s8) from an s8 field gives `lbz r3` / `extsb r3,r3`. */
+typedef signed char s8;
+typedef struct Sub_8012C3DC { char pad0[4]; s8 b4; } Sub_8012C3DC;
+typedef struct Holder_8012C3DC { char pad0[0x24]; Sub_8012C3DC* sub; } Holder_8012C3DC;
+typedef struct SysB_8012C474 {
+    u8 pad0[0x30];
+    f32 alpha[8];
+    u8 pad50[0x5e - 0x50];
+    s8 mask;
+} SysB_8012C474;
+typedef struct HolderB_8012C474 {
+    u8 pad[0x24];
+    SysB_8012C474 *x24;
+} HolderB_8012C474;
 
 s32 fn_8012ADB4(void) { return lbl_80346F10->x24->x14; }
 
@@ -774,5 +789,22 @@ void fn_8012B054(Obj* o)
     case 0xFF:
         o->flags |= 0x40;
         break;
+    }
+}
+
+int fn_8012C3DC(void) {
+    return (*(Holder_8012C3DC**)&lbl_80346F20)->sub->b4;
+}
+
+void fn_8012C474(s8 mask) {
+    s8 i;
+
+    (*(HolderB_8012C474 **)&lbl_80346F20)->x24->mask = mask;
+    for (i = 0; i < 8; i++) {
+        if (mask & (1 << i)) {
+            (*(HolderB_8012C474 **)&lbl_80346F20)->x24->alpha[i] = 1.0f;
+        } else {
+            (*(HolderB_8012C474 **)&lbl_80346F20)->x24->alpha[i] = 0.5f;
+        }
     }
 }

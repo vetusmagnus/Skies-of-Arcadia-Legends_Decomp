@@ -1,5 +1,4 @@
 #include "types.h"
-
 typedef struct Sub {
     u8 pad0[0x14];
     s16 flags;
@@ -198,4 +197,10 @@ void fn_8009703C(s16 v, f32 a, f32 b) {
     lbl_802E0084.f54 = a;
     if (1.0f > b) b = 1.0f;
     lbl_802E0084.f5C = b;
+}
+
+void fn_8009701C(s8 a)
+{
+    lbl_802E0084.flags |= 0x1000;
+    lbl_802E0084.s60 = a;
 }

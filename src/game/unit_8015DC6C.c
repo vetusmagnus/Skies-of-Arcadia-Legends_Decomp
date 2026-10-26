@@ -1954,6 +1954,65 @@ extern void TextPopColor(s32 n);
 typedef struct { s32 id; } In_80189EA0;
 typedef struct { u8 pad0[0x2c]; f32 x, y; u8 pad34[0x74 - 0x34]; f32 z; u8 pad78[0xbc - 0x78]; In_80189EA0 *in; } Obj_80189EA0;
 extern s16 fn_80194378(s8 id);
+typedef void (*Callback)(void);
+typedef struct CbDef {
+    Callback fn;
+    u32 unk4;
+} CbDef;
+typedef struct Hold_8015EB8C {
+    u8 pad0[0x260];
+    Callback cb[47];
+    Callback cb13;
+} Hold_8015EB8C;
+typedef struct Ent_8015EB8C {
+    u8 pad0[0x1d8];
+    Hold_8015EB8C *hold;
+} Ent_8015EB8C;
+extern CbDef lbl_802B4118[47];
+typedef struct OwnerBInner {
+    u8 b0;
+    u8 b1;
+    u8 b2;
+    u8 b3;
+} OwnerBInner;
+typedef struct OwnerB_8016C808 {
+    u8 pad[0x24];
+    OwnerBInner *inner;
+} OwnerB_8016C808;
+typedef struct Tbl {
+    u8 pad0[0x14];
+    s32 base[1];
+} Tbl;
+typedef struct Info {
+    u8 pad0[0x2c];
+    Tbl *tbl;
+} Info;
+typedef struct Joint {
+    u8 pad0[0x68];
+    s32 speed[(0x110 - 0x68) / 4];
+    s32 delta[1];
+} Joint;
+typedef struct Work {
+    u8 pad0[0x8];
+    Joint *joint;
+    u8 pad1[0x54 - 0xc];
+    s32 x54[(0x84 - 0x54) / 4];
+    Info *info;
+} Work;
+typedef struct Obj_80166B2C {
+    u8 pad0[0x1d8];
+    Work *work;
+} Obj_80166B2C;
+/* Linear move to (destX, destY) over 6 steps. */
+typedef struct Mover6 {
+    f32 x;      /* 0x00 */
+    f32 y;      /* 0x04 */
+    f32 destX;  /* 0x08 */
+    f32 destY;  /* 0x0C */
+    f32 stepX;  /* 0x10 */
+    f32 stepY;  /* 0x14 */
+    s32 steps;  /* 0x18 */
+} Mover6;
 
 s32 fn_8015DC6C(Obj_8015DC6C* self, Src* src)
 {
@@ -7285,4 +7344,87 @@ void fn_8016C204(Self_8016B434* self) {
         }
         break;
     }
+}
+
+/* Installs callback fn in slot idx of the entity's holder; fn == NULL restores the default
+ * from lbl_802B4118. Slot 13 goes to a separate field. */
+void fn_8015EB8C(Ent_8015EB8C *self, s32 idx, Callback fn)
+{
+    Hold_8015EB8C *h = self->hold;
+
+    if (fn == NULL) {
+        h->cb[idx] = lbl_802B4118[idx].fn;
+        return;
+    }
+    if (h == NULL) {
+        return;
+    }
+    if (idx == 13) {
+        h->cb13 = fn;
+        return;
+    }
+    if (idx == 2 || idx >= 47) {
+        return;
+    }
+    h->cb[idx] = fn;
+}
+
+void fn_8016C808(s8 c)
+{
+    OwnerB_8016C808 *o = (*(OwnerB_8016C808 **)&lbl_803470B0);
+    if (o == 0) {
+        return;
+    }
+    if (c == 9) {
+        o->inner->b3 = c;
+    } else if (c == 10) {
+        switch (c) {
+        case 2:
+        case 3:
+        case 6:
+            return;
+        default:
+            o->inner->b2 = c;
+            break;
+        }
+    } else {
+        o->inner->b2 = c;
+    }
+}
+
+void fn_80166B2C(Obj_80166B2C *obj, s32 ang, s32 idx) {
+    Work *w = obj->work;
+    Info *info = w->info;
+    Joint *j = w->joint;
+    s32 d;
+
+    if (info->tbl == NULL) {
+        return;
+    }
+    d = (ang - info->tbl->base[idx]) & 0xFFFF;
+    if (d > 0x8000) {
+        d -= 0x10000;
+    }
+    w->x54[idx] = 0;
+    j->delta[idx] = d;
+    if ((s16)d > 0) {
+        j->speed[idx] = 0x2d8;
+    } else if ((s16)d < 0) {
+        j->speed[idx] = -0x2d8;
+    }
+}
+
+void fn_8016AA64(Mover6 *m, f32 x, f32 y)
+{
+    f32 dx, dy;
+
+    m->destX = x;
+    m->destY = y;
+    dx = x - m->x;
+    dy = y - m->y;
+    dx /= 6.0f;
+    dy /= 6.0f;
+    m->stepX = dx;
+    m->stepY = dy;
+    m->steps = 6;
 }

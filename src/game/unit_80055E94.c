@@ -118,7 +118,17 @@ extern s32 fn_8025CB24(char *, char *, ...);
 extern void *fn_801CC1B4(char *);
 extern s32 fn_801CC1A4(void *);
 extern void *fn_801CC0A0(void *);
-extern s32 fn_8006E5BC(void *);
+typedef struct Entry {
+    u32 id;
+    u8 pad4[0xc];
+} Entry;
+typedef struct EntryList {
+    u8 pad0[4];
+    s16 count;      /* 0x04 */
+    u8 pad6[2];
+    Entry entries[1]; /* 0x08 */
+} EntryList;
+BOOL fn_8006E5BC(EntryList *list);
 extern s32 fn_8006E4CC(void *, s16 *, s32, void **);
 extern s32 fn_8006E640(void *, u8 *, s16 *, s32);
 extern void fn_801E17E0(void *);
@@ -2426,4 +2436,68 @@ s32 fn_8006DC6C(void)
     fn_80061F58(&obj->sub, 0xac, 0);
     obj->sub->v4 = (u32)lbl_80347398;
     return 1;
+}
+
+void fn_8006BD84(s16 idx, void *a, void *b) {
+    lbl_80309E88[idx].f0 = a;
+    lbl_80309E88[idx].f4 = b;
+    lbl_80309E88[idx].f8 = 0;
+    lbl_80309E88[idx].fc = 1;
+}
+
+s32 fn_80061114(f32 *v, f32 target, f32 step)
+{
+    *v += step;
+    if (step > 0.0f) {
+        if (*v >= target) {
+            *v = target;
+            return 1;
+        }
+    } else {
+        if (*v <= target) {
+            *v = target;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void fn_8006ADAC(void* a, s16 idx, void* b, s8 v) {
+    s32 d = CHR_S32(idx, 0x18) - CHR_S32(idx, 0x14);
+    lbl_80309174[idx].x8 = 1;
+    lbl_80309730[idx].x8 = 1;
+    WK_S32(idx, 0x3c) = d;
+    WK_S16(idx, 0x44) = v;
+}
+
+s32 fn_80056F30(f32 *val, s16 frames) {
+    if (frames == 0) {
+        return 0;
+    }
+    *val += 1.0f / frames;
+    if (*val >= 0.0f) {
+        *val = 0.0f;
+        return 0;
+    }
+    return 1;
+}
+
+BOOL fn_8006E5BC(EntryList *list) {
+    s16 count = list->count;
+    Entry *e = list->entries;
+    u32 id;
+    s16 i;
+    s16 j;
+    if (count <= 1) {
+        return TRUE;
+    }
+    for (i = 0; i < count - 1; i++) {
+        id = e[i].id;
+        for (j = i + 1; j < count; j++) {
+            if (id == e[j].id) {
+                return FALSE;
+            }
+        }
+    }
+    return TRUE;
 }

@@ -1982,6 +1982,39 @@ typedef struct Src_8010C0E4 {
 } Src_8010C0E4;
 extern u8 *TextCopyN(u8 *dst, const u8 *src, s16 n);
 extern s32 TextStrlen(const char *s);
+typedef struct Obj19 {
+    u8 pad00[0x19];
+    u8 state; /* 0x19 */
+} Obj19;
+typedef struct {
+    s32 a[9];
+    s32 b;
+} Unk80305C40;
+extern Unk80305C40 lbl_80305C40;
+typedef struct {
+    u32 id;
+    u8 rest[0x64];
+} Entry68;
+typedef struct {
+    s32 count;
+    Entry68* entries;
+} Tbl68;
+typedef struct Mid_800E07AC {
+    u8 pad0[0x54];
+    f32 f54;
+} Mid_800E07AC;
+typedef struct Obj_800E07AC {
+    u8 pad0[0x48];
+    s32 f48;
+    u8 pad1[0x114 - 0x4c];
+    s32 f114;
+    u8 pad2[0x164 - 0x118];
+    f32 f164;
+    u8 pad3[0x1c8 - 0x168];
+    Mid_800E07AC *p1c8;
+    u8 pad4[0x254 - 0x1cc];
+    f32 f254;
+} Obj_800E07AC;
 
 void fn_800D81E8(void) {
     fn_80226D14();
@@ -6499,4 +6532,118 @@ s32 fn_8010ABD4(MotCtx* ctx, MotObj* src) {
 
 void fn_80109830(s32 a, s32 b, s32 c) {
     fn_801096FC((void *)0, a, (u32)b, (const char *)c);
+}
+
+void fn_80108DF8(Obj19 *o)
+{
+    switch (o->state) {
+    case 0xFE:
+    case 0xFF:
+        fn_80100B74(o);
+        break;
+    }
+}
+
+/* -1 when x is outside the 20000..28598 id range, else 0 below 23000 and 1 from 23000 up. */
+s32 fn_800DE554(u32 x)
+{
+    s32 inr;
+    s32 ret;
+
+    ret = -1;
+    inr = 0;
+    if (x >= 0x4e20 && x < 0x6fb7) {
+        inr = 1;
+    }
+    if (inr != 0) {
+        ret = x >= 0x59d8;
+    }
+    return ret;
+}
+
+void fn_800E3554(void)
+{
+    Unk80305C40 *p = &lbl_80305C40;
+    int i;
+
+    for (i = 0; i < 9; i++) {
+        p->a[i] = 0;
+    }
+    lbl_80346DC0 = 0;
+    lbl_80346DB8 = 0;
+    lbl_80346DB0 = 0;
+    p->b = 0;
+}
+
+s32 fn_800DE598(u32 id)
+{
+    s32 r = -1;
+    BOOL in = FALSE;
+
+    if (id >= 20000 && id < 28599) {
+        in = TRUE;
+    }
+    if (in) {
+        r = id % 100 / 10;
+    }
+    return r;
+}
+
+static inline Entry *FindByPtr(void *key)
+{
+    Entry *p;
+    for (p = lbl_80347460; p != 0; p = p->next) {
+        if ((void *)p->ptr == key) {
+            return p;
+        }
+    }
+    return 0;
+}
+
+void fn_80109D74(void *p)
+{
+    void *key = fn_801CC0A0(p);
+
+    if (key != 0) {
+        FindByPtr(key)->p8 = 0;
+    }
+}
+
+void* fn_8010062C(Tbl68* t, u16 key) {
+    s32 i;
+    Entry68* e;
+    if ((u32)t->count > key) {
+        e = t->entries;
+        if (key != e[key].id) {
+            for (i = 0; i < t->count; i++) {
+                if (key == e->id) {
+                    return e;
+                }
+                e++;
+            }
+        } else {
+            e += key;
+            return e;
+        }
+    }
+    return NULL;
+}
+
+static inline void SetAngle(Obj_800E07AC *p, f32 deg) {
+    if (p == 0) {
+        return;
+    }
+    p->f114 = (s32)(182.04445f * deg);
+    p->f48 = p->f114;
+    if (fn_801C60A4(p)) {
+        p->f48 = p->f48 + (s32)(182.04445f * p->p1c8->f54);
+    }
+}
+void fn_800E07AC(Obj_800E07AC *p) {
+    if (p == 0) {
+        return;
+    }
+    SetAngle(p, 0.0f);
+    p->f164 = 0.0f;
+    p->f254 = 0.0f;
 }

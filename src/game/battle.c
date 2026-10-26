@@ -650,14 +650,8 @@ void fn_8002CAD8(Msg* a, s16 i) {
 }
 
 void fn_8002CBF8(Msg* a, s16 i) {
-    Chr* e;
-    s32 lim, v;
     lbl_80309DE4[i]->bits &= 0x8;
-    e = lbl_80309DE4[i];
-    lim = e->x18;
-    v = e->x14 + a->x8;
-    if (lim < v) v = lim;
-    e->x14 = v;
+    Acc2(a, i);
     fn_80010474(i);
     a->x2 = 30;
 }
@@ -2277,7 +2271,7 @@ void fn_800304DC(Tk* task) {
         break;
     case 3:
         if (!(lbl_8030A10C.flags & 0x80000000)) {
-            fn_801CBB9C(0.0f);
+            fn_801CBB9C(30.0f);
             task->state = 4;
         }
         break;

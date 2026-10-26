@@ -1349,6 +1349,15 @@ typedef struct Self_801A0C3C {
     Ctx_801A0C3C *ctx;
 } Self_801A0C3C;
 extern void fn_801A1B98(void *o, s32 k);
+/* Memory-card state reset. lbl_80347170 is a 2-entry per-slot table (fn_801A28F4 fills
+ * both entries), lbl_80347178 a slot bit mask. The original stores entry 0 twice; the
+ * store to lbl_80347178 has to come first in the source for the scheduler to keep 1 in r0
+ * and 0 in r3. (Equivalent match: `for (i = 0; i < 2; i++) lbl_80347170[0] = 1;` after the
+ * mask store, i.e. a slot loop that forgot its index.) */
+extern int lbl_80347170[2];
+extern int lbl_80347178;
+extern const u32 lbl_8034BAC0[];
+extern u8 lbl_803473BE;
 
 void fn_80199B9C(void* p, f32 v) {
     *(f32*)((u8*)p + 0x34) = v;
@@ -4182,5 +4191,31 @@ void fn_8019ADA0(Self_8016F138* self) {
         fn_80199F58((Obj_80199F58 *)self->inner);
         self->flags |= 0x40;
         break;
+    }
+}
+
+void fn_801A2C40(void) {
+    lbl_80347178 = 0;
+    lbl_80347170[0] = 1;
+    lbl_80347170[0] = 1;
+}
+
+/* Item count (fn_801F464C) times per-unit value (fn_801F477C), divided by 100. */
+u32 fn_801B90E4(s32 idx) {
+    s16 id = idx;
+    u32 cnt = fn_801F464C(id);
+
+    if (cnt == 0) {
+        return 0;
+    }
+    return cnt * fn_801F477C(id) / 100;
+}
+
+void fn_801BEA70(void *a, u32 idx, s32 mode) {
+    lbl_803473BE = ((u8)mode <= 23) ? mode : 0;
+    if (idx > lbl_8034BAC0[0] - 1) {
+        fn_801BEB10(a, 1, 0, 0);
+    } else {
+        fn_801BEB10(a, 1, idx, 0);
     }
 }
