@@ -20,6 +20,19 @@ void fn_8022D34C(s32 a, f32 b) {
     }
 }
 
+extern void fn_8022E964(void*, void*);
+extern char lbl_8034C750;
+void fn_8022E8F8(void* p, void* arg) {
+    if (!(*(u32*)p & 0x80000000)) {
+        if (strncmp((const char*)p, &lbl_8034C750, 4) == 0) {
+            p = (u8*)p + 8;
+        } else {
+            return;
+        }
+    }
+    fn_8022E964(p, arg);
+}
+
 void fn_8022F00C(void *p) {
     fn_8022F64C(p, 0x4000);
 }

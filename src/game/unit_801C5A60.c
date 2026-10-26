@@ -176,6 +176,12 @@ void fn_801C62D8(void) {
     lbl_803471D0 = 0;
 }
 
+extern void fn_8023AB28(const char*);
+extern char lbl_8034BC10;
+void fn_801C62E4(void) {
+    fn_8023AB28(&lbl_8034BC10);
+}
+
 void fn_801C78B4(void) {
 }
 

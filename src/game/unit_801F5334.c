@@ -346,6 +346,128 @@ s32 fn_80214B28(u32 flags, Cmd *c) {
     return 1;
 }
 
+typedef struct { char pad[0x1c]; void *cur; } Stream;
+extern void fn_80147EA4(s32 v);
+extern f32 lbl_8034C388;
+s32 fn_80214CDC(s32 flags, Stream *s) {
+    void *cur;
+    s32 v;
+    if (flags & 1) {
+        cur = s->cur;
+        cur = (char *)cur + 4;
+        if (lbl_8034C388 == *(f32 *)cur) {
+            cur = (char *)cur + 4;
+            v = 0x7FFFFFFF;
+        } else {
+            v = (s32)fn_801F6120((f32**)&cur);
+        }
+        s->cur = cur;
+        fn_80147EA4(v);
+        return 0;
+    }
+    return 1;
+}
+
+extern void fn_80147EA8(s32 v);
+s32 fn_80214D6C(s32 flags, Stream *s) {
+    void *cur;
+    s32 v;
+    if (flags & 1) {
+        cur = s->cur;
+        cur = (char *)cur + 4;
+        if (lbl_8034C388 == *(f32 *)cur) {
+            cur = (char *)cur + 4;
+            v = 0x7FFFFFFF;
+        } else {
+            v = (s32)fn_801F6120((f32**)&cur);
+        }
+        s->cur = cur;
+        fn_80147EA8(v);
+        return 0;
+    }
+    return 1;
+}
+
+extern void fn_80147EAC(s32 v);
+s32 fn_80214DFC(s32 flags, Stream *s) {
+    void *cur;
+    s32 v;
+    if (flags & 1) {
+        cur = s->cur;
+        cur = (char *)cur + 4;
+        if (lbl_8034C388 == *(f32 *)cur) {
+            cur = (char *)cur + 4;
+            v = 0x7FFFFFFF;
+        } else {
+            v = (s32)fn_801F6120((f32**)&cur);
+        }
+        s->cur = cur;
+        fn_80147EAC(v);
+        return 0;
+    }
+    return 1;
+}
+
+extern void fn_801486CC(s32 v);
+s32 fn_80214E8C(s32 flags, Stream *s) {
+    void *cur;
+    s32 v;
+    if (flags & 1) {
+        cur = s->cur;
+        cur = (char *)cur + 4;
+        if (lbl_8034C388 == *(f32 *)cur) {
+            cur = (char *)cur + 4;
+            v = 0x7FFFFFFF;
+        } else {
+            v = (s32)fn_801F6120((f32**)&cur);
+        }
+        s->cur = cur;
+        fn_801486CC(v);
+        return 0;
+    }
+    return 1;
+}
+
+extern void fn_80148BE8(s32 v);
+s32 fn_80214F1C(s32 flags, Stream *s) {
+    void *cur;
+    s32 v;
+    if (flags & 1) {
+        cur = s->cur;
+        cur = (char *)cur + 4;
+        if (lbl_8034C388 == *(f32 *)cur) {
+            cur = (char *)cur + 4;
+            v = 0x7FFFFFFF;
+        } else {
+            v = (s32)fn_801F6120((f32**)&cur);
+        }
+        s->cur = cur;
+        fn_80148BE8(v);
+        return 0;
+    }
+    return 1;
+}
+
+extern void fn_80148CAC(s32 v);
+s32 fn_80214FAC(s32 flags, Stream *s) {
+    void *cur;
+    s32 v;
+    if (flags & 1) {
+        cur = s->cur;
+        cur = (char *)cur + 4;
+        if (lbl_8034C388 == *(f32 *)cur) {
+            cur = (char *)cur + 4;
+            v = 0x7FFFFFFF;
+        } else {
+            v = (s32)fn_801F6120((f32**)&cur);
+        }
+        s->cur = cur;
+        fn_80148CAC(v);
+        return 0;
+    }
+    return 1;
+}
+
 s32 fn_8021503C(u32 a, CmdStream *st) {
     if (a & 1) {
         u8 *c = st->cur;
@@ -432,6 +554,28 @@ void fn_802172C8(void *obj, s8 a) {
             a = x;
         }
         fn_802173F4(obj, a, 0);
+    }
+}
+
+typedef struct {
+    u32 id;
+    s32 pad4;
+    s32 time;
+    s32 pad0c;
+    s32 pad10;
+} SndSlot;
+extern SndSlot lbl_80315030[12];
+void fn_80217C24(void) {
+    SndSlot *e = lbl_80315030;
+    s32 i;
+    for (i = 0; i < 6; i++, e++) {
+        if (e->id != 0xFFFFFFFF) {
+            if (e->id != lbl_803477E0) {
+                sndSeqStop(e->id);
+            }
+            e->id = 0xFFFFFFFF;
+            e->time = 0x2710;
+        }
     }
 }
 
@@ -592,5 +736,241 @@ s32 fn_801F9C18(u16 flags, ScriptObj* obj)
     }
     if (flags & 8)
         return 1;
+    return 0;
+}
+
+typedef struct CurState {
+    u8 pad0[0x1c];
+    u8 *cur;
+} CurState;
+extern void fn_800D2C94(s32 v);
+extern f32 lbl_8034C1E0;
+s32 fn_801FFE3C(u32 flags, CurState *s)
+{
+    if (flags & 1) {
+        u8 *p = s->cur + 4;
+        u32 v;
+        if (lbl_8034C1E0 == *(f32 *)p) {
+            p += 4;
+            v = 0x7FFFFFFF;
+        } else {
+            v = (s32)fn_801F6120((f32**)&p);
+        }
+        s->cur = p;
+        if (v == 0x7FFFFFFF) {
+            fn_800D2C94(1);
+        } else if (v == 1) {
+            fn_800D2C94(1);
+        } else {
+            fn_800D2C94(0);
+        }
+    }
+    return 0;
+}
+
+extern void fn_800D2C84(s32 v);
+s32 fn_801FFEF0(u32 flags, CurState *s)
+{
+    if (flags & 1) {
+        u8 *p = s->cur + 4;
+        u32 v;
+        if (lbl_8034C1E0 == *(f32 *)p) {
+            p += 4;
+            v = 0x7FFFFFFF;
+        } else {
+            v = (s32)fn_801F6120((f32**)&p);
+        }
+        s->cur = p;
+        if (v == 0x7FFFFFFF) {
+            fn_800D2C84(1);
+        } else if (v == 1) {
+            fn_800D2C84(1);
+        } else {
+            fn_800D2C84(0);
+        }
+    }
+    return 0;
+}
+
+extern f32 lbl_8034C1A0;
+s32 fn_801F9668(u32 flags, CurState *s)
+{
+    u16 f = (u16)flags;
+    if (flags & 1) {
+        u8 *p = s->cur + 4;
+        u32 v;
+        if (lbl_8034C1A0 == *(f32 *)p) {
+            p += 4;
+            v = 0x7FFFFFFF;
+        } else {
+            v = (s32)fn_801F6120((f32**)&p);
+        }
+        s->cur = p;
+        fn_80217830(v);
+    }
+    if (f & 0x8) {
+        return 1;
+    }
+    return 0;
+}
+
+extern void fn_80168B7C(s32 v);
+s32 fn_801F98E8(u32 flags, CurState *s)
+{
+    u16 f = (u16)flags;
+    if (flags & 1) {
+        u8 *p = s->cur + 4;
+        u32 v;
+        if (lbl_8034C1A0 == *(f32 *)p) {
+            p += 4;
+            v = 0x7FFFFFFF;
+        } else {
+            v = (s32)fn_801F6120((f32**)&p);
+        }
+        s->cur = p;
+        fn_80168B7C(v);
+    }
+    if (f & 0x8) {
+        return 1;
+    }
+    return 0;
+}
+
+extern void fn_800E2924(s32 v);
+extern f32 lbl_8034C248;
+s32 fn_8020B80C(u32 flags, CurState *s)
+{
+    u16 f = (u16)flags;
+    if (flags & 1) {
+        u8 *p = s->cur + 4;
+        u32 v;
+        if (lbl_8034C248 == *(f32 *)p) {
+            p += 4;
+            v = 0x7FFFFFFF;
+        } else {
+            v = (s32)fn_801F6120((f32**)&p);
+        }
+        s->cur = p;
+        fn_800E2924(v);
+    }
+    if (f & 0x8) {
+        return 1;
+    }
+    return 0;
+}
+
+extern void fn_8021BD7C(s32 v);
+s32 fn_8020B8AC(u32 flags, CurState *s)
+{
+    u16 f = (u16)flags;
+    if (flags & 1) {
+        u8 *p = s->cur + 4;
+        u32 v;
+        if (lbl_8034C248 == *(f32 *)p) {
+            p += 4;
+            v = 0x7FFFFFFF;
+        } else {
+            v = (s32)fn_801F6120((f32**)&p);
+        }
+        s->cur = p;
+        fn_8021BD7C(v);
+    }
+    if (f & 0x8) {
+        return 1;
+    }
+    return 0;
+}
+
+extern void fn_801E4AB0(s32 v);
+s32 fn_8020B94C(u32 flags, CurState *s)
+{
+    u16 f = (u16)flags;
+    if (flags & 1) {
+        u8 *p = s->cur + 4;
+        u32 v;
+        if (lbl_8034C248 == *(f32 *)p) {
+            p += 4;
+            v = 0x7FFFFFFF;
+        } else {
+            v = (s32)fn_801F6120((f32**)&p);
+        }
+        s->cur = p;
+        fn_801E4AB0(v);
+    }
+    if (f & 0x8) {
+        return 1;
+    }
+    return 0;
+}
+
+extern void fn_800FF4EC(s32 v);
+s32 fn_801FEB78(s32 flags, Stream *s) {
+    void *cur;
+    s32 v;
+    if (flags & 1) {
+        cur = (char *)s->cur + 4;
+        if (lbl_8034C1E0 == *(f32 *)cur) {
+            cur = (char *)cur + 4;
+            v = 0x7FFFFFFF;
+        } else {
+            v = (s32)fn_801F6120((f32**)&cur);
+        }
+        s->cur = cur;
+        fn_800FF4EC(v);
+    }
+    return 0;
+}
+
+extern void fn_800FF5D0(s32 v);
+s32 fn_801FEBFC(s32 flags, Stream *s) {
+    void *cur;
+    s32 v;
+    if (flags & 1) {
+        cur = (char *)s->cur + 4;
+        if (lbl_8034C1E0 == *(f32 *)cur) {
+            cur = (char *)cur + 4;
+            v = 0x7FFFFFFF;
+        } else {
+            v = (s32)fn_801F6120((f32**)&cur);
+        }
+        s->cur = cur;
+        fn_800FF5D0(v);
+    }
+    return 0;
+}
+
+extern void fn_800FF6B4(s32 v);
+s32 fn_801FEC80(s32 flags, Stream *s) {
+    void *cur;
+    s32 v;
+    if (flags & 1) {
+        cur = (char *)s->cur + 4;
+        if (lbl_8034C1E0 == *(f32 *)cur) {
+            cur = (char *)cur + 4;
+            v = 0x7FFFFFFF;
+        } else {
+            v = (s32)fn_801F6120((f32**)&cur);
+        }
+        s->cur = cur;
+        fn_800FF6B4(v);
+    }
+    return 0;
+}
+
+extern void fn_80216D98(s32 v);
+s32 fn_801FEDD0(s32 flags, Stream *s) {
+    void *cur;
+    s32 v;
+    if (flags & 1) {
+        cur = (char *)s->cur + 4;
+        if (lbl_8034C1E0 == *(f32 *)cur) {
+            cur = (char *)cur + 4;
+            v = 0x7FFFFFFF;
+        } else {
+            v = (s32)fn_801F6120((f32**)&cur);
+        }
+        s->cur = cur;
+        fn_80216D98(v);
+    }
     return 0;
 }
