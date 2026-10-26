@@ -333,11 +333,24 @@ config.libs = [
     GameLib(
         "game",
         [
+            # Battle character command task and its helpers. The start is a guess (no constants
+            # before 0x80032E78); fn_800315FC and fn_80032C6C are near misses.
+            Object(NonMatching, "game/btlchar.c"),
+            # Quad, billboard and model draw helpers (.sdata2 from 0x80348570). Near misses:
+            # fn_80033050, fn_800331CC, fn_800334B8, fn_80033888, fn_80034690, fn_8003529C,
+            # fn_80035518, fn_80035708.
+            Object(NonMatching, "game/draw2d.c"),
             # Event task handlers and resource chunk lists (0x80035918-0x8003DEE0): 230 of 235
             # match. Left: fn_80035918, fn_80035C38, fn_8003D2E4 (string pool), fn_8003DBAC,
             # fn_8003DCF4. The original keeps the strings in .rodata (needs -str reuse,readonly
             # once linked), and a 4-byte gap before lbl_802DD238 may mean a file boundary.
             Object(NonMatching, "game/tasks.c"),
+            # .SAMP sample, voice and stream loading. fn_8003E1BC and fn_8003ECF4 differ only in
+            # string offsets: like tasks.c, the strings belong in .rodata (-str reuse,readonly).
+            Object(NonMatching, "game/sound.c"),
+            # Effect and particle tasks (a new 0.0f at 0x80348638). The end is a guess: the file
+            # continues past 0x80041238. fn_800403AC is a near miss.
+            Object(NonMatching, "game/effect.c"),
             # 40 of 44 match; UiDrawNumber, UiLayoutDrawPart, UiLayoutDraw and UiSpriteDraw are
             # register allocation / scheduling away.
             Object(NonMatching, "game/uiobj.c"),
@@ -351,9 +364,15 @@ config.libs = [
             # Table accessors and the story-flag bitset. The file's end is a guess (no float
             # constants to pin it); fn_801E48A8, fn_801E4984 and fn_801E4AB0 are near misses.
             Object(NonMatching, "game/flags.c"),
-            # Model objects: draw, motion blend, per-frame update. All 17 functions so far match;
-            # the file continues past 0x801E6148 (fn_801E6148, fn_801E6438, ... share its constants).
+            # Model objects: draw, motion blend, per-frame update. 38 of 39 match; fn_801E735C is
+            # a near miss. The file ends at 0x801E7654 (a second u32 conversion constant there).
             Object(NonMatching, "game/model.c"),
+            # Motion sampling and chunk strip/UV helpers. The end is a guess (no constants);
+            # fn_801E78C8 and fn_801E85BC are near misses.
+            Object(NonMatching, "game/chunk.c"),
+            # Story-flag event object (a new 0.0f at 0x8034C020); continues past 0x801EA2DC.
+            # fn_801E8CA4 and fn_801E9AE0 are near misses.
+            Object(NonMatching, "game/evobj.c"),
         ],
     ),
 ]
