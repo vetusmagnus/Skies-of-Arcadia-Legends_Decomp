@@ -73,8 +73,8 @@ Duplicates
 ----------
 
 `python tools/match/dupes.py` masks symbols and branch targets across the asm and writes
-[duplicates.txt](duplicates.txt): of 5,844 functions, 5,357 are unique and 172 groups hold 659 functions
-(487 copies). Hand an agent one member of a group and copy the source to the others (re-run fdiff on
+[duplicates.txt](duplicates.txt): of 5,830 functions, 5,347 are unique and 170 groups hold 653 functions
+(483 copies). Hand an agent one member of a group and copy the source to the others (re-run fdiff on
 each copy). Most groups are one- and two-instruction stubs; the largest is 0x12A0 bytes
 (fn_800AE4E0 / fn_800DA744). Members defined in `src/` are starred. The earlier estimate of 4,555 unique
 groups masked immediates too; these groups keep register numbers and offsets, so they are exact.
