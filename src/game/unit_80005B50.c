@@ -15,7 +15,7 @@ extern void fn_801DDCA8(void* p);
 extern void fn_802275A4(void* a, s32 b);
 extern void fn_801E17E0(void* p);
 extern void* fn_801DB1A4(u32 size);
-extern u32 fn_80227810(void* p);
+extern s32 fn_80227810(void* p);
 extern void fn_801DDD74(void* p, s32 n);
 typedef struct Vec3 {
     f32 x;
@@ -1722,8 +1722,8 @@ void fn_80014474(Tk_80014474* t)
 
     switch (u->state) {
     case 0:
-        if ((*(G_80014474*)&lbl_80309EC8).x48 & 0x8000000) {
-            (*(G_80014474*)&lbl_80309EC8).x48 &= ~0x8000000;
+        if (lbl_80309EC8.x48 & 0x8000000) {
+            lbl_80309EC8.x48 &= ~0x8000000;
             u->state = 2;
             break;
         }
@@ -1736,7 +1736,7 @@ void fn_80014474(Tk_80014474* t)
             }
             u->xc = 2.0f * u->xc;
             v[1] = 0.0f;
-            fn_80071CF0((void *)(v), (void *)(w->x38));
+            fn_80071CF0(v, w->x38);
             if (!Hit(w, u, u->xc)) {
                 fn_800608C8(&u->x8);
             }
@@ -1749,19 +1749,19 @@ void fn_80014474(Tk_80014474* t)
             fn_80014AB8(2, 0);
             u->state = 1;
         } else {
-            fn_80071CF0((void *)((*(G_80014474*)&lbl_80309EC8).x4c), (void *)(w->x20));
-            fn_80071CF0((void *)((*(G_80014474*)&lbl_80309EC8).x58), (void *)(w->x38));
-            fn_800614FC((void *)((*(G_80014474*)&lbl_80309EC8).x64), (void *)(w->x2c));
+            fn_80071CF0(lbl_80309EC8.x4c, w->x20);
+            fn_80071CF0(lbl_80309EC8.x58, w->x38);
+            fn_800614FC(lbl_80309EC8.x64, w->x2c);
             break;
         }
     case 1:
         Reset();
         d = u->xc;
         c = u->x8;
-        (*(G_80014474*)&lbl_80309EC8).x19a = 11;
-        (*(G_80014474*)&lbl_80309EC8).x110 = d;
-        fn_80071CF0((void *)(w->x38), (void *)((*(G_80014474*)&lbl_80309EC8).xc0));
-        (*(G_80014474*)&lbl_80309EC8).x160 = c;
+        lbl_80309EC8.x19a = 11;
+        lbl_80309EC8.x110 = d;
+        fn_80071CF0(w->x38, lbl_80309EC8.xc0);
+        lbl_80309EC8.x160 = c;
         break;
     case 2:
         Reset();

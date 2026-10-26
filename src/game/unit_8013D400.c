@@ -116,7 +116,7 @@ extern u8 *fn_80135598(void);
 extern u8 lbl_8030B4D4[];
 extern Ent* lbl_8034727C;
 extern s32 lbl_80347278;
-extern u8 *fn_801E1A74(s32 a, s32 b);
+extern void *fn_801E1A74(s32 a, s32 b);
 extern u8 *fn_8013558C(void);
 extern u8 lbl_80308F98[];
 extern s32 lbl_803472BC;
@@ -163,7 +163,7 @@ typedef struct Owner {
     f32 x14;
     s32 x18;
 } Owner;
-extern void fn_8014EE4C(Owner *o, s32 a, s32 b, s32 c, s32 d);
+extern void fn_8014EE4C(void *,  s32 a,  s32 b,  s32 c,  s32 d);
 typedef struct {
     u8 x0, x1, x2, x3;
     u8 x4, x5, x6, x7;
@@ -660,6 +660,64 @@ typedef struct {
     s32 lo;
     s32 hi;
 } Range_8014F834;
+struct Ctx_8014D398;
+typedef struct Node_8014D398 {
+    s32 w0;
+    void *x4;
+    struct Ctx_8014D398 *x8;
+    s32 xc;
+    s32 x10;
+    s32 x14;
+    s32 x18;
+    f32 f1c;
+    s32 x20;
+} Node_8014D398;
+typedef struct {
+    s32 w0;
+    u8 pad4[0x3c - 4];
+    void *x3c;
+} Info;
+typedef struct {
+    u8 pad0[0x10];
+    Info *x10;
+} Sub;
+typedef struct Ctx_8014D398 {
+    u8 pad0[0xe8];
+    struct Ctx_8014D398 *xe8;
+    u8 pade8[0x100 - 0xec];
+    void *x100;
+    u8 pad104[0x17a - 0x104];
+    u16 h17a;
+    u8 pad17c[0x18c - 0x17c];
+    f32 f18c;
+    f32 f190;
+    u8 pad194[0x1c8 - 0x194];
+    Sub *x1c8;
+    u8 pad1cc[0x1e8 - 0x1cc];
+    struct Task_8014D398 *x1e8;
+    u8 pad1ec[0x23c - 0x1ec];
+    Node_8014D398 *x23c;
+} Ctx_8014D398;
+typedef struct Task_8014D398 {
+    u8 pad0[0x19];
+    u8 b19;
+    u8 pad1a[0x24 - 0x1a];
+    Ctx_8014D398 *x24;
+} Task_8014D398;
+typedef struct {
+    u8 pad0[4];
+    u32 w4;
+} W4;
+extern void fn_80227810(void *p);
+extern void fn_8015ED90(Task_8014D398 *t);
+extern void *fn_8010A164(void *p);
+extern void fn_80156B04(void *a, Ctx_8014D398 *c, s32 d, s32 e, void *f);
+extern s32 fn_8015E600(Ctx_8014D398 *c);
+extern void fn_80156E54(Ctx_8014D398 *c, void *a);
+extern void fn_80156DA0(Ctx_8014D398 *c, void *a);
+extern void fn_8015EBF4(Ctx_8014D398 *c);
+extern void fn_802275A4(void *p, s32 a);
+extern void fn_80100B74(Task_8014D398 *t);
 
 void fn_8013D400(s32 a, s32 b) {
     fn_80136A28(a, b, 3, -1, -1, -1);
@@ -2294,4 +2352,79 @@ void fn_8014F834(Range_8014F834* r, u16 ang, s32 a0, s32 a1, s32 lo, s32 hi, s32
     hi = (hi < 0x3fff) ? hi : 0x3fff;
     r->hi = (r->hi > hi) ? r->hi : hi;
     r->lo = (r->lo < lo) ? r->lo : lo;
+}
+
+void fn_8014D398(Task_8014D398 *t)
+{
+    Ctx_8014D398 *ctx;
+    Node_8014D398 *p;
+    s32 loc[16];
+    void *r;
+    Info *info;
+
+    ctx = t->x24;
+    switch (t->b19) {
+    case 0:
+    case 0xfe:
+        fn_80227810(ctx->x100);
+        fn_8015ED90(t);
+        t->b19 = 1;
+        break;
+    case 1:
+        info = ctx->x1c8->x10;
+        r = fn_8010A164(info->w0 > 0xe ? info->x3c : NULL);
+        ctx->x1e8 = (Task_8014D398 *)r;
+        if (r == NULL) {
+            fn_801DBE1C("Leader Ship Is Nothing %d", ctx->h17a);
+        }
+        t->b19 = 2;
+        p = fn_801E1A74(1, 0x24);
+        ctx->x23c = p;
+        memset(p, 0, 0x24);
+        p->x4 = ctx->x1e8->x24->x23c;
+        if (p->x4 == NULL || (p->x4 != NULL && fn_8025EF88(p->x4, "shp") != 0)) {
+            fn_801DBE1C("Leader Ship Miss {%d} opt=%d", ctx->h17a, ctx->x1e8->x24->h17a);
+        }
+        if (ctx->x1c8->x10->w0 >= 0xf) {
+            p->w0 = 1;
+            memset(&p->x8, 0, 0x1c);
+            p->x8 = ctx;
+            p->x18 = -1;
+            p->x10 = -1;
+            p->x10 = 0;
+            fn_8014EE4C(&p->x8, 0, 1, 1, 0xa);
+        }
+    case 2:
+        p = ctx->x23c;
+        fn_80156B04((u8 *)p->x4 + 0x1d4, ctx, 0, 0, loc);
+        if (fn_8015E600(t->x24) == 0) {
+            if (ctx->xe8 != NULL) {
+                if (p->x20 != 0) {
+                    if (p->x10 == p->x18) {
+                        p->x8->f190 = 1.0f;
+                    } else {
+                        p->x8->f190 = p->f1c;
+                    }
+                }
+                if (p->x20 == 0) {
+                    if (p->x8->f18c >= (f32)((W4 *)p->x8->xe8)->w4 - 1.0f) {
+                        p->x8->f190 = 0.0f;
+                        p->xc = 0;
+                    }
+                }
+                fn_80156E54(ctx, loc);
+            } else {
+                fn_80156DA0(ctx, loc);
+            }
+        }
+        break;
+    case 0xff:
+        fn_801E17E0(ctx->x23c);
+        fn_8015EBF4(t->x24);
+        if (ctx->x100 != NULL) {
+            fn_802275A4(ctx->x100, 0);
+        }
+        fn_80100B74(t);
+        break;
+    }
 }

@@ -1,8 +1,8 @@
 Progress and handoff
 ====================
 
-State of the work as of 2026-10-26 (after the Opus 200-399 byte near-miss pass): 30.1% of code matched (3,696 / 7,116
-functions), 3,420 functions unmatched: about 2,470 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
+State of the work as of 2026-10-26 (after the hand-merge of clashing functions): 30.8% of code matched (3,724 / 7,116
+functions), 3,392 functions unmatched: about 2,470 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
 (the size split of the game functions predates the duplicate-copy batch: 2,193 under 632 bytes, 466 at 632-1000,
 355 at 1-2 KB, 101 at 2-5 KB, 16 over 5 KB). Numbers live in the README status block and on
 [ByteMatch](https://bytematch.dev/vetusmagnus/SoAL-Decomp); this page covers what's in flight.
@@ -201,6 +201,66 @@ matches need), fn_8008F2CC / fn_8008F434 / fn_8008F5E0 (need an `inline` recursi
 fn_800AB834, fn_800B29AC, fn_800C0368, fn_800CF6A8, fn_8010EB88, fn_801353A8, fn_8014836C, fn_80148CAC, fn_80170C64,
 fn_8017567C, fn_80175DC4, fn_801763B8, fn_80178BC8, fn_80185864 (camp_work / lbl_8030B7F4 struct shapes), fn_801A20AC,
 fn_801B057C, fn_801B06CC (const `.rodata` tables), fn_801B65CC, fn_801BE17C, fn_801BE2F0.
+
+### Hand-merging the type-clash leftovers (2026-10-26)
+
+89 functions had matched in isolation but clashed with their unit (25 from the 200-399 near-miss pass, 64 from batch 11).
+The merge script took none of them as they were, so they were merged by hand, one unit at a time, with no new agents and
+no call-site casts: where a unit and a function disagreed, the prototype or struct was fixed so both agree.
+**28 are in the unit files now** (3,696 to 3,724 matched, 855,948 bytes, 30.76%). Every touched unit passes fdiff over
+all its functions and the float check, `main.dol` is byte-identical (SHA-1 equals `config/GEAE8P/build.sha1`).
+`tools/match` has no unit-wide mode: `fdiff.py` needs function names, so check a whole unit by passing every `fn_` in it.
+
+Merged: fn_8000BB28, fn_8000D488, fn_8000D8FC, fn_80013D58, fn_80014474, fn_8001FABC (unit_80005B50.c);
+fn_8005174C, fn_80053964 (unit_800506B0.c); fn_8005C480, fn_8005D614 (unit_80055E94.c); fn_800740D0 (unit_80073D18.c);
+fn_8007B958, fn_8007C344 (unit_80074D9C.c); fn_8008F2CC, fn_8008F434, fn_8008F5E0, fn_80093668, fn_80094144,
+fn_80095220 (unit_8008B4A0.c); fn_800A1690 (unit_800972AC.c); fn_800C3C78, fn_800C4C54 (unit_800B2DA0.c); fn_800D8214
+(unit_800D81E8.c); fn_8010F648, fn_80112868 (unit_8010E164.c); fn_8014D398 (unit_8013D400.c); fn_801A4B40,
+fn_801ABA30 (unit_80199B9C.c).
+
+What the fixes were (they apply to the rest):
+
+- **One struct per global, not one view per function.** lbl_80309EC8 (`Sys_80309EC8`, the 0x244-byte battle block),
+  lbl_80309E5C, lbl_8030A10C (`Sys_8030A10C`), lbl_80310B3C (a `u32[0x356]`), lbl_80311A60 (`Pad_80311A60 *[]`) and the
+  menu object `List` (count, flags, `Ent e[8]`) replace the `(*(View*)&lbl)` casts and `lbl + 0x64` offsets. Fields from
+  every view go in one struct; alias names are renamed in the callers. Gaps need exact `padN` sizes (a 4-byte gap
+  between two arrays broke fn_8005C480 until fdiff showed `0x1c0` for `0x1c4`).
+- **Prototypes follow the definition or the header, not the first caller.** fn_8000F0A4 returns a `TaskFn` (the table at
+  lbl_802DAFA8 is callbacks), fn_8001E05C returns a pointer, fn_80227810 returns `s32` (include/game/sprite.h now says
+  so), fn_800912A8 is the `s32` clamp defined in unit_8008B4A0.c, fn_801DCE18 takes an angle, fn_800C4C54 writes through
+  an output pointer (the callers' `t = fn(c)` became `fn(&t, c)`), fn_800740D0 takes the counter its caller forgot.
+  Callbacks passed to `fn_802268E8`/`fn_80226670`/`fn_8002FEB0` are `void *` parameters, as in sound.c.
+- Struct pointers passed to untyped helpers (`fn_8015ED90`, `fn_8015E600`, `fn_801189F0`, `fn_80222838`, ...) are
+  `void *` parameters; fn_8011816C now takes the object type and uses `&self->f38` instead of `self + 0x38`.
+- A `void fn_X();` forward declaration of a callback is replaced by the real prototype (`struct T *`, or `void *` plus a
+  typed local when the struct is anonymous).
+- Do not trust `merge6.py` on files with more than one function: it only checks the file's own name. Run the whole
+  unit through fdiff after every merge (fn_801185D4 broke once after a merge that reported OK).
+
+Casts left in the merged functions (all from the agent files): fn_8000BB28 (`(u32*)`, `(Cx_BB28*)`), fn_8000D8FC
+(`(Nd*)n->x0`), fn_800D8214 (`(*(s32*)&lbl_80346D98)`), fn_8014D398 (`(Task_8014D398 *)r`, `(u8 *)` offsets),
+fn_801A4B40 (`(NJS_TEXLIST*)`).
+
+Still unmerged (61): the unit and the function describe the same object or call with different shapes, and the fix is a
+struct unification larger than a prototype, or the function only matches in isolation.
+
+- Struct views to unify: fn_8005CDF0 (task `S` vs `O5D47C`), fn_80053C48 (the object inside lbl_80309EC8: two views
+  with different sizes and a different `child`/`p` type), fn_800AB834, fn_800B29AC (`Item`/`TNode`/`MapInfo2` vs lbl_80311AC0
+  as `s32[5]`), fn_800DC828, fn_8010A278, fn_8010B258, fn_8012E6EC, fn_80131254, fn_80148CAC, fn_80153DC8, fn_8014836C,
+  fn_80119FF4 (lbl_80347450), fn_80121680, fn_8010EB88, fn_801353A8, fn_801DA1C0 (lbl_8030E830), fn_801D81C0.
+- Prototype disagreements with callers: fn_800C2A88 and fn_800D4690 (the callers pass two arguments, the definition
+  takes one), fn_800AC474 (fn_800A10A8 is defined with two parameters, the function calls it with three), fn_800D1324
+  (fn_800C355C returns a handle in the unit and a pointer in the function), fn_80113630 and fn_80113AF0 (fn_80119744
+  has three parameters in the unit, four in the function), fn_8014DDF4 (fn_80156B04's parameters).
+- Only match in isolation: fn_8008100C (needs `int fn_80078478(int)`, the neighbours need `s32`, a hint that the
+  boundary is elsewhere), fn_8008D6B4 (needs a signed `bd`; fn_8008C98C matches only with it unsigned).
+- Header conflicts: fn_801AFD34, fn_801B0014, fn_801B0838, fn_801B4CF0 (TextPrintNumber's `y` is `s32` in the function, `s16`
+  in include/game/text.h), fn_8015F3B0 / fn_80167C34 / fn_801684E8 / fn_801863E8 (SePlay, fn_801D68C4 and fn_8015F180 are
+  declared in headers and function-local externs with different types in unit_8015DC6C.c).
+- Not examined past the first error: fn_80168E54, fn_801680B4, fn_80171484, fn_8017C6BC, fn_8017C948, fn_80181F58,
+  fn_801822A0, fn_8019BED8, fn_801AACB0, fn_801B46EC, fn_801B914C, fn_801BDEF4, fn_801B057C, fn_801B06CC, fn_801B65CC,
+  fn_801BE17C, fn_801BE2F0, fn_801A20AC, fn_80170C64, fn_8017567C, fn_80175DC4, fn_801763B8, fn_80178BC8,
+  fn_80185864, fn_800C0368, fn_800CF6A8 (mostly `lbl_*` struct views and per-file `Task`/`MenuUi` tags).
 
 ### Partials batch (2026-10-26)
 

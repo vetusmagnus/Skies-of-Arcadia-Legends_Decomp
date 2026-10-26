@@ -358,7 +358,8 @@ void *fn_80227E84(s32 size);
 s32 fn_800FF48C(void *a, s32 b);
 void *fn_80226704(void *list, void *cb, s32 size);
 void fn_800D81E8(void);
-void fn_800D8214(void);
+struct T;
+void fn_800D8214(struct T *t);
 typedef struct {
     u8 pad0[0x8];
     u32 w8;
@@ -2180,6 +2181,22 @@ typedef struct {
     Work_8010DDBC* work;
 } Obj_8010DDBC;
 extern void fn_80119AF4(Obj_8010DDBC* o);
+typedef struct E { u8 pad0[4]; s32 mode; f32 f8; } E;
+typedef struct T { u8 pad0[0x14]; s32 p14; u8 flags; u8 state; u8 pad1a[8]; E *e; } T;
+extern void fn_800D8014(E *e);
+extern void fn_802171F0(s32 a);
+extern void fn_800D7D60(E *e);
+extern s32 fn_800D7E7C(E *e);
+extern void fn_801CBB9C(f32 f);
+extern void fn_800EDF38(void);
+extern void fn_800CE2B4(void);
+extern void fn_80123E8C(void);
+extern void fn_80217134(void);
+extern void fn_800D7B28(E *e);
+extern void fn_8022DBC8(void);
+extern s32 lbl_80347508;
+extern s32 lbl_80346E04;
+extern s32 lbl_803473B4;
 
 void fn_800D81E8(void) {
     fn_80226D14();
@@ -7273,4 +7290,103 @@ void fn_8010DDBC(void *o_) {
         fn_801C6170(o);
         break;
     }
+}
+
+void fn_800D8214(T *self)
+{
+    E *e;
+    s32 a = 1;
+    s32 b = 1;
+    s32 r;
+
+    e = self->e;
+    if (lbl_803475D8 != 0) {
+        self->state = 9;
+    }
+    switch (self->state) {
+    case 0:
+    case 0xfe:
+        fn_8022697C(self->p14);
+        fn_800D8014(self->e);
+        fn_802171F0(-0x1f);
+        if ((*(s32*)&lbl_80346D98) != 0) {
+            e->mode = 0;
+            self->state = 2;
+            break;
+        }
+        self->state = 1;
+    case 1:
+        fn_800D7D60(e);
+        r = fn_800D7E7C(e);
+        if (r != 0) {
+            s32 st = 2;
+            if (r < 0) st = 6;
+            self->state = st;
+        }
+        break;
+    case 2:
+        fn_801CBBAC(15.0f);
+        self->state = 3;
+        break;
+    case 3:
+        if (lbl_80347508 == 0) {
+            s32 n = e->mode;
+            a = 0;
+            b = 0;
+            if (n == 0) {
+                fn_800EDF38();
+                self->state = 4;
+            } else if (n == 1) {
+                fn_800CE2B4();
+                self->state = 9;
+            } else {
+                self->state = 8;
+                fn_80123E8C();
+            }
+        }
+        break;
+    case 4:
+        a = 0;
+        b = 0;
+        if (lbl_80346E04 == 0) {
+            fn_801CBB9C(15.0f);
+            e->f8 = 0.0f;
+            self->state = 5;
+        }
+        break;
+    case 5:
+        b = 0;
+        if (lbl_80347508 == 0) {
+            self->state = 9;
+        }
+        break;
+    case 6:
+        self->state = 7;
+    case 7:
+        e->f8 = e->f8 - 0.33333334f;
+        if (0.0f >= e->f8) {
+            self->state = 9;
+        }
+        break;
+    case 8:
+        if (lbl_803473B4 != 0) {
+            b = 0;
+            a = 0;
+            break;
+        }
+    default:
+        fn_8022697C(0x7fffffff);
+        lbl_803473E8 = 1;
+        lbl_80347444 = 0;
+        fn_80217134();
+        self->flags |= 0x40;
+        return;
+    }
+    if (a != 0) {
+        fn_80226BD0(-2.92f, 0.5f * (1.0f - e->f8) + 0.5f);
+    }
+    if (b != 0) {
+        fn_800D7B28(e);
+    }
+    fn_8022DBC8();
 }

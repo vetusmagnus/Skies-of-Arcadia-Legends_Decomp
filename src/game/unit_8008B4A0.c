@@ -560,8 +560,8 @@ typedef struct {
 } Tbl;
 extern Tbl lbl_8030E7F0;
 extern void njUnitVector(f32* v);
-extern void fn_80222838(Res_80093668* r);
-extern s32 fn_80223194(s32 mask, Res_80093668* r);
+extern void fn_80222838(void *);
+extern s32 fn_80223194(s32 mask, void *);
 extern s32 fn_801DD4C4(f32 x, f32 z);
 extern void fn_80221EDC(f32* out, u32 a, u32 b);
 typedef struct {
@@ -2033,15 +2033,15 @@ s32 fn_80094144(s32 base, s32 ang, f32* pos, Chr_80094144* chr) {
         res->pos[0] = pr->p[0];
         res->pos[1] = pr->p[1];
         res->pos[2] = pr->p[2];
-        fn_80222838((void *)(res));
-        a = fn_80223194(0x1800, (void *)(res));
+        fn_80222838(res);
+        a = fn_80223194(0x1800, res);
         if ((u32)(a | -a) >> 31) {
             mask |= bit;
         }
         res->pos[0] = pr->m[0];
         res->pos[2] = pr->m[2];
-        fn_80222838((void *)(res));
-        a = fn_80223194(0x1800, (void *)(res));
+        fn_80222838(res);
+        a = fn_80223194(0x1800, res);
         if ((u32)(a | -a) >> 31) {
             mask |= bit << 1;
         }

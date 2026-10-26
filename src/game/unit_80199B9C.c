@@ -24,8 +24,8 @@ void fn_801BEB10(void* a, s32 b, s32 c, s32 d);
 extern void fn_801DC214(void);
 extern s32 fn_80248708(s32 slot, s32 a, s32 b);
 extern s32 fn_801A6A04(s32 r);
-extern void fn_801A4B40(void);
-extern u8 *fn_80226670(u8 *obj, void (*cb)(void));
+extern void fn_801A4B40(void* a);
+extern u8 *fn_80226670(u8 *obj, void *cb);
 extern void *fn_801E1A74(s32 a, s32 b);
 typedef struct Sub_UNIT0000 {
     u8 pad0[0x8];
@@ -72,7 +72,7 @@ extern char lbl_802B69C0[];
 extern void *fn_801CC3C4(const char *path);
 extern s16 fn_800ED8C4(void *p);
 extern u8 lbl_8030B4D4[];
-extern void fn_801ABA30(void);
+extern void fn_801ABA30(void* a);
 extern f32 lbl_8034B96C;
 extern f32 lbl_8034B8B0;
 extern void TextSetColor(u32 colour);
@@ -1532,6 +1532,14 @@ extern const PanelPos lbl_802B8F20[];
 extern void fn_801AFD34(void *t);
 extern void fn_801B0014(void *t);
 typedef struct { const char* a; const char* b; } NamePair;
+typedef struct { u8 pad[0x18]; f32 f18; } Inner_801A4B40;
+typedef struct { u8 pad0[0x18]; u8 flags; u8 pad19[0x24 - 0x19]; Inner_801A4B40* in; } Par_801A4B40;
+typedef struct { u8 pad0[8]; Par_801A4B40* par; u8 pad_[0x18 - 0xc]; u8 flags; u8 state; } Tsk_801A4B40;
+extern void SpriteObjDraw(SpriteObj* obj);
+extern void SpriteObjDrawAt(SpriteObj* obj, f32* pos);
+void SpriteObjDrawAtEx(SpriteObj* obj, f32* pos);
+typedef struct Sub { u8 pad[0x18]; u8 flags; } Sub;
+typedef struct Ent_801ABA30 { u8 pad[8]; Sub* sub; u8 pad2[0x18-0xc]; u8 flags; u8 mode; } Ent_801ABA30;
 
 void fn_80199B9C(void* p, f32 v) {
     *(f32*)((u8*)p + 0x34) = v;
@@ -4964,4 +4972,128 @@ void fn_801B7274(s32 x, s32 y, s32 nx, s32 ny, s16 id) {
     }
     TextPrint(x, y, buf);
     TextPrintNumber(nx, ny, lbl_802EBFBC[id], 0xC005);
+}
+
+void fn_801A4B40(void* a) {
+    Tsk_801A4B40* t = a;
+    SpriteObj obj;
+    f32 pos[2];
+    f32 z;
+    s32 j, i;
+    if (lbl_803475D8 != 0) t->state = 0xff;
+    switch (t->state) {
+    case 0:
+    case 0xfe:
+        z = -9990.0f;
+        obj.sprite = fn_801D68C4(menu_sprites.banks[1], 0);
+        obj.z = -9990.0f;
+        obj.b = 1.0f;
+        obj.a = t->par->in->f18;
+        obj.texlist = (NJS_TEXLIST*)menu_sprites.textlistC;
+        obj.flags = 0;
+        obj.colour = 0;
+        for (j = 0; j < 8; j++) {
+            for (i = 0; i < 10; i++) {
+                obj.z = z;
+                pos[0] = i * 64;
+                pos[1] = j * 64;
+                SpriteObjDrawAt(&obj, pos);
+                z += 0.05f;
+            }
+        }
+        obj.sprite = fn_801D68C4(menu_sprites.banks[0], 0);
+        obj.z = -9980.0f;
+        obj.flags = 3;
+        obj.texlist = (NJS_TEXLIST*)menu_sprites.textlistC;
+        SpriteObjDraw(&obj);
+        obj.flags = 1;
+        obj.texlist = (NJS_TEXLIST*)menu_sprites.texlist8;
+        obj.sprite = fn_801D68C4(menu_sprites.banks[2], 0);
+        obj.z = -9970.0f;
+        SpriteObjDraw(&obj);
+        obj.sprite = fn_801D68C4(menu_sprites.banks[2], 3);
+        obj.z = -9960.0f;
+        SpriteObjDraw(&obj);
+        obj.sprite = fn_801D68C4(menu_sprites.banks[2], 1);
+        obj.z = -9950.0f;
+        SpriteObjDraw(&obj);
+        obj.sprite = fn_801D68C4(menu_sprites.banks[2], 2);
+        obj.z = -9940.0f;
+        SpriteObjDraw(&obj);
+        obj.texlist = (NJS_TEXLIST*)menu_sprites.texlist8;
+        obj.sprite = fn_801D68C4(menu_sprites.banks[3], 0);
+        SpriteObjDraw(&obj);
+        if (t->par->flags & 0x40) t->flags |= 0x40;
+        break;
+    case 0xff:
+        t->flags |= 0x40;
+        break;
+    }
+}
+
+void fn_801ABA30(void* a)
+{
+    Ent_801ABA30* t = a;
+    SpriteObj obj;
+    f32 pos[2];
+    s32 i, j;
+    f32 z;
+
+    if (lbl_803475D8 != 0) {
+        t->mode = 0xFF;
+    }
+    switch (t->mode) {
+    case 0:
+    case 0xFE:
+        z = -10100.0f;
+        obj.sprite = fn_801D68C4(menu_sprites.banks[1], 0);
+        obj.z = -10100.0f;
+        obj.b = 1.0f;
+        obj.a = 1.0f;
+        obj.texlist = menu_sprites.textlistC;
+        obj.flags = 1;
+        obj.colour = 0;
+        for (i = 0; i < 8; i++) {
+            for (j = 0; j < 10; j++) {
+                obj.z = z;
+                pos[0] = (f32)(j * 64);
+                pos[1] = (f32)(i * 64);
+                SpriteObjDrawAtEx(&obj, pos);
+                z += 0.05f;
+            }
+        }
+        obj.sprite = fn_801D68C4(menu_sprites.banks[0], 0);
+        z += 0.05f;
+        obj.flags = 3;
+        obj.z = z;
+        obj.texlist = menu_sprites.textlistC;
+        SpriteObjDraw(&obj);
+        obj.flags = 1;
+        obj.texlist = menu_sprites.texlist8;
+        obj.sprite = fn_801D68C4(menu_sprites.banks[2], 0);
+        z += 0.05f;
+        obj.z = z;
+        SpriteObjDraw(&obj);
+        z += 0.05f * (f32)fn_801D68C4(menu_sprites.banks[2], 0)->count;
+        obj.z = z;
+        obj.sprite = fn_801D68C4(menu_sprites.banks[2], 3);
+        SpriteObjDraw(&obj);
+        z += 0.05f * (f32)fn_801D68C4(menu_sprites.banks[2], 3)->count;
+        obj.z = z;
+        obj.sprite = fn_801D68C4(menu_sprites.banks[2], 1);
+        SpriteObjDraw(&obj);
+        obj.z = z + 0.05f * (f32)fn_801D68C4(menu_sprites.banks[2], 1)->count;
+        obj.sprite = fn_801D68C4(menu_sprites.banks[2], 2);
+        SpriteObjDraw(&obj);
+        obj.texlist = menu_sprites.texlist8;
+        obj.sprite = fn_801D68C4(menu_sprites.banks[3], 0xD);
+        SpriteObjDraw(&obj);
+        if (t->sub->flags & 0x40) {
+            t->flags |= 0x40;
+        }
+        break;
+    case 0xFF:
+        t->flags |= 0x40;
+        break;
+    }
 }
