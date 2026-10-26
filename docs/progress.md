@@ -101,6 +101,30 @@ list):
 > function. Report MATCHED / NEAR (diff lines, what differs) / SKIPPED, plus types and purposes
 > worth naming.
 
+Haiku small-function batch
+--------------------------
+
+A separate batch (16 Haiku agents, 20 functions each) took the 320 smallest unmatched functions between
+0x80050000 and 0x801C0000, one representative per duplicate group. 298 match, in 17 new units
+`src/game/unit_<start>.c` (one per agent's address run, merged by `build/agents/merge.py`; the unit
+ranges in `splits.txt` run from an agent's first function to the next agent's first, so most of each
+range is still unmatched). The unit names and ranges are guesses; the file boundaries are unknown.
+Copies of the duplicate groups (`docs/duplicates.txt`) were not added yet; they need their own
+`extern` labels, so each has to be re-verified.
+
+Near misses (diff lines): fn_8006BD84 (13, table base in r6 with the zero in r3), fn_8008B470 (19, the
+`xor/srawi/cntlzw` compare idiom), fn_8008B4A0 (16) and fn_8008B4D0 (6) (load order of two `s16`s),
+fn_80095630 (4, address of lbl_80346C44 loaded between the float stores), fn_8009701C (12),
+fn_800976F8 (18), fn_8009E49C/E4B8/E4D4 (paired-single `psq_st`/`psq_l` conversions, no plain C found),
+fn_800BE430 (3, a dead second `beq`), fn_800CE4B4 (18), fn_800D1018 (4), fn_8011A960 (12),
+fn_80128108 (2, `li` scheduled before the first `lfs`), fn_8012C3DC (4, `extsb` source register),
+fn_80193FF8 (4), fn_80194378 (1, missing `extsb`), fn_80194C18 (6), fn_801957D8 (10), fn_801968B8 (3),
+fn_801A2C40 (3, the first of two stores to lbl_80347170 is kept in the original).
+
+Stopped at size 0x34 (52 bytes): the 320 smallest representatives in the range top out there, so the
+next batch should start at 0x38 bytes in the same range (and cover 0x80050000-0x801C0000 first, then
+the regions outside it).
+
 Good next targets
 -----------------
 

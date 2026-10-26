@@ -375,6 +375,25 @@ config.libs = [
             # Story-flag event object and event NPC state pickers (a new 0.0f at 0x8034C020).
             # The end is a guess; 5 of 18 match.
             Object(NonMatching, "game/evobj.c"),
+            # Small functions from 0x80055E94 to 0x801BEAE4 (accessors, setters, wrappers), one
+            # unit per matching batch. The ranges are guesses; the units are named after the start.
+            Object(NonMatching, "game/unit_80055E94.c"),
+            Object(NonMatching, "game/unit_80073D18.c"),
+            Object(NonMatching, "game/unit_80074D9C.c"),
+            Object(NonMatching, "game/unit_8008A8B4.c"),
+            Object(NonMatching, "game/unit_8008B4A0.c"),
+            Object(NonMatching, "game/unit_8009623C.c"),
+            Object(NonMatching, "game/unit_800972AC.c"),
+            Object(NonMatching, "game/unit_800B2DA0.c"),
+            Object(NonMatching, "game/unit_800D81E8.c"),
+            Object(NonMatching, "game/unit_8010E164.c"),
+            Object(NonMatching, "game/unit_8012ADB4.c"),
+            Object(NonMatching, "game/unit_8012F6C4.c"),
+            Object(NonMatching, "game/unit_8013D400.c"),
+            Object(NonMatching, "game/unit_8014F970.c"),
+            Object(NonMatching, "game/unit_8015DC6C.c"),
+            Object(NonMatching, "game/unit_80193F28.c"),
+            Object(NonMatching, "game/unit_80199B9C.c"),
         ],
     ),
 ]

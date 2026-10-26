@@ -29,8 +29,59 @@ game/sound.c:
 game/effect.c:
 	.text       start:0x80040010 end:0x80047214
 
+game/unit_80055E94.c:
+	.text       start:0x80055E94 end:0x80073D18
+
+game/unit_80073D18.c:
+	.text       start:0x80073D18 end:0x80074D78
+
 musyx/runtime/CheapReverb/creverb_fx.c:
 	.text       start:0x80074D78 end:0x80074D9C
+
+game/unit_80074D9C.c:
+	.text       start:0x80074D9C end:0x8008A8B4
+
+game/unit_8008A8B4.c:
+	.text       start:0x8008A8B4 end:0x8008B4A0
+
+game/unit_8008B4A0.c:
+	.text       start:0x8008B4A0 end:0x8009623C
+
+game/unit_8009623C.c:
+	.text       start:0x8009623C end:0x800972AC
+
+game/unit_800972AC.c:
+	.text       start:0x800972AC end:0x800B2DA0
+
+game/unit_800B2DA0.c:
+	.text       start:0x800B2DA0 end:0x800D81E8
+
+game/unit_800D81E8.c:
+	.text       start:0x800D81E8 end:0x8010E164
+
+game/unit_8010E164.c:
+	.text       start:0x8010E164 end:0x8012ADB4
+
+game/unit_8012ADB4.c:
+	.text       start:0x8012ADB4 end:0x8012F6C4
+
+game/unit_8012F6C4.c:
+	.text       start:0x8012F6C4 end:0x8013D400
+
+game/unit_8013D400.c:
+	.text       start:0x8013D400 end:0x8014F970
+
+game/unit_8014F970.c:
+	.text       start:0x8014F970 end:0x8015DC6C
+
+game/unit_8015DC6C.c:
+	.text       start:0x8015DC6C end:0x80193F28
+
+game/unit_80193F28.c:
+	.text       start:0x80193F28 end:0x80199B9C
+
+game/unit_80199B9C.c:
+	.text       start:0x80199B9C end:0x801BEB10
 
 game/uiobj.c:
 	.text       start:0x801C2FA0 end:0x801C5758
