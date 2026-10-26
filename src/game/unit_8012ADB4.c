@@ -34,7 +34,10 @@ typedef struct {
 typedef struct {
     u8 pad[0x24];
     SysA *x24;
-    PosHolder *x28;
+    union {
+        PosHolder *x28;
+        void **x28v;
+    };
 } HolderA;
 extern HolderA *lbl_80346F10;
 typedef struct {
@@ -79,11 +82,11 @@ typedef struct {
     u8 state;
 } Obj;
 extern void *lbl_803475A8;
-void *fn_802268E8(void *a, void (*f)(void));
+void *fn_802268E8(void *a, void *f);
 void *fn_801E1C7C(s32 n);
 void *fn_801D68C4(void *a, u32 n);
 void fn_8012AF54(void);
-void fn_8012B054(void);
+void fn_8012B054(Obj* o);
 extern void *lbl_80346F18;
 extern f32 lbl_8034A418;
 extern void *lbl_80346F04;
@@ -698,4 +701,34 @@ void fn_8012B308(s8 n)
     pos->f14 = 51.0f + (out.x - 19.0f);
     pos->f18 = 57.0f + (out.y - 19.0f);
     lbl_80346F10->x24->f8 = (f32)(s32)(182.04445f * (-40.466667f + lbl_80346F10->x24->f4));
+}
+
+void fn_8012B054(Obj* o)
+{
+    switch (o->state) {
+    case 0xFE:
+    case 0:
+        lbl_80346F10->x28v = fn_801E1C7C(0x24);
+        lbl_80346F10->x28v[0] = fn_801D68C4(lbl_80346F04, 8);
+        lbl_80346F10->x28v[1] = fn_801D68C4(lbl_80346F04, 0);
+        lbl_80346F10->x28v[2] = fn_801D68C4(lbl_80346F04, 1);
+        lbl_80346F10->x28v[3] = fn_801D68C4(lbl_80346F04, 2);
+        lbl_80346F10->x28v[4] = fn_801D68C4(lbl_80346F04, 3);
+        lbl_80346F10->x28v[5] = fn_801D68C4(lbl_80346F04, 4);
+        lbl_80346F10->x28v[6] = fn_801D68C4(lbl_80346F04, 5);
+        lbl_80346F10->x28v[7] = fn_801D68C4(lbl_80346F04, 6);
+        lbl_80346F10->x28v[8] = fn_801D68C4(lbl_80346F04, 7);
+        o->state = 1;
+        break;
+    case 1:
+        if (fn_8012B1D8() == 0)
+            o->state = 2;
+        break;
+    case 2:
+        o->state = 0xFF;
+        break;
+    case 0xFF:
+        o->flags |= 0x40;
+        break;
+    }
 }

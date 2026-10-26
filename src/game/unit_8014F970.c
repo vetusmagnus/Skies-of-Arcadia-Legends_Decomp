@@ -71,7 +71,16 @@ void *memset(void *p, s32 c, u32 n);
 extern u8 lbl_803067A8[];
 extern u8 lbl_80306938[];
 extern s32 lbl_80306758[];
-extern u8 *lbl_80346FB8;
+typedef struct {
+    u8 v[4];
+} Cell;
+typedef struct {
+    u8 b0;
+    s8 b1, b2, b3;
+    u8 pad4[2];
+    Cell cell[8][4][2];
+} Tab;
+extern Tab *lbl_80346FB8;
 extern E14 *lbl_80346FE8;
 extern void *lbl_80346FAC;
 extern s32 lbl_8034704C;
@@ -852,6 +861,146 @@ typedef struct {
 } Obj_80153518;
 extern char lbl_802B3BCC[];
 extern s32 fn_80109E7C(u8* b, s32 n);
+typedef struct {
+    u8 pad0[4];
+    s32 f4;
+    u8 pad8[0xc - 8];
+    u8 padc[6];
+    s16 h12;
+    s32 f14;
+    s32 f18;
+    u8 pad1c[4];
+    f32 f20;
+    f32 f24;
+    s32 f28;
+    s32 f2c;
+    u8 pad30[4];
+    s32 f34;
+    u8 pad38[0x78 - 0x38];
+    char buf[0x1e4 - 0x78];
+    f32 f1e4;
+    u8 pad1e8[6];
+    s16 h1ee;
+} S_80158DB4;
+typedef struct {
+    u8 pad0[4];
+    s32 f4;
+    u8 pad8[0x44 - 8];
+    s16 h44;
+    s16 h46;
+    s16 h48;
+    u8 pad4a[0x6e - 0x4a];
+    s16 h6e;
+    u8 pad70[0xbe - 0x70];
+    u8 b_be;
+    u8 pad_bf[0xe2 - 0xbf];
+    u8 b_e2;
+    u8 pad_e3[0x106 - 0xe3];
+    u8 b_106;
+    u8 pad_107[0x12a - 0x107];
+    u8 b_12a;
+    u8 pad_12b[0x14e - 0x12b];
+    u8 b_14e;
+    u8 pad_14f[0x172 - 0x14f];
+    u8 b_172;
+    u8 pad_173[0x196 - 0x173];
+    u8 b_196;
+    u8 pad_197[0x1ba - 0x197];
+    u8 b_1ba;
+    u8 pad_1bb[0x1f0 - 0x1bb];
+    u8 b_1f0;
+} S_80158BE8;
+typedef struct {
+    f32 x, y, z, u, v;
+    u32 colour;
+} Vtx_80159610;
+typedef struct {
+    u8 pad0[0x10];
+    s16 h10;
+    u8 pad12[0x72 - 0x12];
+    s16 h72;
+    void *p74;
+    u8 pad78[0x1f0 - 0x78];
+    u8 alpha;
+} Obj_80159610;
+extern u32 lbl_802E6F00[5];
+extern f32 fn_801DBD9C(f32 z);
+extern void fn_8021EDE0(void *t, s32 a);
+extern s32 fn_8021EE1C(void *t, u32 a);
+extern void fn_80291064(Vtx_80159610 *v, s32 n, s32 mode);
+extern char lbl_802B3BD8[];
+typedef struct {
+    u32 a;
+    u32 b;
+} Tex_80156E54;
+typedef struct {
+    u8 pad0[4];
+    u32 cnt;
+} Anim_80156E54;
+typedef struct {
+    u8 pad0[0x1c];
+    f32 scale;
+    u8 pad20[0x38 - 0x20];
+    f32 pos[3];
+    u8 pad44[0xe4 - 0x44];
+    void *model;
+    Anim_80156E54 *anim;
+    void *xec;
+    u8 padf0[0x100 - 0xf0];
+    Tex_80156E54 *texlist;
+    u8 pad104[0x176 - 0x104];
+    u16 flags176;
+    u8 pad178[0x184 - 0x178];
+    s32 hidden;
+    u8 pad188[4];
+    f32 frame;
+    f32 speed;
+    u8 pad194[4];
+    s32 done;
+} Obj_80156E54;
+extern f32 lbl_8034A8F8;
+extern f32 lbl_8034A904;
+void fn_801E7194(u16 a, void *model, Anim_80156E54 *anim, void *c, f32 frame);
+typedef struct {
+    u8 pad0[0x178];
+    u16 f178;
+    u8 pad17a[0x1c8 - 0x17a];
+    u8* f1c8;
+} Inner_801512DC;
+typedef struct {
+    u8 pad0[0x24];
+    Inner_801512DC* f24;
+} Res_801512DC;
+typedef struct {
+    u8 pad0[4];
+    u8* f4;
+    u8 pad8[0xac - 8];
+    Inner_801512DC* fac;
+} Slot_801512DC;
+typedef struct {
+    s32 f0;
+    s32 f4;
+    s32 f8;
+    s32 fc;
+    s32 f10;
+    f32 f[12];
+} In_801512DC;
+typedef struct {
+    s32 f0;
+    u8 pad4[0x34 - 4];
+    f32 a[12];
+    f32 b[12];
+    u8 pad94[0x214 - 0x94];
+} Sub_801512DC;
+typedef struct {
+    s32 f0;
+    s32 f4;
+    s32 f8;
+    s32 fc;
+    u8 pad10[0x20 - 0x10];
+    Sub_801512DC sub;
+} Obj_801512DC;
+extern char lbl_802B3B18[];
 
 void fn_8014F970(u8 *self) {
     fn_80153270(self + 0x95c);
@@ -957,12 +1106,12 @@ void fn_80153A04(void) {
 }
 
 u8 fn_80153DA8(s32 i) {
-    u8 *b = lbl_80346FB8;
+    u8 *b = (u8 *)lbl_80346FB8;
     return (i + b)[4];
 }
 
 void fn_80153DB8(s32 i, u8 v) {
-    u8 *b = lbl_80346FB8;
+    u8 *b = (u8 *)lbl_80346FB8;
     (i + b)[4] = v;
 }
 
@@ -3018,4 +3167,320 @@ void fn_80155438(Handle_80155438 *h)
         a->x1e = a->keys[a->x8].a;
         a->x1f = a->keys[a->x8].b;
     }
+}
+
+void fn_80158DB4(Obj_8015887C *o)
+{
+    S_80158DB4 *s = (S_80158DB4 *)o->s;
+    s32 d;
+
+    if (s->f28 != s->f34 && s->f18 == 0) {
+        if (s->f28 > s->f34) {
+            s->f18 = 1;
+        } else if (s->f28 < s->f34) {
+            s->f18 = 2;
+        }
+        d = s->f28 - s->f34;
+        s->f28 = s->f34;
+        s->f24 = (f32)(s32)(f32)fabs((f32)d) / 20.0f;
+    }
+    switch (s->h12) {
+    case 3:
+    case 4:
+    case 6:
+    case 8:
+        if ((s->h12 == 6 || s->h12 == 8) && s->f14 == 0) {
+            fn_8025CB24(s->buf, "");
+        } else {
+            fn_8025CB24(s->buf, "%d", s->f14);
+        }
+        if (s->f4 == 1) {
+            if (s->f18 == 1) {
+                s->f20 = s->f20 - s->f24;
+                if (s->f20 <= (f32)s->f34) {
+                    s->f20 = (f32)s->f34;
+                    s->f18 = 0;
+                }
+            } else if (s->f18 == 2) {
+                s->f20 = s->f20 + s->f24;
+                if (s->f20 >= (f32)s->f34) {
+                    s->f20 = (f32)s->f34;
+                    s->f18 = 0;
+                }
+            }
+        }
+        break;
+    case 10:
+        fn_8025CB24(s->buf, "%d", s->f14);
+        s->h1ee = 3;
+        break;
+    default:
+        fn_8025CB24(s->buf, "");
+        break;
+    }
+    s->f1e4 = s->f20 / (f32)s->f2c;
+}
+
+void fn_80158BE8(Obj_8015887C *o)
+{
+    S_80158BE8 *s = (S_80158BE8 *)o->s;
+
+    if (s->h44 == 0) {
+        s->b_1f0 = 0xff;
+        return;
+    }
+    if (s->h48 > 0) {
+        s->h48--;
+        if (s->h44 == 1) {
+            s->b_1f0 = 0;
+        } else {
+            s->b_1f0 = 0xff;
+        }
+    } else if (s->h44 == 1) {
+        s->h6e = (s16)((f32)s->h6e + (f32)floor((f32)(0x100 / s->h46)));
+        if (s->h6e >= 0xff) {
+            s->h6e = 0xff;
+            s->h44 = 0;
+        }
+    } else {
+        s->h6e = (s16)((f32)s->h6e - (f32)floor((f32)(0x100 / s->h46)));
+        if (s->h6e <= 0) {
+            s->h6e = 0;
+            s->h44 = 0;
+            s->f4 = 0;
+        }
+    }
+    s->b_1f0 = s->h6e;
+    s->b_be = s->h6e;
+    s->b_e2 = s->h6e;
+    s->b_106 = s->h6e;
+    s->b_12a = s->h6e;
+    s->b_14e = s->h6e;
+    s->b_172 = s->h6e;
+    s->b_196 = s->h6e;
+    s->b_1ba = s->h6e;
+}
+
+void fn_80159610(Sub_8015887C *o_)
+{
+    Obj_80159610 *o = (Obj_80159610 *)o_;
+    DrawState ds;
+    Vtx_80159610 v[4];
+    f32 y0, y1, x0, x1, z;
+    s32 i;
+    u32 col;
+
+    DrawStateDefault2D(&ds);
+    if (DrawStatePush(&ds) != 0) {
+        if (o->h10 == 0) {
+            x0 = 10.0f;
+            y0 = 114.0f;
+        } else {
+            y0 = 40.0f * (f32)o->h10 + 74.0f;
+            x0 = 598.0f;
+        }
+        x1 = 32.0f + x0;
+        y1 = 32.0f + y0;
+        if (o->p74 != 0) {
+            fn_80299040(o->p74);
+            fn_8021EDE0(o->p74, o->h72);
+        } else {
+            fn_80299040((void *)lbl_80347034);
+            fn_8021EDE0((void *)lbl_80347034, (s16)fn_8021EE1C((void *)lbl_80347034, lbl_802E6F00[2]));
+        }
+        z = fn_801DBD9C(-2.0f);
+        col = o->alpha | 0xffffff00;
+        v[0].x = x0;
+        v[0].y = y0;
+        v[0].u = 0.0f;
+        v[0].v = 0.0f;
+        v[1].x = x0;
+        v[1].y = y1;
+        v[1].u = 0.0f;
+        v[1].v = 0.5019608f;
+        v[2].x = x1;
+        v[2].y = y0;
+        v[2].u = 0.5019608f;
+        v[2].v = 0.0f;
+        v[3].x = x1;
+        v[3].y = y1;
+        v[3].u = 0.5019608f;
+        v[3].v = 0.5019608f;
+        for (i = 0; i < 4; i++) {
+            v[i].z = z;
+            v[i].colour = col;
+        }
+        fn_80291064(v, 4, 1);
+        fn_80299040((void *)lbl_80347034);
+        fn_8021EDE0((void *)lbl_80347034, (u8)fn_8021EE1C((void *)lbl_80347034, lbl_802E6F00[3]));
+        z = fn_801DBD9C(-1.5f);
+        col = o->alpha | 0xdcdcdc00;
+        v[1].v = 1.0f;
+        v[2].u = 1.0f;
+        v[3].u = 1.0f;
+        v[3].v = 1.0f;
+        for (i = 0; i < 4; i++) {
+            v[i].z = z;
+            v[i].colour = col;
+        }
+        fn_80291064(v, 4, 1);
+        DrawStatePop(0);
+    }
+}
+
+void fn_80153A44(s32 unused, f32* f)
+{
+    s32 a = (s32)f[0];
+    s32 b = (s32)f[1];
+    s32 c = (s32)f[2];
+    s32 v0 = (s32)f[3];
+    s32 v1 = (s32)f[4];
+    s32 v2 = (s32)f[5];
+    s32 v3 = (s32)f[6];
+
+    if (v0 >= 0x20) {
+        fn_8015757C((s32)lbl_802B3BD8, v0);
+    }
+    if (v1 >= 0x20) {
+        fn_8015757C((s32)lbl_802B3BD8, v1);
+    }
+    if (v2 >= 0x20) {
+        fn_8015757C((s32)lbl_802B3BD8, v2);
+    }
+    if (v3 >= 0x20) {
+        fn_8015757C((s32)lbl_802B3BD8, v3);
+    }
+    lbl_80346FB8->b0 = 1;
+    lbl_80346FB8->b1 = -1;
+    lbl_80346FB8->b2 = -1;
+    lbl_80346FB8->b3 = -1;
+    lbl_80346FB8->cell[a][b][c].v[0] = v0;
+    lbl_80346FB8->cell[a][b][c].v[1] = v1;
+    lbl_80346FB8->cell[a][b][c].v[2] = v2;
+    lbl_80346FB8->cell[a][b][c].v[3] = v3;
+}
+
+static inline void Advance(Obj_80156E54 *self)
+{
+    f32 zero = lbl_8034A8F8;
+    self->frame += self->speed;
+    if (zero > self->speed) {
+        if (zero > self->frame) {
+            self->done = 1;
+            self->frame = (f32)self->anim->cnt - lbl_8034A904;
+        }
+    } else {
+        if (self->frame > (f32)self->anim->cnt - lbl_8034A904) {
+            self->done = 1;
+            self->frame = zero;
+        }
+    }
+}
+
+void fn_80156E54(Obj_80156E54 *self, void *m)
+{
+    Tex_80156E54 t;
+    Tex_80156E54 *tex = self->texlist;
+    u32 tex4;
+
+    if (tex != 0) {
+        tex4 = tex->b;
+    } else {
+        tex4 = 0;
+    }
+    if (self->model == 0) {
+        return;
+    }
+    if (self->hidden != 0 || lbl_8034A900 >= self->scale) {
+        if (self->anim != 0) {
+            Advance(self);
+        } else {
+            self->done = 1;
+        }
+        return;
+    }
+    if (tex != 0) {
+        t.b = tex4;
+        t.a = self->texlist->a;
+        fn_80299040(&t);
+    }
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    fn_802974E0(self->pos);
+    fn_801E4FD4((void *)self);
+    njMultiMatrix(0, m);
+    if (self->anim != 0) {
+        fn_801E7194(self->flags176, self->model, self->anim, self->xec, self->frame);
+        Advance(self);
+    } else {
+        fn_801E4CB0(self->flags176, self->model);
+        self->done = 1;
+    }
+    DrawStatePop(0);
+    njPopMatrixEx();
+}
+
+void fn_801512DC(Obj_801512DC* o, In_801512DC* in) {
+    Sub_801512DC* s;
+    u8* c;
+    Slot_801512DC* sl;
+    Res_801512DC* r;
+    u8* a;
+    u8* b;
+    s32 t;
+
+    s = &o->sub;
+    switch (in->f4) {
+    case 0:
+        c = NULL;
+        memset(o, 0, 0x214);
+        fn_8015205C((void *)s);
+        o->fc = 1;
+        o->f0 = in->f0;
+        o->f4 = in->f8;
+        o->f8 = in->fc;
+        t = o->f4;
+        sl = ((Slot_801512DC **)lbl_80346FC8)[t];
+        if (sl->fac != NULL) {
+            c = sl->fac->f1c8 + 0x44;
+        }
+        a = sl->f4;
+        b = ((Slot_801512DC **)lbl_80346FC8)[t ^ 1]->f4;
+        r = fn_8010A164(o->f8);
+        if (r == NULL) {
+            fn_8015757C((s32)lbl_802B3B18, r->f24->f178);
+        }
+        fn_801515F8((void *)s, (u32)(a + 0x38), (u32)(a + 0x44), (u32)c, (u32)(r->f24->f1c8 + 0x44), (u32)(b + 0x38));
+        s->f0 = in->f10;
+        s->a[0] = in->f[0];
+        s->a[1] = in->f[1];
+        s->a[2] = in->f[2];
+        s->a[3] = in->f[3];
+        s->a[4] = in->f[4];
+        s->a[5] = in->f[5];
+        s->a[6] = in->f[6];
+        s->a[7] = in->f[7];
+        s->a[8] = in->f[8];
+        s->a[9] = in->f[9];
+        s->a[10] = in->f[10];
+        s->a[11] = in->f[11];
+        break;
+    case 1:
+        s->b[0] = in->f[0];
+        s->b[1] = in->f[1];
+        s->b[2] = in->f[2];
+        s->b[3] = in->f[3];
+        s->b[4] = in->f[4];
+        s->b[5] = in->f[5];
+        s->b[6] = in->f[6];
+        s->b[7] = in->f[7];
+        s->b[8] = in->f[8];
+        s->b[9] = in->f[9];
+        s->b[10] = in->f[10];
+        s->b[11] = in->f[11];
+        break;
+    }
+    fn_80151610((void *)s, 1);
+    fn_8015181C((void *)s);
 }

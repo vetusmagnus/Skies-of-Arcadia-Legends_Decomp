@@ -2,13 +2,19 @@
 #include "types.h"
 #include <string.h>
 typedef struct {
+    s32 w[7];
+} Tbl_801303D0;
+typedef struct {
     u8 pad0[0x94];
     s8 x94;
 } Sys_8012FF48;
 typedef struct {
     u8 pad[0x24];
     Sys_8012FF48 *x24;
-    u8 *x28;
+    union {
+        u8 *x28;
+        Tbl_801303D0 *tbl;
+    };
 } Holder_8012FF48;
 typedef struct {
     u8 pad0[0x1c];
@@ -29,9 +35,72 @@ s32 fn_80136A28(void* a, s32 b, s32 c, s32 d, s32 e, s32 f);
 void fn_801365D8(s32 a, s32 b, s32 c, s32 d, s32 e);
 void *fn_802268E8(void *a, void *);
 void *fn_801E1C7C(u32 n);
-void fn_801303D0(void);
+typedef struct {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 state;
+} Task_801303D0;
+extern s32 lbl_80305FA0[8];
+extern void fn_80131254(void);
+extern s32 fn_801305E4(void);
+void fn_801303D0(Task_801303D0 *t);
 void fn_80131734(void);
-void fn_80132458(void);
+typedef struct {
+    u8 pad0[0x20];
+    s32 x20;
+} Inner_80132458;
+typedef struct {
+    u8 pad0[4];
+    Inner_80132458 *x4;
+} Sys_80132458;
+typedef struct {
+    s8 b0;
+    u8 pad1;
+    u8 b2;
+    u8 b3;
+    s8 b4;
+    u8 pad5[3];
+    f32 f8;
+    s32 wc;
+    s32 w10;
+    u8 pad14[4];
+    s32 w18;
+    s32 w1c;
+    u8 pad20[8];
+    s32 w28;
+    s32 w2c;
+    u8 pad30[4];
+    s32 w34;
+    s32 w38;
+    s32 w3c;
+    u8 b40;
+    u8 pad41[3];
+    s32 w44;
+    s32 w48;
+    u8 pad4c[4];
+    s32 w50;
+    s32 w54;
+    u8 pad58[8];
+    s32 w60;
+    s32 w64;
+    u8 pad68[4];
+    s32 w6c;
+    s32 w70;
+} Data_80132458;
+typedef struct {
+    u8 pad0[0x24];
+    Data_80132458 *x24;
+    s32 *x28;
+} Obj_80132458;
+typedef struct {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 state;
+} Task_80132458;
+extern void *lbl_80346F00;
+extern Sys_80132458 *lbl_80346EF8;
+extern void FieldPartyStatusDraw(void);
+void fn_80132458(Task_80132458 *t);
 void fn_801331AC(void);
 typedef struct Fn80130040Inner {
     u8 pad0[0xa8];
@@ -882,6 +951,89 @@ void fn_8013A35C(s32 a, s32 lo, s32 v, s32 hi) {
         c2b.c = 2;
         c2b.b = 0xc;
         fn_80131658(&c2b);
+        break;
+    }
+}
+
+void fn_801303D0(Task_801303D0 *t) {
+    switch (t->state) {
+    case 0:
+    case 0xFE:
+        lbl_80346F40->x28 = fn_801E1C7C(0x1c);
+        lbl_80346F40->tbl->w[0] = (s32)fn_801D68C4(lbl_80346F04, 0x64);
+        lbl_80346F40->tbl->w[2] = (s32)fn_801D68C4(lbl_80346F04, 0x66);
+        lbl_80346F40->tbl->w[5] = (s32)fn_801D68C4(lbl_80346F04, 0x67);
+        lbl_80346F40->tbl->w[3] = (s32)fn_801D68C4(lbl_80346F04, 0x65);
+        lbl_80346F40->tbl->w[4] = (s32)fn_801D68C4(lbl_80346F04, 0x68);
+        lbl_80346F40->tbl->w[1] = (s32)fn_801D68C4(lbl_80346F04, 0x83);
+        lbl_80346F40->tbl->w[6] = (s32)fn_801D68C4(lbl_80346F04, 0x84);
+        fn_80131254();
+        lbl_80305FA0[0] = (s32)fn_801D68C4(lbl_80346F04, 0x84);
+        lbl_80305FA0[1] = (s32)fn_801D68C4(lbl_80346F04, 0x85);
+        lbl_80305FA0[2] = (s32)fn_801D68C4(lbl_80346F04, 0x86);
+        lbl_80305FA0[3] = (s32)fn_801D68C4(lbl_80346F04, 0x87);
+        lbl_80305FA0[4] = (s32)fn_801D68C4(lbl_80346F08, 0x84);
+        lbl_80305FA0[5] = (s32)fn_801D68C4(lbl_80346F08, 0x85);
+        lbl_80305FA0[6] = (s32)fn_801D68C4(lbl_80346F08, 0x86);
+        lbl_80305FA0[7] = (s32)fn_801D68C4(lbl_80346F08, 0x87);
+        t->state = 1;
+        break;
+    case 1:
+        if (fn_801305E4() == 0) {
+            t->state = 2;
+        }
+        break;
+    case 2:
+        t->state = 0xFF;
+        break;
+    case 0xFF:
+        t->flags |= 0x40;
+        break;
+    }
+}
+
+void fn_80132458(Task_80132458 *t) {
+    switch (t->state) {
+    case 0:
+    case 0xFE:
+        ((Obj_80132458 *)lbl_80346F50)->x28 = fn_801E1C7C(0xc);
+        ((Obj_80132458 *)lbl_80346F50)->x28[0] = (s32)fn_801D68C4(lbl_80346F00, 0);
+        ((Obj_80132458 *)lbl_80346F50)->x28[1] = (s32)fn_801D68C4(lbl_80346F00, 1);
+        ((Obj_80132458 *)lbl_80346F50)->x28[2] = (s32)fn_801D68C4(lbl_80346F00, 2);
+        ((Obj_80132458 *)lbl_80346F50)->x24->b2 = 0xf;
+        ((Obj_80132458 *)lbl_80346F50)->x24->b3 = 5;
+        ((Obj_80132458 *)lbl_80346F50)->x24->b4 = -1;
+        ((Obj_80132458 *)lbl_80346F50)->x24->f8 = 0.36f;
+        ((Obj_80132458 *)lbl_80346F50)->x24->wc = 10000;
+        ((Obj_80132458 *)lbl_80346F50)->x24->w10 = 40000;
+        ((Obj_80132458 *)lbl_80346F50)->x24->w18 = lbl_80346EF8->x4->x20;
+        ((Obj_80132458 *)lbl_80346F50)->x24->w1c = 0;
+        ((Obj_80132458 *)lbl_80346F50)->x24->w28 = 20000;
+        ((Obj_80132458 *)lbl_80346F50)->x24->w2c = 40000;
+        ((Obj_80132458 *)lbl_80346F50)->x24->w34 = lbl_80346EF8->x4->x20;
+        ((Obj_80132458 *)lbl_80346F50)->x24->w38 = 0;
+        ((Obj_80132458 *)lbl_80346F50)->x24->w44 = 30000;
+        ((Obj_80132458 *)lbl_80346F50)->x24->w48 = 40000;
+        ((Obj_80132458 *)lbl_80346F50)->x24->w50 = lbl_80346EF8->x4->x20;
+        ((Obj_80132458 *)lbl_80346F50)->x24->w54 = 0;
+        ((Obj_80132458 *)lbl_80346F50)->x24->w60 = 40000;
+        ((Obj_80132458 *)lbl_80346F50)->x24->w64 = 40000;
+        ((Obj_80132458 *)lbl_80346F50)->x24->w6c = lbl_80346EF8->x4->x20;
+        ((Obj_80132458 *)lbl_80346F50)->x24->w70 = 0;
+        ((Obj_80132458 *)lbl_80346F50)->x24->w3c = 1;
+        ((Obj_80132458 *)lbl_80346F50)->x24->b40 = 0;
+        t->state = 1;
+        break;
+    case 1:
+        if (((Obj_80132458 *)lbl_80346F50)->x24->b0 == 0) {
+            FieldPartyStatusDraw();
+        }
+        break;
+    case 2:
+        t->state = 0xFF;
+        break;
+    case 0xFF:
+        t->flags |= 0x40;
         break;
     }
 }

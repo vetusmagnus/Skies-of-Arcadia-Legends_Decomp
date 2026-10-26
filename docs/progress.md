@@ -380,6 +380,38 @@ re-check serially.
 Next batch: start at 0x278 bytes in 0x80050000-0x801C0000 (about 680 candidates left), then 0x58 bytes and up
 outside it.
 
+Held-back functions merged
+--------------------------
+
+The 122 functions that matched in isolation but clashed with their unit's types (42 from batch 8, 80 from
+batch 9; the lists above) are mostly in the unit files now: 111 of the 121 still unmerged at this point went
+in (one was already merged), every unit passes fdiff over the whole file and the float check, and the build
+still links. What it took, in order of how often it came up:
+
+- Widen the unit's shared structs instead of casting at the use. A cast such as `((T *)lbl)[i].f` changes
+  register allocation in about half the cases; a struct that really has the field does not. `lbl_80309700`
+  (`Slot`, with `Wk` behind `un.work`), `lbl_80309730` (`R16`), `lbl_80309DE4` (`Chr_UNIT0000`),
+  `lbl_80309174` (`ChrState`) and the `lbl_802AD440` / `lbl_802C4BF0` / `lbl_802C7C34` tables (now struct
+  arrays; the old byte accesses are `lbl[i].pad[off]`) got the fields every function needs. Where one offset
+  has two names, an anonymous union holds both (`HolderA`, `Holder_8012FF48`).
+- Callback parameters (`fn_802267AC`, `fn_80226704`, `fn_802268E8`) take `void *`, so typed task callbacks
+  can be passed.
+- A prototype that disagreed about a pointer type now names the real struct tag, and the old callers pass
+  `(void *)x` (pointer casts do not change code). Where the original calls a function with more arguments than
+  the unit's definition has, the extra-argument declaration sits inside the calling function (block scope).
+- `camp_work` is a struct (`CampWorkS`, `objs[]` at +0x10) in `unit_8015DC6C.c` too; the old `camp_work + off`
+  code goes through `CWB`.
+- A new header include in a function file can redeclare something the unit declares differently
+  (`SePlay`, `TaskDelete`); the fix is to drop the include.
+
+Still not merged (10; all compile, but the bytes differ or the types need more than a field):
+fn_8006E924 (the unit calls it with no arguments), fn_80085414 (the call to fn_80083BAC wants an `s16`
+parameter, which breaks that function's own match), fn_8011226C (`clrlwi` placement), fn_80119850 (the original
+keeps `&lbl_802E54B0[0].f94` in a register), fn_8012D508 (`lbl_80346F20` is an array of two pointers in
+the file and one pointer in the unit), fn_80144CE4, fn_8014337C (`lbl_8034727C` views), fn_80170C64
+(`lbl_8030B7F4` is `s8` in the unit, `u8` in the file), fn_801A0E7C (a `u8` argument conversion),
+fn_801B6950. Their files are in `build/agents/`.
+
 Good next targets
 -----------------
 

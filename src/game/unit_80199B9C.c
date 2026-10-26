@@ -1316,6 +1316,38 @@ extern Ent_801AC2E4 lbl_802ED258[];
 extern s8 fn_801BE608(s16 x);
 void fn_801AC16C(Task* task);
 typedef struct { u8 pad[0x24]; u8* w; MObj* obj; u32 x2c; } T;
+typedef struct Flg_801A0C3C { u8 pad[8]; u32 flags; } Flg_801A0C3C;
+typedef struct Sub_801A0C3C { u8 pad[0x28]; UiObj *obj; } Sub_801A0C3C;
+typedef struct Ctx_801A0C3C {
+    u8 pad00[1];
+    u8 x1;
+    u8 pad02[2];
+    u8 idx;           /* 0x04 */
+    u8 x5;
+    u8 x6;
+    u8 x7;
+    u8 pad08;
+    u8 x9;
+    u8 pad0a[0x14 - 0x0a];
+    u32 x14;
+    f32 x18;
+    f32 x1c;
+    u8 pad20[0x20c - 0x20];
+    Sub_801A0C3C *objs[8];   /* 0x20c */
+    u8 pad22c[0x250 - 0x22c];
+    s32 x250;
+    u8 pad254[0x25c - 0x254];
+    s32 slot[1];      /* 0x25c */
+    u8 pad260[0x26c - 0x260];
+    u8 x26c;
+} Ctx_801A0C3C;
+typedef struct Self_801A0C3C {
+    u8 pad00[0x19];
+    u8 state;
+    u8 pad1a[0x24 - 0x1a];
+    Ctx_801A0C3C *ctx;
+} Self_801A0C3C;
+extern void fn_801A1B98(void *o, s32 k);
 
 void fn_80199B9C(void* p, f32 v) {
     *(f32*)((u8*)p + 0x34) = v;
@@ -3938,5 +3970,45 @@ void fn_801B2430(Task_801B2430 *t) {
         MenuDummy(t);
         t->flags |= 0x40;
         break;
+    }
+}
+
+void fn_801A0C3C(Self_801A0C3C *o) {
+    extern void fn_801A1DB4(void);
+    s32 k;
+    if (o->ctx->x250 == 0) return;
+    if (o->ctx->slot[o->ctx->idx] != 0) {
+        MenuPlaySe(3);
+        UiObjMoveToXIfChanged(o->ctx->objs[1]->obj, 6, 4, -330.0f);
+        UiObjSetCommand(o->ctx->objs[1]->obj, 0xf, 0);
+        fn_801A4DCC(o, 1);
+        k = fn_801A6A58(o->ctx->idx, o->ctx->slot[o->ctx->idx]);
+        fn_801A64B4(o, k);
+        o->state = 0x17;
+    } else if (o->ctx->x1 == 1) {
+        fn_801A1DB4();
+        fn_801A1B98(o, 0);
+        fn_801A4DCC(o, 1);
+        UiObjMoveToXIfChanged(o->ctx->objs[1]->obj, 6, 4, -330.0f);
+        UiObjSetCommand(o->ctx->objs[1]->obj, 0xf, 0);
+        o->ctx->x9 = 0;
+        o->state = 8;
+    } else if (o->ctx->x14 != 0) {
+        fn_801A64B4(o, 5);
+        fn_801A1B98(o, 0);
+        o->ctx->x9 = 0;
+        fn_801A4DCC(o, 1);
+        UiObjMoveToXIfChanged(o->ctx->objs[1]->obj, 6, 4, -330.0f);
+        UiObjSetCommand(o->ctx->objs[1]->obj, 0xf, 0);
+        o->state = 8;
+    } else {
+        o->ctx->slot[o->ctx->idx] = 6;
+        fn_801A64B4(o, fn_801A6A58(o->ctx->idx, o->ctx->slot[o->ctx->idx]));
+        o->ctx->x26c = 3;
+        MenuPlaySe(3);
+        fn_801A4DCC(o, 1);
+        UiObjMoveToXIfChanged(o->ctx->objs[1]->obj, 6, 4, -330.0f);
+        UiObjSetCommand(o->ctx->objs[1]->obj, 0xf, 0);
+        o->state = 0xb;
     }
 }
