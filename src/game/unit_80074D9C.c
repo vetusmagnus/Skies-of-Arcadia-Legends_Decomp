@@ -2,16 +2,22 @@
 
 extern s16 lbl_803097F0[];
 extern u32 lbl_802B0830[];
-typedef struct ChrState {
-    s32 x0;
-    u8 pad[0x1c];
-} ChrState;
 extern s32 lbl_80347330;
-extern ChrState lbl_80309174[12];
 extern s8 lbl_802AD440[];
 extern s8 lbl_802C7C34[];
 extern s8 lbl_802C4BF0[];
 extern void fn_8006B774(void* p);
+extern u8* fn_80021658(s32 i);
+extern s16 lbl_80302BF0[];
+extern s8 lbl_80347334;
+typedef struct ChrState {
+    s32 x0;
+    s8 x4;
+    u8 pad5;
+    s16 x6;
+    u8 pad8[0x18];
+} ChrState;
+extern ChrState lbl_80309174[12];
 typedef struct Req {
     s16 idx;
     u8 pad0[2];
@@ -21,25 +27,72 @@ typedef struct Req {
     u8 pad2[0x10];
     u8 f50;
 } Req;
+typedef struct Sub { u32 x0; u32 x4; f32 x8; f32 xc; } Sub;
+typedef struct EntU {
+    union {
+        struct { u8 pad0[6]; s16 x6; } a;
+        struct { u8 pad0[8]; u32 flags; u8 padc[8]; f32 x14; } b;
+    };
+} EntU;
+typedef struct Unit {
+    u8 pad0[0x5c];
+    u32 x5c;
+    u32 x60;
+    u8 pad64[4];
+    f32 x68;
+    f32 x6c;
+    u32 x70;
+    u32 x74;
+    u32 x78;
+    f32 x7c;
+    f32 x80;
+    Sub x84;
+    u8 pad94[0xdc - 0x94];
+    EntU* xdc;
+    u8 pade0[0xe6 - 0xe0];
+    s16 xe6;
+    u8 padE8[0xf0 - 0xe8];
+    u32 xf0;
+    u8 padf4[0x204 - 0xf4];
+    s16 x204;
+} Unit;
+typedef struct Wk {
+    u8 pad0[0x37];
+    s8 x37;
+    u8 pad38[4];
+    s32 x3c;
+    u8 pad40[4];
+    s16 x44;
+    s16 x46;
+    s16 x48;
+    s16 x4a;
+    Unit* u;
+} Wk;
 typedef struct Slot {
     void (*update)(void);
     u8 pad1[0x15];
     u8 flag19;
     u8 pad2[0x0a];
-    Req *req;
+    union {
+        Req *req;
+        Wk *work;
+    } un;
 } Slot;
 extern Slot *lbl_80309700[12];
-extern u8* fn_80021658(s32 i);
-extern s16 lbl_80302BF0[];
-extern void fn_80081FEC(s32 i);
-extern s8 lbl_80347334;
+extern s32 fn_80081FEC(s16 i);
 extern s32 fn_80083BAC(s32 a, s32 b);
+typedef struct Stat {
+    u8 pad0[0x56];
+    s16 s56;
+} Stat;
 typedef struct Chr_UNIT0000 {
     u8 pad[0x10];
     u32 x10;
     s32 score;
     u8 pad2[0x4];
     u32 w1c;
+    u8 pad20[0x110 - 0x20];
+    Stat* p110;
 } Chr_UNIT0000;
 extern Chr_UNIT0000* lbl_80309DE4[12];
 typedef struct Inner { u8 pad0[0x6]; s16 f6; s16 f8; u8 pad1[0xa]; s16 f14; s16 f16; u8 pad2[0x68-0x18]; float f68; u8 pad3[0xec-0x6c]; u32 fec; u32 ff0; } Inner;
@@ -49,25 +102,11 @@ typedef struct Node { struct Node *next; u32 key; u8 pad[0x4]; u8 flag; } Node;
 extern Node lbl_80309E14;
 s32 fn_8006C9AC(s32 a, s32 b);
 void fn_800763D0(s32 a, s32 b);
-extern u32 lbl_80309E5C[];
 typedef struct R16 { s32 w0; u8 pad[5]; u8 b9; u8 pad2[6]; } R16;
 extern R16 lbl_80309730[];
-typedef struct Ent { u8 pad[6]; s16 x6; u8 pad8[0x10]; } Ent;
-typedef struct Unit { u8 pad0[0xdc]; Ent* xdc; u8 pade0[0x204 - 0xe0]; s16 x204; } Unit;
-typedef struct Wk { u8 pad0[0x4c]; Unit* u; } Wk;
-typedef struct Tk_800760EC { u8 pad0[0x24]; Wk* work; } Tk_800760EC;
-s32 fn_8001FDD8(Wk* w);
-typedef struct Unk30 {
-    u8 pad[0x1c];
-    u32 flags;
-} Unk30;
+extern s32 fn_8001FDD8();
 extern s32 fn_80078610(s8 idx);
 extern void fn_8007D42C(void);
-extern void fn_8007DE54(struct Obj_8007DE54 *p);
-extern void *lbl_803475A8;
-extern void *lbl_8034736C;
-extern void *fn_802268E8(void *, void *);
-extern void fn_8007CAB0(void);
 typedef struct Obj_8007DE54 {
     u8 pad[0x18];
     u8 flags18;
@@ -75,6 +114,11 @@ typedef struct Obj_8007DE54 {
     u8 pad2[0x0a];
     void *buf;
 } Obj_8007DE54;
+extern void fn_8007DE54(Obj_8007DE54 *p);
+extern void *lbl_803475A8;
+extern void *lbl_8034736C;
+extern void *fn_802268E8(void *, void *);
+extern void fn_8007CAB0(void);
 extern void *fn_801E1C7C(s32 size);
 extern void fn_80217830(s32 arg);
 typedef struct Ctx_80080438 {
@@ -92,10 +136,6 @@ extern void fn_800842A0(s32 idx);
 extern s32 lbl_80347354;
 extern s32 lbl_80347350;
 extern u8 lbl_80347340;
-typedef struct Obj_80085C88 {
-    u8 pad[0x1c];
-    u32 flags;
-} Obj_80085C88;
 typedef struct Req_80085C88 {
     s16 idx;
     u8 pad[2];
@@ -105,24 +145,7 @@ typedef struct Ctx_80085C88 {
     u8 pad[0x24];
     Req_80085C88 *req;
 } Ctx_80085C88;
-typedef struct Slot_80085C88 {
-    void (*update)(void);
-    u8 pad1[0x15];
-    u8 flag19;
-} Slot_80085C88;
 extern void fn_80086C48(void);
-typedef struct Obj_80089E3C {
-    u8 pad[0x14];
-    s32 score;
-    s32 pad18;
-    u32 flags;
-} Obj_80089E3C;
-typedef struct Obj_8008A004 {
-    u8 pad[0x14];
-    s32 score;
-    s32 pad18;
-    u32 flags;
-} Obj_8008A004;
 extern u8 *lbl_803472FC;
 extern u8 *lbl_80347300;
 extern u8 *lbl_80347304;
@@ -136,6 +159,27 @@ extern E12 lbl_80302C08[12];
 extern void fn_800839D8(s32 a, void *p, s32 b);
 extern s32 lbl_80302C98[8];
 extern s32 fn_8025ECC4(void);
+extern s32 fn_80075DAC(f32 f1, f32 f2, void* w, u16 a, u32 flags, s32 k, s32 j);
+extern f32 lbl_80348A70;
+typedef struct Rec { u8 pad0[0x10]; void* x10; u8 pad14[0x4c - 0x14]; } Rec;
+typedef struct Src8 { u8 pad0[8]; s32* x8; } Src8;
+typedef struct Ent_8007E13C { Rec* recs; Src8* src; u8 pad8[4]; u8 count; u8 pad0d[7]; } Ent_8007E13C;
+typedef struct G_8007E13C {
+    u8 pad0[8];
+    u32 f8;
+    u8 pad0c[0x14];
+    s32 idx;
+    u8 pad24[4];
+    Ent_8007E13C* tab;
+} G_8007E13C;
+typedef struct Arg { u8 pad0[0xc]; Rec* recs; } Arg;
+extern G_8007E13C lbl_80309E5C;
+extern void fn_8007E9E0(u8 i);
+extern void fn_8002DD8C(s16 a, s32 b, s8 c);
+extern s16 lbl_8034734E;
+extern u8 lbl_80309300[0x400];
+extern s32 fn_80082AC0(s8 x, s8 y, u8* grid, s32 k);
+extern s32 fn_8008328C(void* a, void* b, s8 x, s8 y);
 
 void fn_80075D24(Top *t) {
   Inner *i = t->mid->inner;
@@ -250,9 +294,9 @@ s32 fn_8007E264(f32* p) {
 
 void fn_8007E414(s32 on) {
   if (on) {
-    lbl_80309E5C[2] |= 0x04000000;
+    lbl_80309E5C.f8 |= 0x04000000;
   } else {
-    lbl_80309E5C[2] &= ~0x04000000;
+    lbl_80309E5C.f8 &= ~0x04000000;
   }
 }
 
@@ -265,7 +309,7 @@ s32 fn_8007EB74(s32 i) {
     s32 r = 0;
     Slot* t = lbl_80309700[i];
     if (t != 0) {
-        r = t->req->x3c;
+        r = t->un.req->x3c;
     }
     return r;
 }
@@ -307,17 +351,17 @@ s32 fn_8008A880(s32 i) {
     return 0;
 }
 
-s16 fn_800760EC(Tk_800760EC* t, s16 k) {
-    Wk* w = t->work;
+s16 fn_800760EC(Slot* t, s16 k) {
+    Wk* w = t->un.work;
     Unit* u = w->u;
     s32 idx = fn_8001FDD8(w);
     if (k == 2 || k == 7) {
         s16 j = u->x204;
         if (j != 0) {
-            return u->xdc[j].x6;
+            return u->xdc[j].a.x6;
         }
     }
-    return u->xdc[(s16)idx].x6;
+    return u->xdc[(s16)idx].a.x6;
 }
 
 s32 fn_80077CCC(void) {
@@ -383,7 +427,7 @@ s32 fn_80080438(Ctx_80080438 *p) {
 }
 
 void fn_80081168(s16 idx, s32 val) {
-    Req *req = lbl_80309700[idx]->req;
+    Req *req = lbl_80309700[idx]->un.req;
     if (req->flags & 0x20) {
         req->flags &= ~0x20;
         lbl_80309730[idx].w0 = 0x12;
@@ -580,4 +624,144 @@ s32 fn_8008A08C(void) {
         }
     }
     return lbl_80302C98[fn_8025ECC4() % n];
+}
+
+static inline s16 pick(Slot* t, s32 k, s32 j) {
+    Wk* w = t->un.work;
+    Unit* u = w->u;
+    s32 idx = fn_8001FDD8(w, k, j);
+    if (((s16)k == 2 || (s16)k == 7) && u->x204 != 0) {
+        return u->xdc[u->x204].a.x6;
+    }
+    return u->xdc[(s16)idx].a.x6;
+}
+
+s32 fn_80075FF0(Slot* t, s32 k, s32 j) {
+    Wk* w = t->un.work;
+    Unit* u = w->u;
+    s32 idx;
+    s32 r;
+    if (u->xf0 & 0x80000) return 0;
+    if (u->xf0 & 0x800) return 0;
+    idx = fn_8001FDD8(w);
+    r = fn_80075DAC(0.0f, u->xdc[(s16)idx].b.x14, w, pick(t, k, j), u->xdc[(s16)idx].b.flags, k, j);
+    u->xe6 = idx;
+    return r;
+}
+
+s32 fn_80076170(f32 a, f32 b, Wk* o, s32 id, s32 k, s32 j) {
+    Unit* u = o->u;
+    Sub* p = 0;
+    u32 fl = 0;
+    s32 r;
+    s32 idx;
+    u->x74 = u->x5c;
+    u->x7c = u->x68;
+    if (u->x60 != 0) {
+        p = &u->x84;
+        fl = 0x40000000;
+        p->x0 = u->x60;
+        p->x8 = u->x68;
+    }
+    idx = fn_8001FDD8(o, k, j);
+    if (u->xdc[(s16)idx].b.flags & 0x80000) {
+        fl |= 0x80000;
+    }
+    r = fn_80075DAC(a, 1.0f, o, id, fl, k, j);
+    if (r == 0) return r;
+    u->x78 = u->x5c;
+    u->x80 = a;
+    if (u->x60 != 0) {
+        p->x4 = u->x60;
+        p->xc = a;
+    }
+    u->x68 = 0.0f;
+    u->x6c = b;
+    u->x70 = 0;
+    return r;
+}
+
+void fn_8007E13C(Arg* a) {
+    Rec* r;
+    s32 i;
+    lbl_80309E5C.tab[lbl_80309E5C.idx].count = *lbl_80309E5C.tab[lbl_80309E5C.idx].src->x8;
+    lbl_80309E5C.tab[lbl_80309E5C.idx].recs = fn_801E1C7C(lbl_80309E5C.tab[lbl_80309E5C.idx].count * sizeof(Rec));
+    r = a->recs;
+    for (i = 0; i < lbl_80309E5C.tab[lbl_80309E5C.idx].count; i++) {
+        lbl_80309E5C.tab[lbl_80309E5C.idx].recs[i] = r[i];
+        lbl_80309E5C.tab[lbl_80309E5C.idx].recs[i].x10 = lbl_80309E5C.tab[lbl_80309E5C.idx].src;
+        fn_8007E9E0(i);
+    }
+}
+
+void fn_80081EF4(s16 a, s32 b) {
+    s32 c = fn_80081FEC(lbl_80347334);
+    Wk* w;
+    if ((s8)c == 0x1b || (s8)c == 0x1c || (s8)c == 0x2f || (s8)c == 0x27 || fn_80078610(a)) {
+        w = lbl_80309700[a]->un.work;
+        if (w->x37 != 0) {
+            if (w->x3c != -1 || w->x44 != -1 || w->x46 != -1 || w->x48 != -1 || w->x4a != -1) {
+                w->x37 = 0;
+                fn_8002DD8C(a, b, c);
+            }
+        }
+    }
+}
+
+s32 fn_80081FEC(s16 k) {
+    if (k == lbl_80309174[lbl_80347334].x4 && lbl_80309174[lbl_80347334].x0 == 3) {
+        return 0;
+    }
+    switch (lbl_80309174[k].x0) {
+    case 3:
+        return 0;
+    case 1:
+    case 2:
+    case 8:
+        {
+            s16 j = lbl_80309174[k].x6;
+            if (k < 4) {
+                return (s8)lbl_802C4BF0[j * 0x30 + 0x15];
+            }
+            return (s8)lbl_802AD440[j * 0x24 + 0x16];
+        }
+    case 5:
+        return (s8)lbl_802C7C34[lbl_80309174[k].x6 * 0x24 - 0x21ae];
+    case 12:
+        return (s8)lbl_802AD440[lbl_80309174[k].x6 * 0x24 + 0x526];
+    }
+    return 0;
+}
+
+void fn_80082C98(s8 x, s8 y, u8* grid, s32 a, s32 b) {
+    void* wa;
+    void* wb;
+    if (x >= 0 && x <= 10 && y >= 0 && y <= 10) {
+        wa = lbl_80309700[a]->un.work;
+        wb = lbl_80309700[b]->un.work;
+        if (fn_80082AC0(x, y, grid, a) == 0) return;
+        if (fn_8008328C(wa, wb, x, y) == 0) return;
+        lbl_80309300[lbl_8034734E * 2] = x;
+        lbl_80309300[lbl_8034734E * 2 + 1] = y;
+        *(grid + y * 11 + x) = 1;
+        lbl_8034734E++;
+        if (lbl_8034734E >= 0x200) lbl_8034734E = 0;
+    }
+}
+
+s32 fn_8008A738(void) {
+    s32 i;
+    s16 sum = 0;
+    for (i = 4; i < 12; i++) {
+        if (sum > 3000) {
+            break;
+        }
+        if (lbl_80309DE4[i] == NULL) {
+            return 1;
+        }
+        if (lbl_80309700[i] != 0) {
+            sum = sum + lbl_80309DE4[i]->p110->s56;
+        }
+    }
+    return 0;
 }

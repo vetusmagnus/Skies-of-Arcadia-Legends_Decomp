@@ -85,7 +85,7 @@ extern void fn_8014549C(s32 a, s32 b);
 typedef struct Obj24 { u8 pad[0x24]; s16 x24; } Obj24;
 typedef struct Obj7 { u8 pad[7]; u8 x7; } Obj7;
 typedef struct Sub_80146FD4 { u8 pad[0x14]; s32 x14; s32 x18; } Sub_80146FD4;
-typedef struct Req { s8 x0; s8 x1; } Req;
+typedef struct Req_UNIT0000 { s8 x0; s8 x1; } Req_UNIT0000;
 typedef struct MapInfo { s32 map; s32 unk4; char room; } MapInfo;
 extern void fn_800FF908(void);
 extern void fn_801002D0(s32 a);
@@ -127,6 +127,43 @@ extern s32 fn_801298E8(void);
 extern void fn_801299A0(void);
 extern void fn_80129BD4(void);
 extern void fn_8015635C(void);
+extern u8 lbl_80308E90[];
+extern u32 fn_8013FCF0(s32 a, s32 key, s32 n);
+typedef struct { u8 pad[0x2a]; s16 v; u8 pad2[4]; } E30;
+typedef struct { u8 pad[0x24]; } E24;
+typedef struct { s16 v; u8 pad[0x22]; } E24c;
+typedef struct { u8 pad[0x1c]; s16 v; u8 pad2[6]; } E24b;
+extern E30 lbl_802C4BF0[];
+extern E24 lbl_802D8A2C[];
+extern E24 lbl_802C7C34[];
+extern E24b lbl_802D8E64[];
+typedef struct {
+    s8 kind;
+    u8 pad1;
+    s8 slot;
+    u8 pad3[5];
+    s16 id;
+} Req_801462D0;
+typedef struct Cnt { s32 x0; s32 x4; } Cnt;
+typedef struct Body {
+    u8 pad0[0xe8];
+    Cnt *xe8;
+    u8 pad1[0x18c - 0xec];
+    f32 x18c;
+    f32 x190;
+    u8 pad2[4];
+    s32 x198;
+} Body;
+typedef struct Owner {
+    Body *p;
+    s32 x4;
+    s32 x8;
+    s32 xc;
+    s32 x10;
+    f32 x14;
+    s32 x18;
+} Owner;
+extern void fn_8014EE4C(Owner *o, s32 a, s32 b, s32 c, s32 d);
 
 void fn_8013D400(s32 a, s32 b) {
     fn_80136A28(a, b, 3, -1, -1, -1);
@@ -387,7 +424,7 @@ s32 fn_80145D84(Obj7* dst, Obj24* a, Obj24* b)
     }
 }
 
-void fn_80146FD4(Req* r, s32 idx)
+void fn_80146FD4(Req_UNIT0000* r, s32 idx)
 {
     u8* dst;
     Sub_80146FD4* s;
@@ -600,4 +637,87 @@ void fn_80148640(void)
     fn_80129BD4();
     lbl_80346F80 = -1;
     fn_8015635C();
+}
+
+static inline s32 NameCount(void) {
+    s32 n = 0;
+    s8 *p = (s8 *)fn_80135598();
+    if (p != NULL) {
+        n = 0;
+        if (p[0] >= 0) {
+            n = 1;
+            if (p[1] >= 0) {
+                n = 2;
+                if (p[2] >= 0) {
+                    n = 3;
+                    if (p[3] >= 0) {
+                        n = 4;
+                    }
+                }
+            }
+        }
+    }
+    return n;
+}
+
+u32 fn_8013FE10(s32 a, s32 key) {
+    u32 flags = 0;
+    s32 n = NameCount();
+
+    if (a >= 0 && a < n && (s8)lbl_80308E90[a * 5 + 0x14] != -1 &&
+        key == (s8)lbl_80308E90[a * 5 + 0x15]) {
+        flags = 1;
+    } else {
+        if (a >= 0 && a < n && (s8)lbl_80308E90[a * 5 + 0x14] != -1) {
+            flags = 2;
+        } else if (a >= n) {
+            flags = 0x10;
+        }
+        flags |= fn_8013FCF0(a, key, n);
+    }
+    return flags;
+}
+
+void fn_801462D0(Req_801462D0 *o) {
+    u8 *p = fn_80135598() + o->slot * 0x1c + 0x1c6;
+    s32 d;
+
+    switch (o->kind) {
+    case 5:
+        d = lbl_802C4BF0[o->id].v;
+        break;
+    case 1:
+        d = ((E24c *)((u8 *)lbl_802D8A2C - 0x4364))[o->id].v;
+        break;
+    case 2:
+        d = ((E24c *)((u8 *)lbl_802C7C34 - 0x21a4))[o->id].v;
+        break;
+    case 7:
+        d = lbl_802D8E64[o->id].v;
+        break;
+    }
+    p[0xe] += d;
+    if ((s8)p[0xe] > (s8)p[0xd]) p[0xe] = p[0xd];
+}
+
+void fn_8014ED5C(Owner *o, f32 v) {
+    if (o->x8 == o->x10) {
+        o->p->x190 = v;
+    } else {
+        o->p->x190 = o->x14;
+    }
+    if (o->p->x198 == 1) {
+        o->x4 = 0;
+        if (o->x18 != 0) {
+            Body *b = o->p;
+            s32 m = (s32)(100.0f * b->x18c);
+            m = m % ((b->xe8->x4 - 1) * 100);
+            b->x18c = (f32)m / 100.0f;
+        } else {
+            o->p->x190 = 0.0f;
+        }
+        if (o->x8 >= 0) {
+            fn_8014EE4C(o, o->x8, 1, 1, 10);
+        }
+    }
 }

@@ -1,7 +1,7 @@
 Progress and handoff
 ====================
 
-State of the game-code work as of 2026-10-26 (after batch 4). Numbers live in the README status block and on
+State of the game-code work as of 2026-10-26 (after batch 7). Numbers live in the README status block and on
 [ByteMatch](https://bytematch.dev/vetusmagnus/SoAL-Decomp); this page covers what's in flight.
 
 Game files
@@ -231,6 +231,55 @@ Next batch: start at 0xF0 bytes in 0x80050000-0x801C0000 (about 1,560 candidates
 outside it (0x80005B50-0x80050000 and 0x801C0000 and up; skip the SDK range). Selection recipe: group by
 `tools/match/dupes.py`, drop groups with a member already in `src/`, take the lowest address of each group,
 sort by size, skip the names listed in this file as near misses.
+
+Sonnet batch 7 (240-332 byte functions)
+---------------------------------------
+
+16 Sonnet agents, 20 functions each, one representative per duplicate group: the 320 smallest unmatched
+functions of 0xF0 bytes and up in 0x80050000-0x801C0000 (0xF0-0x14C; 1,551 candidates, 1,231 remain).
+226 of 320 match (71%); every one was re-checked with fdiff over the whole unit files (1,221 functions, all
+clean). They went into 13 existing units, plus a new `unit_800540DC.c` (0x800540DC-0x800553B4, guessed;
+fn_800540DC sits in the gap after `effect.c`). Merging was one Sonnet agent per unit. `main.dol` still
+rebuilds byte-identical (the unit objects are `NonMatching`, so that check says little).
+
+fdiff does not compare float constants (the compiler's `@N` literals are "unplaced"), and the agents'
+matches were wrong in five places: fn_8009D88C compared against 1.0f where the original loads 0.0f,
+fn_80100178/fn_80101494 stored 0.0f where the original stores FLT_MAX (`3.4028235e38f`), and two literals were
+one float step off (fn_800CF7BC's `9.999999e-09f`, fn_800E340C's `-1.0799999f`). All fixed. Check constants
+after merging: compile each unit, disassemble it, and compare the bytes of every `lfs`/`lfd` pool entry
+against the original's `.sdata2` (`build/agents/floatcheck.py`, gitignored). This is worth adding to `tools/match`.
+
+Dropped to keep an older match: fn_801B71E8 and fn_801B7274 need text.h's `TextPrint(s16, s16, ...)`, but the
+existing fn_801B0B2C only matches with an `s32` prototype (no `extsh`), and the two cannot share a unit.
+fn_801B0B2C stays; the other two are near misses.
+
+Near misses (diff lines): fn_80077B88 (43), fn_8008100C (8), fn_80081648 (20), fn_80081DE0 (78), fn_80082840 (46),
+fn_8008328C (73), fn_800839D8 (43), fn_80088E4C (61), fn_80088F64 (25), fn_80089074 (27), fn_80089184/892AC (67),
+fn_800893D4/894FC/89624/8974C/89874 (56, one "pick a random living unit not flagged" shape; the original reuses
+dead registers), fn_80089AA0/89BA4/89CA8 (67), fn_8008A174 (6), fn_8008BFDC (6), fn_8008C98C (8), fn_8008FFA4 (58),
+fn_80090DBC (61, `psq_l` s16-to-float casts), fn_80094E50 (24), fn_80095220 (11), fn_80097388 (4),
+fn_80098C58 (26), fn_80099078 (54), fn_8009DDA8 (25), fn_800A12D8 (29), fn_800A1998 (10), fn_800A37E8 (30,
+`subfic/cntlzw` compare), fn_800AB834 (4), fn_800BBC3C (42), fn_800C23CC (18), fn_800C9144 (20), fn_800CF6A8 (32),
+fn_800CF988 (52), fn_800D3464 (130, a big init the compiler folds onto one base register), fn_800EEDD4 (10),
+fn_800F113C (23), fn_801004C4 (40), fn_80109F90 (34), fn_8010B940 (28), fn_8010E074 (4, `lis; subi` for
+0x7FFFFFFF), fn_8010F3A8 (4), fn_80114950 (8), fn_80116898 (14), fn_8011AEE4 (47), fn_8011B024 (34),
+fn_801222A8 (36), fn_80125B60 (12), fn_80129AA4 (23), fn_8012A26C (3), fn_8012CFC8 (14), fn_80130B64 (92),
+fn_80135290 (3), fn_80135474 (17), fn_8013D938 (14), fn_8013FCF0 (25), fn_80140800 (42), fn_80143060 (4),
+fn_80144680 (7), fn_80145E0C (44), fn_80147054 (24), fn_80148228 (12), fn_8014836C (37), fn_80148CAC (10),
+fn_8014F834 (36), fn_80152284 (50), fn_8015519C (28), fn_8015983C (15), fn_8015D124 (28), fn_80167690 (89),
+fn_80168908 (14), fn_8016CED8 (1, extra `b` after a one-case `switch`), fn_8016E6E8 (56), fn_80173688 (8),
+fn_80174E18 (22), fn_8017567C (10), fn_80175DC4 (44), fn_801763B8 (16), fn_8017F540 (9), fn_80184E2C (3),
+fn_80186BE4 (71), fn_801918C4 (20), fn_80195540 (4), fn_801A3A10 (35), fn_801B65CC (18).
+Not matched, no usable file: fn_800823E4, fn_80165DE8.
+
+Lessons: a local `f32 zero = 0.0f;` (or `one`) used in the compare flips `fcmpu` operand order; `p / 128.0f`
+gives the `fmuls` by the reciprocal; `static inline` search helpers (`FindEntry`) reproduce search loops that
+return NULL; `s32 ready = x >= 500; if (ready != 0)` gives the `srwi/subfc/adde.` form; declaring a
+float-taking prototype with the colour argument last fixed a caller's scheduling (fn_8010C87C).
+
+Next batch: start at 0x14C bytes in 0x80050000-0x801C0000 (about 1,230 candidates left), then 0x58 bytes and up
+outside it. `docs/duplicates.txt` was not regenerated: `dupes.py` reads the dtk asm, which no longer lists the
+functions that sit in unit files, so run it from a checkout where those are still in the auto asm.
 
 Good next targets
 -----------------

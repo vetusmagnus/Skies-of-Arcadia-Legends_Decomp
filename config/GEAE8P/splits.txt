@@ -38,6 +38,9 @@ game/sound.c:
 game/effect.c:
 	.text       start:0x80040010 end:0x800506B0
 
+game/unit_800540DC.c:
+	.text       start:0x800540DC end:0x800553B4
+
 game/unit_800553B4.c:
 	.text       start:0x800553B4 end:0x80055E94
 

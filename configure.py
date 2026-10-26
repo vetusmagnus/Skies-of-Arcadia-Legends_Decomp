@@ -398,6 +398,7 @@ config.libs = [
             Object(NonMatching, "game/unit_80193F28.c"),
             Object(NonMatching, "game/unit_80199B9C.c"),
             # Batch 4: 56-88 byte functions, one unit per agent run and gap (guessed ranges).
+            Object(NonMatching, "game/unit_800540DC.c"),
             Object(NonMatching, "game/unit_80005B50.c"),
             Object(NonMatching, "game/unit_80020B50.c"),
             Object(NonMatching, "game/unit_800553B4.c"),
