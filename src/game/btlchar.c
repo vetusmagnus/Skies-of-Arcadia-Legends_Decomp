@@ -241,33 +241,31 @@ void fn_80031580(s32 a, s8 b, s16 c, s32 d) {
     fn_80029364(a, b, c, d);
 }
 
+static inline void CheckVoice(Obj5FC* o, s8 mode) {
+    Sub5FC* s = o->work;
+    s8* p = s->x4c;
+    s8 k;
+    if (fn_80020E10(s->x10 + 0xc) < 0) {
+        if (mode == 2) {
+            k = *p;
+            fn_800290E8(k);
+            fn_80029364(k, 3, 30, 1);
+        }
+    } else if (mode == 1) {
+        k = *p;
+        fn_800290E8(k);
+        fn_80029364(k, 3, 30, 1);
+    }
+}
+
 void fn_800315FC(void) {
     s8 mode;
     s8 i;
-    Obj5FC* o;
-    Sub5FC* s;
-    s8* p;
-    s8 r;
-    s8 k;
     mode = fn_8001C12C();
     if (mode != 0) {
         for (i = 0; i < 12; i++) {
-            o = lbl_80309E24[i];
-            if (o != 0) {
-                s = o->work;
-                p = s->x4c;
-                r = fn_80020E10(s->x10 + 0xc);
-                if (r < 0) {
-                    if (mode == 2) {
-                        k = *p;
-                        fn_800290E8(k);
-                        fn_80029364(k, 3, 30, 1);
-                    }
-                } else if (mode == 1) {
-                    k = *p;
-                    fn_800290E8(k);
-                    fn_80029364(k, 3, 30, 1);
-                }
+            if (lbl_80309E24[i] != 0) {
+                CheckVoice(lbl_80309E24[i], mode);
             }
         }
     }

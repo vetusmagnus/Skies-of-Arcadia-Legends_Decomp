@@ -337,7 +337,6 @@ void fn_8004034C(void* a, u32 b, void** out) {
 s16 fn_800403AC(s16 roll, AnimEnt* tbl, s16 lo, s16 hi) {
     s16 i;
     s16 j;
-    s16 r;
     s16 sum;
     s16 cnt;
     if (tbl[0].weight == 0 ||
@@ -360,14 +359,16 @@ s16 fn_800403AC(s16 roll, AnimEnt* tbl, s16 lo, s16 hi) {
     if (lo >= hi) {
         return tbl[i - 1].id;
     }
-    r = (s16)((s16)(roll - sum) % cnt);
+    roll -= sum;
+    roll %= cnt;
+    i = lo;
     j = 0;
-    while (tbl[lo].weight != 0 && lo <= hi) {
-        j += tbl[lo].weight;
-        if (j > r) {
-            return tbl[lo].id;
+    while (tbl[i].weight != 0 && i <= hi) {
+        j += tbl[i].weight;
+        if (j > roll) {
+            return tbl[i].id;
         }
-        lo++;
+        i++;
     }
     return -1;
 }

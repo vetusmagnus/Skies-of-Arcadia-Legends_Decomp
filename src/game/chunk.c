@@ -120,10 +120,12 @@ u16 fn_801E7654(NJS_MOTION* a, f32* d0, f32* d6, s32* d7, s32* d8, f32 frame) {
 
 s32 fn_801E78C8(NJS_MOTION* a, void* d1, void* d2, void* d4, f32 frame) {
     s32 kind = a->inp_fn & 0xF;
-    s32 m = a->type & 7;
+    s32 i3;
     s32 i;
-    void** tbl;
+    s32 m = (u16)(a->type & 7);
     u8 flag;
+    void** tbl3;
+    void** tbl;
     if (kind == 1) {
         if (a->mdata[0] == 0) return 0;
         flag = (a->inp_fn >> 6) & 1;
@@ -166,28 +168,28 @@ s32 fn_801E78C8(NJS_MOTION* a, void* d1, void* d2, void* d4, f32 frame) {
             }
         }
     } else if (kind == 3) {
-        tbl = a->mdata;
+        tbl3 = a->mdata;
         flag = (a->inp_fn >> 6) & 1;
-        i = 0;
+        i3 = 0;
         fn_800071D8(a, frame);
         if (a->type & 1) {
-            if (d1 != NULL && tbl[0] != NULL) {
+            if (d1 != NULL && tbl3[0] != NULL) {
                 fn_80007080(d1, flag);
             } else {
                 m &= 0xFFFE;
             }
-            i = 1;
+            i3 = 1;
         }
         if (m & 2) {
-            if (d2 != NULL && tbl[i] != NULL) {
+            if (d2 != NULL && tbl3[i3] != NULL) {
                 fn_80006F1C(d2, flag);
             } else {
                 m &= 0xFFFD;
             }
-            i++;
+            i3++;
         }
         if (m & 4) {
-            if (d4 != NULL && tbl[i] != NULL) {
+            if (d4 != NULL && tbl3[i3] != NULL) {
                 fn_80006DA0(d4, flag);
             } else {
                 m &= 0xFFFB;

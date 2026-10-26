@@ -288,15 +288,21 @@ void fn_80032FC4(NJS_POINT3* a, NJS_POINT3* b, s32* c, s32* d) {
 void fn_80033050(Quad3D* o) {
     Order order = lbl_802AD210;
     VertexTex v[4];
+    s32* ip;
+    VertexTex* pv;
     s32 n;
+    pv = v;
+    ip = order.i;
     for (n = 0; n < 4; n++) {
-        s32 i = order.i[n];
-        v[n].x = o->pos[i].x;
-        v[n].y = o->pos[i].y;
-        v[n].z = o->pos[i].z;
-        v[n].u = 0.003921569f * o->uv[i].u;
-        v[n].v = 0.003921569f * o->uv[i].v;
-        v[n].colour = PACK(o->col[i]);
+        s32 i = *ip;
+        pv->x = o->pos[i].x;
+        pv->y = o->pos[i].y;
+        pv->z = o->pos[i].z;
+        pv->u = 0.003921569f * o->uv[i].u;
+        pv->v = 0.003921569f * o->uv[i].v;
+        pv->colour = PACK(o->col[i]);
+        pv++;
+        ip++;
     }
     fn_801CE6D0(o->data, o->id, v, 4, 1, lbl_8034674C);
 }
@@ -320,29 +326,35 @@ void fn_800331CC(Quad2D* q, f32 d, s8 mode) {
     s32 flag = 0;
     s32 i;
     NJS_POINT3 p;
+    VertexCol* pv3;
+    VertexTex* pv2;
     scale = -1.0f / d;
     if (scale > -1.1f) scale = -1.1f;
     if (mode == 1) flag = 1;
     if (mode == 2) {
+        pv3 = v3;
         for (i = 0; i < 4; i++) {
             p = fn_801DCDC0(q->p[i].x, q->p[i].y, scale);
-            v3[i].x = p.x;
-            v3[i].y = p.y;
-            v3[i].z = p.z;
-            v3[i].colour = (q->col[i].c.a << 24) | (q->col[i].c.r << 16) | (q->col[i].c.g << 8) | q->col[i].c.b;
+            pv3->x = p.x;
+            pv3->y = p.y;
+            pv3->z = p.z;
+            pv3->colour = (q->col[i].c.a << 24) | (q->col[i].c.r << 16) | (q->col[i].c.g << 8) | q->col[i].c.b;
             if (q->col[i].c.a < 0xff) flag = 1;
+            pv3++;
         }
         fn_80290ED4(v3, 4, flag);
     } else {
+        pv2 = v2;
         for (i = 0; i < 4; i++) {
             p = fn_801DCDC0(q->p[i].x, q->p[i].y, scale);
-            v2[i].x = p.x;
-            v2[i].y = p.y;
-            v2[i].z = p.z;
-            v2[i].u = q->uv[i].x;
-            v2[i].v = q->uv[i].y;
-            v2[i].colour = (q->col[i].c.a << 24) | (q->col[i].c.r << 16) | (q->col[i].c.g << 8) | q->col[i].c.b;
+            pv2->x = p.x;
+            pv2->y = p.y;
+            pv2->z = p.z;
+            pv2->u = q->uv[i].x;
+            pv2->v = q->uv[i].y;
+            pv2->colour = (q->col[i].c.a << 24) | (q->col[i].c.r << 16) | (q->col[i].c.g << 8) | q->col[i].c.b;
             if (q->col[i].c.a < 0xff) flag = 1;
+            pv2++;
         }
         fn_80297DC8((void*)0x1869E);
         njPushMatrixEx();
@@ -777,14 +789,17 @@ void fn_80034690(Fade* p) {
         q.uv[3].y = 0.9375f;
         for (i = 0; i < 4; i++) {
             q.col[i].c.a = (s32)(255.0f * p->alpha) + 255;
-            if (p->mode != 2) {
+            switch (p->mode) {
+            default:
                 q.col[i].c.r = 255;
                 q.col[i].c.g = 255;
                 q.col[i].c.b = 255;
-            } else {
+                break;
+            case 2:
                 q.col[i].c.r = 128;
                 q.col[i].c.g = 128;
                 q.col[i].c.b = 128;
+                break;
             }
         }
         if (fn_8002F52C() != 0) {
@@ -1090,24 +1105,26 @@ void fn_80035708(void* tex, s32 id, QuadBuf* src, s32 textured) {
     s32 i;
     if (textured) {
         VertexTex v[4];
-        for (i = 0; i < 4; i++) {
+        VertexTex* p = v;
+        for (i = 0; i < 4; i++, p++) {
             u32 k = idx[i];
-            v[i].x = src->pos[k].x;
-            v[i].y = src->pos[k].y;
-            v[i].z = src->pos[k].z;
-            v[i].u = 0.003921569f * src->uv[k * 2];
-            v[i].v = 0.003921569f * src->uv[k * 2 + 1];
-            v[i].colour = src->col[k];
+            p->x = src->pos[k].x;
+            p->y = src->pos[k].y;
+            p->z = src->pos[k].z;
+            p->u = 0.003921569f * src->uv[k * 2];
+            p->v = 0.003921569f * src->uv[k * 2 + 1];
+            p->colour = src->col[k];
         }
         fn_801CE6D0(tex, id, v, 4, 1, lbl_8034674C);
     } else {
         VertexCol v[4];
         for (i = 0; i < 4; i++) {
             u32 k = idx[i];
-            v[i].x = src->pos[k].x;
-            v[i].y = src->pos[k].y;
-            v[i].z = src->pos[k].z;
-            v[i].colour = src->col[k];
+            VertexCol* p = &v[i];
+            p->x = src->pos[k].x;
+            p->y = src->pos[k].y;
+            p->z = src->pos[k].z;
+            p->colour = src->col[k];
         }
         fn_801CE1A4(v, 4, 1, lbl_8034674C);
     }
