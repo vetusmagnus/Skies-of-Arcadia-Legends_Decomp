@@ -114,7 +114,7 @@ game/uiobj.c:
 	.sdata2     start:0x8034BBA8 end:0x8034BBE0
 
 game/unit_801C5A60.c:
-	.text       start:0x801C5A60 end:0x801CA8D8
+	.text       start:0x801C5758 end:0x801CA8D8
 
 game/drawstate.c:
 	.text       start:0x801CA8D8 end:0x801CAE84
