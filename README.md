@@ -99,6 +99,7 @@ Refresh with `python tools/update_status.py` after `ninja`. Other docs link here
 Project notes
 =============
 
+- Work in progress, near misses, what blocks linking and the agent batch workflow: [docs/progress.md](docs/progress.md).
 - Single `main.dol`, no RELs. Game code runs from `0x80005600` to about `0x80231A7C`. Library code follows: Dolphin SDK (Sep 5 2002, `0x2301`), MetroTRK, MSL, Factor 5's MusyX 2.0.0 sound system, then Sega's Ninja graphics library (~150 KB, named by behavior: [docs/ninja.md](docs/ninja.md)).
 - Game code compiler: MWCC **GC/1.3.2** with `-use_lmw_stmw on` and `-inline noauto`. Evidence is in [docs/compiler.md](docs/compiler.md).
 - Library code (SDK/MSL/TRK and MusyX) and how it's imported, plus why some files are rejected and are good next targets: [docs/sdk_import.md](docs/sdk_import.md). Provenance and licenses: [extern/README.md](extern/README.md).
