@@ -16,11 +16,9 @@ Matching decomp of the GameCube game (GEAE8P, USA Rev 0). It's built on encounte
 - Skies-specific build choices for borrowed code live in `tools/import_libs.py`: `FLAG_SUBST` (e.g. `CARD_PATCH_2003=0`), `ALTERNATES` (a copy from another vendored tree) and `LOCAL_LIBS` (libraries vendored here directly, with their flags, such as MusyX). Re-running the import needs a tw2004 checkout at the pinned commit (see `docs/sdk_import.md`); it isn't kept in the repo.
 - dtk's signature names can be wrong when two functions compile to the same bytes (it named `CARDRead` as `CARDWrite`). Fix `symbols.txt` when the call graph disagrees.
 - Functions named from behavior rather than matched source (the Ninja library, the SDK `PSMTX*`/`PSVEC*` routines it calls) go in `symbols.txt` with their evidence in `docs/ninja.md`. Only name what the code clearly shows; mark inferred Ninja names as "likely" there.
-- `../SkiesOfArcadiaLegends-Recomp/tools/export_map.py` exports every named function in `symbols.txt` for DolRecomp, so a wrong name shows up in the recomp and its mods too.
 - To place newly matched source: compile it, run `tools/tusplit.py <obj>` for the `splits.txt` entry, then `tools/fixsplits.py`.
 - Matching workflow and what MWCC cares about: `docs/matching.md`; tools in `tools/match/` (run `tools/match/asmindex.py build` after `ninja` regenerates the asm). Open near-misses: `docs/ui.md` Open.
 
 ## Keeping docs current
 - After a change that affects progress, run `python tools/update_status.py`. It regenerates the README Status block. Other docs link to that block instead of repeating numbers, so don't add counts elsewhere.
 - Update `docs/compiler.md` (compiler and flag evidence) and `docs/sdk_import.md` (library region, rejected files) when their findings change.
-- Research notes for the wider effort are in `../GameCube-Research/`. Update `targets/SkiesOfArcadiaLegends/README.md` there when a phase milestone completes.

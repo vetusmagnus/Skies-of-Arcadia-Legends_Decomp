@@ -104,15 +104,10 @@ Project notes
 - Game code compiler: MWCC **GC/1.3.2** with `-use_lmw_stmw on` and `-inline noauto`. Evidence is in [docs/compiler.md](docs/compiler.md).
 - Library code (SDK/MSL/TRK and MusyX) and how it's imported, plus why some files are rejected and are good next targets: [docs/sdk_import.md](docs/sdk_import.md). Provenance and licenses: [extern/README.md](extern/README.md).
 - `config/GEAE8P/ldscript.lcf` overrides dtk's default linker script. The game's MetroTRK debugger stack is 0x5000 bytes, not 0x2000.
-- Ninja library map, names and port hook points (widescreen, frame interpolation): [docs/ninja.md](docs/ninja.md).
-- Projection, the 2D layer and what widescreen changes: [docs/widescreen.md](docs/widescreen.md).
+- Ninja library map and names: [docs/ninja.md](docs/ninja.md).
 - The frame loop, frame pacing and why the game is fixed-step at 30 fps: [docs/frame_loop.md](docs/frame_loop.md).
 - Menus, HUD and the 2D layer (draw state stack, text queue, layouts, the UiObj animation every menu element uses, where each screen parks hidden elements): [docs/ui.md](docs/ui.md). Game code built from C so far lives in `src/game/`.
-- Cameras per mode, the camera manager and what player camera control needs (implemented in the recomp): [docs/camera.md](docs/camera.md).
-- Random encounters, battle rewards (EXP, gold, magic EXP), battle speed, the battle unit records, damage, and the buttons each mode uses (the recomp's options and Invincible): [docs/qol_cheats.md](docs/qol_cheats.md).
-- The sound layer between the game and MusyX (banks, music lists, sound effects, streams, the Dreamcast file mapping), written for the recomp's Dreamcast music: [docs/sound.md](docs/sound.md).
-- Native static recomp (DolRecomp + ModernGekko, GPL-3, kept separate): `../SkiesOfArcadiaLegends-Recomp/`. It reads this repo's `symbols.txt` for function names, and its game patches (widescreen, camera, options) are built on the research in these docs.
-- Research notes: `../GameCube-Research/`.
+- The sound layer between the game and MusyX (banks, music lists, sound effects, streams, the Dreamcast file mapping): [docs/sound.md](docs/sound.md).
 
 Tools
 -----

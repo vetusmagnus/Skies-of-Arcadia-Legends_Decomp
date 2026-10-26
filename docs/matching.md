@@ -33,9 +33,7 @@ Workflow
    with `main.dol: OK`. A file only links when every function in it matches (its constants and
    jump tables are shared); until then it's `NonMatching` with just its `.text` (and whatever data
    you're sure of) in `splits.txt`, and objdiff tracks it.
-5. **Name** what's understood in `symbols.txt` (`scope:global`), and grep
-   `../SkiesOfArcadiaLegends-Recomp` for the old `fn_` names (its game patches resolve `fn_XXXXXXXX`
-   by address, so renames are safe there).
+5. **Name** what's understood in `symbols.txt` (`scope:global`).
 
 Game code is plain C: no inline asm, pragmas or fakematches. `tools/check_game_src.py` enforces
 it as the first build step.

@@ -2,8 +2,7 @@ The sound layer (music, sound effects, streams)
 ===============================================
 
 What sits between the game and MusyX, and how to tell from RAM (or silence with one wrapped call)
-which music the game is playing. Written for replacing the music with the Dreamcast music played by
-an emulated Manatee driver. Everything here is read from the disassembly (`build/GEAE8P/asm`), the
+which music the game is playing. Everything here is read from the disassembly (`build/GEAE8P/asm`), the
 DOL strings and the disc files; nothing was run. Unverified points are collected under "Open".
 
 All addresses are USA Rev 0 (GEAE8P). Function names below are working names; only `SePlay` is in
@@ -271,8 +270,7 @@ town/dungeon music. `fn_8009CBBC` sets channels 10-15 (`r24 + 10`, six points), 
 12-14 (three points) and, for the third, channel 17 too with the same value (`r23 + 15` when
 `r23 == 2`): MusyX channels from 16 up have no Dreamcast counterpart (the Manatee message is
 `port << 4 | channel`), so 17 looks like a GameCube-side split of channel 14. Both run every frame
-(the world map sends 0 to 12, 13, 14 and 17 each frame). The Dreamcast music option sends channels 0-15
-with `sdMidiSendMes` (0x86), see the recomp's `docs/development-notes.md`.
+(the world map sends 0 to 12, 13, 14 and 17 each frame).
 
 Bonito's sequences (the Dreamcast data) don't end: at the end the port status word at +0x18 becomes 1
 and the port holds, still flagged playing; the GameCube conversions end (`sndSeqGetValid` fails), which
@@ -339,8 +337,7 @@ Streams (streamed music)
 * **Battle streams** (2026-10-21): every spell and S-move plays `SOUND/KO00NN` (NN = the skill id, one
   pre-mixed stereo track with voice and effects; no sound effects start during it), battle voices are
   `B702NNNN` (`fn_8003F890`, two prepared slots at `lbl_8030A10C` +0xCC / +0xD0..+0xD4), the victory
-  line e.g. `153`. The spell / S-move action waits for its stream to end (`qol_cheats.md` *Spells and
-  special attacks*). MusyX side: `streamInfo` (`0x8032C730`, 64 x 0x64) per channel; `last` (+0x20)
+  line e.g. `153`. MusyX side: `streamInfo` (`0x8032C730`, 64 x 0x64) per channel; `last` (+0x20)
   moves between 0 and half the buffer while a stream plays.
 * Stop: `SndStop(0x10/0x11)` / `SndStopAll` (closes both channels at once), or fade:
   `SndFadeStop(0x10/0x11, ms)` sets `lbl_803477C0 = 0x20` and `lbl_803477BC = port`; `SndUpdate`
@@ -487,8 +484,6 @@ Found 2026-10-21 by comparing the three GameCube discs' `sound/` folders (same 1
     other changed bytes (not tempos).
   * The cutscenes set to a stream (`field/me299a.sct` the intro, `me298a` / `me250a` `m03`) divide
     their waits and motion times by 1.2 (expression words `0x04000000 x 0x04000000 0x3F99999A 0x13`).
-  The recomp undoes all three for its 60 Hz (recomp development notes *European intro in sync*,
-  *European 50 Hz audio*).
 * **Japanese release (GEAJ8P): other voices, same layout.** All the voice files differ (streams
   `NNN`, `B702`, `KO`, `f71`, banks `stv`, `cr`, `e6`), most with other sizes; sequence counts match
   except `e6h011` / `k8900001` (one extra at the end). The other banks' `.info` files differ only in

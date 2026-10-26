@@ -72,7 +72,7 @@ Not renamed in `symbols.txt` (the real Ninja names aren't known), but useful whe
 | `0x80345878` | screen parameters (distance, center, aspect), read by `njProjectScreen` |
 | `0x80345850` | view volume (near, far, frustum extents) |
 | `0x80346400` | perspective projection matrix built by `C_MTXFrustum` |
-| `0x803463C0` | 2D (orthographic) projection matrix built by `C_MTXOrtho`; `lbl_803464D0` is its position matrix (see [widescreen.md](widescreen.md)) |
+| `0x803463C0` | 2D (orthographic) projection matrix built by `C_MTXOrtho`; `lbl_803464D0` is its position matrix |
 | `0x803007C8` | identity matrix constant |
 
 Layout (approximate)
@@ -93,36 +93,11 @@ Inferred from what each stretch calls; file boundaries aren't known yet.
 | `0x802AB460`–`0x802AC75C` | Screen clear / fade |
 | `0x802AC75C` | `OSReport` (a `vprintf` wrapper) |
 
-Hook points for a port
-----------------------
+Where things are
+----------------
 
-- **Widescreen / resolution:** `njSetAspect`, `njSetScreen`, `njClipZ` and the other callers of
+- **Projection:** `njSetAspect`, `njSetScreen`, `njClipZ` and the other callers of
   `C_MTXFrustum` / `C_MTXOrtho` in `0x80299188`–`0x802994xx`; everything funnels into the
   projection matrix at `0x80346400` and the GX loads in `0x8029C8A0`–`0x8029CC2C`.
-- **Frame interpolation (60 fps):** game logic runs at a fixed 30 Hz ([frame_loop.md](frame_loop.md)),
-  so a port draws in-between frames. Tagging the matrix functions above (as N64 recomps do with
-  RT64's matrix groups) isn't enough here: the model renderers transform vertices on the CPU and send
-  them to GX already in view space, so the XF matrices barely change between frames (about 2 of
-  2,400 loads per frame in the opening cutscene) and the motion, camera included, is in the vertex
-  positions. The recomp interpolates in the video code instead, blending each draw's positions with
-  the previous frame's (`../SkiesOfArcadiaLegends-Recomp`, NOTES *60 fps*).
-- **Widescreen:** done as a patch on these functions and the 2D layer; see [widescreen.md](widescreen.md).
 - **Model drawing:** the two renderers at `0x80286EE8` and `0x8028B498`, and the display-list
   path at `0x802A8AE4`.
-
-Hot in profiles
----------------
-
-`perf` on the native recomp (`../SkiesOfArcadiaLegends-Recomp`, LLVM backend, opening cutscene,
-2026-10-05) puts these unnamed Ninja functions among the hottest guest code. They're the best
-next targets for naming here, and for native replacements in a port:
-
-| Address | Size | Share of the game thread |
-|---|---|---|
-| `fn_802A21C4` (with `fn_802A2394` in the same region) | `0x1D0` | ~5–6% |
-| `fn_802A49F4` | `0x22C` | ~2% |
-| `fn_802A5F2C` (with `fn_802A6184`) | `0x258` | ~0.7% |
-
-Also hot outside Ninja: the SDK's `PSMTX*` paired-single matrix functions (`0x80238B60`–`0x80238FE8`)
-and `GXSetProjection` / `GXLoad*MtxImm` (`0x80251F8C`–`0x8025228C`). The SDK scheduler's idle spin in
-`SelectThread` (`0x80237BA8`) was hot too, and the recomp now skips it (`StaticRecompIdlePC`).

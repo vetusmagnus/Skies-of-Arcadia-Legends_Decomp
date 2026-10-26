@@ -4,7 +4,6 @@ Menus, HUD and the 2D layer
 How Skies builds its menus and HUD on top of Ninja's 2D drawing, and where each screen puts its
 elements, including the ones parked off-screen. Research from 2026-10-07; function names are in
 `config/GEAE8P/symbols.txt` (names given from behavior, since the game's own names aren't known).
-The projection side (the 2D matrix, what widescreen changes) is in [widescreen.md](widescreen.md).
 
 Decompiled so far: `src/game/drawstate.c` (linked), `src/game/uiobj.c` (UiObj, layouts and
 sprites: 40 of 44 functions match) and `src/game/text.c` (28 of 33). The last two link once their
@@ -15,7 +14,7 @@ Layers
 
 | Layer | What it does | Where |
 |---|---|---|
-| Ninja 2D primitives | triangle strips in screen pixels (`fn_80290ED4`, `fn_80291064`), and Ninja's own `fn_8028A0F4` / `fn_8028A56C` after `fn_8028A26C` / `fn_8028A6BC` | [widescreen.md](widescreen.md) |
+| Ninja 2D primitives | triangle strips in screen pixels (`fn_80290ED4`, `fn_80291064`), and Ninja's own `fn_8028A0F4` / `fn_8028A56C` after `fn_8028A26C` / `fn_8028A6BC` | |
 | Draw state stack | blend mode, constant material colour, fog for whatever is drawn next | `drawstate.c` |
 | Text queue | strings are queued during the frame and drawn together by `main` | `text.c` |
 | Layouts and sprites | a screen element is a list of sprite parts, each a few textured quads | `0x801C3AEC`–`0x801C5400` |
@@ -131,7 +130,7 @@ a part task with a 0x6C-byte UiObj-based widget; `SaveLoadCreateParts` creates a
 The constants are in `.sdata2` (`lbl_8034B63C`-`lbl_8034B6E4`, `lbl_8034B768`, `lbl_8034B780`).
 
 The task's step is `+0x19` (dispatched through `lbl_802EBD30`), its work (0x270 bytes) `+0x24`.
-Traced live in the recomp loading a save from the title (2026-10-11): step 4 waits on the card slot
+Traced live loading a save from the title (2026-10-11): step 4 waits on the card slot
 (Slot A / B), step 9 on the file list (cursor work `+0x05`, file 1 = 0), step 15 on "Load this file.
 Is this ok?" (cursor work `+0x08`, 0 = Yes), step 19 loads; the result goes to `lbl_803473C4`
 (0 running, 1 loaded, 2 cancelled), which the title's Continue task waits on. A closed load screen
@@ -144,7 +143,7 @@ The backdrop (`fn_801A4B40`) tiles 64 px squares from x = 0 to 640 only.
 
 ### Loading a save without the load screen
 
-Traced 2026-10-12 for the recomp's Continue (`patches/game/autoload.c` there).
+Traced 2026-10-12.
 
 **Card files.** Card A's saves are `SA_LEGENDS.000` to `.006` (7 at most; the load screen's list shows
 them as #01-#07), 0x6000 bytes (3 blocks) each: header text, banner and icon up to 0x1440, then the
@@ -186,8 +185,7 @@ intro has played once), 9 the title proper; 10-13 "Press Start" and the menu (ta
 menu's Continue sets `lbl_80347634` (`fn_801D71BC(1)`, Z counts as Start) and 16 starts the Continue task
 (`fn_801D8B2C` / `fn_801D8B94`: `SaveLoadOpenLoad(.., 1)`, waits for `lbl_803473C4`); 17
 (`fn_80228AD4`) then sets state 0x12 (an empty state) and `fn_801DBE6C(6)` (mode 6, the field, which
-starts from the loaded data), or goes back to 9 when nothing was loaded. The recomp's direct load runs
-in state 1 once the font is ready and ends the same way.
+starts from the loaded data), or goes back to 9 when nothing was loaded.
 
 **The logos also load the resident files** (found 2026-10-17, after the direct load had shipped
 without this). On a cold boot state 1 goes to the logos first: 2 (`fn_8022A548`, logo textures and
@@ -222,60 +220,30 @@ windows at x = 648 and x = -260.
 | `ScreenFadeDraw` | script fade, a 640 x 480 colour quad | full screen, drawn through Ninja's own primitive (`fn_8028A0F4`); state at `lbl_8030CEA0 + 0xC5C` |
 | `ScreenWipeDraw` | screen grab drawn back; `fn_8011B6E0` slides it by +-640 or +-480 for wipe transitions | full screen |
 
-Found later with the recomp's deep projection trace (2026-10-10; draw tasks, all through the sprite path
+Found later with a projection trace (2026-10-10; draw tasks, all through the sprite path
 `fn_801D5DD8` -> `fn_80005D98`): the battle party status panels `fn_80022F74`, the command wheel
 `fn_80025624`, the wheel's lists (S-move, Magic, Item) `fn_800240EC`, the SP gauge `fn_80027C04` (it reads the Spirit points from the battle data, `lbl_80347390` +0x6 max and
-+0xA current; [qol_cheats.md](qol_cheats.md) *Battle records*); on the world
++0xA current); on the world
 map the altitude gauge `fn_8016B434` and the compass `fn_8016C204`; the dungeon minimap is drawn by
-`fn_800E23B0` through `fn_800E340C`, `fn_800E3058`, `fn_800E2D0C` and `fn_801E4F88`. The recomp's widescreen
-patch moves these to the wide edges, or to the edges of a narrower centred area the player picks (recomp
-NOTES.md *Widescreen HUD at the edges* and *HUD placement*). The meter and compass are drawn through the
+`fn_800E23B0` through `fn_800E340C`, `fn_800E3058`, `fn_800E2D0C` and `fn_801E4F88`. The meter and compass are drawn through the
 recorded display lists like the rest ([frame_loop.md](frame_loop.md)): while the world map's menu is
 open they're replayed, so a change of the 2D projection then shows only once it closes.
 
-Battle HUD panel per unit (2026-10-11, while checking the recomp's Invincible): `fn_8002969C(slot)` creates a
+Battle HUD panel per unit (2026-10-11): `fn_8002969C(slot)` creates a
 `BattleHudDraw` task and keeps its data block in `lbl_80302AB0[slot]`: state +0x12, HP shown +0x20 (float,
 animated by the step +0x24), HP it heads for +0x28, max +0x2C, bar fraction +0x1E4. `BattleHudDraw` follows the
 unit's HP (`lbl_80309DE4[slot]` +0x14) only in panel states 3-8; `fn_8002942C(slot, 2)` syncs +0x28 / +0x20 to
 it at once. During command input the party status box changed neither when these fields nor when the unit's HP
-were written; it shows the turn's starting HP / MP until the round plays out (its source is still unknown;
-[qol_cheats.md](qol_cheats.md) *Battle records*).
+were written; it shows the turn's starting HP / MP until the round plays out (its source is still unknown).
 
 ### Title screen
 
-Traced in the recomp (every projection load with its callers, 2026-10-07): the title draws its 2D as
+Traced (every projection load with its callers, 2026-10-07): the title draws its 2D as
 `main`'s full-screen background quad, one `fn_80290A60` call from `fn_801D129C`, and four sprite parts
 per frame from `fn_801D5DD8` (a multi-part sprite at a position: parts from a layout list, colour and
 alpha from `njSetConstantMaterial`) through `fn_80005D98`, a generic rotated sprite quad (`njSin` /
 `njCos`, then `fn_80291064`) with about 20 callers. The clouds are 3D (Ninja model draws through
 `fn_80288DE4`); the lower layer is about 120 alike draws, one fewer every second or two as it scrolls.
-
-Off-screen parking and widescreen
----------------------------------
-
-With the 2D layer squeezed into the middle of a 16:9 picture (widescreen.md), 2D x from about -149
-to 789 is visible instead of 0 to 640. The menus' parking spots fall inside that range:
-
-| Parked x | Who |
-|---|---|
-| -348 / 668 | camp menu panels (left / right column), incl. the status screen's inactive pages |
-| -340 / -330 / -240 | save/load header and tabs / card slot cursor / Yes-No windows |
-| 676 / 640 | save/load file windows / message window |
-| -260 / 648 | shop windows |
-| 632 | camp menu help window |
-
-Everything is parked by moving a UiObj, so a fix can work at that level instead of clipping all 2D:
-skip drawing an element whose UiObj is idle (`cmd == 0`) at a parked position, or rewrite the
-parking constants further out (the slides keep their frame counts, since the step is computed from
-the distance). The right-edge HUD (icon columns, party status) stays inside the 4:3 area unless it
-is moved out to the wide edge on purpose.
-
-The recomp's patch clips squeezed 2D to 4:3 with `GXSetScissor` instead, written on every projection
-load ([widescreen.md](widescreen.md#ui-parked-off-screen)). An earlier version that only wrote the
-scissor when the clip turned on or off cut the 3D scene down to 4:3 in places (the Valuan ship's red
-alert room), because the scene is recorded into display lists ([frame_loop.md](frame_loop.md)) and the
-CPU's order of projection loads isn't the GPU's. With the scissor right, the UiObj-level fix above isn't
-needed; it remains an option if the clip ever hides something that should show.
 
 Open
 ----
@@ -291,5 +259,5 @@ Open
   it's free to choose, and it changes scheduling: `UiSpriteDrawEx` only matches with its floats
   before `texlist` and `flags`.
 - The battle-entry shatters are 3D: `fn_802297C4` (spinning card) and `fn_80097CA4` (falling
-  triangles, from `fn_80101828`); see [widescreen.md](widescreen.md#full-screen-2d).
+  triangles, from `fn_80101828`).
 - The shop module's layout; `fn_802267AC` / `fn_802268E8` (task create).
