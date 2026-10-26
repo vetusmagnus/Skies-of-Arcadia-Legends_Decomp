@@ -1,7 +1,9 @@
 Progress and handoff
 ====================
 
-State of the game-code work as of 2026-10-26 (after batch 9). Numbers live in the README status block and on
+State of the work as of 2026-10-26 (after batch 9 and the held-back merges): 25.48% of code matched (3,018 / 7,116
+functions), 4,098 functions unmatched: 3,131 game (2,193 under 632 bytes, 466 at 632-1000, 355 at 1-2 KB, 101 at 2-5 KB,
+16 over 5 KB), 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB). Numbers live in the README status block and on
 [ByteMatch](https://bytematch.dev/vetusmagnus/SoAL-Decomp); this page covers what's in flight.
 
 Game files
@@ -72,12 +74,13 @@ most of the cost was five Opus retry agents and the Opus merges; agent contexts 
 Duplicates
 ----------
 
-`python tools/match/dupes.py` masks symbols and branch targets across the asm and writes
-[duplicates.txt](duplicates.txt): of 5,830 functions, 5,347 are unique and 170 groups hold 653 functions
-(483 copies). Hand an agent one member of a group and copy the source to the others (re-run fdiff on
-each copy). Most groups are one- and two-instruction stubs; the largest is 0x12A0 bytes
-(fn_800AE4E0 / fn_800DA744). Members defined in `src/` are starred. The earlier estimate of 4,555 unique
-groups masked immediates too; these groups keep register numbers and offsets, so they are exact.
+`python tools/match/dupes.py` masks symbols and branch targets across every asm file (including the unit
+files, so matched functions are covered) and writes [duplicates.txt](duplicates.txt): of 7,110 functions,
+6,436 are unique and 201 groups hold 875 functions (674 copies). Members the objdiff report counts as matched
+are starred. 118 groups already have a matched member and 27 are fully matched; 482 unmatched functions
+(45,624 bytes, 410 of them game code) are copies of a group with a matched or earlier member, so copying a
+solved body (re-run fdiff on each copy) covers them. Most groups are one- and two-instruction stubs; the
+largest is 0x12A0 bytes (fn_800AE4E0 / fn_800DA744).
 
 What worked:
 

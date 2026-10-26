@@ -3,12 +3,12 @@
 
 usage: dupes.py [-o docs/duplicates.txt]
 
-Reads dtk's asm (build/GEAE8P/asm/auto_*.s), masks symbol names, branch targets and @ha/@l/@sda
-operands, and groups functions with the same masked instruction stream. Members that are defined in
-src/ count as matched; a group needs matching only once, then the others are copies to re-verify.
+Reads dtk's asm (every .s under build/GEAE8P/asm), masks symbol names, branch targets and @ha/@l/@sda
+operands, and groups functions with the same masked instruction stream. Members the objdiff report
+counts as matched are starred; a group needs matching only once, then the others are copies to re-verify.
 Singletons are not listed. Groups are ordered by size, largest first.
 """
-import glob, os, re, sys, collections
+import glob, json, os, re, sys, collections
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 INSN = re.compile(r"^/\* ([0-9A-F]{8}) [0-9A-F]{8}  (?:[0-9A-F]{2} ){4}\*/\t(.*)$")
@@ -22,7 +22,7 @@ def mask(line):
 
 
 def functions():
-    for path in sorted(glob.glob(os.path.join(ROOT, "build", "GEAE8P", "asm", "auto_*.s"))):
+    for path in sorted(glob.glob(os.path.join(ROOT, "build", "GEAE8P", "asm", "**", "*.s"), recursive=True)):
         name, body = None, []
         for raw in open(path, encoding="utf-8", errors="replace"):
             raw = raw.rstrip("\n")
@@ -39,12 +39,13 @@ def functions():
 
 
 def defined_in_src():
+    """Functions the objdiff report counts as matched (build/GEAE8P/report.json, from `ninja`)."""
     names = set()
-    for p in glob.glob(os.path.join(ROOT, "src", "game", "*.c")):
-        for l in open(p, encoding="utf-8", errors="replace"):
-            m = re.match(r"^[A-Za-z_][\w \*]*?\b(fn_[0-9A-F]{8})\s*\(.*\)\s*\{?\s*$", l)
-            if m and not l.rstrip().endswith(";"):
-                names.add(m.group(1))
+    report = json.load(open(os.path.join(ROOT, "build", "GEAE8P", "report.json")))
+    for unit in report["units"]:
+        for f in unit.get("functions", []):
+            if float(f.get("fuzzy_match_percent", 0)) >= 100:
+                names.add(f["name"])
     return names
 
 
@@ -70,9 +71,9 @@ def main():
         fh.write("Regenerate with: python tools/match/dupes.py\n")
         fh.write("%d functions, %d unique, %d duplicate groups covering %d functions (%d copies)\n"
                  % (total, len(groups), len(dup), sum(len(g) for g in dup), extra))
-        fh.write("Format: group size members (* = defined in src/)\n\n")
+        fh.write("Format: group size members (* = matched)\n\n")
         for i, g in enumerate(dup, 1):
-            mem = " ".join(n[3:] + ("*" if n in done else "") for n, _ in sorted(g))
+            mem = " ".join((n[3:] if n.startswith("fn_") else n) + ("*" if n in done else "") for n, _ in sorted(g))
             fh.write("%d 0x%X %s\n" % (i, g[0][1], mem))
     print("functions %d unique %d groups %d copies %d" % (total, len(groups), len(dup), extra))
 
