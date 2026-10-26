@@ -687,6 +687,106 @@ typedef struct {
     f32 pos[3];
     s32 ang[3];
 } Rec;
+typedef struct {
+    s32 f0;
+    u8 pad4[0x34 - 4];
+    f32 curA[12];
+    f32 curB[12];
+    f32 loA[12];
+    f32 hiA[12];
+    f32 loB[12];
+    f32 hiB[12];
+    u8 pad154[0x1f4 - 0x154];
+} Obj_8015205C;
+typedef struct {
+    u8 pad0[0x38];
+    NJS_POINT3 pos;
+    Angle ang[3];
+    u8 pad50[0x1ec - 0x50];
+    u8 b1ec;
+    u8 b1ed;
+    u8 b1ee;
+    u8 b1ef;
+    u8 b1f0;
+    u8 b1f1;
+    u8 pad1f2[0x22c - 0x1f2];
+    s16 h22c;
+    s16 h22e;
+    s16 h230;
+} Inner_801528AC;
+typedef struct {
+    u8 pad0[0x24];
+    Inner_801528AC* inner;
+} Model_801528AC;
+typedef struct {
+    u8 pad0[0xc];
+    s32 fc;
+    u8 pad10[0x1c - 0x10];
+} Row_801528AC;
+typedef struct {
+    u8 pad0[0x20];
+    Row_801528AC rows[1];
+} Tab_801528AC;
+typedef struct {
+    s32 f0;
+    u8 pad4[4];
+    s32 f8;
+    NJS_POINT3 src;
+    NJS_POINT3 dst;
+    u8 pad24[4];
+    Model_801528AC* model;
+    s32 f2c;
+    u8 pad30[4];
+    s32 f34;
+    u8 pad38[4];
+    u8* f3c;
+    s32 f40;
+    u32 f44;
+    s32 f48;
+    u8 pad4c[4];
+    s32 f50;
+    u8 pad54[4];
+    s32 f58;
+    u8 pad5c[0x68 - 0x5c];
+    Tab_801528AC* f68;
+    void* f6c;
+} Obj_801528AC;
+typedef struct {
+    u8 pad0[0x34];
+    f32 f34;
+    f32 f38;
+    f32 f3c;
+    f32 f40;
+    u8 pad44[0x58 - 0x44];
+} Ent_80157150;
+typedef struct {
+    s32 count;
+    u8 pad4[4];
+    Ent_80157150 *ents;
+} Cnt_80157150;
+typedef struct {
+    u8 pad0[4];
+    u32 cnt;
+    u16 type;
+} Anim_80157EA8;
+typedef struct {
+    u8 pad0[0x44];
+    f32 pos[3];
+    f32 rot[3];
+} Part_80157EA8;
+typedef struct {
+    u8 pad0[0xe8];
+    Anim_80157EA8 *anim;
+    u8 padec[0x1c8 - 0xec];
+    Part_80157EA8 *part;
+} Obj_80157EA8;
+typedef struct {
+    f32 pos[3];
+    s32 ang[3];
+    s32 off[3];
+} Out_80157EA8;
+extern s32 fn_801E78C8(Anim_80157EA8 *a, void *p, void *ang, void *off, f32 frame);
+extern void njRotateZXY(NJS_MATRIX m, s32 x, s32 y, s32 z);
 
 void fn_8014F970(u8 *self) {
     fn_80153270(self + 0x95c);
@@ -2515,4 +2615,212 @@ void fn_801577CC(u8 *base, s32 a, s32 b, s32 i) {
         B++;
         out += 3;
     }
+}
+
+void fn_8015205C(Obj_8015205C* o) {
+    extern void* memset(void*, int, u32);
+    memset(o, 0, 0x1f4);
+    o->f0 = 0;
+    o->curA[0] = 0.0f;
+    o->curA[1] = 0.0f;
+    o->curA[2] = 0.0f;
+    o->curA[3] = 0.0f;
+    o->curA[4] = 0.0f;
+    o->curA[5] = 0.0f;
+    o->curA[6] = -30.0f;
+    o->curA[7] = 0.0f;
+    o->curA[8] = 100.0f;
+    o->curA[9] = 0.0f;
+    o->curA[10] = 0.0f;
+    o->curA[11] = 60.0f;
+    o->curB[0] = 0.0f;
+    o->curB[1] = 0.0f;
+    o->curB[2] = 0.0f;
+    o->curB[3] = 0.0f;
+    o->curB[4] = 0.0f;
+    o->curB[5] = 0.0f;
+    o->curB[6] = 0.0f;
+    o->curB[7] = 0.0f;
+    o->curB[8] = 1.0f;
+    o->curB[9] = 0.0f;
+    o->curB[10] = 0.0f;
+    o->curB[11] = 1.0f;
+    o->loA[0] = -1000.0f;
+    o->hiA[0] = 1000.0f;
+    o->loA[1] = -1000.0f;
+    o->hiA[1] = 1000.0f;
+    o->loA[2] = -1000.0f;
+    o->hiA[2] = 1000.0f;
+    o->loA[3] = -1000.0f;
+    o->hiA[3] = 1000.0f;
+    o->loA[4] = 0.0f;
+    o->hiA[4] = 100.0f;
+    o->loA[5] = 0.0f;
+    o->hiA[5] = 100.0f;
+    o->loA[6] = -85.0f;
+    o->hiA[6] = 85.0f;
+    o->loA[7] = -3600.0f;
+    o->hiA[7] = 3600.0f;
+    o->loA[8] = 20.0f;
+    o->hiA[8] = 8000.0f;
+    o->loA[9] = 0.0f;
+    o->hiA[9] = 100.0f;
+    o->loA[10] = -1000.0f;
+    o->hiA[10] = 1000.0f;
+    o->loA[11] = 2.0f;
+    o->hiA[11] = 100.0f;
+    o->loB[0] = -10.0f;
+    o->hiB[0] = 10.0f;
+    o->loB[1] = -10.0f;
+    o->hiB[1] = 10.0f;
+    o->loB[2] = -10.0f;
+    o->hiB[2] = 10.0f;
+    o->loB[3] = -10.0f;
+    o->hiB[3] = 10.0f;
+    o->loB[4] = -50.0f;
+    o->hiB[4] = 50.0f;
+    o->loB[5] = -50.0f;
+    o->hiB[5] = 50.0f;
+    o->loB[6] = -2.0f;
+    o->hiB[6] = 2.0f;
+    o->loB[7] = -4.0f;
+    o->hiB[7] = 4.0f;
+    o->loB[8] = 0.91f;
+    o->hiB[8] = 1.1f;
+    o->loB[9] = -50.0f;
+    o->hiB[9] = 50.0f;
+    o->loB[10] = -4.0f;
+    o->hiB[10] = 4.0f;
+    o->loB[11] = 0.91f;
+    o->hiB[11] = 1.1f;
+}
+
+void fn_801528AC(Obj_801528AC* o, f32* mtx, s32 a, s32 flag) {
+    extern NJS_VECTOR lbl_802B3B50;
+    extern NJS_VECTOR lbl_802B3B5C;
+    extern void njSetMatrix(NJS_MATRIX dst, NJS_MATRIX src);
+    extern void njUnitTransPortion(NJS_MATRIX m);
+    extern void fn_8020EFD4(u8* p);
+    extern void fn_801580A4(Angle* out, NJS_VECTOR* v);
+    extern void fn_80158200(void* a, NJS_POINT3* b, Angle* c, s32 d);
+    NJS_VECTOR va = lbl_802B3B50;
+    NJS_VECTOR vb = lbl_802B3B5C;
+    Angle ang[3];
+    NJS_MATRIX m;
+
+    if (o->f44 != 0) {
+        fn_8020EFD4(o->f3c);
+        o->f40 = 180;
+    }
+    njCalcPoint(mtx, &o->src, &o->dst);
+    if (o->f2c != 0) {
+        o->model->inner->pos.x = o->dst.x;
+        o->model->inner->pos.y = o->dst.y;
+        o->model->inner->pos.z = o->dst.z;
+        njSetMatrix(m, mtx);
+        njUnitTransPortion(m);
+        njCalcPoint(m, &va, &vb);
+        vb.x = -vb.x;
+        vb.y = -vb.y;
+        vb.z = -vb.z;
+        fn_801580A4(ang, &vb);
+        o->model->inner->ang[0] = ang[0];
+        o->model->inner->ang[1] = ang[1];
+        o->model->inner->ang[2] = ang[2];
+        o->model->inner->b1ec = 1;
+        o->model->inner->b1ed = o->f8;
+        o->model->inner->b1ee = 0;
+        o->model->inner->b1ef = 0;
+        o->model->inner->b1f0 = o->f48;
+        o->model->inner->b1f1 = o->f0;
+        o->model->inner->h22c = o->f34;
+        if (flag != 0) {
+            o->model->inner->h22e = o->f58;
+            o->model->inner->h230 = 1;
+        } else {
+            o->model->inner->h22e = o->f50;
+            o->model->inner->h230 = 0;
+        }
+        fn_80158200(o->f6c, &o->dst, ang, a);
+        o->f68->rows[o->f8].fc++;
+    }
+}
+
+void fn_80157150(s32 a)
+{
+    s32 i;
+    s32 n;
+    Ent_80157150 *e;
+    s32 f;
+    s8 *q;
+
+    if ((*(Cnt_80157150 **)&lbl_803472A8) == 0) {
+        return;
+    }
+    n = (*(Cnt_80157150 **)&lbl_803472A8)->count;
+    e = (*(Cnt_80157150 **)&lbl_803472A8)->ents;
+    for (i = 0; i < n; i++) {
+        q = (s8 *)(lbl_80346FD4 + a * 0x211a4 + i * 0x8468);
+        if (a == 0) {
+            f = 0;
+            if ((*(s8 **)&lbl_80346FD0) != 0) {
+                f = (*(s8 **)&lbl_80346FD0)[lbl_803472BC * 16 + i * 2 + a * 8];
+            }
+            f |= q[0x8455] | (q[0x8454] << 1);
+            e->f34 = f;
+            if ((*(s8 **)&lbl_80346FD0) != 0) {
+                f = (*(s8 **)&lbl_80346FD0)[lbl_803472BC * 16 + i * 2 + a * 8 + 1];
+            }
+            f |= q[0x8457] | (q[0x8456] << 1);
+            e->f38 = f;
+        } else {
+            f = 0;
+            if ((*(s8 **)&lbl_80346FD0) != 0) {
+                f = (*(s8 **)&lbl_80346FD0)[lbl_803472BC * 16 + i * 2 + a * 8];
+            }
+            f |= q[0x8455] | (q[0x8454] << 1);
+            e->f3c = f;
+            if ((*(s8 **)&lbl_80346FD0) != 0) {
+                f = (*(s8 **)&lbl_80346FD0)[lbl_803472BC * 16 + i * 2 + a * 8 + 1];
+            }
+            f |= q[0x8457] | (q[0x8456] << 1);
+            e->f40 = f;
+        }
+        e++;
+    }
+}
+
+s32 fn_80157EA8(Out_80157EA8 *out, Obj_80157EA8 *obj, f32 frame)
+{
+    NJS_MATRIX m;
+    NJS_POINT3 p;
+    s32 flags = 0;
+    Anim_80157EA8 *anim = obj->anim;
+
+    if (anim != 0) {
+        if (frame >= anim->cnt) {
+            frame = anim->cnt - 1.0;
+        } else if (frame < 0.0f) {
+            frame = 0.0f;
+        }
+        fn_801E78C8(anim, out->pos, out->ang, out->off, frame);
+        flags = obj->anim->type & 7;
+    } else {
+        out->pos[0] = 0.0f;
+        out->pos[1] = 0.0f;
+        out->pos[2] = 0.0f;
+        out->ang[0] = 0;
+        out->ang[1] = 0;
+        out->ang[2] = 0;
+    }
+    njUnitMatrix(m);
+    njRotateZXY(m, (s32)(182.04445f * obj->part->rot[0]), (s32)(182.04445f * obj->part->rot[1]), (s32)(182.04445f * obj->part->rot[2]));
+    njCalcPoint(m, (NJS_POINT3 *)out->pos, &p);
+    out->pos[0] = p.x + obj->part->pos[0];
+    out->pos[1] = p.y + obj->part->pos[1];
+    out->pos[2] = p.z + obj->part->pos[2];
+    out->ang[0] += (s32)(182.04445f * obj->part->rot[0]);
+    out->ang[1] += (s32)(182.04445f * obj->part->rot[1]);
+    out->ang[2] += (s32)(182.04445f * obj->part->rot[2]);
+    return flags;
 }

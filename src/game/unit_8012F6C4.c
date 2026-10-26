@@ -180,6 +180,29 @@ typedef struct {
     Sys* x24;
     void** x28;
 } Holder;
+typedef struct {
+    u8 b0;
+    u8 b1;
+    u8 b2[8];
+    s8 ba[8];
+    u8 pad12[2];
+    s32 w14[8];
+    s32 w34[8];
+} Data_8012F75C;
+typedef struct {
+    u8 pad0[0x24];
+    Data_8012F75C *x24;
+} Obj_8012F75C;
+extern void *fn_802268E8(void *a, void (*f)(void));
+extern void *fn_801E1C7C(u32 n);
+extern void fn_8012F958(void);
+typedef struct {
+    s8 x;
+    s8 y;
+    s8 a;
+    s8 b;
+    s8 c;
+} Cell_8013A35C;
 
 void fn_8012F6C4(s8 idx, u32 val) {
     u8* p = *(u8**)((u8*)lbl_80346F38 + 0x24);
@@ -742,4 +765,123 @@ void fn_80133478(void)
     (*(Holder**)&lbl_80346F58)->x28[1] = a;
     (*(Holder**)&lbl_80346F58)->x28[2] = b;
     ((Holder0C*)(*(Holder**)&lbl_80346F58)->x28[3])->spr->x14 = 0xFF808080;
+}
+
+void fn_8012F75C(void) {
+    (*(Obj_8012F75C **)&lbl_80346F38) = fn_802268E8((*(void **)&lbl_803475A8), fn_8012F958);
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24 = fn_801E1C7C(0x54);
+    if ((*(Obj_8012F75C **)&lbl_80346F38) != 0) {
+        (*(Obj_8012F75C **)&lbl_80346F38)->x24->b0 = 1;
+    }
+    if ((*(Obj_8012F75C **)&lbl_80346F38) != 0) {
+        (*(Obj_8012F75C **)&lbl_80346F38)->x24->b1 = 0;
+    }
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->w34[0] = 0;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->b2[0] = 1;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->ba[0] = -1;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->w14[0] = 0;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->w34[1] = 0;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->b2[1] = 1;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->ba[1] = -1;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->w14[1] = 0;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->w34[2] = 0;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->b2[2] = 1;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->ba[2] = -1;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->w14[2] = 0;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->w34[3] = 0;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->b2[3] = 1;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->ba[3] = -1;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->w14[3] = 0;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->w34[4] = 0;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->b2[4] = 1;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->ba[4] = -1;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->w14[4] = 0;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->w34[5] = 0;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->b2[5] = 1;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->ba[5] = -1;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->w14[5] = 0;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->w34[6] = 0;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->b2[6] = 1;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->ba[6] = -1;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->w14[6] = 0;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->w34[7] = 0;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->b2[7] = 1;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->ba[7] = -1;
+    (*(Obj_8012F75C **)&lbl_80346F38)->x24->w14[7] = 0;
+}
+
+void fn_8013A35C(s32 a, s32 lo, s32 v, s32 hi) {
+    extern void fn_80131658(Cell_8013A35C *c);
+    extern void fn_8013160C(s8 x, s8 y, s32 z);
+    extern s32 fn_80136A28(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f);
+    Cell_8013A35C c1b;
+    Cell_8013A35C c2b;
+    Cell_8013A35C c1a;
+    Cell_8013A35C c2a;
+    s8 *arr;
+    s32 kind;
+    s32 ok;
+    s32 code;
+    s32 i;
+
+    fn_80136A28(a, lo, 4, v, -1, hi);
+    arr = fn_80135598() + 0x238;
+    kind = 4;
+    ok = 0;
+    if (arr != 0 && v >= 0 && v < 5 && arr[v * 0x22 + 0x74] >= 0) {
+        ok = 1;
+    }
+    if (ok != 0) {
+        kind = arr[v * 0x22 + 0x74];
+    }
+    switch (kind) {
+    case 1:
+        c1a.x = lo;
+        c1a.y = a;
+        c1a.a = 1;
+        c1a.c = 2;
+        c1a.b = 1;
+        fn_80131658(&c1a);
+        switch (hi - lo) {
+        case 0:
+            code = 0x12;
+            break;
+        case 1:
+            code = 0x13;
+            break;
+        case 2:
+            code = 0x14;
+            break;
+        case 3:
+            code = 0x15;
+            break;
+        default:
+            code = 0x12;
+            break;
+        }
+        c1b.x = lo;
+        c1b.y = a;
+        c1b.a = 3;
+        c1b.c = 2;
+        c1b.b = code;
+        fn_80131658(&c1b);
+        for (i = lo + 1; i <= hi; i++) {
+            fn_8013160C(i, a, 2);
+        }
+        break;
+    case 2:
+        c2a.x = lo;
+        c2a.y = a;
+        c2a.a = 1;
+        c2a.c = 2;
+        c2a.b = 0xd;
+        fn_80131658(&c2a);
+        c2b.x = hi;
+        c2b.y = a;
+        c2b.a = 3;
+        c2b.c = 2;
+        c2b.b = 0xc;
+        fn_80131658(&c2b);
+        break;
+    }
 }

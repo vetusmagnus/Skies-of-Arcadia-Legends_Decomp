@@ -1,7 +1,7 @@
 Progress and handoff
 ====================
 
-State of the game-code work as of 2026-10-26 (after batch 8). Numbers live in the README status block and on
+State of the game-code work as of 2026-10-26 (after batch 9). Numbers live in the README status block and on
 [ByteMatch](https://bytematch.dev/vetusmagnus/SoAL-Decomp); this page covers what's in flight.
 
 Game files
@@ -346,6 +346,39 @@ stops a constant-range `for` from unrolling.
 Next batch: start at 0x1C0 bytes in 0x80050000-0x801C0000 (about 1,000 candidates left), then 0x58 bytes and up
 outside it. Merging is the bottleneck now: before the next batch, give the camp-menu code one shared `camp_work`
 struct in `unit_80193F28.c` / `unit_8015DC6C.c` so its functions can be added without a per-function type.
+
+Sonnet batch 9 (camp_work, then 448-632 byte functions)
+--------------------------------------------------------
+
+First, `camp_work` got one layout. `unit_80193F28.c` now declares it as a 0x360-byte `CampWork` (the size
+in `symbols.txt`; `lbl_80307638` is 0xA50, not 0x900) whose `objs[]` array, indexed by object kind id, starts at
++0x10; the camp-menu creators fill `camp_work.objs[kind]`, and a local `Node **cw = (Node **)&camp_work;`
+at the top of a function reproduces the original's early base-register load. That let all 14 camp-menu
+creators in (fn_80197838-fn_801999B4), plus 13 of the other 55 held-back functions: 27 of the 69.
+The scripts that did the merging (`merge4.py` resolves clashing prototypes per name: keep the unit's, take
+the file's with the whole unit re-checked, or cast at the use) live in `build/agents/` like the rest.
+
+Then 16 Sonnet agents took the 320 smallest unmatched functions of 0x1C0 bytes and up in
+0x80050000-0x801C0000 (0x1C0-0x278; 1,000 candidates, about 680 remain), one representative per duplicate
+group. 176 of 316 attempted files passed fdiff and the float check in isolation (4 functions were never
+attempted: fn_8008C7B0, fn_800AD330, fn_801375A0, fn_8017BCA8); 96 of them are in the unit files now. All
+units pass fdiff over the whole file and the float check; `main.dol` still rebuilds.
+
+Matched in isolation but not merged (80; a type clash with the unit, or a cast at the use changes the code):
+fn_80057BD0, fn_8006065C, fn_8006EB88, fn_8007C600, fn_8007FAB0, fn_800819D0, fn_80084C78, fn_800858B8, fn_80088B14, fn_8008CBB8, fn_800C7058, fn_800C7F64, fn_800CD72C, fn_800CE2B4, fn_800D1E58, fn_800D9E00, fn_800EA244, fn_800EB58C, fn_80100BF8, fn_801032C8, fn_80109868, fn_80109B8C, fn_8010C0E4, fn_8010D280, fn_8010ECD8, fn_8010F198, fn_801115EC, fn_80111A78, fn_80111DE8, fn_8011226C, fn_801157E4, fn_801186D8, fn_80119850, fn_8011B448, fn_8011CC74, fn_8011D2D8, fn_8011FE2C, fn_80124634, fn_80126118, fn_80126BF0, fn_801276E8, fn_80127994, fn_80127BC0, fn_8012D508, fn_801303D0, fn_80132458, fn_8014337C, fn_80143FA4, fn_801512DC, fn_80153518, fn_80155438, fn_80156E54, fn_80158BE8, fn_80158DB4, fn_80159610, fn_801677D0, fn_80167EF0, fn_8016FB2C, fn_80172C60, fn_80173104, fn_8017379C, fn_80174F40, fn_801764E4, fn_80176868, fn_801784D8, fn_80178D2C, fn_80179388, fn_8017BF14, fn_8017C0EC, fn_8017F310, fn_80180694, fn_80180CCC, fn_801887EC, fn_80189EA0, fn_80197270, fn_80199678, fn_801A0C3C, fn_801B0F1C, fn_801B2430.
+
+Near misses (agent files in `build/agents/b10_*/`): fn_80050B88, fn_800581B8, fn_8005B094, fn_80060B98, fn_800683D8, fn_8006D308, fn_80077228, fn_8007814C, fn_80078D24, fn_8007BC6C, fn_8007C7F8, fn_8007F00C, fn_8007FE0C, fn_8008178C, fn_80081B94, fn_80082134, fn_80082AC0, fn_80083D3C, fn_80084A08, fn_80084E38, fn_8008C4C0, fn_80091040, fn_800914D8, fn_8009194C, fn_800953E4, fn_80096DA4, fn_8009884C, fn_80098A68, fn_8009CBBC, fn_8009CDB8, fn_800A25E0, fn_800A3C68, fn_800AE300, fn_800B5064, fn_800C1A50, fn_800C5940, fn_800CB6D0, fn_800D5348, fn_800D57E8, fn_800D6C04, fn_800D7B28, fn_800D8014, fn_800DA564, fn_800E6554, fn_800E6A48, fn_800E6C2C, fn_800EC040, fn_800EC210, fn_800ED8C4, fn_800F0A18, fn_800F4BE8, fn_800F4E08, fn_80100E68, fn_801046D4, fn_8010493C, fn_8010C5BC, fn_8010C978, fn_80112BB4, fn_80112E1C, fn_8011D548, fn_801202C4, fn_80122508, fn_80122B34, fn_801237EC, fn_80123CBC, fn_80123F30, fn_8012AB84, fn_80131820, fn_801321DC, fn_80134A3C, fn_80134E7C, fn_8013506C, fn_801365D8, fn_80136848, fn_8013A538, fn_8013D718, fn_8013DEFC, fn_8013F6E0, fn_8013F8F8, fn_80140264, fn_801410D4, fn_80141390, fn_80142CD8, fn_8014419C, fn_80146BF4, fn_80148464, fn_801491CC, fn_8014FDFC, fn_80150014, fn_80150EF8, fn_80151610, fn_80153790, fn_8015635C, fn_80159D48, fn_8015AB68, fn_8016058C, fn_80165EE4, fn_80166220, fn_8016B1E4, fn_8016C888, fn_8016CCD8, fn_8016D904, fn_8016EF10, fn_80176B3C, fn_80177134, fn_80177EFC, fn_80179554, fn_8017C2C4, fn_8017D7C0, fn_8017DCB4, fn_8017F644, fn_80181D94, fn_80184330, fn_80184A78, fn_80184F68, fn_801852F8, fn_80188098, fn_8018DABC, fn_8018DD24, fn_80196C10, fn_80197654, fn_8019844C, fn_801986BC, fn_80199024, fn_8019BB54, fn_8019D330, fn_8019E6F8, fn_8019F28C, fn_801A0018, fn_801A1958, fn_801A1B98, fn_801A3510, fn_801A4354, fn_801A47D8, fn_801A5FD8, fn_801AC48C, fn_801AC678, fn_801AD00C, fn_801B0B9C, fn_801B95C8.
+
+Lessons: a dead `case 0xFE:`/`case 5:` fixes compare trees again; `do { } while` and `for (i = 31; i != 0; i--)`
+steer unrolling and `bdnz`; two or more `static inline` search helpers (`Find`, `Count`) reproduce the
+original's repeated loops; `((Pnl**)camp_work)[0xFC/4 + i]` gives a strength-reduced pointer walk; declaring a
+callee's float parameters before its int parameters can fix caller scheduling; reading three floats into locals
+and storing them in reverse reproduces an `f2/f3/f0` load pattern; `perm.py` over every local, loop counters
+included, fixed several register shuffles. Running two fdiff processes at the same moment can corrupt both, so
+re-check serially.
+
+Next batch: start at 0x278 bytes in 0x80050000-0x801C0000 (about 680 candidates left), then 0x58 bytes and up
+outside it.
 
 Good next targets
 -----------------

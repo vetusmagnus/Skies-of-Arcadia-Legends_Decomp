@@ -340,6 +340,16 @@ extern s32 fn_8015F1F0(void* p);
 extern void fn_801DBE1C(const char* fmt, ...);
 extern char lbl_802B0D78[];
 extern f32 lbl_802B0D6C[3];
+typedef struct Probe_800912FC {
+    f32 x, y, z;
+    f32 h;
+    s16 a;
+    u16 b;
+} Probe_800912FC;
+typedef struct Obj_800912FC {
+    u8 pad0[0x18];
+    f32* p18;
+} Obj_800912FC;
 
 u32 fn_8008B55C(void* a0, Ent_UNIT0000* e) {
     return (e->x1c >> 9) & 1;
@@ -1203,4 +1213,62 @@ void fn_80094F90(NJS_POINT3* out, Actor* o)
             out->z = p->pos.z;
         }
     }
+}
+
+s32 fn_800912FC(f32* pos, Obj_800912FC* o) {
+    extern f32 njSin(s32 a);
+    extern f32 njCos(s32 a);
+    extern s32 fn_80224588(s32 a, Probe_800912FC* p, s32 b);
+    extern void fn_80222838(void* p);
+    extern s32 fn_80223194(s32 a, void* p);
+    Probe_800912FC p;
+    f32 r = 4.0f;
+    f32 dx;
+    f32 dz;
+    f32 miny = pos[1];
+    s32 ang;
+    s32 n;
+    n = 2;
+    ang = 0;
+    do {
+        dx = r * njCos(ang);
+        dz = r * njSin(ang);
+        p.x = pos[0] + dx;
+        p.y = pos[1];
+        p.z = pos[2] + dz;
+        fn_80224588(0, &p, 1);
+        if (p.a == 0 || (p.b & 0x1800) == 0x1800) {
+            break;
+        }
+        if ((p.b & 0x400) && miny > p.h) {
+            miny = p.h;
+        }
+        p.x = pos[0] - dx;
+        p.z = pos[2] - dz;
+        fn_80224588(0, &p, 1);
+        if (p.a == 0 || (p.b & 0x1800) == 0x1800) {
+            break;
+        }
+        if ((p.b & 0x400) && miny > p.h) {
+            miny = p.h;
+        }
+        ang += 0x4000;
+        n--;
+    } while (n > 0);
+    if (n != 0) {
+        return 0;
+    }
+    o->p18[0] = pos[0];
+    o->p18[1] = miny;
+    o->p18[2] = pos[2];
+    fn_80222838(o);
+    {
+        s32 res = fn_80223194(0x1800, o);
+        s32 bad = (res | -res) >> 31 & 1;
+        if (bad) {
+            return 0;
+        }
+    }
+    pos[1] = miny;
+    return 1;
 }
