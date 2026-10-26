@@ -196,6 +196,42 @@ Not matched: fn_80090518 (38, unrolled memset loop), fn_8010C384 (not attempted)
 
 Next batch: start at 0x8C bytes in 0x80050000-0x801C0000 (216 of the 2,136 candidates were taken, so about
 1,900 remain, all larger), then 0x58 bytes and up outside it.
+Haiku batch 6 (140-236 byte functions)
+--------------------------------------
+
+16 Haiku agents, 20 functions each, one representative per duplicate group: the 320 smallest unmatched
+functions of 0x8C bytes and up in 0x80050000-0x801C0000 (0x8C-0xEC; 1,879 candidates, about 1,560 remain).
+176 of 320 match (every one re-checked with fdiff; `main.dol` still rebuilds byte-identical). They went
+into 13 existing units (Haiku merge passes per unit for clashing extern types); no new unit was needed.
+Beyond roughly 0xA0 bytes the hit rate drops to about 55%: the misses are almost all register
+allocation and loop shape (MWCC turns counted loops into `mtctr`/`bdnz` where the original compares).
+
+Near misses (diff lines): fn_80074D9C (2, two branch targets), fn_80083ACC (11), fn_8007629C (13), fn_80075C70 (16),
+fn_800763D0 (23), fn_8007DEE0 (21), fn_80077DA0 (22, rotated loop without CTR), fn_80083C50 (1, extra `mr`),
+fn_80083F34, fn_800899C0 (18), fn_8008F084/F138/F1F8 (9), fn_8008F434 (13), fn_80090598 (6), fn_80095110 (6),
+fn_80099830 (10), fn_8009D5BC (18), fn_80097A1C (24), fn_8009B3F4/B4C0 (28), fn_8009D190 (36), fn_8009877C (34),
+fn_800C09E4 (3, doubled `beq`), fn_800C63A4 (8), fn_800C8FCC (7), fn_800D6240 (14), fn_800D62DC (19),
+fn_800BF0CC (35, the 32-word copy is `bdnz` in the original), fn_800A3680/A3744 (30), fn_800B0900 (29),
+fn_80109DCC/EEC (5), fn_8010A164 (4), fn_8010B88C (6), fn_8011768C (19), fn_8010DDBC (23),
+fn_80118948 (8), fn_801189F0 (16), fn_80126E24 (18), fn_80128E7C (17), fn_801281E8/82C4/8DA4 (21),
+fn_80129058 (10), fn_801295EC (9), fn_8012C670 (6), fn_80129814 (22),
+fn_8013ECF4 (11), fn_801353A8 (8), fn_8013A818 (24), fn_80148024 (14), fn_801486CC (11),
+fn_80148BE8 (19), fn_801525F8 (17), fn_801557A8 (15), fn_80156CC4 (4), fn_80158590 (4), fn_801589BC (6),
+fn_8015FAD4 (3), fn_80167578/67604 (4, `addi+lwzx` vs `add+lwz`), fn_801752F4 (4), fn_8017A6A4 (9), fn_8018E73C (14),
+fn_80194150 (8), fn_801942A4 (17), fn_801A372C (7), fn_801AAFAC (4), fn_801B5644 (2, LR reload order).
+The `neg/or/srwi` boolean idiom (`!x` on a word) blocked fn_800FF4EC, fn_800FF6B4, fn_80194CC8, fn_80161F04,
+fn_801942A4: plain C always gives `cntlzw` or `and.`.
+Not matched at all (far): fn_80051EC8, fn_80051FA0, fn_80075F2C, fn_80076478, fn_80078A20, fn_800783A8,
+fn_8007C9CC, fn_8007E44C, fn_8007FD20, fn_800801A8, fn_8008066C, fn_80082340, fn_80090A7C, fn_801559BC, fn_801A4684.
+
+Lessons: an `extern T x[];` with no size makes MWCC use `lis/addi`; give the real size (`[2]` for an 8-byte
+sbss object) to get `sda21`. A callee's `s8` argument fixes `extsb`. `switch` reproduces `bne; b` layouts.
+
+Next batch: start at 0xF0 bytes in 0x80050000-0x801C0000 (about 1,560 candidates left), then 0x58 bytes and up
+outside it (0x80005B50-0x80050000 and 0x801C0000 and up; skip the SDK range). Selection recipe: group by
+`tools/match/dupes.py`, drop groups with a member already in `src/`, take the lowest address of each group,
+sort by size, skip the names listed in this file as near misses.
+
 Good next targets
 -----------------
 

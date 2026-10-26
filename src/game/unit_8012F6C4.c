@@ -16,6 +16,64 @@ void fn_801303D0(void);
 void fn_80131734(void);
 void fn_80132458(void);
 void fn_801331AC(void);
+typedef struct Fn80130040Inner {
+    u8 pad0[0xa8];
+    s32 dst[8];
+    s32 src[8];
+} Fn80130040Inner;
+typedef struct Fn80130040Mgr {
+    u8 pad0[0x24];
+    Fn80130040Inner *inner;
+} Fn80130040Mgr;
+extern void fn_80130C6C(void);
+typedef struct Fn80130264Inner {
+    u8 pad0[0xc];
+    s32 dst[8];
+} Fn80130264Inner;
+typedef struct Fn80130264Mgr {
+    u8 pad0[0x24];
+    Fn80130264Inner *inner;
+} Fn80130264Mgr;
+extern void fn_80130B64(void);
+typedef struct Fn80130C6CInner {
+    u8 pad0[0xc];
+    s32 in[8];
+    s32 out[8];
+} Fn80130C6CInner;
+typedef struct Fn80130C6CMgr {
+    u8 pad0[0x24];
+    Fn80130C6CInner *inner;
+} Fn80130C6CMgr;
+typedef struct Fn80131500Holder {
+    s32 a;
+    s32 b;
+} Fn80131500Holder;
+typedef struct Fn80131500Inner {
+    u8 pad0[0xae];
+    u8 f_ae;
+} Fn80131500Inner;
+typedef struct Fn80131500Mgr {
+    u8 pad0[0x24];
+    Fn80131500Inner *inner;
+    Fn80131500Holder *holder;
+} Fn80131500Mgr;
+extern void *lbl_80346F04;
+extern void *lbl_80346F08;
+extern s32 fn_801D68C4(void *, s32);
+typedef struct {
+    u32 id;
+    f32 x;
+    f32 y;
+    u32 flags;
+    u32 aux;
+    f32 sx;
+    f32 sy;
+} FnBlock;
+typedef struct {
+    u8 pad[0x28];
+    u32 *table;
+} FnRoot;
+extern void fn_8012A9A8(FnBlock *b);
 
 void fn_8012F6C4(s8 idx, u32 val) {
     u8* p = *(u8**)((u8*)lbl_80346F38 + 0x24);
@@ -254,4 +312,86 @@ s32 fn_801388B4(s32 r3)
     case 5: r0 = 5; break;
     }
     return r0;
+}
+
+void fn_80130040(void) {
+    fn_80130C6C();
+    ((Fn80130040Mgr *)lbl_80346F40)->inner->dst[0] = ((Fn80130040Mgr *)lbl_80346F40)->inner->src[0];
+    ((Fn80130040Mgr *)lbl_80346F40)->inner->dst[1] = ((Fn80130040Mgr *)lbl_80346F40)->inner->src[1];
+    ((Fn80130040Mgr *)lbl_80346F40)->inner->dst[2] = ((Fn80130040Mgr *)lbl_80346F40)->inner->src[2];
+    ((Fn80130040Mgr *)lbl_80346F40)->inner->dst[3] = ((Fn80130040Mgr *)lbl_80346F40)->inner->src[3];
+    ((Fn80130040Mgr *)lbl_80346F40)->inner->dst[4] = ((Fn80130040Mgr *)lbl_80346F40)->inner->src[4];
+    ((Fn80130040Mgr *)lbl_80346F40)->inner->dst[5] = ((Fn80130040Mgr *)lbl_80346F40)->inner->src[5];
+    ((Fn80130040Mgr *)lbl_80346F40)->inner->dst[6] = ((Fn80130040Mgr *)lbl_80346F40)->inner->src[6];
+    ((Fn80130040Mgr *)lbl_80346F40)->inner->dst[7] = ((Fn80130040Mgr *)lbl_80346F40)->inner->src[7];
+}
+
+void fn_80130264(s32 *src) {
+    ((Fn80130264Mgr *)lbl_80346F40)->inner->dst[0] = src[0];
+    ((Fn80130264Mgr *)lbl_80346F40)->inner->dst[1] = src[1];
+    ((Fn80130264Mgr *)lbl_80346F40)->inner->dst[2] = src[2];
+    ((Fn80130264Mgr *)lbl_80346F40)->inner->dst[3] = src[3];
+    ((Fn80130264Mgr *)lbl_80346F40)->inner->dst[4] = src[4];
+    ((Fn80130264Mgr *)lbl_80346F40)->inner->dst[5] = src[5];
+    ((Fn80130264Mgr *)lbl_80346F40)->inner->dst[6] = src[6];
+    ((Fn80130264Mgr *)lbl_80346F40)->inner->dst[7] = src[7];
+    fn_80130B64();
+}
+
+void fn_80130C6C(void) {
+    s32 i;
+
+    for (i = 0; i < 8; i++) {
+        switch (((Fn80130C6CMgr *)lbl_80346F40)->inner->in[i]) {
+        case 0:
+            ((Fn80130C6CMgr *)lbl_80346F40)->inner->out[i] = 0xff40dc40;
+            break;
+        case 4:
+            ((Fn80130C6CMgr *)lbl_80346F40)->inner->out[i] = 0xff40dcdc;
+            break;
+        case 1:
+            ((Fn80130C6CMgr *)lbl_80346F40)->inner->out[i] = 0xffdcdc40;
+            break;
+        case 5:
+            ((Fn80130C6CMgr *)lbl_80346F40)->inner->out[i] = 0xffdc7040;
+            break;
+        case 2:
+            ((Fn80130C6CMgr *)lbl_80346F40)->inner->out[i] = 0xffdc4040;
+            break;
+        case 3:
+            ((Fn80130C6CMgr *)lbl_80346F40)->inner->out[i] = 0;
+            break;
+        default:
+            ((Fn80130C6CMgr *)lbl_80346F40)->inner->out[i] = 0xff40dc40;
+            break;
+        }
+    }
+}
+
+void fn_80131500(s8 c) {
+    ((Fn80131500Mgr *)lbl_80346F48)->inner->f_ae = c;
+    if (c == 3) {
+        ((Fn80131500Mgr *)lbl_80346F48)->holder->a = fn_801D68C4(lbl_80346F04, 0x52);
+        ((Fn80131500Mgr *)lbl_80346F48)->holder->b = fn_801D68C4(lbl_80346F04, 0x53);
+    } else {
+        ((Fn80131500Mgr *)lbl_80346F48)->holder->a = fn_801D68C4(lbl_80346F08, 0x52);
+        ((Fn80131500Mgr *)lbl_80346F48)->holder->b = fn_801D68C4(lbl_80346F08, 0x53);
+    }
+}
+
+void fn_80132128(void)
+{
+    s32 i;
+    FnBlock b;
+
+    for (i = 0; i < 2; i++) {
+        b.id = ((FnRoot *)lbl_80346F48)->table[i];
+        b.x = -1.2f;
+        b.y = 1.0f;
+        b.flags = 0;
+        b.aux = 0;
+        b.sx = 1.0f;
+        b.sy = 1.0f;
+        fn_8012A9A8(&b);
+    }
 }

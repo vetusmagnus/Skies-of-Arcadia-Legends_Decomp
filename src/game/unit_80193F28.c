@@ -31,6 +31,17 @@ extern char lbl_802B4880[];
 extern s32 fn_801E4BF4(s8 a);
 extern s32 fn_801E4BBC(s8 a);
 extern s32 fn_801F3F88(void *p, s8 i);
+extern s32 fn_801E4BF4(s8 v);
+extern s32 fn_801E4BBC(s8 v);
+typedef struct Elem {
+    u8 pad0[0xf];
+    s8 flag;
+    u8 rest[0x5c - 0x10];
+} Elem;
+typedef struct Dst {
+    u32 pad0;
+    u8 *ptr;
+} Dst;
 
 int fn_80193F28(void) {
     fn_801DBE1C("Nothing VM Tanken.");
@@ -303,5 +314,114 @@ void fn_801959F4(void) {
         *(u32 *)(p + 0x4C) = 0;
         *(u32 *)(p + 0x50) = 0;
         p += 0x78;
+    }
+}
+
+s32 fn_80194A8C(s32 a) {
+    s32 v = a << 1;
+
+    if (fn_801E4BF4((s8)v) == 0) {
+        if (fn_801E4BF4((s8)(v + 1)) == 0) {
+            return -1;
+        }
+        return v + 1;
+    }
+    if (fn_801E4BF4((s8)(v + 1)) == 0) {
+        return v;
+    }
+    if (fn_801E4BBC((s8)v) == 0) {
+        return v + 1;
+    }
+    return v;
+}
+
+s32 fn_80194DA0(void) {
+    s32 i;
+    s8 t;
+
+    for (i = 0; i < 0x16; i++) {
+        if (fn_801E4BF4((s8)i) == 1) {
+            break;
+        }
+    }
+    if (i == 0x16) {
+        return 0;
+    }
+    t = (s8)lbl_80310A1C[6];
+    {
+        s32 v = 0;
+        switch (t) {
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 7:
+        case 0xc:
+            v = 0;
+            break;
+        default:
+            if ((s8)lbl_8030B7F4[0x328] != 0) {
+                v = 0;
+            } else {
+                v = 1;
+            }
+            break;
+        }
+        return v == 1;
+    }
+}
+
+void fn_8019520C(s32 idx, Dst *d) {
+    s8 t = ((Elem *)lbl_8030B7F4 + (s8)idx)->flag;
+
+    switch (t) {
+    case 0:
+        *(u32 *)(d->ptr + 0x14) = 0xFF20FF0A;
+        break;
+    case 1:
+        *(u32 *)(d->ptr + 0x14) = 0xFFFF4020;
+        break;
+    case 2:
+        *(u32 *)(d->ptr + 0x14) = 0xFFC800FF;
+        break;
+    case 3:
+        *(u32 *)(d->ptr + 0x14) = 0xFF0096FF;
+        break;
+    case 4:
+        *(u32 *)(d->ptr + 0x14) = 0xFFFFC800;
+        break;
+    case 5:
+        *(u32 *)(d->ptr + 0x14) = 0xFFDCDCDC;
+        break;
+    }
+}
+
+void fn_80195A68(u32 *p, s8 a, s8 b, s8 c, s8 d, s8 e) {
+    if (a == 1) {
+        *p |= 1;
+    } else {
+        *p &= ~1;
+    }
+    if (b == 1) {
+        *p |= 2;
+    } else {
+        *p &= ~2;
+    }
+    if (c == 1) {
+        *p |= 4;
+    } else {
+        *p &= ~4;
+    }
+    if (d == 1) {
+        *p |= 8;
+    } else {
+        *p &= ~8;
+    }
+    if (e == 1) {
+        *p |= 0x10;
+    } else {
+        *p &= ~0x10;
     }
 }
