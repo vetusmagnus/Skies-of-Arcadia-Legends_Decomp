@@ -2029,6 +2029,18 @@ s32 fn_8016645C(Obj_8016645C *o, Arg *a) {
     return 0;
 }
 
+typedef struct { f32 x, y, z; } Vec3;
+void fn_8016694C(Vec *a, Vec *b, V3i *out) {
+    Vec d;
+
+    if (a != 0 && b != 0 && out != 0) {
+        d.x = b->x - a->x;
+        d.y = b->y - a->y;
+        d.z = b->z - a->z;
+        fn_802135B4(&d, out);
+    }
+}
+
 void fn_8016ABEC(void)
 {
     fn_8016D01C();
