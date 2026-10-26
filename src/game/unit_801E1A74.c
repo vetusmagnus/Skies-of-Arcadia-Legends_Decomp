@@ -35,6 +35,27 @@ void fn_801E1C7C(s32 n) {
     lbl_803476E4 = 0;
 }
 
+extern void fn_801E15FC(void*, void*);
+void fn_801E1D30(void) {
+    void* node = *(void**)lbl_802F6748;
+    while (node != 0) {
+        void* next = *(void**)((u8*)node + 0x18);
+        fn_801E15FC(lbl_802F6748, *(void**)node);
+        node = next;
+    }
+    *(void**)lbl_802F6748 = 0;
+}
+
+void fn_801E1D94(void) {
+    void* node = *(void**)lbl_802F6748;
+    while (node != 0) {
+        void* next = *(void**)((u8*)node + 0x18);
+        fn_801E15FC(lbl_802F6748, *(void**)node);
+        node = next;
+    }
+    *(void**)lbl_802F6748 = 0;
+}
+
 void fn_801E1EE4(void)
 {
     lbl_802F6748[0] = 0;

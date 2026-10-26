@@ -226,3 +226,42 @@ void fn_801C6170(u8 *p) {
 void fn_801C6224(void) {
     lbl_803471CC = DVDGetDriveStatus();
 }
+
+typedef struct { float x, y, z; } Vec3;
+void fn_801C7A2C(Vec3 *v)
+{
+    int i, j;
+    Vec3 t1, t7, t6, t5, t4, t3, t2;
+
+    for (i = 0; i < 7; i++) {
+        for (j = i + 1; j < 8; j++) {
+            if (v[i].y < v[j].y) {
+                t1 = v[j];
+                v[j] = v[i];
+                v[i] = t1;
+            }
+        }
+    }
+    for (i = 0; i < 3; i++) {
+        for (j = i + 1; j < 4; j++) {
+            if (v[i].x > v[j].x) {
+                t2 = v[j];
+                v[j] = v[i];
+                v[i] = t2;
+            }
+        }
+    }
+    for (i = 4; i < 7; i++) {
+        for (j = i + 1; j < 8; j++) {
+            if (v[i].x > v[j].x) {
+                t3 = v[j];
+                v[j] = v[i];
+                v[i] = t3;
+            }
+        }
+    }
+    if (v[0].z < v[1].z) { t4 = v[1]; v[1] = v[0]; v[0] = t4; }
+    if (v[2].z > v[3].z) { t5 = v[3]; v[3] = v[2]; v[2] = t5; }
+    if (v[4].z < v[5].z) { t6 = v[5]; v[5] = v[4]; v[4] = t6; }
+    if (v[6].z > v[7].z) { t7 = v[7]; v[7] = v[6]; v[6] = t7; }
+}

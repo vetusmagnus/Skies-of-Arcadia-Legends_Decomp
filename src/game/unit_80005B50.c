@@ -336,6 +336,11 @@ void fn_80017778(void) {
     }
 }
 
+extern u32 fn_800215EC(s8);
+int fn_800179B4(int a) {
+    return fn_800215EC((s8)a) != 0;
+}
+
 s32 fn_8001BBF8(void* obj) {
     u8* p = PTR(PTR(obj, 0x24), 0x4c);
     s16 id = *(s16*)(p + 0x10);

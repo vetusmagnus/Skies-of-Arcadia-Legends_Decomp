@@ -315,6 +315,37 @@ s32 fn_80214A60(u32 a, CmdStream *st) {
     return 1;
 }
 
+typedef struct Cmd { u8 pad_00[0x1c]; float *cur; } Cmd;
+float fn_801F6120(float **p);
+void fn_8014818C(u16 a, s32 b);
+s32 fn_80214B28(u32 flags, Cmd *c) {
+    float *p;
+    u16 a;
+    s32 t;
+    s32 b;
+    if (flags & 1) {
+        p = c->cur;
+        p++;
+        if (*p == 3.4028235e38f) {
+            p++;
+            t = 0x7FFFFFFF;
+        } else {
+            t = (s32)fn_801F6120(&p);
+        }
+        a = t;
+        if (*p == 3.4028235e38f) {
+            p++;
+            b = 0x7FFFFFFF;
+        } else {
+            b = (s32)fn_801F6120(&p);
+        }
+        c->cur = p;
+        fn_8014818C(a, b);
+        return 0;
+    }
+    return 1;
+}
+
 s32 fn_8021503C(u32 a, CmdStream *st) {
     if (a & 1) {
         u8 *c = st->cur;
@@ -346,6 +377,35 @@ s32 fn_802150BC(u32 a, CmdStream *st) {
 }
 
 extern s32 lbl_803477E8;
+void fn_8014836C(u16 a, s32 b);
+s32 fn_80215368(u32 flags, Cmd *c) {
+    float *p;
+    u16 a;
+    s32 t;
+    s32 b;
+    if (flags & 1) {
+        p = c->cur;
+        p++;
+        if (*p == 3.4028235e38f) {
+            p++;
+            t = 0x7FFFFFFF;
+        } else {
+            t = (s32)fn_801F6120(&p);
+        }
+        a = t;
+        if (*p == 3.4028235e38f) {
+            p++;
+            b = 0x7FFFFFFF;
+        } else {
+            b = (s32)fn_801F6120(&p);
+        }
+        c->cur = p;
+        fn_8014836C(a, b);
+        return 0;
+    }
+    return 1;
+}
+
 s32 fn_80215F8C(void) {
     return 1;
 }

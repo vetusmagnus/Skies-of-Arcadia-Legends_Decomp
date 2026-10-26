@@ -142,6 +142,13 @@ void fn_801D6850(void) {
     lbl_8034761C = -1;
 }
 
+void fn_801D6890(void) {
+    if (lbl_80347608 != 0) {
+        fn_801E1718(lbl_80347608);
+        lbl_80347608 = 0;
+    }
+}
+
 void fn_801D6944(Thing *t) {
     if (t->f8 != 0) {
         t->f8 = 0;
