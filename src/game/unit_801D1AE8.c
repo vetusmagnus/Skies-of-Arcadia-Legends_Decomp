@@ -1,4 +1,6 @@
 #include "types.h"
+#include "ninja.h"
+#include "game/drawstate.h"
 
 void VISetNextFrameBuffer(void *fb);
 void VIFlush(void);
@@ -55,7 +57,7 @@ void fn_801DFA9C(void *p, s32 v);
 typedef struct Mo { u8 pad0[4]; u8 m4[0x28]; u8 m2c[0x1C]; s32 x48; void *x4c; } Mo;
 void njPushMatrixEx(void);
 void njPopMatrixEx(void);
-void njUnitMatrix(void *m);
+
 void fn_80286EE8(void);
 void fn_8028B498(void);
 void fn_801E04E8(void *m, s32 a, void *b, void *c);
@@ -88,14 +90,183 @@ void fn_801D49E4(s32 a, s32 b, s32 c, s32 d, f32 p1, f32 p2, f32 p3, f32 p4) {
     fn_801D4A2C(a, b, c, lbl_80347568, d, 1.0f, 1.0f, p1, p2, p3, p4);
 }
 
-void fn_801D4C9C(s32 a, s32 b, s32 c, void *d, s32 e, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
-void fn_801D4C54(s32 a, s32 b, s32 c, s32 d, f32 p1, f32 p2, f32 p3, f32 p4) {
+typedef struct {
+    s32 idx;
+    f32 x, y, w, h;
+    u32 colour;
+    u8 pad[0x34 - 0x18];
+} Elem;
+
+typedef struct {
+    f32 pad0;
+    f32 u, v, u2, v2;
+} Cell; /* 0x14 */
+
+typedef struct {
+    Cell* cells;
+    Elem* elems;
+    u32 count;
+    u8 pad[8];
+    f32 x, y;
+} Layout;
+
+void fn_801D4C9C(Layout* lay, u32 flags, u32 mode, s32* tex, s32 vmode, f32 f1, f32 f2, f32 base, f32 f4, f32 a, f32 b);
+void fn_801D4C54(Layout* a, u32 b, u32 c, s32 d, f32 p1, f32 p2, f32 p3, f32 p4) {
     fn_801D4C9C(a, b, c, lbl_80347568, d, 1.0f, 1.0f, p1, p2, p3, p4);
 }
 
-void fn_801D4F54(s32 a, s32 b, s32 c, void *d, s32 e, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
-void fn_801D4F0C(s32 a, s32 b, s32 c, s32 d, f32 p1, f32 p2, f32 p3, f32 p4) {
+void fn_801D4F54(Layout* lay, u32 flags, u32 mode, s32* tex, s32 vmode, f32 f1, f32 f2, f32 base, f32 f4, f32 a, f32 b);
+typedef struct {
+    u8 pad[0xc];
+    s32** tex;
+} TexInfo;
+typedef struct {
+    s32 unused0;
+    s32 unused4;
+    TexInfo* info;
+} TexHolder;
+typedef struct {
+    f32 x, y, z, u, v;
+    u32 colour;
+} VertexTex;
+extern s32 fn_801E7554(void);
+extern s32 fn_80299040(void* p);
+extern s32 fn_80297DC8(s32 id);
+extern VertexTex lbl_80308E30[4];
+extern f32 fn_801DBD9C(f32);
+extern void fn_801D65B4(u32 colour, u8* out, f32 a, f32 b);
+extern void fn_80291064(VertexTex* v, s32 n, s32 mode);
+void fn_801D4C9C(Layout* lay, u32 flags, u32 mode, s32* tex, s32 vmode, f32 f1, f32 f2, f32 base, f32 f4, f32 a, f32 b)
+{
+    DrawState st;
+    u8 col[4];
+    u32 oldc;
+    s32 i;
+    VertexTex* v;
+    Cell* c;
+    Elem* e;
+
+    if (fn_801E7554() != 0)
+        return;
+    DrawStateDefault2D(&st);
+    st.attr_or |= flags;
+    if (mode == 1) {
+        st.blend_src = 8;
+        st.blend_dst = 10;
+    }
+    DrawStatePush(&st);
+    {
+        TexHolder* h = (TexHolder*)tex[0];
+        TexHolder* t = *(TexHolder**)((u8*)h + 8);
+        fn_80299040(tex);
+        fn_80297DC8(**(s32**)((u8*)t + 0xc));
+    }
+    v = lbl_80308E30;
+    for (i = 0; i < lay->count; i++) {
+        f32 z = fn_801DBD9C(base + 0.0001f * i);
+        e = &lay->elems[i];
+        c = &lay->cells[e->idx];
+        oldc = e->colour;
+        fn_801D65B4(oldc, col, a, b);
+        e->colour = (col[0] << 24) + (col[1] << 16) + (col[2] << 8) + col[3];
+        v[0].x = lay->x + e->x;
+        v[0].y = lay->y + e->y;
+        v[0].z = z;
+        v[0].u = c->u;
+        v[0].v = c->v;
+        v[0].colour = e->colour;
+        v[2].x = lay->x + e->w;
+        v[2].y = v[0].y;
+        v[2].z = z;
+        v[2].u = c->u2;
+        v[2].v = c->v;
+        v[2].colour = e->colour;
+        v[3].x = v[2].x;
+        v[3].y = lay->y + e->h;
+        v[3].z = z;
+        v[3].u = c->u2;
+        v[3].v = c->v2;
+        v[3].colour = e->colour;
+        v[1].x = v[0].x;
+        v[1].y = v[3].y;
+        v[1].z = z;
+        v[1].u = c->u;
+        v[1].v = c->v2;
+        v[1].colour = e->colour;
+        fn_80291064(v, 4, vmode);
+        e->colour = oldc;
+    }
+    DrawStatePop(0);
+    DrawStateRestore();
+}
+
+void fn_801D4F0C(Layout* a, u32 b, u32 c, s32 d, f32 p1, f32 p2, f32 p3, f32 p4) {
     fn_801D4F54(a, b, c, lbl_80347568, d, 1.0f, 1.0f, p1, p2, p3, p4);
+}
+
+void fn_801D4F54(Layout* lay, u32 flags, u32 mode, s32* tex, s32 vmode, f32 f1, f32 f2, f32 base, f32 f4, f32 a, f32 b)
+{
+    DrawState st;
+    u8 col[4];
+    u32 oldc;
+    s32 i;
+    VertexTex* v;
+    Cell* c;
+    Elem* e;
+
+    if (fn_801E7554() != 0)
+        return;
+    DrawStateDefault2D(&st);
+    st.attr_or |= flags;
+    if (mode == 1) {
+        st.blend_src = 8;
+        st.blend_dst = 10;
+    }
+    DrawStatePush(&st);
+    {
+        TexHolder* h = (TexHolder*)tex[0];
+        TexHolder* t = *(TexHolder**)((u8*)h + 8);
+        fn_80299040(tex);
+        fn_80297DC8(**(s32**)((u8*)t + 0xc));
+    }
+    v = lbl_80308E30;
+    for (i = 0; i < lay->count; i++) {
+        f32 z = fn_801DBD9C(base + 0.05f
+ * i);
+        e = &lay->elems[i];
+        c = &lay->cells[e->idx];
+        oldc = e->colour;
+        fn_801D65B4(oldc, col, a, b);
+        e->colour = (col[0] << 24) + (col[1] << 16) + (col[2] << 8) + col[3];
+        v[0].x = lay->x + e->x;
+        v[0].y = lay->y + e->y;
+        v[0].z = z;
+        v[0].u = c->u;
+        v[0].v = c->v;
+        v[0].colour = e->colour;
+        v[2].x = lay->x + e->w;
+        v[2].y = v[0].y;
+        v[2].z = z;
+        v[2].u = c->u2;
+        v[2].v = c->v;
+        v[2].colour = e->colour;
+        v[3].x = v[2].x;
+        v[3].y = lay->y + e->h;
+        v[3].z = z;
+        v[3].u = c->u2;
+        v[3].v = c->v2;
+        v[3].colour = e->colour;
+        v[1].x = v[0].x;
+        v[1].y = v[3].y;
+        v[1].z = z;
+        v[1].u = c->u;
+        v[1].v = c->v2;
+        v[1].colour = e->colour;
+        fn_80291064(v, 4, vmode);
+        e->colour = oldc;
+    }
+    DrawStatePop(0);
+    DrawStateRestore();
 }
 
 void fn_801D51C4(s32 a, s32 b, s32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
