@@ -333,10 +333,10 @@ Streams (streamed music)
   `a035ah24.mld` `M02s`, `a131i.mld` `m04s` (strings visible without decompression; more are
   compressed). Code: the staff roll `fn_80228E00` (`0x80229048`, `/sound/m02s.p16`, restarted when it
   ends and 92 s elapsed) and `fn_80229124`/`fn_80229E54`, the ending `fn_801C9198` (`0x801C92D8`,
-  `/sound/m04s.p16`). Voices: `fn_8003F890` (`0x8003F9C4`, `"/SOUND/%s"` + `B702%04dS%s`).
+  `/sound/m04s.p16`). Voices: `VoiceOpen` (`0x8003F9C4`, `"/SOUND/%s"` + `B702%04dS%s`).
 * **Battle streams** (2026-10-21): every spell and S-move plays `SOUND/KO00NN` (NN = the skill id, one
   pre-mixed stereo track with voice and effects; no sound effects start during it), battle voices are
-  `B702NNNN` (`fn_8003F890`, two prepared slots at `lbl_8030A10C` +0xCC / +0xD0..+0xD4), the victory
+  `B702NNNN` (`VoiceOpen`, two prepared slots at `lbl_8030A10C` +0xCC / +0xD0..+0xD4), the victory
   line e.g. `153`. MusyX side: `streamInfo` (`0x8032C730`, 64 x 0x64) per channel; `last` (+0x20)
   moves between 0 and half the buffer while a stream plays.
 * Stop: `SndStop(0x10/0x11)` / `SndStopAll` (closes both channels at once), or fade:

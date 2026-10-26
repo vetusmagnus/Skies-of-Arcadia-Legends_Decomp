@@ -1,51 +1,53 @@
 /* Sound loading (0x8003DEE0 - 0x80040010): the sound state lbl_8030A10C (SoundSys), .SAMP
- * sample-bank loading through a task (fn_8003E2B4 reads /SOUND/<name> into the two sample
- * slots), the battle stage/enemy sample numbers (fn_8003E4CC, fn_8003E624), the voice-file
- * name builder fn_8003ECF4 ("B702%04dS.P04" etc.) with its id tables, the two voice stream
- * slots (fn_8003F890 opens /SOUND/<voice>, fn_8003FA70 polls them) and the character sound
- * id lookups into lbl_802DE630 (fn_8003FD40, fn_8003FE54).
+ * sample-bank loading through a task (SampLoadTask reads /SOUND/<name> into the two sample
+ * slots), the battle stage/enemy sample numbers (StvIndexFromStage, StvIndexFromBattle), the voice-file
+ * name builder VoiceFileName ("B702%04dS.P04" etc.) with its id tables, the two voice stream
+ * slots (VoiceOpen opens /SOUND/<voice>, VoicePoll polls them) and the character sound
+ * id lookups into CharSeTable (CharSeId, CharSeIdFromTask).
+ * fn_8003FA30 and fn_8003FB70 keep their address names because battle.c calls them.
  *
  * Built with -str reuse,readonly -inline noauto,deferred (configure.py): strings land in .rodata,
  * and with deferred codegen the compiler emits the functions in reverse source order, local
- * array initialisers (fn_8003E7A4's table) ahead of every string, and the jump tables in code
+ * array initialisers (B702VoiceNo's table) ahead of every string, and the jump tables in code
  * order. So the functions below are written from the highest address down; the inline helpers
  * come first because they must precede their users. See docs/compiler.md. */
 #include "types.h"
 #include "game/task.h"
 
-/* One open voice stream (lbl_8030A10C.slot). */
+/* One open voice stream (lbl_8030A10C.voice), keyed by (owner, act, sub, kind). */
 typedef struct {
-    void* obj;   /* 0x00 */
-    s8 owner;    /* 0x04: character id */
-    s8 kind;     /* 0x05: fn_8003ECF4 kind */
-    s16 a;       /* 0x06 */
-    s16 b;       /* 0x08 */
+    void* stream; /* 0x00: PCM stream handle from fn_80215F14, NULL when free */
+    s8 owner;     /* 0x04: character id */
+    s8 kind;      /* 0x05: VoiceFileName kind */
+    s16 act;      /* 0x06: action code */
+    s16 sub;      /* 0x08: action sub id */
     u8 pad0a[6];
-} SndSlot;
+} VoiceSlot;
 
+/* The sound part of the shared state at lbl_8030A10C. */
 typedef struct {
     u8 pad0[0x6C];
     u32 flags;              /* 0x6C: 0x80000000 loading, 0x1000 stage sample toggle */
-    s16 seArg;              /* 0x70 */
-    s8 owner;               /* 0x72 */
+    s16 seBank;             /* 0x70: SePlay bank slot of the character sounds (7 = b7000000) */
+    s8 voiceOwner;          /* 0x72: character whose voice samples are loaded, -1 none */
     u8 pad73;
-    s32 size[2];            /* 0x74 */
-    void* data[2];          /* 0x7C */
+    s32 sampSize[2];        /* 0x74 */
+    void* sampData[2];      /* 0x7C */
     char sampName[2][0x20]; /* 0x84 */
     u8 padC4[0xCC - 0xC4];
-    SndSlot slot[2];        /* 0xCC */
+    VoiceSlot voice[2];     /* 0xCC */
     u8 padEC[0x1D0 - 0xEC];
 } SoundSys;
 
-/* Work of the .SAMP loader task fn_8003E2B4. */
+/* Work of the .SAMP loader task SampLoadTask. */
 typedef struct {
     u32 flags;              /* 0x00: 0x80000000 cache, 0x40000000 two files */
     u8 pad4[0x4];
     void* handle;           /* 0x08 */
     u8 pad0c[0x2C - 0x0C];
     char path[0x40];        /* 0x2C */
-    char name[2][0x10];     /* 0x6C */
-    s16 idx;                /* 0x8C */
+    char name[2][0x10];     /* 0x6C: file names, loaded in order */
+    s16 idx;                /* 0x8C: file being loaded */
     u8 pad8e[0x9C - 0x8E];
     void* data;             /* 0x9C */
     u8 padA0[0xAC - 0xA0];
@@ -62,18 +64,18 @@ typedef struct {
 /* A battle character task and the parts of its work used here. */
 typedef struct {
     u8 pad0[0xC];
-    char name[0x30 - 0xC];  /* 0x0C */
+    char name[0x30 - 0xC];  /* 0x0C: resource name, mapped to a party index by fn_80020E10 */
     void* x30;              /* 0x30 */
 } ChrRes;
 
 typedef struct {
-    s8 id;                  /* 0x00 */
+    s8 id;                  /* 0x00: character id (owner of voice streams) */
     u8 pad1;
-    s16 x2;                 /* 0x02 */
+    s16 typeId;             /* 0x02: character / enemy type, as fn_80008274 takes it */
     u8 x4;                  /* 0x04 */
     u8 pad5;
-    s16 x6;                 /* 0x06 */
-    s16 x8;                 /* 0x08 */
+    s16 action;             /* 0x06: action code (0x15 etc.), as fn_80020700 takes it */
+    s16 actionSub;          /* 0x08 */
     u8 padA[0x10 - 0xA];
     s16 x10;                /* 0x10 */
     u8 pad12[0x48 - 0x12];
@@ -84,7 +86,7 @@ typedef struct {
     u32 x50;                /* 0x50 */
     u8 pad54[0xEC - 0x54];
     u32 xec;                /* 0xEC */
-    u32 xf0;                /* 0xF0 */
+    u32 xf0;                /* 0xF0: 0x20 voice request pending */
     u8 padF4[0x298 - 0xF4];
     void* x298;             /* 0x298 */
 } ChrInfo;
@@ -101,9 +103,11 @@ typedef struct {
     ChrWork* work;          /* 0x24 */
 } ChrTask;
 
-typedef struct { s16 x0; s16 x2; } SndId;
+/* Entry of the battle participant table lbl_80309700. */
+typedef struct { s16 x0; s16 typeId; } SndId;
 typedef struct { u8 pad[0x24]; SndId* id; } SndIdTask;
 
+/* Result of the fn_80008F08 lookup: three indices into CharSeTable. */
 typedef struct { u8 pad[0x24]; s16 x24, x26, x28; } SndRec;
 typedef struct { u8 pad[0xC]; SndRec* rec; } SndFound;
 
@@ -112,8 +116,8 @@ extern void* lbl_803475A8;
 extern struct { u8 pad[0x328]; s8 x328[4]; } lbl_8030B7F4;
 extern SndIdTask* lbl_80309700[12];
 extern ChrTask* lbl_80309E24[12];
-/* Character voice id tables (fn_8003FD40, fn_8003FE54). */
-s16 lbl_802DE630[190] = {
+/* Character voice id tables (CharSeId, CharSeIdFromTask). */
+s16 CharSeTable[190] = {
     0x0, 0x2B, 0x5, 0x11, 0x1, 0x21, 0x6, 0x12, 0x0, 0x0,
     0x0, 0x0, 0x2, 0x20, 0x7, 0x13, 0x3, 0x11, 0x8, 0x14,
     0xF, 0x4, 0x4, 0x15, 0x18, 0x16, 0x19, 0x17, 0x10, 0x1A,
@@ -168,35 +172,35 @@ extern s32 fn_8000F208(ChrTask**);
 extern s32 fn_80008F08(void*, s32, s32, s32, s32, s32, SndFound**);
 extern void fn_80219378(char*);
 
-void fn_8003E1BC(void);
-void fn_8003E2B4(SampTask*);
-s16 fn_8003E4CC(void);
-s16 fn_8003E624(void);
-s16 fn_8003E7A4(s16);
-void fn_8003EB1C(Task*);
-s16 fn_8003F228(ChrTask*);
-s16 fn_8003F2C0(ChrTask*);
-s16 fn_8003F358(ChrTask*);
-s16 fn_8003F3F0(ChrTask*);
-s16 fn_8003F484(ChrTask*);
-s8 fn_8003F890(s16 a, s16 b, s8 c, ChrTask* t);
-s16 fn_8003FD40(s32 a, s8 kind);
-s16 fn_8003FE54(ChrTask* t, s8 kind);
+void SoundLoadCrSampDefault(void);
+void SampLoadTask(SampTask*);
+s16 StvIndexFromStage(void);
+s16 StvIndexFromBattle(void);
+s16 B702VoiceNo(s16);
+void VoiceSlotReleaseTask(Task*);
+s16 VoiceNoKind8(ChrTask*);
+s16 VoiceNoKind7(ChrTask*);
+s16 VoiceNoKind6(ChrTask*);
+s16 VoiceNoAct20(ChrTask*);
+s16 VoiceNoAct26(ChrTask*);
+s8 VoiceOpen(s16 act, s16 sub, s8 kind, ChrTask* t);
+s16 CharSeId(s32 chr, s8 kind);
+s16 CharSeIdFromTask(ChrTask* t, s8 kind);
 
-void fn_8003DEE0(void);
-void fn_8003DFE0(void);
-void fn_8003E084(void);
-void fn_8003E0F4(s8 a, s8 b);
-void fn_8003E464(char* buf);
-void fn_8003EBE0(ChrTask* arg);
-int fn_8003ECF4(char* out, s16 a, s16 b, ChrTask* t, s8 kind);
-s8 fn_8003F5B8(ChrTask* t, s16 a, s16 b, s16 c, s16 d);
+void SoundLoadStageSamp(void);
+void SoundFreeSamp(void);
+void SoundLoadB7Samp(void);
+void SoundLoadCrSamp(s8 first, s8 second);
+void StvSampPath(char* buf);
+void VoiceStopChar(ChrTask* arg);
+int VoiceFileName(char* out, s16 act, s16 sub, ChrTask* t, s8 kind);
+s8 VoiceRequest(ChrTask* t, s16 act, s16 sub, s16 act2, s16 sub2);
 void fn_8003FA30(s8* p);
-s32 fn_8003FA70(ChrTask* t);
+s32 VoicePoll(ChrTask* t);
 void fn_8003FB70(ChrTask* t, s8 a);
-void fn_8003FC18(ChrTask* t);
-s16 fn_8003FF7C(s16 i);
-void fn_8003FF94(void);
+void CharActionSe(ChrTask* t);
+s16 CharSeTableGet(s16 i);
+void StvSampLoadBlocking(void);
 
 /* Voice set of the party member found in lbl_80309E24 (0 Vyse, 1 Aika, 2 Fina). */
 static inline s8 PartyVoice(void)
@@ -220,7 +224,7 @@ static inline s8 PartyVoice(void)
 static inline s16 VoiceA(ChrTask* t)
 {
     ChrInfo* d = t->work->info;
-    switch (fn_80008274(d->x2)) {
+    switch (fn_80008274(d->typeId)) {
     case 0x63:
     case 0x88:
         return 0x15E0;
@@ -234,14 +238,14 @@ static inline s16 VoiceA(ChrTask* t)
     case 0xEE:
         return 0x15F5;
     default:
-        return d->x2 + 0x1560;
+        return d->typeId + 0x1560;
     }
 }
 
 static inline s16 VoiceB(ChrTask* t)
 {
     ChrInfo* d = t->work->info;
-    switch (fn_80008274(d->x2)) {
+    switch (fn_80008274(d->typeId)) {
     case 0x63:
     case 0x88:
         return 0x157C;
@@ -257,26 +261,29 @@ static inline s16 VoiceB(ChrTask* t)
     case 0xEE:
         return 0x1591;
     default:
-        return d->x2 + 0x14FC;
+        return d->typeId + 0x14FC;
     }
 }
 
-void fn_8003FF94(void)
+/* Loads the battle STVnn.SAMP bank for the current party/enemies (random of two), blocking. */
+void StvSampLoadBlocking(void)
 {
     char name[16];
     char path[32];
-    s16 base = fn_8003E624();
+    s16 base = StvIndexFromBattle();
     fn_8025CB24(name, "STV%02d.SAMP", (s16)(base + fn_8025ECC4() % 2));
     fn_8025CB24(path, "/SOUND/%s", name);
     fn_80219378(path);
 }
 
-s16 fn_8003FF7C(s16 i)
+/* CharSeTable[i]. */
+s16 CharSeTableGet(s16 i)
 {
-    return lbl_802DE630[i];
+    return CharSeTable[i];
 }
 
-s16 fn_8003FE54(ChrTask* t, s8 kind)
+/* SePlay id for sound `kind` of the character task t; the table row comes from the enemy record when one is found. */
+s16 CharSeIdFromTask(ChrTask* t, s8 kind)
 {
     s16 idx;
     SndFound* f;
@@ -319,12 +326,14 @@ s16 fn_8003FE54(ChrTask* t, s8 kind)
             }
         }
     }
-    return lbl_802DE630[idx];
+    return CharSeTable[idx];
 }
 
-s16 fn_8003FD40(s32 a, s8 kind)
+/* SePlay id for sound `kind` of character `chr`: party members index CharSeTable by kind + 4 * party index (kind 4 is
+ * row 0x18), everything else goes through CharSeIdFromTask. */
+s16 CharSeId(s32 chr, s8 kind)
 {
-    ChrTask* t = fn_80021658(a);
+    ChrTask* t = fn_80021658(chr);
     s8 x = fn_80020E10(t->work->res->name);
     s16 idx;
     if (x >= 0) {
@@ -336,7 +345,7 @@ s16 fn_8003FD40(s32 a, s8 kind)
             }
         } else {
             if (fn_8000F208(&t)) {
-                return fn_8003FE54(t, kind);
+                return CharSeIdFromTask(t, kind);
             }
             switch (kind) {
             default:
@@ -357,12 +366,13 @@ s16 fn_8003FD40(s32 a, s8 kind)
                 break;
             }
         }
-        return lbl_802DE630[idx];
+        return CharSeTable[idx];
     }
-    return fn_8003FE54(t, kind);
+    return CharSeIdFromTask(t, kind);
 }
 
-void fn_8003FC18(ChrTask* t)
+/* Plays the character sound for the current action (kind 0, 1, 3 or 4 from the action code) unless flags 0x100000 / 0x20 block it. */
+void CharActionSe(ChrTask* t)
 {
     ChrInfo* d = t->work->info;
     s32 hit = 0;
@@ -373,7 +383,7 @@ void fn_8003FC18(ChrTask* t)
             hit = 1;
         }
         if (hit != 0) {
-            r = fn_8003FD40(0, 0);
+            r = CharSeId(0, 0);
         } else {
             switch (d->x4a) {
             case 4:
@@ -397,12 +407,12 @@ void fn_8003FC18(ChrTask* t)
                 kind = 4;
             }
             if (kind != 4) {
-                r = fn_8003FD40(d->x48, kind);
+                r = CharSeId(d->x48, kind);
             } else {
-                r = fn_8003FD40(d->id, kind);
+                r = CharSeId(d->id, kind);
             }
         }
-        SePlay(0, lbl_8030A10C.seArg, r);
+        SePlay(0, lbl_8030A10C.seBank, r);
     }
 }
 
@@ -412,7 +422,7 @@ void fn_8003FB70(ChrTask* t, s8 a)
     s8 kind = 0;
     s16 r;
     void* h;
-    switch (d->x6) {
+    switch (d->action) {
     case 13:
         kind = 2;
         break;
@@ -421,17 +431,18 @@ void fn_8003FB70(ChrTask* t, s8 a)
         break;
     }
     if (kind != 4) {
-        r = fn_8003FD40(a, kind);
+        r = CharSeId(a, kind);
     } else {
-        r = fn_8003FD40(d->id, kind);
+        r = CharSeId(d->id, kind);
     }
-    h = (void*)SePlay(0, lbl_8030A10C.seArg, r);
+    h = (void*)SePlay(0, lbl_8030A10C.seBank, r);
     if (h != NULL) {
         fn_802172C8(h, -0x10);
     }
 }
 
-s32 fn_8003FA70(ChrTask* t)
+/* 1 when the character's voice is ready to play, 0 while still loading, -1 when it has none. */
+s32 VoicePoll(ChrTask* t)
 {
     SoundSys* s;
     ChrInfo* d;
@@ -439,16 +450,16 @@ s32 fn_8003FA70(ChrTask* t)
     s8 n = 0;
     d = t->work->info;
     s = &lbl_8030A10C;
-    if (s->owner == d->id) {
-        if (s->data[0] != NULL && s->data[1] != NULL) {
-            s->owner = -1;
+    if (s->voiceOwner == d->id) {
+        if (s->sampData[0] != NULL && s->sampData[1] != NULL) {
+            s->voiceOwner = -1;
             return 1;
         }
         return 0;
     }
     for (i = 0; i < 2; i++) {
-        if (d->id == lbl_8030A10C.slot[i].owner && lbl_8030A10C.slot[i].obj != NULL) {
-            if (fn_80215F8C(lbl_8030A10C.slot[i].obj) == 0) {
+        if (d->id == lbl_8030A10C.voice[i].owner && lbl_8030A10C.voice[i].stream != NULL) {
+            if (fn_80215F8C(lbl_8030A10C.voice[i].stream) == 0) {
                 return 0;
             }
             n++;
@@ -459,11 +470,12 @@ s32 fn_8003FA70(ChrTask* t)
 
 void fn_8003FA30(s8* p)
 {
-    s16 snd = fn_8003FD40(*p, 2);
+    s16 snd = CharSeId(*p, 2);
     SePlay(0, 7, snd);
 }
 
-s8 fn_8003F890(s16 a, s16 b, s8 c, ChrTask* t)
+/* Opens (or reuses) a voice stream for (act, sub, kind) in a free slot. 1 ok, 0 nothing to play or no slot, -1 open failed. */
+s8 VoiceOpen(s16 act, s16 sub, s8 kind, ChrTask* t)
 {
     ChrInfo* d = t->work->info;
     s8 i;
@@ -471,14 +483,14 @@ s8 fn_8003F890(s16 a, s16 b, s8 c, ChrTask* t)
     char name[16];
     char path[32];
     for (i = 0; i < 2; i++) {
-        if (lbl_8030A10C.slot[i].owner == d->id && lbl_8030A10C.slot[i].a == a &&
-            lbl_8030A10C.slot[i].b == b && lbl_8030A10C.slot[i].kind == c) {
+        if (lbl_8030A10C.voice[i].owner == d->id && lbl_8030A10C.voice[i].act == act &&
+            lbl_8030A10C.voice[i].sub == sub && lbl_8030A10C.voice[i].kind == kind) {
             return 1;
         }
     }
     slot = -1;
     for (i = 0; i < 2; i++) {
-        if (lbl_8030A10C.slot[i].obj == NULL) {
+        if (lbl_8030A10C.voice[i].stream == NULL) {
             slot = i;
             break;
         }
@@ -486,24 +498,25 @@ s8 fn_8003F890(s16 a, s16 b, s8 c, ChrTask* t)
     if (slot < 0) {
         return 0;
     }
-    if (fn_8003ECF4(name, a, b, t, c) != 0) {
+    if (VoiceFileName(name, act, sub, t, kind) != 0) {
         fn_8025F120(path, "/SOUND/");
         fn_8025F0B0(path, name);
-        lbl_8030A10C.slot[slot].obj = fn_80215F14(2, 0x5622, 2, 0, 0, 0, path);
-        if (lbl_8030A10C.slot[slot].obj != NULL) {
-            lbl_8030A10C.slot[slot].owner = d->id;
-            lbl_8030A10C.slot[slot].a = a;
-            lbl_8030A10C.slot[slot].b = b;
-            lbl_8030A10C.slot[slot].kind = c;
+        lbl_8030A10C.voice[slot].stream = fn_80215F14(2, 0x5622, 2, 0, 0, 0, path);
+        if (lbl_8030A10C.voice[slot].stream != NULL) {
+            lbl_8030A10C.voice[slot].owner = d->id;
+            lbl_8030A10C.voice[slot].act = act;
+            lbl_8030A10C.voice[slot].sub = sub;
+            lbl_8030A10C.voice[slot].kind = kind;
             return 1;
         }
-        lbl_8030A10C.slot[slot].owner = -1;
+        lbl_8030A10C.voice[slot].owner = -1;
         return -1;
     }
     return 0;
 }
 
-s8 fn_8003F5B8(ChrTask* t, s16 a, s16 b, s16 c, s16 d)
+/* Serves the pending voice request (xf0 & 0x20) of the character task by opening the streams its action needs. */
+s8 VoiceRequest(ChrTask* t, s16 act, s16 sub, s16 act2, s16 sub2)
 {
     ChrInfo* info = t->work->info;
     s8 r;
@@ -514,11 +527,11 @@ s8 fn_8003F5B8(ChrTask* t, s16 a, s16 b, s16 c, s16 d)
         info->xf0 &= ~0x20;
         return 0;
     }
-    switch (a) {
+    switch (act) {
     case 0x15:
     case 0x16: {
-        s8 x = fn_8003F890(a, d, 6, t);
-        r = (info->x50 & 0x800000) ? 0 : fn_8003F890(c, d, 0, t);
+        s8 x = VoiceOpen(act, sub2, 6, t);
+        r = (info->x50 & 0x800000) ? 0 : VoiceOpen(act2, sub2, 0, t);
         if (r < 0 || x < 0) {
             r = -1;
         } else {
@@ -529,8 +542,8 @@ s8 fn_8003F5B8(ChrTask* t, s16 a, s16 b, s16 c, s16 d)
     case 0x10:
     case 0x17: {
         s8 y;
-        r = fn_8003F890(c, d, 0, t);
-        y = fn_8003F890(0x10, d, 7, t);
+        r = VoiceOpen(act2, sub2, 0, t);
+        y = VoiceOpen(0x10, sub2, 7, t);
         if (r < 0 || y < 0) {
             r = -1;
         } else {
@@ -539,45 +552,45 @@ s8 fn_8003F5B8(ChrTask* t, s16 a, s16 b, s16 c, s16 d)
         break;
     }
     case 0x11:
-        r = fn_8003F890(a, -1, 8, t);
+        r = VoiceOpen(act, -1, 8, t);
         break;
     case 0x18:
-        if (b == 0x3c) {
-            fn_8003E1BC();
-            lbl_8030A10C.owner = info->id;
-            lbl_8030A10C.data[0] = 0;
+        if (sub == 0x3c) {
+            SoundLoadCrSampDefault();
+            lbl_8030A10C.voiceOwner = info->id;
+            lbl_8030A10C.sampData[0] = 0;
             r = 1;
         } else {
-            r = fn_8003F890(a, b, 1, t);
+            r = VoiceOpen(act, sub, 1, t);
         }
         break;
     case 0x1d:
-        switch (fn_800153E0(0x1d, b)) {
+        switch (fn_800153E0(0x1d, sub)) {
         case 0:
-            r = fn_8003F890(a, b, 2, t);
+            r = VoiceOpen(act, sub, 2, t);
             break;
         case 1:
-            r = fn_8003F890(c, d, 0, t);
+            r = VoiceOpen(act2, sub2, 0, t);
             break;
         case 2:
-            fn_8003F890(a, b, 2, t);
-            r = fn_8003F890(c, d, 0, t);
+            VoiceOpen(act, sub, 2, t);
+            r = VoiceOpen(act2, sub2, 0, t);
             break;
         }
         break;
     case 0xe:
-        r = fn_8003F890(a, b, 3, t);
+        r = VoiceOpen(act, sub, 3, t);
         break;
     case 0x1a:
     case 0x1b:
     case 0x1c:
-        r = fn_8003F890(a, b, 4, t);
+        r = VoiceOpen(act, sub, 4, t);
         break;
     case 0x1e:
-        r = fn_8003F890(a, b, 5, t);
+        r = VoiceOpen(act, sub, 5, t);
         break;
     case 0x14:
-        r = fn_8003F890(a, b, 9, t);
+        r = VoiceOpen(act, sub, 9, t);
         break;
     default:
         r = 0;
@@ -589,14 +602,15 @@ s8 fn_8003F5B8(ChrTask* t, s16 a, s16 b, s16 c, s16 d)
     return r;
 }
 
-s16 fn_8003F484(ChrTask* arg)
+/* Voice file number for actions 0x1A-0x1C: base + 1..3 at random, or base / base + 4 for action 0x1B / 0x1C; 0x1644/0x1645 for two enemy types. */
+s16 VoiceNoAct26(ChrTask* arg)
 {
     ChrWork* w = arg->work;
     ChrInfo* info = w->info;
     s16 r;
     switch (fn_80020E10(w->res->name)) {
     case -1:
-        switch (info->x2) {
+        switch (info->typeId) {
         case 0x84:
         case 0x97:
             return 0x1644;
@@ -613,7 +627,7 @@ s16 fn_8003F484(ChrTask* arg)
     case 4: r = 0x229; break;
     case 5: r = 0x28d; break;
     }
-    switch (info->x6) {
+    switch (info->action) {
     case 0x1b:
         break;
     case 0x1c:
@@ -626,7 +640,8 @@ s16 fn_8003F484(ChrTask* arg)
     return r;
 }
 
-s16 fn_8003F3F0(ChrTask* arg)
+/* Same for action 20. */
+s16 VoiceNoAct20(ChrTask* arg)
 {
     s16 r;
     switch (fn_80020E10(arg->work->res->name)) {
@@ -641,7 +656,8 @@ s16 fn_8003F3F0(ChrTask* arg)
     return r;
 }
 
-s16 fn_8003F358(ChrTask* arg)
+/* Same for kind 6. */
+s16 VoiceNoKind6(ChrTask* arg)
 {
     switch (fn_80020E10(arg->work->res->name)) {
     default: return -1;
@@ -654,7 +670,8 @@ s16 fn_8003F358(ChrTask* arg)
     }
 }
 
-s16 fn_8003F2C0(ChrTask* arg)
+/* Same for kind 7. */
+s16 VoiceNoKind7(ChrTask* arg)
 {
     switch (fn_80020E10(arg->work->res->name)) {
     default: return -1;
@@ -667,7 +684,8 @@ s16 fn_8003F2C0(ChrTask* arg)
     }
 }
 
-s16 fn_8003F228(ChrTask* arg)
+/* Voice file number of the character for VoiceFileName kind 8 (100 per party member, -1 for non-party). */
+s16 VoiceNoKind8(ChrTask* arg)
 {
     switch (fn_80020E10(arg->work->res->name)) {
     default: return -1;
@@ -680,7 +698,8 @@ s16 fn_8003F228(ChrTask* arg)
     }
 }
 
-int fn_8003ECF4(char* out, s16 a, s16 b, ChrTask* t, s8 kind)
+/* Writes the voice file name for (act, sub, kind) into out ("KO%04dS.P04", "B702%04dS.P04", "%3dS.P04"). 1 if there is a file. */
+int VoiceFileName(char* out, s16 act, s16 sub, ChrTask* t, s8 kind)
 {
     char ext[8];
     ChrInfo* info = t->work->info;
@@ -689,18 +708,18 @@ int fn_8003ECF4(char* out, s16 a, s16 b, ChrTask* t, s8 kind)
     fn_8025F120(ext, ".P04");
     switch (kind) {
     case 0:
-        fn_8025CB24(out, "KO%04dS%s", b, ext);
+        fn_8025CB24(out, "KO%04dS%s", sub, ext);
         return 1;
     case 1:
-        if (fn_80008AB4(t->work->res->x30, a, b, 0x3B, 3, 2, info->x298) == 0) {
+        if (fn_80008AB4(t->work->res->x30, act, sub, 0x3B, 3, 2, info->x298) == 0) {
             break;
         }
-        switch (a) {
+        switch (act) {
         case 0x18:
-            if (b == 0x3D) {
+            if (sub == 0x3D) {
                 fn_8025CB24(out, "%03dS%s", PartyVoice() * 100 + 461, ext);
             } else {
-                fn_8025CB24(out, "KO%04dS%s", b, ext);
+                fn_8025CB24(out, "KO%04dS%s", sub, ext);
             }
             return 1;
         }
@@ -710,12 +729,12 @@ int fn_8003ECF4(char* out, s16 a, s16 b, ChrTask* t, s8 kind)
     case 4:
     case 5:
     case 9:
-        if (fn_80008AB4(t->work->res->x30, a, b, 0x3B, 3, 2, info->x298) == 0) {
+        if (fn_80008AB4(t->work->res->x30, act, sub, 0x3B, 3, 2, info->x298) == 0) {
             break;
         }
-        switch (a) {
+        switch (act) {
         case 29:
-            r = fn_8003E7A4(b);
+            r = B702VoiceNo(sub);
             if (r < 0) {
                 return 0;
             }
@@ -725,7 +744,7 @@ int fn_8003ECF4(char* out, s16 a, s16 b, ChrTask* t, s8 kind)
             fn_8025CB24(out, "B702%04dS%s", VoiceA(t), ext);
             return 1;
         case 20:
-            r = fn_8003F3F0(t);
+            r = VoiceNoAct20(t);
             if (r < 0) {
                 return 0;
             }
@@ -734,7 +753,7 @@ int fn_8003ECF4(char* out, s16 a, s16 b, ChrTask* t, s8 kind)
         case 26:
         case 27:
         case 28:
-            r = fn_8003F484(t);
+            r = VoiceNoAct26(t);
             if (r < 0) {
                 return 0;
             }
@@ -750,21 +769,21 @@ int fn_8003ECF4(char* out, s16 a, s16 b, ChrTask* t, s8 kind)
         }
         return 0;
     case 6:
-        r = fn_8003F358(t);
+        r = VoiceNoKind6(t);
         if (r < 0) {
             return 0;
         }
         fn_8025CB24(out, "%3dS%s", r, ext);
         return 1;
     case 7:
-        r = fn_8003F2C0(t);
+        r = VoiceNoKind7(t);
         if (r < 0) {
             return 0;
         }
         fn_8025CB24(out, "%3dS%s", r, ext);
         return 1;
     case 8:
-        r = fn_8003F228(t);
+        r = VoiceNoKind8(t);
         if (r < 0) {
             return 0;
         }
@@ -774,22 +793,23 @@ int fn_8003ECF4(char* out, s16 a, s16 b, ChrTask* t, s8 kind)
     return 0;
 }
 
-void fn_8003EBE0(ChrTask* arg)
+/* Stops the character's plain voice stream (kind 0) and queues VoiceSlotReleaseTask to free its slot. */
+void VoiceStopChar(ChrTask* arg)
 {
     ChrTask* a = arg;
     ChrWork* w = a->work;
     ChrInfo* info = w->info;
-    if (fn_80020700(info->x6, info->x8, arg) == 0 && info->x6 != 0x15 && info->x6 != 0x16
+    if (fn_80020700(info->action, info->actionSub, arg) == 0 && info->action != 0x15 && info->action != 0x16
         && info->x10 != 0x17 && info->x10 != 0x10) {
         return;
     }
     {
         s8 i;
         for (i = 0; i < 2; i++) {
-            if (lbl_8030A10C.slot[i].owner == info->id && lbl_8030A10C.slot[i].obj != 0 && lbl_8030A10C.slot[i].kind == 0) {
+            if (lbl_8030A10C.voice[i].owner == info->id && lbl_8030A10C.voice[i].stream != 0 && lbl_8030A10C.voice[i].kind == 0) {
                 Task* t;
-                fn_80215F94(lbl_8030A10C.slot[i].obj);
-                t = fn_802268E8(lbl_803475A8, fn_8003EB1C);
+                fn_80215F94(lbl_8030A10C.voice[i].stream);
+                t = fn_802268E8(lbl_803475A8, VoiceSlotReleaseTask);
                 fn_80061F58(&t->work, 1, 0);
                 *(s8*)t->work = i;
                 return;
@@ -798,20 +818,22 @@ void fn_8003EBE0(ChrTask* arg)
     }
 }
 
-void fn_8003EB1C(Task* node)
+/* Task that waits for a stopped voice stream to finish, then frees its slot. */
+void VoiceSlotReleaseTask(Task* node)
 {
-    SndSlot* s = lbl_8030A10C.slot;
+    VoiceSlot* s = lbl_8030A10C.voice;
     s8* idx = node->work;
-    if (s[*idx].obj != 0 && fn_80216F48(s[*idx].obj) == 0) {
-        s[*idx].obj = 0;
-        lbl_8030A10C.slot[*idx].owner = -1;
+    if (s[*idx].stream != 0 && fn_80216F48(s[*idx].stream) == 0) {
+        s[*idx].stream = 0;
+        lbl_8030A10C.voice[*idx].owner = -1;
     }
-    if (s[*idx].obj == 0) {
+    if (s[*idx].stream == 0) {
         node->flags |= 0x40;
     }
 }
 
-s16 fn_8003E7A4(s16 id)
+/* Maps a sub id to its B702 voice number (-1 when none). */
+s16 B702VoiceNo(s16 id)
 {
     s16 tbl[29] = {0x19C8, 0x17D4, 0x17D5, 0x1900, 0x1770, 0x1771, 0x1772, 0x1773, 0x1A90, 0x1A91, 0x1A2C, 0x1A2E, 0x1964, 0x1965, 0x1966, 0x1966, 0x1966, 0x1838, 0x1839, 0x183A, 0x183B, 0x183C, 0x189C, 0x189D, 0x189E, 0x189F, 0x18A0, 0x0, 0x17D5};
     switch (id) {
@@ -904,7 +926,8 @@ s16 fn_8003E7A4(s16 id)
     }
 }
 
-s16 fn_8003E624(void)
+/* STV sample index from the party member and the enemy types in the battle table. */
+s16 StvIndexFromBattle(void)
 {
     s8 i;
     s8 b = 0;
@@ -913,7 +936,7 @@ s16 fn_8003E624(void)
         if (lbl_80309700[i] != 0) {
             SndId* id = lbl_80309700[i]->id;
             char name[0x20];
-            fn_800308FC(name, id->x2, id->x0);
+            fn_800308FC(name, id->typeId, id->x0);
             switch (fn_80020E10(name)) {
             case 4:
                 a = 2;
@@ -922,7 +945,7 @@ s16 fn_8003E624(void)
                 a = 4;
                 break;
             }
-            switch (fn_80008274(id->x2)) {
+            switch (fn_80008274(id->typeId)) {
             case 132: b = 6; break;
             case 151: b = 6; break;
             case 155: b = 0xc; break;
@@ -946,7 +969,8 @@ s16 fn_8003E624(void)
     return a + b;
 }
 
-s16 fn_8003E4CC(void)
+/* STV sample index from the party member and the value of fn_80077E34. */
+s16 StvIndexFromStage(void)
 {
     s8 b = 0;
     s8 a = 0;
@@ -984,13 +1008,15 @@ s16 fn_8003E4CC(void)
     return a + b;
 }
 
-void fn_8003E464(char* buf)
+/* Writes "/SOUND/STVnn.SAMP" for the current battle (random of two). */
+void StvSampPath(char* buf)
 {
-    s16 n = fn_8003E4CC();
+    s16 n = StvIndexFromStage();
     fn_8025CB24(buf, "/SOUND/STV%02d.SAMP", (s16)(n + fn_8025ECC4() % 2));
 }
 
-void fn_8003E2B4(SampTask* node)
+/* Task: state 1 opens /SOUND/<name[idx]>, state 2 waits for the read, registers it in the sound state and goes on to the next file. */
+void SampLoadTask(SampTask* node)
 {
     SampWork* work = node->work;
     switch (node->state) {
@@ -1004,8 +1030,8 @@ void fn_8003E2B4(SampTask* node)
     case 2:
         if (fn_801CC1A4(work->handle) == 1) {
             work->data = fn_801CC0A0(work->handle);
-            lbl_8030A10C.data[work->idx] = work->data;
-            lbl_8030A10C.size[work->idx] = 0x20;
+            lbl_8030A10C.sampData[work->idx] = work->data;
+            lbl_8030A10C.sampSize[work->idx] = 0x20;
             fn_8025F120(lbl_8030A10C.sampName[work->idx], work->path);
             if (work->flags & 0x80000000) {
                 fn_80218D84(work->path, work->data, 0x20);
@@ -1032,12 +1058,13 @@ void fn_8003E2B4(SampTask* node)
     }
 }
 
-void fn_8003E1BC(void)
+/* Starts loading CR000.SAMP and CR100/CR101.SAMP. */
+void SoundLoadCrSampDefault(void)
 {
     s8 buf[28];
     u8 found = 0;
     s8 i;
-    SampTask* node = (SampTask*)fn_802268E8(lbl_803475A8, fn_8003E2B4);
+    SampTask* node = (SampTask*)fn_802268E8(lbl_803475A8, SampLoadTask);
     fn_80061F58(&node->work, 0xac, 0);
     fn_8025F120(node->work->name[0], "CR000.SAMP");
     node->work->flags |= 0x80000000;
@@ -1050,42 +1077,46 @@ void fn_8003E1BC(void)
     fn_8025F120(node->work->name[1], (found & 1) == 0 ? "CR101.SAMP" : "CR100.SAMP");
 }
 
-void fn_8003E0F4(s8 a, s8 b)
+/* Starts loading CRnnn.SAMP for `first` and, if second >= 0, `second`. */
+void SoundLoadCrSamp(s8 first, s8 second)
 {
-    SampTask* node = (SampTask*)fn_802268E8(lbl_803475A8, fn_8003E2B4);
+    SampTask* node = (SampTask*)fn_802268E8(lbl_803475A8, SampLoadTask);
     fn_80061F58(&node->work, 0xac, 0);
-    fn_8025CB24(node->work->name[0], "CR%03d.SAMP", a);
+    fn_8025CB24(node->work->name[0], "CR%03d.SAMP", first);
     lbl_8030A10C.flags |= 0x80000000;
-    if (b >= 0) {
+    if (second >= 0) {
         node->work->flags |= 0x40000000;
-        fn_8025CB24(node->work->name[1], "CR%03d.SAMP", b);
+        fn_8025CB24(node->work->name[1], "CR%03d.SAMP", second);
     }
 }
 
-void fn_8003E084(void)
+/* Starts loading B7000000.SAMP. */
+void SoundLoadB7Samp(void)
 {
-    SampTask* node = (SampTask*)fn_802268E8(lbl_803475A8, fn_8003E2B4);
+    SampTask* node = (SampTask*)fn_802268E8(lbl_803475A8, SampLoadTask);
     fn_80061F58(&node->work, 0xac, 0);
     fn_8025F120(node->work->name[0], "B7000000.SAMP");
     lbl_8030A10C.flags |= 0x80000000;
 }
 
-void fn_8003DFE0(void)
+/* Releases the first loaded sample bank and clears the voice owner. */
+void SoundFreeSamp(void)
 {
     s8 i;
     for (i = 0; i < 1; i++) {
-        if (lbl_8030A10C.data[i] != 0) {
-            fn_80218D84(lbl_8030A10C.sampName[i], lbl_8030A10C.data[i], (lbl_8030A10C.size[i] + 0x1F) & ~0x1F);
-            lbl_8030A10C.data[i] = 0;
-            lbl_8030A10C.size[i] = 0;
+        if (lbl_8030A10C.sampData[i] != 0) {
+            fn_80218D84(lbl_8030A10C.sampName[i], lbl_8030A10C.sampData[i], (lbl_8030A10C.sampSize[i] + 0x1F) & ~0x1F);
+            lbl_8030A10C.sampData[i] = 0;
+            lbl_8030A10C.sampSize[i] = 0;
         }
     }
-    lbl_8030A10C.owner = -1;
+    lbl_8030A10C.voiceOwner = -1;
 }
 
-void fn_8003DEE0(void)
+/* Stops the voice streams and starts loading the next STVnn.SAMP, alternating between two banks. */
+void SoundLoadStageSamp(void)
 {
-    s16 n = fn_8003E624();
+    s16 n = StvIndexFromBattle();
     s8 i;
     SampTask* node;
     if (lbl_8030A10C.flags & 0x1000) {
@@ -1095,9 +1126,9 @@ void fn_8003DEE0(void)
         lbl_8030A10C.flags |= 0x1000;
     }
     for (i = 0; i < 2; i++) {
-        if (lbl_8030A10C.slot[i].obj != 0) fn_80217830(lbl_8030A10C.slot[i].obj);
+        if (lbl_8030A10C.voice[i].stream != 0) fn_80217830(lbl_8030A10C.voice[i].stream);
     }
-    node = (SampTask*)fn_802268E8(lbl_803475A8, fn_8003E2B4);
+    node = (SampTask*)fn_802268E8(lbl_803475A8, SampLoadTask);
     fn_80061F58(&node->work, 0xac, 0);
     fn_8025CB24(node->work->name[0], "STV%02d.SAMP", n);
     lbl_8030A10C.flags |= 0x80000000;

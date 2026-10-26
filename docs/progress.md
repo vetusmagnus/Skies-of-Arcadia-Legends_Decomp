@@ -39,7 +39,7 @@ functions, not data. What we learned (it applies to every unit with strings or l
 initialisers):
 
 - **The original built these files with `-inline deferred`.** Deferred codegen emits functions in
-  *reverse* source order, creates local array initialisers (fn_8003E7A4's table, fn_8003DBAC's
+  *reverse* source order, creates local array initialisers (B702VoiceNo's table, fn_8003DBAC's
   `"ABG"`) at parse time so they land ahead of every string literal, and writes the strings and
   float constants in codegen order. The `.rodata`/`.sdata2` order in the DOL is exactly that: table
   first, then the strings in address order. The matching source therefore lists the functions from
@@ -53,7 +53,7 @@ initialisers):
   0x80035918-0x80036520, its only data the jump table at 0x802DD0C8) ends there and `tasks.c`
   starts with the 8-aligned task table `lbl_802DD238`. The boundary is only known to lie between
   fn_8003617C and fn_800367E8 (the first user of `lbl_802DD238`); we put it at fn_80036520.
-- Data comes from C now: sound.c defines `lbl_802DE630` (the voice id tables), the task tables
+- Data comes from C now: sound.c defines `CharSeTable` (the voice id tables), the task tables
   `lbl_802DD238`/`lbl_802DE208` are in tasks.c, the strings are the compiler's. tasks.c's compiled
   `.rodata`, `.data` and `.sdata2` equal the original bytes (checked with relocations masked).
 - Why tasks.c can't link partly: `"ABG"` is the first `.sdata2` entry of the unit that contains
