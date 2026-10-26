@@ -348,14 +348,13 @@ s32 fn_80214B28(u32 flags, Cmd *c) {
 
 typedef struct { char pad[0x1c]; void *cur; } Stream;
 extern void fn_80147EA4(s32 v);
-extern f32 lbl_8034C388;
 s32 fn_80214CDC(s32 flags, Stream *s) {
     void *cur;
     s32 v;
     if (flags & 1) {
         cur = s->cur;
         cur = (char *)cur + 4;
-        if (lbl_8034C388 == *(f32 *)cur) {
+        if (3.4028235e38f == *(f32 *)cur) {
             cur = (char *)cur + 4;
             v = 0x7FFFFFFF;
         } else {
@@ -375,7 +374,7 @@ s32 fn_80214D6C(s32 flags, Stream *s) {
     if (flags & 1) {
         cur = s->cur;
         cur = (char *)cur + 4;
-        if (lbl_8034C388 == *(f32 *)cur) {
+        if (3.4028235e38f == *(f32 *)cur) {
             cur = (char *)cur + 4;
             v = 0x7FFFFFFF;
         } else {
@@ -395,7 +394,7 @@ s32 fn_80214DFC(s32 flags, Stream *s) {
     if (flags & 1) {
         cur = s->cur;
         cur = (char *)cur + 4;
-        if (lbl_8034C388 == *(f32 *)cur) {
+        if (3.4028235e38f == *(f32 *)cur) {
             cur = (char *)cur + 4;
             v = 0x7FFFFFFF;
         } else {
@@ -415,7 +414,7 @@ s32 fn_80214E8C(s32 flags, Stream *s) {
     if (flags & 1) {
         cur = s->cur;
         cur = (char *)cur + 4;
-        if (lbl_8034C388 == *(f32 *)cur) {
+        if (3.4028235e38f == *(f32 *)cur) {
             cur = (char *)cur + 4;
             v = 0x7FFFFFFF;
         } else {
@@ -435,7 +434,7 @@ s32 fn_80214F1C(s32 flags, Stream *s) {
     if (flags & 1) {
         cur = s->cur;
         cur = (char *)cur + 4;
-        if (lbl_8034C388 == *(f32 *)cur) {
+        if (3.4028235e38f == *(f32 *)cur) {
             cur = (char *)cur + 4;
             v = 0x7FFFFFFF;
         } else {
@@ -455,7 +454,7 @@ s32 fn_80214FAC(s32 flags, Stream *s) {
     if (flags & 1) {
         cur = s->cur;
         cur = (char *)cur + 4;
-        if (lbl_8034C388 == *(f32 *)cur) {
+        if (3.4028235e38f == *(f32 *)cur) {
             cur = (char *)cur + 4;
             v = 0x7FFFFFFF;
         } else {
@@ -744,13 +743,12 @@ typedef struct CurState {
     u8 *cur;
 } CurState;
 extern void fn_800D2C94(s32 v);
-extern f32 lbl_8034C1E0;
 s32 fn_801FFE3C(u32 flags, CurState *s)
 {
     if (flags & 1) {
         u8 *p = s->cur + 4;
         u32 v;
-        if (lbl_8034C1E0 == *(f32 *)p) {
+        if (3.4028235e38f == *(f32 *)p) {
             p += 4;
             v = 0x7FFFFFFF;
         } else {
@@ -774,7 +772,7 @@ s32 fn_801FFEF0(u32 flags, CurState *s)
     if (flags & 1) {
         u8 *p = s->cur + 4;
         u32 v;
-        if (lbl_8034C1E0 == *(f32 *)p) {
+        if (3.4028235e38f == *(f32 *)p) {
             p += 4;
             v = 0x7FFFFFFF;
         } else {
@@ -792,14 +790,13 @@ s32 fn_801FFEF0(u32 flags, CurState *s)
     return 0;
 }
 
-extern f32 lbl_8034C1A0;
 s32 fn_801F9668(u32 flags, CurState *s)
 {
     u16 f = (u16)flags;
     if (flags & 1) {
         u8 *p = s->cur + 4;
         u32 v;
-        if (lbl_8034C1A0 == *(f32 *)p) {
+        if (3.4028235e38f == *(f32 *)p) {
             p += 4;
             v = 0x7FFFFFFF;
         } else {
@@ -821,7 +818,7 @@ s32 fn_801F98E8(u32 flags, CurState *s)
     if (flags & 1) {
         u8 *p = s->cur + 4;
         u32 v;
-        if (lbl_8034C1A0 == *(f32 *)p) {
+        if (3.4028235e38f == *(f32 *)p) {
             p += 4;
             v = 0x7FFFFFFF;
         } else {
@@ -909,7 +906,7 @@ s32 fn_801FEB78(s32 flags, Stream *s) {
     s32 v;
     if (flags & 1) {
         cur = (char *)s->cur + 4;
-        if (lbl_8034C1E0 == *(f32 *)cur) {
+        if (3.4028235e38f == *(f32 *)cur) {
             cur = (char *)cur + 4;
             v = 0x7FFFFFFF;
         } else {
@@ -927,7 +924,7 @@ s32 fn_801FEBFC(s32 flags, Stream *s) {
     s32 v;
     if (flags & 1) {
         cur = (char *)s->cur + 4;
-        if (lbl_8034C1E0 == *(f32 *)cur) {
+        if (3.4028235e38f == *(f32 *)cur) {
             cur = (char *)cur + 4;
             v = 0x7FFFFFFF;
         } else {
@@ -945,7 +942,7 @@ s32 fn_801FEC80(s32 flags, Stream *s) {
     s32 v;
     if (flags & 1) {
         cur = (char *)s->cur + 4;
-        if (lbl_8034C1E0 == *(f32 *)cur) {
+        if (3.4028235e38f == *(f32 *)cur) {
             cur = (char *)cur + 4;
             v = 0x7FFFFFFF;
         } else {
@@ -963,7 +960,7 @@ s32 fn_801FEDD0(s32 flags, Stream *s) {
     s32 v;
     if (flags & 1) {
         cur = (char *)s->cur + 4;
-        if (lbl_8034C1E0 == *(f32 *)cur) {
+        if (3.4028235e38f == *(f32 *)cur) {
             cur = (char *)cur + 4;
             v = 0x7FFFFFFF;
         } else {
