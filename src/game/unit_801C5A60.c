@@ -271,3 +271,14 @@ void fn_801C7A2C(Vec3 *v)
     if (v[4].z < v[5].z) { t6 = v[5]; v[5] = v[4]; v[4] = t6; }
     if (v[6].z > v[7].z) { t7 = v[7]; v[7] = v[6]; v[6] = t7; }
 }
+
+extern void fn_801D9634(Vec3 *v, void *out);
+void fn_801C588C(Vec3 *a, Vec3 *b, void *out) {
+    Vec3 d;
+    if (a != 0 && b != 0 && out != 0) {
+        d.x = b->x - a->x;
+        d.y = b->y - a->y;
+        d.z = b->z - a->z;
+        fn_801D9634(&d, out);
+    }
+}

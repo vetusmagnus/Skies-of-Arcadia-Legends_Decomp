@@ -2406,3 +2406,24 @@ void fn_80071CF0(V3 *src, V3 *dst) {
 void fn_8006EA90(s32 a, void *b, s32 c) {
     fn_8006E924(a, b, (void *)c, 0);
 }
+
+s32 fn_8006DC6C(void)
+
+{
+    s32 r;
+    ObjA *obj;
+
+    if (*(u32 *)(lbl_8030A10C + 0x6C) & 0x80000000) {
+        r = 0;
+    } else {
+        *(u32 *)(lbl_8030A10C + 0x6C) |= 0x80000000;
+        r = 1;
+    }
+    if (r == 0) {
+        return 0;
+    }
+    obj = fn_802268E8(lbl_803475A8, fn_8006E00C);
+    fn_80061F58(&obj->sub, 0xac, 0);
+    obj->sub->v4 = (u32)lbl_80347398;
+    return 1;
+}

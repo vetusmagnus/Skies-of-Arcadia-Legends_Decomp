@@ -2219,6 +2219,29 @@ void fn_80177BD4(void)
     fn_80199BAC(obj, -348.0f, 125.0f);
 }
 
+void fn_801791E0(void)
+{
+    u8 *p;
+    UiObj *obj;
+    s32 i;
+
+    i = *(s32 *)(lbl_80307638 + 0x7c);
+    p = (u8 *)camp_work.objs[i];
+    obj = (UiObj *)(*(u8 **)(p + 0x24) + 8);
+
+    UiObjSetRaised(obj);
+    fn_80199BB8(obj, -348.0f, 61.0f);
+    fn_80199BAC(obj, -348.0f, 61.0f);
+
+    i = *(s32 *)(lbl_80307638 + 0x16c);
+    p = (u8 *)camp_work.objs[i + 0x1f];
+    obj = (UiObj *)(*(u8 **)(p + 0x24) + 8);
+
+    UiObjSetRaised(obj);
+    fn_80199BB8(obj, -348.0f, 125.0f);
+    fn_80199BAC(obj, -348.0f, 125.0f);
+}
+
 void fn_8017B5EC(void) {
     UiObj* o;
     f32 y;

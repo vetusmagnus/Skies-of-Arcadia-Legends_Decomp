@@ -649,6 +649,20 @@ typedef struct {
     s32 pad10;
 } SndSlot;
 extern SndSlot lbl_80315030[12];
+void fn_80217B98(void) {
+    SndSlot *e = lbl_80315030;
+    s32 i;
+    for (i = 0; i < 6; i++, e++) {
+        if (e->id != 0xFFFFFFFF) {
+            if (e->id != lbl_803477E0) {
+                sndSeqStop(e->id);
+            }
+            e->id = 0xFFFFFFFF;
+            e->time = 0x2710;
+        }
+    }
+}
+
 void fn_80217C24(void) {
     SndSlot *e = lbl_80315030;
     s32 i;

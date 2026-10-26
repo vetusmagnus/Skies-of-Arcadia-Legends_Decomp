@@ -1166,6 +1166,14 @@ void fn_80153DB8(s32 i, u8 v) {
     (i + b)[4] = v;
 }
 
+void fn_80154B04(void) {
+    if (lbl_80346FE0 != 0) {
+        fn_801E17E0((s32)lbl_80346FE0);
+
+        lbl_80346FE0 = 0;
+    }
+}
+
 void fn_801558B0(Src_UNIT0000* s) {
     E14* e = lbl_80346FE8 + s->idx;
     e->a = (void*)s->a;
