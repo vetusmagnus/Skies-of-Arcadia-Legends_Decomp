@@ -7,7 +7,7 @@
 #include "game/task.h"
 #include <string.h>
 #include "string.h"
-extern void fn_80117748(void);
+extern void fn_80117748();
 extern void fn_80114C84(void *a, void *b, void *c, void *d, void *e, void *f);
 extern void fn_80114A44(void);
 extern void fn_80114AB8(void);
@@ -1698,14 +1698,14 @@ typedef struct In_80126BF0 {
 } In_80126BF0;
 extern u8 fn_80128B34(u8* t);
 extern u8 fn_80128E7C(u8* t);
-extern u8 fn_80128DA4(u8* t);
+extern s32 fn_80128DA4(Tbl_801284C0 *t);
 extern u8 fn_80128938(u8* t);
 extern u8 fn_801286F4(u8* t);
 extern u8 fn_8012813C(u8* t);
 extern u8 fn_80128670(u8* t);
 extern u8 fn_801285D8(u8* t);
-extern u8 fn_801282C4(u8* t);
-extern u8 fn_801281E8(u8* t);
+extern s32 fn_801282C4(Tbl_801284C0 *t);
+extern s32 fn_801281E8(Tbl_801284C0 *t);
 extern u8 fn_80128414(u8* t);
 typedef struct Ent_801283A4 {
     u8 id;
@@ -2433,6 +2433,48 @@ extern void fn_8015C618(void);
 extern void fn_80148DDC(void);
 extern void fn_80217CB0(void);
 extern void fn_801CBC10(void);
+typedef struct {
+    u8 pad0[0x20c];
+    s32 frame;
+} Obj_801295EC;
+typedef struct {
+    u8 pad0[0x19];
+    u8 state;
+    u8 pad1[0x0a];
+    Obj_801295EC* inner;
+} Parent_801295EC;
+extern void fn_801E735C(u32 index, f32 speed, Obj_801295EC* obj);
+typedef struct {
+    f32 x, y, z;
+} Vec3_8010F924;
+typedef struct {
+    s32 x, y, z;
+} Ang3_8010F924;
+typedef struct {
+    u8 pad0[0x20];
+    Ang3_8010F924* ang;
+} Model_8010F924;
+typedef struct {
+    u8 pad0[0x38];
+    Vec3_8010F924 pos;
+    Ang3_8010F924 ang;
+    u8 pad50[0x100 - 0x50];
+    void* texlist;
+    Vec3_8010F924 prev;
+    u8 pad110[0x1b8 - 0x110];
+    void* x1b8;
+    Model_8010F924* model;
+    u8 pad1c0[0x20c - 0x1c0];
+    Ang3_8010F924 ang2;
+} Work_8010F924;
+typedef struct {
+    u8 pad0[0x19];
+    u8 state;
+    u8 pad1a[0x24 - 0x1a];
+    void* work;
+} Obj_8010F924;
+extern void* fn_802258BC(s32 a, s32 b, s32 c);
+extern void fn_801E66E0(Work_8010F924* w);
 
 void fn_8010E164(u8 *obj) {
     if (obj[0x19] == 0xff) {
@@ -5817,7 +5859,7 @@ void fn_80126BF0(Obj_80126BF0* o, In_80126BF0* in) {
         in->f24 = 0x6A;
         break;
     case 0x1A:
-        in->b18 = fn_80128DA4(in->tab);
+        in->b18 = fn_80128DA4((void *)(in->tab));
         in->f24 = 0x68;
         in->b17 = 1;
         break;
@@ -5853,11 +5895,11 @@ void fn_80126BF0(Obj_80126BF0* o, In_80126BF0* in) {
         in->f24 = 0x62;
         break;
     case 0x20:
-        in->b18 = fn_801282C4(in->tab);
+        in->b18 = fn_801282C4((void *)(in->tab));
         in->f24 = 0x1062;
         break;
     case 0x33:
-        in->b18 = fn_801281E8(in->tab);
+        in->b18 = fn_801281E8((void *)(in->tab));
         in->f24 = 0x3060;
         break;
     case 0x1C:
@@ -7226,5 +7268,160 @@ void fn_8012A26C(void)
     lbl_8030CEA0.xc5c = 0;
     if (lbl_8034727C[lbl_803472B4].kind != 2) {
         lbl_80347280 = 1;
+    }
+}
+
+s32 fn_801281E8(Tbl_801284C0 *t)
+{
+    u8 ids[3] = { 0, 1, 2 };
+    u8 a0[4] = { 1, 0, 2, 0 };
+    u8 a1[4] = { 0, 1, 2, 1 };
+    u8 a2[4] = { 0, 2, 1, 2 };
+    s32 i;
+    for (i = 0; i < 3; i++) {
+        t->e[i].id = ids[i];
+    }
+    for (i = 0; i < 4; i++) {
+        t->e[0].a[i] = a0[i];
+    }
+    for (i = 0; i < 4; i++) {
+        t->e[1].a[i] = a1[i];
+    }
+    for (i = 0; i < 4; i++) {
+        t->e[2].a[i] = a2[i];
+    }
+    t->b_ac = 0x14;
+    t->b_ad = 0x14;
+    t->f_b0 = 31.0f;
+    t->f_b4 = 40.0f;
+    t->f_bc = 41.0f;
+    t->f_c0 = 1.0f;
+    t->f_c4 = 1.0f;
+    return 3;
+}
+
+s32 fn_801282C4(Tbl_801284C0 *t)
+{
+    u8 ids[3] = { 0, 1, 2 };
+    u8 a0[4] = { 1, 0, 2, 0 };
+    u8 a1[4] = { 0, 1, 2, 1 };
+    u8 a2[4] = { 0, 2, 1, 2 };
+    s32 i;
+    for (i = 0; i < 3; i++) {
+        t->e[i].id = ids[i];
+    }
+    for (i = 0; i < 4; i++) {
+        t->e[0].a[i] = a0[i];
+    }
+    for (i = 0; i < 4; i++) {
+        t->e[1].a[i] = a1[i];
+    }
+    for (i = 0; i < 4; i++) {
+        t->e[2].a[i] = a2[i];
+    }
+    t->b_ac = 0x14;
+    t->b_ad = 0x15;
+    t->f_b0 = 31.0f;
+    t->f_b4 = 40.0f;
+    t->f_bc = 41.0f;
+    t->f_c0 = 1.0f;
+    t->f_c4 = 1.0f;
+    return 3;
+}
+
+s32 fn_80128DA4(Tbl_801284C0 *t)
+{
+    u8 ids[3] = { 1, 0, 3 };
+    u8 a0[4] = { 0x35, 0, 0x34, 1 };
+    u8 a1[4] = { 0x34, 1, 0x35, 0 };
+    u8 a2[4] = { 1, 0x35, 0, 3 };
+    s32 i;
+    for (i = 0; i < 3; i++) {
+        t->e[i].id = ids[i];
+    }
+    for (i = 0; i < 4; i++) {
+        t->e[0].a[i] = a0[i];
+    }
+    for (i = 0; i < 4; i++) {
+        t->e[1].a[i] = a1[i];
+    }
+    for (i = 0; i < 4; i++) {
+        t->e[2].a[i] = a2[i];
+    }
+    t->b_ac = 0x14;
+    t->f_b0 = 31.0f;
+    t->f_b4 = 40.0f;
+    t->f_bc = 41.0f;
+    t->f_c0 = 1.0f;
+    t->f_c4 = 1.0f;
+    return 3;
+}
+
+void fn_801295EC(Parent_801295EC* p)
+{
+    extern s32 fn_8015E600(Obj_801295EC* o);
+    extern void fn_8015EBF4(Obj_801295EC* o);
+    Obj_801295EC* o = p->inner;
+
+    switch (p->state) {
+    case 0:
+    case 0xfe:
+        fn_8015ED90((void *)(p));
+        o->frame = -1;
+        p->state = 1;
+        break;
+    case 1:
+        if (fn_8015E600(p->inner) == 0 && o->frame != lbl_803472C0) {
+            o->frame = lbl_803472C0;
+            fn_801E735C(lbl_803472C0 % lbl_803472D0, 1.0f, o);
+        }
+        break;
+    case 0xff:
+        fn_8015EBF4(p->inner);
+        fn_80100B74((void *)(p));
+        break;
+    }
+}
+
+void fn_8010F924(Obj_8010F924* o) {
+    extern s32 fn_8015E600(void* work);
+    void* work = o->work;
+    Work_8010F924* w = work;
+
+    switch (o->state) {
+    case 0:
+    case 0xfe:
+        if (w->texlist != NULL) {
+            fn_80227810(w->texlist);
+        }
+        w->x1b8 = fn_802258BC(0xFFFF, 0xFFFF, 1);
+        w->prev.x = w->pos.x;
+        w->prev.y = w->pos.y;
+        w->prev.z = w->pos.z;
+        w->ang2.x = 0;
+        w->ang2.y = w->ang.y;
+        w->ang2.z = w->ang.z;
+        w->model->ang = &w->ang2;
+        fn_8015ED90((void *)(o));
+        o->state = 1;
+        break;
+    case 1:
+        if (fn_8015E600(work) == 0) {
+            fn_80222838((void *)(w->model));
+            w->ang2.x = 0;
+            w->ang2.y = w->ang.y;
+            w->ang2.z = w->ang.z;
+            fn_801E66E0(w);
+        }
+        break;
+    case 0xff:
+        if (fn_8015E600(work) == 0) {
+            if (w->texlist != NULL) {
+                fn_802275A4((void *)(w->texlist), 0);
+            }
+            fn_801E17E0((void *)(w->x1b8));
+            fn_80117748(o);
+        }
+        break;
     }
 }

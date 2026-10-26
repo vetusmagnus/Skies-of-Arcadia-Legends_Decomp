@@ -1,8 +1,8 @@
 Progress and handoff
 ====================
 
-State of the work as of 2026-10-26 (after Sonnet batch 11): 28.9% of code matched (3,570 / 7,116
-functions), 3,546 functions unmatched: about 2,580 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
+State of the work as of 2026-10-26 (after the Opus 200-399 byte near-miss pass): 30.1% of code matched (3,696 / 7,116
+functions), 3,420 functions unmatched: about 2,470 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
 (the size split of the game functions predates the duplicate-copy batch: 2,193 under 632 bytes, 466 at 632-1000,
 355 at 1-2 KB, 101 at 2-5 KB, 16 over 5 KB). Numbers live in the README status block and on
 [ByteMatch](https://bytematch.dev/vetusmagnus/SoAL-Decomp); this page covers what's in flight.
@@ -150,6 +150,57 @@ fn_80194378, fn_80194C18, fn_8019E3A8 and fn_80095360 (files in `build/agents/n_
 the three `lbl_803036xx` blocks defined, not extern, at the top of the unit so they pool into one base register),
 fn_801F58B8, fn_8009E49C and fn_8009E4B8/4D4 (need the Dolphin `__OSf32tou8`/`__OSu8tof32` fast-cast inlines added to
 `OSFastCast.h`; the agent's header is in `build/agents/n_01/`).
+
+### Opus pass over the 200-399 byte near misses (2026-10-26)
+
+15 Opus 5.5 agents (model set explicitly), 13 functions each (195 logged near misses from 200 to 399 bytes), about 10
+tries per function, no retry or merge agents, no `goto` forms. About 125 matched in isolation; after type clashes
+with the units were resolved by hand, 108 more functions match (3,587 to 3,696, siblings included), every one
+re-checked with fdiff and `floatcheck.py`, `main.dol` still rebuilds byte-identical and a fresh worktree from
+origin builds. Header change: `extern/sdk/include/dolphin/os/OSFastCast.h` now has `__OSu16tof32`, `__OSs16tof32`
+and their `OS*` wrappers (psq_l through GQR3/GQR5), next to `__OSf32tou8`; fn_8002B40C, fn_80090DBC and
+fn_800DDE98 use them.
+
+What fixed the near misses (new, on top of the list in the earlier section):
+
+- A `static inline` helper for a repeated block or a bool test (`FlagTest`, `MapInRange`, `Cat`, `RandomLivingAlly`,
+  `FreeIf`, `Close`, `Relocate`/`ClearWork`) fixes doubled `beq`s, `neg/or/srwi` flag idioms and loop-counter versus
+  offset register swaps; the explicit `!= 0` on the inline's boolean result is what makes the `neg/or/srwi` form.
+- Declaring a `.rodata` table `const` lets MWCC hoist its loads above stores (`lbl_802B8F20`, `lbl_802B8EDC`).
+- `extern` array sizes decide `sda21` versus `lis/addi` (sized to 8 bytes or less, or declared at full size).
+- An empty `case 0xfe: break;` / `case 3: break;` / `case 0:` in front of `default:` reproduces the original's compare
+  tree; a dead second `beq` comes from `if (p) { if (p) f(p); p = 0; }`.
+- A chained store (`a = b = c = 0.0f`) and `x / 2.0f` versus `x * 0.5f` fix float scheduling and fcmp/fmul operand order.
+- `int` versus `s32` (`long`) parameters change the code at calls and inline arguments; try `int` when a stray `mr` appears.
+- Struct-typed tables and a held local for each field read (`Party`, `Rec5`, `Joint`) beat casts and flat offsets.
+- Comparison held in a named `int` (`s32 set = ... != 0`), or `if (c) return 1; return 0;`, gives the xor/srawi forms.
+
+Still near after this pass (diff lines in brackets where logged): fn_80048570 (8), fn_8004DD54 (13), fn_80065498 (20),
+fn_80075DAC (16), fn_80077B88 (5, string-pool offsets), fn_80081DE0 (14), fn_8008328C (26), fn_800839D8 (27),
+fn_80083C50, fn_80088CE8 (27), fn_80088F64 (16), fn_8008BFDC (6), fn_80090598 (8), fn_800949BC/fn_80094CEC (8, `ang[1]`
+and `x3c` swap r4/r5), fn_80094E50, fn_80097A1C (3), fn_80098C58 (22), fn_8009DDA8 (29), fn_800A12D8, fn_800A37E8 (14),
+fn_800B2C1C, fn_800B444C (21), fn_800C3F80 (3 instructions), fn_800D701C (5), fn_800DB9E4 (1), fn_800E0634 (36),
+fn_800E1634 (6), fn_800FF7A0, fn_80109F90 (32), fn_801195E4 (2), fn_8011AEE4/fn_8011B024 (B-spline evaluators, register
+colouring), fn_801228A0, fn_80123074, fn_80125B60 (2), fn_80129AA4 (4), fn_801300E0 (12), fn_80134D1C (6), fn_80135474 (6),
+fn_80140800, fn_80144CE4 (15), fn_80145E0C (14), fn_80147054 (24), fn_80152284 (26), fn_80155B78 (5), fn_801560FC (20),
+fn_8015983C (12), fn_8015CFA0, fn_8015D124 (10), fn_80167690, fn_80168908 (8), fn_801705B8, fn_80174E18 (8),
+fn_8017AFA0 (8; only a `goto` matches), fn_80186A60, fn_80195540 (4), fn_8019AA18 (8), fn_801B5644/fn_801B571C (2),
+fn_801B60E8 (20); fn_80173688 matches only with a `goto` (not adopted).
+
+Blocked on the file layout, not on the C: fn_801A3A10 and fn_801A4070 (card buffers defined in the original's own
+`.bss`, addressed from one pooled base), fn_8009D190 (needs lbl_803033B0 split into three `s32[6]` arrays defined
+in the unit), fn_800D3464 (four static fog/fx blocks laid out in first-use order), fn_801B02F4 and fn_800C24CC /
+fn_801004C4 (string or `.rodata` pool order: the unit's pool has to start with the original's earlier strings),
+fn_800B0F54 and fn_800C35C4 (see the earlier list), fn_800C9144 (also needs fn_800C8F3C as an inline and an
+uninitialised `ready` local), fn_80156CC4 (pooled initialiser symbol, only the full build can confirm), fn_80090DBC
+(builds on the new header; unit_8015DC6C.c needs the inline block removed from the agent file before merging).
+
+Matched in isolation, not merged (the unit types or prototypes differ in a way a cast changes; agent files are in
+`build/agents/m_*/`, gitignored): fn_8008100C and fn_80082840 (the unit's `s32`/`u8` prototypes are what the neighbouring
+matches need), fn_8008F2CC / fn_8008F434 / fn_8008F5E0 (need an `inline` recursive find in unit_8008B4A0.c), fn_80095220,
+fn_800AB834, fn_800B29AC, fn_800C0368, fn_800CF6A8, fn_8010EB88, fn_801353A8, fn_8014836C, fn_80148CAC, fn_80170C64,
+fn_8017567C, fn_80175DC4, fn_801763B8, fn_80178BC8, fn_80185864 (camp_work / lbl_8030B7F4 struct shapes), fn_801A20AC,
+fn_801B057C, fn_801B06CC (const `.rodata` tables), fn_801B65CC, fn_801BE17C, fn_801BE2F0.
 
 ### Partials batch (2026-10-26)
 

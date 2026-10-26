@@ -214,6 +214,7 @@ typedef struct DataTable {
 } DataTable;
 extern s32 *fn_8022ACA8(s32);
 extern void *fn_801E1C7C(s32);
+extern void *fn_801CC3C4(const char *name);
 
 void fn_801D1AE8(void) {
     VISetNextFrameBuffer(lbl_803476AC);
@@ -1259,6 +1260,17 @@ static inline void Relocate(DataTable *t)
 void fn_801D6A74(DataTable *t, s32 id)
 {
     t->data = fn_8022ACA8(id);
+    t->count = t->data[0];
+    t->base = (u8 *)t->data + (t->count + 1) * 4;
+    t->offsets = t->data + 1;
+    t->work = fn_801E1C7C(t->count * 4);
+    ClearWork(t);
+    Relocate(t);
+}
+
+void fn_801D6B58(DataTable *t, const char *name)
+{
+    t->data = fn_801CC3C4(name);
     t->count = t->data[0];
     t->base = (u8 *)t->data + (t->count + 1) * 4;
     t->offsets = t->data + 1;

@@ -1086,6 +1086,28 @@ typedef struct {
 extern u32 lbl_80310B3C[];
 extern s32 fn_80212050(void);
 extern Anim* fn_801552B0(s32 owner, KeyIn* in1, Pair* in2);
+typedef struct {
+    u8 pad[0x44];
+    f32 x, y, z;
+} Part_801541D8;
+typedef struct {
+    u8 pad[0x1C8];
+    Part_801541D8* part;
+} Link_801541D8;
+typedef struct {
+    u8 pad00[0x184];
+    Link_801541D8* l0;       /* 0x184 */
+    u8 pad188[0x19C - 0x188];
+    Link_801541D8* l1;       /* 0x19C */
+    u8 pad1a0[0x1B4 - 0x1A0];
+    Link_801541D8* l2;       /* 0x1B4 */
+    u8 pad1b8[0x1CC - 0x1B8];
+    Link_801541D8* l3;       /* 0x1CC */
+    u8 pad1d0[0x5F4 - 0x1D0];
+    f32 cx, cy, cz; /* 0x5F4 */
+    s32 valid;      /* 0x600 */
+} Obj_801541D8;
+extern char lbl_802B3C34[];
 
 void fn_8014F970(u8 *self) {
     fn_80153270(self + 0x95c);
@@ -3949,5 +3971,23 @@ void fn_8015519C(KeyIn* in1, Pair* in2)
             p->w[1] = 0;
         }
         (*(State_8015519C**)&lbl_80346FE0)->x0 = 0;
+    }
+}
+
+void fn_801541D8(s32 idx)
+{
+    Obj_801541D8* o = ((Obj_801541D8**)lbl_80346FC8)[idx];
+
+    if (o->l0 != NULL && o->l1 != NULL && o->l2 != NULL && o->l3 != NULL) {
+        o->cx = (o->l0->part->x + o->l1->part->x + o->l2->part->x + o->l3->part->x) / 4.0f;
+        o->cy = (o->l0->part->y + o->l1->part->y + o->l2->part->y + o->l3->part->y) / 4.0f;
+        o->cz = (o->l0->part->z + o->l1->part->z + o->l2->part->z + o->l3->part->z) / 4.0f;
+        o->valid = 1;
+    } else {
+        fn_8015757C((s32)lbl_802B3C34, idx);
+        o->cx = 0.0f;
+        o->cy = 0.0f;
+        o->cz = 0.0f;
+        o->valid = 0;
     }
 }

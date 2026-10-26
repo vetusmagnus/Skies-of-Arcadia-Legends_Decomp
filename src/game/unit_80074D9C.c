@@ -589,6 +589,24 @@ typedef struct Chr_8008A174 {
     u8 pad[0x1c];
     u32 w1c;
 } Chr_8008A174;
+typedef struct Chr_80089184 {
+    u8 pad[0x1c];
+    u32 w1c;
+    u8 pad20[0x82 - 0x20];
+    s16 x82;
+} Chr_80089184;
+typedef struct Chr_800893D4 {
+    u8 pad[0x1c];
+    u32 w1c;
+    u8 pad20[0x82 - 0x20];
+    s16 x82;
+} Chr_800893D4;
+typedef struct E12_80083ACC {
+    s8 x0;
+    u8 pad1[3];
+    s32 x4;
+    s32 x8;
+} E12_80083ACC;
 
 void fn_80075040(Msg* a, s16 i) {
     fn_80075060(a, i);
@@ -826,12 +844,12 @@ void fn_8008999C(void* a) {
     fn_80083BAC((s32)a, 3);
 }
 
-extern void fn_80083ACC(s16 id, u32 kind);
+extern s32 fn_80083ACC(s32 id, s32 kind);
 void fn_8008A12C(s32 p) {
     fn_80083BAC(p, 1);
 }
 
-void fn_8008A150(s16 p) {
+void fn_8008A150(s32 p) {
     fn_80083ACC(p, 1);
 }
 
@@ -2818,3 +2836,201 @@ s32 fn_8008A174(s32 idx) {
     lbl_80309174[idx].x4 = r;
     return 2;
 }
+
+s32 fn_80089184(void) {
+    s32* out;
+    s32 i;
+    s32 n;
+
+    out = lbl_80302C98;
+    out[0] = -1;
+    out[1] = -1;
+    out[2] = -1;
+    out[3] = -1;
+    n = 0;
+    for (i = 0; i <= 3; i++) {
+        if (fn_80078610(i) && !(lbl_80309DE4[i]->w1c & 0x80)) {
+            lbl_80302C98[n] = i;
+            n++;
+        }
+    }
+    if (n != 0) {
+        return lbl_80302C98[fn_8025ECC4() % n];
+    }
+    return RandomLivingAlly();
+}
+
+s32 fn_800892AC(void) {
+    s32* out;
+    s32 i;
+    s32 n;
+
+    out = lbl_80302C98;
+    out[0] = -1;
+    out[1] = -1;
+    out[2] = -1;
+    out[3] = -1;
+    n = 0;
+    for (i = 0; i <= 3; i++) {
+        if (fn_80078610(i) && !(lbl_80309DE4[i]->w1c & 0x1000)) {
+            lbl_80302C98[n] = i;
+            n++;
+        }
+    }
+    if (n != 0) {
+        return lbl_80302C98[fn_8025ECC4() % n];
+    }
+    return RandomLivingAlly();
+}
+
+s32 fn_800893D4(void) {
+    s32* out;
+    s32 i;
+    s32 n;
+
+    out = lbl_80302C98;
+    out[0] = -1;
+    out[1] = -1;
+    out[2] = -1;
+    out[3] = -1;
+    n = 0;
+    for (i = 0; i <= 3; i++) {
+        if (fn_80078610(i) && !(lbl_80309DE4[i]->w1c & 0x80000)) {
+            lbl_80302C98[n] = i;
+            n++;
+        }
+    }
+    if (n != 0) {
+        return lbl_80302C98[fn_8025ECC4() % n];
+    }
+    return RandomLivingAlly();
+}
+
+s32 fn_800894FC(void) {
+    s32* out;
+    s32 i;
+    s32 n;
+
+    out = lbl_80302C98;
+    out[0] = -1;
+    out[1] = -1;
+    out[2] = -1;
+    out[3] = -1;
+    n = 0;
+    for (i = 0; i <= 3; i++) {
+        if (fn_80078610(i) && !(lbl_80309DE4[i]->w1c & 0x400)) {
+            lbl_80302C98[n] = i;
+            n++;
+        }
+    }
+    if (n != 0) {
+        return lbl_80302C98[fn_8025ECC4() % n];
+    }
+    return RandomLivingAlly();
+}
+
+s32 fn_80089624(void) {
+    s32* out;
+    s32 i;
+    s32 n;
+
+    out = lbl_80302C98;
+    out[0] = -1;
+    out[1] = -1;
+    out[2] = -1;
+    out[3] = -1;
+    n = 0;
+    for (i = 0; i <= 3; i++) {
+        if (fn_80078610(i) && !(lbl_80309DE4[i]->w1c & 0x200)) {
+            lbl_80302C98[n] = i;
+            n++;
+        }
+    }
+    if (n != 0) {
+        return lbl_80302C98[fn_8025ECC4() % n];
+    }
+    return RandomLivingAlly();
+}
+
+s32 fn_8008974C(void) {
+    s32* out;
+    s32 i;
+    s32 n;
+
+    out = lbl_80302C98;
+    out[0] = -1;
+    out[1] = -1;
+    out[2] = -1;
+    out[3] = -1;
+    n = 0;
+    for (i = 0; i <= 3; i++) {
+        if (fn_80078610(i) && !(lbl_80309DE4[i]->w1c & 0x800)) {
+            lbl_80302C98[n] = i;
+            n++;
+        }
+    }
+    if (n != 0) {
+        return lbl_80302C98[fn_8025ECC4() % n];
+    }
+    return RandomLivingAlly();
+}
+
+s32 fn_80089874(void) {
+    s32* out;
+    s32 i;
+    s32 n;
+
+    out = lbl_80302C98;
+    out[0] = -1;
+    out[1] = -1;
+    out[2] = -1;
+    out[3] = -1;
+    n = 0;
+    for (i = 0; i <= 3; i++) {
+        if (fn_80078610(i) && !(lbl_80309DE4[i]->w1c & 0x4000)) {
+            lbl_80302C98[n] = i;
+            n++;
+        }
+    }
+    if (n != 0) {
+        return lbl_80302C98[fn_8025ECC4() % n];
+    }
+    return RandomLivingAlly();
+}
+
+s32 fn_80083ACC(s32 id, s32 kind) {
+    s32 i;
+
+    lbl_80302C08[0].x4 = 0x7f;
+    lbl_80302C08[0].x0 = -1;
+    lbl_80302C08[1].x4 = 0x7f;
+    lbl_80302C08[1].x0 = -1;
+    lbl_80302C08[2].x4 = 0x7f;
+    lbl_80302C08[2].x0 = -1;
+    lbl_80302C08[3].x4 = 0x7f;
+    lbl_80302C08[3].x0 = -1;
+    lbl_80302C08[4].x4 = 0x7f;
+    lbl_80302C08[4].x0 = -1;
+    lbl_80302C08[5].x4 = 0x7f;
+    lbl_80302C08[5].x0 = -1;
+    lbl_80302C08[6].x4 = 0x7f;
+    lbl_80302C08[6].x0 = -1;
+    lbl_80302C08[7].x4 = 0x7f;
+    lbl_80302C08[7].x0 = -1;
+    lbl_80302C08[8].x4 = 0x7f;
+    lbl_80302C08[8].x0 = -1;
+    lbl_80302C08[9].x4 = 0x7f;
+    lbl_80302C08[9].x0 = -1;
+    lbl_80302C08[10].x4 = 0x7f;
+    lbl_80302C08[10].x0 = -1;
+    lbl_80302C08[11].x4 = 0x7f;
+    lbl_80302C08[11].x0 = -1;
+    fn_800839D8(id, lbl_80302C08, kind);
+    for (i = 11; i >= 0; i--) {
+        if (lbl_80302C08[i].x4 != 0x7f) {
+            return lbl_80302C08[i].x0;
+        }
+    }
+    return -1;
+}
+

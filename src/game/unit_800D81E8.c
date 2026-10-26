@@ -2166,6 +2166,20 @@ extern void fn_80222838(void* p);
 extern void fn_8011622C(s32 v);
 extern u32 lbl_803473FC;
 extern s32 lbl_80347400;
+typedef struct {
+    u8 pad0[0x100];
+    void* texlist;
+    u8 pad104[0x170 - 0x104];
+    s16 h170;
+    s16 h172;
+} Work_8010DDBC;
+typedef struct {
+    u8 pad0[0x19];
+    u8 state;
+    u8 pad1a[0x24 - 0x1a];
+    Work_8010DDBC* work;
+} Obj_8010DDBC;
+extern void fn_80119AF4(Obj_8010DDBC* o);
 
 void fn_800D81E8(void) {
     fn_80226D14();
@@ -7194,6 +7208,69 @@ void fn_8010E074(Obj_8010E074* o) {
             fn_802275A4(w->texlist, 0);
         }
         fn_80100B74(o);
+        break;
+    }
+}
+
+void fn_800F113C(Ctl* c, Obj_800F1264* o) {
+    s32 ok = 0;
+    Rec_800F1264* a = lookup(o, 3);
+    if (a != 0) {
+        s32 f;
+        u32 k = (u32)(a->n * 8 + 4) >> 2;
+        u32 v = a->s0;
+        o->dst = (u8*)(o->w20c = f = 0);
+        if (v == k && o->src != 0 && *o->src == a->n) {
+            o->w20c = a->s6;
+            o->dst = (u8*)a + 4;
+            f = 1;
+        }
+        ok = f;
+    }
+    if (ok != 0) {
+        if (c->mode == 0) {
+            o->w20c = 1;
+            fn_800F0C68((void *)(o));
+            c->mode = 2;
+        } else {
+            o->flags |= 8;
+            o->s20a = 2;
+            c->mode = 3;
+        }
+    } else {
+        c->mode = 2;
+    }
+}
+
+void fn_8010DDBC(void *o_) {
+    Obj_8010DDBC* o = o_;
+    Work_8010DDBC* w = o->work;
+
+    switch (o->state) {
+    case 0:
+        w->h170 = 0;
+        w->h172 = 0;
+        if (w->texlist != NULL) {
+            fn_80227810(w->texlist);
+        }
+        o->state = 1;
+        break;
+    case 1:
+        fn_801E5DF0(w);
+        break;
+    case 2:
+        fn_801E5DF0(w);
+        break;
+    case 3:
+        fn_80119AF4(o);
+        break;
+    case 0xfe:
+        break;
+    case 0xff:
+        if (w->texlist != NULL) {
+            fn_802275A4(w->texlist, 0);
+        }
+        fn_801C6170(o);
         break;
     }
 }

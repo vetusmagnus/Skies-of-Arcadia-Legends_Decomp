@@ -2693,7 +2693,7 @@ typedef struct Obj_800C6474 {
     Work_800C6474* work;
 } Obj_800C6474;
 extern s32 fn_8015F218(Work_800C6474*);
-extern s32 fn_800C63A4(Work_800C6474*);
+extern s32 fn_800C63A4(void *);
 extern s32 fn_802254A0(V3_800C6474* p, void* q);
 typedef struct Cell { s32 a, b4, b; } Cell;
 typedef struct Cmd { s32 w0; } Cmd;
@@ -2946,6 +2946,55 @@ extern u32 lbl_8030A3C8[3];
 extern u16 lbl_8034740E;
 extern f32 lbl_80347410;
 extern s32 fn_802256A0(V3_800D07F8* v, Sub_800D07F8* s, u32 a, u32 b);
+typedef struct Param {
+    u8 pad0[0x2c];
+    f32 pos[3];
+    s32 rot[3];
+    u32 mode;
+    u8 pad48[0x68 - 0x48];
+    f32 f68;
+} Param;
+typedef struct Info_800C09E4 {
+    u8 pad0[0x10];
+    Param *param;
+} Info_800C09E4;
+typedef struct Obj_800C09E4 {
+    u8 pad0[0xb4];
+    f32 pos[3];
+    s32 rot[3];
+    u8 padcc[0x16c - 0xcc];
+    s16 f16c;
+    u8 pad16e[0x1c8 - 0x16e];
+    Info_800C09E4 *info;
+    u8 pad1cc[0x1fa - 0x1cc];
+    u8 f1fa;
+    u8 f1fb;
+    s16 f1fc;
+    u8 pad1fe[0x25c - 0x1fe];
+    void *f25c;
+} Obj_800C09E4;
+extern void fn_800C04D8(Obj_800C09E4 *o);
+extern void fn_8009D6C0(Obj_800C09E4 *o, s32 idx, f32 f);
+typedef struct HookCmd {
+    u32 type;
+    u8 pad4[0x24 - 4];
+    u32 flag;
+} HookCmd;
+typedef struct HookInfo {
+    u8 pad0[4];
+    u32 id;
+    u8 pad8[0x10 - 8];
+    HookCmd *cmd;
+} HookInfo;
+typedef struct Obj_800C63A4 {
+    u8 pad0[0x1b8];
+    void *hook;
+    u8 pad1bc[0x1c8 - 0x1bc];
+    HookInfo *info;
+    u8 pad1cc[0x23c - 0x1cc];
+    u32 flag;
+} Obj_800C63A4;
+extern void *fn_802258BC(s32 a, u16 id, s32 c);
 
 void fn_800B2DA0(u8* p, u32 v) {
     u8* q = *(u8**)(p + 0x268);
@@ -8264,4 +8313,56 @@ s32 fn_800D07F8(Obj_800D07F8* o) {
         }
     }
     return res;
+}
+
+void fn_800C09E4(Obj_800C09E4 *o)
+{
+    Param *prm = o->info->param;
+
+    o->f1fa = 0;
+    o->f1fb = 0;
+    o->f1fc = 0;
+    if (o->f25c != NULL) {
+        FreeIf(o->f25c);
+        o->f25c = NULL;
+    }
+    fn_800C04D8(o);
+    fn_8009D6C0(o, 0, prm->f68);
+    if (prm->mode == 1) {
+        o->pos[0] = prm->pos[0];
+        o->pos[1] = prm->pos[1];
+        o->pos[2] = prm->pos[2];
+        o->rot[0] = prm->rot[0];
+        o->rot[1] = prm->rot[1];
+        o->rot[2] = prm->rot[2];
+        o->f16c = 1;
+    } else {
+        o->pos[0] = o->pos[1] = o->pos[2] = 0.0f;
+        o->rot[0] = o->rot[1] = o->rot[2] = 0;
+        o->f16c = 0;
+    }
+}
+
+s32 fn_800C63A4(void *o_) {
+    Obj_800C63A4 * o = o_;
+    s32 ok = 0;
+    HookInfo *info = o->info;
+    HookCmd *cmd;
+
+    if (info != NULL && (cmd = info->cmd) != NULL) {
+        if (cmd->type == 9) {
+            if (cmd->flag >= 0x600 && cmd->flag <= 0x77f) {
+                o->flag = cmd->flag;
+                o->hook = fn_802258BC(0xFFFF, info->id, 2);
+                if (o->hook != NULL) {
+                    ok = 1;
+                }
+            } else {
+                fn_801DBE1C("eventhook %d setflag %d", info->id, cmd->flag);
+            }
+        } else {
+            fn_801DBE1C("NoOption eventhook %d", info->id);
+        }
+    }
+    return ok;
 }

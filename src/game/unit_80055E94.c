@@ -4,11 +4,26 @@
 /* One declaration per global / prototype. Tk and Chr tables are read through raw offsets
    (same offsets and widths as the per-function struct views they replace). */
 typedef struct Lim { u8 pad[6]; s16 x6; s16 x8; s16 xa; } Lim;
-typedef struct Node { u8 pad0[8]; u32 x8; u8 name[0x2c]; struct Node* x38; } Node;
+typedef struct Node {
+    u8 pad0[4];
+    s16 count;           /* 0x04 reference count */
+    u8 pad6[2];
+    u32 x8;              /* 0x08 */
+    u8 name[0x28];       /* 0x0C */
+    struct Node* prev;   /* 0x34 */
+    struct Node* x38;    /* 0x38 next */
+    u8 pad3c[8];
+} Node;
 extern u8 lbl_8030A10C[];
 extern u8 *lbl_80309700[12];
 extern u8 *lbl_80309DE4[12];
-extern s32 *lbl_80347398;
+typedef struct Ent6EB88 {
+    s32 f0;
+    void *f4;
+    char f8[0x10];
+    s32 f18;
+} Ent6EB88;
+extern Ent6EB88 *lbl_80347398;
 extern Lim *lbl_80347390;
 extern Node *lbl_803473A0;
 extern s8 lbl_80347334;
@@ -44,7 +59,7 @@ void fn_800D208C(void *obj, f32 f);
 void fn_8006AFD0(s16 i, void *a, void *b, s32 c);
 extern void fn_8006AC68(s16 i);
 extern void fn_800696A8(s32 a, s16 i, s32 b, s8 v);
-void fn_8006E924();
+s16 fn_8006E924(char* path, char* name, Node** out, void* key);
 s32 fn_8025ECC4(void);
 s32 fn_801D6E38(s32 a);
 typedef struct U64FE0 {
@@ -672,11 +687,6 @@ extern s32 fn_8022E258(void *, void *, u8, s32);
 extern void fn_80061F58(void *, s32, s32);
 extern void fn_8022F580(void *, s32, s32);
 extern void fn_8022E4CC(void *, s32, s32, s32, s32, s32);
-typedef struct Ent6EB88 {
-    s32 f0;
-    void *f4;
-    char f8[0x14];
-} Ent6EB88;
 typedef struct Out6EB88 {
     u8 pad0[8];
     void *f8;
@@ -792,62 +802,6 @@ typedef struct O_80061FCC {
     S_80061FCC *s;
 } O_80061FCC;
 extern Nd_80061FCC *fn_80021658(s32);
-typedef struct Ent80067CA4 {
-    u8 pad0[4];
-    s16 type;
-    u8 pad6[0xa];
-    f32 f10;
-    f32 f14;
-} Ent80067CA4;
-typedef struct U80067CA4 {
-    s8 slot;
-    u8 pad1;
-    s16 s2;
-    u8 pad4[0xdc - 4];
-    Ent80067CA4 *list;
-    u8 pade0[0x128 - 0xe0];
-    f32 f128;
-    f32 f12c;
-    u8 pad130[0x29c - 0x130];
-} U80067CA4;
-typedef struct Base80067CA4 {
-    u8 d[0x4c];
-} Base80067CA4;
-typedef struct W80067CA4 {
-    Base80067CA4 base;
-    U80067CA4 *u;
-    u8 pad50[8];
-} W80067CA4;
-typedef struct Tk80067CA4 {
-    u8 pad0[0x24];
-    W80067CA4 *work;
-} Tk80067CA4;
-typedef struct Src80067CA4 {
-    u8 pad0[4];
-    Base80067CA4 *base;
-} Src80067CA4;
-typedef struct Arg80067CA4 {
-    u8 pad0[4];
-    Src80067CA4 *src;
-    u8 pad8[4];
-    Ent80067CA4 *list;
-} Arg80067CA4;
-extern void *lbl_802DF2B8[18];
-extern void *lbl_803475A8;
-extern Tk80067CA4 *lbl_80309E24[14];
-extern s16 fn_80020060(Ent80067CA4 *);
-typedef struct E10 { u8 pad0[4]; void* x4; u8 pad8[8]; } E10;
-typedef struct E18 { u8 pad0[4]; void* x4; u8 pad8[0x10]; } E18;
-typedef struct Obj {
-    u8 pad0[0x94];
-    u32 x94[15];
-    void* xd0;
-    u8 padd4[6];
-    u16 xda;
-} Obj;
-typedef struct Wk_80072190 { u8 pad0[0x14]; s16 x14; u8 pad16[0x4C - 0x16]; Obj* obj; } Wk_80072190;
-typedef struct Tk_80072190 { u8 pad[0x24]; Wk_80072190* work; } Tk_80072190;
-extern s16 fn_80060F6C(s16, void*, int);
 
 void fn_80055E94(u8 *p) {
     p[0x18] |= 0x40;
@@ -990,7 +944,7 @@ void *fn_8006B6F4(s16 idx) {
 }
 
 void fn_8006C5A4(void) {
-    *lbl_80347398 = -1;
+    lbl_80347398->f0 = -1;
 }
 
 s32 fn_8006C8C4(void) {
@@ -1041,8 +995,8 @@ s32 fn_8006DBDC(void)
     return 1;
 }
 
-void fn_8006EA70(void) {
-    fn_8006E924();
+void fn_8006EA70(char* path, char* name, Node** out, void* key) {
+    fn_8006E924(path, name, out, key);
 }
 
 void fn_80071B98(f32 *a, f32 *b, f32 *out) {
@@ -2571,8 +2525,8 @@ void fn_80071CF0(V3 *src, V3 *dst) {
     dst->z = src->z;
 }
 
-void fn_8006EA90(s32 a, void *b, s32 c) {
-    fn_8006E924(a, b, (void *)c, 0);
+void fn_8006EA90(char* path, char* name, Node** out) {
+    fn_8006E924(path, name, out, 0);
 }
 
 s32 fn_8006DC6C(void)
@@ -2808,6 +2762,175 @@ void fn_80061FCC(O_80061FCC *o) {
     }
 }
 
+typedef struct Work6C124 { u8 pad0[4]; u32 recs; u8 pad8[0xa0]; u8 xa8; } Work6C124;
+typedef struct Task6C124 { u8 pad0[0x24]; Work6C124* work; } Task6C124;
+extern s8 fn_80020F68(void);
+extern void fn_8006C124(void*);
+extern void fn_8002FE10(void);
+extern void fn_8002FD58(void);
+extern char lbl_802B06A8[];
+extern char lbl_802B06B4[];
+
+/* Adds NAME to the loaded-name table lbl_80347398 (terminated by id -1, at most 0x80) unless present. */
+inline void AddName(char* name) {
+    Ent6EB88* recs = lbl_80347398;
+    s16 i = 0;
+    while (recs[i].f0 > 0) {
+        if (fn_8025EF88(name, recs[i].f8) == 0) {
+            return;
+        }
+        i++;
+        if (i >= 0x80) {
+            return;
+        }
+    }
+    fn_8025F120(recs[i].f8, name);
+    recs[i].f0 = 9999999;
+    recs[i].f4 = 0;
+    recs[i].f18 = 0;
+    recs[i + 1].f0 = -1;
+}
+
+/* Sets the top bit of the battle flags word; 1 if it was clear. */
+inline s32 SetOnce(void) {
+    if (*(u32 *)(lbl_8030A10C + 0x6C) & 0x80000000) {
+        return 0;
+    }
+    *(u32 *)(lbl_8030A10C + 0x6C) |= 0x80000000;
+    return 1;
+}
+
+void fn_8006C5B4(void) {
+    char buf[0x18];
+    Task6C124* t;
+    s8 c;
+
+    lbl_80347398->f0 = -1;
+    c = fn_80020F68();
+    fn_8025CB24(buf, lbl_802B06A8, c);
+    AddName(buf);
+    if (SetOnce()) {
+        t = (Task6C124*)fn_802268E8(lbl_803475A8, fn_8006C124);
+        fn_80061F58(&t->work, 0xac, 0);
+        t->work->recs = (u32)lbl_80347398;
+        t->work->xa8 = 0;
+    }
+}
+
+void fn_8006C710(s8 mode, u8 flag) {
+    Task6C124* t;
+
+    lbl_80347398->f0 = -1;
+    if (mode == 0) {
+        AddName(lbl_802B06B4);
+        lbl_80347398->f4 = fn_8022ACA8(7);
+    }
+    fn_8002FE10();
+    fn_8002FD58();
+    if (SetOnce()) {
+        t = (Task6C124*)fn_802268E8(lbl_803475A8, fn_8006C124);
+        fn_80061F58(&t->work, 0xac, 0);
+        t->work->recs = (u32)lbl_80347398;
+        t->work->xa8 = flag;
+    }
+}
+
+extern void* fn_801E1C7C(s32 size);
+
+s16 fn_8006E924(char* path, char* name, Node** out, void* key) {
+    Node* m;
+    Node* n = lbl_803473A0;
+    if (n->x8 == 0) {
+        if (key == 0) {
+            fn_8006EB88(path, name, (Out6EB88*)n);
+        } else {
+            n->x8 = (u32)fn_801DB124(key);
+            fn_8006CF54((Out6EB88*)n);
+        }
+        fn_8025F120((char*)n->name, name);
+        n->count = 1;
+        *out = n;
+        return n->count;
+    }
+    while (1) {
+        if (n->x8 != 0 && fn_8025EF88(name, (char*)n->name) == 0) {
+            *out = n;
+            n->count++;
+            return n->count;
+        }
+        if (n->x38 == 0) {
+            break;
+        }
+        n = n->x38;
+    }
+    n->x38 = fn_801E1C7C(0x44);
+    m = n->x38;
+    memset(m, 0, 0x44);
+    m->prev = n;
+    if (key == 0) {
+        fn_8006EB88(path, name, (Out6EB88*)m);
+    } else {
+        m->x8 = (u32)fn_801DB124(key);
+        fn_8006CF54((Out6EB88*)m);
+    }
+    fn_8025F120((char*)m->name, name);
+    m->count = 1;
+    *out = m;
+    return m->count;
+}
+
+typedef struct Ent80067CA4 {
+    u8 pad0[4];
+    s16 type;
+    u8 pad6[0xa];
+    f32 f10;
+    f32 f14;
+} Ent80067CA4;
+
+typedef struct U80067CA4 {
+    s8 slot;
+    u8 pad1;
+    s16 s2;
+    u8 pad4[0xdc - 4];
+    Ent80067CA4 *list;
+    u8 pade0[0x128 - 0xe0];
+    f32 f128;
+    f32 f12c;
+    u8 pad130[0x29c - 0x130];
+} U80067CA4;
+
+typedef struct Base80067CA4 {
+    u8 d[0x4c];
+} Base80067CA4;
+
+typedef struct W80067CA4 {
+    Base80067CA4 base;
+    U80067CA4 *u;
+    u8 pad50[8];
+} W80067CA4;
+
+typedef struct Tk80067CA4 {
+    u8 pad0[0x24];
+    W80067CA4 *work;
+} Tk80067CA4;
+
+typedef struct Src80067CA4 {
+    u8 pad0[4];
+    Base80067CA4 *base;
+} Src80067CA4;
+
+typedef struct Arg80067CA4 {
+    u8 pad0[4];
+    Src80067CA4 *src;
+    u8 pad8[4];
+    Ent80067CA4 *list;
+} Arg80067CA4;
+
+extern void *lbl_802DF2B8[18];
+extern Tk80067CA4 *lbl_80309E24[14];
+
+extern s16 fn_80020060(Ent80067CA4 *);
+
 void fn_80067CA4(Arg80067CA4 *arg) {
     Ent80067CA4 *list = arg->list;
     Tk80067CA4 *task;
@@ -2818,7 +2941,7 @@ void fn_80067CA4(Arg80067CA4 *arg) {
     idx = fn_80020060(list);
     while (idx < 0) {
     }
-    task = ((Tk80067CA4 *)fn_802268E8((void *)(lbl_803475A8), (void *)(lbl_802DF2B8[list[idx].type])));
+    task = (Tk80067CA4 *)fn_802268E8(lbl_803475A8, lbl_802DF2B8[list[idx].type]);
     fn_80061F58(&task->work, 0x58, 0);
     w = task->work;
     w->base = *src->base;
@@ -2827,7 +2950,7 @@ void fn_80067CA4(Arg80067CA4 *arg) {
     u->list = list;
     u->f128 = list[idx].f14;
     u->f12c = list[idx].f10;
-    if ((*(u32*)&lbl_80347394) == 0) {
+    if (lbl_80347394 == 0) {
         lbl_80309E24[12] = task;
         u->slot = 12;
         u->s2 = 0;
@@ -2845,15 +2968,29 @@ void fn_80067CA4(Arg80067CA4 *arg) {
     }
 }
 
-void fn_80072190(Tk_80072190* t) {
-    Wk_80072190* w = t->work;
-    Obj* o = w->obj;
+typedef struct E10_72190 { u8 pad0[4]; void* x4; u8 pad8[8]; } E10_72190;
+typedef struct E18_72190 { u8 pad0[4]; void* x4; u8 pad8[0x10]; } E18_72190;
+typedef struct Obj_72190 {
+    u8 pad0[0x94];
+    u32 x94[15];
+    void* xd0;
+    u8 padd4[6];
+    u16 xda;
+} Obj_72190;
+typedef struct Wk_72190 { u8 pad0[0x14]; s16 x14; u8 pad16[0x4C - 0x16]; Obj_72190* obj; } Wk_72190;
+typedef struct Tk_72190 { u8 pad[0x24]; Wk_72190* work; } Tk_72190;
+
+extern s16 fn_80060F6C(s16, void*, int);
+
+void fn_80072190(Tk_72190* t) {
+    Wk_72190* w = t->work;
+    Obj_72190* o = w->obj;
     u8 type;
-    E10* a;
+    E10_72190* a;
     s16 n;
     s16 i;
     int found;
-    E18* b;
+    E18_72190* b;
 
     found = 0;
     for (i = 0; i < 15; i++) {
@@ -2870,10 +3007,10 @@ void fn_80072190(Tk_80072190* t) {
         type = o->xda & 0xF;
         switch (type) {
         case 2:
-            a = (E10*)o->xd0;
+            a = (E10_72190*)o->xd0;
             break;
         case 3:
-            b = (E18*)o->xd0;
+            b = (E18_72190*)o->xd0;
             break;
         default:
             return;

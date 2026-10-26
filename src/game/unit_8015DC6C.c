@@ -96,7 +96,24 @@ extern void* lbl_80347114;
 extern void* lbl_80347450;
 typedef struct Rec_UNIT0000 { u8 pad[0x24]; void *x24; } Rec_UNIT0000;
 Rec_UNIT0000 *fn_8010A164(u16 idx);
-typedef struct Sub_8015F768 { u8 pad[0x178]; s32 x178; } Sub_8015F768;
+typedef struct {
+    u8 pad0[0xb4];
+    f32 fb4;
+    f32 fb8;
+    f32 fbc;
+    s32 fc0;
+    s32 fc4;
+    s32 fc8;
+    u8 padcc[0x16c - 0xcc];
+    s16 h16c;
+} Inner_80161F04;
+typedef struct Sub_8015F768 {
+    u8 pad0[8];
+    Inner_80161F04 *inner;
+    u8 pad0c[0x178 - 0xc];
+    s32 x178;
+    u32 x17c;
+} Sub_8015F768;
 typedef struct Obj_8015F768 { u8 pad[0x1d8]; Sub_8015F768 *x1d8; } Obj_8015F768;
 typedef struct Obj_8015FB98 { u8 pad[0xec]; u32 xec; u32 xf0; u32 xf4; } Obj_8015FB98;
 void *fn_8008F8FC(void *a, s32 b);
@@ -2361,6 +2378,48 @@ typedef struct {
     Info_801918C4* info;  /* 0x04 */
     u8 pad8[0x360 - 8];
 } CampWork_801918C4;
+typedef struct {
+    u8 pad0[0x18];
+    u16 id;
+} Arg_80161F04;
+typedef struct {
+    u8 pad0[4];
+    s32 f4;
+    s32 f8;
+    s32 fc;
+    u8 pad10[0x34];
+    s32 f44;
+    u8 pad48[4];
+    s32 f4c;
+} Ctrl_801729D0;
+typedef struct {
+    Ctrl_801729D0* ctrl;
+} Holder_801729D0;
+typedef struct {
+    u8 pad0[0x24];
+    Holder_801729D0* holder;
+} Outer_801729D0;
+typedef struct {
+    u8 pad0[8];
+    s32 f8;
+    u8 padc[4];
+    s32 f10;
+    u8 pad14[0x44];
+    s32 f58;
+    u32 f5c;
+} La_801729D0;
+typedef struct {
+    u8 pad0[0xbc];
+    La_801729D0* la;
+} In_801729D0;
+typedef struct {
+    u8 pad0[0x24];
+    In_801729D0* in;
+} Pnl_801729D0;
+extern s32 fn_80194A8C(s32 a);
+extern s32 fn_80194A18(s32 a);
+extern s32 fn_80194C38(s8 a);
+#define LA(n) (((Pnl_801729D0*)camp_work.objs[n])->in->la)
 
 s32 fn_8015DC6C(Obj_8015DC6C* self, Src* src)
 {
@@ -2411,13 +2470,17 @@ s32 fn_8015F298(u32 *a, u32 *b) {
     return 0;
 }
 
-s32 fn_8015F768(Obj_8015F768 *o) {
+static inline s32 ObjIsMoving(Obj_8015F768 *o) {
     Sub_8015F768 *s = o->x1d8;
     s32 r;
     if (s == 0) return 0;
     r = 0;
     if (s->x178 == 1 || s->x178 == 3) r = 1;
     return r != 0;
+}
+
+s32 fn_8015F768(Obj_8015F768 *o) {
+    return ObjIsMoving(o);
 }
 
 void fn_8015FB98(void *a, Obj_8015FB98 *b) {
@@ -8841,4 +8904,69 @@ void fn_801918C4(Inner_801918C4* in) {
     TextPrintf(x + 0xc2, y + 0x1e, "%6d", fn_80194028());
     TextPopColor(1);
     TextSetZ(z);
+}
+
+s32 fn_80161F04(Obj_8015F768 *o, Arg_80161F04 *a) {
+    Sub_8015F768 *s = o->x1d8;
+    Inner_80161F04 *in = s->inner;
+
+    if (!ObjIsMoving(o)) {
+        return 0;
+    }
+    if (s->x17c == a->id) {
+        if (s->x178 != 3) {
+            return 0;
+        }
+        s->x178 = 2;
+        fn_800A0028(o);
+        s->x178 = 0;
+        in->h16c = 0;
+        in->fb4 = 0.0f;
+        in->fb8 = 0.0f;
+        in->fbc = 0.0f;
+        in->fc0 = 0;
+        in->fc4 = 0;
+        in->fc8 = 0;
+    }
+    return 0;
+}
+
+void fn_801729D0(void) {
+    Ctrl_801729D0* c;
+    u8* tb;
+    La_801729D0* la;
+    Ctrl_801729D0* c2;
+
+    c = ((Outer_801729D0*)lbl_8034710C)->holder->ctrl;
+    tb = lbl_80307638;
+    la = LA(0x82);
+    c->fc = 0;
+    if (la->f5c & (1 << *(s32*)(tb + 0x61c))) {
+        c->fc = 3;
+    } else {
+        c->fc = 1;
+    }
+    c->f4 = 0;
+    c->f8 = 0;
+    c->f4c = la->f58;
+    c->f44 = *(s32*)(tb + 0x61c);
+    fn_80195A68(c, 1, 0, 0, 0, 1);
+    c2 = ((Outer_801729D0*)lbl_8034710C)->holder->ctrl;
+    {
+        La_801729D0* t = LA(0x85);
+        t->f10 = fn_80194A8C(c2->f44);
+    }
+    {
+        La_801729D0* t = LA(0x83);
+        t->f8 = fn_80194A8C(c2->f44);
+    }
+    {
+        La_801729D0* t = LA(0x86);
+        t->f10 = fn_80194A18(c2->f44);
+    }
+    {
+        La_801729D0* t = LA(0x84);
+        t->f8 = fn_80194A18(c2->f44);
+    }
+    fn_801954D0((void *)fn_80194C38(LA(0x85 + (s8)c->f4)->f10));
 }

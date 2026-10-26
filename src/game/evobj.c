@@ -2282,6 +2282,9 @@ extern void fn_801EFC88(s16 idx);
 extern void fn_801EFFD8(s16 id);
 extern void fn_801EFFFC(s16 id);
 extern void fn_801F28CC(int);
+void fn_801F11C8(int unused, int kind, int idx);
+int fn_801F0588(int who, int idx, s8 kind);
+int fn_801F039C(int a, s16 kind);
 typedef struct Ent_801F11C8 {
     u8 pad0[0x15];
     s8 b15;                 /* 0x15 */
@@ -2639,6 +2642,38 @@ void fn_801F01E4(void) {
     fn_8021B2B4();
 }
 
+int fn_801F0284(int a, int who, int kind, int idx, int all)
+{
+    switch (kind) {
+    case 0: {
+        int i;
+        lbl_8030B7F4.chr[a].mp--;
+        if (all == 1) {
+            fn_801F11C8(a, who, idx);
+        } else {
+            for (i = 0; i < 4; i++) {
+                int id = lbl_8030B7F4.party[i];
+                if (id != -1) {
+                    fn_801F11C8(a, id, idx);
+                }
+            }
+        }
+        break;
+    }
+    case 1: {
+        Item *it = &lbl_802C7C34[idx - 0xf0];
+        fn_801F0588(who, idx, it->kind);
+        break;
+    }
+    case 5: {
+        Item *it = &lbl_802D8A2C[idx - 0x1e0];
+        fn_801F039C(idx, (u8)it->kind);
+        break;
+    }
+    }
+    return 1;
+}
+
 static inline void ItemChance(s16 idx)
 {
     if (idx >= 0x1e0 && idx <= 0x1fd) {
@@ -2863,7 +2898,7 @@ int fn_801F0588(int who, int idx, s8 kind)
     return 1;
 }
 
-void fn_801F11C8(void* unused, s32 kind, s32 idx) {
+void fn_801F11C8(int unused, int kind, int idx) {
     Ent_801F11C8* e = (Ent_801F11C8*)(lbl_802C4BF0 + idx * 0x30);
     if (kind == 6) {
         Big* big = (Big*)&lbl_8030B7F4;
