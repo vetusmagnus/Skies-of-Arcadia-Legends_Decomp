@@ -443,6 +443,31 @@ void fn_801DBE1C(s32 a, ...) {
 void fn_801DBF90(void) {
 }
 
+extern u32 lbl_803476D4;
+extern s32 lbl_803475AC;
+extern const char lbl_802C4628[];
+extern int OSGetResetButtonState(void);
+extern void OSReport(const char *msg, ...);
+void fn_801DC214(void) {
+    int reset = OSGetResetButtonState();
+    u32 flags = lbl_803476D4;
+    if (flags & 1) {
+        if (reset == 0) {
+            lbl_803476D4 = flags & ~1u;
+            lbl_803476D4 = lbl_803476D4 | 2;
+        }
+    } else {
+        if (reset != 0) {
+            int msg =
+ lbl_803475AC;
+            lbl_803476D4 = flags | 1;
+            if (msg != 0) {
+                OSReport(lbl_802C4628);
+            }
+        }
+    }
+}
+
 void fn_801DD71C(void *dst) {
     s32 idx;
     if (lbl_8034754C > 0) {
