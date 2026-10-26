@@ -218,6 +218,40 @@ s32 fn_80207368(u32 a, CmdStream *st) {
     return 0;
 }
 
+typedef struct ScptArgs {
+    s32 kind;
+    u8 pad04[0x14];
+    s32 owner;
+    s32 *args;
+    u8 pad20[0x10];
+    s32 zero;
+} ScptArgs;
+extern s16 fn_80207830(s32, ScptArgs *);
+extern void fn_80210F74(ScptArgs *);
+void fn_80207738(s32 a, s32 b)
+{
+    ScptArgs s;
+    s32 i;
+
+    for (i = 0; i < 256; i++) {
+        if (*(s32 *)((u8 *)lbl_8030CEA0 + i * 8 + 0x18) != 0) {
+            s32 args[5] = { 0, 0, 0x1D, 0, 0x1D };
+            s.args = args;
+            args[0] = a;
+            args[1] = b + 0x8000000;
+            args[3] = i + 0x8000000;
+            s.zero = 0;
+            s.owner = a;
+            if (fn_80207830(1, &s) == 1) {
+                s.kind = 1;
+                *(s16 *)((u8 *)&s + 0x10) = 0;
+                *(s32 *)((u8 *)&s + 8) = 0;
+                fn_80210F74(&s);
+            }
+        }
+    }
+}
+
 s32 fn_8020A72C(void) {
     return 0;
 }
