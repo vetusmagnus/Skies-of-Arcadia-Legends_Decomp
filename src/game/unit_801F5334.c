@@ -516,3 +516,81 @@ void fn_80216EFC(s32 a) {
 void fn_80216CB4(s32 p) {
     fn_802193BC(p, 0);
 }
+
+typedef struct {
+    u8 pad[0x1c];
+    f32* script;
+} ScriptObj;
+extern void fn_80168398(f32 a, f32 b, f32 c, f32 d, s32 i0, s32 i1, s32 i2, s32 i3, u16 i4, u8 i5);
+static inline s32 ReadInt(f32** p)
+{
+    if (3.4028235e38f == **p) {
+        (*p)++;
+        return 0x7FFFFFFF;
+    }
+    return (s32)fn_801F6120(p);
+}
+s32 fn_801F9988(u16 flags, ScriptObj* obj)
+{
+    f32* p;
+    f32 f0, f1, f2, f3;
+    s32 h;
+    u16 a;
+    u32 c;
+    s8 d;
+    s8 e;
+    s8 b;
+
+    if (flags & 1) {
+        p = obj->script + 1;
+        a = ReadInt(&p);
+        f0 = fn_801F6120(&p);
+        f1 = fn_801F6120(&p);
+        f2 = fn_801F6120(&p);
+        b = ReadInt(&p);
+        f3 = fn_801F6120(&p);
+        c = ReadInt(&p);
+        d = ReadInt(&p);
+        e = ReadInt(&p);
+        h = ReadInt(&p);
+        h = (h == 0x7FFFFFFF) ? 0 : h + 1;
+        obj->script = p;
+        fn_80168398(f0, f1, f2, f3, c, d, e, b, a, h);
+    }
+    if (flags & 8)
+        return 1;
+    return 0;
+}
+
+extern void fn_80169144(f32 a, f32 b, f32 c, f32 d, s32 i0, s32 i1, s32 i2, s32 i3, u16 i4, u8 i5);
+s32 fn_801F9C18(u16 flags, ScriptObj* obj)
+{
+    f32* p;
+    f32 f0, f1, f2, f3;
+    s32 h;
+    u16 a;
+    u32 c;
+    s8 d;
+    s8 e;
+    s8 b;
+
+    if (flags & 1) {
+        p = obj->script + 1;
+        a = ReadInt(&p);
+        f0 = fn_801F6120(&p);
+        f1 = fn_801F6120(&p);
+        f2 = fn_801F6120(&p);
+        b = ReadInt(&p);
+        f3 = fn_801F6120(&p);
+        c = ReadInt(&p);
+        d = ReadInt(&p);
+        e = ReadInt(&p);
+        h = ReadInt(&p);
+        h = (h == 0x7FFFFFFF) ? 0 : h + 1;
+        obj->script = p;
+        fn_80169144(f0, f1, f2, f3, c, d, e, b, a, h);
+    }
+    if (flags & 8)
+        return 1;
+    return 0;
+}

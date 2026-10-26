@@ -139,3 +139,177 @@ extern void fn_801C64DC(Msg*, s16);
 void fn_801CC69C(Msg* a, s16 i) {
     fn_801C64DC(a, i);
 }
+
+typedef struct DrawVtx {
+    f32 x, y, z, w;
+} DrawVtx;
+extern s32 lbl_8034720C;
+extern s16 lbl_80347256;
+extern u32 lbl_80347218;
+extern u32 lbl_80347258;
+extern s32 lbl_80347208;
+extern s32 lbl_803475D8;
+extern void *lbl_8034725C;
+extern s32 lbl_8034721C;
+void fn_802A8E50(void *p, u32 len, s32 mode);
+void fn_802A8D64(void *p, u32 len, s32 mode);
+void fn_8024DE74(void);
+void fn_80290ED4(DrawVtx *v, s32 n, s32 a);
+void fn_802A8F40(s32 a);
+void fn_801D0BC0(s32 a, f32 b);
+void fn_8029CEA4(s32 a, s32 b);
+extern u8 lbl_80346820;
+void fn_8029CE6C(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f);
+void fn_80296EEC(s32 a, s32 b, s32 c);
+static inline void FogBuf(s32 mode) {
+    u32 len;
+    void *p;
+    if (lbl_80347256 < 0x400 && lbl_80347218 > lbl_80347258 && lbl_80347208 != 0 && lbl_8034720C != 0) {
+        len = lbl_80347218 - lbl_80347258;
+        p = lbl_8034725C;
+        if (lbl_803475D8 != 0) {
+            p = 0;
+        }
+        if (p != 0) {
+            GXFlush();
+            if (lbl_8034721C == 0) {
+                fn_802A8E50(p, lbl_80347218, mode);
+                lbl_8034721C = 1;
+            } else {
+                fn_802A8D64(p, len, mode);
+            }
+            fn_8024DE74();
+        } else {
+            fn_802A8E50(p, len, mode);
+        }
+        DrawStateApplyFog();
+    }
+}
+void fn_801CD73C(DrawVtx *v, s32 n, s32 a, u32 flags) {
+    f32 avg;
+    s32 i;
+
+    if (n <= 0) {
+        return;
+    }
+    if (!(flags & 0x800000)) {
+        avg = 0.0f;
+        for (i = 0; i < n; i++) {
+            avg += v[i].z;
+        }
+        avg /= (f32)n;
+    } else {
+        avg = v[0].z;
+    }
+    if (lbl_8034720C != 0 && (flags & 0x1000)) {
+        if (a == 0) {
+            if (flags & 0x100) {
+                FogBuf(2);
+                DrawStateReapply();
+                fn_80290ED4(v, n, a);
+                fn_802A8F40(1);
+                if (lbl_80347256 < 0x400 && lbl_80347218 > lbl_80347258 && lbl_80347208 != 0 && lbl_8034720C != 0) {
+                    fn_801D0BC0(0, 10000.0f + avg);
+                }
+                fn_802A8F40(0);
+            } else {
+                DrawStateReapply();
+                fn_80290ED4(v, n, a);
+            }
+        } else if (flags & 0x8000) {
+            FogBuf(3);
+            fn_8029CEA4(0, 1);
+            fn_8029CE6C(6, lbl_80346820, 0, 6, lbl_80346820, 1);
+            DrawStateReapply();
+            fn_80290ED4(v, n, a);
+            fn_8029CEA4(0, 1);
+            fn_8029CE6C(4, 0, 0, 7, 0, 1);
+            fn_802A8F40(1);
+            if (lbl_80347256 < 0x400 && lbl_80347218 > lbl_80347258 && lbl_80347208 != 0 && lbl_8034720C != 0) {
+                fn_801D0BC0(1, 10000.0f + avg);
+            }
+            fn_802A8F40(0);
+        } else {
+            FogBuf(3);
+            if (flags & 0x4000) {
+                fn_80296EEC(1, 3, 0);
+            }
+            DrawStateReapply();
+            fn_80290ED4(v, n, a);
+            fn_80296EEC(1, 3, 1);
+            fn_802A8F40(1);
+            if (lbl_80347256 < 0x400 && lbl_80347218 > lbl_80347258 && lbl_80347208 != 0 && lbl_8034720C != 0) {
+                fn_801D0BC0(8, 10000.0f + avg);
+            }
+            fn_802A8F40(0);
+        }
+    } else {
+        DrawStateReapply();
+        fn_80290ED4(v, n, a);
+    }
+}
+
+void fn_8028A418(DrawVtx *v, s32 n, s32 a);
+void fn_801CE1A4(DrawVtx *v, s32 n, s32 a, u32 flags) {
+    f32 avg;
+    s32 i;
+
+    if (n <= 0) {
+        return;
+    }
+    if (!(flags & 0x800000)) {
+        avg = 0.0f;
+        for (i = 0; i < n; i++) {
+            avg += v[i].z;
+        }
+        avg /= (f32)n;
+    } else {
+        avg = v[0].z;
+    }
+    if (lbl_8034720C != 0 && (flags & 0x1000)) {
+        if (a == 0) {
+            if (flags & 0x100) {
+                FogBuf(2);
+                DrawStateReapply();
+                fn_8028A418(v, n, a);
+                fn_802A8F40(1);
+                if (lbl_80347256 < 0x400 && lbl_80347218 > lbl_80347258 && lbl_80347208 != 0 && lbl_8034720C != 0) {
+                    fn_801D0BC0(0, 10000.0f + avg);
+                }
+                fn_802A8F40(0);
+            } else {
+                DrawStateReapply();
+                fn_8028A418(v, n, a);
+            }
+        } else if (flags & 0x8000) {
+            FogBuf(3);
+            fn_8029CEA4(0, 1);
+            fn_8029CE6C(6, lbl_80346820, 0, 6, lbl_80346820, 1);
+            DrawStateReapply();
+            fn_8028A418(v, n, a);
+            fn_8029CEA4(0, 1);
+            fn_8029CE6C(4, 0, 0, 7, 0, 1);
+            fn_802A8F40(1);
+            if (lbl_80347256 < 0x400 && lbl_80347218 > lbl_80347258 && lbl_80347208 != 0 && lbl_8034720C != 0) {
+                fn_801D0BC0(1, 10000.0f + avg);
+            }
+            fn_802A8F40(0);
+        } else {
+            FogBuf(3);
+            if (flags & 0x4000) {
+                fn_80296EEC(1, 3, 0);
+            }
+            DrawStateReapply();
+            fn_8028A418(v, n, a);
+            fn_80296EEC(1, 3, 1);
+            fn_802A8F40(1);
+            if (lbl_80347256 < 0x400 && lbl_80347218 > lbl_80347258 && lbl_80347208 != 0 && lbl_8034720C != 0) {
+                fn_801D0BC0(8, 10000.0f + avg);
+            }
+            fn_802A8F40(0);
+        }
+    } else {
+        DrawStateReapply();
+        fn_8028A418(v, n, a);
+    }
+}
