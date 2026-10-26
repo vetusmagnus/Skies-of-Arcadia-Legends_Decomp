@@ -1,9 +1,10 @@
 Progress and handoff
 ====================
 
-State of the work as of 2026-10-26 (after batch 9 and the held-back merges): 25.48% of code matched (3,018 / 7,116
-functions), 4,098 functions unmatched: 3,131 game (2,193 under 632 bytes, 466 at 632-1000, 355 at 1-2 KB, 101 at 2-5 KB,
-16 over 5 KB), 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB). Numbers live in the README status block and on
+State of the work as of 2026-10-26 (after the duplicate-copy batch): 26.52% of code matched (3,393 / 7,116
+functions), 3,723 functions unmatched: 2,756 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
+(the size split of the game functions predates the duplicate-copy batch: 2,193 under 632 bytes, 466 at 632-1000,
+355 at 1-2 KB, 101 at 2-5 KB, 16 over 5 KB). Numbers live in the README status block and on
 [ByteMatch](https://bytematch.dev/vetusmagnus/SoAL-Decomp); this page covers what's in flight.
 
 Game files
@@ -77,10 +78,39 @@ Duplicates
 `python tools/match/dupes.py` masks symbols and branch targets across every asm file (including the unit
 files, so matched functions are covered) and writes [duplicates.txt](duplicates.txt): of 7,110 functions,
 6,436 are unique and 201 groups hold 875 functions (674 copies). Members the objdiff report counts as matched
-are starred. 118 groups already have a matched member and 27 are fully matched; 482 unmatched functions
-(45,624 bytes, 410 of them game code) are copies of a group with a matched or earlier member, so copying a
-solved body (re-run fdiff on each copy) covers them. Most groups are one- and two-instruction stubs; the
-largest is 0x12A0 bytes (fn_800AE4E0 / fn_800DA744).
+are starred. After the duplicate-copy batch below, 143 groups have a matched member and 129 are fully matched.
+Most groups are one- and two-instruction stubs; the largest is 0x12A0 bytes (fn_800AE4E0 / fn_800DA744).
+
+### Duplicate-copy batch (2026-10-26)
+
+All 410 game-code copies in the regenerated list were worked: 375 more functions now match (3,018 to 3,393).
+
+- Copies of a group with a matched member (about 325): a script (`build/dup/copy.py`, scratch, gitignored) mapped
+  the symbols between the two asm bodies, cloned the solved body into the unit holding the copy with its
+  `extern` lines and typedefs, and ran fdiff plus floatcheck on each. 248 went in untouched; about 65 needed a
+  by-hand fix. Typical causes: a callee prototype in the target unit with different types (cast the argument, or
+  take the parameter as `s32`), an existing `(void)` prototype for a function that really takes arguments
+  (declare it `()`), a global declared with a different struct in the target unit, and float constants that
+  differ between the two functions (fdiff masks pool loads, so floatcheck is what catches `-348.0f` vs `-8.0f`).
+  Four copies differed only in a string literal. The copies are no longer byte-identical C, only identical code.
+- Groups with no matched member (35 groups, one representative each): 11 agents, 8 on Sonnet 5.5 (functions of
+  200 bytes and up) and 3 on Haiku 5.5, about 10 tries per function, no Opus, no retry or merge agents.
+  The representatives were copied to the other members by the same script. 25 of 35 representatives matched.
+- Two splits grew: `unit_801CBA60` now starts at 0x801CAE84 and `unit_801C5A60` at 0x801C5758, to cover functions
+  that sat between units.
+- The script-stream sentinel compare (`3.4028235e38f == *(f32*)cur`) is written as a literal; agents had referenced
+  the `.sdata2` constant by label.
+- Not touched: the 0x80231A7C+ SDK range (12 stubs, different compiler) and the groups already logged as near
+  misses (fn_800AE4E0, fn_80006618/fn_801E41E0, fn_8017DCB4, fn_800A37E8, fn_800FF4EC, fn_801E461C, fn_80083F34,
+  fn_8012A900, fn_8022BA10, fn_800D2048, fn_8013A320).
+
+New near misses (the group's other members stay unmatched): fn_801D56C8 / fn_801D5A50 (the original converts
+colour bytes with `psq_l` fast casts, 299 lines), fn_801E04E8 / fn_801E0AC0 (register shift plus an
+`srawi/subfc/adde.` sign test, 122), fn_801D6A74 / fn_801D6B58 (loop counter and offset registers swapped, 50),
+fn_800A3744 / fn_801497CC (20), fn_800949BC / fn_80094CEC (19, one register swap), fn_80068994 / fn_80068A58 (10),
+fn_8020623C / fn_80206424 (10, flag and temp swap r30/r31), fn_801C5C80 / fn_801C5D04 (2, 0.0f loaded after the
+test), fn_801F58B8 / fn_801F593C (2, FLT_MAX loaded after the prologue store), fn_801F7C18 / fn_801FA1D0 (2, add
+order).
 
 What worked:
 
