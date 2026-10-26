@@ -25,6 +25,18 @@ extern u8 lbl_80346820;
 /* lbl_8034720C = (lbl_80347208 != 0), and the value is returned (r3 holds the result;
  * as a void function the compiler keeps it in r0). The one caller, fn_801DC62C, ignores it. */
 extern long lbl_80347208;
+typedef struct Node { u8 pad0[4]; struct Node* next; void* tex; } Node;
+extern Node* lbl_80308CB8[10];
+extern s32 lbl_803475D8;
+extern s32 lbl_803475CC;
+extern void FogOn(void);
+extern void FogOff(void);
+extern void fn_80286EE8(void);
+extern void fn_8028B498(void);
+extern void fn_801D1714(void);
+extern void fn_801DBCD4(void);
+extern void GXFlush(void);
+extern void fn_802A8AE4(void* tex);
 
 void fn_801CED24(u32 a, u32 b, u32 c, f32 d, u32 e)
 {
@@ -297,4 +309,54 @@ s32 fn_801D1504(void) {
 
 int fn_801D13C0(void) {
     return lbl_8034720C = lbl_80347208 != 0;
+}
+
+static inline void FreeList(Node* n)
+{
+    for (; n != 0; n = n->next) {
+        if (n->tex != 0) {
+            GXFlush();
+            fn_802A8AE4(n->tex);
+            n->tex = 0;
+        }
+    }
+}
+
+void fn_801D0F80(void)
+{
+    Node* n;
+    if (lbl_80347208 != 0 && lbl_803475D8 == 0) {
+        if (lbl_803475CC == 6) {
+            FogOn();
+        }
+        fn_80286EE8();
+        fn_8028B498();
+        FreeList(lbl_80308CB8[1]);
+        if (lbl_803475CC == 6) {
+            FogOff();
+        }
+        fn_801D1714();
+        if (lbl_803475CC == 6) {
+            FogOn();
+        }
+        FreeList(lbl_80308CB8[0]);
+        FreeList(lbl_80308CB8[3]);
+        FreeList(lbl_80308CB8[4]);
+        FreeList(lbl_80308CB8[5]);
+        FreeList(lbl_80308CB8[2]);
+        FreeList(lbl_80308CB8[6]);
+        FreeList(lbl_80308CB8[7]);
+        FreeList(lbl_80308CB8[8]);
+        for (n = lbl_80308CB8[9]; n != 0; n = n->next) {
+            if (n->tex != 0) {
+                fn_801DBCD4();
+                GXFlush();
+                fn_802A8AE4(n->tex);
+                n->tex = 0;
+            }
+        }
+        if (lbl_803475CC == 6) {
+            FogOff();
+        }
+    }
 }

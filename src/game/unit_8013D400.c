@@ -1,4 +1,5 @@
 #include "types.h"
+#include <dolphin/types.h>
 extern void fn_80136A28(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f);
 extern void fn_8013DA50(s32 a, s32 b);
 typedef struct { u8 pad0[1]; s8 kind; } KindObj;
@@ -480,6 +481,91 @@ typedef struct Ent_80143200 {
 } Ent_80143200;
 typedef struct Node_80149070 Node_80149070;
 void fn_80148EDC(Node_80149070 *n);
+typedef struct {
+    u8 b0;
+    u8 b1;
+    u8 b2;
+    u8 b3;
+    u8 b4;
+    u8 b5;
+    u8 b6;
+    u8 b7;
+    s16 s8;
+    s16 sa;
+    u32 wc;
+} Rec;
+typedef struct {
+    s16 s0;
+    s16 s2;
+    u8 pad4[4];
+    u32 w8;
+    u32 wc;
+    Rec e[8];
+} Blk;
+typedef struct {
+    u8 b0;
+    u8 b1;
+    u8 b2;
+    u8 b3;
+    u8 pad4;
+    u8 b5;
+    s16 s6;
+    u8 pad8;
+    u8 b9;
+    u8 padA[2];
+    s16 sc;
+    u8 padE[6];
+    s16 s14;
+} Src;
+typedef struct {
+    u8 pad0[6];
+    s16 s6;
+    s16 s8;
+} Cur;
+typedef struct {
+    u8 pad0[0x124];
+    Blk a;
+} SysA;
+typedef struct {
+    u8 pad0[7];
+    u8 b7;
+} Obj;
+typedef struct {
+    u8 pad0[0x1c];
+    s16 s1c;
+    u8 pad1e[2];
+    s16 s20;
+    u8 pad22[0x40 - 0x22];
+    s16 s40;
+    u8 pad42[0x76 - 0x42];
+    s16 s76;
+    u8 pad78[2];
+    s16 s7a;
+    u8 pad7c[0x98 - 0x7c];
+    s16 s98;
+    u8 pad9a[2];
+    s16 s9c;
+    u8 pad9e[0xba - 0x9e];
+    s16 sba;
+    u8 padbc[2];
+    s16 sbe;
+    u8 padc0[0xdc - 0xc0];
+    s16 sdc;
+    u8 paddE[2];
+    s16 se0;
+    u8 pade2[0xfe - 0xe2];
+    s16 sfe;
+    u8 pad100[2];
+    s16 s102;
+} Ent_8014654C;
+typedef struct {
+    u8 pad0[0x20];
+    Ent_8014654C *x20;
+    Ent_8014654C *x24;
+    u8 pad28;
+    u8 b29;
+    u8 b2a;
+} Sys_8014654C;
 
 void fn_8013D400(s32 a, s32 b) {
     fn_80136A28(a, b, 3, -1, -1, -1);
@@ -1681,4 +1767,154 @@ void fn_80149070(void) {
     FreeSlots(500);
     fn_801E17E0((void *)((*(Node_80149070 ***)&lbl_80346F88)));
     (*(Node_80149070 ***)&lbl_80346F88) = NULL;
+}
+
+static inline void copyrec(Rec *d, Rec *s)
+{
+    d->b0 = s->b0;
+    d->b1 = s->b1;
+    d->b2 = s->b2;
+    d->b3 = s->b3;
+    d->b4 = s->b4;
+    d->b5 = s->b5;
+    d->b6 = s->b6;
+    d->s8 = s->s8;
+    d->b7 = s->b7;
+    d->sa = s->sa;
+    d->wc = s->wc;
+}
+
+void fn_8014549C(s32 idx, s32 flag)
+{
+    u8 *sys;
+    Blk *out;
+    Blk *b1;
+    Blk *b2;
+    Src *q;
+    Rec *e;
+    s32 cnt;
+    s32 k;
+    Cur *c;
+
+    cnt = 0;
+    sys = (*(u8 **)&lbl_8034727C);
+    out = (Blk *)(sys + 0xa24);
+    if (flag == 0) {
+        q = (Src *)(sys + idx * 0x3e + 0x3a);
+        b1 = (Blk *)(sys + idx * 0x90 + 0x124);
+        b2 = (Blk *)(sys + idx * 0x90 + 0x5a4);
+    } else {
+        q = (Src *)(sys + idx * 0x3e + 0x52);
+        b1 = (Blk *)(sys + idx * 0x90 + 0x5a4);
+        b2 = (Blk *)(sys + idx * 0x90 + 0x124);
+    }
+    switch ((s8)q->b0) {
+    case 0:
+        out->e[0].b0 = q->b0;
+        cnt = 1;
+        out->e[0].b1 = q->b1;
+        out->e[0].b2 = q->b2;
+        out->e[0].b3 = q->b3;
+        out->e[0].b4 = q->b5;
+        out->e[0].b5 = q->s6;
+        out->e[0].b6 = q->b9;
+        out->e[0].s8 = q->sc;
+        out->e[0].sa = q->s14;
+        out->e[0].wc = 0;
+        out->e[0].b7 = b1->e[0].b7;
+        break;
+    case -1:
+    case 3:
+    case 6:
+        out->e[0].b0 = q->b0;
+        cnt = 1;
+        out->e[0].b1 = q->b1;
+        out->e[0].b2 = q->b2;
+        out->e[0].b3 = q->b3;
+        out->e[0].b4 = q->b5;
+        out->e[0].b5 = q->s6;
+        out->e[0].b6 = q->b9;
+        out->e[0].s8 = q->sc;
+        out->e[0].sa = q->s14;
+        out->e[0].wc = 0;
+        break;
+    case 4:
+        if ((s32)q->b5 == 2) {
+            out->e[0].b0 = q->b0;
+            cnt = 1;
+            out->e[0].b1 = q->b1;
+            out->e[0].b2 = q->b2;
+            out->e[0].b3 = q->b3;
+            out->e[0].b4 = q->b5;
+            out->e[0].b5 = q->s6;
+            out->e[0].b6 = q->b9;
+            out->e[0].s8 = q->sc;
+            out->e[0].sa = q->s14;
+            out->e[0].wc = 0;
+            out->e[0].b7 = 3;
+        }
+        break;
+    }
+    for (k = 0; k < 8; k++) {
+        e = &b2->e[k];
+        if ((s8)e->b0 != 0) {
+            if (k == idx) {
+                switch ((s8)q->b0) {
+                case 3:
+                case -1:
+                case 6:
+                    break;
+                default:
+                    copyrec(&out->e[cnt], e);
+                    cnt++;
+                    break;
+                }
+            } else {
+                copyrec(&out->e[cnt], e);
+                cnt++;
+            }
+        }
+    }
+    c = ((Cur *)fn_80135598());
+    out->s0 = cnt;
+    out->s2 = b1->s2;
+    if (out->s2 > c->s6 - c->s8) out->s2 = c->s6 - c->s8;
+    out->w8 = b1->w8;
+    out->wc = b2->wc;
+}
+
+static inline void boost(Ent_8014654C *e)
+{
+    e->s1c += e->s1c / 2;
+    e->s20 += e->s20 / 2;
+    e->s40 += e->s40 / 2;
+    e->s76 += e->s76 / 2;
+    e->s7a += e->s7a / 2;
+    e->s98 += e->s98 / 2;
+    e->s9c += e->s9c / 2;
+    e->sba += e->sba / 2;
+    e->sbe += e->sbe / 2;
+    e->sdc += e->sdc / 2;
+    e->se0 += e->se0 / 2;
+    e->sfe += e->sfe / 2;
+    e->s102 += e->s102 / 2;
+}
+
+void fn_8014654C(Obj *o)
+{
+    Ent_8014654C *e;
+    o->b7 = 0;
+    if (*((s8 *)o + 1) == 0) {
+        if ((*(Sys_8014654C **)&lbl_8034727C)->b29 & 1) return;
+        (*(Sys_8014654C **)&lbl_8034727C)->b29 |= 1;
+        e = (*(Sys_8014654C **)&lbl_8034727C)->x20;
+        o->b7 = 1;
+        boost(e);
+    } else {
+        if ((*(Sys_8014654C **)&lbl_8034727C)->b2a & 1) return;
+        (*(Sys_8014654C **)&lbl_8034727C)->b2a |= 1;
+        e = (*(Sys_8014654C **)&lbl_8034727C)->x24;
+        o->b7 = 1;
+        boost(e);
+    }
 }

@@ -1358,6 +1358,52 @@ extern int lbl_80347170[2];
 extern int lbl_80347178;
 extern const u32 lbl_8034BAC0[];
 extern u8 lbl_803473BE;
+typedef struct { u8 pad[0x28]; UiObj* obj; } Pnl;
+typedef struct { s32 f0; u8 pad[0x28]; } E2c;
+typedef struct {
+    u8 pad0[7];
+    u8 f7;
+    u8 pad8;
+    u8 f9;
+    u8 padA[2];
+    s32 fc;
+    u8 pad10[0x20 - 0x10];
+    E2c ent[10];
+    u8 pad_[0x20c - 0x20 - 10 * 0x2c];
+    Pnl* p[19];
+    void* f258;
+} W_8019EFF8;
+typedef struct { u8 pad[0x19]; u8 state; u8 pad1a[0x24 - 0x1a]; W_8019EFF8* w; } Task_8019EFF8;
+extern s32 fn_801A3B30(Task_8019EFF8* t, s32* out);
+extern s32 MenuPlaySe(s16 se);
+typedef struct {
+    u8 pad0[1];
+    u8 f1;
+    u8 cnt;
+    u8 f3;
+    u8 sel;
+    u8 pad5[0x18 - 5];
+    f32 f18;
+    u8 pad1c[0x20c - 0x1c];
+    Pnl* p[19];
+    s32 pad258;
+    s32 st[8];
+} W_801A11B0;
+typedef struct { u8 pad[0x19]; u8 state; u8 pad1a[0x24 - 0x1a]; W_801A11B0* w; } Task_801A11B0;
+typedef struct { u8 pad[0x14]; u32 f14; u8 pad18[0x50 - 0x18]; } Tab;
+typedef struct { u8 pad[8]; u32 bits; } Pad;
+typedef struct { Pad* pad; } PadInfo;
+extern s32 fn_801C09F8(s32 a, s32 b);
+extern void fn_801A20AC(Task_801A11B0* t);
+typedef struct V { u8 pad[4]; f32 a; f32 b; } V;
+typedef struct Ent_801B737C { u8 pad[0x28]; V* v; } Ent_801B737C;
+typedef struct St_801B737C { u8 pad[0x64]; s8 seen[8]; } St_801B737C;
+typedef struct Fl { u8 pad[4]; u32 f4; u8 pad8[0x18 - 8]; u32 f18; u32 f1c; u8 pad20[0x30 - 0x20]; u32 f30; u8 pad34[0x168 - 0x34]; u32 f168; u8 pad16c[4]; u32 f170; } Fl;
+typedef struct UiObj UiObj;
+typedef struct Slot { u8 pad[0x28]; UiObj* obj; } Slot;
+extern void UiObjSetCommand(UiObj* obj, u16 cmd, u16 delay);
+typedef struct Menu { u8 pad[0xA]; u8 cur; u8 pad2[0x230-0xB]; Slot* slot[5]; } Menu;
+typedef struct Task_801AB094 { u8 pad[0x24]; Menu* m; } Task_801AB094;
 
 void fn_80199B9C(void* p, f32 v) {
     *(f32*)((u8*)p + 0x34) = v;
@@ -4218,4 +4264,236 @@ void fn_801BEA70(void *a, u32 idx, s32 mode) {
     } else {
         fn_801BEB10(a, 1, idx, 0);
     }
+}
+
+void fn_8019EFF8(Task_8019EFF8* t) {
+    s32 r;
+    if (fn_801A3B30(t, &r) == 0) return;
+    if (r == 0) {
+        MemCopy(&t->w->ent[t->w->f7], (u8*)t->w + 0x1d8, 0x2c);
+        t->w->ent[t->w->f7].f0 = 1;
+        t->w->f9 = 0;
+        fn_801A41C0(t->w->f258);
+        t->w->f258 = NULL;
+        fn_801A64B4(t, 10);
+        MenuPlaySe(0xd);
+        UiObjMoveToXIfChanged(t->w->p[1]->obj, 6, 4, -330.0f);
+        UiObjSetCommand(t->w->p[1]->obj, 0xf, 0);
+        fn_801A4DCC(t, 1);
+        UiObjMoveToX(t->w->p[5]->obj, 6, 5, -240.0f);
+        UiObjSetCommand(t->w->p[5]->obj, 0x1a, 2);
+        UiObjMoveToX(t->w->p[6]->obj, 6, 5, -240.0f);
+        UiObjSetCommand(t->w->p[6]->obj, 0x1a, 0);
+        lbl_803475D0 = 0;
+        lbl_803475E0 = 0;
+        t->w->fc = 10;
+        t->state = 0x15;
+    } else if (r != -1) {
+        t->w->ent[t->w->f7].f0 = 2;
+        t->w->f9 = 0;
+        fn_801A41C0(t->w->f258);
+        t->w->f258 = NULL;
+        fn_801A64B4(t, 9);
+        MenuPlaySe(3);
+        UiObjMoveToXIfChanged(t->w->p[1]->obj, 6, 4, -330.0f);
+        UiObjSetCommand(t->w->p[1]->obj, 0xf, 0);
+        UiObjMoveToX(t->w->p[5]->obj, 6, 5, -240.0f);
+        UiObjSetCommand(t->w->p[5]->obj, 0x1a, 2);
+        UiObjMoveToX(t->w->p[6]->obj, 6, 5, -240.0f);
+        UiObjSetCommand(t->w->p[6]->obj, 0x1a, 0);
+        fn_801A4DCC(t, 1);
+        lbl_803475D0 = 0;
+        lbl_803475E0 = 0;
+        t->state = 0x17;
+    }
+}
+
+void fn_801A11B0(Task_801A11B0* t) {
+    u32 bits;
+    u8 v;
+    s32 arg;
+    if (t->w->f18 != 1.0f) fn_801A4DCC((void *)(t), 1);
+    if (fn_801A6554((void *)(t)) != 0) return;
+    if (((Tab*)lbl_803081CC)[0].f14 == 0 && ((Tab*)lbl_803081CC)[1].f14 == 0) {
+        t->w->st[0] = fn_801A28AC(0);
+        t->w->st[1] = fn_801A28AC(1);
+        t->w->f3 = t->w->cnt;
+        t->w->cnt = 0;
+        if (t->w->st[0] != 1) t->w->cnt++;
+        if (t->w->st[1] != 1) t->w->cnt++;
+    }
+    if (fn_801C09F8(0, 4) != 0 || fn_801C09F8(0, 5) != 0) {
+        if (t->w->cnt == 2) {
+            MenuPlaySe(4);
+            t->w->sel++;
+            t->w->sel &= 1;
+        }
+    } else {
+        bits = ((PadInfo*)lbl_80311A60)[0].pad->bits;
+        if (bits & 0x100) {
+            if (t->w->cnt == 0) {
+                MenuPlaySe(3);
+            } else if (t->w->sel != 2) {
+                MenuPlaySe(2);
+                if (t->w->sel == 0) {
+                    UiObjSetCommand(t->w->p[3]->obj, 0x14, 0);
+                    UiObjMoveToX(t->w->p[4]->obj, 6, 5, -340.0f);
+                    UiObjSetCommand(t->w->p[4]->obj, 0xf, 0);
+                } else {
+                    UiObjMoveToX(t->w->p[3]->obj, 6, 5, -340.0f);
+                    UiObjSetCommand(t->w->p[3]->obj, 0xf, 0);
+                    UiObjSetCommand(t->w->p[4]->obj, 0x14, 0);
+                }
+                fn_801A64B4((void *)(t), 0x11);
+                t->state = 5;
+            } else {
+                goto cancel;
+            }
+        } else if (bits & 0x200) {
+        cancel:
+            UiObjSetCommand(t->w->p[3]->obj, 0x14, 0);
+            UiObjSetCommand(t->w->p[4]->obj, 0x14, 0);
+            t->state = 0x1c;
+        } else if (bits & 0x400) {
+            t->state = 0x1e;
+        } else {
+            fn_801A20AC(t);
+            if (t->w->cnt != 0) {
+                v = 0xb;
+                if (t->w->f1 == 0) v = 1;
+                arg = v;
+            } else {
+                arg = 4;
+            }
+            fn_801A64B4((void *)(t), arg);
+        }
+    }
+}
+
+void fn_801B737C(Ent_801B737C* t)
+{
+    char buf[32];
+    s32 i;
+    s32 ok;
+    for (i = 0; i < 8; i++) {
+        ok = 0;
+        switch (i) {
+        case 0:
+            fn_8025F120((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
+            ok = 1;
+            break;
+        case 1:
+            if ((*(Fl*)&lbl_80310B3C).f4 & 0x10000000) {
+                fn_8025F120((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
+                ok = 1;
+            }
+            break;
+        case 2:
+            if ((*(Fl*)&lbl_80310B3C).f18 & 0x100) {
+                fn_8025F120((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
+                ok = 1;
+            }
+            break;
+        case 3:
+            if ((*(Fl*)&lbl_80310B3C).f1c & 0x04000000) {
+                fn_8025F120((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
+                ok = 1;
+            }
+            break;
+        case 4:
+            if ((*(Fl*)&lbl_80310B3C).f168 & 0x40000000) {
+                fn_8025F120((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
+                ok = 1;
+            }
+            break;
+        case 5:
+            if (((*(Fl*)&lbl_80310B3C).f30 & 0x10000) || (*(St_801B737C*)&lbl_80310A1C).seen[5] > 0) {
+                ok = 1;
+                if ((*(St_801B737C*)&lbl_80310A1C).seen[5] > 1) {
+                    fn_8025F120((void *)(buf), (void *)(lbl_802B8F70));
+                } else {
+                    fn_8025F120((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
+                }
+            }
+            break;
+        case 6:
+            if ((*(Fl*)&lbl_80310B3C).f170 & 0x80) {
+                fn_8025F120((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
+                ok = 1;
+            }
+            break;
+        case 7:
+            if ((*(Fl*)&lbl_80310B3C).f30 & 0x1000000) {
+                fn_8025F120((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
+                ok = 1;
+            }
+            break;
+        }
+        if (ok == 0) {
+            TextSetColor(0x40201008);
+            TextPrint((s32)(16.0f + t->v->a), (s32)(12.0f + t->v->b + (f32)(i * 24)), (void *)(lbl_802B8F94));
+            TextSetColor(0xFF201008);
+        } else {
+            TextPrint((s32)(16.0f + t->v->a), (s32)(12.0f + t->v->b + (f32)(i * 24)), (void *)(buf));
+        }
+        if ((*(St_801B737C*)&lbl_80310A1C).seen[i] == 0 && ok == 1) {
+            (*(St_801B737C*)&lbl_80310A1C).seen[i] = 1;
+        }
+    }
+}
+
+s32 fn_801AB094(Task_801AB094* t)
+{
+    s32 ret = 0;
+    u8 old = t->m->cur;
+    s32 i, cmd;
+    Slot* s;
+    UiObj* o;
+    if (fn_801C09F8(0, 4)) {
+        ret = 1;
+        if (t->m->cur == 0) t->m->cur = 4; else t->m->cur--;
+        if (t->m->slot[t->m->cur] == 0) {
+            for (i = 0; i < 5; i++) {
+                if (t->m->slot[t->m->cur] != 0) break;
+                if (t->m->cur == 0) t->m->cur = 5; else t->m->cur--;
+            }
+        }
+    } else if (fn_801C09F8(0, 5)) {
+        ret = 1;
+        t->m->cur++;
+        if (t->m->cur == 5) t->m->cur = 0;
+        if (t->m->slot[t->m->cur] == 0) {
+            for (i = 0; i < 5; i++) {
+                if (t->m->slot[t->m->cur] != 0) break;
+                t->m->cur++;
+                if (t->m->cur == 5) t->m->cur = 0;
+            }
+        }
+    }
+    if (old != t->m->cur) MenuPlaySe(0);
+    cmd = 0x14;
+    if (t->m->cur == 0) cmd = 0x15;
+    UiObjSetCommand(t->m->slot[0]->obj, cmd, 0);
+    if ((s = t->m->slot[1]) != 0) {
+        o = s->obj;
+        cmd = 0x14;
+        if (t->m->cur == 1) cmd = 0x15;
+        UiObjSetCommand(o, cmd, 0);
+    }
+    if ((s = t->m->slot[2]) != 0) {
+        o = s->obj;
+        cmd = 0x14;
+        if (t->m->cur == 2) cmd = 0x15;
+        UiObjSetCommand(o, cmd, 0);
+    }
+    if ((s = t->m->slot[3]) != 0) {
+        o = s->obj;
+        cmd = 0x14;
+        if (t->m->cur == 3) cmd = 0x15;
+        UiObjSetCommand(o, cmd, 0);
+    }
+    cmd = 0x14;
+    if (t->m->cur == 4) cmd = 0x15;
+    UiObjSetCommand(t->m->slot[4]->obj, cmd, 0);
+    return ret;
 }

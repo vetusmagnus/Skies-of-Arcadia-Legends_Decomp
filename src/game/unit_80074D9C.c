@@ -454,7 +454,21 @@ extern void fn_8007C344(void);
 extern void fn_800794D8(void);
 extern void fn_8007B5B0(void);
 extern void fn_8007A890(void);
-extern void fn_8007BEB4(void);
+typedef struct Ent_8007BEB4 { s8 x0; u8 pad1[3]; s16 x4; u8 pad6[10]; } Ent_8007BEB4;
+typedef struct Menu_8007BEB4 { u8 x0; u8 pad1[2]; s8 x3; u8 x4; u8 x5; u8 x6; s8 x7; Ent_8007BEB4 ents[8]; } Menu_8007BEB4;
+typedef struct Slot_8007BEB4 { u8 pad0[8]; u32 x8; u32 flags; u8 pad10[0x24 - 0x10]; } Slot_8007BEB4;
+typedef struct Task_8007BEB4 { u8 pad0[0x18]; u8 flags; u8 state; u8 pad1a[0x24 - 0x1a]; Menu_8007BEB4* work; } Task_8007BEB4;
+typedef struct ChrState_8007BEB4 { s32 x0; u8 pad4[0x1c]; } ChrState_8007BEB4;
+extern Slot_8007BEB4 lbl_8030A6D4[];
+extern u8 lbl_8030B7F4[];
+extern s32 lbl_80346C10;
+extern s32 lbl_8034757C;
+extern void fn_8007BC6C(s32 sel, u8* pl, Menu_8007BEB4* w);
+extern void fn_80023D14(Menu_8007BEB4* w);
+extern void fn_80023D04(Menu_8007BEB4* w);
+extern void fn_8007B958(Task_8007BEB4* t, s32 sel, s16 item, s32 kind);
+extern s32 SePlay(s32 bank, s8 arg1, s8 id);
+void fn_8007BEB4(Task_8007BEB4* t);
 typedef struct Msg {
     s16 x0;
     s16 x2;
@@ -2201,4 +2215,192 @@ void fn_80077D40(s16 id)
         }
         i++;
     } while (i < 80);
+}
+
+void fn_8007BEB4(Task_8007BEB4* t) {
+    Menu_8007BEB4* w;
+    s32 sel;
+    switch (t->state) {
+    case 0:
+        t->state = 1;
+        w = fn_801E1C7C(0x88);
+        t->work = w;
+        sel = ((s8*)lbl_8030B7F4)[lbl_80347330 + 0x328];
+        fn_8007BC6C(sel, lbl_8030B7F4 + sel * 0x5c, w);
+        w->x3 = 0;
+        w->x4 = 0;
+        w->x5 = 1;
+        w->x7 |= 1;
+    case 1:
+        if (lbl_80346C10 == 0) {
+            fn_80023D14(t->work);
+            t->state = 2;
+            lbl_80346C10 = 1;
+        }
+        break;
+    case 2: {
+        u32 f;
+        w = t->work;
+        w->x6 = 0;
+        if (w->x3 < 0) break;
+        if ((s8)w->x0 > 1) {
+            f = lbl_8030A6D4[lbl_8034757C].flags;
+            if (f & 8) {
+                w->x6 = 1;
+                SePlay(0, 1, 0);
+                break;
+            } else if (f & 4) {
+                w->x6 = 2;
+                SePlay(0, 1, 0);
+                break;
+            }
+        }
+        f = lbl_8030A6D4[lbl_8034757C].x8;
+        if (f & 0x100) {
+            Ent_8007BEB4* e = (Ent_8007BEB4*)((u8*)w + w->x3 * 16 + 8);
+            if (e->x0 != 0) {
+                SePlay(0, 1, 2);
+                t->state = 4;
+                fn_8007B958(t, lbl_80347330, e->x4, 2);
+                ((ChrState_8007BEB4*)lbl_80309174)[lbl_80347330].x0 = 2;
+            } else {
+                SePlay(0, 1, 3);
+            }
+        } else if (f & 0x200) {
+            (*(Task_8007BEB4**)&lbl_80347318)->state = 2;
+            w->x6 = 4;
+            t->state = 7;
+            w->x7 &= ~1;
+            SePlay(0, 1, 7);
+        } else if (f & 0x400) {
+            w->x7 |= 2;
+            t->state = 6;
+            SePlay(0, 1, 6);
+        }
+        break;
+    }
+    case 6:
+        if (lbl_8030A6D4[lbl_8034757C].x8 != 0) {
+            t->state = 2;
+            t->work->x7 &= ~2;
+            SePlay(0, 1, 7);
+        }
+        break;
+    case 7:
+        t->flags |= 0x40;
+        (*(u8**)&lbl_80347304) = 0;
+        fn_80023D04(t->work);
+        lbl_80346C10 = 0;
+        break;
+    case 3:
+        return;
+    case 4:
+    case 5:
+        break;
+    }
+}
+
+s32 fn_800824F0(u8* pos, s8 val, u8* grid, u8* dir) {
+    u8 dx = dir[0];
+    u8 dy = dir[1];
+    u8 px = pos[0];
+    u8 py = pos[1];
+    s32 y;
+    s32 x;
+    switch ((s8)(dy + ((s8)dx + 1) * 16 + 1)) {
+    case 0:
+        x = (s8)px;
+        y = (s8)py;
+        if (val == (s8)(grid + y * 11)[x - 12]) {
+            pos[1] = y - 1;
+            pos[0] = x - 1;
+            return 1;
+        }
+        break;
+    case 1:
+        x = (s8)px;
+        y = (s8)py;
+        if (val == (s8)(grid + y * 11)[x - 1]) {
+            pos[0] = x - 1;
+            return 1;
+        }
+        break;
+    case 2:
+        x = (s8)px;
+        y = (s8)py;
+        if (val == (s8)(grid + y * 11)[x + 10]) {
+            pos[1] = y + 1;
+            pos[0] = x - 1;
+            return 1;
+        }
+        break;
+    case 16:
+        x = (s8)px;
+        y = (s8)py;
+        if (val == (s8)(grid + y * 11)[x - 11]) {
+            pos[1] = y - 1;
+            return 1;
+        }
+        break;
+    case 18:
+        x = (s8)px;
+        y = (s8)py;
+        if (val == (s8)(grid + y * 11)[x + 11]) {
+            pos[1] = y + 1;
+            return 1;
+        }
+        break;
+    case 32:
+        x = (s8)px;
+        y = (s8)py;
+        if (val == (s8)(grid + y * 11)[x - 10]) {
+            pos[1] = y - 1;
+            pos[0] = x + 1;
+            return 1;
+        }
+        break;
+    case 33:
+        x = (s8)px;
+        y = (s8)py;
+        if (val == (s8)(grid + y * 11)[x + 1]) {
+            pos[0] = x + 1;
+            return 1;
+        }
+        break;
+    case 34:
+        x = (s8)px;
+        y = (s8)py;
+        if (val == (s8)(grid + y * 11)[x + 12]) {
+            pos[1] = y + 1;
+            pos[0] = x + 1;
+            return 1;
+        }
+        break;
+    }
+    y = (s8)py;
+    x = (s8)px;
+    if (val == (s8)(grid + y * 11)[x - 1]) {
+        pos[0] = x - 1;
+    } else if (val == (s8)(grid + y * 11)[x + 1]) {
+        pos[0] = x + 1;
+    } else if (val == (s8)(grid + y * 11)[x - 11]) {
+        pos[1] = y - 1;
+    } else if (val == (s8)(grid + y * 11)[x + 11]) {
+        pos[1] = y + 1;
+    } else if (val == (s8)(grid + y * 11)[x - 12]) {
+        pos[1] = y - 1;
+        pos[0] = x - 1;
+    } else if (val == (s8)(grid + y * 11)[x + 10]) {
+        pos[1] = y + 1;
+        pos[0] = x - 1;
+    } else if (val == (s8)(grid + y * 11)[x - 10]) {
+        pos[1] = y - 1;
+        pos[0] = x + 1;
+    } else if (val == (s8)(grid + y * 11)[x + 12]) {
+        pos[1] = y + 1;
+        pos[0] = x + 1;
+    } else {
+        return 0;
+    }
+    return 1;
 }

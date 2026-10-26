@@ -2,6 +2,7 @@
 #include "ninja.h"
 #include "game/sprite.h"
 #include <math.h>
+#include "game/drawstate.h"
 typedef struct Ent_UNIT0000 {
     u8 pad[0x1C];
     u32 x1c;
@@ -374,6 +375,94 @@ typedef struct Lim {
     s16 xa;
 } Lim;
 extern Lim* lbl_80347390;
+typedef NJS_POINT3 Vec;
+typedef struct {
+    u8 pad0[0x1C];
+    Vec pos;      /* 0x1C */
+    s32 rot[3];   /* 0x28 */
+    u8 pad34[0x4C - 0x34];
+    void* body;   /* 0x4C */
+} Unit_8008E3BC;
+typedef struct {
+    u8 pad[0x24];
+    Unit_8008E3BC* unit;
+} Owner_8008E3BC;
+typedef struct {
+    u8 pad0[0x12];
+    s16 len;
+} Info_8008E3BC;
+typedef struct {
+    u8 pad0[0x5C];
+    s32 x5c;
+    u8 pad60[8];
+    f32 x68;
+    u8 pad6c[0x154 - 0x6C];
+    void* x154;
+    u8 pad158[0x194 - 0x158];
+    s32 x194;
+    s32 x198;
+    f32 x19c;
+} Body;
+typedef struct {
+    Owner_8008E3BC* owner;     /* 0x00 */
+    Info_8008E3BC* info;       /* 0x04 */
+    void* model;      /* 0x08 */
+    u8 pad0c[4];
+    void* x10;        /* 0x10 */
+    u8 pad14[0x24 - 0x14];
+    Vec pos;          /* 0x24 */
+    s32 rot[3];       /* 0x30 */
+    Vec scale;        /* 0x3C */
+    u8 pad48[4];
+    u8 x4c;           /* 0x4C */
+    u8 pad4d[0x54 - 0x4D];
+    u8 x54[0x94 - 0x54];
+    s32 x94;
+    u8 x98[0xC8 - 0x98];
+    s32 xc8;
+    s32 xcc;
+    f32 xd0;
+    DrawState ds;     /* 0xD4 */
+    s16 t;            /* 0xFC */
+    s16 xfe;
+} Work_8008E3BC;
+typedef struct {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 state;
+    u8 pad1a[0x24 - 0x1A];
+    Work_8008E3BC* work;
+} Node_8008E3BC;
+extern void fn_8006D954(s32);
+extern void fn_8006D8DC(s32);
+extern void fn_8007638C(void*, void*, u16);
+extern void fn_80076478(void*, void*, u16, int);
+extern void fn_80071CF0(Vec*, Vec*);
+extern void fn_80060950(void*);
+extern void fn_8007576C(void*, s32);
+extern void fn_80032E44(void*);
+extern void fn_80035380(void*, s32, f32, s32);
+extern void fn_800D2048(void);
+typedef struct {
+    u8 pad[0x38];
+    f32 x38;
+    u8 pad3c[4];
+    f32 x40;
+} Cam;
+typedef struct { u8 b[0x2e]; } Rec_8008F9B8;
+typedef struct {
+    u8 pad[0x17A];
+    u16 id;
+} Ent;
+extern s32 lbl_80311AD4[11];
+extern u8* lbl_80347468;
+extern s32 lbl_80346C2C;
+extern u32 lbl_802DFF1C[0x2e];
+extern Ent* lbl_80302E18[0x40];
+extern char lbl_802B0D00[];
+extern char lbl_802B0D20[];
+extern s32 fn_8009014C(u8* arr, u8* key, s32 n, s32 size);
+extern int fn_8025CB24(char* buf, const char* fmt, ...);
 
 u32 fn_8008B55C(void* a0, Ent_UNIT0000* e) {
     return (e->x1c >> 9) & 1;
@@ -1439,4 +1528,127 @@ s32 fn_8008B4D0(void) {
     Lim* l = lbl_80347390;
     s32 differ = l->x6 != l->x8;
     return !differ;
+}
+
+void fn_8008E3BC(Node_8008E3BC* node) {
+    Work_8008E3BC* w = node->work;
+    Info_8008E3BC* info = w->info;
+    Body* body = (Body*)w->owner->unit->body;
+    Unit_8008E3BC* unit = w->owner->unit;
+
+    switch (node->state) {
+    case 0:
+        fn_8006D954(1);
+        if (w->info->len != 0) {
+            node->state = 1;
+        } else {
+            node->state = 2;
+            return;
+        }
+        w->t = 0;
+    case 1:
+        if (w->t >= info->len) {
+            w->t = 0;
+            node->state = 2;
+            fn_80076478(w->x54, body->x154, 0, 0);
+            return;
+        }
+        w->t++;
+        return;
+    case 2:
+        if (w->model != NULL) {
+            fn_80071CF0(&unit->pos, &w->pos);
+            w->rot[0] = unit->rot[0];
+            w->rot[1] = unit->rot[1];
+            w->rot[2] = unit->rot[2];
+            w->x94 = body->x5c;
+            w->xfe = body->x68;
+            DrawStateDefault2D(&w->ds);
+            node->state = 3;
+        } else {
+            node->state = 4;
+        }
+    case 3:
+        w->scale.x -= 0.1f;
+        w->scale.y += 0.05f * w->t;
+        w->scale.z -= 0.1f;
+        ((f32*)&w->ds.colour)[0] = -(0.1f * w->t);
+        w->ds.control3d |= 0x800;
+        w->ds.attr_or |= 0x800;
+        if (((f32*)&w->ds.colour)[0] <= -1.0f) {
+            ((f32*)&w->ds.colour)[0] = -1.0f;
+            w->t = 0;
+            node->state = 4;
+        }
+        w->xc8 = body->x194;
+        w->xcc = body->x198;
+        w->xd0 = body->x19c;
+        if (w->xc8 == 1) {
+            fn_80060950(&w->x98);
+        }
+        w->t++;
+        DrawStatePush(&w->ds);
+        if (w->model != NULL) {
+            fn_8007576C(w->model, 1);
+            fn_80032E44(w->x10);
+            njPushMatrixEx();
+            fn_80286EE8();
+            fn_8028B498();
+            njTranslate(NULL, w->pos.x, w->pos.y, w->pos.z);
+            njRotateXYZ(NULL, w->rot[0], w->rot[1], w->rot[2]);
+            njScale(NULL, w->scale.x, w->scale.y, w->scale.z);
+            fn_80035380(w->model, w->x94, w->xfe, w->x4c);
+            njPopMatrixEx();
+            fn_8007576C(w->model, 0);
+        }
+        DrawStatePop(&w->ds);
+        if (w->xc8 == 1) {
+            fn_800D2048();
+        }
+        break;
+    case 4:
+        fn_8006D8DC(1);
+        fn_8007638C(w->x54, body->x154, 0);
+        node->state = 5;
+        break;
+    case 5:
+        node->flags |= 0x40;
+        break;
+    }
+}
+
+void fn_8008F9B8(u16 key, u8* src) {
+    char msg1[0x38];
+    char msg2[0x34];
+    int idx;
+    int i;
+    u8* dst;
+
+    if (lbl_80311AD4[6] != 8) {
+        idx = fn_8009014C(lbl_80347468, (u8*)&key, 0x40, 2);
+        if (idx == -1) {
+            fn_8025CB24(msg1, lbl_802B0D00, (s32)(*(Cam**)&lbl_80347450)->x38, (s32)(*(Cam**)&lbl_80347450)->x40);
+            fn_801DBE1C((void *)(msg1));
+            return;
+        }
+        dst = &lbl_80347468[idx * 0x2e + 0x80];
+        for (i = 0; i < 0x2e; i++) {
+            *dst++ = src[lbl_802DFF1C[i]];
+        }
+    } else {
+        idx = fn_8009014C(lbl_80347468, (u8*)&key, 0x40, 2);
+        if (idx == -1) {
+            fn_8025CB24(msg2, lbl_802B0D20, (s32)(*(Cam**)&lbl_80347450)->x38, (s32)(*(Cam**)&lbl_80347450)->x40);
+            fn_801DBE1C((void *)(msg2));
+            return;
+        }
+        ((s16*)lbl_80347468)[idx] = 0;
+        lbl_80346C2C--;
+    }
+    for (i = 0; i < 0x40; i++) {
+        if (lbl_80302E18[i] != NULL && key == lbl_80302E18[i]->id) {
+            lbl_80302E18[i] = NULL;
+            break;
+        }
+    }
 }

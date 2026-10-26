@@ -1,8 +1,8 @@
 Progress and handoff
 ====================
 
-State of the work as of 2026-10-26 (after the Opus near-miss batch): 26.9% of code matched (3,494 / 7,116
-functions), 3,622 functions unmatched: about 2,660 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
+State of the work as of 2026-10-26 (after Sonnet batch 11): 28.9% of code matched (3,570 / 7,116
+functions), 3,546 functions unmatched: about 2,580 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
 (the size split of the game functions predates the duplicate-copy batch: 2,193 under 632 bytes, 466 at 632-1000,
 355 at 1-2 KB, 101 at 2-5 KB, 16 over 5 KB). Numbers live in the README status block and on
 [ByteMatch](https://bytematch.dev/vetusmagnus/SoAL-Decomp); this page covers what's in flight.
@@ -181,6 +181,79 @@ Ideas found but not adopted (each leaves the function unmatched):
   fn_80032C6C, the text.c/uiobj.c group (about 40-150 lines of register allocation; TextNodeNew's `lis 0x8197`
   hoist and TextReadChar's `clrlwi` remain), fn_801E3DE0, fn_801E4AB0, fn_801E48A8, fn_801E85BC, fn_801E41E0,
   fn_801EE140 (`stbx` vs walked pointer), fn_801EC854, fn_8003529C, fn_80033888, fn_800334B8.
+
+Sonnet batch 11 (632 bytes and up)
+----------------------------------
+
+16 Sonnet 5.5 agents (no Opus, no Haiku: nothing here is under 200 bytes), 20 functions each, contiguous
+address runs: the 320 smallest unmatched game functions of 0x278 bytes and up (0x278-0x358; 873 candidates,
+about 550 remain), one per duplicate group. Fresh checkout in `build/wt-632`, merged by script in the
+coordinating session (`merge6.py` plus hand fixes), no merge agents. 141 of 320 matched in isolation (fdiff and
+the float check); **76 are in the unit files now**, every function of every touched unit passes fdiff over the whole
+file and the float check, and `main.dol` rebuilds byte-identical (SHA-1 equals `config/GEAE8P/build.sha1`).
+None of the 320 has a twin in `duplicates.txt`, so there was nothing to copy.
+
+Matched in isolation but not merged (65; the unit declares a global or prototype with another type, a typedef
+tag clashes, or the function only matches in a file of its own). The agents' files are in `build/agents/b11_*/`
+on the machine that ran the batch: fn_8000BB28, fn_8000D488, fn_8000D8FC, fn_80013D58, fn_80014474,
+fn_8001FABC, fn_8005174C, fn_80053964, fn_80053C48, fn_8005C480, fn_8005CDF0, fn_8005D614, fn_800740D0,
+fn_8007B958, fn_8007C344, fn_8008D6B4, fn_80093668, fn_80094144, fn_800A1690, fn_800AC474, fn_800C2A88,
+fn_800C3C78, fn_800C4C54, fn_800D1324, fn_800D4690, fn_800D8214, fn_800DC828, fn_8010A278, fn_8010B258,
+fn_8010F648, fn_80112868, fn_80113630, fn_80113AF0, fn_80119FF4, fn_80121680, fn_8012E6EC, fn_80131254,
+fn_8014D398, fn_8014DDF4, fn_80153DC8, fn_8015F3B0, fn_80167C34, fn_801680B4, fn_801684E8, fn_80168E54,
+fn_80171484, fn_8017C6BC, fn_8017C948, fn_80181F58, fn_801822A0, fn_801863E8, fn_8019BED8, fn_801A4B40,
+fn_801AACB0, fn_801ABA30, fn_801AFD34, fn_801B0014, fn_801B0838, fn_801B46EC, fn_801B4CF0, fn_801B914C,
+fn_801BDEF4, fn_801D81C0, fn_801DA1C0. Not merged on purpose: fn_801331AC (it only matched with a taken address
+on a dead local to keep its stores). Frame-sized padding (`u8 buf[0x270]` for fn_80124108 and fn_80125D40) was
+not accepted, so those two stay near misses.
+
+Near misses (diff lines where the agents reported them; mostly register allocation): fn_80005600 (string
+offsets only: its strings sit at `lbl_802AC820+0x80`), fn_80007BFC (28), fn_8000B320 (136), fn_80011B40 (34),
+fn_80017430 (61), fn_8001BE2C (14), fn_8001C7E8 (20), fn_8001D628 (60), fn_800541E0 (19), fn_800583D4 (113),
+fn_800594CC (string offsets only), fn_800651D0 (14), fn_800657A0 (68), fn_80066028 (6), fn_800692D8 (19),
+fn_8006A3E4 (18), fn_8006D524 (9, `beq; b` loop shape), fn_8006E244 (96), fn_8007050C (29), fn_800708C0 (64),
+fn_80072B3C (21), fn_80077E60 (130), fn_80079C5C (12), fn_8007B010 (69), fn_8007B328 (113), fn_80081350 (24),
+fn_800842A0 (261), fn_8008A424 (2), fn_8008C21C (131), fn_8008D960 (54), fn_8008DC1C (6), fn_8008FC50 (160),
+fn_800916A8 (36), fn_80096570 (11), fn_80097720 (31), fn_80098DA4 (`psq_st` fast cast, no plain C), fn_8009944C
+(22), fn_8009FDA0 (string offsets only), fn_800A39E0 (16), fn_800A40B0 (152), fn_800B3D78 (78), fn_800C3054
+(24), fn_800C56AC (4), fn_800C8998 (142), fn_800CB338 (20), fn_800CB90C/BBBC/BE98 (16 each, the same `lis` in
+r3 vs r4 idiom), fn_800D0970 (35), fn_800D1B5C (8), fn_800D2688 (14), fn_800D4F00 (4), fn_800D59CC (40),
+fn_800D6974 (6), fn_800DBF5C/DC220/DC524 (the original has the recursion inlined 3-4 deep; the nested
+`static inline` form that matched fn_800740D0 and fn_801D25DC was not found for these), fn_800E29CC (5),
+fn_800E67C0 (188), fn_800E9424 (80), fn_80108E30 (48), fn_8010AC00 (163), fn_8010EF00 (8), fn_80110D00 (30),
+fn_80111318 (10), fn_80111FC4 (39), fn_80113E28 (39), fn_801144A4 (232), fn_80115BBC (45), fn_8011660C (28),
+fn_8011D02C (not attempted past reading), fn_8011F560 (83), fn_8011FFF0 (117), fn_8012061C (94), fn_80124108
+(8), fn_80125D40 (62), fn_8012A39C (83), fn_8012A634 (211), fn_8012BD34 (90), fn_8012FB10 (78), fn_80130FB4
+(43), fn_80133900 and fn_801358A0 (not attempted: too large for the budget), fn_80135BE8 (94), fn_80135EBC
+(125), fn_80136320 (175), fn_80138114 (50), fn_8013D430 (50), fn_8013DC34 (126), fn_8013E42C (124),
+fn_8013EA10 (222), fn_8013FF50 (151), fn_80140460 (199), fn_80140A14 (61), fn_80144400 (87), fn_801447A0 (12),
+fn_80146000 (6), fn_80148954 (20), fn_80154E54 (188), fn_80159948 (47), fn_8015C1E4 (20), fn_8015C95C (2, one
+extra `b` after each inner `switch`), fn_801611BC/80161C20/80164E40/80165210 (4-6: after a call the original
+loads a `u32` compared with 0x7fffffff/0xffffffff into r4, mine r3), fn_801644C8 (22), fn_801664A4 (20),
+fn_801679A4 (14, `fcmpu` operand order), fn_8016BF54 (2), fn_801720EC (r30/r31), fn_801723A4, fn_801726B4,
+fn_80174A18 (14), fn_80175774 (15), fn_80180414, fn_801847F0 (49), fn_8018D7F0 (192), fn_8018E0A8 (12),
+fn_8018E82C (124), fn_8018FDAC (196), fn_801946E8 (114), fn_80198118 (113), fn_8019C190 (12), fn_8019DF70
+(29), fn_8019EAD4 (15), fn_8019F44C (2, `cmplw` operand order), fn_801A28F4 (144), fn_801A5600 (8), fn_801A58A0
+(20), fn_801B49B0 (94), fn_801B6BB4 (109), fn_801C0D34 (71), fn_801D38D4 (170), fn_801D3BC8 (136), fn_801D538C
+(273, `psq_l` colour unpack), fn_801D74FC (20), fn_801D7C44 (156), fn_801DBF94 and fn_801F5468 (string offsets
+only), fn_801E1138 (70), fn_801F224C (270), fn_801F2518 (259), fn_801F35A0 (142), fn_802163FC (10), fn_80217CB0
+(16), fn_802182F4 (12), fn_80219D78 (101), fn_8021A2B0 (212), fn_8021B644 (67), fn_8021BAEC (97), fn_8021C0BC
+(158), fn_8021D648 (81), fn_8021EB44 (111), fn_80227810 (124), fn_80228E00/80229124 (22, prologue registers),
+fn_80230920 (177). Not attempted: fn_8022DCC4, fn_802249CC, fn_8022FDA0 (judged too large for ten tries); one
+agent stopped after two functions, so fn_800E9F28, fn_800EA4A8, fn_800EA79C, fn_800EBD20, fn_800F0200,
+fn_800F1AD8, fn_800F34B0, fn_800F81B8, fn_800F850C, fn_800F87A0, fn_800FE354, fn_800FEF9C, fn_801015AC,
+fn_80103FF8, fn_80104450, fn_80104D64, fn_80107EF0 and fn_801089B8 were never tried.
+
+Lessons: a dead `case 5:`/`case 3:` arm reproduces the original's switch tree again; nested `static inline`
+helpers that end in the real recursive call reproduce 3-4 levels of self-inlining (fn_800740D0, fn_801D25DC,
+fn_801DA748, fn_801DF600, fn_8022F0CC); `int i` instead of `s32 i` on a constant-bound loop drops the guard
+`cmpwi`; `*= -1` gives `mulli`, `= x * -1` gives `neg`; `f = (f != 0); if (f)` gives `neg/or/srwi.`; a `u32`
+compare against 0xffffffff/0x7fffffff gives `addis/subis; cmplwi`; a file-static .bss object is addressed through
+one base register where an `extern` gets a `lis/addi` per use. `perm.py` on the declaration lines fixed many
+register orders but did nothing for several families of menu handlers. Merging: the common clashes are a typedef
+tag the unit already owns (`Task`, `Vec3`; rename in the file), a `void **` cursor against the unit's `f32 **`
+(convert the file to the unit's helper), and a function the original calls with more arguments than the unit's
+definition declares (put the extern in the caller's block).
 
 Duplicates
 ----------

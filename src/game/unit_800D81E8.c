@@ -2015,6 +2015,60 @@ typedef struct Obj_800E07AC {
     u8 pad4[0x254 - 0x1cc];
     f32 f254;
 } Obj_800E07AC;
+typedef struct Cfg_800E2D0C { s32 n; u8 pad4[0x20]; s32 i24, i28, i2c, i30; u32 u34; u32 u38; } Cfg_800E2D0C;
+typedef struct Scr_800E2D0C { u8 pad[0x10]; Cfg_800E2D0C *cfg; } Scr_800E2D0C;
+typedef struct Obj_800E2D0C { u8 pad[0x1c8]; Scr_800E2D0C *scr; } Obj_800E2D0C;
+typedef struct {
+    s32 n;
+    f32 x, z, w;
+    f32 r0, r1, a, f1c_pad;
+} Hdr;
+typedef struct {
+    s32 n;      /* 0x00 */
+    f32 f04;
+    f32 f08;
+    f32 f0c;
+    f32 f10;
+    f32 f14;
+    f32 f18;
+    u32 u1c;
+} Hdr2;
+typedef struct { u8 pad[0x20]; void *tex; u8 pad24[0x44 - 0x24]; } Ent_8010A834;
+typedef struct {
+    u8 pad0[0x38];
+    f32 x, y, z;
+} Cam;
+typedef struct { u8 pad[0x10]; Hdr2 *hdr; u8 pad14[0x20 - 0x14]; void *tex; } Ent2;
+typedef struct Ctx_8010A834 {
+    u8 pad0[0x1c8];
+    Ent2 *p1c8;
+} Ctx_8010A834;
+typedef struct Obj_8010A834 {
+    u8 pad0[0x19];
+    u8 state;
+    u8 pad1a[6];
+    f32 f20;
+    Ctx_8010A834 *ctx;
+} Obj_8010A834;
+typedef struct {
+    u32 w0;
+    u8 pad4[0x58 - 4];
+    u32 *colors;
+    u8 pad5c[0x64 - 0x5c];
+    f32 x, y, z;
+    u8 pad70[0x7c - 0x70];
+    f32 f7c, f80;
+    u8 pad84[4];
+} DrawObj;
+extern DrawObj lbl_80305D10;
+extern char lbl_802B3058[];
+extern f32 lbl_80349C40;
+extern void fn_8009090C(DrawObj *o);
+extern void fn_8009076C(s32 a, DrawObj *o);
+extern void fn_80296EEC(s32 a, s32 b, s32 c);
+extern f32 fn_80291A5C(f32 x);
+extern f32 njSin(s32 a);
+extern f32 njCos(s32 a);
 
 void fn_800D81E8(void) {
     fn_80226D14();
@@ -6646,4 +6700,98 @@ void fn_800E07AC(Obj_800E07AC *p) {
     SetAngle(p, 0.0f);
     p->f164 = 0.0f;
     p->f254 = 0.0f;
+}
+
+void fn_800E2D0C(s32 mode, Obj_800E2D0C *e, f32 *ox, f32 *oy, f32 a, f32 b, f32 c)
+{
+    Cfg_800E2D0C *cfg = e->scr->cfg;
+    s32 n = cfg->n;
+    s32 p = n > 8 ? cfg->i24 : 0;
+    s32 q = n > 10 ? cfg->i2c : 0;
+    f32 fx = (f32)(q + p);
+    s32 r = n > 9 ? cfg->i28 : 0;
+    s32 t = n > 11 ? cfg->i30 : 0;
+    f32 fy = (f32)(t + r);
+
+    if (mode == 0) {
+        *ox = fx + a / (f32)(n > 12 ? cfg->u34 : 0);
+        *oy = fy + c / (f32)(e->scr->cfg->n > 12 ? e->scr->cfg->u34 : 0);
+    } else if (mode == 1) {
+        *ox = fx + a / (f32)(n > 12 ? cfg->u34 : 0);
+        *oy = fy - b / (f32)(e->scr->cfg->n > 12 ? e->scr->cfg->u34 : 0);
+    } else if (mode == 2) {
+        *ox = fx + c / (f32)(n > 12 ? cfg->u34 : 0);
+        *oy = fy - b / (f32)(e->scr->cfg->n > 12 ? e->scr->cfg->u34 : 0);
+    } else if (mode == 3) {
+        *ox = fx - c / (f32)(n > 12 ? cfg->u34 : 0);
+        *oy = fy - b / (f32)(e->scr->cfg->n > 12 ? e->scr->cfg->u34 : 0);
+    } else if (mode == 4) {
+        *ox = fx - c / (f32)(n > 12 ? cfg->u34 : 0);
+        *oy = fy - b / (f32)(e->scr->cfg->n > 12 ? e->scr->cfg->u34 : 0);
+    }
+}
+
+void fn_8010A834(Obj_8010A834 *self) {
+    Ctx_8010A834 *c = self->ctx;
+    DrawObj *d = &lbl_80305D10;
+    Hdr2 *h = c->p1c8->hdr;
+    if ((*(Cam **)&lbl_80347450) == 0) return;
+    if (self->state != 0xff && lbl_803473A8 == 0) return;
+    switch (self->state) {
+    case 0:
+        if ((u32)h->n < 7) fn_801DBE1C(lbl_802B3058);
+        fn_80227810((void *)(c->p1c8->tex));
+        fn_8009090C(d);
+        self->f20 = lbl_80349C40;
+        self->state = self->state + 1;
+        break;
+    case 1: {
+        f32 lim, dx, dz, dist;
+        s32 ang;
+        u32 a;
+        u32 col;
+        DrawState ds;
+        d->f80 = h->f0c;
+        d->f7c = h->f0c;
+        d->w0 = (u32)c->p1c8->tex;
+        dx = h->f04 - (*(Cam **)&lbl_80347450)->x;
+        dz = h->f08 - (*(Cam **)&lbl_80347450)->z;
+        if (dx > 8400.0f) dx -= 16800.0f;
+        else if (dx < -8400.0f) dx += 16800.0f;
+        if (dz > 7200.0f) dz -= 14400.0f;
+        else if (dz < -7200.0f) dz += 14400.0f;
+        dist = fn_80291A5C(dx * dx + dz * dz);
+        lim = 1.04f * dist;
+        if (lim > h->f10) return;
+        ang = (s32)(16384.0f * (h->f10 - dist) / h->f10);
+        d->y = 2000.0f * njSin(ang);
+        d->x = (h->f14 / h->f10) * (dx * njCos(ang)) + (*(Cam **)&lbl_80347450)->x;
+        d->z = (h->f14 / h->f10) * (dz * njCos(ang)) + (*(Cam **)&lbl_80347450)->z;
+        a = (u32)(255.0f * h->f18 * (h->f10 - lim) / h->f10);
+        if (a > 0xff) a = 0xff;
+        col = (a << 24) | 0xffffff;
+        d->colors[0] = col;
+        d->colors[1] = col;
+        d->colors[2] = col;
+        d->colors[3] = col;
+        ClipZPush();
+        njClipZ(-1.1f, -2200.0f);
+        DrawStateDefault2D(&ds);
+        if (h->u1c != 0) {
+            ds.blend_src = 8;
+            ds.blend_dst = 10;
+        }
+        DrawStatePush(&ds);
+        fn_80296EEC(1, 3, 0);
+        fn_8009076C(0, d);
+        fn_80296EEC(1, 3, 1);
+        DrawStatePop(0);
+        ClipZPop();
+        break;
+    }
+    case 0xff:
+        if (c->p1c8->tex != 0) fn_802275A4((void *)(c->p1c8->tex), 0);
+        fn_80100B74((void *)(self));
+        break;
+    }
 }

@@ -1,5 +1,6 @@
 #include "types.h"
 #include "ninja.h"
+#include "game/drawstate.h"
 #define PTR(p, off) (*(void**)((u8*)(p) + (off)))
 extern void* fn_80005B9C(void* heap);
 extern void* memset(void* dst, s32 c, u32 n);
@@ -123,6 +124,186 @@ typedef struct Obj {
     u8 pad[0x24];
     Inner *inner; /* 0x24 */
 } Obj;
+typedef struct {
+    f32 x0;
+    u8 pad4[8];
+    f32 xc;
+    f32 x10;
+    f32 x14;
+    f32 x18;
+    f32 x1c;
+    u8 pad20[0x40 - 0x20];
+    s32 x40;
+    s32 x44;
+    f32 x48;
+    void* x4c;
+    u32 x50;
+} U;
+typedef struct {
+    void* x0;
+    u8 pad4[4];
+    void* x8;
+    struct { u8 pad[4]; u32 x4; }* xc;
+    u8 pad10[8];
+    s16 x18;
+    u8 pad1a[0x44 - 0x1a];
+    u8 x44;
+    u8 pad45[0x4c - 0x45];
+    U* u;
+} W;
+typedef struct {
+    u8 pad0[0x19];
+    u8 state;
+    u8 pad1a[0x24 - 0x1a];
+    W* work;
+} Tk_8000E664;
+typedef struct {
+    u16 x0;
+    u8 pad2[6];
+    u32 x8;
+    u8 padc[0x18 - 0xc];
+    s32 x18;
+    f32 x1c;
+} G;
+extern int fn_8000CCBC(Tk_8000E664*, int);
+extern void fn_8000B77C(void*, void*);
+extern void fn_80060950(void*);
+extern int fn_80035908(void);
+extern void fn_80035910(int);
+extern void fn_8000F0BC(void);
+extern void fn_80299040(void*);
+extern void fn_8000B6F0(W*);
+extern void fn_8000B5F4(W*, f32);
+extern void fn_800D2048(void);
+typedef struct {
+    u8 pad0[0x19];
+    u8 state;
+    u8 pad1a[0x24 - 0x1a];
+    W* work;
+} Tk_8000EDE4;
+typedef struct {
+    s8 id;
+    u8 pad1[0x44 - 1];
+    u32 x44;
+    u8 pad48[0x50 - 0x48];
+    u32 x50;
+    u8 pad54[0x1dc - 0x54];
+    void* x1dc;
+} Unit_80016580;
+typedef struct {
+    u8 pad[0x4c];
+    Unit_80016580* w;
+} UW_80016580;
+typedef struct Tk_80016580 {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 state;
+    u8 pad1a[0x24 - 0x1a];
+    union {
+        void* v;
+        UW_80016580* uw;
+    } work;
+} Tk_80016580;
+typedef struct {
+    s16 x0;
+    u8 pad2[2];
+    u32 x4;
+} W_80016580;
+typedef struct {
+    u8 pad[0x1c];
+    u32 x1c;
+} Chr;
+typedef struct {
+    u8 pad0[0x1c4];
+    s32 x1c4;
+} GS;
+typedef struct {
+    u8 pad[0x44];
+    u32 x44;
+} U44;
+extern int fn_80016A18(s8);
+extern void fn_80015138(int);
+extern void fn_80032B4C(void);
+extern int fn_800168D8(int, void*, u8);
+typedef struct {
+    u8 pad0[0x5c];
+    void* x5c;
+    void* x60;
+    u8 pad64[0x74 - 0x64];
+    u8 x74[0x10];
+    u8 x84[4];
+    u8 pad88[0x154 - 0x88];
+    void* x154;
+    u8 pad158[0x264 - 0x158];
+    f32 x264;
+    f32 x268;
+    f32 x26c;
+    f32 x270;
+    f32 x274;
+    f32 x278;
+    f32 x27c;
+    s32 x280;
+    s32 x284;
+    s32 x288;
+    u8 x28c;
+} U_80018868;
+typedef struct {
+    void* x0;
+    u8 pad4[0x4c - 4];
+    U_80018868* u;
+} W_80018868;
+typedef struct {
+    u8 pad[0x24];
+    W_80018868* work;
+} Tk_80018868;
+extern u8 lbl_80346ABC;
+extern u8 lbl_80346ABD;
+extern void fn_8007E678(void*, void*);
+extern void fn_8029D008(s32);
+extern void njTranslate(void*, f32, f32, f32);
+extern void njRotateX(void*, s32);
+extern void njRotateY(void*, s32);
+extern void njRotateZ(void*, s32);
+extern void njScale(void*, f32, f32, f32);
+extern void fn_80035468(void*, void*, void*, int, f32);
+extern void fn_80035228(void*, void*, int, f32);
+extern void fn_800353F4(void*, void*, void*, int, f32);
+extern void fn_80035380(void*, void*, int, f32);
+extern void fn_8003529C(void*, void*, int, f32);
+typedef struct {
+    s8 id;
+    u8 pad1[5];
+    s16 x6;
+    s16 x8;
+    u8 padA[0x10 - 0xA];
+    s16 x10;
+    u8 pad12[2];
+    s16 x14;
+    s16 x16;
+    u8 pad18[0xec - 0x18];
+    u32 xec;
+    u8 padf0[0x20c - 0xf0];
+    s16 x20c;
+    s16 x20e;
+} Unit_8001CED0;
+typedef struct {
+    u8 pad[0x3c];
+    u32 x3c;
+    u8 pad40[0x4c - 0x40];
+    Unit_8001CED0* w;
+} Wk_8001CED0;
+typedef struct Tk_8001CED0 {
+    u8 pad[0x24];
+    Wk_8001CED0* work;
+} Tk_8001CED0;
+extern u32 fn_800153E0(s32, s16);
+extern s16 fn_800760EC(Tk_8001CED0*, s16, s16);
+extern s8 fn_8002EEFC(Tk_8001CED0*, u32*);
+extern s8 fn_80030AE8(u32, Unit_8001CED0*);
+extern s16 fn_80009030(void*, s16, s16, int, int);
+extern void fn_800312F0(Tk_8001CED0*, s16, s16, s8);
+extern void fn_80031254(Tk_8001CED0*);
+typedef struct { u8 pad[0x10]; void* x10; } GS_8001CED0;
 
 void* fn_80005B50(void* heap, u32 size) {
     void* p = fn_80005B9C(heap);
@@ -619,5 +800,470 @@ s32 fn_80014F50(Obj *o)
         return 0;
     default:
         return 1;
+    }
+}
+
+void fn_8000E664(Tk_8000E664* t)
+{
+    W* w = t->work;
+    U* u = w->u;
+    DrawState s;
+    int ok;
+    int saved;
+
+    switch (t->state) {
+    case 0:
+        t->state = 1;
+        u->xc = 0.0f;
+        break;
+    case 1:
+        t->state = 2;
+        break;
+    default:
+        DrawStateDefault2D(&s);
+        w->x44 = 2;
+        s.control3d |= 0x800;
+        s.attr_or |= 0x300;
+        if (u->x10 != 0.0f) {
+            s.attr_or |= 0x800;
+        }
+        ok = fn_8000CCBC(t, 0);
+        s.colour.a = u->x10;
+        s.colour.r = u->x14;
+        s.colour.g = u->x18;
+        s.colour.b = u->x1c;
+        if (!((*(G*)&lbl_80309E5C).x8 & 0x1000000)) {
+            if ((*(G*)&lbl_80309E5C).x8 & 0x8000000) {
+                u->x40 = 1;
+                u->x44 = (*(G*)&lbl_80309E5C).x18;
+                u->x48 = (*(G*)&lbl_80309E5C).x1c;
+            } else {
+                u->x40 = 0;
+                u->x48 = 0.0f;
+            }
+            if (u->x50 & 0x40000000) {
+                if (0.0f == u->x10) {
+                    if (u->x50 & 0x20000000) {
+                        fn_8000B77C(u->x4c, w->x0);
+                        u->x50 &= ~0x20000000;
+                    }
+                } else if (u->x10 < 0.0f && u->x10 > -1.0f) {
+                    fn_8000B77C(u->x4c, w->x0);
+                    u->x50 |= 0x20000000;
+                }
+            }
+        }
+        if (u->x10 <= -1.0f) {
+            ok = 0;
+        }
+        if (u->x40 != 0 && ok == 1) {
+            fn_80060950(&u->x10);
+        }
+        if (ok == 1) {
+            if (DrawStatePush(&s)) {
+                saved = fn_80035908();
+                fn_8000F0BC();
+                fn_80299040(w->x8);
+                if (w->x18 == 6) {
+                    fn_8000B6F0(w);
+                } else if (w->x18 == 8) {
+                    if ((*(G*)&lbl_80309E5C).x0 == 6) {
+                        fn_80035910(0x5000);
+                    }
+                    fn_8000B5F4(w, u->x0);
+                    u->x0 += 1.0f;
+                    if (u->x0 >= (f32)w->xc->x4) {
+                        u->x0 = u->x0 - (f32)w->xc->x4;
+                    }
+                } else if (w->x18 == 0x10) {
+                    fn_8000B5F4(w, u->x0);
+                    if (u->x0 < (f32)w->xc->x4 - 1.0f) {
+                        u->x0 += 1.0f;
+                    }
+                }
+                fn_80035910(saved);
+                DrawStatePop(&s);
+            }
+        }
+        break;
+    }
+    fn_800D2048();
+}
+
+void fn_8000EDE4(Tk_8000EDE4* t)
+{
+    W* w = t->work;
+    U* u = w->u;
+    DrawState s;
+    int ok;
+    int saved;
+    u8 flag = 0;
+
+    switch (t->state) {
+    case 0:
+        t->state = 1;
+        u->xc = 0.0f;
+        break;
+    case 1:
+        t->state = 2;
+        break;
+    default:
+        DrawStateDefault2D(&s);
+        s.control3d |= 0x800;
+        if (w->x44 == 2) {
+            flag = 1;
+            s.attr_or |= 0x200;
+            if (u->x10 != 0.0f) {
+                s.attr_or |= 0x800;
+            }
+            w->x44 = 0;
+        } else {
+            s.attr_and &= ~0x700;
+            if (u->x10 != 0.0f) {
+                s.attr_or |= 0x800;
+            }
+        }
+        ok = fn_8000CCBC((void *)(t), 0);
+        if (!((*(G*)&lbl_80309E5C).x8 & 0x1000000)) {
+            if ((*(G*)&lbl_80309E5C).x8 & 0x8000000) {
+                u->x40 = 1;
+                u->x44 = (*(G*)&lbl_80309E5C).x18;
+                u->x48 = (*(G*)&lbl_80309E5C).x1c;
+            } else {
+                u->x40 = 0;
+                u->x48 = 0.0f;
+            }
+        }
+        s.colour.a = u->x10;
+        s.colour.r = u->x14;
+        s.colour.g = u->x18;
+        s.colour.b = u->x1c;
+        if (u->x10 <= -1.0f) {
+            ok = 0;
+        }
+        if (u->x40 != 0 && ok == 1) {
+            fn_80060950(&u->x10);
+        }
+        saved = fn_80035908();
+        fn_8000F0BC();
+        if (ok == 1) {
+            if (DrawStatePush(&s)) {
+                fn_80299040(w->x8);
+                if (w->x18 == 1) {
+                    fn_8000B6F0(w);
+                } else if (w->x18 == 7) {
+                    fn_8000B5F4(w, u->x0);
+                    u->x0 += 1.0f;
+                    if (u->x0 >= (f32)w->xc->x4) {
+                        u->x0 = u->x0 - (f32)w->xc->x4;
+                    }
+                } else if (w->x18 == 0xf) {
+                    fn_8000B5F4(w, u->x0);
+                    if (u->x0 < (f32)w->xc->x4 - 1.0f) {
+                        u->x0 += 1.0f;
+                    }
+                }
+                DrawStatePop(&s);
+            }
+        }
+        fn_80035910(saved);
+        fn_800D2048();
+        if (flag == 1) {
+            w->x44 = 2;
+        }
+        break;
+    }
+}
+
+void fn_80016580(Tk_80016580* t)
+{
+    W_80016580* w = t->work.v;
+    s8 k;
+
+    lbl_80347378 |= 1;
+    lbl_80347378 |= 2;
+    lbl_80347378 |= 4;
+    lbl_80347378 |= 8;
+    switch (t->state) {
+    case 0:
+        t->state = 0x14;
+        break;
+    case 20:
+        if (fn_80016A18(0)) {
+            fn_80015138(0);
+            w->x0 = 0x78;
+        } else {
+            w->x0 = 0;
+        }
+        t->state = 0x15;
+        break;
+    case 21:
+        if (w->x0 == 0) {
+            if (fn_80016A18(1)) {
+                fn_80032B4C();
+                fn_80015138(1);
+                w->x0 = 0x78;
+            }
+            t->state = 0x16;
+        } else {
+            w->x0--;
+        }
+        break;
+    case 22:
+        if (w->x0 == 0) {
+            t->state = 1;
+        } else {
+            w->x0--;
+        }
+        break;
+    case 1:
+        if (fn_800168D8(0x40000, w, 0)) {
+            t->state = 2;
+            w->x4 |= 0x80000000;
+        } else {
+            t->state = 3;
+        }
+        break;
+    case 2:
+        if (!(w->x4 & 0x80000000)) {
+            t->state = 3;
+        }
+        break;
+    case 3:
+        if (fn_800168D8(0x80, w, 0)) {
+            t->state = 4;
+            w->x4 |= 0x80000000;
+        } else {
+            t->state = 5;
+        }
+        break;
+    case 4:
+        if (!(w->x4 & 0x80000000)) {
+            t->state = 5;
+        }
+        break;
+    case 5:
+        if (fn_800168D8(0x40000, w, 1)) {
+            t->state = 6;
+            w->x4 |= 0x80000000;
+        } else {
+            t->state = 7;
+        }
+        break;
+    case 6:
+        if (!(w->x4 & 0x80000000)) {
+            t->state = 7;
+        }
+        break;
+    case 7:
+        if (fn_800168D8(0x80, w, 1)) {
+            t->state = 8;
+            w->x4 |= 0x80000000;
+        } else {
+            t->state = 9;
+        }
+        break;
+    case 8:
+        if (!(w->x4 & 0x80000000)) {
+            t->state = 9;
+        }
+        break;
+    case 9:
+        lbl_80347378 &= ~1;
+        lbl_80347378 &= ~2;
+        lbl_80347378 &= ~4;
+        lbl_80347378 &= ~8;
+        for (k = 0; k < 12; k++) {
+            Tk_80016580* o = ((Tk_80016580*)fn_800215EC(k));
+            if (o != NULL && !(o->work.uw->w->x50 & 0x1000000)) {
+                o = ((Tk_80016580*)fn_800215EC(k));
+                if (o != NULL) {
+                    Unit_80016580* u = o->work.uw->w;
+                    if (u->x1dc != NULL) {
+                        u->x44 = ((Chr**)lbl_80309DE4)[u->id]->x1c;
+                    }
+                }
+            }
+        }
+        t->flags |= 0x40;
+        (*(GS*)&lbl_8030A10C).x1c4 -= 1;
+        break;
+    }
+}
+
+void fn_80018868(Tk_80018868* t, s8 mode, f32 frame)
+{
+    W_80018868* w;
+    U_80018868* u;
+    void* x0;
+    DrawState s;
+    u16 a;
+    u16 b;
+
+    if (mode >= 0) {
+        w = t->work;
+        u = w->u;
+        x0 = w->x0;
+        DrawStateDefault2D(&s);
+        fn_8007E678(u->x154, &s);
+        s.colour.a = u->x264;
+        s.control3d |= 0x8000;
+        switch (lbl_80346ABD) {
+        case 0:
+        default:
+            a = 0;
+            break;
+        case 1: a = 0x800; break;
+        case 2: a = 0x1000; break;
+        case 3: a = 0x1800; break;
+        case 4: a = 0x2000; break;
+        case 5: a = 0x2800; break;
+        case 6: a = 0x3000; break;
+        case 7: a = 0x3800; break;
+        }
+        switch (lbl_80346ABC) {
+        case 0:
+        default:
+            b = 0;
+            break;
+        case 1: b = 0x100; break;
+        case 2: b = 0x200; break;
+        case 3: b = 0x300; break;
+        case 4: b = 0x400; break;
+        case 5: b = 0x500; break;
+        case 6: b = 0x600; break;
+        case 7: b = 0x700; break;
+        }
+        fn_8029D008(b | a);
+        if (DrawStatePush(&s)) {
+            njTranslate(0, u->x274, u->x278, u->x27c);
+            switch (u->x28c) {
+            case 0:
+            case 1:
+                njRotateY(0, u->x284);
+                njRotateZ(0, u->x288);
+                break;
+            case 3:
+            case 4:
+                njRotateX(0, u->x280);
+                break;
+            }
+            njScale(0, u->x268, u->x26c, u->x270);
+            switch (mode) {
+            case 0:
+                fn_80035468(x0, u->x74, u->x84, 1, frame);
+                break;
+            case 1:
+                fn_80035228(x0, u->x74, 1, frame);
+                break;
+            case 2:
+                fn_800353F4(x0, u->x5c, u->x60, 1, frame);
+                break;
+            case 4:
+                fn_8003529C(x0, u->x5c, 1, frame);
+                break;
+            case 3:
+                fn_80035380(x0, u->x5c, 1, frame);
+                break;
+            }
+            DrawStatePop(&s);
+        }
+    }
+}
+
+inline int Match(Tk_8001CED0* t, Unit_8001CED0* u)
+{
+    s16 a;
+    s16 b;
+    s16 x;
+    s16 y;
+
+    if (u->xec & 0x8000) {
+        a = u->x14;
+        b = u->x16;
+    } else {
+        a = u->x6;
+        b = u->x8;
+    }
+    switch (u->x20c) {
+    case 0x1d:
+        if (fn_800153E0(0x1d, u->x20e) != 0) {
+            return 1;
+        }
+    }
+    if (a != 0x18) {
+        return 0;
+    }
+    x = fn_800760EC(t, 0x15, -1);
+    y = fn_800760EC(t, a, b);
+    if (x == y) {
+        return 1;
+    }
+    return 0;
+}
+
+inline int Kind(Unit_8001CED0* u)
+{
+    switch (u->x10) {
+    case 0x10:
+    case 0x17:
+    case 0x1d:
+        return 0;
+    }
+    return 1;
+}
+
+
+inline int Both(Tk_8001CED0* t)
+{
+    Unit_8001CED0* u2 = t->work->w;
+    if (!Kind(u2)) {
+        return 0;
+    }
+    return Match(t, u2);
+}
+
+int fn_8001CED0(Tk_8001CED0* t)
+{
+    u32 flags = 0;
+    Unit_8001CED0* u = t->work->w;
+    s8 r;
+    s16 a;
+    s16 b;
+    Unit_8001CED0* u2;
+
+    r = fn_8002EEFC(t, &flags);
+    if (!Kind(t->work->w)) {
+        flags &= ~0x20000000;
+    }
+    if (r == 2) {
+        r = 1;
+    }
+    if (fn_80030AE8(flags, u) && Both(t)) {
+        u2 = t->work->w;
+        if (u2->xec & 0x8000) {
+            a = u2->x14;
+            b = u2->x16;
+        } else {
+            a = u2->x6;
+            b = u2->x8;
+        }
+        if (fn_80009030((*(GS_8001CED0*)&lbl_8030A10C).x10, a, b, -1, -1)) {
+            fn_800312F0(t, a, b, r);
+            u->xec &= ~0x8000;
+        }
+    } else {
+        u2 = t->work->w;
+        if (u2->xec & 0x8000) {
+            a = u2->x14;
+            b = u2->x16;
+        } else {
+            a = u2->x6;
+            b = u2->x8;
+        }
+        if (fn_80009030((*(GS_8001CED0*)&lbl_8030A10C).x10, a, b, -1, -1)) {
+            fn_80031254(t);
+            u->xec |= 0x80000;
+        }
     }
 }

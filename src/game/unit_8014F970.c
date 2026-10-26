@@ -2,6 +2,7 @@
 #include "ninja.h"
 #include "game/drawstate.h"
 #include <math.h>
+#include <dolphin/types.h>
 #define AT(T, p, off) (*(T *)((u8 *)(p) + (off)))
 typedef struct { u8 pad0[4]; s32 f4; u8 pad8[4]; s32 fc; } Ev;
 typedef struct { u8 pad0[0x2d8]; s32 f2d8; } Ctx;
@@ -1036,6 +1037,46 @@ typedef struct {
     u8 a[4][2];
     u8 b[4][2];
 } Row_80157E04;
+typedef struct Item {
+    u8 pad0[0x28];
+    s8 b28;
+    u8 pad29[3];
+    s32 w2c;
+} Item;
+typedef struct {
+    s32 x0;
+    u8 pad4[0x14 - 4];
+    Item *x14;
+    u8 pad18[0x1c - 0x18];
+} Ent_80150800;
+typedef struct {
+    s32 w0;
+    s32 w4;
+    s32 w8;
+    s32 wc;
+    u8 pad10[0x1c - 0x10];
+    s32 w1c;
+    u8 pad20[4];
+    Ent_80150800 ent[2];
+} Obj_80150800;
+typedef struct {
+    u8 pad0[0x58];
+    s32 w58;
+    s32 w5c;
+    s32 w60;
+    s32 w64;
+    u32 w68;
+} Tail;
+typedef struct {
+    s16 v;
+    s16 pad[2];
+} S6;
+typedef struct {
+    u8 pad0[0x10];
+    void *x10;
+} Thing;
+extern void fn_801536E0(void);
+extern void fn_8014F714(Item *p);
 
 void fn_8014F970(u8 *self) {
     fn_80153270(self + 0x95c);
@@ -3722,4 +3763,95 @@ void fn_80157E04(s32 i, s32 j, u8 a0, u8 a1, u8 b0, u8 b1)
         (*(Row_80157E04 **)&lbl_80346FD0)[i].b[j][0] = b0;
         (*(Row_80157E04 **)&lbl_80346FD0)[i].b[j][1] = b1;
     }
+}
+
+s32 fn_80150800(Obj_80150800 *o)
+{
+    s32 changed;
+    s32 st;
+    Item *a;
+    Item *b;
+    s32 ia;
+    s32 ib;
+    Tail *tl;
+    s32 t;
+
+    changed = 0;
+    tl = (Tail *)o;
+    o->w4 = o->wc;
+    o->wc = (*(S6 **)&lbl_80346F9C)[(s32)lbl_803472E0 - lbl_80346FC4].v;
+    st = o->wc;
+    if (st != o->w4 && (st == 10 || st == 20)) {
+        fn_8014F970((void *)(((Thing **)lbl_80346FC8)[0]->x10));
+        fn_8014F970((void *)(((Thing **)lbl_80346FC8)[1]->x10));
+        fn_801536E0();
+        tl->w64 = 0;
+        tl->w68 = 0;
+        o->w8 = 0;
+    }
+    if (st == 0) o->w1c = lbl_803472B8;
+    if (st == 11) o->w1c = lbl_803472B8 ^ 1;
+    if (tl->w68 != 0) {
+        if (tl->w58 != 0) {
+            tl->w58--;
+            if (tl->w58 == 0) {
+                tl->w64 = tl->w60;
+                tl->w5c = 0x13;
+            }
+        }
+        if (tl->w5c != 0) {
+            tl->w5c--;
+            if (tl->w5c == 0) {
+                tl->w64 = 0;
+                tl->w68 = 0;
+            }
+        }
+    }
+    t = tl->w64;
+    if (t != 0) {
+        o->w8 = t;
+        st = t;
+    } else if (o->w8 != 0) {
+        if (o->w4 == o->wc) {
+            st = o->w8;
+        } else {
+            o->w8 = 0;
+        }
+    }
+    if (o->w0 != st) {
+        a = NULL;
+        b = NULL;
+        if (st == 2) a = o->ent[o->w1c].x14;
+        if (st == 0xc) a = o->ent[o->w1c].x14;
+        if (st == 4) {
+            ia = 0x15;
+            ib = 0x16;
+            b = o->ent[o->w1c].x14;
+        }
+        if (st == 0xe) {
+            ia = 0x17;
+            ib = 0x18;
+            b = o->ent[o->w1c].x14;
+        }
+        if (b != NULL) {
+            fn_80150B24((void *)(o), o->w1c, ia, ib);
+        }
+        if (a != NULL) {
+            if (a->b28 == 0) {
+                fn_8014F714(a);
+                st = o->w0;
+            } else {
+                o->ent[o->w1c].x0 = a->w2c;
+            }
+        }
+        if (st == 0) {
+            o->ent[0].x0 = 6;
+            o->ent[1].x0 = 6;
+        }
+        if (st != o->w0) {
+            o->w0 = st;
+            changed = 1;
+        }
+    }
+    return changed;
 }

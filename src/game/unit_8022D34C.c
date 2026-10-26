@@ -1,5 +1,4 @@
 #include "types.h"
-
 typedef struct {
     u8 pad[0x4c];
     s32 a;
@@ -9,6 +8,9 @@ typedef struct {
 extern Unk8022D34C lbl_80311970;
 extern f32 lbl_80347570;
 extern void fn_8022F64C(void *p, u32 flags);
+typedef struct Node { u8 pad_00[0x2c]; struct Node *child; struct Node *next; } Node;
+extern void fn_8022F408(Node *n, s32 a, s32 b);
+void fn_8022F0CC(Node *n, s32 a, s32 b);
 
 void fn_8022D34C(s32 a, f32 b) {
     if (a > 0) {
@@ -81,4 +83,48 @@ void fn_80230F28(Msg* a, s16 i) {
 void fn_80230F48(void) {
     fn_801F01E4();
     fn_801D6850();
+}
+
+static inline void walk4(Node *n, s32 a, s32 b)
+{
+    fn_8022F408(n, a, b);
+    if (n->child != 0) {
+        fn_8022F0CC(n->child, a, b);
+    }
+    if (n->next != 0) {
+        fn_8022F0CC(n->next, a, b);
+    }
+}
+
+static inline void walk3(Node *n, s32 a, s32 b)
+{
+    fn_8022F408(n, a, b);
+    if (n->child != 0) {
+        walk4(n->child, a, b);
+    }
+    if (n->next != 0) {
+        walk4(n->next, a, b);
+    }
+}
+
+static inline void walk2(Node *n, s32 a, s32 b)
+{
+    fn_8022F408(n, a, b);
+    if (n->child != 0) {
+        walk3(n->child, a, b);
+    }
+    if (n->next != 0) {
+        walk3(n->next, a, b);
+    }
+}
+
+void fn_8022F0CC(Node *n, s32 a, s32 b)
+{
+    fn_8022F408(n, a, b);
+    if (n->child != 0) {
+        walk2(n->child, a, b);
+    }
+    if (n->next != 0) {
+        walk2(n->next, a, b);
+    }
 }
