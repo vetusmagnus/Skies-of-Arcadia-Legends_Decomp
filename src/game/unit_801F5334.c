@@ -2,6 +2,7 @@
 #include "ninja.h"
 #include "game/task.h"
 #include <math.h>
+void fn_80217B98();
 
 void fn_801EFC88(s32 v);
 typedef struct CmdStream { u8 pad_00[0x1c]; u8 *cur; } CmdStream;
