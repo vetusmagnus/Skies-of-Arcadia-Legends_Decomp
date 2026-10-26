@@ -2184,6 +2184,24 @@ void fn_8016F128(Rec_8016F128* r, u8 a, u8 b, f32 v)
     r->f = v;
 }
 
+void fn_8017B5EC(void) {
+    UiObj* o;
+    f32 y;
+    s32 i;
+    UiObj* a;
+
+    a = &PNL(0x78)->in->obj;
+    fn_80199BB8(a, -8.0f, 61.0f);
+    fn_80199BAC(a, -8.0f, 61.0f);
+    for (i = 0; i < 2; i++) {
+        o = &(*(Pnl**)(CWB + 0x22c + i * 4))->in->obj;
+        y = (f32)((i + 1) * 64 + 61);
+        UiObjSetLowered(o);
+        fn_80199BB8(o, -348.0f, y);
+        fn_80199BAC(o, -348.0f, y);
+    }
+}
+
 s32 fn_8018126C(void) {
     s32 buf[0x20];
     s32 off = *(s32 *)(lbl_80307638 + 0x7c);

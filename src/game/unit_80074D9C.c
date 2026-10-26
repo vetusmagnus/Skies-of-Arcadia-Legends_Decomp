@@ -702,6 +702,10 @@ void fn_8008999C(void* a) {
 }
 
 extern void fn_80083ACC(s16 id, u32 kind);
+void fn_8008A12C(s32 p) {
+    fn_80083BAC(p, 1);
+}
+
 void fn_8008A150(s16 p) {
     fn_80083ACC(p, 1);
 }

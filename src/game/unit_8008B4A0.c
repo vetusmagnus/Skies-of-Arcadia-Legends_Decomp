@@ -385,6 +385,52 @@ s32 fn_8008B5C8(void) {
     return lbl_80347340 == 1;
 }
 
+s32 fn_8008B6C4(s32 a) {
+    s32 i;
+    Vec3_8008B600 A;
+    Vec3_8008B600 B;
+    Sub_8008B600 *s;
+    s = fn_80021658(a)->x24;
+    A.x = s->v.x;
+    A.y = s->v.y;
+    A.z = s->v.z;
+    for (i = 0; i <= 3; i++) {
+        if (fn_80078610(i)) {
+            s = fn_80021658(i)->x24;
+            B.x = s->v.x;
+            B.y = s->v.y;
+            B.z = s->v.z;
+            if (fn_80071E9C(&A, &B) >= 30.0f) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+s32 fn_8008B84C(s32 a) {
+    s32 i;
+    Vec3_8008B600 A;
+    Vec3_8008B600 B;
+    Sub_8008B600 *s;
+    s = fn_80021658(a)->x24;
+    A.x = s->v.x;
+    A.y = s->v.y;
+    A.z = s->v.z;
+    for (i = 0; i <= 3; i++) {
+        if (fn_80078610(i)) {
+            s = fn_80021658(i)->x24;
+            B.x = s->v.x;
+            B.y = s->v.y;
+            B.z = s->v.z;
+            if (fn_80071E9C(&A, &B) <= 30.0f) {
+                return 0;
+            }
+        }
+    }
+    return 1;
+}
+
 u32 fn_8008B910(s32 i) {
     return (lbl_80309DE4[i]->x10 >> 1) & 1;
 }
