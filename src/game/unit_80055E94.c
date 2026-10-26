@@ -841,6 +841,38 @@ void fn_8006CF28(u8 *a, u32 *out, s32 idx) {
     *out = p[1];
 }
 
+typedef struct SubRec {
+    u8 pad0[4];
+    u32 v4;
+} SubRec;
+typedef struct ObjA {
+    u8 pad0[0x24];
+    SubRec *sub;
+} ObjA;
+extern void *lbl_803475A8;
+extern ObjA *fn_802268E8(void *a, void *fp);
+void fn_8006DDBC(O6DDBC *o);
+s32 fn_8006DBDC(void)
+
+{
+    s32 r;
+    ObjA *obj;
+
+    if (*(u32 *)(lbl_8030A10C + 0x6C) & 0x80000000) {
+        r = 0;
+    } else {
+        *(u32 *)(lbl_8030A10C + 0x6C) |= 0x80000000;
+        r = 1;
+    }
+    if (r == 0) {
+        return 0;
+    }
+    obj = fn_802268E8(lbl_803475A8, fn_8006DDBC);
+    fn_80061F58(&obj->sub, 0xac, 0);
+    obj->sub->v4 = (u32)lbl_80347398;
+    return 1;
+}
+
 void fn_8006EA70(void) {
     fn_8006E924();
 }
