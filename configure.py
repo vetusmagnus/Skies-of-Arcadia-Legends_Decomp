@@ -334,11 +334,10 @@ config.libs = [
         "game",
         [
             # Battle character command task and its helpers. The start is a guess (no constants
-            # before 0x80032E78); fn_800315FC and fn_80032C6C are near misses.
+            # before 0x80032E78); fn_80032C6C is a near miss.
             Object(NonMatching, "game/btlchar.c"),
             # Quad, billboard and model draw helpers (.sdata2 from 0x80348570). Near misses:
-            # fn_80033050, fn_800331CC, fn_800334B8, fn_80033888, fn_80034690, fn_8003529C,
-            # fn_80035518, fn_80035708.
+            # fn_800334B8, fn_80033888, fn_8003529C, fn_80035518.
             Object(NonMatching, "game/draw2d.c"),
             # Event task handlers and resource chunk lists (0x80035918-0x8003DEE0): 230 of 235
             # match. Left: fn_80035918, fn_80035C38, fn_8003D2E4 (string pool), fn_8003DBAC,
@@ -349,7 +348,7 @@ config.libs = [
             # string offsets: like tasks.c, the strings belong in .rodata (-str reuse,readonly).
             Object(NonMatching, "game/sound.c"),
             # Effect and particle tasks (a new 0.0f at 0x80348638). The end is a guess: the file
-            # continues past 0x80041238. fn_800403AC is a near miss.
+            # continues past 0x80041238. Everything so far matches.
             Object(NonMatching, "game/effect.c"),
             # 40 of 44 match; UiDrawNumber, UiLayoutDrawPart, UiLayoutDraw and UiSpriteDraw are
             # register allocation / scheduling away.
@@ -368,7 +367,7 @@ config.libs = [
             # a near miss. The file ends at 0x801E7654 (a second u32 conversion constant there).
             Object(NonMatching, "game/model.c"),
             # Motion sampling and chunk strip/UV helpers. The end is a guess (no constants);
-            # fn_801E78C8 and fn_801E85BC are near misses.
+            # fn_801E85BC is a near miss.
             Object(NonMatching, "game/chunk.c"),
             # Story-flag event object (a new 0.0f at 0x8034C020); continues past 0x801EA2DC.
             # fn_801E8CA4 and fn_801E9AE0 are near misses.
