@@ -1358,3 +1358,7 @@ void fn_8008CBB8(Slot* self) {
         break;
     }
 }
+
+void fn_8008B5E0(s32 a) {
+    fn_8008B788(a);
+}

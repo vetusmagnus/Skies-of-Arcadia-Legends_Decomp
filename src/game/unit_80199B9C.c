@@ -10,6 +10,7 @@
 extern void TextPrint(s32 x, s32 y, const char *str);
 #include "game/menu.h"
 #include "game/drawstate.h"
+#include <math.h>
 extern u8 lbl_8030741C[];
 extern u32 lbl_80347180;
 extern u8 lbl_8034717C[2];
@@ -4133,4 +4134,53 @@ Task_801B6240* fn_801B6320(void* a, f32 x)
     o->p28->z = x;
     UiObjSetLowered((UiObj*)o->p28);
     return o;
+}
+
+typedef struct {
+    s32 kind;   /* 0x00 */
+    u32 pad04;
+    UiObj obj;  /* 0x08 */
+} Inner_8016F138;
+typedef struct {
+    u8 pad00[0x18];
+    u8 flags;    /* 0x18 */
+    u8 state;    /* 0x19 */
+    u8 pad1A[0x24 - 0x1A];
+    Inner_8016F138* inner; /* 0x24 */
+} Self_8016F138;
+typedef struct Self_8016F594 {
+    u8 pad[0x2c];
+    f32 x, y;
+    u8 pad2[0x74 - 0x34];
+    f32 z;
+    u8 pad3[0xbc - 0x78];
+    u8 *data;
+} Self_8016F594;
+extern void fn_8019AE84(Self_8016F594 *self);
+void fn_8019ADA0(Self_8016F138* self) {
+    UiObj* obj = &self->inner->obj;
+
+    if (lbl_803475D8 != 0) {
+        self->state = 0xff;
+    }
+    switch (self->state) {
+    case 0:
+    case 0xfe:
+        self->state = 1;
+    case 1:
+        fn_80199F38(obj);
+        UiObjCalcRect(obj);
+        if (self->inner->kind == 1) {
+            CampPanelDrawFrame(self->inner);
+            fn_8019AE84((struct Self_8016F594 *)self->inner);
+        }
+        break;
+    case 0x64:
+        self->state = 0xff;
+        break;
+    case 0xff:
+        fn_80199F58((Obj_80199F58 *)self->inner);
+        self->flags |= 0x40;
+        break;
+    }
 }

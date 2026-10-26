@@ -260,7 +260,7 @@ extern f32 lbl_80347560;
 extern void ClipZPush(void);
 extern void ClipZPop(void);
 extern void njClipZ(f32 near, f32 far);
-extern s32 fn_8010ABD4(void *a, void *b);
+extern s32 fn_8010ABD4();
 extern void fn_80100B74(void *p);
 extern void fn_800D2B1C(void* p);
 extern s32 fn_801E1098(void* a, void* b);
@@ -6447,4 +6447,15 @@ void fn_8010C0E4(Obj_8010C0E4 *o, Src_8010C0E4 *n)
 
 void fn_8010B238(void* p) {
     fn_8010B038(p);
+}
+
+s32 fn_8010ABD4(MotCtx* ctx, MotObj* src) {
+    ctx->dst->frame = src->frame;
+    ctx->dst->speed = src->speed;
+    ctx->dst->motion = src->motion;
+    return 0;
+}
+
+void fn_80109830(s32 a, s32 b, s32 c) {
+    fn_801096FC((void *)0, a, (u32)b, (const char *)c);
 }

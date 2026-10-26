@@ -6764,3 +6764,31 @@ void fn_800C7018(void* p) {
 void fn_800C7038(void* p) {
     fn_800C7058(p);
 }
+
+s8 fn_800C8C54(f32* pos, Arg_800C7F64* arg) {
+    s32* dir = (s32*)arg;
+    s32 dx = (s32)((8400.0f - pos[0]) / 2400.0f);
+    s32 a;
+    s32 dz = (s32)((7200.0f - pos[2]) / 2400.0f);
+
+    dir[0] -= dx;
+    if (dir[0] <= -6) {
+        dir[0] = 1;
+    } else if (dir[0] >= 6) {
+        dir[0] = -1;
+    }
+    dir[2] -= dz;
+    if (dir[2] <= -5) {
+        dir[2] = 1;
+    } else if (dir[2] >= 5) {
+        dir[2] = -1;
+    }
+    a = dir[0];
+    if (a == 0 && dir[2] == 0) {
+        return 'C';
+    }
+    if (fabsf((f32)a) <= 1.0f && fabsf((f32)dir[2]) <= 1.0f) {
+        return 'A';
+    }
+    return 'N';
+}

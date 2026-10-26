@@ -483,7 +483,7 @@ typedef struct {
     u8 pad260[4];
     void* x264;
 } Work_800ABEB4;
-extern void* fn_8009D5BC(void);
+extern void* fn_8009D5BC();
 typedef struct {
     u32 flags;
     u8 pad04[0x2c - 4];
@@ -2287,4 +2287,49 @@ void fn_800B2588(Obj_800B2588 *o)
         }
         break;
     }
+}
+
+typedef struct {
+    s32 len;      /* 0x00 */
+    s16* plist;   /* 0x04 chunk data */
+    s16* offsets; /* 0x08 stream of chunk offsets and per-vertex deltas */
+} ChunkSet;
+typedef struct {
+    u32 flags;  /* 0x00 */
+    s16* plist; /* 0x04 chunk data */
+} CnkModel;
+typedef struct CnkObject {
+    u32 flags;                /* 0x00 bit 3: no model, bit 4: no children */
+    CnkModel* model;          /* 0x04 */
+    u8 pad8[0x2C - 8];
+    struct CnkObject* child;   /* 0x2C */
+    struct CnkObject* sibling; /* 0x30 */
+} CnkObject;
+typedef struct {
+    s32 num;          /* 0x00 */
+    ChunkSet* sets;   /* 0x04 */
+    CnkObject* owner; /* 0x08 */
+} ChunkSetList;
+extern void* fn_801E1C7C(s32 size);
+extern void fn_8009D400(CnkObject* o, ChunkSet** strips, s16** out);
+void* fn_8009D5BC(CnkObject* o) {
+    s32 nodes;
+    s32 shorts;
+    ChunkSetList* h;
+    ChunkSet* p;
+    s16* q;
+    shorts = 0;
+    nodes = 0;
+    fn_8009D294((Node_8009D294*)o, &nodes, &shorts);
+    if (nodes == 0 || shorts == 0) return 0;
+    h = fn_801E1C7C((nodes * 12 + 12) + shorts * 2);
+    if (h != 0) {
+        p = (ChunkSet*)(h + 1);
+        q = (s16*)(p + nodes);
+        h->num = nodes;
+        h->sets = p;
+        h->owner = o;
+        fn_8009D400(o, &p, &q);
+    }
+    return h;
 }

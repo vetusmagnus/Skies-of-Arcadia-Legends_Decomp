@@ -1363,7 +1363,7 @@ typedef struct Obj_8016C4C8 {
     u8 pad[0x24];
     Sub_8016C4C8* sub;
 } Obj_8016C4C8;
-void fn_8016C204(void);
+void fn_8016C204();
 void fn_8016C61C(void);
 typedef struct { s32 hide; u8 pad4[4]; UiObj obj; u8 pad_[0xbc - 8 - sizeof(UiObj)]; void* sub; } Win_8017A510;
 typedef struct { u8 pad[0x24]; Win_8017A510* in; } Pnl_8017A510;
@@ -7067,6 +7067,136 @@ void fn_801802AC(void) {
     case 4:
         c->state = 0;
         c->f6c = 2;
+        break;
+    }
+}
+
+extern void fn_80174E18(void);
+void fn_80174CB0(void) {
+    Ctrl_80170450* c = ((Outer_80170450*)lbl_8034710C)->holder->ctrl;
+
+    switch (c->state) {
+    case 0:
+        fn_80174F40((s8)c->f44, 1);
+        c->state++;
+        break;
+    case 1:
+        if (CampMenuAnyPanelBusy() == 0) {
+            fn_80174E18();
+            c->state++;
+        } else if (fn_801C09F8(lbl_80347154, 0x11) != 0 || fn_801C09F8(lbl_80347154, 0x10) != 0) {
+            CampMenuFinishAllPanels();
+            fn_80174E18();
+            c->state++;
+        }
+        break;
+    case 2:
+        fn_80174F40((s8)c->f44, 0);
+        c->state++;
+        break;
+    case 3:
+        if (CampMenuAnyPanelBusy() == 0) {
+            c->state++;
+        } else if (fn_801C09F8(lbl_80347154, 0x11) != 0 || fn_801C09F8(lbl_80347154, 0x10) != 0) {
+            CampMenuFinishAllPanels();
+            c->state++;
+        }
+        break;
+    case 4:
+        c->state = 0;
+        c->f6c = 2;
+        break;
+    }
+}
+
+extern void fn_80178BC8(void);
+void fn_80178A60(void) {
+    Ctrl_80170450* c = ((Outer_80170450*)lbl_8034710C)->holder->ctrl;
+
+    switch (c->state) {
+    case 0:
+        fn_80178D2C((s8)c->f44, 1);
+        c->state++;
+        break;
+    case 1:
+        if (CampMenuAnyPanelBusy() == 0) {
+            fn_80178BC8();
+            c->state++;
+        } else if (fn_801C09F8(lbl_80347154, 0x11) != 0 || fn_801C09F8(lbl_80347154, 0x10) != 0) {
+            CampMenuFinishAllPanels();
+            fn_80178BC8();
+            c->state++;
+        }
+        break;
+    case 2:
+        fn_80178D2C((s8)c->f44, 0);
+        c->state++;
+        break;
+    case 3:
+        if (CampMenuAnyPanelBusy() == 0) {
+            c->state++;
+        } else if (fn_801C09F8(lbl_80347154, 0x11) != 0 || fn_801C09F8(lbl_80347154, 0x10) != 0) {
+            CampMenuFinishAllPanels();
+            c->state++;
+        }
+        break;
+    case 4:
+        c->state = 0;
+        c->f6c = 2;
+        break;
+    }
+}
+
+void fn_80189DBC(Self_8016F138* self) {
+    UiObj* obj = &self->inner->obj;
+
+    if (lbl_803475D8 != 0) {
+        self->state = 0xff;
+    }
+    switch (self->state) {
+    case 0:
+    case 0xfe:
+        self->state = 1;
+    case 1:
+        fn_80199F38(obj);
+        UiObjCalcRect(obj);
+        if (self->inner->kind == 1) {
+            CampPanelDrawFrame(self->inner);
+            fn_80189EA0((Obj_80189EA0 *)self->inner);
+        }
+        break;
+    case 0x64:
+        self->state = 0xff;
+        break;
+    case 0xff:
+        fn_80199F58(self->inner);
+        self->flags |= 0x40;
+        break;
+    }
+}
+
+extern s32 fn_8016B9C8(void* self);
+void fn_8016C204(Self_8016B434* self) {
+    switch (self->state) {
+    case 0:
+    case 0xfe:
+        fn_8016C2C0();
+        self->state = 1;
+        self->timer = -1.3f;
+        break;
+    case 1:
+        if (fn_8016B9C8(self) == 0) {
+            self->state = 2;
+        }
+        break;
+    case 2:
+        self->state = 0xff;
+        break;
+    case 0xff:
+        self->flags |= 0x40;
+        if (lbl_803470B0 != 0) {
+            lbl_803470B0 = 0;
+        }
         break;
     }
 }

@@ -6346,3 +6346,7 @@ int fn_80118204(Chr_80118204 *c) {
     }
     return result;
 }
+
+void fn_801264A4(void *p, s32 n, f32 f) {
+    fn_80157684((Rec_80125820*)p, n, f);
+}

@@ -1335,6 +1335,11 @@ void fn_8015C5F4(void) {
 }
 
 extern void fn_80144E60(Msg*, s16);
+void fn_8015C618(void) {
+    fn_801E17E0((s32)lbl_80347048);
+    lbl_80347048 = NULL;
+}
+
 void fn_8015C6A8(Msg* a, s16 i) {
     fn_80144E60(a, i);
 }
@@ -3597,4 +3602,20 @@ void fn_801512DC(Obj_801512DC* o, In_801512DC* in) {
     }
     fn_80151610((void *)s, 1);
     fn_8015181C((void *)s);
+}
+
+void fn_80158374(void *p) {
+    fn_801E17E0((s32)p);
+}
+
+void fn_801575C4(void *a) {
+}
+
+void fn_8015596C(void *p) {
+    fn_80151128((Tab_80151128*)lbl_80346FB0, (Src*)p);
+}
+
+extern void fn_8015128C(void *p, void *q);
+void fn_80155994(void *p) {
+    fn_8015128C((void*)lbl_80346FB4, p);
 }

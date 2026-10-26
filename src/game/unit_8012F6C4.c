@@ -1078,3 +1078,7 @@ s32 fn_8013D3F0(u8* p) {
     p[0x1] = 0;
     return 2;
 }
+
+s8* fn_80135598(void) {
+    return (s8*)&lbl_803063F0;
+}

@@ -1,4 +1,7 @@
 #include "types.h"
+#include "ninja.h"
+#include "game/task.h"
+#include <math.h>
 
 void fn_801EFC88(s32 v);
 typedef struct CmdStream { u8 pad_00[0x1c]; u8 *cur; } CmdStream;
@@ -19,7 +22,7 @@ s32 fn_80219B7C(void);
 s32 fn_801D168C(void);
 void fn_801D150C(s32 v);
 void fn_802173F4(void *obj, s32 v, s32 w);
-void fn_802193BC(void);
+void fn_802193BC();
 typedef struct Slot { u8 pad_00[0x10]; s32 field_10; u8 rest[0x28]; } Slot;
 extern Slot lbl_80315120[];
 s32 fn_80219834(s32 v);
@@ -444,4 +447,12 @@ s32 fn_80218DC4(void) {
         return -1;
     }
     return lbl_803477E0;
+}
+
+void fn_80216EFC(s32 a) {
+    fn_80217830(a);
+}
+
+void fn_80216CB4(s32 p) {
+    fn_802193BC(p, 0);
 }

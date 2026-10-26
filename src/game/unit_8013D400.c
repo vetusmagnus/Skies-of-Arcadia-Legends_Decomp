@@ -1576,3 +1576,7 @@ void fn_80143FA4(u8* s, s32 idx, s32 slot) {
         break;
     }
 }
+
+void fn_80147DA8(s32 a, s32 b) {
+    fn_80142F04(a, b);
+}

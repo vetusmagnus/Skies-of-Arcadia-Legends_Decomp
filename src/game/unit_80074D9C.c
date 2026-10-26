@@ -169,7 +169,7 @@ typedef struct Ctx_80085C88 {
     u8 pad[0x24];
     Req_80085C88 *req;
 } Ctx_80085C88;
-extern void fn_80086C48(void);
+extern void fn_80086C48();
 extern u8 *lbl_803472FC;
 extern u8 *lbl_80347300;
 extern u8 *lbl_80347304;
@@ -2147,4 +2147,27 @@ void fn_8007C600(u32 arg)
         break;
     }
     lbl_80309174[lbl_80347330].x0 = arg;
+}
+
+void fn_80087054(Slot* s) {
+    fn_800804B8((Node_800804B8*)s);
+}
+
+void fn_8007EB9C(s32 a, s32 b) {
+    fn_80083558(a, b);
+}
+
+void fn_80086C48(Node_800804B8* t) {
+    fn_800804B8(t);
+}
+
+void fn_80088ABC(Ctx_80085C88 *c) {
+    Req_80085C88 *req = c->req;
+    void (*fp)(void) = (void (*)(void))fn_80087054;
+    s16 idx = req->idx;
+    Chr_UNIT0000 *o = lbl_80309DE4[idx];
+    o->w1c |= 1;
+    req->flags |= 1;
+    lbl_80309700[idx]->update = fp;
+    lbl_80309700[idx]->flag19 = 0;
 }

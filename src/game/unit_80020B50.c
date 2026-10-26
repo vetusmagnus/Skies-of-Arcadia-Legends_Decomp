@@ -62,8 +62,29 @@ void fn_80022F0C(void) {
 }
 
 extern Mgr_800C8F3C *lbl_80346BA8;
+extern void fn_80022F74(void);
+void fn_80022F1C(void *p) {
+  lbl_80346BA4 = fn_802268E8(lbl_803475A8, fn_80022F74);
+  ((Holder *)lbl_80346BA4)->ptr = fn_801E1C7C(4);
+  *(void **)((Holder *)lbl_80346BA4)->ptr = p;
+}
+
 void fn_80023D04(void) {
     ((u8*)lbl_80346BA8)[0x19] = 2;
+}
+
+extern void fn_800240EC(void);
+void fn_80023D14(void *p) {
+  lbl_80346BA8 = fn_802268E8(lbl_803475A8, fn_800240EC);
+  ((Holder *)lbl_80346BA8)->ptr = fn_801E1C7C(4);
+  *(void **)((Holder *)lbl_80346BA8)->ptr = p;
+}
+
+extern void fn_80025624(void);
+void fn_800255CC(void *p) {
+  lbl_80346BAC = fn_802268E8(lbl_803475A8, fn_80025624);
+  ((Holder *)lbl_80346BAC)->ptr = fn_801E1C7C(4);
+  *(void **)((Holder *)lbl_80346BAC)->ptr = p;
 }
 
 void fn_80029070(void) {

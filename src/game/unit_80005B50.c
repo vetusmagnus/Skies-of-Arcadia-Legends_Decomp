@@ -1,4 +1,5 @@
 #include "types.h"
+#include "ninja.h"
 #define PTR(p, off) (*(void**)((u8*)(p) + (off)))
 extern void* fn_80005B9C(void* heap);
 extern void* memset(void* dst, s32 c, u32 n);
@@ -140,6 +141,25 @@ void fn_800068C4(NJS_MKEY_F* keys, u32 i, u32 nbKeys, f32* out) {
 }
 
 extern void fn_802A9338(s32 a, s32 b, s32 c, void (*f)(void));
+typedef struct {
+    u32 keyframe;
+    Angle key[3];
+} NJS_MKEY_A;
+void fn_80006A70(NJS_MKEY_A* keys, u32 i, u32 nbKeys, Angle* out) {
+    f32 div[2] = {1.0f, 1.0f};
+    NJS_MKEY_A* k1 = &keys[i];
+    NJS_MKEY_A* k2 = &keys[(i + 1) % nbKeys];
+    f32 t;
+    f32 u;
+
+    div[1] = (f32)(k2->keyframe - k1->keyframe);
+    t = (lbl_80316940.frame - (f32)k1->keyframe) / div[(s32)(k2->keyframe - k1->keyframe) > 0];
+    u = 1.0f - t;
+    out[0] = k1->key[0] * u + k2->key[0] * t;
+    out[1] = k1->key[1] * u + k2->key[1] * t;
+    out[2] = k1->key[2] * u + k2->key[2] * t;
+}
+
 void fn_800072A8(s32 a, s32 b, s32 c)
 {
     fn_802A9338(a, b, c, fn_8028AB48);
@@ -516,4 +536,9 @@ void fn_8000E0D8(E0D8Obj *obj) {
         obj->flags |= 0x40;
         break;
     }
+}
+
+extern void fn_8000F2A0(void);
+void fn_8000F6F8(void* obj, s32 a, s32 b, s32 c, s32 d) {
+    fn_8000F2A0();
 }

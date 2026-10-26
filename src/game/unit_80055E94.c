@@ -44,7 +44,7 @@ void fn_800D208C(void *obj, f32 f);
 void fn_8006AFD0(s16 i, void *a, void *b, s32 c);
 extern void fn_8006AC68(s16 i);
 extern void fn_800696A8(s32 a, s16 i, s32 b, s8 v);
-void fn_8006E924(void);
+void fn_8006E924();
 s32 fn_8025ECC4(void);
 s32 fn_801D6E38(s32 a);
 typedef struct U64FE0 {
@@ -2324,4 +2324,14 @@ void fn_80073D10(void) {
 }
 
 void fn_80073D14(void) {
+}
+
+void fn_80071CF0(V3 *src, V3 *dst) {
+    dst->x = src->x;
+    dst->y = src->y;
+    dst->z = src->z;
+}
+
+void fn_8006EA90(s32 a, void *b, s32 c) {
+    fn_8006E924(a, b, (void *)c, 0);
 }
