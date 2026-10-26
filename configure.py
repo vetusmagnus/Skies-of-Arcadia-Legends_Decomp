@@ -345,14 +345,18 @@ config.libs = [
             # Quad, billboard and model draw helpers (.sdata2 from 0x80348570). Near misses:
             # fn_800334B8, fn_80033888, fn_8003529C, fn_80035518.
             Object(NonMatching, "game/draw2d.c"),
-            # Event task handlers and resource chunk lists (0x80035918-0x8003DEE0): 230 of 235
-            # match. Left: fn_80035918, fn_80035C38, fn_8003D2E4 (string pool), fn_8003DBAC,
-            # fn_8003DCF4. The original keeps the strings in .rodata (needs -str reuse,readonly
-            # once linked), and a 4-byte gap before lbl_802DD238 may mean a file boundary.
-            Object(NonMatching, "game/tasks.c"),
-            # .SAMP sample, voice and stream loading. fn_8003E1BC and fn_8003ECF4 differ only in
-            # string offsets: like tasks.c, the strings belong in .rodata (-str reuse,readonly).
-            Object(NonMatching, "game/sound.c"),
+            # Chunk lists: free, merge and load 16-byte ChunkHdr arrays, fn_8003617C gives each chunk
+            # type its size (0x80035918-0x80036520; the end is a guess, the data pins it between
+            # fn_8003617C and fn_800367E8). Near misses: fn_80035918 (block layout of the null
+            # check), fn_80035C38 (two locals swap r29/r31).
+            Object(NonMatching, "game/chunklist.c", extra_cflags=["-str reuse,readonly"]),
+            # Task command handlers (0x80036520-0x8003DEE0), deferred codegen like sound.c. Data
+            # layout (rodata, data, sdata2) is byte-exact; left: fn_8003DBAC (divide/modulo
+            # scheduling) and fn_8003DCF4 (register colouring in the third TargetMatch).
+            Object(NonMatching, "game/tasks.c", extra_cflags=["-str reuse,readonly", "-inline noauto,deferred"]),
+            # .SAMP sample, voice and stream loading (linked). Original flags: strings in .rodata
+            # (-str reuse,readonly) and deferred codegen, which reverses the function order.
+            Object(Matching, "game/sound.c", extra_cflags=["-str reuse,readonly", "-inline noauto,deferred"]),
             # Effect and particle tasks (a new 0.0f at 0x80348638). The end is a guess. 60 of 62
             # match; fn_80041E64 and fn_800470F0 are near misses.
             Object(NonMatching, "game/effect.c"),

@@ -82,3 +82,23 @@ Open questions
 - `-O4,p` vs `-O4,s`; `-str` pooling; small-data thresholds; `-common on/off`.
 - `mw_comment_version` (currently 10) and the linker version (the template's GC/1.3.2 `mwldeppc`) are now confirmed to work with compiled source: the library objects built from C (see the README Status block) link into a byte-identical DOL. Confirmed with game code too: `src/game/drawstate.c` links.
 - The library region past `0x80266878` (~270 KB) is mostly unidentified: AX audio plus probable Sega middleware. Identify it before choosing compilers there. See `docs/sdk_import.md`.
+
+
+Deferred codegen and reversed source order
+------------------------------------------
+
+Found 2026-10-26 on `sound.c` and `tasks.c`: some game files were built with `-inline deferred` (the
+build flags are `-inline noauto,deferred`) and `-str reuse,readonly`. A three-function test shows what
+deferred does: the functions are emitted in reverse source order, a local array initialiser is
+written to `.rodata` first, and the string literals follow in codegen order (so the *last*
+function in the source gets the *first* string). The original `.rodata` of sound.c is
+`[table][STV%02d.SAMP][B7000000.SAMP]...` with the table used by the sixth function; reproducing
+that needs the functions written from the highest address down. Data defined at file scope is
+emitted at parse time, before every jump table, so a file that has `[jump table][data][jump
+tables]` in the DOL (the old "tasks.c" did) is two files. Without deferred, each function's strings
+and template land at its own position, which is what the older units already match with.
+
+How to convert a file: `build/agents`-style scripts aren't needed. Move the typedefs, externs,
+prototypes and `inline` helpers to the top, keep data definitions after them, then list the
+functions in descending address order; add the two flags in `configure.py`. Check `.rodata` with a
+compile (`mwcceppc ... -c`) and compare the object's sections with the original bytes.

@@ -29,11 +29,21 @@ game/btlchar.c:
 game/draw2d.c:
 	.text       start:0x80032E78 end:0x80035918
 
+game/chunklist.c:
+	.text       start:0x80035918 end:0x80036520
+	.data       start:0x802DD0C8 end:0x802DD238
+
 game/tasks.c:
-	.text       start:0x80035918 end:0x8003DEE0
+	.text       start:0x80036520 end:0x8003DEE0
+	.rodata     start:0x802AD220 end:0x802AD290
+	.data       start:0x802DD238 end:0x802DE630
+	.sdata2     start:0x803485D0 end:0x80348618
 
 game/sound.c:
 	.text       start:0x8003DEE0 end:0x80040010
+	.rodata     start:0x802AD290 end:0x802AD360
+	.data       start:0x802DE630 end:0x802DF02C
+	.sdata2     start:0x80348618 end:0x80348638
 
 game/effect.c:
 	.text       start:0x80040010 end:0x800506B0

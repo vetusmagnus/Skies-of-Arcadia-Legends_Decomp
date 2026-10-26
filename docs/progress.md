@@ -1,8 +1,8 @@
 Progress and handoff
 ====================
 
-State of the work as of 2026-10-26 (after the partials batch): 26.6% of code matched (3,399 / 7,116
-functions), 3,717 functions unmatched: 2,750 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
+State of the work as of 2026-10-26 (after the partials batch): 26.7% of code matched (3,402 / 7,116
+functions), 3,714 functions unmatched: 2,750 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
 (the size split of the game functions predates the duplicate-copy batch: 2,193 under 632 bytes, 466 at 632-1000,
 355 at 1-2 KB, 101 at 2-5 KB, 16 over 5 KB). Numbers live in the README status block and on
 [ByteMatch](https://bytematch.dev/vetusmagnus/SoAL-Decomp); this page covers what's in flight.
@@ -16,8 +16,9 @@ Game files
 | `battle.c` | 0x8002C010-0x80031254 | 86 of 101; near: fn_8002C51C, fn_8002C8FC, fn_8002CA54, fn_8002CBF8 (clamp temps in swapped registers), fn_8002D72C (the original keeps a dead loop counter), fn_8002E5D0 (register colouring only), fn_8002EEFC, fn_8002F35C, fn_8002F598, fn_8002F6D4, fn_8002F80C, fn_8002FA00, fn_80030280, fn_800303EC, fn_800308FC (string offsets only; the strings sit at lbl_802AD0F8+0x78, so `-str reuse,readonly` like tasks.c). The start is a guess |
 | `btlchar.c` | 0x80031254-0x80032E78 | 22 of 23; near: fn_80032C6C (prologue registers; an inline `Lookup` for the table search gets it to 14 lines, `build/agents/r6_1/`). The start is a guess |
 | `draw2d.c` | 0x80032E78-0x80035918 | 31 of 35; near: fn_800334B8 (r0/r4 swap only in the textured branch, 96 lines in `build/agents/r6_2/`), fn_80033888 (a `frsp` from a double-typed value), fn_8003529C (saved-register order; the only fix found was a long-to-int local copy, rejected), fn_80035518 (12 lines in `build/agents/r6_2/`) |
-| `tasks.c` | 0x80035918-0x8003DEE0 | 230 of 235 |
-| `sound.c` | 0x8003DEE0-0x80040010 | 26 of 28; fn_8003E1BC and fn_8003ECF4 differ only in string offsets (see below) |
+| `chunklist.c` | 0x80035918-0x80036520 | 6 of 8; near: fn_80035918, fn_80035C38 (see "Linking tasks.c and sound.c"). The end is a guess |
+| `tasks.c` | 0x80036520-0x8003DEE0 | 224 of 226; near: fn_8003DBAC, fn_8003DCF4. Data is byte-exact, so it links the moment those two match |
+| `sound.c` | 0x8003DEE0-0x80040010 | linked |
 | `effect.c` | 0x80040010-0x800506B0 | 62 of 62 defined. Not in the file, as near misses: fn_800472DC (a 3-iteration copy loop ends `blt`; `i < 3` unrolls, `i != 3` gives `bne`), fn_80047A68 (counter and value swap r5/r6 in the alpha loop), fn_80048570 (register naming), fn_80048654 (callee-saved colouring), fn_8004C1E4 (`node` r26 vs r27, ribbon effect; 394 lines), fn_8004DD54 (register numbering), fn_8004E474 (two pointers swap r26/r27), fn_8004E7F0 (`addi; extsh` vs `extsh; addi`, 4 lines), fn_8004EEF0 (float load scheduling, 4 lines), fn_8004F664 (one `mr` before `lfd`, 2 lines), fn_8004F868 (`lwz r5` vs r0, 2 lines), fn_8004FF8C (f30 hoist, signed vs unsigned range check). The end is a guess; the file stops after fn_8004FF8C, the next function is 0x800506B0 |
 | `drawstate.c` | 0x801CA8D8-0x801CAE84 | linked |
 | `uiobj.c` | 0x801C2FA0-0x801C5758 | 40 of 44; near: UiDrawNumber, UiLayoutDrawPart, UiLayoutDraw, UiSpriteDraw |
@@ -31,29 +32,41 @@ Game files
 `build/agents/` is gitignored, so the per-function work mentioned above only exists on the machine that ran
 the batch.
 
-### tasks.c: what blocks linking
+### Linking tasks.c and sound.c (2026-10-26)
 
-- Near misses: fn_80035918 (block layout of the null check), fn_80035C38 (two locals swap
-  r29/r31; all 5040 declaration orders tried), fn_8003DBAC (divide/modulo scheduling),
-  fn_8003DCF4 (register colouring in the third TargetMatch), fn_8003D2E4 (string addressing only,
-  see below).
-- Strings: the original keeps this file's literals in `.rodata` (0x802AD220-0x802AD28A). The game
-  flags put them in `.data`; the object needs `-str reuse,readonly`. With that, fn_8003D2E4's offsets
-  match.
-- `.sdata2`: fn_8003DBAC's `"ABG"` local initialiser comes out last; the original has it first
-  (0x803485D0), which shifts the rest by 4.
-- `.data`: a 4-byte zero gap at 0x802DD234, between fn_8003617C's jump table and the task table
-  `lbl_802DD238`, can't be reproduced. It may mean a file boundary around fn_8003617C.
-- The file's start (0x80035918) comes from the constant pools (a new 0.0f at 0x803485E4, the
-  `.sdata2` run from 0x803485D0); check it again when linking.
+sound.c now links and `main.dol` is byte-identical. tasks.c does not, but its blockers are four
+functions, not data. What we learned (it applies to every unit with strings or local array
+initialisers):
 
-### sound.c: strings
-
-Like tasks.c, sound.c keeps its strings in `.rodata`: fn_8003E7A4's s16 table at lbl_802AD290 comes
-first, then the strings in first-use order ("/SOUND/" is in `.sdata2`). With `-str reuse,readonly`
-fn_8003ECF4's offsets match; fn_8003E1BC is still 0x3C off, because a local array initialiser is
-emitted when its function is compiled, after the earlier strings. tasks.c's `.rodata` ends at
-0x802AD28A and sound.c's starts at 0x802AD290, so the two may turn out to be one file.
+- **The original built these files with `-inline deferred`.** Deferred codegen emits functions in
+  *reverse* source order, creates local array initialisers (fn_8003E7A4's table, fn_8003DBAC's
+  `"ABG"`) at parse time so they land ahead of every string literal, and writes the strings and
+  float constants in codegen order. The `.rodata`/`.sdata2` order in the DOL is exactly that: table
+  first, then the strings in address order. The matching source therefore lists the functions from
+  the highest address down, with the inline helpers and prototypes first (they must precede their
+  users). Per-file flags in `configure.py`: `extra_cflags=["-str reuse,readonly", "-inline
+  noauto,deferred"]`. `-str reuse,readonly` puts strings in `.rodata`/`.sdata2` instead of `.data`.
+  Evidence on a 3-function test file is in docs/compiler.md. Other units with string-offset-only
+  near misses (battle.c's fn_800308FC, effect.c, anything that shows `lbl_xxxx+0x78` string offsets)
+  probably want the same treatment.
+- **tasks.c was two files.** The 4-byte zero gap at 0x802DD234 is alignment: `chunklist.c` (code
+  0x80035918-0x80036520, its only data the jump table at 0x802DD0C8) ends there and `tasks.c`
+  starts with the 8-aligned task table `lbl_802DD238`. The boundary is only known to lie between
+  fn_8003617C and fn_800367E8 (the first user of `lbl_802DD238`); we put it at fn_80036520.
+- Data comes from C now: sound.c defines `lbl_802DE630` (the voice id tables), the task tables
+  `lbl_802DD238`/`lbl_802DE208` are in tasks.c, the strings are the compiler's. tasks.c's compiled
+  `.rodata`, `.data` and `.sdata2` equal the original bytes (checked with relocations masked).
+- Why tasks.c can't link partly: `"ABG"` is the first `.sdata2` entry of the unit that contains
+  fn_8003DBAC, ahead of the floats used by earlier functions, so fn_8003DBAC can't be split off
+  into its own unit; the whole of tasks.c waits for fn_8003DBAC and fn_8003DCF4. chunklist.c waits
+  for fn_80035918 and fn_80035C38; its two matching stretches (0x8003598C-0x80035C38 and
+  0x80035D4C-0x80036520) could be split into units of their own if linking them early is worth it.
+- Near misses, for whoever takes them: fn_80035918 (the original has an extra `b`, and the
+  parameter `mr` sits after the loop; ~25 loop/inline shapes tried, all give the same 26
+  instructions), fn_80035C38 (two locals swap r29/r31; all 5040 declaration orders tried),
+  fn_8003DBAC (the `rem` of `% 1000` is `extsh` into r3 then `mr r6,r3`; ~100 orderings and
+  type variants tried), fn_8003DCF4 (the third TargetMatch compares `obj->type` first: swapping the
+  arguments gets the compare right but moves the registers).
 
 Agent batches
 -------------
