@@ -1963,6 +1963,10 @@ s32 fn_8015DC6C(Obj_8015DC6C* self, Src* src)
     return 0;
 }
 
+s32 fn_8015E30C(void) {
+    return 0;
+}
+
 void* fn_8015F180(Obj_8015F180* self)
 {
     Sub_8015F180* sub = self->sub;
@@ -2033,6 +2037,14 @@ void fn_8016ABEC(void)
     fn_8016AD08();
 }
 
+void fn_8016B620(void) {
+    u8* p = (u8*)lbl_803470A0;
+    if (p == NULL) {
+        return;
+    }
+    p[0x19] = 2;
+}
+
 void fn_8016B950(f32 a, f32 b)
 {
     OwnerA_UNIT0000* o = ((OwnerA_UNIT0000*)lbl_803470A0);
@@ -2057,6 +2069,22 @@ void fn_8016B96C(f32 v)
         v -= lbl_8034ABDC;
     }
     in->f20 = v;
+}
+
+void fn_8016B998(u8 v) {
+    u8* p = (u8*)lbl_803470A0;
+    if (p == NULL) {
+        return;
+    }
+    *(u8*)(*(u8**)((u8*)p + 0x24) + 0x2) = v;
+}
+
+void fn_8016C4B0(void) {
+    u8* p = (u8*)lbl_803470B0;
+    if (p == NULL) {
+        return;
+    }
+    p[0x19] = 2;
 }
 
 void fn_8016C780(u32 a, u32 b)
@@ -2101,6 +2129,22 @@ void fn_8016C7F0(u32 a)
         return;
     }
     o->inner->w20 = a;
+}
+
+void fn_8016D01C(void) {
+    u8* p = (u8*)lbl_803470B8;
+    if (p == NULL) {
+        return;
+    }
+    p[0x19] = 2;
+}
+
+void fn_8016D114(u8 v) {
+    u8* p = (u8*)lbl_803470B8;
+    if (p == NULL) {
+        return;
+    }
+    *(u8*)(*(u8**)((u8*)p + 0x24) + 0x2) = v;
 }
 
 s32 fn_8016E1D8(void *p) {
@@ -2152,6 +2196,35 @@ s8 fn_80187F90(s32 x)
     return fn_801F4CA0(x);
 }
 
+extern void fn_80188098(Self_8016F594 *self);
+void fn_80187FB4(Self_8016F138* self) {
+    UiObj* obj = &self->inner->obj;
+
+    if (lbl_803475D8 != 0) {
+        self->state = 0xff;
+    }
+    switch (self->state) {
+    case 0:
+    case 0xfe:
+        self->state = 1;
+    case 1:
+        fn_80199F38(obj);
+        UiObjCalcRect(obj);
+        if (self->inner->kind == 1) {
+            CampPanelDrawFrame(self->inner);
+            fn_80188098((struct Self_8016F594 *)self->inner);
+        }
+        break;
+    case 0x64:
+        self->state = 0xff;
+        break;
+    case 0xff:
+        fn_80199F58(self->inner);
+        self->flags |= 0x40;
+        break;
+    }
+}
+
 void fn_80189DB0(s32* p, s8 v)
 {
     *p = v;
@@ -2187,6 +2260,23 @@ void fn_80192800(void)
 {
     TaskDelete(lbl_80347114);
     lbl_80347114 = 0;
+}
+
+void fn_80192920(void)
+{
+    s16* p = (s16*)(lbl_8030B7F4 + 0x1568);
+    s32 i;
+
+    for (i = 0; i < 5; i++) {
+        if (p[12 + i] != -1) {
+            fn_801C1148(p[12 + i], 1);
+        }
+    }
+    for (i = 0; i < 3; i++) {
+        if (p[17 + i] != -1) {
+            fn_801C1148(p[17 + i], 1);
+        }
+    }
 }
 
 s32 fn_801929B8(s32 idx) {
@@ -6941,4 +7031,42 @@ void fn_80189EA0(Obj_80189EA0 *self) {
     }
     TextPopColor(1);
     TextSetZ(z);
+}
+
+extern void fn_80180414(void);
+void fn_801802AC(void) {
+    Ctrl_80170450* c = ((Outer_80170450*)lbl_8034710C)->holder->ctrl;
+
+    switch (c->state) {
+    case 0:
+        fn_80180694(c->f44, 1);
+        c->state++;
+        break;
+    case 1:
+        if (CampMenuAnyPanelBusy() == 0) {
+            fn_80180414();
+            c->state++;
+        } else if (fn_801C09F8(lbl_80347154, 0x11) != 0 || fn_801C09F8(lbl_80347154, 0x10) != 0) {
+            CampMenuFinishAllPanels();
+            fn_80180414();
+            c->state++;
+        }
+        break;
+    case 2:
+        fn_80180694(c->f44, 0);
+        c->state++;
+        break;
+    case 3:
+        if (CampMenuAnyPanelBusy() == 0) {
+            c->state++;
+        } else if (fn_801C09F8(lbl_80347154, 0x11) != 0 || fn_801C09F8(lbl_80347154, 0x10) != 0) {
+            CampMenuFinishAllPanels();
+            c->state++;
+        }
+        break;
+    case 4:
+        c->state = 0;
+        c->f6c = 2;
+        break;
+    }
 }

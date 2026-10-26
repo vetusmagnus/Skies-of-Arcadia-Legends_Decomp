@@ -49,6 +49,15 @@ void fn_801C5B98(u8 *o)
     }
 }
 
+typedef struct Obj12 {
+    u8 pad_00[0x12];
+    u16 v12;
+} Obj12;
+BOOL fn_801C5E80(void *unused, Obj12 *p)
+{
+    return p->v12 == 1;
+}
+
 u32 fn_801C5F40(u8 *o, u32 n)
 {
     u8 *p;
@@ -156,6 +165,18 @@ float fn_801C60C8(float a, float b)
         return s;
     }
     return -1.0f;
+}
+
+extern u32 lbl_803471D0;
+s32 fn_801C621C(void) {
+    return lbl_803471CC;
+}
+
+void fn_801C62D8(void) {
+    lbl_803471D0 = 0;
+}
+
+void fn_801C78B4(void) {
 }
 
 void fn_801C78B8(void)

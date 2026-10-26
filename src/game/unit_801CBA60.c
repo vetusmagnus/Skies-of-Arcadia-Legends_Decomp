@@ -28,6 +28,28 @@ void fn_801CBA60(float a, float c)
     lbl_8030E7C0[i].c = c;
 }
 
+typedef struct Msg {
+    s16 x0;
+    s16 x2;
+    s16 x4;
+    s16 x6;
+    s32 x8;
+    s32 xc;
+} Msg;
+extern void fn_801CBC90(Msg*, s16);
+extern u32 lbl_803471F8;
+void fn_801CBBF8(void) {
+    lbl_803471F8 = 1;
+}
+
+void fn_801CBC04(void) {
+    lbl_803474F8 = 0;
+}
+
+void fn_801CBC10(Msg* a, s16 i) {
+    fn_801CBC90(a, i);
+}
+
 u32 fn_801CC0A0(u32 *o)
 {
     u32 v;
@@ -37,6 +59,16 @@ u32 fn_801CC0A0(u32 *o)
     v = o[1];
     fn_801E1718(o);
     return v;
+}
+
+extern void fn_801CBE38(Msg*, s16);
+void fn_801CC3A4(Msg* a, s16 i) {
+    fn_801CBE38(a, i);
+}
+
+extern void fn_8023AB28(Msg*, s16);
+void fn_801CC578(Msg* a, s16 i) {
+    fn_8023AB28(a, i);
 }
 
 s32 fn_801CC5BC(void)
@@ -73,4 +105,19 @@ void fn_801CC600(u8 *p, u32 v) {
 
 u32 fn_801CC62C(void) {
     return fn_8023A4B0() != -1;
+}
+
+extern void fn_801C6384(Msg*, s16);
+void fn_801CC65C(Msg* a, s16 i) {
+    fn_801C6384(a, i);
+}
+
+extern void fn_801C63EC(Msg*, s16);
+void fn_801CC67C(Msg* a, s16 i) {
+    fn_801C63EC(a, i);
+}
+
+extern void fn_801C64DC(Msg*, s16);
+void fn_801CC69C(Msg* a, s16 i) {
+    fn_801C64DC(a, i);
 }

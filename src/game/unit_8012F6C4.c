@@ -318,6 +318,10 @@ void fn_80130304(s8 v) {
     *(s16*)(p + 0xa4) = v;
 }
 
+void fn_80130368(void) {
+    ((u8*)lbl_80346F40)[0x19] = 2;
+}
+
 void fn_80131598(u8 v) {
     u8* p = *(u8**)((u8*)lbl_80346F48 + 0x24);
     p[0xad] = v;
@@ -340,6 +344,14 @@ void fn_8013160C(s8 a, s8 b, u8 v) {
 void fn_80131630(s8 a, s8 b, u8 v) {
     u8* arr = *(u8**)((u8*)lbl_80346F48 + 0x24);
     arr[(s32)a * 16 + (s32)b * 4 + 0x9] = v;
+}
+
+void fn_801316CC(void) {
+    ((u8*)lbl_80346F48)[0x19] = 2;
+}
+
+void fn_801323F0(void) {
+    ((u8*)lbl_80346F50)[0x19] = 2;
 }
 
 void fn_80133030(s32* src) {
@@ -405,6 +417,10 @@ void fn_801330FC(u8 v) {
     *(u8*)(*(u8**)((u8*)p + 0x24) + 0x2) = v;
 }
 
+void fn_80133144(void) {
+    ((u8*)lbl_80346F58)[0x19] = 2;
+}
+
 void* fn_8013558C(void) {
     return lbl_80305FC0;
 }
@@ -416,6 +432,11 @@ s32 fn_801380D4(u8* p) {
 
 s32 fn_801380E4(void* a, s32 b) {
     return fn_80136A28(a, b, 6, -1, -1, -1);
+}
+
+s32 fn_801383DC(u8* p) {
+    p[0x1] = 0;
+    return 2;
 }
 
 s32 fn_801383EC(void* a, s32 b, s32 c) {
@@ -879,6 +900,21 @@ void fn_8012F75C(void) {
     (*(Obj_8012F75C **)&lbl_80346F38)->x24->w14[7] = 0;
 }
 
+s32 fn_80138920(s16* a, s16* b) {
+    s16 bv = b[1];
+    return a[1] - bv;
+}
+
+s32 fn_80139A94(u8* p) {
+    p[0x1] = 0;
+    return 2;
+}
+
+s32 fn_8013A310(u8* p) {
+    p[0x1] = 0;
+    return 2;
+}
+
 void fn_8013A35C(s32 a, s32 lo, s32 v, s32 hi) {
     extern void fn_80131658(Cell_8013A35C *c);
     extern void fn_8013160C(s8 x, s8 y, s32 z);
@@ -1036,4 +1072,9 @@ void fn_80132458(Task_80132458 *t) {
         t->flags |= 0x40;
         break;
     }
+}
+
+s32 fn_8013D3F0(u8* p) {
+    p[0x1] = 0;
+    return 2;
 }

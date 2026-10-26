@@ -414,6 +414,9 @@ void fn_8008F288(s16 slot, s16 id, s32 value) {
     e->value = value;
 }
 
+void fn_8008F75C(void) {
+}
+
 u32 fn_8008F980(void) {
     u32 v = lbl_80347494;
     lbl_80347494 = v + 1;
@@ -431,9 +434,37 @@ s32 fn_8008FC48(void) {
     return lbl_80346C28;
 }
 
+void fn_800906E8(Xform* o) {
+    fn_80299040(o->texlist);
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    njTranslate(0, o->tx, o->ty, o->tz);
+    njRotateXYZ(0, o->rx, o->ry, o->rz);
+    njScale(0, o->sx, o->sy, o->sz);
+    fn_802872D4(o->obj);
+    njPopMatrixEx();
+}
+
 s32 fn_80090D78(void) {
     fn_800E3594();
     return lbl_80346DD4;
+}
+
+typedef struct Msg {
+    s16 x0;
+    s16 x2;
+    s16 x4;
+    s16 x6;
+    s32 x8;
+    s32 xc;
+} Msg;
+extern void fn_800E36B0(Msg*, s16);
+void fn_80090D9C(Msg* a, s16 i) {
+    fn_800E36B0(a, i);
+}
+
+void fn_80090EE8(void) {
 }
 
 void fn_80090F9C(Angle *out, NJS_POINT3 *a, NJS_POINT3 *b) {

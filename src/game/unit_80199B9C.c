@@ -1386,6 +1386,9 @@ void fn_801A289C(void) {
     lbl_80347180 = 0;
 }
 
+void fn_801A28A8(void) {
+}
+
 s32 fn_801A28AC(s32 obj) {
     s32 r;
     fn_801DC214();
@@ -1420,6 +1423,12 @@ void fn_801A471C(s32 idx) {
     u8* p = lbl_803081CC + idx * 0x50;
     *(u32*)(p + 0xC) = 0;
     *(u32*)(p + 0x10) = 0;
+}
+
+extern void *lbl_80346720;
+extern void fn_80005AD8(void *p, void *q);
+void fn_801A49B8(void *p) {
+    fn_80005AD8(lbl_80346720, p);
 }
 
 void *fn_801A4AF4(void *obj) {
@@ -1495,6 +1504,34 @@ void fn_801AB98C(Obj_UNIT0000 *o)
     o->sub->f8 = 0.0f;
 }
 
+extern void fn_801AC678(void);
+Task3_801ACC00* fn_801ACD38(void* arg, u16 slot) {
+    Task3_801ACC00* t = fn_802267AC(arg, fn_801AC678);
+    t->a = fn_801E1A74(1, 0x58);
+    t->pan = fn_801E1A74(1, 0x6c);
+    t->c = fn_801E1A74(1, 0x20);
+    t->d = fn_801E1A74(1, 0x18);
+    t->f2C = 0;
+    t->a->slot = slot;
+    t->c->b1E = 4;
+    t->c->b1F = 3;
+    t->c->s18 = 0;
+    t->c->s1A = 0;
+    t->pan->ui.alpha_en = 0;
+    ((u8*)t->a)[0] = 0;
+    t->pan->ui.x = 648.0f;
+    t->pan->ui.tx = 648.0f;
+    t->pan->ui.y = 38.0f;
+    t->pan->ui.ty = 38.0f;
+    t->pan->ui.rdx = 0.0f;
+    t->pan->ui.rdy = 0.0f;
+    *(f32*)((u8*)t->pan + 0x38) = 1.0f;
+    t->pan->ui.alpha = 1.0f;
+    t->pan->ui.z = -4500.0f;
+    UiObjSetLowered(&t->pan->ui);
+    return t;
+}
+
 void fn_801B6400(u32 v) {
     u8* p = *(u8**)((u8*)lbl_803471B8 + 0x24);
     u8* q = *(u8**)(p + 0x214);
@@ -1518,6 +1555,71 @@ u32 fn_801B94F0(void)
 void fn_801BCFAC(u8* obj, s32 idx) {
     s32 j = *(s32*)(*(u8**)(obj + 4) + idx * 0x34);
     *(f32*)(*(u8**)obj + j * 0x14 + 0xC) = 0.59f;
+}
+
+extern const char lbl_802C39A0[];
+extern void* fn_801E49D8(const char* name);
+extern void* lbl_803471B0;
+extern s32 fn_801E4974(void* h, s32 i);
+extern s32 fn_801E48A8(void* h);
+extern void* fn_801E4984(void* h, s32 i);
+extern void* fn_801E1584(void* h, s32 size);
+extern void** fn_801DB124(void* p);
+extern void* lbl_803471B4;
+extern void* lbl_803471AC;
+extern void fn_801D6998(void* dst, void* src);
+extern void* lbl_803471A8;
+typedef struct {
+    u8 pad00[0x20];
+    void* x20;
+} Sub20;
+typedef struct {
+    u8 pad00[4];
+    Sub20* x4;
+} Obj4;
+void fn_801BD5A4(void)
+{
+    if (lbl_803471A8 != 0) {
+        fn_801D6944(lbl_803471A8);
+        fn_801E17E0(lbl_803471A8);
+        lbl_803471A8 = 0;
+    }
+    if (lbl_803471AC != 0) {
+        fn_801D6944(lbl_803471AC);
+        fn_801E17E0(lbl_803471AC);
+        lbl_803471AC = 0;
+    }
+    if (lbl_803471B4 != 0) {
+        fn_802275A4(((Obj4*)lbl_803471B4)->x4->x20, 0);
+        fn_801E17E0(lbl_803471B4);
+        lbl_803471B4 = 0;
+    }
+    if (lbl_803471B0 != 0) {
+        fn_801E17E0(lbl_803471B0);
+        lbl_803471B0 = 0;
+    }
+}
+
+void fn_801BD644(void) {
+    s32 b;
+    void* buf;
+    s32 a;
+    void* src;
+    void* s0;
+    lbl_803471B0 = fn_801E49D8(lbl_802C39A0);
+    a = fn_801E4974(lbl_803471B0, 2);
+    b = fn_801E48A8(lbl_803471B0);
+    buf = fn_801E1C7C(a);
+    src = fn_801E4984(lbl_803471B0, 2);
+    MemCopy(buf, src, a);
+    lbl_803471B0 = fn_801E1584(lbl_803471B0, b - a);
+    lbl_803471B4 = fn_801DB124(buf);
+    fn_80227810(*(void**)((u8*)((void**)lbl_803471B4)[1] + 0x20));
+    lbl_803471AC = fn_801E1C7C(0x14);
+    s0 = fn_801E4984(lbl_803471B0, 0);
+    fn_801D6998(lbl_803471AC, s0);
+    lbl_803471A8 = fn_801E1C7C(0x14);
+    fn_801D6998(lbl_803471A8, fn_801E4984(lbl_803471B0, 1));
 }
 
 void fn_801BEAE4(void* a, s32 b) {
@@ -4011,4 +4113,24 @@ void fn_801A0C3C(Self_801A0C3C *o) {
         UiObjSetCommand(o->ctx->objs[1]->obj, 0xf, 0);
         o->state = 0xb;
     }
+}
+
+Task_801B6240* fn_801B6320(void* a, f32 x)
+{
+    Task_801B6240* o = fn_802267AC(a, fn_801B5FA8);
+    o->p24 = fn_801E1A74(1, 0x58);
+    o->p28 = fn_801E1A74(1, 0x6c);
+    o->w2c = 0;
+    o->p24[0] = 0;
+    o->p28->alpha_en = 0;
+    o->p28->x = 640.0f;
+    o->p28->tx = 640.0f;
+    o->p28->y = 480.0f;
+    o->p28->ty = 480.0f;
+    o->p28->rdx = 0.0f;
+    o->p28->rdy = 0.0f;
+    o->p28->alpha = 1.0f;
+    o->p28->z = x;
+    UiObjSetLowered((UiObj*)o->p28);
+    return o;
 }

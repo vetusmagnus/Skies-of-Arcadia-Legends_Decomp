@@ -2518,6 +2518,53 @@ void fn_800C1A34(s32 a, s32 b, s32 c, s32 d) {
     lbl_803473D8 = d;
 }
 
+typedef struct Msg {
+    s16 x0;
+    s16 x2;
+    s16 x4;
+    s16 x6;
+    s32 x8;
+    s32 xc;
+} Msg;
+extern void fn_800C2A88(Msg*, s16);
+void fn_800C285C(Msg* a, s16 i) {
+    fn_800C2A88(a, i);
+}
+
+f32 fn_800C287C(Arg_800C2650 *a)
+{
+    extern void *lbl_803470E8;
+    extern void *lbl_803470F0;
+    extern void *lbl_803470F4;
+    extern Spr_800C2650 *fn_801D68C4(void *bank, s32 n);
+    extern void fn_801D4F0C(Spr_800C2650 *s, s32 a, s32 b, s32 c, f32 f1, f32 f2, f32 f3, f32 f4);
+    extern void fn_801D52A8(Spr_800C2650 *s, s32 a, s32 b, f32 f1, f32 f2, f32 f3, f32 f4);
+    f32 x = a->f0;
+    Spr_800C2650 *s;
+
+    s = fn_801D68C4(lbl_803470F0, 0x51);
+    s->f14 = a->h4;
+    s->f18 = a->h6;
+    fn_801D4F0C(s, 0, 0, 1, x, 0.0f, a->fc, a->f8);
+    x += 10.0f;
+    s = fn_801D68C4(lbl_803470E8, 7);
+    s->f14 = a->h4;
+    s->f18 = a->h6;
+    fn_801D4F0C(s, 0, 0, 0, x, 0.0f, a->fc, a->f8);
+    x += 100.0f;
+    s = fn_801D68C4(lbl_803470F0, 0x54);
+    s->f14 = a->h4;
+    s->f18 = a->h6;
+    fn_801D4F0C(s, 0, 0, 1, x, 0.0f, a->fc, a->f8);
+    x += 20.0f;
+    s = fn_801D68C4(lbl_803470F4, 0x47);
+    s->f14 = a->h4;
+    s->f18 = a->h6;
+    fn_801D52A8(s, 0, 0, x, 0.0f, a->fc, a->f8);
+    x += 20.0f;
+    return x;
+}
+
 s32 fn_800C34C8(Obj_800C34C8 *obj) {
     Sub_800C34C8 *s = obj->f1c8;
     if (s != NULL && s->f20 != NULL && s->f20->f4 != 0) {
@@ -2534,6 +2581,14 @@ s32 fn_800C3518(Obj_800C3518 *obj) {
         return 1;
     }
     return 0;
+}
+
+void fn_800C6FD8(void) { fn_800C79C4(); }
+
+void fn_800C6FF8(void) { fn_800C79C4(); }
+
+void fn_800C7378(void* p) {
+    fn_80100B74(p);
 }
 
 int fn_800C7DD4(void) {
@@ -2697,6 +2752,15 @@ void fn_800D2CA8(u8 v) {
 
 void fn_800D2CB8(u8 v) {
     lbl_80305BA8[0] = v;
+}
+
+extern void fn_800D4690(Msg*, s16);
+void fn_800D4944(Msg* a, s16 i) {
+    fn_800D4690(a, i);
+}
+
+void fn_800D4964(Msg* a, s16 i) {
+    fn_800D4690(a, i);
 }
 
 void *fn_800D5184(s16 *tbl, s16 idx) {
@@ -6689,4 +6753,14 @@ void fn_800CD72C(Obj_800CD72C* o) {
         fn_800C3428((void *)o);
         break;
     }
+}
+
+void fn_800C2F2C(void) { fn_800C2F4C(); }
+
+void fn_800C7018(void* p) {
+    fn_800C7058(p);
+}
+
+void fn_800C7038(void* p) {
+    fn_800C7058(p);
 }

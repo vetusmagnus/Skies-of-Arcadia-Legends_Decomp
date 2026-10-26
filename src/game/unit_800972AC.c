@@ -858,6 +858,11 @@ void fn_80097660(void)
     lbl_80346750 = 1;
 }
 
+void fn_800976EC(void)
+{
+    lbl_80346C3C = 1;
+}
+
 void fn_80097AFC(void)
 {
     lbl_803473F8 = 0;
@@ -899,6 +904,22 @@ s32 fn_8009B5D4(s32 unused, Obj8009B5D4 *obj, Entry8009B5D4 *e, s16 arg) {
 u32 fn_8009C50C(void *unused, Obj10 *p)
 {
     return (p->v10 >> 14) & 1;
+}
+
+typedef struct Msg {
+    s16 x0;
+    s16 x2;
+    s16 x4;
+    s16 x6;
+    s32 x8;
+    s32 xc;
+} Msg;
+extern void fn_801E7E14(Msg*, s16);
+void fn_8009CBB8(void) {
+}
+
+void fn_8009D274(Msg* a, s16 i) {
+    fn_801E7E14(a, i);
 }
 
 void fn_8009D67C(Obj8009D67C *o, s32 idx) {
@@ -1064,6 +1085,9 @@ void fn_800ABE9C(ObjA_800ABE9C *a)
     ObjB_800ABE9C *b = a->obj_24;
     b->flag_1fb = 1;
     a->state_19 = 1;
+}
+
+void fn_800ABEB0(void) {
 }
 
 void fn_800AC44C(ObjA_800AC44C *a)

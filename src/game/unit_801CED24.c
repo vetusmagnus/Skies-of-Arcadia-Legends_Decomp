@@ -192,6 +192,23 @@ void fn_801CF090(u32 a, u32 b, f32 d, u32 c)
     fn_801CF248();
 }
 
+extern u32 lbl_80347224;
+void fn_801D0B2C(void) {
+    lbl_80347224 = 0;
+}
+
+void fn_801D0B38(s32 v) {
+    lbl_80347224 = v;
+}
+
+s32 fn_801D0B40(void) {
+    return lbl_80347220;
+}
+
+void fn_801D0B48(s32 v) {
+    lbl_80347220 = v;
+}
+
 void fn_801D0B50(s32 delta)
 {
     s32 cur;
@@ -265,4 +282,13 @@ void fn_801D1420(void) {
 void fn_801D142C(u8 v)
 {
     lbl_80346820 = v;
+}
+
+extern u32 lbl_80347268;
+void fn_801D14F8(void) {
+    lbl_80347268 = 0;
+}
+
+s32 fn_801D1504(void) {
+    return lbl_80347268;
 }

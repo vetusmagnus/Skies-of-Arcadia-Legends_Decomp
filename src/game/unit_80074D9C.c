@@ -456,6 +456,24 @@ extern void fn_8007B5B0(void);
 extern void fn_8007A890(void);
 extern void fn_8007BEB4(void);
 
+typedef struct Msg {
+    s16 x0;
+    s16 x2;
+    s16 x4;
+    s16 x6;
+    s32 x8;
+    s32 xc;
+} Msg;
+extern void fn_80075060(Msg*, s16);
+void fn_80075040(Msg* a, s16 i) {
+    fn_80075060(a, i);
+}
+
+extern void fn_8007578C(Msg*, s16);
+void fn_8007576C(Msg* a, s16 i) {
+    fn_8007578C(a, i);
+}
+
 void fn_80075D24(Top *t) {
   Inner *i = t->mid->inner;
   if (i->f68 == 0.0f) {
@@ -575,6 +593,70 @@ void fn_8007E414(s32 on) {
   }
 }
 
+typedef struct E0D8Anim {
+    u16 cur;
+    u16 end;
+    s16 sub;
+    u8 pad6[2];
+    u32 val;
+    u8 mat[0x14];
+    void *p20;
+    u8 pad24[8];
+    void *p2c;
+} E0D8Anim;
+typedef struct E0D8Obj {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 state;
+    u8 pad1A[10];
+    struct { void *p0; u8 pad4[0x48]; E0D8Anim *anim; } *inner;
+} E0D8Obj;
+extern void fn_80230634(void *, void *);
+extern void fn_80230280(void *, void *);
+extern s32 fn_800179E4(s16);
+extern void fn_8022FDA0(f32, void *, void *);
+extern void fn_801E17E0(void* p);
+void fn_8007E4F8(E0D8Obj *obj) {
+    E0D8Anim *a;
+    void *p;
+    p = obj->inner->p0;
+    a = obj->inner->anim;
+    if (p == 0) {
+        obj->state = 3;
+    }
+    switch (obj->state) {
+    case 0:
+        if (a->cur >= a->end) {
+            obj->state = 1;
+            a->val = *(u32 *)((u8 *)p + 4);
+        } else {
+            a->cur = a->cur + 1;
+        }
+        break;
+    case 1:
+        fn_80230634(p, a->mat);
+        fn_80230280(p, a->mat);
+        obj->state = 2;
+        break;
+    case 2:
+        if (a->sub >= 0 && fn_800179E4(a->sub) == 0) {
+            obj->state = 3;
+        }
+        fn_8022FDA0((f32)a->cur, p, a->mat);
+        a->cur += 1.0f;
+        break;
+    case 3:
+        if (a->p20 != 0) {
+            fn_801E17E0(a->p20);
+        }
+        if (a->p2c != 0) {
+            fn_801E17E0(a->p2c);
+        }
+        obj->flags |= 0x40;
+        break;
+    }
+}
+
 void fn_8007E678(s32 a, u32* b) {
     b[0] |= 0x800;
     b[2] = 0x800;
@@ -612,8 +694,16 @@ void fn_8008210C(void) {
     fn_80081FEC(lbl_80347334);
 }
 
+void fn_80088F60(void) {
+}
+
 void fn_8008999C(void* a) {
     fn_80083BAC((s32)a, 3);
+}
+
+extern void fn_80083ACC(s16 id, u32 kind);
+void fn_8008A150(s16 p) {
+    fn_80083ACC(p, 1);
 }
 
 s32 fn_8008A880(s32 i) {

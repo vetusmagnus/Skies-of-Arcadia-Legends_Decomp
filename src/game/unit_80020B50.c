@@ -42,10 +42,28 @@ void fn_80021784(Top *t) {
   fn_8002E5D0(t);
 }
 
+void fn_80022A9C(void) {
+    ((u8*)lbl_80346BA0)[0x19] = 2;
+}
+
 void fn_80022AAC(void *p) {
   lbl_80346BA0 = fn_802268E8(lbl_803475A8, fn_80022B04);
   ((Holder *)lbl_80346BA0)->ptr = fn_801E1C7C(4);
   *(void **)((Holder *)lbl_80346BA0)->ptr = p;
+}
+
+typedef struct {
+    u8 pad0[0x24];
+    void *tab;
+} Mgr_800C8F3C;
+extern Mgr_800C8F3C *lbl_80346BA4;
+void fn_80022F0C(void) {
+    ((u8*)lbl_80346BA4)[0x19] = 2;
+}
+
+extern Mgr_800C8F3C *lbl_80346BA8;
+void fn_80023D04(void) {
+    ((u8*)lbl_80346BA8)[0x19] = 2;
 }
 
 void fn_80029070(void) {

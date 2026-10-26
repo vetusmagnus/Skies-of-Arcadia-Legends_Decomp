@@ -2020,6 +2020,11 @@ void fn_800E0A8C(TgtObj* obj) {
     obj->tgt[2] = 0;
 }
 
+extern char lbl_802B1700[];
+void fn_800E0AA8(void* p) {
+    fn_800DF74C(p, lbl_802B1700);
+}
+
 s32 fn_800E0AD0(s32 mode, s32 a, s32 b) {
     s32 ret = 0;
     if (a > 0) {
@@ -2060,6 +2065,9 @@ void fn_800E28D4(f32 *src, u32 *cfg) {
     c = cfg[2];
     lbl_80346DB4 = 0xFF000000 | ((a & 0xFF) << 16) | ((b & 0xFF) << 8) | (c & 0x00FF0000);
     lbl_80346DB8 = 1;
+}
+
+void fn_800E3540(void) {
 }
 
 void fn_800E3544(void) {
@@ -2120,9 +2128,26 @@ void fn_800FF4B0(void) {
     }
 }
 
+typedef struct Msg {
+    s16 x0;
+    s16 x2;
+    s16 x4;
+    s16 x6;
+    s32 x8;
+    s32 xc;
+} Msg;
+extern void fn_80123E9C(Msg*, s16);
+void fn_800FF780(Msg* a, s16 i) {
+    fn_80123E9C(a, i);
+}
+
 void fn_800FF9FC(void) {
     lbl_80311AD4[6] = 15;
     lbl_80346E48 = 1;
+}
+
+void fn_80100150(void* p) {
+    fn_801004C4(p, lbl_80305CF0);
 }
 
 void fn_801003F4(void* p) {
@@ -2147,8 +2172,27 @@ void fn_80100684(s32 a, s32 b) {
     fn_801E1AC8((u16)lbl_80311AC0.w4, lbl_80311AC0.room, a, b);
 }
 
+void fn_801006C0(void* p) {
+    fn_800D2924(p);
+}
+
+extern void fn_800D2C60(Msg*, s16);
+void fn_801006E0(Msg* a, s16 i) {
+    fn_800D2C60(a, i);
+}
+
+extern void fn_800D2C74(Msg*, s16);
+void fn_80100700(Msg* a, s16 i) {
+    fn_800D2C74(a, i);
+}
+
 void fn_80100720(s8 x) {
     fn_800D2CA8(x);
+}
+
+extern void fn_800D2CB8(s32 x);
+void fn_80100744(s8 x) {
+    fn_800D2CB8(x);
 }
 
 void fn_80101060(void* p, s32 a, s32 b) {
@@ -2157,6 +2201,21 @@ void fn_80101060(void* p, s32 a, s32 b) {
 
 void fn_8010108C(s32 a, s32 b, s32 c) {
     fn_80100E68((void*)0, a, b, c);
+}
+
+extern void fn_801073B4(Msg*, s16);
+s32 fn_801010C4(void) {
+    return lbl_80346E44;
+}
+
+void fn_80108C9C(void) {
+}
+
+void fn_80108CA0(void) {
+}
+
+void fn_80108CA4(Msg* a, s16 i) {
+    fn_801073B4(a, i);
 }
 
 void fn_801097F8(s32 a, s32 b, s32 c) {
@@ -6384,4 +6443,8 @@ void fn_8010C0E4(Obj_8010C0E4 *o, Src_8010C0E4 *n)
         o->flags |= 0x1000;
         o->flags &= 0xFFDF;
     }
+}
+
+void fn_8010B238(void* p) {
+    fn_8010B038(p);
 }

@@ -44,6 +44,10 @@ void fn_801F5334(s8 n) {
     }
 }
 
+s32 fn_801F58B0(void) {
+    return 1;
+}
+
 s32 fn_801F5CCC(s32 unused, CmdStream *st) {
     u8 *p = st->cur;
     u32 v;
@@ -58,12 +62,40 @@ s32 fn_801F5CCC(s32 unused, CmdStream *st) {
     return 0;
 }
 
+extern void fn_801DBE1C(const char *fmt, ...);
+int fn_801F60F0(void) {
+    fn_801DBE1C("scptSTUB: code error!");
+    return 0;
+}
+
 s32 fn_801F7CD8(u32 a, CmdStream *st) {
     u16 f = a;
     if (a & 1) {
         u8 *c = st->cur;
         st->cur = c + 4;
         fn_800B0900(c);
+    }
+    if (f & 8) return 1;
+    return 0;
+}
+
+s32 fn_801F95C0(u32 a, CmdStream *st) {
+    u16 f = a;
+    if (a & 1) {
+        u8 *c = st->cur;
+        st->cur = c + 4;
+        fn_80217CB0(c);
+    }
+    if (f & 8) return 1;
+    return 0;
+}
+
+s32 fn_801F9614(u32 a, CmdStream *st) {
+    u16 f = a;
+    if (a & 1) {
+        u8 *c = st->cur;
+        st->cur = c + 4;
+        fn_80217B98(c);
     }
     if (f & 8) return 1;
     return 0;
@@ -88,6 +120,56 @@ s32 fn_801FDA70(u32 a, CmdStream *st) {
     return 0;
 }
 
+s32 fn_801FEB08(u32 a, CmdStream *st) {
+    if (a & 1) {
+        u8 *c = st->cur;
+        st->cur = c + 4;
+        fn_801F3148(c);
+    }
+    return 0;
+}
+
+s32 fn_801FEB40(u32 a, CmdStream *st) {
+    if (a & 1) {
+        u8 *c = st->cur;
+        st->cur = c + 4;
+        fn_801F35A0(c);
+    }
+    return 0;
+}
+
+s32 fn_801FED04(u32 a, CmdStream *st) {
+    if (a & 1) {
+        u8 *c = st->cur;
+        st->cur = c + 4;
+        fn_800FF7A0(c);
+    }
+    return 0;
+}
+
+s32 fn_801FEDC8(void) {
+    return 1;
+}
+
+int fn_801FEEE8(void) {
+    fn_801DBE1C("scptDELL BG: SYNTAX ERROR!!!");
+    return 0;
+}
+
+int fn_801FEF18(void) {
+    fn_801DBE1C("scptINS BG: SYNTAX ERROR!!!");
+    return 0;
+}
+
+s32 fn_801FEF48(u32 a, CmdStream *st) {
+    if (a & 1) {
+        u8 *c = st->cur;
+        st->cur = c + 4;
+        fn_800FFA18(c);
+    }
+    return 0;
+}
+
 s32 fn_801FF0F8(u32 a, CmdStream *st) {
     if (a & 1) {
         u8 *c = st->cur;
@@ -96,6 +178,11 @@ s32 fn_801FF0F8(u32 a, CmdStream *st) {
         st->cur = q + 4;
         fn_801003F4(q + off);
     }
+    return 0;
+}
+
+int fn_801FF1E0(void) {
+    fn_801DBE1C("scptKill: SYNTAX ERROR!!!");
     return 0;
 }
 
@@ -128,6 +215,10 @@ s32 fn_80207368(u32 a, CmdStream *st) {
     return 0;
 }
 
+s32 fn_8020A72C(void) {
+    return 0;
+}
+
 void fn_8020EEE8(s8 id) {
     void *r = fn_80217FF4(id);
     if (r) {
@@ -147,6 +238,16 @@ s32 fn_802138A0(u32 a, CmdStream *st) {
     return 1;
 }
 
+s32 fn_802138E0(u32 a, CmdStream *st) {
+    if (a & 1) {
+        u8 *c = st->cur;
+        st->cur = c + 4;
+        fn_80142CD8(c);
+        return 0;
+    }
+    return 1;
+}
+
 s32 fn_80214908(u32 a, CmdStream *st) {
     if (a & 1) {
         u8 *c = st->cur;
@@ -157,6 +258,98 @@ s32 fn_80214908(u32 a, CmdStream *st) {
         return 0;
     }
     return 1;
+}
+
+s32 fn_80214954(u32 a, CmdStream *st) {
+    if (a & 1) {
+        u8 *c = st->cur;
+        st->cur = c + 4;
+        fn_80147DF8(c);
+        return 0;
+    }
+    return 1;
+}
+
+s32 fn_80214994(u32 a, CmdStream *st) {
+    if (a & 1) {
+        u8 *c = st->cur;
+        u8 *q = c + 4;
+        u32 off = *(u32 *)(c + 4);
+        st->cur = q + 4;
+        fn_80147E2C(q + off);
+        return 0;
+    }
+    return 1;
+}
+
+s32 fn_802149E0(u32 a, CmdStream *st) {
+    if (a & 1) {
+        u8 *c = st->cur;
+        st->cur = c + 4;
+        fn_80148108(c);
+        return 0;
+    }
+    return 1;
+}
+
+s32 fn_80214A20(u32 a, CmdStream *st) {
+    if (a & 1) {
+        u8 *c = st->cur;
+        st->cur = c + 4;
+        fn_80148124(c);
+        return 0;
+    }
+    return 1;
+}
+
+s32 fn_80214A60(u32 a, CmdStream *st) {
+    if (a & 1) {
+        u8 *c = st->cur;
+        st->cur = c + 4;
+        fn_80148160(c);
+        return 0;
+    }
+    return 1;
+}
+
+s32 fn_8021503C(u32 a, CmdStream *st) {
+    if (a & 1) {
+        u8 *c = st->cur;
+        st->cur = c + 4;
+        fn_80148190(c);
+        return 0;
+    }
+    return 1;
+}
+
+s32 fn_8021507C(u32 a, CmdStream *st) {
+    if (a & 1) {
+        u8 *c = st->cur;
+        st->cur = c + 4;
+        fn_801481B0(c);
+        return 0;
+    }
+    return 1;
+}
+
+s32 fn_802150BC(u32 a, CmdStream *st) {
+    if (a & 1) {
+        u8 *c = st->cur;
+        st->cur = c + 4;
+        fn_801481D0(c);
+        return 0;
+    }
+    return 1;
+}
+
+extern s32 lbl_803477E8;
+s32 fn_80215F8C(void) {
+    return 1;
+}
+
+s32 fn_80216CA4(void)
+{
+    return lbl_803477E8 == 0;
 }
 
 void fn_80216CD8(void) {
@@ -177,6 +370,9 @@ void fn_802172C8(void *obj, s8 a) {
         }
         fn_802173F4(obj, a, 0);
     }
+}
+
+void fn_80218D80(void) {
 }
 
 void fn_80218D84(void) {

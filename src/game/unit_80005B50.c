@@ -101,6 +101,87 @@ void* fn_80005B50(void* heap, u32 size) {
     return p;
 }
 
+typedef struct {
+    u32 keyframe;
+    f32 key[3];
+} NJS_MKEY_F;
+typedef void (*MotionInterpFn)(void* keys, u32 i, u32 nbKeys, void* out);
+typedef struct {
+    void** mdata;  /* 0x00 current node's channel data */
+    void** keys;   /* 0x04 key array pointers for the node */
+    void** counts; /* 0x08 key counts for the node */
+    f32 frame;     /* 0x0C */
+    u32 nbFrame;   /* 0x10 */
+    s32 unk14;
+    f32* matrix;   /* 0x18 extra matrix applied after each node, or NULL */
+    s32 unk1C;
+} MotionState;
+extern MotionState lbl_80316940;
+void fn_800068C4(NJS_MKEY_F* keys, u32 i, u32 nbKeys, f32* out) {
+    NJS_MKEY_F* k1 = &keys[i];
+    f32 div[2] = {1.0f, 1.0f};
+    NJS_MKEY_F* k0 = &keys[(i + nbKeys - 1) % nbKeys];
+    NJS_MKEY_F* k2 = &keys[(i + 1) % nbKeys];
+    NJS_MKEY_F* k3 = &keys[(i + 2) % nbKeys];
+    f32 t, t2, t3;
+    f32 c0, c1, c2, c3;
+
+    div[1] = (f32)(k2->keyframe - k1->keyframe);
+    t = (lbl_80316940.frame - (f32)k1->keyframe) / div[(s32)(k2->keyframe - k1->keyframe) > 0];
+    t2 = t * t;
+    t3 = t2 * t;
+    c0 = 0.5f * (-t3 + 2.0f * t2 - t);
+    c1 = 1.5f * t3 - 2.5f * t2 + 1.0f;
+    c2 = -1.5f * t3 + 2.0f * t2 + 0.5f * t;
+    c3 = 0.5f * (t3 - t2);
+    out[0] = c0 * k0->key[0] + c1 * k1->key[0] + c2 * k2->key[0] + c3 * k3->key[0];
+    out[1] = c0 * k0->key[1] + c1 * k1->key[1] + c2 * k2->key[1] + c3 * k3->key[1];
+    out[2] = c0 * k0->key[2] + c1 * k1->key[2] + c2 * k2->key[2] + c3 * k3->key[2];
+}
+
+extern void fn_802A9338(s32 a, s32 b, s32 c, void (*f)(void));
+void fn_800072A8(s32 a, s32 b, s32 c)
+{
+    fn_802A9338(a, b, c, fn_8028AB48);
+}
+
+extern void fn_80287C14(void);
+void fn_800072D0(s32 a, s32 b, s32 c)
+{
+    fn_802A9B94(a, b, c, fn_80287C14);
+}
+
+void fn_800072F8(s32 a, s32 b, s32 c)
+{
+    fn_802A9338(a, b, c, fn_80287C14);
+}
+
+extern void fn_802873BC(void);
+void fn_80007320(s32 a, s32 b, s32 c)
+{
+    fn_802A9B94(a, b, c, fn_802873BC);
+}
+
+void fn_80007348(s32 a, s32 b, s32 c)
+{
+    fn_802A9338(a, b, c, fn_802873BC);
+}
+
+extern void fn_802890A4(void);
+void fn_80007370(s32 a, s32 b, s32 c)
+{
+    fn_802A9B94(a, b, c, fn_802890A4);
+}
+
+void fn_80007398(s32 a, s32 b, s32 c)
+{
+    fn_802A9338(a, b, c, fn_802890A4);
+}
+
+void fn_80008170(void) {
+    fn_8023A8E0((s32)lbl_803478DC);
+}
+
 void fn_800091A4(s16* p) {
     s16 x = p[0];
     s16 y = p[1];
@@ -128,6 +209,10 @@ void fn_8000AA58(void) {
     lbl_80346AA0 = fn_801DB1A4(4);
     fn_80227810(PTR(PTR(lbl_80346AA0, 4), 0x20));
     fn_801DDD74(lbl_803474E4, 1);
+}
+
+s32 fn_8000ACE8(void) {
+    return 1;
 }
 
 f32 fn_8000ACF0(Vec3* v) {
@@ -168,6 +253,16 @@ void fn_80010538(s16 idx) {
     *(s16*)((u8*)q + 0xb4) += *(s16*)((u8*)q + 8);
 }
 
+extern void fn_80011208(s32 a, s32 b, s32 c);
+s32 fn_80010B5C(void) {
+    return 1;
+}
+
+void fn_80011370(s32 a, s32 b)
+{
+    fn_80011208(a, b, 0);
+}
+
 s32 fn_80014CC0(void* obj) {
     u8* p = PTR(PTR(obj, 0x24), 0x4c);
     s16 id = *(s16*)(p + 6);
@@ -193,6 +288,9 @@ s32 fn_800153A0(Pair* p) {
     return p->b > 1;
 }
 
+void fn_8001545C(void) {
+}
+
 s32 fn_80015828(const char* s) {
     if (s[0] == 'M' || s[0] == 'm') {
         if (s[1] == 'A' || s[1] == 'a') {
@@ -202,6 +300,9 @@ s32 fn_80015828(const char* s) {
         }
     }
     return 0;
+}
+
+void fn_80017320(void) {
 }
 
 void fn_80017778(void) {

@@ -23,3 +23,36 @@ void fn_8022D34C(s32 a, f32 b) {
 void fn_8022F00C(void *p) {
     fn_8022F64C(p, 0x4000);
 }
+
+extern void fn_801F01E4(void);
+extern void fn_801D6850(void);
+typedef struct Msg {
+    s16 x0;
+    s16 x2;
+    s16 x4;
+    s16 x6;
+    s32 x8;
+    s32 xc;
+} Msg;
+extern void fn_8022F050(Msg*, s16);
+void fn_8022F030(Msg* a, s16 i) {
+    fn_8022F050(a, i);
+}
+
+extern void fn_8023080C(Msg*, s16);
+void fn_802307EC(Msg* a, s16 i) {
+    fn_8023080C(a, i);
+}
+
+extern void fn_801D6890(Msg*, s16);
+void fn_80230F24(void) {
+}
+
+void fn_80230F28(Msg* a, s16 i) {
+    fn_801D6890(a, i);
+}
+
+void fn_80230F48(void) {
+    fn_801F01E4();
+    fn_801D6850();
+}

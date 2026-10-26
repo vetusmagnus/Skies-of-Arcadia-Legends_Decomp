@@ -447,6 +447,11 @@ void fn_8013D400(s32 a, s32 b) {
     fn_80136A28(a, b, 3, -1, -1, -1);
 }
 
+s32 fn_8013D708(u8* p) {
+    p[0x1] = 0;
+    return 2;
+}
+
 void fn_8013DB64(void) {
     fn_8013DA50(0, 1);
 }
@@ -457,6 +462,11 @@ s32 fn_8013DB8C(s32 a, s32 b) {
     if (b < 0) idx = n - 1;
     if (idx > n - 1) idx = 0;
     return idx;
+}
+
+s32 fn_8013F624(u8* p) {
+    p[0x1] = 0;
+    return 2;
 }
 
 void fn_8013F634(s32 a, s32 b) {
@@ -475,6 +485,11 @@ end:
     r = 2;
 out:
     return r;
+}
+
+s32 fn_8013F694(u8* p) {
+    p[0x1] = 0;
+    return 2;
 }
 
 void fn_801415C4(CountObj* o) {
@@ -506,8 +521,23 @@ s32 fn_80143274(void) {
     return (fn_8025ECC4() & 1) ^ 1;
 }
 
+s32 fn_8014329C(void) {
+    return fn_8025ECC4() % 5 == 0;
+}
+
+s32 fn_801432E4(void) {
+    return fn_8025ECC4() % 10 == 0;
+}
+
 s32 fn_8014332C(void) {
     return fn_8025ECC4() % 100 == 0;
+}
+
+s32 fn_80143374(void) {
+    return 1;
+}
+
+void fn_80144E5C(void) {
 }
 
 void fn_801463E4(IdxArg* a) {
@@ -542,6 +572,12 @@ void fn_80146480(IdxArg* a) {
     }
 }
 
+void fn_80147CC4(void) {
+}
+
+void fn_80147DC8(void) {
+}
+
 void fn_80147DCC(void) {
     fn_80100270();
     fn_801F7B04(0x10000 - 0x63C0);
@@ -550,6 +586,12 @@ void fn_80147DCC(void) {
 void fn_80147DF8(void) {
     fn_80100270(lbl_802E5E68);
     fn_801F7B04(0x10000 - 0x63C0);
+}
+
+void fn_80147EA4(void) {
+}
+
+void fn_80147EA8(void) {
 }
 
 void fn_80148108(void) {
@@ -570,6 +612,30 @@ void fn_80148160(void) {
     *(s32*)(lbl_8030CEA0 + 0x1614) = (s32)lbl_803472E0;
 }
 
+typedef struct Msg {
+    s16 x0;
+    s16 x2;
+    s16 x4;
+    s16 x6;
+    s32 x8;
+    s32 xc;
+} Msg;
+extern void fn_80129994(Msg*, s16);
+void fn_80148188(void) {
+}
+
+void fn_8014818C(void) {
+}
+
+void fn_80148190(Msg* a, s16 i) {
+    fn_80129994(a, i);
+}
+
+extern void fn_80129988(Msg*, s16);
+void fn_801481B0(Msg* a, s16 i) {
+    fn_80129988(a, i);
+}
+
 void fn_80148DDC(void) {
     if (lbl_803472CC != 0) {
         fn_801E17E0(lbl_803472CC);
@@ -587,6 +653,11 @@ void fn_801490F4(void) {
     void* p = fn_801E1A74(0x1f4, 4);
     lbl_80346F88 = p;
     memset(p, 0, 0x7d0);
+}
+
+void fn_8014E0B0(u8 *p) {
+    u8 *src = *(u8 **)(*(u8 **)(p + 0x1d8) + 0x8);
+    MemCopy(p + 0x38, src + 0x38, 0x24);
 }
 
 void fn_8014ED2C(Obj_UNIT0000* o) {

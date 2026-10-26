@@ -92,6 +92,10 @@ void fn_801D51C4(s32 a, s32 b, s32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
     fn_801D5A50(a, b, c, lbl_80347618->sub->val, 1.0f, 1.0f, p1, p2, p3, p4);
 }
 
+void fn_801D52A8(s32 a, s32 b, s32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
+    fn_801D5A50(a, b, c, lbl_80347614->sub->val, 1.0f, 1.0f, p1, p2, p3, p4);
+}
+
 void fn_801D668C(void) {
     if (lbl_80347614 != 0) {
         fn_802275A4(lbl_80347614->sub->val, 1);
@@ -115,6 +119,11 @@ void fn_801D6944(Thing *t) {
         fn_801E17E0(t->fc);
         t->fc = 0;
     }
+}
+
+extern s32 lbl_80347634;
+void fn_801D71BC(s32 v) {
+    lbl_80347634 = v;
 }
 
 void fn_801D7868(Quad *q, void *p, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6, f32 f7) {
@@ -147,6 +156,19 @@ void fn_801D78A8(Quad *q, void *p, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5) {
     q->f28 = b;
     q->f1c = f2;
     q->f2c = b;
+}
+
+typedef struct Msg {
+    s16 x0;
+    s16 x2;
+    s16 x4;
+    s16 x6;
+    s32 x8;
+    s32 xc;
+} Msg;
+extern void fn_80291424(Msg*, s16);
+void fn_801D8080(Msg* a, s16 i) {
+    fn_80291424(a, i);
 }
 
 void fn_801D9CF0(f32 f1, f32 f2, f32 f3) {
@@ -201,6 +223,17 @@ void fn_801DBA0C(void) {
     lbl_80312D00[15] = 0;
 }
 
+extern s32 lbl_803476D8;
+s32 fn_801DBCCC(void) {
+    return lbl_803476D8;
+}
+
+void fn_801DBE1C(s32 a, ...) {
+}
+
+void fn_801DBF90(void) {
+}
+
 void fn_801DD71C(void *dst) {
     s32 idx;
     if (lbl_8034754C > 0) {
@@ -209,6 +242,17 @@ void fn_801DD71C(void *dst) {
         if (dst != 0) {
             memcpy(dst, lbl_8030EA1C + idx * 0x40, 0x40);
         }
+    }
+}
+
+void fn_801DD7CC(void) {
+    lbl_8034754C = 0;
+}
+
+void fn_801DD95C(void *p)
+{
+    if (p != 0) {
+        fn_801E17E0(p);
     }
 }
 
@@ -223,6 +267,15 @@ void fn_801E06E0(Mo *o) {
     fn_8028B498();
     njUnitMatrix(0);
     fn_801E04E8(&o->m4, o->x48, o->x4c, &o->m2c);
+    njPopMatrixEx();
+}
+
+void fn_801E0CB8(Mo *o) {
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    njUnitMatrix(0);
+    fn_801E0AC0(&o->m4, o->x48, o->x4c, &o->m2c);
     njPopMatrixEx();
 }
 

@@ -716,6 +716,10 @@ void fn_80061F3C(f32 *src, f32 *dst) {
     dst[2] = src[2];
 }
 
+s32 fn_80065490(void) {
+    return 1;
+}
+
 void fn_800688C4(void *a, s16 idx, void *b, s8 v) {
     u8 *p = lbl_80309700[idx];
     *(s16 *)(*(u8 **)(p + 0x24) + 0x44) = v;
@@ -725,12 +729,30 @@ void fn_80069684(s16 a, void *b, s32 c) {
     fn_8006AFD0(a, b, (void *)c, 0);
 }
 
+void fn_80069CD8(void* a, s16 i, void* b, s8 v) {
+    WK_S32(i, 0x3c) = -1;
+    if (CHR_U32(i, 0x1c) & 0x6100) {
+        WK_S16(i, 0x44) = -1;
+    } else {
+        WK_S16(i, 0x44) = v;
+    }
+}
+
 void fn_8006B3C4(void *a, s16 idx) {
     u8 *p = lbl_80309DE4[idx];
     *(u32 *)(p + 0x1c) |= 1;
 }
 
 void fn_8006B3E8(void) {
+}
+
+void fn_8006B460(void) {
+}
+
+void fn_8006B464(void) {
+}
+
+void fn_8006B468(void) {
 }
 
 s32 fn_8006B670(s16 idx) {
@@ -782,6 +804,12 @@ void fn_8006CF28(u8 *a, u32 *out, s32 idx) {
 
 void fn_8006EA70(void) {
     fn_8006E924();
+}
+
+void fn_80071B98(f32 *a, f32 *b, f32 *out) {
+    out[0] = b[0] - a[0];
+    out[1] = b[1] - a[1];
+    out[2] = b[2] - a[2];
 }
 
 void fn_80071CBC(f32 *a, f32 *b) {
@@ -2287,4 +2315,13 @@ void fn_8006EB88(char *a, char *b, Out6EB88 *out) {
         out->f8 = fn_801DB244(buf);
     }
     fn_8006CF54(out);
+}
+
+void fn_80073D0C(void) {
+}
+
+void fn_80073D10(void) {
+}
+
+void fn_80073D14(void) {
 }

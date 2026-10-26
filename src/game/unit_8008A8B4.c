@@ -51,11 +51,41 @@ s32 fn_8008AAD8(s32 unused, Rec_8008AAD8* p)
     return p->x26 == 1;
 }
 
+s32 fn_8008ACD0(s32 i)
+{
+    Slot* e = lbl_80309DE4[i];
+    if (e->x10 & 0x100) {
+        e->x10 &= ~0x100;
+        return 1;
+    }
+    return 0;
+}
+
 s32 fn_8008AD6C(s32 i)
 {
     Slot* e = lbl_80309DE4[i];
     if (e->x10 & 0x2000) {
         e->x10 &= ~0x2000;
+        return 1;
+    }
+    return 0;
+}
+
+s32 fn_8008ADA0(s32 i)
+{
+    Slot* e = lbl_80309DE4[i];
+    if (e->x10 & 0x100) {
+        e->x10 &= ~0x100;
+        return 1;
+    }
+    return 0;
+}
+
+s32 fn_8008ADD4(s32 i)
+{
+    Slot* e = lbl_80309DE4[i];
+    if (e->x10 & 0x100) {
+        e->x10 &= ~0x100;
         return 1;
     }
     return 0;
@@ -69,6 +99,16 @@ s32 fn_8008AE08(s32 i)
 s32 fn_8008AE24(s32 i)
 {
     return (lbl_80309DE4[i]->x10 & 0x4000) != 0;
+}
+
+s32 fn_8008AE40(s32 i)
+{
+    Slot* e = lbl_80309DE4[i];
+    if (e->x10 & 0x2000) {
+        e->x10 &= ~0x2000;
+        return 1;
+    }
+    return 0;
 }
 
 s32 fn_8008AE74(s32 i)
@@ -101,6 +141,26 @@ s32 fn_8008AF0C(s32 i)
 s32 fn_8008AF28(s32 i)
 {
     return (lbl_80309DE4[i]->x10 & 0x200) != 0;
+}
+
+s32 fn_8008AF44(s32 i)
+{
+    Slot* e = lbl_80309DE4[i];
+    if (e->x10 & 0x100) {
+        e->x10 &= ~0x100;
+        return 1;
+    }
+    return 0;
+}
+
+s32 fn_8008AF78(s32 i)
+{
+    Slot* e = lbl_80309DE4[i];
+    if (e->x10 & 0x100) {
+        e->x10 &= ~0x100;
+        return 1;
+    }
+    return 0;
 }
 
 s32 fn_8008B0AC(void)
@@ -136,6 +196,10 @@ s32 fn_8008B13C(s32 i)
 s32 fn_8008B158(s32 i)
 {
     return (lbl_80309DE4[i]->x10 & 0x4) != 0;
+}
+
+s32 fn_8008B174(void) {
+    return 1;
 }
 
 s32 fn_8008B17C(void) {
