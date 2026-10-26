@@ -201,7 +201,7 @@ typedef struct Self_801A1834 {
     u8 pad1[0xa];
     Ctx_801A1834 *ctx;
 } Self_801A1834;
-extern void* fn_802267AC(void* a, void (*b)(void));
+extern void* fn_802267AC(void* a, void *);
 extern void fn_801A2D60(void);
 typedef struct Task_801A343C {
     u8 pad00[0x24];
@@ -263,7 +263,20 @@ typedef struct Wk_801A4E58 {
     u8 pad04[0x14];
     f32 f18;
 } Wk_801A4E58;
-extern void fn_801A5274(void);
+typedef struct PanelUi_801A5274 {
+    UiObj ui;
+    const char *label;
+} PanelUi_801A5274;
+typedef struct Task_801A5274 {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 state;
+    u8 pad1a[0xa];
+    u8 *flag;
+    PanelUi_801A5274 *pan;
+} Task_801A5274;
+extern LayoutPart lbl_802B4A00[2];
+void fn_801A5274(Task_801A5274 *t);
 typedef struct MenuUi {
     f32 z;
     f32 x, y;
@@ -307,7 +320,20 @@ typedef struct Task_801AC094 {
     MenuUi* p28;
     u32 w2c;
 } Task_801AC094;
-extern void fn_801B0F1C(void);
+extern void fn_801B6BB4(void *ui, f32 *pos, s16 a, s32 b, s32 c, s32 d, f32 e);
+extern u8 lbl_802B7720[0x50];
+typedef struct Cfg_801B0F1C { u8 pad[6]; u16 h6; u8 pad8; u8 b9; } Cfg_801B0F1C;
+typedef struct Gl_801B0F1C { u8 pad[0x24]; Cfg_801B0F1C *cfg; } Gl_801B0F1C;
+typedef struct Pan_801B0F1C { UiObj ui; const char *label; } Pan_801B0F1C;
+typedef struct Task_801B0F1C {
+    u8 pad00[0x18];
+    u8 flags;     /* 0x18 */
+    u8 state;     /* 0x19 */
+    u8 pad1a[0x24 - 0x1a];
+    u8 *flag;     /* 0x24 */
+    Pan_801B0F1C *pan;  /* 0x28 */
+} Task_801B0F1C;
+void fn_801B0F1C(Task_801B0F1C *t);
 extern s32 fn_801F4AE4(s16 v);
 typedef struct Task_801B1104 {
     u8 pad00[0x24];
@@ -546,7 +572,31 @@ typedef struct Node {
 } Node;
 extern const char lbl_80346808[4];
 extern const char lbl_8034680C[3];
-extern void fn_801A5D08(void);
+typedef struct Panel_801A5D08 {
+    UiObj ui;
+    const char *label;
+} Panel_801A5D08;
+typedef struct Ctx_801A5D08 {
+    u8 pad0[0x18];
+    f32 f18;
+} Ctx_801A5D08;
+typedef struct Parent_801A5D08 {
+    u8 pad0[0x24];
+    Ctx_801A5D08 *ctx;
+} Parent_801A5D08;
+typedef struct Task_801A5D08 {
+    u8 pad0[8];
+    Parent_801A5D08 *parent;
+    u8 pad0c[0xc];
+    u8 flags;
+    u8 state;
+    u8 pad1a[0xa];
+    u8 *flag;
+    Panel_801A5D08 *pan;
+} Task_801A5D08;
+extern LayoutPart lbl_802B4B88[1];
+extern LayoutPart lbl_802B4B4C[3];
+void fn_801A5D08(Task_801A5D08 *t);
 typedef struct {
     UiObj ui;
     const char* label; /* 0x4C */
@@ -560,7 +610,30 @@ typedef struct {
 } SlotTask;
 extern void* fn_801E1A74(s32 n, s32 size);
 extern void fn_801A5FD8(void);
-extern void fn_801A6344(void);
+typedef struct Panel_801A6344 {
+    UiObj ui;
+    const char *label;
+} Panel_801A6344;
+typedef struct Ctx_801A6344 {
+    u8 pad0[0x18];
+    f32 f18;
+} Ctx_801A6344;
+typedef struct Parent_801A6344 {
+    u8 pad0[0x24];
+    Ctx_801A6344 *ctx;
+} Parent_801A6344;
+typedef struct Task_801A6344 {
+    u8 pad0[8];
+    Parent_801A6344 *parent;
+    u8 pad0c[0xc];
+    u8 flags;
+    u8 state;
+    u8 pad1a[0xa];
+    u8 *flag;
+    Panel_801A6344 *pan;
+} Task_801A6344;
+extern LayoutPart lbl_802B4A28[3];
+void fn_801A6344(Task_801A6344 *t);
 typedef struct {
     u8 pad0[0x10];
     u16 id;       /* 0x10 */
@@ -752,7 +825,20 @@ typedef struct {
     Panel_801B2678* pan;  /* 0x28 */
     s32 f2C;
 } Task2_801B2678;
-extern void fn_801B2430(void);
+extern void UiDrawNumber(NJS_POINT3 *pos, u32 flags, u16 ndigits, u32 value, f32 c1);
+extern u8 lbl_802B6DF8[0x50];
+typedef struct Cfg_801B2430 { u8 pad[0x11c]; u32 w11c; u32 w120; } Cfg_801B2430;
+typedef struct Gl_801B2430 { u8 pad[0x24]; Cfg_801B2430 *cfg; } Gl_801B2430;
+typedef struct Pan_801B2430 { UiObj ui; const char *label; } Pan_801B2430;
+typedef struct Task_801B2430 {
+    u8 pad00[0x18];
+    u8 flags;     /* 0x18 */
+    u8 state;     /* 0x19 */
+    u8 pad1a[0x24 - 0x1a];
+    u8 *flag;     /* 0x24 */
+    Pan_801B2430 *pan;  /* 0x28 */
+} Task_801B2430;
+void fn_801B2430(Task_801B2430 *t);
 extern u32 lbl_802EC04C[13];
 typedef struct {
     UiObj ui;
@@ -1224,6 +1310,12 @@ typedef struct Self_801A0FD8 {
     Ctx_801A0FD8 *ctx;
 } Self_801A0FD8;
 extern void UiObjMoveToY(UiObj *o, u16 frames, s16 se, f32 y);
+typedef struct { u8 pad[0x24]; struct { u8 pad[6]; u16 idx; } *p; } G;
+typedef struct { void* a; void* b; void* c; u8 pad[0x1C]; } Ent_801AC2E4;
+extern Ent_801AC2E4 lbl_802ED258[];
+extern s8 fn_801BE608(s16 x);
+void fn_801AC16C(Task* task);
+typedef struct { u8 pad[0x24]; u8* w; MObj* obj; u32 x2c; } T;
 
 void fn_80199B9C(void* p, f32 v) {
     *(f32*)((u8*)p + 0x34) = v;
@@ -1759,7 +1851,7 @@ void fn_801A473C(void)
 
 void* fn_801A4DCC(void* a, u16 flag)
 {
-    Ctl_801A4DCC* o = fn_802267AC(a, (void (*)(void))fn_801A4E58);
+    Ctl_801A4DCC* o = fn_802267AC(a, (void *)fn_801A4E58);
     o->p24 = fn_801E1A74(1, 4);
     if (flag == 0) {
         ((Wk_801A4DCC*)o->p24)->f00 = 0.1f;
@@ -2712,7 +2804,7 @@ void fn_801B66F8(PanelTask_801B66F8* t) {
 }
 
 Task2_801B6838* fn_801B6838(void* arg) {
-    Task2_801B6838* t = fn_802267AC(arg, (void (*)(void))fn_801B66F8);
+    Task2_801B6838* t = fn_802267AC(arg, (void *)fn_801B66F8);
     t->a = fn_801E1A74(1, 0x58);
     t->pan = fn_801E1A74(1, 0x6c);
     t->a[0] = 0;
@@ -3654,5 +3746,197 @@ void fn_801A0FD8(Self_801A0FD8 *o) {
         UiObjSetCommand(o->ctx->objs[1]->obj, 0xf, 0);
         fn_801A4DCC(o, 0);
         o->state = 6;
+    }
+}
+
+void fn_801A5274(Task_801A5274 *t) {
+    f32 x;
+    f32 y;
+    f32 z;
+    switch (t->state) {
+    case 0:
+    case 0xFE:
+        if (t->flag[0] == 1) {
+            return;
+        }
+        UiObjUpdate(&t->pan->ui);
+        UiLayoutDraw((NJS_TEXLIST **)&menu_sprites.texlist8, lbl_802B4A00, 2, &t->pan->ui.x, t->pan->ui.z, t->pan->ui.alpha, 1.0f);
+        z = TextGetZ();
+        y = 12.0f + t->pan->ui.y;
+        x = 18.0f + t->pan->ui.x;
+        if (t->pan->label != 0) {
+            TextPushColor();
+            TextSetColor(0xFF201008);
+            TextSetZ(-27.5f + t->pan->ui.z);
+            TextPrint((s32)x, (s32)y, t->pan->label);
+            TextPopColor(1);
+        }
+        TextSetZ(z);
+        break;
+    case 0xFF:
+        t->flags |= 0x40;
+        break;
+    }
+}
+
+void fn_801A5D08(Task_801A5D08 *t) {
+    f32 x;
+    f32 y;
+    f32 z;
+    switch (t->state) {
+    case 0:
+    case 0xFE:
+        if (t->flag[0] == 1) {
+            return;
+        }
+        UiObjUpdate(&t->pan->ui);
+        UiObjCalcRect(&t->pan->ui);
+        UiLayoutDraw((NJS_TEXLIST **)&menu_sprites.texlist8, lbl_802B4B88, 1, &t->pan->ui.rect[2], t->pan->ui.z, 1.0f, 1.0f);
+        UiLayoutDraw((NJS_TEXLIST **)&menu_sprites.texlist8, lbl_802B4B4C, 3, &t->pan->ui.rect[0], t->pan->ui.z, t->pan->ui.alpha * t->parent->ctx->f18, 1.0f);
+        z = TextGetZ();
+        y = 19.0f + t->pan->ui.rect[1];
+        x = 74.0f + t->pan->ui.rect[0];
+        if (t->pan->label != 0) {
+            TextPushColor();
+            TextSetColor(0xFF201008);
+            TextSetZ(-27.5f + t->pan->ui.z);
+            TextPrint((s32)x, (s32)y, t->pan->label);
+            TextPopColor(1);
+        }
+        TextSetZ(z);
+        break;
+    case 0xFF:
+        t->flags |= 0x40;
+        break;
+    }
+}
+
+void fn_801A6344(Task_801A6344 *t) {
+    f32 x;
+    f32 y;
+    f32 z;
+    switch (t->state) {
+    case 0:
+    case 0xFE:
+        if (t->flag[0] == 1) {
+            return;
+        }
+        UiObjUpdate(&t->pan->ui);
+        UiLayoutDraw((NJS_TEXLIST **)&menu_sprites.texlist8, lbl_802B4A28, 3, &t->pan->ui.x, t->pan->ui.z, t->pan->ui.alpha * t->parent->ctx->f18, 1.0f);
+        z = TextGetZ();
+        y = 18.0f + t->pan->ui.y;
+        x = 105.0f + t->pan->ui.x;
+        if (t->pan->label != 0) {
+            TextPushColor();
+            TextSetColor(0xFF201008);
+            TextSetZ(-27.5f + t->pan->ui.z);
+            TextPrint((s32)x, (s32)y, t->pan->label);
+            TextPopColor(1);
+        }
+        TextSetZ(z);
+        break;
+    case 0xFF:
+        t->flags |= 0x40;
+        break;
+    }
+}
+
+void* fn_801AC2E4(void* a) {
+    T* t = fn_802267AC((void *)(a), (void *)(fn_801AC16C));
+    t->w = fn_801E1A74(1, 0x58);
+    t->obj = fn_801E1A74(1, 0x6c);
+    switch (fn_801BE608((*(G**)&lbl_803471B8)->p->idx)) {
+    case 0:
+        t->obj->text = lbl_802ED258[(*(G**)&lbl_803471B8)->p->idx].a;
+        break;
+    case 1:
+        t->obj->text = lbl_802ED258[(*(G**)&lbl_803471B8)->p->idx].c;
+        break;
+    case 2:
+        t->obj->text = lbl_802ED258[(*(G**)&lbl_803471B8)->p->idx].b;
+        break;
+    default:
+        t->obj->text = NULL;
+        break;
+    }
+    t->obj->o.alpha_en = 0;
+    t->w[0] = 0;
+    t->obj->o.x = -348.0f;
+    t->obj->o.tx = -348.0f;
+    t->obj->o.y = 36.0f;
+    t->obj->o.ty = 36.0f;
+    t->obj->o.rdx = 0.0f;
+    t->obj->o.rdy = 0.0f;
+    *(f32*)((u8*)t->obj + 0x38) = 1.0f;
+    t->obj->o.alpha = 1.0f;
+    t->obj->o.z = -4300.0f;
+    t->x2c = 0;
+    UiObjSetLowered(&t->obj->o);
+    UiObjCalcRect(&t->obj->o);
+    return t;
+}
+
+void fn_801B0F1C(Task_801B0F1C *t) {
+    f32 z;
+    switch (t->state) {
+    case 0:
+    case 0xFE:
+        if (t->flag[0] == 1) {
+            return;
+        }
+        UiObjUpdate(&t->pan->ui);
+        z = TextGetZ();
+        TextPushColor();
+        TextSetColor(0xFF201008);
+        UiLayoutDraw((void *)((NJS_TEXLIST **)&menu_sprites.texlist8), (void *)(lbl_802B7720), 4, (void *)(&t->pan->ui.x), t->pan->ui.z, 1.0f, 1.0f);
+        fn_801B6BB4(t->pan, &t->pan->ui.x, (*(Gl_801B0F1C *(*)[2])&lbl_803471B8)[0]->cfg->h6, -1, 0x18, 0x14, 1.0f);
+        TextSetZ(-27.5f + t->pan->ui.z);
+        TextPrint(55.0f + t->pan->ui.x, 20.0f + t->pan->ui.y, t->pan->label);
+        TextPrint(264.0f + t->pan->ui.x, 20.0f + t->pan->ui.y, "\x81\x7e");
+        TextPrintNumber(288.0f + t->pan->ui.x, 20.0f + t->pan->ui.y, (*(Gl_801B0F1C *(*)[2])&lbl_803471B8)[0]->cfg->b9, 0xC002);
+        TextPopColor(1);
+        TextSetZ(z);
+        break;
+    case 0xFF:
+        MenuDummy();
+        t->flags |= 0x40;
+        break;
+    }
+}
+
+void fn_801B2430(Task_801B2430 *t) {
+    f32 z;
+    NJS_POINT3 pos;
+    if (lbl_803475D8 != 0) {
+        t->state = 0xff;
+    }
+    switch (t->state) {
+    case 0:
+    case 0xFE:
+        if (t->flag[0] == 1) {
+            return;
+        }
+        UiObjUpdate(&t->pan->ui);
+        UiLayoutDraw((void *)((NJS_TEXLIST **)&menu_sprites.texlist8), (void *)(lbl_802B6DF8), 4, (void *)(&t->pan->ui.x), t->pan->ui.z, 1.0f, 1.0f);
+        z = TextGetZ();
+        TextPushColor();
+        TextSetColor(0xFF201008);
+        TextSetZ(-27.5f + t->pan->ui.z);
+        TextPrint(20.0f + t->pan->ui.x, 5.0f + t->pan->ui.y, t->pan->label);
+        TextPrint(20.0f + t->pan->ui.x, 32.0f + t->pan->ui.y, (*(const char *(*)[13])&lbl_802EC04C)[5]);
+        TextPopColor(1);
+        pos.x = 84.0f + (97.0f + (t->pan->ui.x + t->pan->ui.rdx));
+        pos.y = 7.0f + (t->pan->ui.y - t->pan->ui.rdy);
+        pos.z = -32.0f + t->pan->ui.z;
+        UiDrawNumber(&pos, 0, 8, (*(Gl_801B2430 *(*)[2])&lbl_803471B8)[0]->cfg->w11c, t->pan->ui.alpha);
+        pos.y = 34.0f + (t->pan->ui.y - t->pan->ui.rdy);
+        pos.z = -31.5f + t->pan->ui.z;
+        UiDrawNumber(&pos, 0, 8, (*(Gl_801B2430 *(*)[2])&lbl_803471B8)[0]->cfg->w120, t->pan->ui.alpha);
+        TextSetZ(z);
+        break;
+    case 0xFF:
+        MenuDummy(t);
+        t->flags |= 0x40;
+        break;
     }
 }

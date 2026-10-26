@@ -133,6 +133,56 @@ typedef struct {
     u32 xc;
     s32 x10, x14, x18, x1c, x20, x24, x28;
 } Ent2c;
+typedef struct CampSub {
+    s32 x0;
+    s32 x4;
+    u8 pad8[4];
+    f32 xc, x10, x14, x18, x1c, x20, x24, x28, x2c, x30, x34, x38, x3c, x40;
+    s32 x44;
+    u8 x48, x49;
+    s16 x4a, x4c, x4e;
+    u8 pad50[0x74 - 0x50];
+    u8 x74[0xbc - 0x74];
+    void *xbc;
+} CampSub;
+typedef struct CampObj {
+    u8 pad[0x24];
+    CampSub *sub;
+} CampObj;
+typedef struct { u8 pad[0x10]; CampObj *objs[1]; } CampWork_80199508;
+extern void fn_80191A04(void *p, s32 a);
+typedef struct Sub1c_80199678 {
+    s32 x0, x4, x8, xc;
+    s32 x10;
+    u8 x14;
+    u8 x15[3];
+    s32 x18;
+} Sub1c_80199678;
+typedef struct Body_80199678 {
+    s32 x0;
+    s32 x4;
+    u8 pad08[4];
+    f32 xc, x10, x14, x18, x1c, x20, x24, x28, x2c, x30, x34, x38, x3c, x40;
+    s32 x44;
+    u8 x48, x49;
+    s16 x4a, x4c, x4e;
+    u8 pad50[0x74 - 0x50];
+    u8 x74[0xbc - 0x74];
+    void* xbc;
+} Body_80199678;
+typedef struct Node_80199678 {
+    u8 pad[0x24];
+    Body_80199678* body;
+} Node_80199678;
+typedef struct CampWork_80199678 {
+    u8 *p0;
+    u8 *p4;
+    u8 *p8;
+    u8 b0c;
+    u8 pad0d[3];
+    Node_80199678 *objs[0xd0];
+    u8 pad350[0x10];
+} CampWork_80199678;
 
 int fn_80193F28(void) {
     fn_801DBE1C("Nothing VM Tanken.");
@@ -1488,5 +1538,121 @@ void fn_80197B1C(s32 arg)
         s->x49 = 0;
         camp_work.objs[i + 72] = obj;
         obj->body->x4 = i + 72;
+    }
+}
+
+void fn_80199508(void)
+{
+    s32 i;
+    for (i = 0; i < 8; i++) {
+        CampObj *obj = ((CampObj *)fn_802268E8((void *)((*(void **)&lbl_8034710C)), (void *)(fn_8018E82C)));
+        void *buf;
+        CampSub *s;
+        obj->sub = fn_801E1C7C(0xc0);
+        obj->sub->x0 = 0;
+        buf = fn_801E1C7C(0xc);
+        obj->sub->xbc = buf;
+        fn_8018E81C(buf, 5, i);
+        fn_80191A04(obj->sub->x74, 5);
+        s = obj->sub;
+        s->x14 = 0.0f;
+        s->x18 = 256.0f;
+        s->xc = 0.0f;
+        s->x10 = 256.0f;
+        s->x2c = 0.0f;
+        s->x30 = 0.0f;
+        s->x34 = 0.0f;
+        s->x38 = 0.0f;
+        s->x1c = 0.0f;
+        s->x20 = 0.0f;
+        s->x24 = 0.0f;
+        s->x28 = 0.0f;
+        s->x4a = 0;
+        s->x4e = 0;
+        s->x4c = 0;
+        s->x48 = 1;
+        s->x3c = 0.7f;
+        s->x40 = 1.0f;
+        s->x44 = 0;
+        s->x49 = 0;
+        (*(CampWork_80199508*)&camp_work).objs[i + 0x7a] = obj;
+        obj->sub->x4 = i + 0x7a;
+    }
+}
+
+void fn_80199678(void) {
+    Body_80199678* b;
+    Node_80199678* n;
+    void* pos;
+    void* t;
+    s32 i;
+    for (i = 0; i < 12; i++) {
+        n = ((Node_80199678*)fn_802268E8((void *)((*(Node_80199678**)&lbl_8034710C)), (void *)(fn_8018E82C)));
+        n->body = fn_801E1C7C(0xc0);
+        n->body->x0 = 0;
+        t = fn_801E1C7C(0xc);
+        n->body->xbc = t;
+        pos = n->body->x74;
+        switch (i) {
+        case 0:
+        case 2:
+            fn_8018E81C((void *)(t), 1, -1);
+            fn_80191A04((void *)(pos), 3);
+            break;
+        case 1:
+        case 3:
+            fn_8018E81C((void *)(t), 2, -1);
+            fn_80191A04((void *)(pos), 4);
+            break;
+        case 4:
+        case 5:
+            fn_8018E81C((void *)(t), 7, -1);
+            fn_80191A04((void *)(pos), 7);
+            break;
+        case 6:
+        case 7:
+            fn_8018E81C((void *)(t), 8, -1);
+            fn_80191A04((void *)(pos), 8);
+            break;
+        case 8:
+            fn_8018E81C((void *)(t), 9, -1);
+            fn_80191A04((void *)(pos), 9);
+            break;
+        case 9:
+            fn_8018E81C((void *)(t), 0xa, -1);
+            fn_80191A04((void *)(pos), 0xa);
+            break;
+        case 10:
+            fn_8018E81C((void *)(t), 0xd, -1);
+            fn_80191A04((void *)(pos), 0xd);
+            break;
+        case 11:
+            fn_8018E81C((void *)(t), 0xe, -1);
+            fn_80191A04((void *)(pos), 0xe);
+            break;
+        }
+        b = n->body;
+        b->x14 = 0.0f;
+        b->x18 = 256.0f;
+        b->xc = 0.0f;
+        b->x10 = 256.0f;
+        b->x2c = 0.0f;
+        b->x30 = 0.0f;
+        b->x34 = 0.0f;
+        b->x38 = 0.0f;
+        b->x1c = 0.0f;
+        b->x20 = 0.0f;
+        b->x24 = 0.0f;
+        b->x28 = 0.0f;
+        b->x4a = 0;
+        b->x4e = 0;
+        b->x4c = 0;
+        b->x48 = 0;
+        b->x3c = 1.0f;
+        b->x40 = 1.0f;
+        b->x44 = 0;
+        b->x49 = 0;
+        (*(CampWork_80199678*)&camp_work).objs[0x6c + i] = n;
+        n->body->x4 = 0x6c + i;
     }
 }

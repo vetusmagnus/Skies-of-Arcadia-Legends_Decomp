@@ -27,7 +27,7 @@ extern void* lbl_803475A8;
 extern u8 lbl_80305FC0[];
 s32 fn_80136A28(void* a, s32 b, s32 c, s32 d, s32 e, s32 f);
 void fn_801365D8(s32 a, s32 b, s32 c, s32 d, s32 e);
-void *fn_802268E8(void *a, void (*f)(void));
+void *fn_802268E8(void *a, void *);
 void *fn_801E1C7C(u32 n);
 void fn_801303D0(void);
 void fn_80131734(void);
@@ -193,7 +193,7 @@ typedef struct {
     u8 pad0[0x24];
     Data_8012F75C *x24;
 } Obj_8012F75C;
-extern void *fn_802268E8(void *a, void (*f)(void));
+extern void *fn_802268E8(void *a, void *);
 extern void *fn_801E1C7C(u32 n);
 extern void fn_8012F958(void);
 typedef struct {
