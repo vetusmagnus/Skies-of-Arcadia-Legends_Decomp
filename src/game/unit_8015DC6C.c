@@ -2079,6 +2079,11 @@ void fn_8016B998(u8 v) {
     *(u8*)(*(u8**)((u8*)p + 0x24) + 0x2) = v;
 }
 
+void fn_8016B9B0(u8 v) {
+    if (lbl_803470A0 == 0) return;
+    (*(u8**)((u8*)lbl_803470A0 + 0x24))[1] = v;
+}
+
 void fn_8016C4B0(void) {
     u8* p = (u8*)lbl_803470B0;
     if (p == NULL) {
@@ -2129,6 +2134,11 @@ void fn_8016C7F0(u32 a)
         return;
     }
     o->inner->w20 = a;
+}
+
+void fn_8016C870(u8 v) {
+    if (lbl_803470B0 == 0) return;
+    (*(u8**)((u8*)lbl_803470B0 + 0x24))[1] = v;
 }
 
 void fn_8016D01C(void) {

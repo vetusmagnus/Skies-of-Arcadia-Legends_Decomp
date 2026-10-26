@@ -1634,8 +1634,8 @@ typedef struct Work_8011B448 {
 } Work_8011B448;
 extern void *fn_801E1A2C(s32 a, u32 size);
 extern void fn_8015EB8C(void *p, s32 id, void *cb);
-extern void fn_8011B290(void);
-extern void fn_8011B288(void);
+extern int fn_8011B290();
+extern int fn_8011B288();
 extern s32 fn_8011B298(void *work, void *rec);
 typedef struct Task_8011CC74 {
     u8 pad0[0x18];
@@ -1679,8 +1679,8 @@ typedef struct Work_8011CC74 {
     u8 pad260[0x264 - 0x260];
     Spawn_8011CC74 *x264;
 } Work_8011CC74;
-extern void fn_8011CE64(void);
-extern void fn_8011CC6C(void);
+extern int fn_8011CE64();
+extern int fn_8011CC6C();
 typedef struct Obj_80126BF0 {
     u8 _00[0x190];
     f32 f190;
@@ -2216,6 +2216,14 @@ void fn_8011A2A8(void) {
 void fn_8011B238(s32 a, ...) {
 }
 
+int fn_8011B288(void* h, void* arg) {
+    return 1;
+}
+
+int fn_8011B290(void* h, void* arg) {
+    return 1;
+}
+
 void fn_8011BAA4(u8 *p) {
     lbl_80346EB0 = p;
     if (!(p[0x18] & 0x20)) {
@@ -2233,6 +2241,14 @@ void fn_8011BAD0(void)
 }
 
 s32 fn_8011BAE0(void) {
+    return 1;
+}
+
+int fn_8011CC6C(void* h, void* arg) {
+    return 1;
+}
+
+int fn_8011CE64(void* h, void* arg) {
     return 1;
 }
 
