@@ -68,6 +68,22 @@ initialisers):
   type variants tried), fn_8003DCF4 (the third TargetMatch compares `obj->type` first: swapping the
   arguments gets the compare right but moves the registers).
 
+### Linking pass (2026-10-26)
+
+Nothing new links. Every game unit still has at least one near-miss function, and a unit only links when
+all of its functions match:
+
+- `-inline noauto,deferred` with `-str reuse,readonly` changes nothing for the single-near-miss units
+  (model, chunk, btlchar, flags, chunklist, tasks): the diffs are identical with and without it.
+- battle.c's fn_800308FC differs only in string offsets (`0x78` vs `0x2d4` from the pool base), but the
+  unit has 15 other near misses and no data splits yet, so it can't link before those match.
+- fn_801E735C (model.c): the original does `addi r5,r5,4` after the bounds check and then `lwzx` twice.
+  Four more source shapes tried (list pointer assigned inside the branch, `&list[0]`, a table-pointer
+  local, assignment before the stores); all fold the `addi` into `lwz 4(r3)` or hoist it.
+- Splitting units at near-miss boundaries would link about 160 KB of pool-free matching code, but those
+  boundaries are not file boundaries, so it was not done. Only splits backed by data or alignment evidence
+  (as with tasks.c) are pushed.
+
 Agent batches
 -------------
 
