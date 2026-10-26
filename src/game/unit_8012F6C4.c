@@ -90,7 +90,7 @@ typedef struct {
     u32 *table;
 } FnRoot;
 extern void fn_8012A9A8(FnBlock *b);
-extern void *fn_801D68C4(void *a, s32 n);
+extern void* fn_801D68C4(void* a, u32 n);
 typedef struct {
     u8 pad0[0x14];
     f32 f14;
@@ -105,7 +105,7 @@ typedef struct {
     f32 e;
     f32 g;
 } Args;
-extern void *lbl_80346EFC;
+extern void* lbl_80346EFC;
 extern void fn_8012A954(Args *a);
 typedef struct {
     u8 pad0[0xb];
@@ -161,6 +161,25 @@ typedef struct {
     s8 b;
     s8 c;
 } Cell;
+typedef struct {
+    u8 pad0[4];
+    u32 x4;
+    u8 pad8[0x14 - 8];
+    u32 x14;
+} Spr;
+typedef struct {
+    u8 pad0[4];
+    Spr* spr;
+} Holder0C;
+typedef struct {
+    u8 pad0[2];
+    s8 kind;
+} Sys;
+typedef struct {
+    u8 pad[0x24];
+    Sys* x24;
+    void** x28;
+} Holder;
 
 void fn_8012F6C4(s8 idx, u32 val) {
     u8* p = *(u8**)((u8*)lbl_80346F38 + 0x24);
@@ -684,4 +703,43 @@ s32 fn_801361B8(void* a, s32 lo, s32 y, s32 hi, s32 d)
     for (j = lo + 1; j <= end; j++)
         fn_8013160C(j, y, 0);
     return end;
+}
+
+void fn_80133478(void)
+{
+    void* a;
+    void* b;
+    switch ((*(Holder**)&lbl_80346F58)->x24->kind) {
+    case 0:
+        a = fn_801D68C4(lbl_80346EFC, 8);
+        b = fn_801D68C4(lbl_80346EFC, 2);
+        break;
+    case 1:
+        a = fn_801D68C4(lbl_80346EFC, 9);
+        b = fn_801D68C4(lbl_80346EFC, 3);
+        break;
+    case 2:
+        a = fn_801D68C4(lbl_80346EFC, 10);
+        b = fn_801D68C4(lbl_80346EFC, 4);
+        break;
+    case 3:
+        a = fn_801D68C4(lbl_80346EFC, 11);
+        b = fn_801D68C4(lbl_80346EFC, 5);
+        break;
+    case 4:
+        a = fn_801D68C4(lbl_80346EFC, 12);
+        b = fn_801D68C4(lbl_80346EFC, 6);
+        break;
+    case 5:
+        a = fn_801D68C4(lbl_80346EFC, 13);
+        b = fn_801D68C4(lbl_80346EFC, 7);
+        break;
+    default:
+        a = fn_801D68C4(lbl_80346EFC, 8);
+        b = fn_801D68C4(lbl_80346EFC, 2);
+        break;
+    }
+    (*(Holder**)&lbl_80346F58)->x28[1] = a;
+    (*(Holder**)&lbl_80346F58)->x28[2] = b;
+    ((Holder0C*)(*(Holder**)&lbl_80346F58)->x28[3])->spr->x14 = 0xFF808080;
 }

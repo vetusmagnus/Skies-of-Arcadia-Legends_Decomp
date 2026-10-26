@@ -1,5 +1,6 @@
 #include "types.h"
 #include "game/text.h"
+#include "ninja.h"
 typedef struct {
     s8 x0;
     s8 x1;
@@ -119,7 +120,7 @@ extern void fn_8012F13C(void);
 extern void fn_8012ECF8(void);
 extern void fn_8012E970(void);
 extern void fn_8012E6EC(void);
-extern void fn_8012B308(s32 n);
+void fn_8012B308(s8 n);
 extern void fn_8012BD34(void);
 extern void fn_8012B47C(void);
 extern void fn_8012F61C(void);
@@ -198,6 +199,20 @@ typedef struct {
     u8 pad[0x24];
     SysC_8012F2EC* x24;
 } HolderC_8012F2EC;
+typedef struct {
+    u8 pad0[4];
+    f32 f4;
+    f32 f8;
+} SysA_8012B308;
+typedef struct {
+    Pos* pos;
+} PosHolder_8012B308;
+typedef struct {
+    u8 pad[0x24];
+    SysA_8012B308* x24;
+    PosHolder_8012B308* x28;
+} HolderA_8012B308;
+extern void njRotate(NJS_MATRIX m, NJS_VECTOR* axis, Angle a);
 
 s32 fn_8012ADB4(void) { return lbl_80346F10->x24->x14; }
 
@@ -657,4 +672,30 @@ void fn_8012F2EC(void)
     (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->x32 = 0;
     (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->x33 = -1;
     (*(HolderC_8012F2EC**)&lbl_80346F28)->x24->f34 = 1.0f;
+}
+
+void fn_8012B308(s8 n)
+{
+    NJS_MATRIX m;
+    NJS_VECTOR in;
+    NJS_VECTOR out;
+    NJS_VECTOR axis;
+    Pos* pos;
+    f32 d;
+
+    d = (-43.5f * (f32)n) / 3.0f;
+    lbl_80346F10->x24->f4 += d;
+    axis.x = 0.0f;
+    axis.y = 0.0f;
+    axis.z = 1.0f;
+    pos = lbl_80346F10->x28->pos;
+    in.x = (19.0f + pos->f14) - 51.0f;
+    in.y = (19.0f + pos->f18) - 57.0f;
+    in.z = 0.0f;
+    njUnitMatrix(m);
+    njRotate(m, &axis, (Angle)(182.04445f * d));
+    njCalcPoint(m, &in, &out);
+    pos->f14 = 51.0f + (out.x - 19.0f);
+    pos->f18 = 57.0f + (out.y - 19.0f);
+    lbl_80346F10->x24->f8 = (f32)(s32)(182.04445f * (-40.466667f + lbl_80346F10->x24->f4));
 }

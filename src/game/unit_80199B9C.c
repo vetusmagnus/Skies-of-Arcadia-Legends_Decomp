@@ -41,7 +41,22 @@ extern void fn_801A65D4(Task *t);
 extern u8 *lbl_80311A60[];
 extern s32 fn_801A6554(void *o);
 extern void fn_801A64E0(void *o);
-extern void fn_801A66AC(void *p);
+typedef struct VertexCol {
+    f32 x, y, z;
+    u32 colour;
+} VertexCol;
+typedef struct Ctx_801A66AC {
+    u8 pad0[0x44];
+    u32 w44;
+} Ctx_801A66AC;
+typedef struct Task_801A66AC {
+    u8 pad0[0x24];
+    Ctx_801A66AC *ctx;
+    UiObj *ui;
+} Task_801A66AC;
+extern f32 fn_801DBD9C(f32 z);
+extern void fn_80290ED4(VertexCol *v, s32 count, s32 flag);
+void fn_801A66AC(Task_801A66AC *t);
 extern void *fn_801A4DCC(void *a, u16 flag);
 extern void fn_801CBBAC(f32 f);
 extern void Ui2DBegin(void);
@@ -1102,6 +1117,10 @@ void fn_801B277C(Task* t);
 typedef struct { u8 b0; u8 pad1[3]; s16 h4; u8 pad6[2]; s32 w8; s32 wc; s32 w10; } W_801B54D4;
 typedef struct { u8 pad[0x24]; W_801B54D4* w; MObj* obj; MObj* obj2; u8 pad30[0xC]; void* p3c; } T_801B54D4;
 typedef struct { f32 a, b; } FP;
+extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, u16 index, f32 z, f32 a, f32 b);
+extern u8 fn_801F464C(s32 id);
+extern u16 fn_801B995C(s32 id);
+typedef struct { s16 id; s8 count; s8 pad; } Ent_801B9810;
 
 void fn_80199B9C(void* p, f32 v) {
     *(f32*)((u8*)p + 0x34) = v;
@@ -3308,4 +3327,55 @@ s32 fn_801B8F48(s32 mode, s16* sel, s16 id) {
         MenuPlaySe(0);
     }
     return total * (u16)*sel;
+}
+
+static inline u32 ItemTotal(s16 id) {
+    u32 cnt = fn_801F464C(id);
+    if (cnt == 0) {
+        return 0;
+    }
+    return cnt * fn_801F477C(id) / 100;
+}
+u32 fn_801B9810(Ent_801B9810* list, Ent_801B9810** out, u32 n) {
+    u32 i;
+    u32 k;
+    Ent_801B9810** p = out;
+    for (i = 0; i < n; i++) {
+        *p++ = NULL;
+    }
+    i = 0;
+    k = 0;
+    for (; i < n; list++, i++) {
+        if (list->id != -1 && list->count - fn_801B995C(list->id) > 0) {
+            if (ItemTotal((u16)list->id) != 0) {
+                *out++ = list;
+                k++;
+            }
+        }
+    }
+    return k;
+}
+
+void fn_801A66AC(Task_801A66AC *t) {
+    VertexCol v[3] = {
+        { 0.0f, 0.0f, 0.0f, 0xFF201008 },
+        { 24.0f, 0.0f, 0.0f, 0xFF201008 },
+        { 12.0f, 20.0f, 0.0f, 0xFF201008 },
+    };
+    u32 i;
+    u32 n;
+    VertexCol *p;
+    if (t != 0) {
+        n = t->ctx->w44 + 1;
+        t->ctx->w44 = n;
+        if ((n & 8) == 0) {
+            p = v;
+            for (i = 0; i < 3; i++, p++) {
+                p->x = 18.0f + p->x + 264.0f + t->ui->x;
+                p->y = 16.0f + p->y + 48.0f + t->ui->y;
+                p->z = fn_801DBD9C(-0.1f);
+            }
+            fn_80290ED4(v, 3, 0);
+        }
+    }
 }

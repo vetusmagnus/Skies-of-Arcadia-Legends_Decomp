@@ -247,6 +247,30 @@ extern void fn_8007D32C(void);
 extern f32 njSin(s32 a);
 extern f32 njCos(s32 a);
 extern void njTranslate(NJS_MATRIX m, f32 x, f32 y, f32 z);
+typedef struct Eff {
+    u8 pad0[4];
+    u32 x4;
+    s16 x8;
+    u8 padA[6];
+    f32 x10;
+    u8 pad14[0x30 - 0x14];
+    f32 x30;
+    f32 x34;
+    f32 x38;
+    u8 pad3c[0x48 - 0x3C];
+    f32 x48;
+    f32 x4c;
+    u8 pad50[0x64 - 0x50];
+} Eff;
+typedef struct Task {
+    u8 pad0[0x19];
+    u8 state;
+    u8 pad1a[0x24 - 0x1A];
+    u8* work;
+} Task;
+typedef struct TblEnt_8006B46C { void* f0; void* f4; u32 f8; u8 fc; u8 pad[3]; } TblEnt_8006B46C;
+extern void* memset(void*, int, u32);
+extern void fn_8006B8A8(Eff*);
 
 void fn_80055E94(u8 *p) {
     p[0x18] |= 0x40;
@@ -1108,4 +1132,42 @@ void fn_80071D0C(f32 dist, NJS_POINT3* out, NJS_POINT3* pos, Angle* ang) {
     out->y = res.y;
     out->z = res.z;
     njPopMatrixEx();
+}
+
+static inline u32 get_f8(s16 idx) {
+    if (idx >= 4) {
+        return 0;
+    }
+    return lbl_80309E88[idx].f8;
+}
+
+void fn_8006B46C(Task* t) {
+    Eff* e = (Eff*)(t->work + 0x28);
+    switch (t->state) {
+    case 0:
+        memset(e, 0, 0x64);
+        e->x8 = 1;
+        e->x30 = 0.1f;
+        e->x34 = 0.5f;
+        e->x38 = 0.3f;
+        e->x10 = 60.0f;
+        e->x48 = 80.0f;
+        e->x4c = 300.0f;
+        t->state = 1;
+    case 1:
+        e->x4 |= 0x40000000;
+        t->state = 3;
+        break;
+    case 3:
+        fn_8006B8A8(e);
+        if (get_f8(e->x8) == 1) {
+            t->state = 5;
+        }
+        break;
+    case 5:
+        if (get_f8(e->x8) == 0) {
+            t->state = 3;
+        }
+        break;
+    }
 }

@@ -9,7 +9,7 @@ typedef struct Obj12 {
 } Obj12;
 extern s16 lbl_80346C3C;
 extern s16 lbl_80346750;
-extern u32 lbl_803473F8;
+extern s32 lbl_803473F8;
 extern u32 lbl_803473F4;
 extern u8 lbl_80303340[];
 extern void *lbl_803473F0;
@@ -81,7 +81,7 @@ typedef struct {
 extern SeFlagBlock lbl_802E0084;
 extern s16 lbl_80302F18[408];
 extern void fn_800D2CA8(s32 x);
-extern void fn_80097B0C(void *p);
+s32 fn_80097B0C(void* p);
 typedef struct {
     s16 flag;
     s16 count;
@@ -187,7 +187,7 @@ extern u8 *lbl_80346C94;
 extern s32 lbl_80346C90;
 void fn_801E7DF0(void *);
 void fn_801DD76C(void *m);
-void njScale(void *m, f32 x, f32 y, f32 z);
+extern void njScale(NJS_MATRIX m, f32 x, f32 y, f32 z);
 f32 fn_8009DEF0(u8 *obj, void *m, void *p, f32 *s, f32 z);
 void fn_801DD71C(s32 a);
 void fn_801E1784(void *p);
@@ -653,6 +653,25 @@ typedef struct {
     u8 pad1a[0x24 - 0x1a];
     Work *work;
 } Obj_800B2428;
+extern f32 lbl_80346C70;
+extern s32 lbl_80346C6C;
+extern s32 lbl_80346C50;
+extern f32 lbl_80345878[];
+extern s32 lbl_80311AD4[11];
+extern NJS_TEXLIST lbl_80347568;
+extern u8 lbl_8030A318[];
+extern u8 lbl_802F60B0[];
+extern void njTranslate(NJS_MATRIX m, f32 x, f32 y, f32 z);
+extern void njPushMatrixEx(void);
+extern void njPopMatrixEx(void);
+extern void fn_8028BB90(void* p);
+extern void fn_8022B960(void* p);
+extern void fn_80286EE8(void);
+extern void fn_8028B498(void);
+extern void fn_80299040(NJS_TEXLIST* t);
+extern void fn_80287B38(void* p);
+extern s32 fn_80097720(void);
+extern s32 fn_80097CEC(void* p);
 
 void fn_800972AC(void)
 {
@@ -1913,4 +1932,50 @@ void fn_800B2428(Obj_800B2428 *o) {
     case 5:
         break;
     }
+}
+
+s32 fn_80097B0C(void* p)
+{
+    s32 a;
+    s32 b;
+    s32 flag;
+    s32 mode;
+    s32 ret;
+    switch (lbl_803473F8) {
+    case 0:
+        fn_8028BB90(lbl_8030A318);
+        DrawStateDefault(1, (*(DrawState**)&lbl_803473F0));
+        (*(DrawState**)&lbl_803473F0)->attr_or |= 0x100;
+        lbl_80346C70 = 1.0f;
+        lbl_80346C6C = 0;
+        lbl_803473F8 = 1;
+        lbl_80346C50 = 0;
+        /* fallthrough */
+    case 1:
+        DrawStatePush((*(DrawState**)&lbl_803473F0));
+        fn_8022B960(lbl_8030A318);
+        njPushMatrixEx();
+        fn_80286EE8();
+        fn_8028B498();
+        njUnitMatrix(0);
+        njTranslate(0, 0.0f, 0.0f, -1.0f * lbl_80345878[6]);
+        njScale(0, 0.9090909f, 1.0f, 1.0f);
+        fn_80299040(&lbl_80347568);
+        fn_80287B38(lbl_802F60B0);
+        njPopMatrixEx();
+        DrawStatePop(0);
+        lbl_803473F8 = 2;
+        break;
+    case 2:
+        ret = 0;
+        mode = lbl_80311AD4[6];
+        flag = 0;
+        if (mode == 12 || mode == 13) flag = 1;
+        if (flag) a = 1;
+        else a = fn_80097720();
+        b = fn_80097CEC(p);
+        if (a && b) ret = 1;
+        return ret;
+    }
+    return 0;
 }
