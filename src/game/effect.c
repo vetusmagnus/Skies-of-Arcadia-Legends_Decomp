@@ -1299,7 +1299,7 @@ void fn_80041E64(Node* node)
                     p->c = s->c;
                     p->arg = s->arg;
                     p->start = ofs + s->c->step * j;
-                    p->end = ofs + (s->c->step * j + (s->c->len - s->c->start));
+                    p->end = ofs + s->c->step * j + (s->c->len - s->c->start);
                     p->x2c = s->c->x144 + dx;
                     p->x30 = s->c->x148 + dy;
                     p->x10 = s->c->x154 - s->c->x158;
@@ -3888,7 +3888,7 @@ void fn_800470F0(QuadSrc_800470F0* src, NJS_POINT3* scl, void* data, UV* uv, NJS
     q.data = data;
     q.x38 = 0;
     q.id = 0;
-    a = (s32)(255.0f * alpha);
+    a = 255.0f * alpha;
     for (i = 0; i < 4; i++) {
         q.pos[i].x = scl->x * pos->x;
         q.pos[i].y = scl->y * pos->y;
@@ -3904,13 +3904,13 @@ void fn_800470F0(QuadSrc_800470F0* src, NJS_POINT3* scl, void* data, UV* uv, NJS
             c = src->col[i].c[0];
         }
         q.col[i].c[0] = c;
-        pos++;
         q.col[i].c[1] = src->col[i].c[1];
         q.col[i].c[2] = src->col[i].c[2];
         q.col[i].c[3] = src->col[i].c[3];
         q.uv[i].u = uv->u;
         q.uv[i].v = uv->v;
         uv++;
+        pos++;
     }
     fn_80047214((u32)src->x80);
     fn_80033050(&q);

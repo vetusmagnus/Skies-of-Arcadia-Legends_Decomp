@@ -1,8 +1,8 @@
 Progress and handoff
 ====================
 
-State of the work as of 2026-10-26 (after the duplicate-copy batch): 26.52% of code matched (3,393 / 7,116
-functions), 3,723 functions unmatched: 2,756 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
+State of the work as of 2026-10-26 (after the partials batch): 26.6% of code matched (3,399 / 7,116
+functions), 3,717 functions unmatched: 2,750 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
 (the size split of the game functions predates the duplicate-copy batch: 2,193 under 632 bytes, 466 at 632-1000,
 355 at 1-2 KB, 101 at 2-5 KB, 16 over 5 KB). Numbers live in the README status block and on
 [ByteMatch](https://bytematch.dev/vetusmagnus/SoAL-Decomp); this page covers what's in flight.
@@ -13,17 +13,17 @@ Game files
 | File | Range | Status |
 |---|---|---|
 | `bevent.c` | 0x8002A034-0x8002C010 | 8 of 12; near: fn_8002B124 (epilogue reloads `lwz r0` before `lwz r31`, 2 lines), fn_8002B200 (one float register swap), fn_8002B40C (the original converts its four `s16` arguments with `psq_l`/`qr5` loads, the Dolphin fast cast; plain C gives 126 instructions against 94), fn_8002BD88 (register allocation). The start is a guess |
-| `battle.c` | 0x8002C010-0x80031254 | 83 of 101; near: fn_8002C51C, fn_8002C8FC, fn_8002CA54, fn_8002CBF8 (clamp temps in swapped registers), fn_8002D72C (the original keeps a dead loop counter), fn_8002E320 (`mulli -1` vs `neg`), fn_8002E5D0 (register colouring only), fn_8002EEFC, fn_8002F35C, fn_8002F598, fn_8002F630 (base pointer folded into an `addi`), fn_8002F6D4, fn_8002F80C, fn_8002FA00, fn_80030100, fn_80030280, fn_800303EC, fn_800308FC (string offsets only; the strings sit at lbl_802AD0F8+0x78, so `-str reuse,readonly` like tasks.c). The start is a guess |
+| `battle.c` | 0x8002C010-0x80031254 | 86 of 101; near: fn_8002C51C, fn_8002C8FC, fn_8002CA54, fn_8002CBF8 (clamp temps in swapped registers), fn_8002D72C (the original keeps a dead loop counter), fn_8002E5D0 (register colouring only), fn_8002EEFC, fn_8002F35C, fn_8002F598, fn_8002F6D4, fn_8002F80C, fn_8002FA00, fn_80030280, fn_800303EC, fn_800308FC (string offsets only; the strings sit at lbl_802AD0F8+0x78, so `-str reuse,readonly` like tasks.c). The start is a guess |
 | `btlchar.c` | 0x80031254-0x80032E78 | 22 of 23; near: fn_80032C6C (prologue registers; an inline `Lookup` for the table search gets it to 14 lines, `build/agents/r6_1/`). The start is a guess |
 | `draw2d.c` | 0x80032E78-0x80035918 | 31 of 35; near: fn_800334B8 (r0/r4 swap only in the textured branch, 96 lines in `build/agents/r6_2/`), fn_80033888 (a `frsp` from a double-typed value), fn_8003529C (saved-register order; the only fix found was a long-to-int local copy, rejected), fn_80035518 (12 lines in `build/agents/r6_2/`) |
 | `tasks.c` | 0x80035918-0x8003DEE0 | 230 of 235 |
 | `sound.c` | 0x8003DEE0-0x80040010 | 26 of 28; fn_8003E1BC and fn_8003ECF4 differ only in string offsets (see below) |
-| `effect.c` | 0x80040010-0x800506B0 | 60 of 62 defined; near: fn_80041E64 (operand order of one `add`), fn_800470F0 (register allocation in the quad loop). Not in the file, as near misses: fn_800472DC (a 3-iteration copy loop ends `blt`; `i < 3` unrolls, `i != 3` gives `bne`), fn_80047A68 (counter and value swap r5/r6 in the alpha loop), fn_80048570 (register naming), fn_80048654 (callee-saved colouring), fn_8004C1E4 (`node` r26 vs r27, ribbon effect; 394 lines), fn_8004DD54 (register numbering), fn_8004E474 (two pointers swap r26/r27), fn_8004E7F0 (`addi; extsh` vs `extsh; addi`, 4 lines), fn_8004EEF0 (float load scheduling, 4 lines), fn_8004F664 (one `mr` before `lfd`, 2 lines), fn_8004F868 (`lwz r5` vs r0, 2 lines), fn_8004FF8C (f30 hoist, signed vs unsigned range check). The end is a guess; the file stops after fn_8004FF8C, the next function is 0x800506B0 |
+| `effect.c` | 0x80040010-0x800506B0 | 62 of 62 defined. Not in the file, as near misses: fn_800472DC (a 3-iteration copy loop ends `blt`; `i < 3` unrolls, `i != 3` gives `bne`), fn_80047A68 (counter and value swap r5/r6 in the alpha loop), fn_80048570 (register naming), fn_80048654 (callee-saved colouring), fn_8004C1E4 (`node` r26 vs r27, ribbon effect; 394 lines), fn_8004DD54 (register numbering), fn_8004E474 (two pointers swap r26/r27), fn_8004E7F0 (`addi; extsh` vs `extsh; addi`, 4 lines), fn_8004EEF0 (float load scheduling, 4 lines), fn_8004F664 (one `mr` before `lfd`, 2 lines), fn_8004F868 (`lwz r5` vs r0, 2 lines), fn_8004FF8C (f30 hoist, signed vs unsigned range check). The end is a guess; the file stops after fn_8004FF8C, the next function is 0x800506B0 |
 | `drawstate.c` | 0x801CA8D8-0x801CAE84 | linked |
 | `uiobj.c` | 0x801C2FA0-0x801C5758 | 40 of 44; near: UiDrawNumber, UiLayoutDrawPart, UiLayoutDraw, UiSpriteDraw |
 | `text.c` | 0x801E1F3C-0x801E3874 | 29 of 33; near: FontFindGlyph, TextNodeNew/NewN (0x8197 constant hoisted out of the copy loop), TextReadChar (extra `clrlwi`/`mr`) |
 | `motion.c` | 0x801E3874-0x801E48A8 | 9 of 11; near: fn_801E3DE0 (u8 index mask), fn_801E41E0 (one extra saved register); fn_801E461C has no C |
-| `flags.c` | 0x801E48A8-0x801E4C2C | 8 of 11; near: fn_801E48A8 (unrolled loop shape), fn_801E4984 (add operand order), fn_801E4AB0 (`mr` of a shift constant). The end is a guess |
+| `flags.c` | 0x801E48A8-0x801E4C2C | 9 of 11; near: fn_801E48A8 (unrolled loop shape), fn_801E4AB0 (`mr` of a shift constant). The end is a guess |
 | `model.c` | 0x801E4C2C-0x801E7654 | 38 of 39; near: fn_801E735C (one `addi` hoisted above the bounds check). Ends where a second u32-to-float constant starts (0x8034C018) |
 | `chunk.c` | 0x801E7654-0x801E8CA4 | 14 of 15; near: fn_801E85BC (two locals swap registers). The end is a guess |
 | `evobj.c` | 0x801E8CA4-0x801F224C | 26 of 39 (batch 3 added 21 from 0x801EE324: fn_801EE324/EE344, the equipment-stat and item helpers fn_801EF054-FFFC, fn_801F01E4, fn_801F039C, fn_801F0588, fn_801F11C8, fn_801F1280/1590/1774; near-misses outside the file: fn_801EE5A4 (register allocation, 15 saved registers), fn_801EF000 (MWCC turns every counted loop into `mtctr`/`bdnz`; the original uses `cmpwi`/`blt`), fn_801EF300 (a 4-byte combine into `sig`), fn_801EF7E0, fn_801EF9A8 and fn_801F0020 (an 11- and 17-byte copy loop: the original has no pre-loop guard), fn_801F0284 (one extra `mr r31`), fn_801F1F80 (unrolled 4-byte party check, plus scheduling in case 0)); older: near: fn_801E8CA4 (camera-vector stores fold their offsets), fn_801E9AE0 (20 lines in `build/agents/r6_4/`), fn_801EB01C (6 lines, two `addi` swapped), fn_801EBC5C (8, a state store scheduled after the next compare), fn_801EE140 (3, indexed `stbx` vs a walked pointer), fn_801EDF24 (same), fn_801EC854, fn_801ECA2C, fn_801ED074, fn_801ED69C, fn_801EDAC0 (register colouring around the ObjTurn inline), fn_801EA2DC and fn_801EB330 (large, far off). The end is a guess |
@@ -71,6 +71,37 @@ renames clashing typedefs.
 functions under 200 bytes, Sonnet (`model: "sonnet"`) for everything else, merging included; set the model
 explicitly on every Agent call. Cap each function at ~10 variants and log the rest as near misses. In batch 1
 most of the cost was five Opus retry agents and the Opus merges; agent contexts peaked at 90-230k tokens.
+
+### Partials batch (2026-10-26)
+
+Second pass over the 60 partly matched functions (objdiff fuzzy between 0 and 100%), except the ones in tasks.c
+and sound.c (another session owns those): 16 agents on 53 functions (3 on Haiku 5.5 for the nine under 200
+bytes, 13 on Sonnet 5.5), about 10-20 tries each, no Opus, no retry or merge agents. 6 now match: fn_8002E320
+(`cnt *= -1` gives `mulli -1`, `cnt = cnt * -1` gives `neg`), fn_80030100 (the three `0.0f` stores go before the
+four zero stores), fn_8002F630 (five stores indexed `x194[i + k]` with an explicit `+ 0`, `s8 i`, step 5),
+fn_801E4984 (`off + (s32)t`), fn_80041E64 (no parentheses around `step * j + (len - start)`), fn_800470F0
+(`255.0f * alpha` assigned to the `s16` without an `(s32)` cast, `pos++` after `uv++`). Rejected: fn_801E735C
+matched only with a pointer that is cast between two table types (a cleaner form was 4 lines off).
+
+Ideas found but not adopted (each leaves the function unmatched):
+
+- `u32 d` instead of `s32 d` in the `ObjTurn`/`ObjStartTurn` inlines (evobj.c) fixes the `cmplwi`/`clrlwi` pieces
+  of fn_801ECA2C, fn_801ED074 (47 to 39 lines), fn_801ED69C (23 to 17) and fn_801EDAC0 (129 to 76); the rest is
+  `m`/`has`/`force` register colouring.
+- fn_801EB01C is one line off, and the cause is `.bss` order: the compiler lays out the file's bss by first use,
+  and the original touches `lbl_803136E4` (+0x3c from `lbl_803136A8`) in an earlier function than ours does.
+  Finding that earlier function would fix it.
+- fn_80035518: the walked-pointer loop of its sibling fn_80035708 takes it from 102 to 64 lines (the vertex pointer
+  and `k*4` registers still differ). fn_801EB330 goes from 377 to 149 lines with `v`/`s` as one `f32 sv[4]`
+  array and block-scoped `a`/`b` in cases 3-6; fn_801E9AE0 from 20 to 8 distinct lines with an inline distance helper
+  (`evDist`): the unrolled scale loop is what differs.
+- fn_8002F80C / fn_8002FA00 improve with a separate `s8 start` assigned in the switch (about 100 to 26 lines);
+  `pp`/`end` still swap.
+- Unchanged near misses: fn_8002C8FC/CA54/CBF8/C51C (a clamp's sum lands in the wrong register), fn_800303EC,
+  fn_8002F35C, fn_8002D72C (dead loop counter), fn_8002E5D0, fn_8002EEFC (mode/ep swap), fn_80030280,
+  fn_80032C6C, the text.c/uiobj.c group (about 40-150 lines of register allocation; TextNodeNew's `lis 0x8197`
+  hoist and TextReadChar's `clrlwi` remain), fn_801E3DE0, fn_801E4AB0, fn_801E48A8, fn_801E85BC, fn_801E41E0,
+  fn_801EE140 (`stbx` vs walked pointer), fn_801EC854, fn_8003529C, fn_80033888, fn_800334B8.
 
 Duplicates
 ----------

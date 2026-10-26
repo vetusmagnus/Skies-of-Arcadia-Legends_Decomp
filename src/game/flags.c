@@ -42,9 +42,9 @@ s32 fn_801E4974(Table* t, s32 i) {
     return t->entries[i].size;
 }
 
-/* Near miss: the final add has its operands swapped. */
 u8* fn_801E4984(Table* t, s32 i) {
-    return (u8*)t + t->entries[i].offset;
+    s32 off = t->entries[i].offset;
+    return (u8*)(off + (s32)t);
 }
 
 void fn_801E4998(void) {
