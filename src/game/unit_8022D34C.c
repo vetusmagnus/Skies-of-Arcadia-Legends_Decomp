@@ -20,11 +20,12 @@ extern void fn_8022F64C(void *p, u32 flags);
 typedef struct Node { u8 pad_00[0x2c]; struct Node *child; struct Node *next; } Node;
 extern void fn_8022F408(Node *n, s32 a, s32 b);
 void fn_8022F0CC(Node *n, s32 a, s32 b);
-extern s32 fn_8022E068(void *p, u16 i, s32 *a, s32 *b, s32 *c, s32 *d);
+s32 fn_8022E068(f32 *p, u16 i, f32 *a, f32 *b, f32 *c, f32 *d);
 extern s32 lbl_80347884;
 extern void fn_8023182C(void);
-extern void fn_80230FCC(void);
-extern void fn_80288DE4(void *p, void (*f)(void));
+typedef struct Res230 { void *x0; void *x4; u8 pad08[0xc]; f32 x14; } Res230;
+s32 fn_80230FCC(Res230 *r);
+extern void fn_80288DE4(void *p, s32 (*f)(Res230 *));
 extern void fn_80296F28(void);
 extern s32 fn_8022E734(u8 kind, void *p, void *a, void *b, s32 f1, s32 f2, s32 f3);
 typedef struct Pt { f32 x; f32 y; f32 z; } Pt;
@@ -151,6 +152,10 @@ typedef union Cur_80230634 {
 extern u8 lbl_802F9360[];
 extern void *fn_801E1C7C(u32 size);
 extern f32 fn_80291A5C(f32 v);
+extern char lbl_8034C750;
+extern int strncmp(const char *a, const char *b, u32 n);
+extern char lbl_8034C760;
+extern void fn_80230920(s16 *p, s16 *v);
 
 void fn_8022D34C(s32 a, f32 b) {
     if (a > 0) {
@@ -189,12 +194,12 @@ typedef struct Msg {
     s32 x8;
     s32 xc;
 } Msg;
-extern void fn_8022F050(Msg*, s16);
-void fn_8022F030(Msg* a, s16 i) {
-    fn_8022F050(a, i);
+void fn_8022F050(void *p, s32 a, s32 b);
+void fn_8022F030(void *p, s32 a, s32 b) {
+    fn_8022F050(p, a, b);
 }
 
-extern void fn_8023080C(Msg*, s16);
+s16 *fn_8023080C(void *p, s16 *v, s16 *res);
 extern void fn_8022F6B8(void*, u32);
 void fn_8022F64C(void* p, u32 arg) {
 
@@ -208,8 +213,8 @@ void fn_8022F64C(void* p, u32 arg) {
     fn_8022F6B8(p, arg);
 }
 
-void fn_802307EC(Msg* a, s16 i) {
-    fn_8023080C(a, i);
+s16 *fn_802307EC(void *p, s16 *v, s16 *res) {
+    return fn_8023080C(p, v, res);
 }
 
 extern void fn_801D6890(Msg*, s16);
@@ -270,10 +275,10 @@ void fn_8022F0CC(Node *n, s32 a, s32 b)
 }
 
 s32 fn_8022DFFC(void *p) {
-    s32 d;
-    s32 a;
-    s32 b;
-    s32 c;
+    f32 d;
+    f32 a;
+    f32 b;
+    f32 c;
     s32 i = 0;
     s32 ret;
     for (;;) {
@@ -766,4 +771,52 @@ s32 fn_80230634(Src *src, Out_80230634 *out) {
         out->dist[j] = fn_80291A5C(dx * dx + dy * dy + dz * dz);
     }
     return 1;
+}
+
+void fn_8022F050(void *n, s32 a, s32 b) {
+    if (!(*(u32 *)n & 0x80000000)) {
+        if (strncmp(n, &lbl_8034C750, 4) == 0) {
+            n = (u8 *)n + 8;
+        } else {
+            return;
+        }
+    }
+    fn_8022F0CC(n, a, b);
+}
+
+s16 *fn_8023080C(void *p0, s16 *v0, s16 *res0) {
+    s16 *v = v0;
+    u16 i;
+    void *p = p0;
+    s16 *res = res0;
+    s16 *tmp;
+    if (strncmp((const char*)p, &lbl_8034C750, 4) == 0) {
+        p = (u8*)p + 8;
+    } else if (strncmp((const char*)p, &lbl_8034C760, 4) == 0) {
+        return res;
+    }
+    tmp = res;
+    if (res == 0) {
+        for (i = 0x40; i < 0xff; i++) {
+            switch (i) {
+            case 0x40:
+            case 0x43:
+            case 0x46:
+                break;
+            default:
+                if (fn_80230D10(i, p, &tmp) != 0) {
+                    i = 0x100;
+                }
+                break;
+            }
+        }
+        if (i == 0xff) {
+            return 0;
+        }
+    }
+    fn_80230920(tmp, v);
+    if (res == 0) {
+        return tmp;
+    }
+    return res;
 }
