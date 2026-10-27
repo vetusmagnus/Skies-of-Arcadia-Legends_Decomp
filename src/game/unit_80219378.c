@@ -481,7 +481,7 @@ typedef struct V3p {
 typedef struct A3 {
     Angle x, y, z;
 } A3;
-/* A model's node tree (unit_801D1AE8.c draws it with fn_801D25DC). */
+/* A model's node tree (unit_801D24D0.c draws it with fn_801D25DC). */
 typedef struct ModelNode ModelNode;
 void fn_801D25DC(ModelNode *n);
 typedef struct Shape_80224F28 {

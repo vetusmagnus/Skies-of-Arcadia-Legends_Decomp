@@ -138,8 +138,15 @@ game/unit_801CBA60.c:
 game/unit_801CED24.c:
 	.text       start:0x801CED24 end:0x801D1AE8
 
-game/unit_801D1AE8.c:
-	.text       start:0x801D1AE8 end:0x801E1A74
+game/gp_check.c:
+	.text       start:0x801D1AE8 end:0x801D24D0
+	.rodata     start:0x802C41E0 end:0x802C4478
+	.data       start:0x802F6518 end:0x802F6558
+	.sbss       start:0x803475F8 end:0x80347608
+	.sdata2     start:0x8034BD78 end:0x8034BDB0
+
+game/unit_801D24D0.c:
+	.text       start:0x801D24D0 end:0x801E1A74
 
 game/unit_801E1A74.c:
 	.text       start:0x801E1A74 end:0x801E1F3C

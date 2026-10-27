@@ -384,7 +384,9 @@ config.libs = [
             Object(NonMatching, "game/evobj.c"),
             # Small functions from 0x80055E94 to 0x801BEAE4 (accessors, setters, wrappers), one
             # unit per matching batch. The ranges are guesses; the units are named after the start.
-            Object(NonMatching, "game/unit_80055E94.c"),
+            # Every string this range uses sits in .rodata or .sdata2, so it was built with
+            # -str reuse,readonly (fn_80073024 needs it; all matched functions are unchanged by it).
+            Object(NonMatching, "game/unit_80055E94.c", extra_cflags=["-str reuse,readonly"]),
             Object(NonMatching, "game/unit_80073D18.c"),
             Object(NonMatching, "game/unit_80074D9C.c"),
             Object(NonMatching, "game/unit_8008A8B4.c"),
@@ -412,7 +414,10 @@ config.libs = [
             Object(NonMatching, "game/unit_801C5A60.c"),
             Object(NonMatching, "game/unit_801CBA60.c"),
             Object(NonMatching, "game/unit_801CED24.c"),
-            Object(NonMatching, "game/unit_801D1AE8.c"),
+            # Display setup and the graphics processor hang check (linked; the name is the one its
+            # OSPanic-style call passes). Deferred codegen like sound.c.
+            Object(Matching, "game/gp_check.c", extra_cflags=["-str reuse,readonly", "-inline noauto,deferred"]),
+            Object(NonMatching, "game/unit_801D24D0.c"),
             Object(NonMatching, "game/unit_801E1A74.c"),
             Object(NonMatching, "game/unit_801F224C.c"),
             Object(NonMatching, "game/unit_801F5334.c"),

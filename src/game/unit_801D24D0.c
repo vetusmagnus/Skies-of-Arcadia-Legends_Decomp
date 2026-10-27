@@ -113,8 +113,6 @@ typedef struct MemHeap {
 } MemHeap;
 void *fn_801E184C(MemHeap *heap, s32 idx, s32 mode, u32 n);
 extern MemHeap lbl_802F6748[];
-void fn_8024DF5C(u32 a);
-void GXClearGPMetric(void);
 void GXInvalidateVtxCache(void);
 void GXInvalidateTexAll(void);
 extern u8 lbl_80311B00[];
@@ -451,15 +449,8 @@ typedef struct SlotTab {
     s16 count;
     s16 used;
 } SlotTab;
-extern s32 lbl_80347600;
-extern u32 lbl_803475FC;
-extern u32 lbl_803475F8;
 extern s32 lbl_803475AC;
-extern const char lbl_802C428C[];
 extern void OSReport(const char *msg, ...);
-extern void GXGetGPStatus(u8*, u8*, u8*, u8*, u8*);
-extern u32 GXGetOverflowCount(void);
-extern void fn_801D20D8(void);
 typedef struct { s16 a; s16 b; s32 off; } Ent_801DE504;
 typedef struct {
     void* list;
@@ -752,15 +743,6 @@ typedef struct KeySet_801DEDC0 {
     Key_801DEDC0* keys;
     s32 count;
 } KeySet_801DEDC0;
-
-void fn_801D1AE8(void) {
-    VISetNextFrameBuffer(lbl_803476AC);
-    VIFlush();
-    VIWaitForRetrace();
-    if (*lbl_803476C0 & 1) {
-        VIWaitForRetrace();
-    }
-}
 
 void fn_801D49E4(s32 a, s32 b, s32 c, s32 d, f32 p1, f32 p2, f32 p3, f32 p4) {
     fn_801D4A2C(a, b, c, lbl_80347568, d, 1.0f, 1.0f, p1, p2, p3, p4);
@@ -1236,14 +1218,6 @@ void fn_801E1A2C(s32 mode, u32 n) {
     }
     q = fn_801E184C(lbl_802F6748, -1, mode, n);
     *(u32 *)((u8 *)q - 0x10) = 0;
-}
-
-void fn_801D23E0(void)
-{
-    fn_8024DF5C(0x10000 - 0x115);
-    GXClearGPMetric();
-    GXInvalidateVtxCache();
-    GXInvalidateTexAll();
 }
 
 void fn_801D4954(void *p)
@@ -2343,28 +2317,6 @@ s32 fn_801DDD74(SlotTab *t, s16 n) {
     t->count = n;
     t->used = 0;
     return 1;
-}
-
-void fn_801D1DE0(void) {
-    char name[] = "Hang AT High Watermark";
-    u8 hi, lo;
-    u32 cnt;
-    lbl_80347600++;
-    GXGetGPStatus(&hi, &lo, &lo, &lo, &lo);
-    cnt = GXGetOverflowCount();
-    if (hi != 0 && cnt == lbl_803475FC) {
-        lbl_803475F8++;
-        if (lbl_803475F8 >= 2) {
-            if (lbl_803475AC != 0) {
-                OSReport(lbl_802C428C, name);
-            }
-            fn_801D20D8();
-            for (;;) {}
-        }
-    } else {
-        lbl_803475FC = cnt;
-        lbl_803475F8 = 0;
-    }
 }
 
 void fn_801D9634(NJS_POINT3* v, s32* out) {
