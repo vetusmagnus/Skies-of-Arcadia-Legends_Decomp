@@ -2457,6 +2457,27 @@ typedef struct Obj_80166138 {
 } Obj_80166138;
 extern s32 fn_801664A4(Obj_80166138 *o);
 extern void fn_801E735C(u32 index, f32 speed, Mod *obj);
+typedef struct Obj_80191E94 { u8 pad[0x18]; u8 flags; u8 kind; } Obj_80191E94;
+typedef struct NameEnt { char *name; u32 b; u32 c; } NameEnt;
+typedef struct NameTab { NameEnt *ents; u32 count; } NameTab;
+typedef struct Node {
+    u8 pad[0x100];
+    NameTab *tab;
+    u8 pad104[0x1d0 - 0x104];
+    struct Node *parent;
+} Node;
+typedef struct Hit {
+    NJS_POINT3 pos; /* 0x00 */
+    f32 y0;         /* 0x0c */
+    f32 y1;         /* 0x10 */
+    s16 n0;         /* 0x14 */
+    s16 n1;         /* 0x16 */
+    u8 pad18[6];
+    u16 id0;        /* 0x1e */
+    u8 pad20[2];
+    u16 id1;        /* 0x22 */
+} Hit;
+extern s32 fn_8022436C(u32 id, Hit* arr, s32 count);
 
 s32 fn_8015DC6C(Obj_8015DC6C* self, Src* src)
 {
@@ -9014,4 +9035,81 @@ s32 fn_80166138(Obj_80166138 *o, Tab_80166138 *t) {
         }
     }
     return r;
+}
+
+void fn_80191E94(Obj_80191E94 *o) {
+    switch (o->kind) {
+    case 0:
+    case 1:
+        break;
+    case 0xfe:
+        break;
+    case 0xff:
+        o->flags |= 0x40;
+        break;
+    }
+}
+
+NameEnt *fn_8016748C(Node *n, char **key) {
+    Node *p;
+    NameEnt *e;
+    u32 i;
+    for (i = 0; i < n->tab->count; i++) {
+        e = &n->tab->ents[i];
+        if (strncmp(e->name, *key, strlen(e->name)) == 0) return e;
+    }
+    for (p = n->parent; p != 0; p = p->parent) {
+        for (i = 0; i < p->tab->count; i++) {
+            e = &p->tab->ents[i];
+            if (strncmp(e->name, *key, strlen(e->name)) == 0) return e;
+        }
+    }
+    return 0;
+}
+
+static inline s32 iabs(s32 v)
+{
+    s32 s = v >> 31;
+    return (s ^ v) - s;
+}
+s32 fn_80166D40(s32 *a, s32 *b)
+{
+    s16 m;
+    s16 d;
+    s32 i;
+    s32 r = 1;
+
+    if (a != NULL && b != NULL) {
+        m = 0;
+        for (i = 0; i < 3; i++) {
+            d = iabs((s16)(b[i] - a[i]));
+            m = (m > d) ? m : d;
+        }
+        r = m / 2184;
+    }
+    return r;
+}
+
+u32 fn_8015FAD4(NJS_POINT3* pos) {
+    Hit h;
+    u32 id;
+    f32 y;
+    h.pos.x = pos->x;
+    h.pos.y = pos->y;
+    h.pos.z = pos->z;
+    id = 0xFFFFFFFF;
+    h.pos.y += 1.0f;
+    if (fn_8022436C(0xFFFF, &h, 1) == 1) {
+        if (h.n1 != 0) {
+            id = h.id1;
+            y = h.y1;
+        } else if (h.n0 != 0) {
+            id = h.id0;
+            y = h.y0;
+        }
+    }
+    if (id != 0xFFFFFFFF) {
+        pos->y = y;
+    }
+    return id;
 }

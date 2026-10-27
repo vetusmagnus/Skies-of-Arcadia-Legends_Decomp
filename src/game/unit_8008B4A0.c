@@ -583,6 +583,15 @@ typedef struct {
     Probe_80094144 probe[2]; /* 0x1C8 */
 } Chr_80094144;
 FindEntry *fn_8008F2CC(FindEntry *head, s16 id);
+typedef struct { u8 pad[0xC]; u8 xc[1]; } TaskSub;
+typedef struct { u8 pad0[0x10]; TaskSub* x10; u8 pad1[0x4C - 0x14]; void* x4c; } TaskRes;
+typedef struct { u8 pad[0x24]; TaskRes* res; } TaskArg;
+typedef struct { u8 pad[0xC]; void* obj; } Handler;
+typedef struct { u8 pad[0x18]; u8 flags; u8 state; u8 pad1a[0x24 - 0x1A]; void* work; } Node;
+typedef struct { TaskArg* arg; void* owner; } Work_8008F1F8;
+int fn_8003DCF4(void* objp, void* cp);
+Node* fn_8003DB34(void* fn);
+extern void fn_8008EC84(void);
 
 u32 fn_8008B55C(void* a0, Ent_UNIT0000* e) {
     return (e->x1c >> 9) & 1;
@@ -2196,4 +2205,55 @@ void fn_80095220(CamObj *obj, NJS_POINT3 *pos, Angle *ang)
         ang[1] = o->ang[1];
         ang[2] = o->ang[2];
     }
+}
+
+int fn_8008F1F8(Handler* h, TaskArg* arg)
+{
+    void* obj = h->obj;
+    Node* node;
+    Work_8008F1F8* w;
+    if (fn_8003DCF4(obj, arg->res->x4c)) {
+        node = fn_8003DB34(fn_8008EC84);
+        fn_80061F58(&node->work, 0x28, 0);
+        w = node->work;
+        w->arg = arg;
+        w->owner = obj;
+    } else {
+        return 0;
+    }
+    return 1;
+}
+
+void fn_80090518(u8 *p, u32 n) {
+    u32 i;
+    for (i = 0; i < n; i++) {
+        *p++ = 0;
+    }
+}
+
+void fn_80090A7C(f32 *in, f32 *out) {
+    s32 cx;
+    s32 cz;
+    cx = (8400.0f - in[0]) / 2400.0f;
+    cz = (7200.0f - in[2]) / 2400.0f;
+    out[0] = 8400.0f + ((s32)-(2400.0f * cx) - 1200.0f);
+    out[1] = 0.0f;
+    out[2] = 7200.0f + ((s32)-(2400.0f * cz) - 1200.0f);
+}
+
+/* 10 to the power n. */
+static inline s32 Pow10(s32 n) {
+    s32 i;
+    s32 p = 1;
+    for (i = 0; i < n; i++) {
+        p *= 10;
+    }
+    return p;
+}
+
+/* Decimal digit n of x (1 = units). */
+s32 fn_80090378(s32 x, s32 n) {
+    x /= Pow10(n - 1);
+    x %= 10;
+    return x;
 }

@@ -99,3 +99,12 @@ void fn_801E1CCC(void) {
     }
     *(Node **)slot = NULL;
 }
+
+void *fn_801E1BDC(u32 n) {
+    void *p;
+    if (n == 0) n = 0x20;
+    p = fn_801E184C(&lbl_802F6748[2], -1, 0, n);
+    *(s32 *)((u8 *)p - 0x10) = 2;
+    lbl_80347700++;
+    return p;
+}

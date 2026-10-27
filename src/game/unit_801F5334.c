@@ -1184,6 +1184,35 @@ typedef struct {
     s32 a2c;
     Work_8020B4AC* work;     /* 0x30 */
 } Script_8020B4AC;
+typedef struct Cmd_801F5BD0 {
+    u8 pad00[0x1c];
+    f32* cursor; /* 0x1C */
+} Cmd_801F5BD0;
+typedef struct { u8 pad_00[4]; s32 x4; u8 pad_08[0x14]; u8 *cur; s32 x20; } Cmd_802056A8;
+s32 fn_8009763C(void);
+void fn_800972AC(void);
+extern char lbl_802D4740[];
+typedef struct { u8 pad_00[0x1c]; u32 *cur; } CmdStream_801F5C30;
+s32 fn_8010038C(void *p);
+typedef struct { u8 pad_00[4]; u32 x04; u8 pad8[0x14]; u8 *cur; u8 pad20[0x10]; u8 *x30; } Obj_801FF05C;
+typedef struct {
+    u8 pad0[8];
+    s16 h8;
+    u8 pad0a[2];
+    s32 x0c;
+    s32 x10;
+} Ev;
+typedef struct {
+    u8 pad0[8];
+    s32 x08;
+    void *x0c;
+    u8 pad10[0x20 - 0x10];
+    s32 x20;
+    u32 x24;
+    s32 x28;
+    void *x2c;
+} Rec_80211058;
+void fn_80148228(s32 a, s32 b);
 
 void fn_801F5334(s8 n) {
     s32 i;
@@ -5787,4 +5816,140 @@ void fn_80211EB0(s16 mode, f32 v)
     } else if (mode == 2) {
         lbl_8030CEA0.x834 = (s32)v;
     }
+}
+
+/* Script "return": pops the cursor saved by a call (stack[sp--]); with an empty stack it
+ * ends the script (x1874 = 0) unless x0a > 1, which reports 1. */
+s32 fn_801F5BD0(s32 unused, Cmd_801F5BD0* s) {
+    f32* cur = s->cursor;
+    if (lbl_8030CEA0.sp <= 0) {
+        if (lbl_8030CEA0.x0a <= 1) {
+            lbl_8030CEA0.x1874 = 0;
+            s->cursor = cur;
+            return 0;
+        }
+        return 1;
+    }
+    s->cursor = lbl_8030CEA0.stack[lbl_8030CEA0.sp--];
+    return 0;
+}
+
+s16 fn_802056A8(u32 a0, Cmd_802056A8 *st) {
+    s32 n;
+    u16 a = a0;
+    s8 r;
+    if (a0 & 1) {
+        u8 *p = st->cur;
+        fn_801F7500();
+        p += 4;
+        if (3.4028235e38f == *(f32 *)p) {
+            p += 4;
+            n = 0x7fffffff;
+        } else {
+            n = (s32)fn_801F6120((f32**)&p);
+        }
+        st->cur = p;
+        r = fn_8009763C();
+        fn_800972AC();
+        if (n == 0) {
+            fn_80097318(1);
+        } else {
+            fn_80097318(0);
+        }
+        if (r == 2) {
+            st->x20 = 2;
+            st->x4 = 0;
+            return 1;
+        }
+    }
+    if (a & 2) {
+        if (--st->x20 == 0) {
+            lbl_80310B3C[34] &= ~2;
+            st->x20 = 0;
+            return 0;
+        }
+        return 1;
+    }
+    return (a >> 3) & 1;
+}
+
+s32 fn_801F5C30(s32 unused, CmdStream_801F5C30 *st)
+{
+    u32 *p = st->cur;
+
+    if (lbl_8030CEA0.sp >= 0x20) {
+        fn_801DBE1C(lbl_802D4740);
+    }
+    lbl_8030CEA0.stack[++lbl_8030CEA0.sp] = p + 2;
+    p++;
+    p += *p / 4;
+    st->cur = p;
+    return 0;
+}
+
+s32 fn_801FF05C(u32 flags, Obj_801FF05C *st) {
+    u16 f = flags;
+    if (flags & 1) {
+        u8 *c = st->cur;
+        u8 *q = c + 4;
+        u32 w = *(u32 *)(c + 4);
+        u8 *e = q + w;
+        st->cur = q + 4;
+        st->x04 = 0;
+        st->x30 = e;
+    }
+    if (f & 2) {
+        if (fn_8010038C(st->x30) == 1) {
+            st->x30 = 0;
+            return 0;
+        }
+    }
+    if (f & 8) return 0;
+    return 1;
+}
+
+void fn_80211058(void *s, s32 a, s32 b, s32 c, s16 d, void *w)
+{
+    Rec_80211058 *o = s;
+    Ev *e = w;
+    s32 k;
+    e->h8 = 0;
+    e->x0c = 0;
+    e->x10 = 0;
+    k = (c << 16) | (u16)d;
+    o->x08 = fn_800CD0B8(a, b, k, (s32)e);
+    o->x20 = a;
+    o->x24 = (u16)b;
+    o->x28 = k;
+    o->x2c = e;
+    o->x0c = e;
+    lbl_8030CEA0.x08++;
+}
+
+s32 fn_8021528C(u32 flags, Cmd *c) {
+    float *p;
+    int a;
+    s32 t;
+    s32 b;
+    if (flags & 1) {
+        p = c->cur;
+        p++;
+        if (*p == 3.4028235e38f) {
+            p++;
+            t = 0x7FFFFFFF;
+        } else {
+            t = (s32)fn_801F6120(&p);
+        }
+        a = t;
+        if (*p == 3.4028235e38f) {
+            p++;
+            b = 0x7FFFFFFF;
+        } else {
+            b = (s32)fn_801F6120(&p);
+        }
+        c->cur = p;
+        fn_80148228(a, b);
+        return 0;
+    }
+    return 1;
 }

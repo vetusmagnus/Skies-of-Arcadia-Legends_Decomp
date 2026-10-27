@@ -1111,6 +1111,18 @@ extern void* lbl_80347320;
 extern void fn_801CBBBC(void);
 extern void fn_80029070(void);
 extern void* fn_801E1C7C(s32 size);
+extern void fn_8007201C(s32 *out, Vec3f *v);
+extern char lbl_802B0708[];
+extern void fn_80068190(char *);
+extern void fn_80009500(Ent6EB88 *, s32, s32);
+extern void fn_8006E75C(Ent6EB88 *, char *, s32);
+typedef struct { s32 pad; s32 v[1]; } Tab_8006801C;
+typedef struct { u8 pad0[0x24]; Tab_8006801C *tab; } O_8006801C;
+typedef struct Ctr_8006D02C {
+    u8 pad0[4];
+    s16 x4;
+} Ctr_8006D02C;
+extern void fn_8006D080(void *p, s32 free);
 
 void fn_80055E94(u8 *p) {
     p[0x18] |= 0x40;
@@ -4220,4 +4232,150 @@ void fn_80061518(V3 *src, V3 *out, void *m) {
     out->x = b.x;
     out->y = b.y;
     out->z = b.z;
+}
+
+/* Moves pos (x/z only) towards the target (x, z) by step; returns 1 when it is there.
+   A zero step snaps that axis. */
+u8 fn_80061340(f32 *pos, f32 *step, f32 x, f32 z)
+{
+    f32 t[3];
+    f32 zero = 0.0f;
+    s32 i;
+    s32 k;
+    s32 ret = 0;
+
+    if (step[0] == zero) {
+        pos[0] = x;
+    }
+    if (step[2] == zero) {
+        pos[2] = z;
+    }
+    if (pos[0] == x && pos[2] == z) {
+        return 1;
+    }
+    t[0] = x;
+    t[1] = zero;
+    t[2] = z;
+    i = 3;
+    for (k = 0; k < 3; k++) {
+        i--;
+        if (i == 1) {
+            continue;
+        }
+        pos[i] += step[i];
+        if (step[i] > zero) {
+            if (pos[i] >= t[i]) {
+                pos[i] = t[i];
+            }
+        } else {
+            if (pos[i] <= t[i]) {
+                pos[i] = t[i];
+            }
+        }
+    }
+    if (pos[0] == x && pos[2] == z) {
+        ret = 1;
+    }
+    return ret;
+}
+
+/* fn_8007201C on b->a with components inside +-0.00001 snapped to 0 (the sibling of
+ * fn_80071F84, same arguments). Literals, not the sdata2 labels: the extern loads
+ * schedule differently. */
+void fn_80071EEC(s32 *out, NJS_POINT3 *a, NJS_POINT3 *b) {
+    Vec3f d;
+    s8 i;
+    f32 *p;
+    d.x = a->x - b->x;
+    d.y = a->y - b->y;
+    d.z = a->z - b->z;
+    p = &d.x;
+    for (i = 0; i < 3; i++) {
+        if (*p < 0.00001f && *p > -0.00001f) {
+            *p = 0.0f;
+        }
+        p++;
+    }
+    fn_8007201C(out, &d);
+}
+
+/* Angle compare: wraps a and b into (-180, 180] when they are more than 180 degrees apart. */
+s32 fn_80061080(f32 *a, f32 *b)
+{
+    f32 av;
+    f32 bv;
+    f32 d;
+    bv = *b;
+    av = *a;
+    d = bv - av;
+    if (d < 0.0f) {
+        d *= -1.0f;
+    }
+    if (d > 180.0f) {
+        if (av > 180.0f) {
+            *a = -(360.0f - av);
+        }
+        if (*b > 180.0f) {
+            *b = -(360.0f - *b);
+        }
+        if (*b > *a) {
+            return 1;
+        }
+        return 0;
+    }
+    return bv < av;
+}
+
+void fn_80072E8C(s16 k, s16 b, s16 c, char *d) {
+    switch (k) {
+    case 0x18:
+    case 0x19:
+    case 0x1d:
+    case 0x1e:
+        fn_8025CB24(d, lbl_802B0708, b, k);
+        break;
+    default:
+        fn_8025CB24(d, lbl_802B0708, c, k);
+        break;
+    }
+}
+
+s16 fn_8006801C(O_8006801C *o, s32 n) {
+    char a[0x20];
+    char b[0x20];
+    char c[0x20];
+    s32 v;
+    fn_80068190(a);
+    fn_8025F120(b, a);
+    fn_8025F120(c, a);
+    fn_80061048(b);
+    fn_80046BB0(a, &v);
+    fn_80009500(lbl_80347398, v, v);
+    o->tab->v[n] = v;
+    n++;
+    fn_8025CB24(a, "%s.STD", b);
+    fn_8006E75C(lbl_80347398, a, v);
+    o->tab->v[n] = v;
+    n++;
+    fn_8025CB24(a, "%s0.STD", b);
+    fn_8006E75C(lbl_80347398, a, v);
+    o->tab->v[n] = v;
+    n++;
+    return n;
+}
+
+s32 fn_8006D02C(Ctr_8006D02C *p, s32 free)
+{
+    s16 n;
+
+    if (p->x4 == 0) {
+        return 0;
+    }
+    p->x4--;
+    n = p->x4;
+    if (n == 0) {
+        fn_8006D080(p, free);
+        return 0;
+    }
+    return n;
 }

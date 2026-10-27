@@ -3,9 +3,9 @@
 #include "game/drawstate.h"
 #include <dolphin/os.h>
 #include "game/task.h"
+#include <string.h>
 #define PTR(p, off) (*(void**)((u8*)(p) + (off)))
 extern void* fn_80005B9C(void* heap);
-extern void* memset(void* dst, s32 c, u32 n);
 extern void fn_800090F8(s32 packed, s16* p);
 extern void* lbl_803475A8;
 extern void* fn_802268E8(void* a, void (*cb)(void*));
@@ -903,6 +903,161 @@ typedef struct F163A4Task {
 extern void fn_8001E6DC(V3* out, s8 v);
 extern s32 fn_80018398(V3* v, s32 a);
 extern s32 fn_8001D944(s8 id, void* t);
+typedef struct Node_800102C8 {
+    u8 pad[0x24];
+    void* val;
+} Node_800102C8;
+typedef struct Mid_800102C8 {
+    u8 pad0[0x1e0];
+    Node_800102C8* e0;
+    Node_800102C8* e4;
+} Mid_800102C8;
+typedef struct Holder_800102C8 {
+    u8 pad[0x4c];
+    Mid_800102C8* mid;
+} Holder_800102C8;
+typedef struct Ent_800102C8 {
+    u8 pad[0x24];
+    Holder_800102C8* h;
+} Ent_800102C8;
+typedef struct State_80017A7C {
+    u8 pad0[0x12];
+    s16 state;          /* 0x12 */
+    u8 pad14[0xe4 - 0x14];
+    s16 xe4;            /* 0xe4 */
+    u8 pade6[0xf8 - 0xe6];
+    NJS_POINT3 pos;     /* 0xf8 */
+    u8 pad104[0x134 - 0x104];
+    s32 x134;           /* 0x134 */
+} State_80017A7C;
+typedef struct Work_80017A7C {
+    u8 pad0[0x1c];
+    NJS_POINT3 pos;     /* 0x1c */
+    u8 pad28[0x4c - 0x28];
+    State_80017A7C *st; /* 0x4c */
+} Work_80017A7C;
+extern void fn_80075F2C(void *t);
+extern void fn_80017CB8(Task *t, s16 v);
+typedef struct Unit_8001DB44 { s8 id0; u8 pad1[3]; s8 id4; u8 pad5; s16 x6; u8 pad8[0xE8]; u32 xf0; } Unit_8001DB44;
+typedef struct Wk_8001DB44 { u8 pad[0x4C]; Unit_8001DB44* w; } Wk_8001DB44;
+typedef struct Tk_8001DB44 { u8 pad[0x24]; Wk_8001DB44* work; } Tk_8001DB44;
+typedef struct Wk_80015640 { u8 pad[0xec]; u32 xec; } Wk_80015640;
+typedef struct In_80015640 { u8 pad[0x4c]; Wk_80015640* x4c; } In_80015640;
+typedef struct Task_80015640 { u8 pad[0x24]; In_80015640* x24; } Task_80015640;
+typedef struct Self { u8 pad[0x18]; u8 flags; u8 state; } Self;
+/* lbl_80309E24: the character task table (void* in unit_80005B50.c). */
+extern void* lbl_80309E24[];
+extern void fn_8001BE2C(Task_80015640* t);
+typedef struct Sub {
+    void* link;
+    u8 pad[0x1c];
+    f32 pos;
+} Sub;
+typedef struct Mid_8000DEC8 {
+    f32 speed;
+    s16 mode;
+    u8 pad[2];
+    Sub* sub;
+} Mid_8000DEC8;
+typedef struct Holder_8000DEC8 {
+    u8 pad[0x4c];
+    Mid_8000DEC8* mid;
+} Holder_8000DEC8;
+typedef struct Actor_8000DEC8 {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 state;
+    u8 pad1[0xa];
+    Holder_8000DEC8* holder;
+} Actor_8000DEC8;
+typedef struct { u8 pad[0xec]; u32 xec; } Flags;
+typedef struct { u8 pad[0x1c]; NJS_POINT3 pos; u8 pad28[0x4c - 0x28]; Flags* x4c; } Work_800171F0;
+typedef struct { u8 pad[0x24]; Work_800171F0* work; } Obj_800171F0;
+extern f32 fn_80071E9C(void*, void*);
+void fn_8001E19C(NJS_POINT3 *self, NJS_POINT3 *out, void *ctx, NJS_POINT3 *v);
+typedef struct Unit_8001E05C {
+    s8 id;      /* 0x00 */
+    u8 pad1[3];
+    s8 target;  /* 0x04 */
+} Unit_8001E05C;
+typedef struct Wk_8001E05C {
+    u8 pad[0x4c];
+    Unit_8001E05C *w;    /* 0x4C */
+} Wk_8001E05C;
+typedef struct Tk_8001E05C {
+    u8 pad[0x24];
+    Wk_8001E05C *work;   /* 0x24 */
+} Tk_8001E05C;
+extern s32 fn_8023AB88(void *info, void *addr, s32 len, s32 offset, void (*cb)(void), s32 prio);
+typedef struct { s32 a; s32 b; s32 err; } Err_803457F8;
+extern Err_803457F8 lbl_803457F8;
+extern s32 lbl_803478AC;
+extern s32 lbl_80346738;
+extern s32 lbl_803478D4;
+extern s32 lbl_803478BC;
+extern void *lbl_803478D8;
+extern s32 lbl_803478D0;
+extern s32 lbl_803478CC;
+extern s32 lbl_803478A8;
+typedef struct Mid_80011394 {
+    u8 pad0[0xf0];
+    u32 flags;
+    u8 pad1[0x164 - 0xf4];
+    f32 f164;
+    u8 pad2[0x1ec - 0x168];
+    u32 f1ec;
+} Mid_80011394;
+typedef struct Holder_80011394 {
+    u8 pad[0x4c];
+    Mid_80011394* mid;
+} Holder_80011394;
+typedef struct Node_80011394 {
+    u8 pad[0x24];
+    Holder_80011394* h;
+} Node_80011394;
+typedef struct Vec3_80015A58 { f32 x, y, z; } Vec3_80015A58;
+extern void fn_802917C8(Vec3_80015A58 *pts, Vec3_80015A58 *out, Vec3_80015A58 *tmp, f32 t);
+typedef struct {
+    s32 key;
+    s32 val;
+} LblEnt;
+extern LblEnt lbl_802ACDF0[];
+typedef struct Dat_8001DF44 { s8 id; u8 pad_01[3]; s8 x4; } Dat_8001DF44;
+typedef struct Wk_8001DF44 { u8 pad_00[0x1c]; f32 x1c[3]; u8 pad_28[0x24]; Dat_8001DF44 *x4c; } Wk_8001DF44;
+typedef struct Tsk_8001DF44 { u8 pad_00[0x24]; Wk_8001DF44 *work; } Tsk_8001DF44;
+typedef struct Row_8001EBA4 {
+    s16 x0;
+    s16 pad2[2];
+    s16 x6;
+    s16 pad8[2];
+    s16 xc;
+    s16 pade;
+    f32 x10;
+    u8 pad14[4];
+} Row_8001EBA4;
+typedef struct C_8001EBA4 {
+    u8 pad0[6];
+    s16 x6;
+    u8 pad8[0x64 - 8];
+    s16 x64;
+    u8 pad66[0xdc - 0x66];
+    Row_8001EBA4 *tab;
+    u8 pade0[0xec - 0xe0];
+    u32 xec;
+    u32 xf0;
+    u8 padf4[0x204 - 0xf4];
+    s16 x204;
+} C_8001EBA4;
+typedef struct W_8001EBA4 {
+    u8 pad0[0x4c];
+    C_8001EBA4 *c;
+} W_8001EBA4;
+typedef struct O_8001EBA4 {
+    u8 pad0[0x24];
+    W_8001EBA4 *w;
+} O_8001EBA4;
+extern s32 fn_80076170(f32 a, f32 b, void *o, s32 id, s32 k, s32 j);
+extern void fn_80072770(void *o);
 
 void* fn_80005B50(void* heap, u32 size) {
     void* p = fn_80005B9C(heap);
@@ -3428,5 +3583,324 @@ s32 fn_800163A4(F163A4Task* t, s8 flag, s8 mode, s16 want, s16 cols, s16 rows) {
         }
         break;
     }
+    return 1;
+}
+
+static inline s32 GetNode(Mid_800102C8* m, s16 sel, Node_800102C8** out) {
+    switch (sel) {
+    case 1:
+        if (m->e0 != NULL) {
+            *out = m->e0;
+            return 1;
+        }
+        break;
+    case 2:
+        if (m->e4 != NULL) {
+            *out = m->e4;
+            return 1;
+        }
+        break;
+    }
+    return 0;
+}
+
+s32 fn_800102C8(Ent_800102C8* obj, s16 sel, void** out) {
+    Node_800102C8* n;
+
+    if (GetNode(obj->h->mid, sel, &n)) {
+        *out = n->val;
+        return 1;
+    }
+    return 0;
+}
+
+void fn_80017A7C(Task *t)
+{
+    Work_80017A7C *w = t->work;
+    State_80017A7C *s = w->st;
+
+    switch (s->state) {
+    case 0:
+        memset(&w->pos, 0, sizeof(NJS_POINT3));
+        fn_80071CF0(&w->pos, &s->pos);
+        fn_80075F2C(t);
+        s->state = 1;
+    case 1:
+        s->x134 = 1;
+        break;
+    }
+    fn_80017CB8(t, s->xe4);
+}
+
+static inline Tk_8001DB44* Find(s8 id) {
+    s8 i;
+    for (i = 0; i < 14; i++) {
+        Tk_8001DB44* t = lbl_80309E24[i];
+        if (t != 0 && t->work->w->id0 == id) return lbl_80309E24[i];
+    }
+    return 0;
+}
+s32 fn_8001DB44(Tk_8001DB44* t, s8 mode) {
+    Tk_8001DB44* o;
+    Unit_8001DB44* u;
+    o = Find(t->work->w->id4);
+    o = o ? o : Find(0);
+    u = o->work->w;
+    switch (mode) {
+    case 0:
+        if (u->x6 == 0xb || u->x6 == 0x20) return 1;
+        break;
+    case 1:
+        if (u->xf0 & 0x00400000) return 1;
+        break;
+    }
+    return 0;
+}
+
+/* Three-step task: on step 1 clears flags 0x100000 and 8 of every character that has them and
+ * calls fn_8001BE2C on it, then marks itself done (flag 0x40). */
+void fn_80015640(Self* o) {
+    s8 i;
+    switch (o->state) {
+    case 0:
+        o->state = 1;
+        break;
+    case 1:
+        for (i = 0; i < 12; i++) {
+            Task_80015640* t = lbl_80309E24[i];
+            if (t != 0) {
+                Wk_80015640* w = t->x24->x4c;
+                if ((w->xec & 0x100000) || (w->xec & 8)) {
+                    w->xec &= ~0x100000;
+                    w->xec &= ~8;
+                    fn_8001BE2C(t);
+                }
+            }
+        }
+        o->state = 2;
+    case 2:
+        o->flags |= 0x40;
+        break;
+    }
+}
+
+void fn_8000DEC8(Actor_8000DEC8* a) {
+    Mid_8000DEC8* m = a->holder->mid;
+    Sub* s = m->sub;
+
+    if (s->link == 0) {
+        a->state = 3;
+    }
+    if ((s32)a->state != 3) {
+        if ((s32)a->state >= 3) {
+            return;
+        }
+        if ((s32)a->state != 0) {
+            return;
+        }
+        if (m->mode != 1) {
+            return;
+        }
+        if (s->pos <= 0.0f) {
+            s->pos = s->pos + m->speed;
+        } else {
+            s->pos = s->pos - m->speed;
+        }
+    } else {
+        a->flags |= 0x40;
+    }
+}
+
+void fn_800171F0(s8 ia, s8 ib, NJS_POINT3* o1, NJS_POINT3* o2)
+{
+    NJS_POINT3 pa;
+    NJS_POINT3 pb;
+    NJS_POINT3 t;
+    Obj_800171F0* a = fn_80021658(ia);
+    Obj_800171F0* b = fn_80021658(ib);
+    f32 d;
+    fn_80071CF0(&a->work->pos, &pa);
+    fn_80071CF0(&b->work->pos, &pb);
+    d = fn_80071E9C(&pa, &pb);
+    if (a->work->x4c->xec & 0x200000) {
+        d += 22.5f;
+    } else {
+        d += 7.5f;
+    }
+    t.x = d;
+    t.y = 0.0f;
+    fn_8001E19C(&t, o1, b, &a->work->pos);
+    d = fn_80071E9C(&pa, &pb);
+    if (b->work->x4c->xec & 0x200000) {
+        d += 22.5f;
+    } else {
+        d += 7.5f;
+    }
+    t.x = d;
+    t.y = 0.0f;
+    fn_8001E19C(&t, o2, a, &b->work->pos);
+}
+
+static inline Tk_8001E05C *FindUnit(s8 id) {
+    s8 i;
+    for (i = 0; i < 14; i++) {
+        Tk_8001E05C *t = lbl_80309E24[i];
+        if (t != NULL && t->work->w->id == id) {
+            return lbl_80309E24[i];
+        }
+    }
+    return NULL;
+}
+
+Tk_8001E05C *fn_8001E05C(Tk_8001E05C *t) {
+    Tk_8001E05C *r = FindUnit(t->work->w->target);
+    if (r != NULL) {
+        return r;
+    }
+    return FindUnit(0);
+}
+
+s32 fn_80008000(s32 idx) {
+    s32 blk;
+    s32 bs;
+    s32 q;
+    if (idx >= lbl_803478AC || idx < 0) {
+        return -1;
+    }
+    bs = lbl_80346738;
+    q = idx / bs;
+    blk = q * bs;
+    if (blk != lbl_803478D4) {
+        lbl_803478D4 = blk;
+        if (lbl_803478AC > blk + bs) {
+            lbl_803478BC = idx;
+            lbl_803478D0 = bs;
+            lbl_803478CC = bs << 11;
+            if (fn_8023AB88(lbl_803478DC, lbl_803478D8, lbl_803478CC, blk << 11, 0, 2) == 0) {
+                lbl_803457F8.err = 5;
+                return -1;
+            }
+        } else {
+            lbl_803478BC = idx;
+            lbl_803478D0 = lbl_803478AC - blk;
+            lbl_803478CC = lbl_803478A8 - (blk << 11);
+            if (fn_8023AB88(lbl_803478DC, lbl_803478D8, lbl_803478CC, blk << 11, 0, 2) == 0) {
+                lbl_803457F8.err = 5;
+                return -1;
+            }
+        }
+        lbl_803478B8 = 2;
+        lbl_803478B4 = 0;
+    }
+    return 0;
+}
+
+void fn_80011394(s8 sel) {
+    s8 i;
+
+    for (i = 0; i < 0xe; i++) {
+        Node_80011394* n = lbl_80309E24[i];
+        if (n != 0) {
+            Mid_80011394* m = n->h->mid;
+            if ((!(m->flags & 0x80000000) && sel == 0) || sel != 0) {
+                m->f164 = 0.0f;
+                m->f1ec |= 0x20000000;
+            }
+        }
+    }
+}
+
+void fn_80015A58(Vec3_80015A58 *base, s16 n, Vec3_80015A58 *out, f32 ang) {
+    Vec3_80015A58 tmp;
+    Vec3_80015A58 pts[4];
+    s32 k;
+    s16 t;
+    s16 d;
+    Vec3_80015A58 *q;
+    s16 rem;
+    s16 idx;
+    s16 j;
+    f32 f;
+    if (ang >= 360.0f) ang -= 360.0f;
+    k = 360 / n;
+    t = (s32)ang;
+    d = t / k;
+    rem = t % k;
+    idx = d - 1;
+    if (idx < 0) idx = n - 1;
+    q = pts;
+    for (j = 0; j < 4; j++) {
+        fn_80071CF0(&base[idx], q);
+        idx++;
+        if (idx >= n) idx = 0;
+        q++;
+    }
+    f = (f32)rem / (f32)k;
+    if (f <= 0.0f) f = 0.01f;
+    if (f >= 1.0f) f = 0.09f;
+    fn_802917C8(pts, out, &tmp, f);
+}
+
+s16 fn_80015460(s16 id) {
+    s32 k;
+    s8 i;
+    for (i = 0; (k = lbl_802ACDF0[i].key) >= 0; i++) {
+        if (id == k - 0xf0) {
+            return lbl_802ACDF0[i].val;
+        }
+    }
+    return 0;
+}
+
+static inline Tsk_8001DF44 *FindTask(s8 idx) {
+    s8 i;
+    for (i = 0; i < 14; i++) {
+        Tsk_8001DF44 *t = lbl_80309E24[i];
+        if (t != 0 && t->work->x4c->id == idx) {
+            return lbl_80309E24[i];
+        }
+    }
+    return 0;
+}
+
+static inline Tsk_8001DF44 *FindTaskOrDefault(s8 idx) {
+    Tsk_8001DF44 *t = FindTask(idx);
+    if (t != 0) {
+        return t;
+    }
+    return FindTask(0);
+}
+
+s32 fn_8001DF44(Tsk_8001DF44 *self, f32 *out) {
+    Tsk_8001DF44 *t = FindTaskOrDefault(self->work->x4c->x4);
+    if (t == 0) {
+        return 0;
+    }
+    fn_80071CF0(t->work->x1c, out);
+    return 1;
+}
+
+s32 fn_8001EBA4(O_8001EBA4 *o, s16 idx) {
+    C_8001EBA4 *c = o->w->c;
+    s32 v;
+    f32 f;
+    if (c->x64 == idx) {
+        return 0;
+    }
+    if ((c->x6 == 2 || c->x6 == 7) && c->x204 != 0) {
+        v = c->tab[c->x204].x6;
+    } else {
+        v = c->tab[idx].x6;
+    }
+    f = c->tab[idx].x10;
+    if (f < 1.0f && (c->xf0 & 0x40000)) {
+        f = 5.0f;
+    }
+    f = 1.0f / f;
+    if (fn_80076170(0.0f, f, o->w, v, c->tab[idx].x0, c->tab[idx].xc)) {
+        c->xec |= 0x80000000;
+        fn_80072770(o);
+    }
+    c->x64 = -1;
     return 1;
 }

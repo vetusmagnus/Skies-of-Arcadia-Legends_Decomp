@@ -1,6 +1,7 @@
 #include "types.h"
 #include "game/drawstate.h"
 #include <math.h>
+#include "game/task.h"
 extern s16 lbl_803097F0[];
 extern u32 lbl_802B0830[];
 extern s32 lbl_80347330;
@@ -628,6 +629,53 @@ extern void fn_801E17E0(void *p);
 extern void fn_802938C0(void (*cb)(void));
 extern void fn_8007629C(void);
 extern void *lbl_80346BF0;
+typedef struct Anim {
+    u16 cur;   /* 0x00 */
+    u16 max;   /* 0x02 */
+    s16 v[1];  /* 0x04 */
+} Anim;
+typedef struct Work {
+    void *snd;      /* 0x00 */
+    u8 pad04[0x48];
+    Anim *anim;     /* 0x4C */
+} Work;
+extern void fn_802307EC(void *p, s16 *v, s32 n);
+typedef struct Walk_800823E4 {
+    u8 pad0[0xc];
+    u8 pos[2];      /* 0x0C */
+    u8 padE[0x14 - 0xe];
+    s8 len;         /* 0x14 */
+    u8 pad15;
+    s8 state;       /* 0x16 */
+    s8 path[30][2]; /* 0x17 */
+    u8 grid[1];     /* 0x53 */
+} Walk_800823E4;
+s32 fn_800824F0(u8 *pos, s8 val, u8 *grid, u8 *dir);
+typedef struct EntU_80075F2C {
+    union {
+        struct { u8 pad0[2]; s16 x2; u8 pad4[2]; s16 x6; } a;
+        struct { u8 pad0[8]; u32 flags; u8 padc[8]; f32 x14; } b;
+    };
+} EntU_80075F2C;
+typedef struct Unit_80075F2C {
+    u8 pad0[6];
+    s16 x6;
+    s16 x8;
+    u8 pada[0xdc - 0xa];
+    EntU_80075F2C* xdc;
+    u8 pade0[0xe4 - 0xe0];
+    s16 xe4;
+    u8 pade6[0x204 - 0xe6];
+    s16 x204;
+} Unit_80075F2C;
+typedef struct Wk_80075F2C {
+    u8 pad0[0x4c];
+    Unit_80075F2C* u;
+} Wk_80075F2C;
+typedef struct Slot_80075F2C {
+    u8 pad0[0x24];
+    Wk_80075F2C* work;
+} Slot_80075F2C;
 
 void fn_80075040(Msg* a, s16 i) {
     fn_80075060(a, i);
@@ -3293,4 +3341,124 @@ void fn_8007651C(void) {
     }
     fn_802938C0(fn_8007629C);
     lbl_80346BF0 = fn_801E1C7C(0x40);
+}
+
+void fn_8007E44C(Task *t) {
+    Work *w = t->work;
+    Anim *a;
+    void *snd;
+    snd = w->snd;
+    a = w->anim;
+    if (snd == NULL) {
+        t->state = 3;
+    }
+    switch (t->state) {
+    case 0:
+        if (a->cur >= a->max) {
+            t->state = 1;
+        } else {
+            a->cur++;
+        }
+        break;
+    case 1:
+        fn_802307EC(snd, a->v, 0);
+        break;
+    case 2:
+        break;
+    case 3:
+        t->flags |= 0x40;
+        break;
+    }
+}
+
+s32 fn_80083C50(s32 a, s32 b) {
+    E12 *e;
+    s32 id;
+    int i;
+    e = lbl_80302C08;
+    for (i = 0; i < 12; i++) {
+        e[i].x4 = 0x7f;
+        e[i].x0 = -1;
+    }
+    fn_800839D8(a, e = lbl_80302C08, b);
+    id = e->x0;
+    do {
+        if (fn_80083728(a, id)) {
+            return id;
+        }
+        id = (++e)->x0;
+    } while (id != -1);
+    return -1;
+}
+
+f32 fn_80083F34(s8 a, s8 b)
+{
+    f32 r;
+    switch (b) {
+    case 1:
+        r = a * 15 - 75;
+        break;
+    case 2:
+        r = a * 15 - 75;
+        r += 7.0f;
+        break;
+    case 3:
+        r = a * 15 - 75;
+        r += 15.0f;
+        break;
+    }
+    return r;
+}
+
+/* Trace the path back from the walker's position, recording each step and marking the grid. */
+s8 fn_800823E4(Walk_800823E4 *w)
+{
+    s8 i;
+    s8 n;
+    s32 k;
+    u8 pos[2];
+    u8 dir[2];
+    u8 ox, oy;
+    u8 *grid;
+
+    if (w->state == 1 || w->state == 2) {
+        w->len = 0;
+        return 0;
+    }
+    n = w->len;
+    pos[0] = w->pos[0];
+    pos[1] = w->pos[1];
+    dir[0] = 0;
+    dir[1] = 0;
+    grid = w->grid;
+    for (i = n, k = 0; i > 0; i--, k++) {
+        ox = pos[0];
+        oy = pos[1];
+        fn_800824F0(pos, i, grid, dir);
+        dir[0] = ox - pos[0];
+        dir[1] = oy - pos[1];
+        w->path[k][0] = pos[0];
+        w->path[k][1] = pos[1];
+        (lbl_80347354 + (s8)pos[1] * 11)[(s8)pos[0]] = i + 0x60;
+    }
+    w->path[n][0] = -1;
+    return n;
+}
+
+s32 fn_80075F2C(Slot_80075F2C* t)
+{
+    Wk_80075F2C* w = t->work;
+    Unit_80075F2C* u = w->u;
+    s16 id;
+
+    if (u->xdc[u->xe4].a.x2 != 1) {
+        return 0;
+    }
+    if ((u->x6 == 2 || u->x6 == 7) && u->x204 != 0) {
+        id = u->xdc[u->x204].a.x6;
+    } else {
+        id = u->xdc[u->xe4].a.x6;
+    }
+    fn_80075DAC(0.0f, u->xdc[u->xe4].b.x14, w, id, u->xdc[u->xe4].b.flags, u->x6, u->x8);
+    return 1;
 }

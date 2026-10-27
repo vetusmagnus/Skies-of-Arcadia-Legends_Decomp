@@ -3041,6 +3041,29 @@ typedef struct {
     s16 step;
     s16 used;
 } Queue;
+/* An animation/sequence record: header (4 bytes) then b3 words; its size in words is passed in. */
+typedef struct Seq_800D6240 {
+    u8 b0;
+    u8 b1;
+    u8 b2;   /* 0x02 */
+    u8 n;    /* 0x03 */
+    s16 h4;  /* 0x04 */
+    s16 h6;  /* 0x06 */
+    u32 w[1];
+} Seq_800D6240;
+typedef struct Obj_800D6240 {
+    u8 pad0[0x1c];
+    f32 x1c;
+    u8 pad20[0x188 - 0x20];
+    u32 x188;
+    u8 pad18c[0x1fc - 0x18c];
+    s16 x1fc;
+    s16 x1fe;
+    u8 pad200[0x24c - 0x200];
+    f32 x24c;
+    u8 pad250[0x25c - 0x250];
+    Seq_800D6240* seq;
+} Obj_800D6240;
 
 void fn_800B2DA0(u8* p, u32 v) {
     u8* q = *(u8**)(p + 0x268);
@@ -8523,4 +8546,22 @@ s32 fn_800CD0B8(s32 a, s32 b, s32 c, s32 d) {
         return 1;
     }
     return 0;
+}
+
+/* Installs seq on o when its size in words matches: resets the step, copies the speed (b2),
+ * h6's low byte and h4, and sets flag 2. Returns 1 if installed. */
+s32 fn_800D6240(void* unused, Obj_800D6240* o, Seq_800D6240* seq, s16 words) {
+    s32 ok = 0;
+    s32 size = ((seq->n - 1) * 4 + 8) / 4; /* header + n words, in words */
+
+    if (size == words) {
+        o->seq = seq;
+        o->x1fc = 0;
+        ok = 1;
+        o->x1c = seq->b2;
+        o->x24c = seq->h6 & 0xff;
+        o->x1fe = seq->h4;
+        o->x188 |= 2;
+    }
+    return ok;
 }

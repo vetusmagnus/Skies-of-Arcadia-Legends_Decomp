@@ -1,4 +1,5 @@
 #include "types.h"
+#include <string.h>
 extern u32 lbl_80347228;
 extern u32 lbl_80347230;
 extern u32 lbl_8034723C;
@@ -44,6 +45,11 @@ extern f32 lbl_80345850[10];
 typedef struct { s32 id; u8 pad4[4]; s8 x8; } Cur;
 extern Cur lbl_80311AC0;
 extern u32 lbl_80310B3C[];
+extern f32 lbl_80308CE0[4];
+extern u8 lbl_80308CF0[0x100];
+extern s32 lbl_80347270;
+extern s32 lbl_80347274;
+extern void fn_8029CFF8(s32 a);
 
 void fn_801CED24(u32 a, u32 b, u32 c, f32 d, u32 e)
 {
@@ -444,4 +450,36 @@ void fn_801D0680(void) {
     if (lbl_80311AC0.id == 0x11 && lbl_80311AC0.x8 == 0x61) {
         lbl_80346820 = 0xc0;
     }
+}
+
+void fn_801D1A94(void) {
+    f32* p;
+    s32 i;
+    lbl_80347270 = 0;
+    lbl_80347274 = 0;
+    memset(lbl_80308CF0, 0, 0x100);
+    p = lbl_80308CE0;
+    for (i = 4; i != 0; i--) {
+        *p++ = 0.0f;
+    }
+}
+
+/* Adds the modifier bits to a key/button code: lbl_80347220 (unless it is the 0x80000
+ * raw mode) and lbl_80347224 for plain codes below 0x100. Bit 0x2000 calls fn_8029CFF8(1).
+ * lbl_80347224 is compared signed (cmpwi): it is s32 here, u32 in unit_801CED24.c. */
+u32 fn_801D0AB4(u32 x) {
+    s32 m;
+    u32 v;
+    u32 r;
+    m = lbl_80347220;
+    v = (m == 0x80000) ? x : (m | (x & 0x7f));
+    r = v;
+    m = lbl_80347224;
+    if (m != 0 && (x & ~0xff) == 0) {
+        r = v | (m | (x & 0x7f));
+    }
+    if (r & 0x2000) {
+        fn_8029CFF8(1);
+    }
+    return r;
 }

@@ -3,6 +3,7 @@
 #include <math.h>
 #include "ninja.h"
 #include "game/drawstate.h"
+#include <dolphin/os/OSFastCast.h>
 typedef struct Obj12 {
     u8 pad_00[0x12];
     u16 v12;
@@ -1160,6 +1161,12 @@ extern Pair_800A1690 lbl_80303450;
 extern f32* lbl_80346778;
 extern f32* lbl_8034677C;
 extern void njRotateZ(NJS_MATRIX m, Angle a);
+/* Byte (0..255) to a 0..1 float: __OSu8tof32(&b) * (1/255).
+ * Needs the Dolphin SDK fast-cast inline __OSu8tof32 (psq_l through GQR2), which our
+ * extern/sdk OSFastCast.h lacks. The SDK's definition is reproduced here only until it is
+ * added to <dolphin/os/OSFastCast.h>; the game code itself is the one-line function. */
+#include <dolphin/os/OSFastCast.h>
+typedef unsigned char u8;
 
 void fn_800972AC(void)
 {
@@ -3501,4 +3508,16 @@ void fn_800A1690(f32* m, Ang3* out) {
     out->x *= -1;
     out->y *= -1;
     out->z *= -1;
+}
+
+f32 fn_8009E4B8(u8 b) {
+    f32 f = __OSu8tof32(&b);
+    f *= 0.003921569f;
+    return f;
+}
+
+/* (1 + x) * 255 to a u8 through the SDK fast cast. The constants must be literals: as
+ * extern sdata2 labels the stwu is scheduled first. */
+u8 fn_8009E4D4(f32 x) {
+    return __OSf32tou8((1.0f + x) * 255.0f);
 }

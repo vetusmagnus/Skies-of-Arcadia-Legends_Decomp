@@ -712,6 +712,14 @@ extern void fn_80156DA0(Ctx_8014D398 *c, void *a);
 extern void fn_8015EBF4(Ctx_8014D398 *c);
 extern void fn_802275A4(void *p, s32 a);
 extern void fn_80100B74(Task_8014D398 *t);
+extern void fn_8012E5B0(s8 v);
+extern void fn_8012E560(s8 v);
+extern s32 fn_8013EA10(void);
+extern void fn_8012E5A0(s16 v);
+extern void fn_8012E590(s8 v);
+extern void fn_8012E414(s8 v);
+extern void fn_8012E404(s8 v);
+extern void fn_8013E0BC(s8 a, s8 b, void *p);
 
 void fn_8013D400(s32 a, s32 b) {
     fn_80136A28(a, b, 3, -1, -1, -1);
@@ -2421,4 +2429,15 @@ void fn_8014D398(Task_8014D398 *t)
         fn_80100B74(t);
         break;
     }
+}
+
+void fn_8013ECF4(s8 a, s8 b, s32 c, void *p) {
+    fn_8012E5B0(1);
+    fn_8012E560(c);
+    fn_8012E5A0(fn_8013EA10());
+    fn_8012E590(a + 6);
+    fn_8012E414(c < 0);
+    fn_8012E404(!(c < 0));
+    fn_8013E0BC(a, b, p);
+    fn_8012E5C0(0);
 }

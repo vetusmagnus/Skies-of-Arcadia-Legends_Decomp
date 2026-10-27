@@ -157,6 +157,10 @@ extern void fn_80011370(u8, s32);
 extern void fn_80011400(s32, s32);
 extern void fn_80032B4C(void);
 extern void fn_80032BBC(u8, s32);
+typedef struct Chr_80051FA0 { u8 id; } Chr_80051FA0;
+typedef struct Wk_80051FA0 { u8 pad0[0x4c]; Chr_80051FA0 *chr; } Wk_80051FA0;
+typedef struct Task_80051FA0 { u8 pad0[0x24]; Wk_80051FA0 *work; } Task_80051FA0;
+extern void fn_800171F0(u8 id, u8 part, f32 *a, f32 *b);
 
 void fn_80052058(O52058 *o) {
     fn_8001E05C(o->child);
@@ -399,3 +403,27 @@ void fn_80053964(O_80053964 *o) {
     fn_80011400(un->id, 0);
 }
 
+/* Over up to 8 parts (list ends at a negative entry), finds the pair of points fn_800171F0
+ * gives with the largest distance; copies that pair to outA/outB and returns the distance. */
+f32 fn_80051FA0(Task_80051FA0 *t, s8 *list, f32 *outA, f32 *outB) {
+    s16 i;
+    Chr_80051FA0 *c = t->work->chr;
+    f32 best = 0.0f;
+    f32 a[3];
+    f32 b[3];
+    f32 d;
+
+    for (i = 0; i < 8; i++) {
+        if (list[i] < 0) {
+            break;
+        }
+        fn_800171F0(c->id, list[i], a, b);
+        d = fn_80071E9C(a, b);
+        if (d > best) {
+            best = d;
+            fn_80071CF0(a, outA);
+            fn_80071CF0(b, outB);
+        }
+    }
+    return best;
+}

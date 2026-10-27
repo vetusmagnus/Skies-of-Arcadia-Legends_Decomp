@@ -57,6 +57,17 @@ static inline unsigned char __OSf32tou8(register float inF) {
 
 static inline void OSf32tou8(float* in, unsigned char* out) { *out = __OSf32tou8(*in); }
 
+static inline float __OSu8tof32(register const unsigned char* arg) {
+  register float ret;
+#ifdef __MWERKS__
+  asm
+  {
+        psq_l   ret, 0(arg), 1, OS_FASTCAST_U8
+  }
+#endif
+  return ret;
+}
+
 static inline float __OSu16tof32(register const unsigned short* arg) {
   register float ret;
 #ifdef __MWERKS__

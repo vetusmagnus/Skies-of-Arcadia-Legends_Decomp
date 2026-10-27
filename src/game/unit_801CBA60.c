@@ -34,6 +34,8 @@ extern void fn_801DBE1C(const char*, ...);
 extern void fn_8025F120(char*, const char*);
 extern u32 lbl_80310B3C[0x356];
 extern u8 lbl_80310A1C[0x120];
+s32 fn_801CB460(s32 c);
+typedef union Vec3 { f32 f[3]; s32 i[3]; } Vec3;
 
 s32 fn_801CAE84(void) {
     return 1;
@@ -462,4 +464,133 @@ void fn_801CAF30(void) {
     for (i = 0; i < 0x120; i++) {
         lbl_80310A1C[i] = 0;
     }
+}
+
+s32 fn_801CB0A4(s32 c) {
+    switch (c) {
+    case 0x22: return 3;
+    case 0x23: case 0x24: case 0x25: case 0x26: case 0x27: case 0x28: return 4;
+    case 0x29: return 6;
+    case 0x2a: case 0x2b: case 0x2c: case 0x2d: case 0x2e: case 0x2f: return 7;
+    case 0x30: return 4;
+    case 0x31: case 0x32: return 5;
+    case 0x0: case 0xff: return 0x80000000;
+    default: return 0;
+    }
+}
+
+void fn_801CAE98(void) {
+    int i;
+    for (i = 0x3a; i < 0x40; i++) {
+        lbl_80310B3C[i] = 0;
+    }
+    for (i = 0x80; i < 0x11f; i++) {
+        lbl_80310A1C[i] = 0;
+    }
+}
+
+s32 fn_801CB1AC(u16* p) {
+    s32 c;
+    s32 lo;
+    s32 n;
+    s32 r;
+    u32 w;
+    u16* q;
+    s32 sum;
+    if (p == 0) return 0;
+    lo = 0;
+    sum = 0;
+    do {
+        q = p + 2;
+        n = p[0];
+        c = (u8)p[1];
+        r = fn_801CB0A4(c);
+        if (r >= 0) {
+            w = q[0];
+        }
+        if (!(lo <= r)) {
+            n = r & 0xffff;
+        }
+        if (r > 0) {
+            sum += w;
+        }
+        p = q + n * 2;
+    } while (c != 0xff);
+    return sum;
+}
+
+s16 *fn_801CB6A0(s16 *p, s16 want)
+{
+    u8 c;
+    s32 r;
+    s32 step;
+    if (p == NULL) {
+        return NULL;
+    }
+    do {
+        c = (u8)*p;
+        if (want == c) {
+            return p;
+        }
+        p++;
+        r = fn_801CB460(c);
+        if (r >= 0) {
+            step = *p;
+            p++;
+        } else {
+            step = (u16)r;
+        }
+        p = (s16 *)((u8 *)p + (step << 1));
+    } while ((s32)c != 0xff);
+    return NULL;
+}
+
+s32 fn_801CB244(Vec3* out, u16* p, s32 max) {
+    u32 size;
+    u16* next;
+    Vec3* v;
+    s32 r;
+    s32 i;
+    s32 c;
+    s32 cnt;
+    u16* cur;
+    Vec3* dst;
+    s32 n;
+    if (p == 0 || max == 0) return 0;
+    dst = out;
+    cur = p;
+    n = 0;
+    do {
+        size = cur[0];
+        c = (u8)cur[1];
+        next = cur + 2;
+        cur = next;
+        r = fn_801CB0A4(c);
+        if (r >= 0) {
+            cnt = *next;
+            next += 2;
+        } else {
+            size = r & 0xffff;
+        }
+        if (r > 0) {
+            v = (Vec3*)next;
+            do {
+                for (i = 0; i < n; i++) {
+                    Vec3* o = &out[i];
+                    if (o->i[0] == v->i[0] && o->i[1] == v->i[1] && o->i[2] == v->i[2]) break;
+                }
+                if (i == n) {
+                    dst->f[0] = v->f[0];
+                    dst->f[1] = v->f[1];
+                    dst->f[2] = v->f[2];
+                    n++;
+                    dst++;
+                }
+                cnt--;
+                v = (Vec3*)((u16*)v + r * 2);
+            } while (cnt > 0 && n < max);
+        }
+        cur += size * 2;
+    } while (c != 0xff && n < max);
+    return n;
 }

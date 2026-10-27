@@ -26,6 +26,8 @@ typedef struct { u8 pad[0x24]; u8 f; u8 pad2[0x3]; } T6;
 extern T6 lbl_802D83EC[];
 typedef struct { u8 pad[0x18]; u8 f; u8 pad2[0xb]; } T7;
 extern T7 lbl_802D8A2C[];
+extern const s8 lbl_802D4600[24];
+s32 fn_801E4BBC(s8 i);
 
 s32 fn_801F2508(void *a, void *b)
 {
@@ -228,4 +230,22 @@ s32 fn_801F4D14(void)
         }
     }
     return !((f32)sa / (f32)sb < 0.63);
+}
+
+s32 fn_801F52AC(void)
+{
+    s8 i;
+    s32 cnt;
+
+    cnt = 0;
+    for (i = 0; i < 0x16; i++) {
+        if (fn_801E4BBC(i) != 0) {
+            if (lbl_802D4600[i] == 0) {
+                cnt += 1;
+            } else {
+                cnt += 0x100;
+            }
+        }
+    }
+    return cnt;
 }

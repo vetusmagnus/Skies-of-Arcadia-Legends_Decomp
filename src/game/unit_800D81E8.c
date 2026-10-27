@@ -1771,7 +1771,16 @@ typedef struct {
     void *p40;
 } Menu_8010CF78;
 extern Stick lbl_80311A14[];
-extern void fn_8010C384(void *p, s32 a, s32 b);
+typedef struct Row {
+    struct Row *next;
+    u8 pad4[4];
+    u32 color;
+    u8 padc[8];
+    u16 x14;
+    u8 pad16[2];
+    s16 x18;
+} Row;
+void fn_8010C384(Row *p, s32 a, s16 b);
 typedef struct {
     s16 s0;
     s16 pad2;
@@ -7397,4 +7406,60 @@ void fn_80100270(void *arg) {
     }
     fn_8025F120(lbl_80305CF0, arg);
     lbl_80311AD4[6] = 15;
+}
+
+s32 fn_800EDAA4(f32 x, f32 y, u8 (*tbl)[24][28], s32 idx) {
+    s32 cx;
+    s32 cy;
+    s32 t;
+    if (x > 0.0f) {
+        cx = (x - 36.0f) / 16.0f;
+    } else {
+        cx = 0;
+    }
+    if (y > 0.0f) {
+        cy = (y - 53.0f) / 16.0f;
+    } else {
+        cy = 0;
+    }
+    if (cx >= 0x1c) {
+        cx = 0x1b;
+    }
+    if (cy >= 0x18) {
+        cy = 0x17;
+    }
+    t = tbl[idx][cy][cx];
+    if ((s8)lbl_80310A1C[6] < 14) {
+        if (t == 7) {
+            t = 0;
+        }
+    } else if (t == 11) {
+        t = 7;
+    }
+    return t;
+}
+
+void fn_8010C384(Row *p, s32 a, s16 b)
+{
+    s32 n = b;
+
+    while (p != NULL) {
+        if (p->x14 == 0) break;
+        p = p->next;
+        n--;
+    }
+    while (p != NULL && n > 0) {
+        if (p->x14 == 0) {
+            if (a == 0) {
+                p->color = 0xFFC0C021;
+            } else {
+                p->color = 0xFFC0C0C0;
+            }
+            a--;
+            n -= p->x18;
+        } else {
+            n--;
+        }
+        p = p->next;
+    }
 }

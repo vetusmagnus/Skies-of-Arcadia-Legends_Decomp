@@ -1124,6 +1124,16 @@ typedef struct Owner_8015C928 { u8 pad[0x1d8]; Sub *fl; } Owner_8015C928;
 typedef struct Arg_8015C928 { u8 pad[0x1c]; s32 v; } Arg_8015C928;
 void fn_801E5EA4(void *p, s16 v);
 extern void *fn_80109D74(s32 h);
+typedef void (*CmdFn)(s32 n, f32 *args);
+extern CmdFn lbl_802E6EF0[4];
+float fn_801F6120(float **p);
+typedef struct {
+    u8 pad0[0x34];
+    f32 x34, x38, x3c, x40;
+    u8 pad44[0x58 - 0x44];
+} Rec58;
+extern void fn_80157E54(s32 i, s32 j);
+extern void fn_80157E04(s32 i, s32 j, u8 a0, u8 a1, u8 b0, u8 b1);
 
 void fn_8014F970(u8 *self) {
     fn_80153270(self + 0x95c);
@@ -4055,4 +4065,30 @@ void fn_80153730(void) {
             lbl_80306758.f8 = 1;
         }
     }
+}
+
+void fn_801532F0(s32 idx, s32 a, s32 b) {
+    fn_80153790(lbl_802E6A40[idx]->f0, a, b);
+}
+
+void fn_801559BC(float *p) {
+    f32 args[128] = {0.0f};
+    f32 *a;
+    s32 i;
+    s32 n;
+
+    n = *(s32 *)p++;
+    for (i = 0, a = args; i < n; i++) {
+        *a++ = fn_801F6120(&p);
+    }
+    lbl_802E6EF0[(s32)args[0]](n - 1, &args[1]);
+}
+
+void fn_801557A8(s32 i, s32 j)
+{
+    Rec58 *r;
+
+    fn_80157E54(i, j);
+    r = (Rec58 *)lbl_80308F98[i].p + j;
+    fn_80157E04(i, j, r->x34, r->x38, r->x3c, r->x40);
 }

@@ -50,6 +50,7 @@ extern void fn_80230BD4(u8 id, void *node, u32 **out, u16 idx);
         dst++;                   \
     }
 #define STEP_8022E4CC(n)                              q = (p += (n));                          if (dir == 0) {                              if (*q != cmp) {                             *q = val;                            }                                    } else {                                     *q = val;                            }
+typedef struct Spring8022E18C { f32 a, b, c, d, e; } Spring8022E18C;
 
 void fn_8022D34C(s32 a, f32 b) {
     if (a > 0) {
@@ -408,4 +409,49 @@ void fn_80231688(s32 mode) {
         GXSetZCompLoc(GX_TRUE);
         GXSetAlphaCompare(GX_ALWAYS, 0, GX_AOP_AND, GX_ALWAYS, 0);
     }
+}
+
+s32 fn_8022E18C(Spring8022E18C *p, s32 n, f32 *out)
+{
+    s32 ok = 1;
+    f32 e;
+    f32 b2;
+    f32 na;
+    f32 c;
+    f32 v;
+    f32 x;
+    f32 last;
+    f32 acc;
+    s32 i;
+
+    if (n > 300) {
+        return 0;
+    }
+    b2 = p->b * p->b;
+    c = p->c;
+    na = -p->a;
+    v = p->d;
+    e = p->e;
+    acc = na * v - c * b2;
+    v += acc * e / 2;
+    x = c + v * e;
+    for (i = 0; i < n; i++) {
+        acc = na * v - x * b2;
+        v = v + acc * e;
+        x += v * e;
+        if (n > 1 && i == n - 2) {
+            last = -x;
+        }
+    }
+    *out = -x;
+    if (n != 0) {
+        f32 d = last - *out;
+        if (d < 0.0f) {
+            d *= -1.0f;
+        }
+        if (d < 0.0001) {
+            ok = 0;
+        }
+    }
+    return ok;
 }

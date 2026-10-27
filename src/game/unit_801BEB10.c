@@ -17,6 +17,8 @@ typedef struct { u8 pad[0x24]; W* w; void* p28; Q* p2c; void* p30; } T;
 void fn_801BE670(Task* t);
 typedef struct Ctl { u8 pad0[0x11c]; u32 v; u8 pad1[4]; s32 out; } Ctl;
 typedef struct Obj { u8 pad[0x24]; Ctl *c; } Obj;
+extern u32 lbl_803471C0;
+void fn_80217830(u32 h);
 
 T* fn_801BEB10(void* a, s32 b, s32 c, s32 d) {
     extern void MenuDummy(Task* t);
@@ -66,4 +68,21 @@ void fn_801C0814(Obj *o) {
     } else {
         c->out = 1;
     }
+}
+
+static inline s32 PlaySe(s16 se) {
+    if (se >= MENU_SE_COUNT || se == -1) {
+        return 0;
+    }
+    return SePlay(menu_se_table[se].bank, 1, menu_se_table[se].id);
+}
+
+void fn_801C08B4(s32 msg) {
+    if (lbl_803471C0 != 0) {
+        if (lbl_803471C0 != 0) {
+            fn_80217830(lbl_803471C0);
+        }
+        lbl_803471C0 = 0;
+    }
+    lbl_803471C0 = PlaySe(msg);
 }

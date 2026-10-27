@@ -566,6 +566,40 @@ typedef struct Spec {
 } Spec;
 extern void njCalcVector(NJS_MATRIX m, NJS_POINT3 *v, NJS_POINT3 *out);
 extern f32 njCos(Angle a);
+typedef struct Vec3_80222838 { f32 x, y, z; } Vec3_80222838;
+typedef struct Ang3_80222838 { Angle x, y, z; } Ang3_80222838;
+/* A collision object: its transform is built from two translate/rotate pairs,
+   then each of its `count` parts is transformed in turn. */
+typedef struct Obj_80222838 {
+    u8 pad0[0xc];
+    s16 count;               /* 0x0c */
+    u8 pade[0x18 - 0xe];
+    Vec3_80222838 *pos;      /* 0x18 */
+    void *parts;             /* 0x1c */
+    Ang3_80222838 *rot;      /* 0x20 */
+    Vec3_80222838 *pos2;     /* 0x24 */
+    Ang3_80222838 *rot2;     /* 0x28 */
+    u8 pad2c[0x34 - 0x2c];
+    u8 data[1];              /* 0x34 */
+} Obj_80222838;
+extern Slot lbl_803154B0[8];
+extern u32 lbl_803474C0;
+extern u32 lbl_803474C4;
+void fn_8022291C(void);
+typedef struct Obj_80219ACC { u8 pad[0x34]; u32 flags; } Obj_80219ACC;
+extern Obj_80219ACC *lbl_803477E8;
+extern void fn_8023A8E0(void *p);
+typedef struct Blk {
+    u8 pad0[0x30];
+    struct Blk *next;
+} Blk;
+extern void *heap_main;
+extern Blk *lbl_80347804;
+extern u32 lbl_80347800;
+typedef struct { s32 x0, x4, x8, state; } State_80311AD4;
+extern u8 lbl_802D96CC[];
+extern s32 fn_8022AE94(void);
+extern void fn_80228914(void);
 
 void fn_80219378(s32 a)
 {
@@ -2690,4 +2724,189 @@ void fn_8022D1F8(NJS_POINT3 *out, Spec *s, Angle *rot) {
             out->z += r.z * k;
         }
     }
+}
+
+void fn_80222838(void *p)
+{
+    Obj_80222838 *o = p;
+    NJS_MATRIX m;
+    void *q;
+    s32 i;
+
+    njUnitMatrix(m);
+    if (o->pos != NULL) {
+        njTranslate(m, o->pos->x, o->pos->y, o->pos->z);
+    }
+    if (o->rot != NULL) {
+        njRotateZXY(m, o->rot->x, o->rot->y, o->rot->z);
+    }
+    if (o->pos2 != NULL) {
+        njTranslate(m, o->pos2->x, o->pos2->y, o->pos2->z);
+    }
+    if (o->rot2 != NULL) {
+        njRotateZXY(m, o->rot2->x, o->rot2->y, o->rot2->z);
+    }
+    q = o->data;
+    for (i = 0; i < o->count; i++) {
+        q = fn_802226A8(m, o->parts, q);
+    }
+}
+
+s16 fn_80225E58(Slot *tbl, s16 n, u32 key_)
+{
+    u16 key = key_;
+    s32 i;
+    if (key != 0xFFFF) {
+        for (i = 0; i < n; tbl++, i++) {
+            if (tbl->p0 != NULL && tbl->key8 == key) {
+                return i;
+            }
+        }
+    } else {
+        for (i = 0; i < n; tbl++, i++) {
+            if (tbl->p0 != NULL) {
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+
+/* Points the slot table at tbl (n entries) and empties every slot; as an inline its own
+ * counter gets the register the original has (written out in place, i and the offset swap). */
+static inline void SlotInit(Slot *tbl, s16 n) {
+    s32 i;
+    lbl_8034752C = tbl;
+    lbl_8034752A = n;
+    for (i = 0; i < lbl_8034752A; i++) {
+        lbl_8034752C[i].p0 = NULL;
+        lbl_8034752C[i].key8 = 0xFFFF;
+    }
+    lbl_80347528 = 0;
+}
+/* Resets the sound/stream slot system: counters, the 8-slot table, then fn_8022291C. */
+void fn_80225FDC(void)
+{
+    lbl_803474C4 = 0;
+    lbl_803474C0 = 0;
+    SlotInit(lbl_803154B0, 8);
+    fn_8022291C();
+}
+
+void *fn_80226704(Node_UNIT0000 *a, void *b, u32 c)
+{
+    Node_UNIT0000 *n = fn_801E1A74(1, c + 0x40);
+    if (n != NULL) {
+        n->f20 = 0.0f;
+        n->next = a->next;
+        a->next = n;
+        if (lbl_80311A78.cur == a) {
+            lbl_80311A78.cur = n;
+        }
+        n->w0 = b;
+        n->w8 = a;
+        n->w10 = c;
+        n->w14 = a->w14;
+        n->b18 = 0;
+        n->b1b = a->b1b + 1;
+    }
+    return n;
+}
+
+void fn_8022638C(void **list) {
+    Node_UNIT0000 *cur = &lbl_80311A78.sentinel;
+    void *v;
+    s32 i = 0;
+    while ((v = *list++) != NULL) {
+        Node_UNIT0000 *n = fn_801E1A74(1, 0x40);
+        if (n == NULL) {
+            break;
+        }
+        n->f20 = 0.0f;
+        n->next = cur->next;
+        cur->next = n;
+        cur = n;
+        n->w0 = v;
+        n->w14 = i++;
+        n->b18 = 0;
+        n->b1b = 0;
+    }
+}
+
+void fn_80219ACC(s32 x, void *p)
+{
+    fn_8023A8E0(p);
+    if (lbl_803477E8 != 0) {
+        lbl_803477E8->flags |= (x > 0) ? 2 : 0x12;
+    }
+}
+
+static inline void FreeAll(Blk *p)
+{
+    Blk *nx;
+    while (p != NULL) {
+        nx = p->next;
+        fn_80005AD8(heap_main, p);
+        p = nx;
+    }
+}
+
+void fn_8022807C(void)
+{
+    if (lbl_80347804 != NULL) {
+        FreeAll(lbl_80347804);
+        lbl_80347800 = 0;
+        lbl_80347804 = NULL;
+    }
+}
+
+/* Create a task running fn, linked right after parent a (a child inherits a's w14, depth + 1). */
+void *fn_802267AC(void *a, void *fn)
+{
+    Node_UNIT0000 *p = a;
+    Node_UNIT0000 *n = fn_801E1A74(1, 0x40);
+    if (n != NULL) {
+        n->f20 = 0.0f;
+        n->next = p->next;
+        p->next = n;
+        if (lbl_80311A78.cur == p) {
+            lbl_80311A78.cur = n;
+        }
+        n->w0 = fn;
+        n->w8 = p;
+        n->w10 = 0;
+        n->w14 = p->w14;
+        n->b18 = 0;
+        n->b1b = p->b1b + 1;
+    }
+    return n;
+}
+
+void fn_80228B74(void) {
+    switch (fn_8022AE94()) {
+    case 0: fn_80228914(); fn_80100178(lbl_802D96CC); fn_801DBE6C(6); break;
+    case 1: fn_801CBC30(); lbl_80311AD4.state = 2; break;
+    case 2: break;
+    }
+    fn_8022642C();
+}
+
+Node_UNIT0000 *fn_80226670(Node_UNIT0000 *a, void *b)
+{
+    Node_UNIT0000 *n = fn_801E1A74(1, 0x40);
+    if (n != NULL) {
+        Node_UNIT0000 *t;
+        n->f20 = 0.0f;
+        t = lbl_80311A78.head;
+        n->next = t->next;
+        t->next = n;
+        lbl_80311A78.head = n;
+        n->w0 = b;
+        n->w8 = a;
+        n->w10 = 0;
+        n->w14 = a->w14;
+        n->b18 = 0;
+        n->b1b = a->b1b + 1;
+    }
+    return n;
 }

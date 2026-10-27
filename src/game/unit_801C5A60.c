@@ -127,6 +127,24 @@ typedef struct Ent_802EE7C0 {
 extern Ent_802EE7C0 lbl_802EE7C0[];
 extern int strncmp(const char *a, const char *b, u32 n);
 extern int fn_8025EF88(const char *a, const char *b);
+/* lbl_80308428: 8 pairs of 3-word vectors (0xc0 bytes). */
+typedef struct Pair_801C86D8 {
+    s32 a[3];
+    s32 b[3];
+} Pair_801C86D8;
+extern Pair_801C86D8 lbl_80308428[8];
+extern void fn_801C8590(void);
+extern void fn_802938C0(void (*cb)(void));
+typedef struct Rec_801C5D88 {
+    u8 pad0[0x1c];
+    u32* lst;
+} Rec_801C5D88;
+typedef struct Obj_801C5D88 {
+    u8 pad0[0x1c8];
+    Rec_801C5D88* rec;
+} Obj_801C5D88;
+extern u32 lbl_802EE798[];
+extern f32 njScalor(NJS_VECTOR *v);
 
 void fn_801C5A60(NJS_MATRIX m, NJS_POINT3 *p, NJS_POINT3 *out)
 {
@@ -628,4 +646,158 @@ s32 fn_801C8A0C(char *s) {
         }
     } while (n--, e++, n > 0);
     return -1;
+}
+
+/* Clears the 8 vector pairs and registers fn_801C8590 as a callback. */
+void fn_801C86D8(void)
+{
+    s32 i, j;
+    for (i = 0; i < 8; i++) {
+        for (j = 0; j < 3; j++) {
+            lbl_80308428[i].a[j] = 0;
+            lbl_80308428[i].b[j] = 0;
+        }
+    }
+    fn_802938C0(fn_801C8590);
+}
+
+u32 fn_801C5D88(Obj_801C5D88* obj, u32 idx) {
+    s32 ok;
+    u32 val;
+    val = 0;
+    ok = 0;
+    if (obj && obj->rec) {
+        u32* lst = obj->rec->lst;
+        if (lst && lst[0] != 0 && lst[0] > idx) {
+            ok = 1;
+        }
+    }
+    if (ok) {
+        val = obj->rec->lst[idx + 1];
+    }
+    return val;
+}
+
+static inline int fn_801C8930_known(s32 id) {
+    u32 *q;
+    if (id > 0) {
+        q = lbl_802EE798;
+        while (*q != 0 && id != *q) {
+            q++;
+        }
+        return *q != 0;
+    }
+    return 0;
+}
+
+void *fn_801C8930(void *h) {
+    if (h == NULL) {
+        return NULL;
+    }
+    if (fn_801C8930_known(*(s32 *)h) == 1) {
+        return (u8 *)h + 8;
+    }
+    return h;
+}
+
+void fn_801C8828(u8 *base) {
+    u8 *hdr;
+    u8 *end;
+    u32 c;
+    u8 *p;
+    u32 off;
+    u8 *a;
+    u8 *b;
+    u32 *slot;
+    a = base + 8;
+    hdr = a;
+    b = a + *(u32 *)(base + 4);
+    p = b + 8;
+    end = p + *(u32 *)(b + 4);
+    while (end > p) {
+        c = *p;
+        switch (c & 0xc0) {
+        case 0:
+            p += 1;
+            continue;
+        case 0x40:
+            off = (c & ~0xc0) << 2;
+            *p = 0;
+            p += 1;
+            break;
+        case 0x80:
+            off = (c & ~0xc0) << 8;
+            *p = 0;
+            off += p[1];
+            p[1] = 0;
+            off <<= 2;
+            p += 2;
+            break;
+        case 0xc0:
+            off = (c & 0x3f) << 24;
+            *p = 0;
+            off += p[1] << 16;
+            p[1] = 0;
+            off += p[2] << 8;
+            p[2] = 0;
+            off += p[3];
+            p[3] = 0;
+            off <<= 2;
+            p += 4;
+            break;
+        }
+        slot = (u32 *)(a + off);
+        if (*slot != 0) {
+            *slot = (u32)hdr + *slot;
+        }
+        a = (u8 *)slot;
+    }
+}
+
+f32 fn_801C599C(NJS_POINT3 *a, NJS_POINT3 *b) {
+    f32 r = 0.0f;
+    if (a && b) {
+        NJS_POINT3 d;
+        d.x = a->x - b->x;
+        d.y = r;
+        d.z = a->z - b->z;
+        r = njScalor(&d);
+    }
+    return r;
+}
+
+/* Same shape as CalcPointSafe/RotateVector in src/game/uiobj.c. */
+static inline void CalcPointSafe(f32* m, NJS_VECTOR* v, NJS_VECTOR* out) {
+    NJS_VECTOR t;
+    if (m != NULL && v != NULL && out != NULL) {
+        t.x = v->x;
+        t.y = v->y;
+        t.z = v->z;
+        njCalcPoint(m, &t, out);
+    }
+}
+
+void fn_801C58FC(NJS_VECTOR* v, NJS_VECTOR* out, Angle x, Angle y, Angle z) {
+    NJS_MATRIX m;
+    if (v != NULL && out != NULL) {
+        njUnitMatrix(m);
+        njRotateXYZ(m, x, y, z);
+        CalcPointSafe(m, v, out);
+    }
+}
+
+u8* fn_801C87C8(u8 code, u8* base) {
+    switch (code) {
+    case 0x29:
+        return base + 0x18;
+    case 0x22:
+        return base + 0xc;
+    case 0x23: case 0x24: case 0x25: case 0x26: case 0x27: case 0x28:
+    case 0x30:
+        return base + 0x10;
+    case 0x2a: case 0x2b: case 0x2c: case 0x2d: case 0x2e: case 0x2f:
+        return base + 0x1c;
+    case 0x31: case 0x32:
+        return base + 0x14;
+    }
 }

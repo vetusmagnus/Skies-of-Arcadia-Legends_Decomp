@@ -576,6 +576,68 @@ typedef struct KeySet {
     Key* keys;
     s32 count;
 } KeySet;
+/* Needs include/game/sprite.h to declare `Sprite* fn_801D68C4(void* bank, s32 index)`:
+   the original does not mask the index (u16 adds clrlslwi). */
+typedef struct Sprite Sprite;
+typedef struct SpriteBank {
+    u8* base;      /* 0x0 sprite data */
+    s32 x4;        /* 0x4 */
+    s32* offsets;  /* 0x8 offset of each sprite from base */
+} SpriteBank;
+/* Relocates a block's self-relative offsets into pointers (0 stays 0). */
+typedef struct E18 { u8 pad0[0xc]; u32 f0c; u32 f10; u8 pad14[4]; } E18;
+typedef struct E8 { u32 pad0; u32 f4; } E8;
+typedef struct Hdr_801DA6A8 { u32 f0; u32 f4; u8 pad8[0x10]; s16 n18; s16 n1a; } Hdr_801DA6A8;
+typedef struct KeyEnt {
+    u32 a;
+    u32 b;
+    u32 key;
+} KeyEnt;
+typedef struct KeyList {
+    KeyEnt *ents;
+    u32 count;
+} KeyList;
+typedef struct L3 {
+    u8 pad[0x20];
+    u32 f20;
+} L3;
+typedef struct L2 {
+    u8 pad[0xc];
+    L3 *fc;
+} L2;
+typedef struct L1 {
+    u8 pad[8];
+    L2 *f8;
+} L1;
+typedef struct Top {
+    L1 *f0;
+} Top;
+extern s32 fn_80299040(void *p);
+extern void fn_80291428(s32 a);
+extern void fn_802913E8(s32 a, s32 b);
+typedef struct {
+    u32 a;
+    u32 b;
+    u32 c;
+} Triple616C;
+s32 fn_80227AF0(s32 i, void *p);
+void *fn_801E13B0(void *p, u32 off);
+void fn_801DAEB8(void *p);
+typedef struct TexHdr {
+    u8 pad0[0x10];
+    u32 off;
+} TexHdr;
+typedef struct SpinObj {
+    u8 pad00[0x2];
+    s16 k02;
+    u8 pad04[0x18];
+    f32 angle;     /* 0x1c */
+    f32 speed;     /* 0x20 */
+    f32 rate;      /* 0x24 */
+    u8 pad28[0x24];
+    void *model;   /* 0x4c */
+} SpinObj;
+void fn_801DFC5C(void *a, void *b, s16 c, f32 d);
 
 void fn_801D1AE8(void) {
     VISetNextFrameBuffer(lbl_803476AC);
@@ -2699,4 +2761,152 @@ s32 fn_801DE6F0(f32* a, f32* b, f32* c, f32 t, KeySet* ks) {
         return 1;
     }
     return 0;
+}
+
+Sprite* fn_801D68C4(void* bank, s32 index)
+{
+    SpriteBank* b = bank;
+    return (Sprite*)(b->base + b->offsets[index]);
+}
+
+void fn_801DA6A8(Hdr_801DA6A8 *h) {
+    if (h->f0 != 0) {
+        E18 *e;
+        s32 n;
+        u32 v = h->f0 + (u32)h;
+        h->f0 = v;
+        e = (E18 *)v;
+        n = h->n18;
+        do {
+            if (e->f0c != 0) e->f0c = (u32)&e->f0c + e->f0c;
+            if (e->f10 != 0) e->f10 = (u32)&e->f10 + e->f10;
+            e++;
+        } while (--n > 0);
+    }
+    if (h->f4 != 0) {
+        s32 n;
+        E8 *q;
+        q = (E8 *)(h->f4 = (u32)&h->f4 + h->f4);
+        n = h->n1a;
+        do {
+            if (q->f4 != 0) q->f4 = (u32)&q->f4 + q->f4;
+            q++;
+        } while (--n > 0);
+    }
+}
+
+s32 fn_801DDC48(KeyList *x, KeyList *y) {
+    s32 i;
+    s32 n;
+    s32 ok;
+    KeyEnt *p;
+    KeyEnt *q;
+
+    n = x->count;
+    if (n == y->count) {
+        p = x->ents;
+        ok = 1;
+        q = y->ents;
+        for (i = 0; i < n; i++) {
+            if (p->key == 0 || p->key != q->key) {
+                ok = 0;
+                break;
+            }
+            p++;
+            q++;
+        }
+        return ok;
+    }
+    return 0;
+}
+
+/* fn_80299040 takes t itself (it stores its argument), which is what kept r3 live. */
+s32 fn_801D80A0(Top *t) {
+    s32 r = 0;
+    if (t != 0 && t->f0 != 0 && t->f0->f8 != 0 && t->f0->f8->fc != 0 && t->f0->f8->fc->f20 != 0) {
+        fn_80299040(t);
+        fn_80291428(1);
+        fn_802913E8(0, -1);
+        r = 1;
+    }
+    return r;
+}
+
+s32 fn_801D616C(Triple616C* p) {
+    if (p == 0) {
+        return 0;
+    }
+    if (p->a == 0) {
+        return 0;
+    }
+    if (p->b == 0) {
+        return 0;
+    }
+    return p->c >= 1;
+}
+
+void *fn_801DB124(void *p) {
+    s32 i;
+    u32 off, cnt;
+    GXInvalidateTexAll();
+    i = 0;
+    for (;;) {
+        if (fn_80227AF0(i, p) == 0) {
+            off = *(u32 *)((u8 *)p + 0x10);
+            cnt = *(u32 *)((u8 *)off + (u32)p);
+            p = fn_801E13B0(p, off + (cnt * 0x2c + 4));
+            break;
+        }
+        i++;
+    }
+    fn_801DAEB8(p);
+    return p;
+}
+
+void* fn_801DB244(const char* name)
+{
+    s32 i;
+    TexHdr* p;
+
+    p = fn_801CC3C4(name);
+    GXInvalidateTexAll();
+    i = 0;
+    for (;;) {
+        if (fn_80227AF0(i, p) == 0) {
+            u32 off = p->off;
+            p = fn_801E13B0(p, *(u32*)(off + (u32)p) * 0x2c + 4 + off);
+            break;
+        }
+        i++;
+    }
+    fn_801DAEB8(p);
+    return p;
+}
+
+/* Rotates `in` about Y by `ang` into `out` (in and out may be the same vector). */
+void fn_801DCE18(NJS_VECTOR *out, NJS_VECTOR *in, Angle ang)
+{
+    NJS_MATRIX m;
+
+    njUnitMatrix(m);
+    njRotateY(m, ang);
+    if (out != in) {
+        njCalcVector(m, in, out);
+    } else {
+        NJS_VECTOR tmp;
+        tmp.x = in->x;
+        tmp.y = in->y;
+        tmp.z = in->z;
+        njCalcVector(m, &tmp, out);
+    }
+}
+
+void fn_801DFDB0(SpinObj *o) {
+    s32 t;
+    o->angle += o->speed;
+    t = (s32)((o->angle * o->rate) / 360.0f);
+    if (t != 0) {
+        o->angle -= (360.0f * (f32)t) / o->rate;
+    }
+    fn_801DFC5C((u8 *)o + 0x24, o->model, o->k02, o->angle);
 }
