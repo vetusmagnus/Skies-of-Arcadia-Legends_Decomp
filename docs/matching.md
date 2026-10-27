@@ -198,6 +198,25 @@ misses in `docs/near/`:
   as a macro over `tex`/`len`/`alt`); where they move around per copy, an inline with its own
   locals matches. The two kinds sit side by side in that function. Within a copy, the order of
   the two assignments (`tex` first or `len` first) swaps their registers too.
+- **MWCC's inline budget, in numbers.** GC/1.3.2 caps the total size a function may reach with
+  inlining at `inline_max_total_size` 7000 (and a single helper at `inline_max_size` 512); the
+  defaults are set in mwcceppc.exe at 0x41F66D. Size means statements plus expression nodes, nested
+  helpers counted in full. Over the cap, the compiler halves the per-helper limit until the
+  total fits, so the biggest helpers stop being inlined first. The size of one helper can be
+  measured exactly by compiling a probe with `-pragma "inline_max_size(N)"` and bisecting N.
+  GC/1.3 has no such cap: fn_8013AD9C (about 8,200 nodes) inlines fully there, and every function
+  that already matches in its unit matches under 1.3 too (docs/near/fn_8013AD9C.c).
+- **Cheaper forms of the same code.** A loop that MWCC unrolls costs fewer inline nodes than the
+  unrolled source: the party count `for (n = 0; n < 4; n++) if (p[n] < 0) break;` compiles to
+  the same if chain as writing it out, at 44 nodes instead of 70.
+- **Register colouring order.** Variables are split into webs and coloured one by one. A web
+  takes the lowest-numbered callee-saved register already in use that it doesn't interfere
+  with, and only allocates a new one (counting down from r31) when there is none. The order in
+  which webs are coloured decides the numbering. Inline-function locals come out in reverse
+  declaration order, while block-scoped variables in a macro keep source order. That is why
+  one search helper gave mirrored registers as an inline function and the right ones as a
+  macro. Statement order within a macro, and which function-level variable a value lives in,
+  move registers too.
 
 Open
 ----

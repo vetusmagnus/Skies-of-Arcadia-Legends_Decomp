@@ -1244,3 +1244,8 @@ More (2026-10-27)
   blocks are inlines where the copies take fresh registers (the buffer flush before a layer, the
   clip distance) and macros on the function's own `tex`/`len`/`alt` where they don't (see
   matching.md).
+- fn_8013AD9C (9.8 KB, unit_8012F6C4.c, the party-member pick menu): a near miss in
+  [near/fn_8013AD9C.c](near/fn_8013AD9C.c). Its structure is exact, and about 330 instructions
+  differ in registers. It only inlines fully under GC/1.3: under 1.3.2 it goes over the inline
+  budget (matching.md). Whether this unit was built with 1.3 is open. Everything that matches in
+  the unit is identical under both.
