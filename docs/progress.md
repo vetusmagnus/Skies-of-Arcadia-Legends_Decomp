@@ -1318,3 +1318,26 @@ their unit (redeclared views or prototypes).
 tasks.c's fn_8003DCF4, tried again: with the third TargetMatch in the roles the asm implies (`obj->type, c->x6, obj->id,
 c->x8`) and `s16` locals for `wid`/`id` it is 12 diff lines (type and id swap r0/r5). Locals in every order, an `int`
 `wid`, a cached `c->xec`, and TargetMatch with all-`s16` or reordered parameters (as fn_8003DE8C has them) do not get closer.
+
+### Held-back isolated matches, agent pass (2026-10-27)
+
+16 Sonnet 5.5 agents (model set explicitly, one per unit, no retry or merge agents) on the 33 left from the first hand pass.
+Every result was reviewed and re-checked (fdiff + `floatcheck.py` over each whole unit, `main.dol` force-relink). **13 are merged**
+(4,429 to 4,442): fn_800472DC and fn_8004DD54 (effect.c), fn_8001ECB4, fn_80020094 and fn_80017B18 (unit_80005B50.c, where
+`lbl_8030A10C` is now the unit's `GS` struct instead of a byte array), fn_801523A4 (unit_8014F970.c; fn_80155FD0 takes `(s32)`),
+fn_80188098 (unit_8015DC6C.c), fn_801C83B4 (unit_801C5A60.c), fn_802109E8 and fn_80210B44 (unit_801F5334.c), fn_8021BF80,
+fn_80221AAC and fn_80226120 (unit_80219378.c; `Shape` holds its sphere/capsule forms in a union, picked by its type).
+
+Matched in the agents' copies but rejected in review, with the unit left as it was:
+
+- needs a pointer cast or raw byte offsets: fn_80067E8C (`(Ent *)((u8 *)cur + 0x10)`), fn_80134E7C (`lbl_8030B7F4` + 0x1568 as
+  bytes), fn_8013D718/fn_8013FB48 (`(Sub *)(fn_80135598() + 0x238)`, `(Rec5 *)lbl_80308E90`), fn_800CB6D0/fn_800D57E8
+  (pointer-to-int and `(NJS_POINT3 *)` casts), fn_802273E0 (`(u32 *)(h->off + (u32)h)`), fn_8018E3D0
+  (`(Outer_80183C54 *)lbl_8034710C`), fn_8009D400/fn_800B2C1C (function-scope externs that contradict the file's prototypes,
+  and a pointer difference through `(u8 *)`);
+- a second view: fn_801942A4/fn_80197654 (`lbl_8030B7F4` as a union of bytes and records), fn_801A53D4/fn_801AC48C/fn_801AC678
+  (a `UiObj *`/`MenuUi *` union field, plus texlist and `(f32 *)` casts);
+- a K&R prototype so one callee takes both a pointer and an int: fn_80084A08.
+
+Not matched in the unit: fn_80021934 and fn_80166220 (only with byte-offset casts), fn_80077228 and fn_801EF7E0 (need fields
+named in the shared headers include/game/save_8030B7F4.h and stat_8030B4D4.h, which the agents were not allowed to edit).

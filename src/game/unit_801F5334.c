@@ -179,7 +179,7 @@ typedef struct Work8020 {
     s32 x3c;
     u8 pad40[0x4];
 } Work8020;
-typedef struct Part { u8 pad00[0x2c]; s32 x2c; } Part;
+typedef struct Part { u8 pad00[0x2c]; s32 x2c; u8 pad30[0x138]; s16 x168; } Part;
 typedef struct Sub { u8 pad00[8]; Part *x8; u8 pad0c[0x1a0 - 0xc]; s32 x1a0; } Sub;
 /* An actor: fn_8015F1A0's result, lbl_80347450, and the work of a task from fn_8010A164. */
 typedef struct Actor {
@@ -5983,6 +5983,46 @@ static inline void ScptDestruct(u16 n)
         }
     } else {
         fn_801DBE1C("scptDestruct: wrong enter rable ! call programer %d", n);
+    }
+}
+
+static inline void ActorReset(Actor *o)
+{
+    if (o != 0 && o->x1d8 != 0 && o->x1d8->x8 != 0) {
+        o->x1d8->x8->x168 = 0;
+    }
+}
+
+void fn_802109E8(s32 i, Actor *o)
+{
+    if (lbl_802F7940[lbl_8030CEA0.x10[i].owner].fn(8, &lbl_8030CEA0.x10[i]) == 1) {
+        if (lbl_8030CEA0.x10[i].handle == 1) {
+            ActorReset(o);
+        }
+        ScptDestruct(i);
+    }
+}
+
+void fn_80210B44(s32 i)
+{
+    if (lbl_802F7940[lbl_8030CEA0.x10[i].owner].fn(8, &lbl_8030CEA0.x10[i]) == 1) {
+        if (lbl_8030CEA0.x10[i].handle == 1) {
+            Actor *o;
+            Obj10A *t;
+            u32 id = lbl_8030CEA0.x10[i].a24;
+            if ((u16)id == 0xffff) {
+                o = lbl_80347450;
+            } else {
+                t = fn_8010A164(id);
+                if (t != 0) {
+                    o = t->x24;
+                } else {
+                    fn_801DBE1C("scptTskDestruct: no Task #%d", lbl_8030CEA0.x10[i].a24);
+                }
+            }
+            ActorReset(o);
+        }
+        ScptDestruct(i);
     }
 }
 

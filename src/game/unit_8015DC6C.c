@@ -406,10 +406,17 @@ typedef struct {
     u8 pad1A[0x24 - 0x1A];
     Inner_8016EE2C* inner; /* 0x24 */
 } Self_8016EE2C;
+typedef struct { f32 f0, f4; s32 i8, ic; u8 pad10[8]; f32 f18, f1c; } Pos_80188274;
+typedef struct { u8 pad0[0x14]; s32 sel; } Sel_80188098;
+typedef struct { Sel_80188098 *sel; s8 mask; } Inn_80188098;
 typedef struct {
     s32 kind;   /* 0x00 */
     u32 pad04;
     UiObj obj;  /* 0x08 */
+    u8 pad54[0x74 - 8 - sizeof(UiObj)];
+    Pos_80188274 pos; /* 0x74 */
+    u8 pad94[0xbc - 0x94];
+    Inn_80188098 *inn; /* 0xbc */
 } Inner_8016F138;
 typedef struct {
     u8 pad00[0x18];
@@ -1048,7 +1055,8 @@ typedef struct {
 extern void* lbl_80347100;
 extern void* fn_801CC0A0(void* p);
 typedef struct {
-    u8 pad0[0x24];
+    const char *name; /* 0x00 */
+    u8 pad4[0x20];
     s32 id; /* 0x24 */
 } Ent_801929FC;
 extern Ent_801929FC lbl_802ED258[0x58];
@@ -1693,7 +1701,6 @@ typedef struct { u8 pad[0x24]; Win_8017EE48* in; } Pnl_8017EE48;
 typedef struct { u8 pad[0xc]; s8 count; u8 pad1[3]; Pnl_8017EE48* pnl[0xcf]; } CampW_8017EE48;
 typedef struct { u8 pad0[4]; s32 f4; u8 pad8[4]; u32 fc; u8 pad10[0x24 - 0x10]; s32 f24; } Ctrl_8017EE48;
 typedef struct { u8 pad[0x24]; Ctrl_8017EE48** holder; } Outer_8017EE48;
-typedef struct { f32 f0, f4; s32 i8, ic; u8 pad10[8]; f32 f18, f1c; } Pos_80188274;
 typedef struct { s16 x, y; f32 a, b; s8 idx; } Req_80188274;
 typedef struct { u8 pad0[0x14]; f32 x, y; } Spr_80188274;
 typedef struct { void *spr; } Sp_8018C6A8;
@@ -2867,7 +2874,7 @@ s8 fn_80187F90(s32 x)
     return fn_801F4CA0(x);
 }
 
-extern void fn_80188098(Self_8016F594 *self);
+extern void fn_80188098(Inner_8016F138 *self);
 void fn_80187FB4(Self_8016F138* self) {
     UiObj* obj = &self->inner->obj;
 
@@ -2883,7 +2890,7 @@ void fn_80187FB4(Self_8016F138* self) {
         UiObjCalcRect(obj);
         if (self->inner->kind == 1) {
             CampPanelDrawFrame(self->inner);
-            fn_80188098((struct Self_8016F594 *)self->inner);
+            fn_80188098(self->inner);
         }
         break;
     case 0x64:
@@ -6612,6 +6619,47 @@ void fn_8017EE48(void) {
         UiObjSetCommand(o, 15, i + off);
         (*(CampW_8017EE48*)CWB).pnl[base + i]->in->f74 += 150.0f;
     }
+}
+
+void fn_80188274(Req_80188274 *r, Pos_80188274 *p);
+void fn_80188098(Inner_8016F138 *self) {
+    extern Spr_80188274 *fn_801D68C4(void *bank, u32 n);
+    extern void fn_801D4F0C(Spr_80188274 *s, f32 f1, f32 f2, f32 f3, f32 f4, s32 a, s32 b, s32 c);
+    Spr_80188274 *s;
+    s32 x;
+    s16 y;
+    s16 xx;
+    s16 i = 0;
+    Pos_80188274 *pos = &self->pos;
+    Inn_80188098 *inn = self->inn;
+    s32 sy;
+    y = (s16)self->obj.rect[1];
+    x = (s16)self->obj.rect[0];
+    xx = x;
+    for (; i < 6; i++) {
+        s32 on = (((s32)inn->mask) & (1 << i)) != 0;
+        if (on == 1) {
+            Req_80188274 r;
+            f32 a;
+            if (i == inn->sel->sel) a = 1.0f; else a = 0.5f;
+            r.x = xx;
+            r.y = y;
+            r.a = a;
+            r.idx = i;
+            r.b = 10.0f + pos->f0;
+            fn_80188274(&r, pos);
+        }
+        xx += 0x30;
+    }
+    s = fn_801D68C4(lbl_803470F0, 0x44);
+    s->x = (f32)(x + inn->sel->sel * 0x30 + 0xe);
+    sy = y + 0x11;
+    s->y = (f32)sy;
+    fn_801D4F0C(s, -4000.0f, pos->f4, 1.0f, 1.0f, pos->ic, pos->i8, 1);
+    s = fn_801D68C4(lbl_803470F0, 0x43);
+    s->x = (f32)(x + inn->sel->sel * 0x30 + 0x36);
+    s->y = (f32)sy;
+    fn_801D4F0C(s, -4000.0f, pos->f4, 1.0f, 1.0f, pos->ic, pos->i8, 1);
 }
 
 void fn_80188274(Req_80188274 *r, Pos_80188274 *p) {

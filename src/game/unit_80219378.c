@@ -394,17 +394,27 @@ typedef struct { s16 x0; s16 x2; s8 x4; s8 x5; } Out;
 typedef struct { s8 id; u8 pad1[0x17]; s16 ids[5]; } Src;
 s32 fn_8021A6E8(Src* a, void* b, TblC* c);
 s32 fn_8021A620(Src* a, void* b, TblC* c);
+typedef struct { Vec pos; f32 r; } Sphere_80221AAC;
+typedef struct { Vec b; Vec a; f32 r; } Capsule_80221AAC;
 typedef struct {
     s32 type;
     u8 pad04[0x10];
-    f32 x14[3];
-    f32 x20[0x44 / 4];
+    union {
+        Sphere_80221AAC sph;
+        struct {
+            f32 x14[3];
+            union {
+                f32 x20[0x44 / 4];
+                Capsule_80221AAC seg;
+            } u;
+        } alt;
+    } v;
     f32 x64[3];
 } Shape;
 void fn_80221E24(f32* out, f32* a);
 void fn_80220B14(f32* out, f32* a, f32* b);
 void fn_80221D04(f32* out, f32* a, f32* b);
-void fn_80221AAC(f32* out, f32* a, f32* b);
+void fn_80221AAC(f32* out, Sphere_80221AAC* a, Capsule_80221AAC* b);
 void fn_802205E0(f32* out, f32* a, f32* b);
 void fn_80221328(f32* out, f32* a, f32* b);
 typedef struct { f32 x, y; } NJS_POINT2;
@@ -767,6 +777,7 @@ extern s32 lbl_803475D0;
 extern void fn_801A289C(void);
 extern s32 lbl_803477F4;
 extern void *lbl_802D9620[];
+extern void *lbl_802D9630[];
 extern void fn_8022638C(void **list);
 extern void fn_80226318(void *p);
 
@@ -804,8 +815,8 @@ void fn_8021EDE0(Obj_UNIT0000 *p, s32 n)
     fn_80298FE4((s16)n);
 }
 
-extern u32 lbl_802F89A8[];
-u32 fn_802205C8(s16 i)
+extern void* lbl_802F89A8[];
+void* fn_802205C8(s16 i)
 {
     return lbl_802F89A8[i];
 }
@@ -2001,29 +2012,29 @@ void fn_80221EDC(f32* out, Shape* a, Shape* b)
     case 1:
         switch (b->type) {
         case 0:
-            fn_80220B14(out, a->x14, b->x64);
+            fn_80220B14(out, a->v.alt.x14, b->x64);
             break;
         case 1:
-            fn_80221D04(out, a->x14, b->x14);
+            fn_80221D04(out, a->v.alt.x14, b->v.alt.x14);
             break;
         case 2:
-            fn_80221AAC(out, a->x14, b->x20);
+            fn_80221AAC(out, &a->v.sph, &b->v.alt.u.seg);
             break;
         }
         break;
     case 2:
         switch (b->type) {
         case 0:
-            fn_802205E0(out, a->x20, b->x64);
+            fn_802205E0(out, a->v.alt.u.x20, b->x64);
             break;
         case 1:
-            fn_80221AAC(out, b->x14, a->x20);
+            fn_80221AAC(out, &b->v.sph, &a->v.alt.u.seg);
             out[0] *= -1.0f;
             out[1] *= -1.0f;
             out[2] *= -1.0f;
             break;
         case 2:
-            fn_80221328(out, a->x20, b->x20);
+            fn_80221328(out, a->v.alt.u.x20, b->v.alt.u.x20);
             break;
         }
         break;
@@ -3753,4 +3764,122 @@ void fn_80222964(Node *n)
             next->prev = NULL;
         }
     }
+}
+
+typedef struct Wk_8021BF80 {
+    void *x0;
+    NameList *x4;
+    s32 x8;
+    u8 padc[0x48 - 0xc];
+    f32 x48;
+    u8 pad4c[0x52 - 0x4c];
+    s16 x52;
+    s16 x54;
+    u8 pad56[0x5e - 0x56];
+    s16 x5e;
+} Wk_8021BF80;
+typedef struct Task_8021BF80 {
+    u8 pad[0x24];
+    Wk_8021BF80 *work;
+} Task_8021BF80;
+typedef struct Owner_8021BF80 {
+    u8 pad[0x1f4];
+    void *x1f4;
+} Owner_8021BF80;
+extern char *lbl_802F8968[];
+void fn_8021BF80(Owner_8021BF80 *o, NameList *arg, s32 val, s16 count, s16 extra, f32 scale) {
+    Task_8021BF80 *node;
+    s32 div;
+    s16 n;
+    s32 i;
+    Wk_8021BF80 *w;
+    s32 k;
+    n = count - 1;
+    div = 1;
+    for (i = 0; i < count; i++) {
+        node = fn_802267AC(o->x1f4, fn_802205C8(3));
+        node->work = fn_801E1C7C(0x60);
+        memset(node->work, 0, 0x60);
+        w = node->work;
+        w->x0 = o;
+        w->x4 = arg;
+        w->x8 = fn_8021EE1C(arg, lbl_802F8968[1]);
+        for (k = 0; k < n; k++) div *= 10;
+        w->x52 = val / div;
+        val %= div;
+        w->x54 = i;
+        w->x5e = extra;
+        w->x48 = scale;
+        n--;
+        div = 1;
+    }
+}
+
+typedef struct Line3_80221AAC { Vec o; Vec d; } Line3_80221AAC;
+extern f32 fn_8028FEA4(Vec *p, Line3_80221AAC *l, Vec *out);
+
+void fn_80221AAC(f32 *out, Sphere_80221AAC *p, Capsule_80221AAC *s)
+{
+    Vec d;
+    Vec q;
+    Line3_80221AAC l;
+    s32 inside;
+
+    l.o.x = s->a.x;
+    l.o.y = s->a.y;
+    l.o.z = s->a.z;
+    l.d.x = s->b.x - s->a.x;
+    l.d.y = s->b.y - s->a.y;
+    l.d.z = s->b.z - s->a.z;
+    fn_8028FEA4(&p->pos, &l, &q);
+
+    d.x = s->b.x - q.x;
+    d.y = s->b.y - q.y;
+    d.z = s->b.z - q.z;
+    inside = 0;
+    {
+        Vec w;
+        w.x = s->a.x - q.x;
+        w.y = s->a.y - q.y;
+        w.z = s->a.z - q.z;
+        if (0.0f >= d.y * w.y && 0.0f >= d.x * w.x && 0.0f >= d.z * w.z) {
+            inside = 1;
+        }
+        if (!inside) {
+            if (d.x * d.x + d.y * d.y + d.z * d.z > w.x * w.x + w.y * w.y + w.z * w.z) {
+                q = s->a;
+            } else {
+                q = s->b;
+            }
+        }
+    }
+    d.x = p->pos.x - q.x;
+    d.y = p->pos.y - q.y;
+    d.z = p->pos.z - q.z;
+    if (d.x == 0.0f && d.y == 0.0f && d.z == 0.0f) {
+        out[2] = 0.0f;
+        out[1] = 0.0f;
+        out[0] = 0.0f;
+    } else {
+        f32 k;
+        njUnitVector(&d);
+        k = 0.01f + (p->r + s->r);
+        d.x = d.x * k;
+        d.y = d.y * k;
+        d.z = d.z * k;
+        out[0] = (q.x + d.x) - p->pos.x;
+        out[1] = (q.y + d.y) - p->pos.y;
+        out[2] = (q.z + d.z) - p->pos.z;
+    }
+}
+
+void fn_80226120(void)
+{
+    Node_UNIT0000 *s = &lbl_80311A78.sentinel;
+    lbl_803477F4 = 0x7fffffff;
+    s->w0 = NULL;
+    s->next = NULL;
+    s->b1b = 0;
+    fn_8022638C(lbl_802D9630);
+    fn_8022642C();
 }

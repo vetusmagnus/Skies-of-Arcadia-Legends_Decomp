@@ -155,7 +155,19 @@ void fn_8015823C(u8 *p);
 void fn_80153790(s32 a, s32 b, s32 c);
 void fn_8014836C(s32 a, void *b);
 void fn_80148228(s32 a, void *b);
-void fn_801523A4(void *p, s32 a, s32 b, s32 c, s32 d);
+typedef struct {
+    s32 x0;
+    s32 x4;
+    s32 x8;
+    s32 xc;
+    s32 x10;
+    s32 x14;
+    s32 x18;
+    s32 x1c;
+    s32 x20;
+    s32 x24;
+} Obj_801523A4;
+s32 fn_801523A4(void *p, s32 a, s32 b, s32 c, s32 d);
 s32 fn_8010CED4(void);
 void fn_8012F72C(s32 a);
 s32 fn_8015BB58(s32 a);
@@ -1257,9 +1269,9 @@ typedef struct Msg {
     s32 x8;
     s32 xc;
 } Msg;
-extern void fn_80155FD0(Msg*, s16);
-void fn_80153958(Msg* a, s16 i) {
-    fn_80155FD0(a, i);
+extern void fn_80155FD0(s32);
+void fn_80153958(s32 a, s16 i) {
+    fn_80155FD0(a);
 }
 
 void fn_80153978(void) {
@@ -1360,9 +1372,9 @@ void fn_80155F80(void) {
     s->c = 0;
 }
 
-extern void fn_80216EFC(Msg*, s16);
-void fn_80155FD0(Msg* a, s16 i) {
-    fn_80216EFC(a, i);
+extern void fn_80216EFC(s32);
+void fn_80155FD0(s32 a) {
+    fn_80216EFC(a);
 }
 
 void fn_80156250(void) {
@@ -1601,6 +1613,69 @@ void fn_80150258(void)
     fn_80150A80((u8 *)lbl_80346FA8);
     fn_8014F72C(((Owner*)lbl_80346FC8[0])->x10 + 0x9c0, 0);
     fn_8014F72C(((Owner*)lbl_80346FC8[1])->x10 + 0x9c0, 1);
+}
+
+typedef struct {
+    s16 a;
+    s16 b;
+    s16 c;
+    s16 d;
+    s16 e;
+} Row_801523A4;
+
+extern Row_801523A4 lbl_802E5F28[];
+
+extern void fn_80154C34(s32 val, s32 delay);
+extern s32 fn_80155FF0(s32, s32, s32, s32);
+extern void fn_801677D0(s32 id, s32 x, f32 f1, f32 f2, f32 f3, f32 f4, s8 k, s32 w);
+
+static inline s32 Play_801523A4(Obj_801523A4 *o, s32 a, s32 b, s32 c)
+{
+    s32 x8 = o->x8;
+    s32 id = fn_80155FF0(7, a, 0, 0);
+    fn_801677D0(id, lbl_802E5F28[a].a + 0x1C + b, 0.0f, 0.0f, 0.0f,
+                (f32)c * (f32)lbl_802E5F28[a].b / 1000.0f, lbl_802E5F28[a].c, x8);
+    fn_80154C34(lbl_802E5F28[a].d, lbl_802E5F28[a].e);
+    o->x20 = 1;
+    o->x24 = id;
+    return id;
+}
+
+s32 fn_801523A4(void *p, s32 flag, s32 a, s32 b, s32 c)
+{
+    Obj_801523A4 *o = p;
+    s32 ret = 0;
+
+    if (o->x4 == 0) {
+        if (flag != 0) {
+            if (o->x20 == 0) {
+                ret = Play_801523A4(o, a, b, c);
+            }
+        } else {
+            o->x20 = 0;
+            fn_80155FD0(o->x24);
+        }
+    }
+    if (o->x4 == 1) {
+        if (flag != 0) {
+            if (o->x20 == 0) {
+                o->xc = a;
+                o->x10 = b;
+                o->x14 = c;
+                o->x1c = 1;
+                o->x20 = 0;
+            }
+        } else {
+            o->xc = 0;
+            o->x10 = 0;
+            o->x14 = 0;
+            o->x1c = 0;
+            o->x20 = 0;
+            fn_80155FD0(o->x24);
+        }
+        o->x18 = 0;
+    }
+    return ret;
 }
 
 void fn_80152538(void* dst, s32 a, s32 b, s32 c)

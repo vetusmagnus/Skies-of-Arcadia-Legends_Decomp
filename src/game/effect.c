@@ -5051,6 +5051,140 @@ void fn_80047214(u32 flags) {
     }
 }
 
+typedef struct {
+    NJS_POINT3* pts;    /* 0x00 */
+    u32* cols;          /* 0x04 */
+    u32* idx;           /* 0x08 */
+    u32 count;          /* 0x0C */
+    u32 w10, w14;
+    NJS_POINT3 v18;     /* 0x18 */
+    NJS_POINT3 v24;     /* 0x24 */
+    u8 pad30[0x3C - 0x30];
+} Entry_800472DC;
+typedef struct {
+    NJS_POINT3* pts;    /* 0x00 */
+    u32* cols;          /* 0x04 */
+    u32* idx;           /* 0x08 */
+    u32 count;          /* 0x0C */
+    u32 w10, w14;
+    NJS_POINT3 v18;     /* 0x18 */
+    NJS_POINT3 v24;     /* 0x24 */
+} Dest_800472DC;
+typedef struct {
+    u8 pad0[2];
+    s16 s2;             /* 0x02 */
+    s16 s4;             /* 0x04 */
+    u8 pad6[2];
+    NJS_POINT3 v8;      /* 0x08 */
+    NJS_POINT3 v14;     /* 0x14 */
+    u8 pad20[0x2C - 0x20];
+    f32 f2c;            /* 0x2C */
+    f32 f30;            /* 0x30 */
+    u8 pad34[4];
+    s32 w38;            /* 0x38 */
+    u8 pad3c[4];
+    u32 w40;            /* 0x40 */
+    u8 b44;             /* 0x44 */
+    u8 b45;             /* 0x45 */
+    u8 pad46[2];
+    s16 s48;            /* 0x48 */
+    u8 pad4a[2];
+    s32 w4c;            /* 0x4C */
+    Dest_800472DC* dest; /* 0x50 */
+    Dest_800472DC destbuf; /* 0x54 */
+    u8 pad84[0x90 - 0x84];
+    NJS_POINT3 pts[3];  /* 0x90 */
+    u32 cols[3];        /* 0xB4 */
+    u32 idx[3];         /* 0xC0 */
+    u8 padcc[4];
+    s32 wd0;            /* 0xD0 */
+    s32 wd4;            /* 0xD4 */
+    NJS_ARGB argb;      /* 0xD8 */
+} Sub_800472DC;
+typedef struct { u8 pad0[0xC]; char name[1]; } Name_800472DC;
+typedef struct {
+    u8 pad0[0x10];
+    f32 f10;            /* 0x10 */
+    s16 s14;            /* 0x14 */
+    s16 s16;            /* 0x16 */
+    f32 f18;            /* 0x18 */
+    u8 pad1c[8];
+    Entry_800472DC* ents; /* 0x24 */
+} Info_800472DC;
+typedef struct {
+    u8 pad0[8];
+    s32 w8;             /* 0x08 */
+    u8 padc[4];
+    Name_800472DC* p10; /* 0x10 */
+    u8 pad14[0x4c - 0x14];
+    Info_800472DC* info; /* 0x4C */
+} Inner_800472DC;
+typedef struct { u8 pad0[0x24]; Inner_800472DC* inner; } Outer_800472DC;
+typedef struct { u8 pad0[0x4c]; Sub_800472DC* sub; } Obj2_800472DC;
+typedef struct { u8 pad0[0x24]; Obj2_800472DC* p; } Obj_800472DC;
+void fn_800472DC(void* outerp, s16 idx, s32 val, void* colp) {
+    Outer_800472DC* outer = outerp;
+    NJS_ARGB* col = colp;
+    Entry_800472DC* e;
+    NJS_POINT3* p18;
+    NJS_POINT3* p24;
+    Sub_800472DC* sub;
+    Info_800472DC* info;
+    Entry_800472DC* ents;
+    Inner_800472DC* inner;
+    Obj_800472DC* obj;
+    s32 tmp;
+    s8 i;
+
+    inner = outer->inner;
+    info = inner->info;
+    ents = info->ents;
+    if (ents[idx].idx != 0) {
+        obj = fn_8003DB34(fn_8004335C);
+        fn_80061F58(&obj->p, 0x58, 0);
+        fn_80061F58(&obj->p->sub, 0xe8, 0);
+        e = &ents[idx];
+        p18 = &e->v18;
+        sub = obj->p->sub;
+        sub->w38 = inner->w8;
+        fn_80071CF0(p18, &sub->v8);
+        p24 = &e->v24;
+        fn_80071CF0(p24, &sub->v14);
+        sub->f2c = info->f10;
+        sub->f30 = 0.9f;
+        sub->w40 = 0xb4000000;
+        sub->s48 = 5;
+        sub->s2 = 0;
+        sub->s4 = info->s16;
+        sub->b44 = (s32)(255.0f * (1.0f + info->f18));
+        sub->argb = *col;
+        if (info->s14 != 0) {
+            sub->b45 = sub->b44 / info->s14;
+        } else {
+            sub->b45 = sub->b44;
+        }
+        sub->w4c = 1;
+        sub->dest = &sub->destbuf;
+        sub->dest->w10 = ents[idx].w10;
+        sub->dest->w14 = ents[idx].w14;
+        fn_80071CF0(p18, &sub->dest->v18);
+        fn_80071CF0(p24, &sub->dest->v24);
+        sub->dest->pts = sub->pts;
+        sub->dest->cols = sub->cols;
+        sub->dest->idx = sub->idx;
+        for (i = 0; i < 3; i++) {
+            sub->dest->pts[i] = ents[idx].pts[i];
+            sub->dest->cols[i] = ents[idx].cols[i];
+            sub->dest->idx[i] = ents[idx].idx[i];
+        }
+        sub->dest->count = ents[idx].count;
+        ents[idx].count = 0;
+        fn_80046BB0(inner->p10->name, &tmp);
+        sub->wd0 = tmp;
+        sub->wd4 = val;
+    }
+}
+
 void fn_8004754C(Line* l, f32 a1, f32 a2) {
     Seg seg;
     DrawState ds;
@@ -7065,6 +7199,36 @@ void fn_8004DB90(Node_8004DB90* node) {
         return;
     }
     fn_80037FD8(own->cmd, &node->state);
+}
+
+typedef struct { u8 id; u8 pad1[0x5A - 1]; u8 x5a; u8 pad5b[0xEC - 0x5B]; u32 xec; } Unit_8004DD54;
+typedef struct { u8 pad[0x4C]; Unit_8004DD54* w; } Wk_8004DD54;
+typedef struct { u8 pad[0x24]; Wk_8004DD54* work; } Tk_8004DD54;
+extern Tk_8004DD54* lbl_80309E24[12];
+void fn_8004DD54(s16 a, s16 b, Tk_8004DD54* task, s8 flag, int d) {
+    Tk_8004DD54* o;
+    Unit_8004DD54* c;
+    Unit_8004DD54* u;
+    int m;
+    int ok;
+    s16 i;
+    u = task->work->w;
+    for (i = 0; i < 12; i++) {
+        o = lbl_80309E24[i];
+        if (o != NULL) {
+            c = o->work->w;
+            m = fn_8001D944(c->id, task);
+            if (flag != 0 && m != 0) ok = 0;
+            else if (flag == 0 && m == 0) ok = 0;
+            else ok = 1;
+            if (ok) {
+                u->x5a = c->id;
+                u->xec |= 0x80;
+                fn_80020B8C(task, a, b, d);
+                u->xec &= ~0x80;
+            }
+        }
+    }
 }
 
 void fn_8004DE48(Node_8004DE48* node) {

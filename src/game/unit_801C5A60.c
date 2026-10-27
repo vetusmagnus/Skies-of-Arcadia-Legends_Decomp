@@ -131,7 +131,7 @@ extern int strncmp(const char *a, const char *b, u32 n);
 extern int fn_8025EF88(const char *a, const char *b);
 /* lbl_80308428: 8 pairs of 3-word vectors (0xc0 bytes). */
 typedef struct Pair_801C86D8 {
-    s32 a[3];
+    void* a[3];
     s32 b[3];
 } Pair_801C86D8;
 extern Pair_801C86D8 lbl_80308428[8];
@@ -690,6 +690,27 @@ s32 fn_801C8A0C(char *s) {
         }
     } while (n--, e++, n > 0);
     return -1;
+}
+
+extern char lbl_802C3BE8[];
+extern void fn_801DBE1C(const char* fmt, ...);
+static inline void SlotRemove(Pair_801C86D8* tab, void* id) {
+    s32 i;
+    for (i = 0; i < 8; i++) {
+        if (tab[i].a[1] == id) {
+            lbl_80308428[i].a[0] = 0;
+            lbl_80308428[i].a[1] = 0;
+            lbl_80308428[i].a[2] = 0;
+            return;
+        }
+    }
+    fn_801DBE1C(lbl_802C3BE8);
+}
+void fn_801C83B4(void* id) {
+    if (!id) {
+        fn_801DBE1C(lbl_802C3BE8);
+    }
+    SlotRemove(lbl_80308428, id);
 }
 
 /* Clears the 8 vector pairs and registers fn_801C8590 as a callback. */
