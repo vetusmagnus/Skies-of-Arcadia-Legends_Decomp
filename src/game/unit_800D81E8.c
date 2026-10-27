@@ -628,11 +628,92 @@ extern void fn_802913E8(s32 a, s32 b);
 extern f32 fn_801DBD9C(f32 v);
 extern void fn_802911CC(f32* v);
 extern void fn_80291424(void);
+/* The battle result screen's work (lbl_80346DCC; fn_800E4644 is its state machine). */
+typedef struct {           /* 0x18 */
+    s16 flags;   /* 0x00 */
+    u8 pad2[2];
+    u32 c4;      /* 0x04 */
+    u32 c8;      /* 0x08 */
+    u32 cc;      /* 0x0C */
+    s16 h10;     /* 0x10 */
+    s16 h12;     /* 0x12 */
+    s16 h14;     /* 0x14 */
+    s16 h16;     /* 0x16 */
+} ResSpr;
+
+typedef struct {           /* 0x6C */
+    UiObj o;
+    u8 pad4c[0x20];
+} ResPanel;
+
+typedef struct {           /* 0x0C */
+    u8 pad0[4];
+    s16 id;      /* 0x04 */
+    s16 arg;     /* 0x06 */
+    s16 flags;   /* 0x08 */
+    s16 ha;      /* 0x0A */
+} ResEv;
+
+typedef struct {           /* 0x14 */
+    s16 sel;     /* 0x00 */
+    s8 on[6];    /* 0x02 */
+    s16 slot[6]; /* 0x08 */
+} ResMem;
+
+typedef struct {           /* 0x42 */
+    u8 b0;       /* 0x00 */
+    u8 pad1;
+    u8 b2;       /* 0x02 */
+    u8 pad3[0x14];
+    u8 b17;      /* 0x17 */
+    u8 pad18[0x2a];
+} ResRow;
+
+typedef struct {           /* 0x6E */
+    s16 h0;      /* 0x00 */
+    s16 h2;      /* 0x02 */
+    u8 pad4[4];
+    u8 b8;       /* 0x08 */
+    u8 b9[99];   /* 0x09 */
+    u8 b6c;      /* 0x6C */
+    u8 b6d;      /* 0x6D */
+} ResStat;
+
 typedef struct {
-    u8 pad0[0x15f8];
-    u8 sub[0x14]; /* 0x15F8 */
-    s32 active;   /* 0x160C */
+    u32 w0;              /* 0x00 */
+    s32 state;           /* 0x04 */
+    u32 w8;              /* 0x08 */
+    s32 count;           /* 0x0C */
+    s32 w10;             /* 0x10 */
+    s32 w14;             /* 0x14 */
+    s32 total;           /* 0x18 */
+    s32 w1c;             /* 0x1C */
+    s32 w20;             /* 0x20 */
+    s32 cur;             /* 0x24 */
+    struct { s16 h; u8 pad[2]; } h28[3]; /* 0x28 */
+    s8 b34[4];           /* 0x34 */
+    s8 b38[4];           /* 0x38 */
+    u8 pad3c[4];
+    s32 timer;           /* 0x40 */
+    s32 w44;             /* 0x44 */
+    s32 w48;             /* 0x48 */
+    f32 fade;            /* 0x4C */
+    u8 pad50[0x170];
+    ResRow row[4];       /* 0x1C0 */
+    ResMem mem[4];       /* 0x2C8 */
+    u8 pad318[0x58];
+    ResSpr spr[22];      /* 0x370 */
+    ResPanel obj[22];    /* 0x580 */
+    ResStat stat[4];     /* 0xEC8 */
+    u8 pad1080[0x470];
+    s16 evIdx;           /* 0x14F0 */
+    s16 h14f2;           /* 0x14F2 */
+    u8 pad14f4[0x44];
+    ResEv ev[16];        /* 0x1538 */
+    u8 sub[0x14];        /* 0x15F8 */
+    s32 active;          /* 0x160C */
 } Ctx3594;
+
 extern Ctx3594* lbl_80346DCC;
 extern s32 lbl_80346DC8;
 extern u8 lbl_802B1B20[0x14];

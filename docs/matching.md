@@ -160,6 +160,30 @@ From `fn_801BA9CC` (6.8 KB, the discoveries window, same file; near miss in
   remaining register swap (task and a part pointer, r29/r31) didn't move with declaration order,
   scope, hoisting, helper shape or the permuter.
 
+From `fn_801B7624` (the shop's sell screen) and `fn_800E4644` (the battle result screen), both near
+misses in `docs/near/`:
+
+- **Two callers can disagree on a declaration.** fn_801B11EC treats fn_801B93E8's result as an
+  `s32` (`extsh` at the call, none at the compare), the sell screen as an `s16` (none when passed
+  on, `extsh` at the compare). fn_801B8F48's id is the same: the sell screen passes a `u16`
+  (`clrlwi`), fn_801B8F48 itself extends it as an `s16`. One file can't hold both declarations,
+  so the unit may hold more than one source file, but nothing else marks a boundary yet. The unit
+  keeps `s32 fn_801B93E8` and `s16 id`, which its matched functions need; with the sell screen's
+  view (`s16` return, `u16` id copied into an `s16` local, fn_801B11EC with a block-scope `s32`
+  declaration) it is 14 lines off instead of 31, but that is a call-site patch, not a split.
+- **A global reached through a cast loses optimizations.** With `(*(T**)&lbl)` MWCC doesn't
+  strength-reduce byte-array indexing in loops; declared with its real type, it does.
+- **`s32` is `long`.** A loop counter the original declared `int` lets the unroller drop its
+  trip-count check; with `long` it keeps one.
+- **Inline helpers with their own locals colour differently from the same code using the
+  function's variables**, by a lot (fn_800E4644 went from 557 to 111 lines by choosing per helper),
+  while renaming variables or reordering declarations changes nothing. Try both for every helper
+  that has a loop.
+- **A conversion into a local is kept, into a parameter it isn't.** An `s16` parameter only
+  stored with `sth` is never extended; an `s16` local holding the same value is (`extsh`).
+- **`i = n = 0`** (the counter's zero copied into the index) is what gives a strength-reduced
+  pointer that starts with `mulli rN, r<counter>, stride`.
+
 Open
 ----
 

@@ -2324,17 +2324,6 @@ void fn_801B6400(u32 v) {
     *(u32*)(*(u8**)(q + 0x28) + 0x4C) = v;
 }
 
-s32 fn_801B94F0(void)
-{
-    u8 *p = *(u8 **)((u8 *)lbl_803471B8 + 0x30);
-    u32 sum = *(u32 *)(p + 0x3cc);
-    sum += *(u32 *)(p + 0x0);
-    sum += *(u32 *)(p + 0x144);
-    sum += *(u32 *)(p + 0x288);
-    sum += *(u32 *)(p + 0x510);
-    return sum != 0;
-}
-
 void fn_801BCFAC(u8* obj, s32 idx) {
     s32 j = *(s32*)(*(u8**)(obj + 4) + idx * 0x34);
     *(f32*)(*(u8**)obj + j * 0x14 + 0xC) = 0.59f;
@@ -3074,6 +3063,7 @@ typedef struct Task_1B3C {
 
 extern f32 njCos(s32 a);
 extern void fn_801B1EA0(Task_1B3C* t);
+s32 fn_801B94F0(void);
 u16 fn_801B952C(u16 i);
 void fn_801B5D68(Task3_801B5D68* t);
 
@@ -3227,7 +3217,20 @@ void fn_801B8E68(Task_801B8E68* t)
     }
 }
 
-u16 fn_801B952C(u16 k)
+/* Whether there is anything to sell. inline, like fn_801B952C: fn_801B1B3C (before them) calls
+ * them, fn_801B7624 (after) has them inlined. */
+inline s32 fn_801B94F0(void)
+{
+    u32 sum = lbl_803471B8->p30->w3cc;
+    sum += lbl_803471B8->p30->w00;
+    sum += lbl_803471B8->p30->w144;
+    sum += lbl_803471B8->p30->w288;
+    sum += lbl_803471B8->p30->w510;
+    return sum != 0;
+}
+
+/* How many items a sell tab lists. */
+inline u16 fn_801B952C(u16 k)
 {
     switch (k) {
     case 0:
@@ -5468,7 +5471,7 @@ typedef struct ShopList {
     u8 pad16[2];
     u16 page;    /* 0x18 */
     u16 row;     /* 0x1A */
-    u8 pad1c[2];
+    u16 tab;     /* 0x1C */
     u8 b1e;      /* 0x1E */
 } ShopList;
 
@@ -5479,7 +5482,9 @@ typedef struct ShopSub38 {
 } ShopSub38;
 
 typedef struct ShopPart {
-    u8 pad0[0x24];
+    u8 pad0[0x19];
+    u8 b19;          /* 0x19 */
+    u8 pad1a[0xa];
     u8* flag;        /* 0x24 */
     UiObj* obj;      /* 0x28 */
     UiObj* obj2;     /* 0x2C */
@@ -5536,6 +5541,7 @@ typedef struct ShopTask {
     };               /* 0x24 */
     u8 pad28[4];
     ShopBuf* buf;    /* 0x2C */
+    Pl* p30;         /* 0x30: the sell lists */
 } ShopTask;
 
 typedef struct ShopMember {
