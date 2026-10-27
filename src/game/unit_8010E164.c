@@ -457,15 +457,15 @@ typedef struct {
 } Ctx_80127E24;
 extern void fn_801264A4(void *p, s32 n, f32 f);
 extern s32 fn_80126E24(void*c, f32 a, f32 b);
-typedef struct {
+/* A battle formation: up to 12 slots (id, then the slot data), the camera distance and angles. */
+typedef struct FormEnt {
     u8 id;
     u8 pad1;
-    u8 a[6];
-    u8 pad8[6];
-} Ent_801284C0;
-typedef struct {
-    Ent_801284C0 e[4];
-    u8 pad38[0xac - 0x38];
+    u8 d[12];
+} FormEnt;
+typedef struct FormTbl {
+    FormEnt e[12];      /* 0x00 */
+    u8 padA8[0xac - 0xa8];
     u8 b_ac;
     u8 b_ad;
     u8 padae[2];
@@ -475,23 +475,7 @@ typedef struct {
     f32 f_bc;
     f32 f_c0;
     f32 f_c4;
-} Tbl_801284C0;
-typedef struct {
-    u8 id;
-    u8 pad1;
-    u8 a[6];
-    u8 pad8[6];
-} Ent_80128A1C;
-typedef struct {
-    Ent_80128A1C e[4];
-    u8 pad38[0xb0 - 0x38];
-    f32 f_b0;
-    f32 f_b4;
-    u8 padb8[4];
-    f32 f_bc;
-    f32 f_c0;
-    f32 f_c4;
-} Tbl_80128A1C;
+} FormTbl;
 extern s32 lbl_80347290;
 extern s32 lbl_80347294;
 extern s32 lbl_803472D8;
@@ -731,23 +715,6 @@ typedef struct Chr_80122ED8 {
     Path *path;
 } Chr_80122ED8;
 extern void fn_8009FDA0(s32 a, s32 b, NJS_POINT3 *out, s32 c, s32 *d, s32 e, s32 f);
-typedef struct {
-    u8 id;
-    u8 pad1;
-    u8 d[12];
-} Ent;
-typedef struct {
-    Ent e[4];          /* 0x00 */
-    u8 pad38[0xAC - 0x38];
-    u8 xac;
-    u8 padad[3];
-    f32 fb0;           /* 0xB0 */
-    f32 fb4;           /* 0xB4 */
-    u8 padb8[4];
-    f32 fbc;           /* 0xBC */
-    f32 fc0;           /* 0xC0 */
-    f32 fc4;           /* 0xC4 */
-} Tab;
 typedef struct Vec_80110AA0 {
     f32 x, y, z;
 } Vec_80110AA0;
@@ -1696,47 +1663,21 @@ typedef struct In_80126BF0 {
     u8 _19[0xb];
     s32 f24;
     u8 _28[0x44];
-    u8 tab[200];
+    FormTbl tab;
 } In_80126BF0;
-extern u8 fn_80128B34(u8* t);
-extern u8 fn_80128E7C(u8* t);
-extern s32 fn_80128DA4(Tbl_801284C0 *t);
-extern u8 fn_80128938(u8* t);
-extern u8 fn_801286F4(u8* t);
-extern u8 fn_8012813C(u8* t);
-extern u8 fn_80128670(u8* t);
-extern u8 fn_801285D8(u8* t);
-extern s32 fn_801282C4(Tbl_801284C0 *t);
-extern s32 fn_801281E8(Tbl_801284C0 *t);
-extern u8 fn_80128414(u8* t);
-typedef struct Ent_801283A4 {
-    u8 id;
-    u8 pad1;
-    u8 a[6];
-    u8 pad8[6];
-} Ent_801283A4;
-typedef struct Tbl_801283A4 {
-    Ent_801283A4 e[2];
-    u8 pad1c[0xb0 - 0x1c];
-    f32 f_b0;
-    f32 f_b4;
-    u8 padb8[4];
-    f32 f_bc;
-    f32 f_c0;
-    f32 f_c4;
-} Tbl_801283A4;
-typedef struct T_80128108 {
-    u8 x0;
-    u8 pad[0xaf];
-    f32 xb0;
-    f32 xb4;
-    f32 xb8;
-    f32 xbc;
-    f32 xc0;
-    f32 xc4;
-} T_80128108;
-extern s32 fn_801283A4(Tbl_801283A4 *t);
-extern u8 fn_80128108(T_80128108 *t);
+extern s32 fn_80128B34(FormTbl* t);
+extern s32 fn_80128E7C(FormTbl* t);
+extern s32 fn_80128DA4(FormTbl *t);
+extern s32 fn_80128938(FormTbl* t);
+extern u8 fn_801286F4(FormTbl* t);
+extern u8 fn_8012813C(FormTbl* t);
+extern u8 fn_80128670(FormTbl* t);
+extern u8 fn_801285D8(FormTbl* t);
+extern s32 fn_801282C4(FormTbl *t);
+extern s32 fn_801281E8(FormTbl *t);
+extern u8 fn_80128414(FormTbl* t);
+extern s32 fn_801283A4(FormTbl *t);
+extern u8 fn_80128108(FormTbl *t);
 typedef struct {
     f32 x, y, z;
     s32 a, b, c;
@@ -3624,7 +3565,7 @@ void fn_80127E24(Ctx_80127E24 *c, Obj_80127E24 *o, u32 mask)
     }
 }
 
-s32 fn_801284C0(Tbl_801284C0 *t)
+s32 fn_801284C0(FormTbl *t)
 {
     u8 ids[3] = { 0, 1, 2 };
     u8 a0[6] = { 2, 0, 0x32, 1, 0x33, 0 };
@@ -3635,13 +3576,13 @@ s32 fn_801284C0(Tbl_801284C0 *t)
         t->e[i].id = ids[i];
     }
     for (i = 0; i < 6; i++) {
-        t->e[0].a[i] = a0[i];
+        t->e[0].d[i] = a0[i];
     }
     for (i = 0; i < 6; i++) {
-        t->e[1].a[i] = a1[i];
+        t->e[1].d[i] = a1[i];
     }
     for (i = 0; i < 4; i++) {
-        t->e[2].a[i] = a2[i];
+        t->e[2].d[i] = a2[i];
     }
     t->b_ac = 0x14;
     t->b_ad = 0x15;
@@ -3653,7 +3594,7 @@ s32 fn_801284C0(Tbl_801284C0 *t)
     return 3;
 }
 
-s32 fn_80128A1C(Tbl_80128A1C *t)
+s32 fn_80128A1C(FormTbl *t)
 {
     u8 ids[4] = { 0, 1, 2, 3 };
     u8 a0[3] = { 1, 0x35, 0 };
@@ -3665,16 +3606,16 @@ s32 fn_80128A1C(Tbl_80128A1C *t)
         t->e[i].id = ids[i];
     }
     for (i = 0; i < 3; i++) {
-        t->e[0].a[i] = a0[i];
+        t->e[0].d[i] = a0[i];
     }
     for (i = 0; i < 3; i++) {
-        t->e[1].a[i] = a1[i];
+        t->e[1].d[i] = a1[i];
     }
     for (i = 0; i < 6; i++) {
-        t->e[2].a[i] = a2[i];
+        t->e[2].d[i] = a2[i];
     }
     for (i = 0; i < 3; i++) {
-        t->e[3].a[i] = a3[i];
+        t->e[3].d[i] = a3[i];
     }
     t->f_b0 = 31.0f;
     t->f_b4 = 40.0f;
@@ -4325,7 +4266,7 @@ void fn_80122ED8(Chr_80122ED8 *c) {
     }
 }
 
-s32 fn_80128C1C(Tab* t)
+s32 fn_80128C1C(FormTbl* t)
 {
     u8 a[4] = { 0x00, 0x01, 0x33, 0x34 };
     u8 b[6] = { 0x01, 0x00, 0x33, 0x00, 0x34, 0x00 };
@@ -4343,12 +4284,12 @@ s32 fn_80128C1C(Tab* t)
         t->e[2].d[i] = d[i];
     for (i = 0; i < 6; i++)
         t->e[3].d[i] = e[i];
-    t->xac = 0x14;
-    t->fb0 = 31.0f;
-    t->fb4 = 40.0f;
-    t->fbc = 41.0f;
-    t->fc0 = 1.0f;
-    t->fc4 = 1.0f;
+    t->b_ac = 0x14;
+    t->f_b0 = 31.0f;
+    t->f_b4 = 40.0f;
+    t->f_bc = 41.0f;
+    t->f_c0 = 1.0f;
+    t->f_c4 = 1.0f;
     return 4;
 }
 
@@ -5520,7 +5461,7 @@ void fn_80127F20(T_80127F20* t) {
     }
 }
 
-u8 fn_801286F4(u8* tab) {
+u8 fn_801286F4(FormTbl* t) {
     u8 x[5] = { 0x00, 0x01, 0x02, 0x34, 0x35 };
     u8 y[10] = { 0x01, 0x32, 0x00, 0x02, 0x33, 0x00, 0x34, 0x00, 0x35, 0x02 };
     u8 z[6] = { 0x00, 0x32, 0x01, 0x02, 0x33, 0x00 };
@@ -5529,49 +5470,49 @@ u8 fn_801286F4(u8* tab) {
     u8 u[8] = { 0x02, 0x35, 0x00, 0x33, 0x02, 0x01, 0x32, 0x00 };
     s8 i;
 
-    tab[0] = x[0];
-    tab[0xE] = x[1];
-    tab[0x1C] = x[2];
-    tab[0x2A] = x[3];
-    tab[0x38] = x[4];
+    t->e[0].id = x[0];
+    t->e[1].id = x[1];
+    t->e[2].id = x[2];
+    t->e[3].id = x[3];
+    t->e[4].id = x[4];
     for (i = 0; i < 10; i++) {
-        *(tab + i + 2) = *(y + i);
+        t->e[0].d[i] = y[i];
     }
-    tab[0x10] = z[0];
-    tab[0x11] = z[1];
-    tab[0x12] = z[2];
-    tab[0x13] = z[3];
-    tab[0x14] = z[4];
-    tab[0x15] = z[5];
-    tab[0x1E] = w[0];
-    tab[0x1F] = w[1];
-    tab[0x20] = w[2];
-    tab[0x21] = w[3];
-    tab[0x22] = w[4];
-    tab[0x23] = w[5];
-    tab[0x2C] = v[0];
-    tab[0x2D] = v[1];
-    tab[0x2E] = v[2];
-    tab[0x2F] = v[3];
-    tab[0x30] = v[4];
-    tab[0x31] = v[5];
-    tab[0x32] = v[6];
-    tab[0x33] = v[7];
-    tab[0x3A] = u[0];
-    tab[0x3B] = u[1];
-    tab[0x3C] = u[2];
-    tab[0x3D] = u[3];
-    tab[0x3E] = u[4];
-    tab[0x3F] = u[5];
-    tab[0x40] = u[6];
-    tab[0x41] = u[7];
-    tab[0xAC] = 0x14;
-    tab[0xAD] = 0x15;
-    *(f32*)(tab + 0xB0) = 31.0f;
-    *(f32*)(tab + 0xB4) = 40.0f;
-    *(f32*)(tab + 0xBC) = 41.0f;
-    *(f32*)(tab + 0xC0) = 1.0f;
-    *(f32*)(tab + 0xC4) = 1.0f;
+    t->e[1].d[0] = z[0];
+    t->e[1].d[1] = z[1];
+    t->e[1].d[2] = z[2];
+    t->e[1].d[3] = z[3];
+    t->e[1].d[4] = z[4];
+    t->e[1].d[5] = z[5];
+    t->e[2].d[0] = w[0];
+    t->e[2].d[1] = w[1];
+    t->e[2].d[2] = w[2];
+    t->e[2].d[3] = w[3];
+    t->e[2].d[4] = w[4];
+    t->e[2].d[5] = w[5];
+    t->e[3].d[0] = v[0];
+    t->e[3].d[1] = v[1];
+    t->e[3].d[2] = v[2];
+    t->e[3].d[3] = v[3];
+    t->e[3].d[4] = v[4];
+    t->e[3].d[5] = v[5];
+    t->e[3].d[6] = v[6];
+    t->e[3].d[7] = v[7];
+    t->e[4].d[0] = u[0];
+    t->e[4].d[1] = u[1];
+    t->e[4].d[2] = u[2];
+    t->e[4].d[3] = u[3];
+    t->e[4].d[4] = u[4];
+    t->e[4].d[5] = u[5];
+    t->e[4].d[6] = u[6];
+    t->e[4].d[7] = u[7];
+    t->b_ac = 0x14;
+    t->b_ad = 0x15;
+    t->f_b0 = 31.0f;
+    t->f_b4 = 40.0f;
+    t->f_bc = 41.0f;
+    t->f_c0 = 1.0f;
+    t->f_c4 = 1.0f;
     return 5;
 }
 
@@ -5977,76 +5918,76 @@ void fn_8011CC74(Task_8011CC74 *t) {
 }
 
 void fn_80126BF0(Obj_80126BF0* o, In_80126BF0* in) {
-    memset(in->tab, 0xFF, 200);
+    memset(&in->tab, 0xFF, 200);
     switch (in->kind) {
     case 0x18:
-        in->b18 = fn_80128B34(in->tab);
+        in->b18 = fn_80128B34(&in->tab);
         o->f190 *= 1.5f;
         in->f24 = 0x8000;
         break;
     case 0x19:
-        in->b18 = fn_80128A1C((void *)(in->tab));
+        in->b18 = fn_80128A1C(&in->tab);
         in->f24 = 0x8000;
         break;
     case 0x23:
-        in->b18 = fn_80128E7C(in->tab);
+        in->b18 = fn_80128E7C(&in->tab);
         in->f24 = 0x6A;
         break;
     case 0x1A:
-        in->b18 = fn_80128DA4((void *)(in->tab));
+        in->b18 = fn_80128DA4(&in->tab);
         in->f24 = 0x68;
         in->b17 = 1;
         break;
     case 0x1B:
-        in->b18 = fn_80128938(in->tab);
+        in->b18 = fn_80128938(&in->tab);
         o->f190 *= 1.5f;
         in->f24 = 0x60;
         break;
     case 0x24:
-        in->b18 = fn_801286F4(in->tab);
+        in->b18 = fn_801286F4(&in->tab);
         in->f24 = 0x6E2;
         break;
     case 0x25:
-        in->b18 = fn_80128C1C((void *)(in->tab));
+        in->b18 = fn_80128C1C(&in->tab);
         in->f24 = 0x62;
         break;
     case 0x26:
-        in->b18 = fn_8012813C(in->tab);
+        in->b18 = fn_8012813C(&in->tab);
         in->f24 = 0x20;
         break;
     case 0x28:
     case 0x29:
-        in->b18 = fn_80128670(in->tab);
+        in->b18 = fn_80128670(&in->tab);
         in->f24 = 0x62;
         break;
     case 0x1D:
-        in->b18 = fn_801285D8(in->tab);
+        in->b18 = fn_801285D8(&in->tab);
         in->f24 = 0x10062;
         break;
     case 0x1E:
     case 0x1F:
-        in->b18 = fn_801284C0((void *)(in->tab));
+        in->b18 = fn_801284C0(&in->tab);
         in->f24 = 0x62;
         break;
     case 0x20:
-        in->b18 = fn_801282C4((void *)(in->tab));
+        in->b18 = fn_801282C4(&in->tab);
         in->f24 = 0x1062;
         break;
     case 0x33:
-        in->b18 = fn_801281E8((void *)(in->tab));
+        in->b18 = fn_801281E8(&in->tab);
         in->f24 = 0x3060;
         break;
     case 0x1C:
-        in->b18 = fn_80128414(in->tab);
+        in->b18 = fn_80128414(&in->tab);
         in->f24 = 0x14840;
         break;
     case 0x32:
-        in->b18 = fn_801283A4((void *)(in->tab));
+        in->b18 = fn_801283A4(&in->tab);
         in->f24 = 0x2040;
         break;
     default:
         in->kind = 0;
-        in->b18 = fn_80128108((void *)(in->tab));
+        in->b18 = fn_80128108(&in->tab);
         in->f24 = 0x40;
         break;
     }
@@ -7118,7 +7059,7 @@ void fn_80123A44(P_80123A44 *p) {
     }
 }
 
-s32 fn_801283A4(Tbl_801283A4 *t)
+s32 fn_801283A4(FormTbl *t)
 {
     u8 ids[2] = { 0, 1 };
     u8 a0[1] = { 0 };
@@ -7128,10 +7069,10 @@ s32 fn_801283A4(Tbl_801283A4 *t)
         t->e[i].id = ids[i];
     }
     for (i = 0; i < 1; i++) {
-        t->e[0].a[i] = a0[i];
+        t->e[0].d[i] = a0[i];
     }
     for (i = 0; i < 2; i++) {
-        t->e[1].a[i] = a1[i];
+        t->e[1].d[i] = a1[i];
     }
     t->f_b0 = 31.0f;
     t->f_b4 = 40.0f;
@@ -7141,13 +7082,13 @@ s32 fn_801283A4(Tbl_801283A4 *t)
     return 2;
 }
 
-u8 fn_80128108(T_80128108 *t) {
-    t->x0 = 0;
-    t->xb0 = 31.0f;
-    t->xb4 = 40.0f;
-    t->xbc = 41.0f;
-    t->xc0 = 1.0f;
-    t->xc4 = 1.0f;
+u8 fn_80128108(FormTbl *t) {
+    t->e[0].id = 0;
+    t->f_b0 = 31.0f;
+    t->f_b4 = 40.0f;
+    t->f_bc = 41.0f;
+    t->f_c0 = 1.0f;
+    t->f_c4 = 1.0f;
     return 1;
 }
 
@@ -7405,7 +7346,7 @@ void fn_8012A26C(void)
     }
 }
 
-s32 fn_801281E8(Tbl_801284C0 *t)
+s32 fn_801281E8(FormTbl *t)
 {
     u8 ids[3] = { 0, 1, 2 };
     u8 a0[4] = { 1, 0, 2, 0 };
@@ -7416,13 +7357,13 @@ s32 fn_801281E8(Tbl_801284C0 *t)
         t->e[i].id = ids[i];
     }
     for (i = 0; i < 4; i++) {
-        t->e[0].a[i] = a0[i];
+        t->e[0].d[i] = a0[i];
     }
     for (i = 0; i < 4; i++) {
-        t->e[1].a[i] = a1[i];
+        t->e[1].d[i] = a1[i];
     }
     for (i = 0; i < 4; i++) {
-        t->e[2].a[i] = a2[i];
+        t->e[2].d[i] = a2[i];
     }
     t->b_ac = 0x14;
     t->b_ad = 0x14;
@@ -7434,7 +7375,7 @@ s32 fn_801281E8(Tbl_801284C0 *t)
     return 3;
 }
 
-s32 fn_801282C4(Tbl_801284C0 *t)
+s32 fn_801282C4(FormTbl *t)
 {
     u8 ids[3] = { 0, 1, 2 };
     u8 a0[4] = { 1, 0, 2, 0 };
@@ -7445,13 +7386,13 @@ s32 fn_801282C4(Tbl_801284C0 *t)
         t->e[i].id = ids[i];
     }
     for (i = 0; i < 4; i++) {
-        t->e[0].a[i] = a0[i];
+        t->e[0].d[i] = a0[i];
     }
     for (i = 0; i < 4; i++) {
-        t->e[1].a[i] = a1[i];
+        t->e[1].d[i] = a1[i];
     }
     for (i = 0; i < 4; i++) {
-        t->e[2].a[i] = a2[i];
+        t->e[2].d[i] = a2[i];
     }
     t->b_ac = 0x14;
     t->b_ad = 0x15;
@@ -7463,7 +7404,7 @@ s32 fn_801282C4(Tbl_801284C0 *t)
     return 3;
 }
 
-s32 fn_80128DA4(Tbl_801284C0 *t)
+s32 fn_80128DA4(FormTbl *t)
 {
     u8 ids[3] = { 1, 0, 3 };
     u8 a0[4] = { 0x35, 0, 0x34, 1 };
@@ -7474,13 +7415,13 @@ s32 fn_80128DA4(Tbl_801284C0 *t)
         t->e[i].id = ids[i];
     }
     for (i = 0; i < 4; i++) {
-        t->e[0].a[i] = a0[i];
+        t->e[0].d[i] = a0[i];
     }
     for (i = 0; i < 4; i++) {
-        t->e[1].a[i] = a1[i];
+        t->e[1].d[i] = a1[i];
     }
     for (i = 0; i < 4; i++) {
-        t->e[2].a[i] = a2[i];
+        t->e[2].d[i] = a2[i];
     }
     t->b_ac = 0x14;
     t->f_b0 = 31.0f;
@@ -7868,4 +7809,100 @@ void fn_8012048C(void *o) {
         el++;
         ent++;
     } while (--n != 0);
+}
+
+u8 fn_80128670(FormTbl *t)
+{
+    u8 ids[2] = { 0, 1 };
+    u8 a0[2] = { 1, 0 };
+    u8 a1[2] = { 0, 1 };
+    s32 i;
+    for (i = 0; i < 2; i++) {
+        t->e[i].id = ids[i];
+    }
+    for (i = 0; i < 2; i++) {
+        t->e[0].d[i] = a0[i];
+    }
+    for (i = 0; i < 2; i++) {
+        t->e[1].d[i] = a1[i];
+    }
+    t->b_ac = 0x14;
+    t->f_b0 = 31.0f;
+    t->f_b4 = 40.0f;
+    t->f_bc = 41.0f;
+    t->f_c0 = 1.0f;
+    t->f_c4 = 1.0f;
+    return 2;
+}
+
+s32 fn_80128938(FormTbl *t)
+{
+    u8 ids[2] = { 0, 1 };
+    u8 a0[3] = { 1, 0x33, 0 };
+    u8 a1[3] = { 0, 0x32, 1 };
+    s32 i;
+    for (i = 0; i < 2; i++) {
+        t->e[i].id = ids[i];
+    }
+    for (i = 0; i < 7; i++) {
+        t->e[0].d[i] = a0[i];
+    }
+    for (i = 0; i < 7; i++) {
+        t->e[1].d[i] = a1[i];
+    }
+    t->f_b0 = 31.0f;
+    t->f_b4 = 40.0f;
+    t->f_bc = 41.0f;
+    t->f_c0 = 1.0f;
+    t->f_c4 = 1.0f;
+    t->f_c0 = 1.5f;
+    t->f_c4 = -0.5f;
+    return 2;
+}
+
+s32 fn_80128B34(FormTbl *t)
+{
+    u8 ids[2] = { 0, 1 };
+    u8 a0[7] = { 1, 5, 0, 3, 0, 2, 0 };
+    u8 a1[7] = { 0, 4, 1, 3, 1, 2, 1 };
+    s32 i;
+    for (i = 0; i < 2; i++) {
+        t->e[i].id = ids[i];
+    }
+    for (i = 0; i < 7; i++) {
+        t->e[0].d[i] = a0[i];
+    }
+    for (i = 0; i < 7; i++) {
+        t->e[1].d[i] = a1[i];
+    }
+    t->f_b0 = 31.0f;
+    t->f_b4 = 40.0f;
+    t->f_bc = 41.0f;
+    t->f_c0 = 1.5f;
+    t->f_c4 = -0.5f;
+    return 2;
+}
+
+s32 fn_80128E7C(FormTbl *t)
+{
+    u8 ids[2] = { 0, 1 };
+    u8 a0[4] = { 0x32, 0x34, 1, 0 };
+    u8 a1[5] = { 0, 1, 0x32, 0x34, 1 };
+    s32 i;
+    for (i = 0; i < 2; i++) {
+        t->e[i].id = ids[i];
+    }
+    for (i = 0; i < 4; i++) {
+        t->e[0].d[i] = a0[i];
+    }
+    for (i = 0; i < 5; i++) {
+        t->e[1].d[i] = a1[i];
+    }
+    t->b_ac = 20;
+    t->f_b0 = 31.0f;
+    t->f_b4 = 40.0f;
+    t->f_bc = 41.0f;
+    t->f_c0 = 1.0f;
+    t->f_c4 = 1.0f;
+    return 2;
 }
