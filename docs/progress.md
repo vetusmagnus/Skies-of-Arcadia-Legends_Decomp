@@ -1,8 +1,8 @@
 Progress and handoff
 ====================
 
-State of the work as of 2026-10-26 (after tier 2, the under-200-byte never-tried batch): 31.2% of code matched (3,830 / 7,116
-functions), 3,392 functions unmatched: about 2,470 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
+State of the work as of 2026-10-26 (after tier 2, the under-200-byte never-tried batch): 31.8% of code matched (3,831 / 7,116
+functions), 3,285 functions unmatched: about 2,470 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
 (the size split of the game functions predates the duplicate-copy batch: 2,193 under 632 bytes, 466 at 632-1000,
 355 at 1-2 KB, 101 at 2-5 KB, 16 over 5 KB). Numbers live in the README status block and on
 [ByteMatch](https://bytematch.dev/vetusmagnus/SoAL-Decomp); this page covers what's in flight.
@@ -201,6 +201,15 @@ matches need), fn_8008F2CC / fn_8008F434 / fn_8008F5E0 (need an `inline` recursi
 fn_800AB834, fn_800B29AC, fn_800C0368, fn_800CF6A8, fn_8010EB88, fn_801353A8, fn_8014836C, fn_80148CAC, fn_80170C64,
 fn_8017567C, fn_80175DC4, fn_801763B8, fn_80178BC8, fn_80185864 (camp_work / lbl_8030B7F4 struct shapes), fn_801A20AC,
 fn_801B057C, fn_801B06CC (const `.rodata` tables), fn_801B65CC, fn_801BE17C, fn_801BE2F0.
+
+### fn_801A6BDC, the shop state machine (2026-10-26)
+
+The 16.6 KB shop buy/equip state machine (27 states: item list, quantity and gold countdown, the equip-now prompt with the
+weapon, armor and accessory comparison windows) is in `unit_80199B9C.c` and matches byte for byte (4,149 instructions).
+The whole unit passes fdiff and the float check, `main.dol` is byte-identical. Five `goto`s remain, each a tail the original
+shares (`accessory`, `back_to_list`, `list_ready`, `armor_changed`); see the large-function section of `docs/matching.md`.
+Its prototypes forced two fixes in the unit: `fn_801F4C24` returns `s32` (`fn_801B5868` narrows it through an `s16` local),
+and `fn_801AAFAC`/`fn_801AFBE8` take the shop's task type (a union view of the work pointer; `void*` return).
 
 ### Hand-merging the type-clash leftovers (2026-10-26)
 

@@ -62,6 +62,32 @@ What MWCC cares about
 - **The game's types:** Ninja's matrix is the Dreamcast `Float[16]` (`include/ninja.h`); small
   structs in `.sbss` must stay separate globals if the original accesses them with `sda21`.
 
+Large functions
+---------------
+
+Found matching `fn_801A6BDC` (the 16.6 KB shop state machine in `unit_80199B9C.c`):
+
+- **MWCC's inline budget is per caller and size-based.** An `inline` helper stops expanding once
+  the calling function gets big (around 2,500 instructions here, counting the caller's own code),
+  biggest helpers first, then all of them. No flag changes it (`deferred`, `level=`, `-O4,s` all
+  cut off in the same place). So a function this size can't rely on `inline` helpers: repeated
+  blocks are macros.
+- **Shared tails are `goto`s.** MWCC does not merge identical code. Where the original jumps into
+  another case's code (a state that sets a value and then branches into the middle of another
+  state), the source has a label there.
+- **A value the original keeps in a register across stores is a local**, often assigned inside a
+  condition: `if ((n = t->w->xa) != 4) { a->h = n; b->h = n; }`, or a loop bound reused after
+  the loop: `for (cnt = 0; cnt < (i = t->w->xb); cnt++)`.
+- **`addi 8; add; lha 2` (an array element's address kept, then the field read)** comes from
+  copying the address through a second pointer: `ShopEntry* cur_ = &buf->out[i]; e = cur_;`. A
+  single assignment folds into `lhax` with offset `0xa`.
+- **`?:` between two constants becomes branchless code**; `cmd = 20; if (x) cmd = 21;` gives the
+  `li`/`bne`/`li` the original has.
+- **Register-only differences in a big function were variable identity, not declaration order**:
+  a declaration-order search changed nothing, while swapping which variable plays the loop index
+  and which the counter fixed it. Block-scoped temporaries (in the macros) get their own
+  registers and were what the original's temporaries needed.
+
 Open
 ----
 

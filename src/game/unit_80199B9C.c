@@ -435,8 +435,13 @@ typedef struct Flags_UNIT0000 {
 } Flags_UNIT0000;
 typedef struct Stat {
     u8 pad00[0x34C];
-    s32 w34c;
-    u8 pad350[0x16A0 - 0x350];
+    s32 w34c; /* gold */
+    u8 pad350[0x1568 - 0x350];
+    s8 b1568;
+    u8 pad1569[0x1580 - 0x1569];
+    s16 h1580[5];
+    s16 h158a[4];
+    u8 pad1592[0x16A0 - 0x1592];
 } Stat;
 extern Stat lbl_8030B7F4;
 extern void* lbl_803470EC;
@@ -1210,7 +1215,7 @@ typedef struct Game_801AB580 {
     u8 pad0[0x34c];
     s32 w34c;
 } Game_801AB580;
-extern s16 fn_801F4C24(s16 id);
+extern s32 fn_801F4C24(s16 id);
 extern u16 fn_801F477C(s16 id);
 extern s8 fn_801F452C(s16 id);
 typedef struct Game_801AB82C {
@@ -4634,6 +4639,1180 @@ s32 fn_801AB094(Task_801AB094* t)
     return ret;
 }
 
+/* fn_801A6BDC: the shop's buy screen (item list, quantity, gold) and the equip-now prompt that
+ * follows a purchase (weapon, armor and accessory comparison windows). The work keeps the menu
+ * parts in a table like MenuWork; the state byte at work+0x03 drives the switch. */
+typedef struct ShopPadState {
+    u8 pad0[0x8];
+    u32 x8; /* buttons held this frame: 0x100 A, 0x200 B */
+} ShopPadState;
+/* The globals below are declared with other types earlier in this file. */
+#define SHOP_PAD ((ShopPadState*)lbl_80311A60[0])
+#define SHOP_PARTY ((ShopParty*)lbl_803471B8)
+
+typedef struct ShopList {
+    u8 pad0[0x8];
+    f32 x8;      /* 0x08 */
+    f32 xc;      /* 0x0C */
+    u8 pad10[4];
+    u16 h14;     /* 0x14 */
+    u8 pad16[2];
+    u16 page;    /* 0x18 */
+    u16 row;     /* 0x1A */
+    u8 pad1c[2];
+    u8 b1e;      /* 0x1E */
+} ShopList;
+
+typedef struct ShopSub38 {
+    u8 pad0[0xa];
+    u16 ha;      /* 0x0A */
+    u16 hc;      /* 0x0C */
+} ShopSub38;
+
+typedef struct ShopPart {
+    u8 pad0[0x24];
+    u8* flag;        /* 0x24 */
+    UiObj* obj;      /* 0x28 */
+    UiObj* obj2;     /* 0x2C */
+    ShopList* list;  /* 0x30 */
+    u8 pad34[4];
+    ShopSub38* x38;  /* 0x38 */
+} ShopPart;
+
+typedef struct ShopWork {
+    u8 pad0[3];
+    u8 state;        /* 0x03 */
+    s16 qty;         /* 0x04 */
+    u16 item;        /* 0x06 */
+    u8 pad8[1];
+    u8 x9;           /* 0x09 */
+    u8 xa;           /* 0x0A */
+    u8 xb;           /* 0x0B */
+    u8 xc[4];        /* 0x0C */
+    s8 who[4];       /* 0x10 */
+    s16 stat[4][4];  /* 0x14 */
+    u8 b34;          /* 0x34 */
+    u8 pad35[2];
+    u8 b37;          /* 0x37 */
+    u8 pad38[0xe4];
+    u32 cost;        /* 0x11C */
+    u32 left;        /* 0x120 */
+    u32 step;        /* 0x124 */
+    u8 pad128[0xd0];
+    ShopPart* parts[19]; /* 0x1F8 */
+} ShopWork;
+
+typedef struct ShopEntry {
+    s8 flag;
+    s8 type;
+    s16 id;
+    u8 pad4[2];
+} ShopEntry;
+
+typedef struct ShopBuf {
+    u8 pad0[4];
+    u16 pages;
+    s16 count;
+    ShopEntry out[0x30];
+} ShopBuf;
+
+typedef struct ShopTask {
+    u8 pad0[0x19];
+    u8 state;        /* 0x19 */
+    u8 pad1a[0xa];
+    union {
+        ShopWork* w;
+        Ctx_801AAFAC* ctx;
+    };               /* 0x24 */
+    u8 pad28[4];
+    ShopBuf* buf;    /* 0x2C */
+} ShopTask;
+
+typedef struct ShopMember {
+    s8 id;
+    u8 pad1[5];
+    s16 x06, x08, x0a;
+    u8 padc[0x18];
+} ShopMember;
+typedef struct ShopPartyInfo {
+    u8 pad0[0x3c];
+    ShopMember m[4];  /* 0x3C */
+    u8 padcc[0xc];
+    struct { s16 v; u8 pad[8]; } d8[4]; /* 0xD8 */
+    u8 pad100[0xa];
+    s16 h10a[3];      /* 0x10A */
+} ShopPartyInfo;
+typedef struct ShopChar {
+    u8 pad0[0x6c];
+    s16 h6c;
+    u8 pad6e[0x2e];
+} ShopChar;
+typedef struct ShopParty {
+    u8 pad0[0x24];
+    ShopPartyInfo* info;  /* 0x24 */
+    ShopChar* chr;        /* 0x28 */
+} ShopParty;
+extern u8 fn_801C0CA0(s16 id);
+extern s8 fn_801C0C14(s16 id);
+extern s32 fn_801C2C84(u8 i);
+extern s32 fn_801F3FD0(s32 who, s16 id);
+extern s32 fn_801C0B88(s16 id, u8 who);
+typedef struct ShopSlotPos {
+    u16 idx;
+    f32 x;   /* shown */
+    f32 x2;  /* hidden */
+} ShopSlotPos;
+extern const ShopSlotPos lbl_802B69E8[];
+extern ShopPart* fn_801AD00C(ShopTask* t, u16 kind, s32 who);
+extern ShopPart* fn_801B057C(ShopTask* t, u16 kind, s32 who);
+extern ShopPart* fn_801B06CC(ShopTask* t, u16 i, s32 who, f32 alpha);
+extern void* fn_801AFBE8(void* t, u16 i, u16 kind, f32 alpha);
+extern void fn_801C1FC0(s16 id, s32 who);
+extern u16 fn_801C16D0(s16 id);
+extern void fn_801C1728(s16 id, s32 slot);
+extern s32 fn_801AAFAC(ShopTask* t);
+extern void fn_801C0AB4(u16 id, u8 who);
+extern void fn_801C2C4C(u8 who, s8 v);
+typedef struct ShopMObj {
+    UiObj o;
+    const char* text;
+    u16 h50, h52, h54, h56;
+} ShopMObj;
+extern void fn_8021B1CC(void* a, void* b);
+extern void fn_801C1E48(void);
+extern s32 fn_801AACB0(ShopTask* t);
+extern void fn_801F4E38(s32 who, s16 v);
+extern void fn_801F4E04(s32 who, s16 v);
+extern void fn_801C12C8(void);
+extern void* fn_801F48AC(s16 id);
+extern void fn_801B5644(ShopPart* p, u16 id);
+extern void fn_801B571C(ShopPart* p, u16 id);
+extern void fn_801C0FBC(s16 id);
+extern void fn_801C08B4(s32 msg);
+extern void fn_801C0814(ShopTask* t);
+extern void fn_801C1148(s16 id, u8 n);
+
+#define PAD_A (SHOP_PAD->x8 & 0x100)
+#define PAD_B (SHOP_PAD->x8 & 0x200)
+/* The entry under the cursor. The original keeps the entry address in a register (addi 8; add;
+ * lha 2) even for one use; only the extra copy through cur_ reproduces that. */
+#define SHOP_CUR_ENTRY(e, t, p)                                                          \
+    {                                                                                    \
+        ShopEntry* cur_ = &(t)->buf->out[(u8)(p)->list->page * 6 + (u8)(p)->list->row]; \
+        (e) = cur_;                                                                      \
+    }
+
+#define SHOP_LIST_SET_Y(part)                   \
+    {                                           \
+        ShopPart* lp_ = (part);                 \
+        ShopList* ll_ = lp_->list;              \
+        ll_->xc = ll_->row * 24;                \
+        lp_->list->x8 = 0.0f;                   \
+    }
+
+#define ShopShowEquip(t) \
+    { \
+        UiObjMoveToX(t->w->parts[0]->obj, 6, 5, -260.0f); \
+        UiObjSetCommand(t->w->parts[0]->obj, 15, 0); \
+        UiObjMoveToX(t->w->parts[3]->obj, 6, 5, -260.0f); \
+        UiObjSetCommand(t->w->parts[3]->obj, 15, 2); \
+        UiObjMoveToX(t->w->parts[1]->obj, 6, 5, -260.0f); \
+        UiObjSetCommand(t->w->parts[1]->obj, 15, 4); \
+        UiObjMoveToX(t->w->parts[2]->obj, 6, 5, -240.0f); \
+        UiObjSetCommand(t->w->parts[2]->obj, 15, 6); \
+        UiObjMoveToX(t->w->parts[8]->obj, 6, -1, 648.0f); \
+        UiObjSetCommand(t->w->parts[8]->obj, 15, 0); \
+        UiObjMoveTo(t->w->parts[7]->obj, 6, -1, 640.0f, 480.0f); \
+        UiObjSetCommand(t->w->parts[7]->obj, 15, 2); \
+        *t->w->parts[9]->flag = 1; \
+        t->w->state = 8; \
+    }
+
+#define ShopBackToList(t) \
+    { \
+        t->w->parts[8]->list->b1e = 0; \
+        *t->w->parts[9]->flag = 0; \
+        UiObjMoveToX(t->w->parts[9]->obj, 6, -1, -8.0f); \
+        UiObjSetCommand(t->w->parts[9]->obj, 15, 2); \
+        UiObjMoveToX(t->w->parts[2]->obj, 6, -1, -240.0f); \
+        UiObjSetCommand(t->w->parts[2]->obj, 15, 0); \
+    }
+
+#define ShopHideList(t) \
+    { \
+        *t->w->parts[0]->flag = 1; \
+        *t->w->parts[3]->flag = 1; \
+        *t->w->parts[1]->flag = 1; \
+        *t->w->parts[2]->flag = 1; \
+        *t->w->parts[8]->flag = 1; \
+        *t->w->parts[7]->flag = 1; \
+    }
+
+#define ShopShowCompare(t) \
+    { \
+        UiObjMoveToX(t->w->parts[10]->obj, 6, -1, 328.0f); \
+        UiObjSetCommand(t->w->parts[10]->obj, 15, 0); \
+        UiObjMoveToX(t->w->parts[10]->obj2, 6, -1, 328.0f); \
+        UiObjSetCommand(t->w->parts[10]->obj2, 15, 2); \
+        UiObjMoveToX(t->w->parts[11]->obj, 6, -1, 328.0f); \
+        UiObjSetCommand(t->w->parts[11]->obj, 15, 4); \
+        UiObjMoveToX(t->w->parts[11]->obj2, 6, -1, 328.0f); \
+        UiObjSetCommand(t->w->parts[11]->obj2, 15, 6); \
+    }
+
+#define ShopCompareDone(t) \
+    { \
+        t->w->state = 12; \
+        if (fn_801AAFAC(t)) { \
+            t->w->xa = 4; \
+        } \
+    }
+
+#define ShopFreeCompare(t) \
+    { \
+        MenuPartFree((MenuTask*)t, 12); \
+        MenuPartFree((MenuTask*)t, 18); \
+        MenuPartFree((MenuTask*)t, 10); \
+        MenuPartFree((MenuTask*)t, 11); \
+        MenuPartFree((MenuTask*)t, 13); \
+        MenuPartFree((MenuTask*)t, 14); \
+        fn_801AB328((Self_801AB328*)t); \
+    }
+
+#define SHOP_SLOT_CMDS(t, cmd, o) \
+    { \
+        cmd = 20; \
+        if (t->w->xa == 0) { \
+            cmd = 21; \
+        } \
+        UiObjSetCommand(t->w->parts[14]->obj, cmd, 0); \
+        { \
+            ShopPart* q_ = t->w->parts[15]; \
+            if (q_) { \
+                o = q_->obj; \
+                cmd = 20; \
+                if (t->w->xa == 1) { \
+                    cmd = 21; \
+                } \
+                UiObjSetCommand(o, cmd, 0); \
+            } \
+        } \
+        { \
+            ShopPart* q_ = t->w->parts[16]; \
+            if (q_) { \
+                o = q_->obj; \
+                cmd = 20; \
+                if (t->w->xa == 2) { \
+                    cmd = 21; \
+                } \
+                UiObjSetCommand(o, cmd, 0); \
+            } \
+        } \
+        { \
+            ShopPart* q_ = t->w->parts[17]; \
+            if (q_) { \
+                o = q_->obj; \
+                cmd = 20; \
+                if (t->w->xa == 3) { \
+                    cmd = 21; \
+                } \
+                UiObjSetCommand(o, cmd, 0); \
+            } \
+        } \
+        cmd = 20; \
+        if (t->w->xa == 4) { \
+            cmd = 21; \
+        } \
+        UiObjSetCommand(t->w->parts[18]->obj, cmd, 0); \
+    }
+
+void fn_801A6BDC(ShopTask* t) {
+    extern void TextPrintNumber(s32 x, s32 y, s32 value, u32 flags);
+    f32 z;
+    f32 y;
+    f32 a;
+    ShopPart* p;
+    ShopEntry* e;
+    u16 price;
+    s32 page;
+    s32 row;
+    s32 i;
+    u32 n;
+    s32 d;
+    u8 d8;
+    s32 cmd;
+    s32 old;
+    s32 cnt;
+    UiObj* o;
+
+    switch (t->w->state) {
+    case 0:
+        fn_801C12C8();
+        fn_801AB580((Self_801AB580*)t);
+        *t->w->parts[4]->flag = 1;
+        *t->w->parts[5]->flag = 1;
+        t->w->parts[7] = (ShopPart*)fn_801B6320(t, -4450.0f);
+        t->w->parts[8] = (ShopPart*)fn_801B5C4C(t);
+        t->w->parts[9] = (ShopPart*)fn_801B54D4(t);
+        t->w->parts[2] = (ShopPart*)fn_801B2678(t, 0);
+        *t->w->parts[2]->flag = 1;
+        t->w->parts[8]->list->page = 0;
+        t->w->parts[8]->list->row = 0;
+        t->w->qty = 1;
+        t->w->state = 1;
+        SHOP_LIST_SET_Y(t->w->parts[8]);
+    case 1:
+        UiObjMoveTo(t->w->parts[7]->obj, 6, -1, 24.0f, 384.0f);
+        UiObjSetCommand(t->w->parts[7]->obj, 15, 0);
+        SHOP_CUR_ENTRY(e, t, t->w->parts[8]);
+        fn_801B6400((u32)fn_801F48AC(e->id));
+        UiObjMoveToX(t->w->parts[8]->obj, 6, -1, 240.0f);
+        UiObjSetCommand(t->w->parts[8]->obj, 15, 0);
+        SHOP_CUR_ENTRY(e, t, t->w->parts[8]);
+        fn_801B5644(t->w->parts[9], e->id);
+        t->w->state = 2;
+        break;
+    case 2:
+        if (UiObjIsBusy(t->w->parts[7]->obj) == 0 || PAD_A) {
+            MenuPartsFinish((MenuTask*)t);
+            t->w->parts[8]->x38->ha = 1 < t->buf->pages;
+            t->w->state = 3;
+        }
+        break;
+    case 3:
+        p = t->w->parts[8];
+        page = p->list->page;
+        row = p->list->row;
+        if (fn_801C09F8(0, 1)) {
+            t->w->state = 0x18;
+            t->w->parts[8]->x38->ha = 0;
+            MenuPlaySe(5);
+        } else {
+            if (fn_801C09F8(0, 4)) {
+                if (p->list->row == 0) {
+                    p->list->row = 5;
+                    for (i = 0; i < 6 - p->list->row; i++) {
+                        if (t->buf->out[(u8)p->list->page * 6 + (u8)p->list->row].id != -1) {
+                            break;
+                        }
+                        p->list->row--;
+                    }
+                } else {
+                    p->list->row--;
+                }
+            } else if (fn_801C09F8(0, 5)) {
+                p->list->row++;
+                if (p->list->row == 6) {
+                    p->list->row = 0;
+                }
+                SHOP_CUR_ENTRY(e, t, p);
+                if (e->id == -1) {
+                    p->list->row = 0;
+                }
+            } else {
+                if (fn_801C09F8(0, 6)) {
+                    if (p->list->page == 0) {
+                        p->list->page = t->buf->pages;
+                    }
+                    p->list->page--;
+                    if (page != p->list->page) {
+                        t->w->parts[8]->x38->hc = 0;
+                    }
+                } else if (fn_801C09F8(0, 7)) {
+                    p->list->page++;
+                    if (p->list->page == t->buf->pages) {
+                        p->list->page = 0;
+                    }
+                    if (page != p->list->page) {
+                        t->w->parts[8]->x38->hc = 0;
+                    }
+                } else {
+                    goto no_move;
+                }
+                SHOP_CUR_ENTRY(e, t, p);
+                if (e->id == -1) {
+                    for (i = 0; i < 6 - p->list->row; i++) {
+                        if (t->buf->out[(u8)p->list->page * 6 + (u8)p->list->row].id != -1) {
+                            break;
+                        }
+                        p->list->row--;
+                    }
+                }
+            }
+            if (page != p->list->page || row != p->list->row) {
+                MenuPlaySe(4);
+            }
+            p = t->w->parts[8];
+            SHOP_CUR_ENTRY(e, t, p);
+            fn_801B571C(t->w->parts[9], e->id);
+            p->list->h14 = 0;
+            goto tail3;
+        no_move: /* no direction pressed */
+            if (PAD_A) {
+            SHOP_CUR_ENTRY(e, t, t->w->parts[8]);
+            if (e->flag == 0) {
+                t->w->item = e->id;
+                fn_801C0FBC(t->w->item);
+                t->w->qty = 1;
+                price = fn_801F477C(t->w->item);
+                t->w->cost = price * t->w->qty;
+                t->w->left = (s32)(lbl_8030B7F4.w34c - t->w->cost) <= 0 ? 0 : lbl_8030B7F4.w34c - t->w->cost;
+                UiObjMoveToX(t->w->parts[9]->obj, 6, -1, -624.0f);
+                UiObjSetCommand(t->w->parts[9]->obj, 15, 0);
+                *t->w->parts[2]->flag = 0;
+                UiObjMoveToX(t->w->parts[2]->obj, 6, -1, -8.0f);
+                UiObjSetCommand(t->w->parts[2]->obj, 15, 1);
+                t->w->parts[8]->x38->ha = 0;
+                fn_801C08B4(2);
+                t->w->state = 4;
+            } else {
+                fn_801C08B4(3);
+            }
+            }
+        }
+    tail3:
+        SHOP_LIST_SET_Y(t->w->parts[8]);
+        SHOP_CUR_ENTRY(e, t, t->w->parts[8]);
+        fn_801B6400((u32)fn_801F48AC(e->id));
+        break;
+    case 4:
+        if (UiObjIsBusy(t->w->parts[2]->obj) == 0 && UiObjIsBusy(t->w->parts[9]->obj) == 0) {
+            t->w->state = 5;
+            *t->w->parts[9]->flag = 1;
+            t->w->parts[8]->list->b1e = 1;
+        } else if (PAD_A) {
+            MenuPartsFinish((MenuTask*)t);
+        }
+        break;
+    case 5:
+        if (fn_801C09F8(0, 1)) {
+            t->w->state = 9;
+            MenuPlaySe(5);
+        back_to_list:
+            ShopBackToList(t);
+            break;
+        }
+        if (fn_801C09F8(0, 4)) {
+            t->w->qty = fn_801AB82C(8, t->w->qty, t->w->item);
+        } else if (fn_801C09F8(0, 5)) {
+            t->w->qty = fn_801AB82C(4, t->w->qty, t->w->item);
+        } else if (fn_801C09F8(0, 6)) {
+            t->w->qty = fn_801AB82C(1, t->w->qty, t->w->item);
+        } else if (fn_801C09F8(0, 7)) {
+            t->w->qty = fn_801AB82C(2, t->w->qty, t->w->item);
+        } else if (PAD_A) {
+            t->w->state = 6;
+            t->w->parts[8]->list->b1e = 0xFF;
+            MenuPlaySe(2);
+            fn_801C08B4(0x19);
+        }
+        y = t->w->parts[8]->list->row * 24 + 12;
+        z = TextGetZ();
+        TextPushColor();
+        TextSetColor(0xFF2222F0);
+        TextSetZ(-27.5f + t->w->parts[8]->obj->z);
+        TextPrint((s32)(336.0f + (t->w->parts[8]->obj->x + t->w->parts[8]->obj->rdx)),
+                  (s32)(y + (t->w->parts[8]->obj->y - t->w->parts[8]->obj->rdy)), "\x81\x7e");
+        TextPrintNumber((s32)(360.0f + (t->w->parts[8]->obj->x + t->w->parts[8]->obj->rdx)),
+                        (s32)(y + (t->w->parts[8]->obj->y - t->w->parts[8]->obj->rdy)), t->w->qty, 0xC002);
+        TextPopColor(1);
+        TextSetZ(z);
+        price = fn_801F477C(t->w->item);
+        t->w->cost = price * t->w->qty;
+        t->w->left = (s32)(lbl_8030B7F4.w34c - t->w->cost) <= 0 ? 0 : lbl_8030B7F4.w34c - t->w->cost;
+        fn_801C0814(t);
+        break;
+    case 6:
+        if (PAD_A) {
+            lbl_8030B7F4.w34c -= t->w->cost;
+            t->w->cost = 0;
+        } else if (t->w->cost <= t->w->step) {
+            lbl_8030B7F4.w34c -= t->w->cost;
+            t->w->cost = 0;
+        } else {
+            t->w->cost -= t->w->step;
+            lbl_8030B7F4.w34c -= t->w->step;
+        }
+        if (t->w->cost == 0) {
+            fn_801C1148(t->w->item, t->w->qty);
+            fn_801AB580((Self_801AB580*)t);
+            t->w->state = 7;
+            fn_801C08B4(0x18);
+            t->w->step = 0;
+        }
+        break;
+    case 7:
+        t->w->who[3] = -1;
+        t->w->who[2] = -1;
+        t->w->who[1] = -1;
+        t->w->who[0] = -1;
+        t->w->xb = 0;
+        t->w->parts[17] = 0;
+        t->w->parts[16] = 0;
+        t->w->parts[15] = 0;
+        t->w->parts[14] = 0;
+        fn_801C0FBC(t->w->item);
+        for (i = 0; i < 4; i++) {
+            t->w->stat[i][3] = 0;
+            t->w->stat[i][2] = 0;
+            t->w->stat[i][1] = 0;
+            t->w->stat[i][0] = 0;
+        }
+        switch (fn_801F4C24(t->w->item)) {
+        case 0:
+            if (fn_801C0CA0(t->w->item)) {
+                t->w->who[0] = fn_801C0C14(t->w->item);
+                t->w->b34 = fn_801C2C84(t->w->who[0]);
+                t->w->xb = 1;
+                ShopShowEquip(t);
+            } else {
+                t->w->state = 10;
+            }
+            break;
+        case 1:
+        case 2:
+            t->w->xa = 0;
+            for (i = 0; i < 4; i++) {
+                if (fn_801F3FD0(SHOP_PARTY->info->m[i].id, t->w->item)) {
+                    t->w->who[t->w->xb] = i;
+                    t->w->stat[i][0] = SHOP_PARTY->info->m[i].x06;
+                    t->w->stat[i][1] = SHOP_PARTY->info->m[i].x08;
+                    t->w->stat[i][2] = SHOP_PARTY->info->m[i].x0a;
+                    t->w->xb++;
+                    if (fn_801C0B88(t->w->item, i)) {
+                        t->w->xa++;
+                    }
+                }
+            }
+            if (t->w->xa == t->w->xb) {
+                t->w->xa = 4;
+            }
+            if (t->w->xb == 0) {
+                t->w->state = 10;
+            } else {
+                ShopShowEquip(t);
+            }
+            break;
+        case 5:
+        case 6:
+            switch ((s8)lbl_80310A1C[6]) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 12:
+                t->w->state = 10;
+                break;
+            default:
+                if (fn_801F3FD0(0, t->w->item) == 2 && lbl_8030B7F4.b1568 != -1) {
+                    ShopShowEquip(t);
+                } else {
+                    t->w->state = 10;
+                }
+                break;
+            }
+            break;
+        case 3:
+        case 4:
+        case 7:
+            t->w->state = 10;
+            break;
+        }
+        break;
+    case 8:
+        if (UiObjIsBusy(t->w->parts[2]->obj)) {
+            if (!PAD_A) {
+                break;
+            }
+            MenuPartsFinish((MenuTask*)t);
+        }
+        switch (fn_801F4C24(t->w->item)) {
+        case 0:
+            ShopHideList(t);
+            t->w->xa = 0;
+            t->w->parts[12] = (ShopPart*)fn_801B1104(t);
+            t->w->parts[18] = (ShopPart*)fn_801B0470(t);
+            t->w->parts[10] = fn_801AD00C(t, 0, t->w->who[0]);
+            t->w->parts[11] = fn_801AD00C(t, 1, t->w->who[0]);
+            t->w->parts[13] = fn_801B057C(t, 0, t->w->who[0]);
+            UiObjMoveToX(t->w->parts[13]->obj, 6, 4, -8.0f);
+            UiObjSetCommand(t->w->parts[13]->obj, 15, 2);
+            t->w->stat[0][0] = SHOP_PARTY->info->m[t->w->who[0]].x06;
+            fn_801C1FC0(t->w->item, t->w->who[0]);
+            t->w->parts[14] = (ShopPart*)fn_801B0DF8(t);
+            t->w->parts[14]->list->page = fn_801AB6E8(0, fn_801C2C84(t->w->who[0]));
+            t->w->xc[t->w->who[0]] = 0;
+            UiObjMoveToX(t->w->parts[14]->obj, 6, 4, -8.0f);
+            UiObjSetCommand(t->w->parts[14]->obj, 15, 4);
+            UiObjMoveToX(t->w->parts[12]->obj, 6, 5, -8.0f);
+            UiObjSetCommand(t->w->parts[12]->obj, 15, 0);
+            UiObjMoveToX(t->w->parts[18]->obj, 6, 5, -8.0f);
+            UiObjSetCommand(t->w->parts[18]->obj, 15, 6);
+            ShopShowCompare(t);
+            t->w->state = 11;
+            break;
+        case 1:
+        case 2:
+            ShopHideList(t);
+            t->w->parts[12] = (ShopPart*)fn_801B1104(t);
+            t->w->parts[18] = (ShopPart*)fn_801B0470(t);
+            t->w->xc[3] = 0;
+            t->w->xc[2] = 0;
+            t->w->xc[1] = 0;
+            t->w->xc[0] = 0;
+            n = 0;
+            for (i = 0; i < t->w->xb; i++) {
+                if (fn_801C0B88(t->w->item, t->w->who[i])) {
+                    a = 0.7f;
+                    n++;
+                } else {
+                    a = 1.0f;
+                }
+                fn_801C1FC0(t->w->item, t->w->who[i]);
+                t->w->parts[lbl_802B69E8[i].idx] = fn_801B06CC(t, i, t->w->who[i], a);
+                UiObjMoveToX(t->w->parts[lbl_802B69E8[i].idx]->obj, 6, 4, lbl_802B69E8[i].x);
+                UiObjSetCommand(t->w->parts[lbl_802B69E8[i].idx]->obj, 15, i * 2 + 2);
+            }
+            if (n == t->w->xb) {
+                t->w->xa = 4;
+                i = 0;
+            } else {
+                for (i = 0; i < t->w->xb; i++) {
+                    if (fn_801C0B88(t->w->item, t->w->who[i]) == 0) {
+                        break;
+                    }
+                }
+                t->w->xa = i;
+            }
+            t->w->parts[10] = fn_801AD00C(t, 0, t->w->who[i]);
+            t->w->parts[11] = fn_801AD00C(t, 1, t->w->who[i]);
+            d8 = t->w->xb * 2 + 2;
+            UiObjMoveToX(t->w->parts[12]->obj, 6, 5, -8.0f);
+            UiObjSetCommand(t->w->parts[12]->obj, 15, 0);
+            UiObjMoveToX(t->w->parts[18]->obj, 6, 5, -8.0f);
+            UiObjSetCommand(t->w->parts[18]->obj, 15, d8);
+            ShopShowCompare(t);
+            t->w->state = 15;
+            break;
+        case 5:
+            t->w->b37 = 0;
+            t->w->xa = 0;
+            t->w->xc[3] = 0;
+            t->w->xc[2] = 0;
+            t->w->xc[1] = 0;
+            t->w->xc[0] = 0;
+            t->w->parts[10] = fn_801AD00C(t, 2, fn_801C16D0(t->w->item));
+            t->w->parts[11] = fn_801AD00C(t, 3, fn_801C16D0(t->w->item));
+            t->w->stat[0][0] = SHOP_PARTY->info->d8[0].v;
+            t->w->stat[0][1] = SHOP_PARTY->info->d8[1].v;
+            t->w->stat[0][2] = SHOP_PARTY->info->d8[2].v;
+            t->w->stat[0][3] = SHOP_PARTY->info->d8[3].v;
+            fn_801C1728(t->w->item, 0);
+            fn_801C1728(t->w->item, 1);
+            fn_801C1728(t->w->item, 2);
+            fn_801C1728(t->w->item, 3);
+            for (i = 0; i < 4; i++) {
+                t->w->parts[lbl_802B69E8[i].idx] = fn_801AFBE8(t, i, 0, lbl_8030B7F4.h158a[i] == t->w->item ? 0.7f : 1.0f);
+                UiObjMoveToX(t->w->parts[lbl_802B69E8[i].idx]->obj, 6, 4, lbl_802B69E8[i].x);
+                UiObjSetCommand(t->w->parts[lbl_802B69E8[i].idx]->obj, 15, i * 2 + 2);
+            }
+            goto accessory; /* types 5 and 6 share their tail */
+        case 6:
+            t->w->xa = 0;
+            t->w->b37 = 1;
+            t->w->xc[3] = 0;
+            t->w->xc[2] = 0;
+            t->w->xc[1] = 0;
+            t->w->xc[0] = 0;
+            t->w->parts[10] = fn_801AD00C(t, 4, 0);
+            t->w->parts[11] = fn_801AD00C(t, 5, 0);
+            t->w->stat[0][0] = SHOP_PARTY->info->h10a[0];
+            t->w->stat[0][1] = SHOP_PARTY->info->h10a[1];
+            t->w->stat[0][2] = SHOP_PARTY->info->h10a[2];
+            fn_801C1728(t->w->item, 0);
+            fn_801C1728(t->w->item, 1);
+            fn_801C1728(t->w->item, 2);
+            for (i = 0; i < 3; i++) {
+                t->w->parts[lbl_802B69E8[i].idx] = fn_801AFBE8(t, i, 1, lbl_8030B7F4.h1580[i] == t->w->item ? 0.7f : 1.0f);
+                UiObjMoveToX(t->w->parts[lbl_802B69E8[i].idx]->obj, 6, 4, lbl_802B69E8[i].x);
+                UiObjSetCommand(t->w->parts[lbl_802B69E8[i].idx]->obj, 15, i * 2 + 2);
+            }
+        accessory:
+            ShopHideList(t);
+            t->w->parts[12] = (ShopPart*)fn_801B1104(t);
+            t->w->parts[18] = (ShopPart*)fn_801B0470(t);
+            UiObjMoveToX(t->w->parts[12]->obj, 6, 5, -8.0f);
+            UiObjSetCommand(t->w->parts[12]->obj, 15, 0);
+            UiObjMoveToX(t->w->parts[18]->obj, 6, 5, -8.0f);
+            UiObjSetCommand(t->w->parts[18]->obj, 15, (u8)(i * 2 + 2));
+            ShopShowCompare(t);
+            t->w->state = 19;
+            break;
+        case 3:
+        case 4:
+        case 7:
+            t->w->xa = 0;
+            t->w->state = 10;
+            break;
+        }
+        if (PAD_A) {
+            MenuPartsFinish((MenuTask*)t);
+        }
+        break;
+    case 10:
+        t->w->state = 9;
+        goto back_to_list; /* the original jumps into state 5's code */
+    case 9:
+        if (fn_801C09F8(0, 1) || PAD_B) {
+            MenuPartsFinish((MenuTask*)t);
+        list_ready:
+            *t->w->parts[2]->flag = 1;
+            t->w->state = 3;
+            t->w->parts[8]->x38->ha = 1 < t->buf->pages;
+        } else if (UiObjIsBusy(t->w->parts[2]->obj) == 0 && UiObjIsBusy(t->w->parts[9]->obj) == 0) {
+            goto list_ready; /* shared with the cancel path above */
+        }
+        break;
+    case 11:
+        if (UiObjIsBusy(t->w->parts[18]->obj) == 0 && UiObjIsBusy(t->w->parts[11]->obj2) == 0) {
+            ShopCompareDone(t);
+        } else if (PAD_A) {
+            MenuPartsFinish((MenuTask*)t);
+            ShopCompareDone(t);
+        }
+        break;
+    case 12:
+        if (PAD_B) {
+            if (t->w->xa == 4) {
+                break;
+            }
+            t->w->parts[14]->x38->ha = 1;
+            t->w->xc[t->w->who[0]] = 0;
+            SHOP_PARTY->chr[t->w->who[0]].h6c = -1;
+            fn_801C0AB4(t->w->stat[0][0], t->w->who[0]);
+            fn_801C2C4C(t->w->who[0], t->w->b34);
+            fn_801C12C8();
+            fn_801C0FBC(t->w->item);
+            fn_801AAFAC(t);
+        } else if (PAD_A) {
+            switch (t->w->xa) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+                if (t->w->x9 != 0 && t->w->parts[14]->x38->ha != 0) {
+                    fn_801C0AB4(t->w->item, t->w->who[0]);
+                    if (fn_801F4CA0()) {
+                        fn_801C2C4C(t->w->who[0], t->w->parts[14]->list->page);
+                        SHOP_PARTY->chr[t->w->who[0]].h6c = t->w->parts[14]->list->page;
+                        t->w->xc[t->w->who[0]] = 1;
+                    } else {
+                        fn_801C2C4C(t->w->who[0], t->w->b34);
+                        SHOP_PARTY->chr[t->w->who[0]].h6c = t->w->b34;
+                        t->w->xc[t->w->who[0]] = 1;
+                    }
+                    fn_801C12C8();
+                    fn_801C0FBC(t->w->item);
+                    if (fn_801AAFAC(t)) {
+                        t->w->xa = 4;
+                    }
+                    fn_801C08B4(0x16);
+                    SHOP_SLOT_CMDS(t, cmd, o);
+                    t->w->parts[14]->x38->ha = 0;
+                } else {
+                    fn_801C08B4(3);
+                }
+                break;
+            case 4:
+                fn_801C08B4(2);
+                UiObjMoveToX(t->w->parts[13]->obj, 6, 5, -348.0f);
+                UiObjSetCommand(t->w->parts[13]->obj, 15, 4);
+                UiObjMoveToX(t->w->parts[14]->obj, 6, 5, -348.0f);
+                UiObjSetCommand(t->w->parts[14]->obj, 15, 2);
+                UiObjMoveToX(t->w->parts[12]->obj, 6, 5, -348.0f);
+                UiObjSetCommand(t->w->parts[12]->obj, 15, 6);
+                UiObjMoveToX(t->w->parts[18]->obj, 6, 5, -348.0f);
+                UiObjSetCommand(t->w->parts[18]->obj, 15, 0);
+                UiObjMoveToX(t->w->parts[10]->obj, 6, -1, 648.0f);
+                UiObjSetCommand(t->w->parts[10]->obj, 15, 6);
+                UiObjMoveToX(t->w->parts[10]->obj2, 6, -1, 648.0f);
+                UiObjSetCommand(t->w->parts[10]->obj2, 15, 4);
+                UiObjMoveToX(t->w->parts[11]->obj, 6, -1, 648.0f);
+                UiObjSetCommand(t->w->parts[11]->obj, 15, 2);
+                UiObjMoveToX(t->w->parts[11]->obj2, 6, -1, 648.0f);
+                UiObjSetCommand(t->w->parts[11]->obj2, 15, 0);
+                t->w->state = 14;
+                break;
+            }
+        } else if (fn_801AB094((Task_801AB094*)t) == 0) {
+            if (fn_801C09F8(0, 6)) {
+                if (t->w->xa == 0 && t->w->parts[14]->x38->ha != 0 &&
+                    t->w->stat[0][0] == SHOP_PARTY->info->m[t->w->who[0]].x06) {
+                    page = t->w->parts[14]->list->page;
+                    t->w->parts[14]->list->page = fn_801AB6E8(-1, page);
+                    if (page != t->w->parts[14]->list->page) {
+                        MenuPlaySe(0);
+                    }
+                }
+            } else if (fn_801C09F8(0, 7)) {
+                if (t->w->xa == 0 && t->w->parts[14]->x38->ha != 0 &&
+                    t->w->stat[0][0] == SHOP_PARTY->info->m[t->w->who[0]].x06) {
+                    page = t->w->parts[14]->list->page;
+                    t->w->parts[14]->list->page = fn_801AB6E8(1, page);
+                    if (page != t->w->parts[14]->list->page) {
+                        MenuPlaySe(0);
+                    }
+                }
+            }
+        }
+        break;
+    case 14:
+        if (fn_801C09F8(0, 1) || PAD_A) {
+            MenuPartsFinish((MenuTask*)t);
+            ShopFreeCompare(t);
+            MenuPartsFinish((MenuTask*)t);
+            t->w->state = 3;
+            t->w->parts[8]->x38->ha = 1 < t->buf->pages;
+        } else if (UiObjIsBusy(t->w->parts[10]->obj) == 0) {
+            ShopFreeCompare(t);
+            t->w->state = 0x17;
+        }
+        break;
+    case 15:
+        if (UiObjIsBusy(t->w->parts[18]->obj) == 0 && UiObjIsBusy(t->w->parts[11]->obj2) == 0) {
+            t->w->state = 16;
+        } else if (PAD_A) {
+            MenuPartsFinish((MenuTask*)t);
+            t->w->state = 16;
+        }
+        break;
+    case 16:
+        if (PAD_B) {
+            if (t->w->xa == 4) {
+                break;
+            }
+            switch (fn_801F4C24(t->w->item)) {
+            default:
+                return;
+            case 1:
+                if (t->w->item == t->w->stat[t->w->who[t->w->xa]][1]) {
+                    return;
+                }
+                t->w->xc[t->w->who[t->w->xa]] = 0;
+                fn_801F4E38(SHOP_PARTY->info->m[t->w->who[t->w->xa]].id, t->w->stat[t->w->who[t->w->xa]][1]);
+                break;
+            case 2:
+                if (t->w->item == t->w->stat[t->w->who[t->w->xa]][2]) {
+                    return;
+                }
+                t->w->xc[t->w->who[t->w->xa]] = 0;
+                fn_801F4E04(SHOP_PARTY->info->m[t->w->who[t->w->xa]].id, t->w->stat[t->w->who[t->w->xa]][2]);
+                break;
+            }
+        armor_changed:
+            fn_801C12C8();
+            fn_801C0FBC(t->w->item);
+            if (fn_801AAFAC(t)) {
+                t->w->xa = 4;
+            }
+            fn_801AAFAC(t);
+        } else if (PAD_A) {
+            switch (t->w->xa) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+                if (t->w->x9 != 0 && fn_801C0B88(t->w->item, t->w->who[t->w->xa]) == 0) {
+                    t->w->xc[t->w->who[t->w->xa]] = 1;
+                    fn_801C0AB4(t->w->item, t->w->who[t->w->xa]);
+                    fn_801C08B4(0x16);
+                    goto armor_changed; /* shared with the cancel path above */
+                }
+                fn_801C08B4(3);
+                break;
+            case 4:
+                fn_801C08B4(2);
+                fn_801AAFAC(t);
+                d = t->w->xb * 2;
+                for (cnt = 0; cnt < (i = t->w->xb); cnt++, d -= 2) {
+                    UiObjMoveToX(t->w->parts[lbl_802B69E8[cnt].idx]->obj, 6, 5, lbl_802B69E8[cnt].x2);
+                    UiObjSetCommand(t->w->parts[lbl_802B69E8[cnt].idx]->obj, 15, d);
+                }
+                UiObjMoveToX(t->w->parts[12]->obj, 6, 5, -348.0f);
+                UiObjSetCommand(t->w->parts[12]->obj, 15, (u8)(i * 2 + 2));
+                UiObjMoveToX(t->w->parts[18]->obj, 6, 5, -348.0f);
+                UiObjSetCommand(t->w->parts[18]->obj, 15, 0);
+                UiObjMoveToX(t->w->parts[10]->obj, 6, -1, 648.0f);
+                UiObjSetCommand(t->w->parts[10]->obj, 15, 6);
+                UiObjMoveToX(t->w->parts[10]->obj2, 6, -1, 648.0f);
+                UiObjSetCommand(t->w->parts[10]->obj2, 15, 4);
+                UiObjMoveToX(t->w->parts[11]->obj, 6, -1, 648.0f);
+                UiObjSetCommand(t->w->parts[11]->obj, 15, 2);
+                UiObjMoveToX(t->w->parts[11]->obj2, 6, -1, 648.0f);
+                UiObjSetCommand(t->w->parts[11]->obj2, 15, 0);
+                t->w->state = 17;
+                break;
+            }
+        } else if (fn_801AB094((Task_801AB094*)t)) {
+            if (t->w->xa != 4 && (old = t->w->who[t->w->xa]) != -1) {
+                ((ShopMObj*)t->w->parts[11]->obj)->h56 = old;
+                ((ShopMObj*)t->w->parts[10]->obj)->h56 = old;
+            }
+        }
+        break;
+    case 17:
+        if (fn_801C09F8(0, 1) || PAD_A) {
+            MenuPartsFinish((MenuTask*)t);
+            MenuPartFree((MenuTask*)t, 12);
+            MenuPartFree((MenuTask*)t, 18);
+            MenuPartFree((MenuTask*)t, 10);
+            MenuPartFree((MenuTask*)t, 11);
+            for (i = 0; i < 4; i++) {
+                MenuPartFree((MenuTask*)t, i + 14);
+            }
+            fn_801AB328((Self_801AB328*)t);
+            MenuPartsFinish((MenuTask*)t);
+            t->w->state = 3;
+            t->w->parts[8]->x38->ha = 1 < t->buf->pages;
+        } else if (UiObjIsBusy(t->w->parts[12]->obj) == 0) {
+            MenuPartFree((MenuTask*)t, 12);
+            MenuPartFree((MenuTask*)t, 18);
+            MenuPartFree((MenuTask*)t, 10);
+            MenuPartFree((MenuTask*)t, 11);
+            for (i = 0; i < 4; i++) {
+                MenuPartFree((MenuTask*)t, i + 14);
+            }
+            fn_801AB328((Self_801AB328*)t);
+            t->w->state = 3;
+            t->w->parts[8]->x38->ha = 1 < t->buf->pages;
+        }
+        break;
+    case 18:
+        t->w->state = 18;
+        break;
+    case 19:
+        fn_801C0FBC(t->w->item);
+        if (UiObjIsBusy(t->w->parts[18]->obj) == 0 && UiObjIsBusy(t->w->parts[11]->obj2) == 0) {
+            t->w->state = 20;
+            if (fn_801AACB0(t)) {
+                t->w->xa = 4;
+            }
+            fn_801AACB0(t);
+            SHOP_SLOT_CMDS(t, cmd, o);
+        } else if (PAD_A) {
+            MenuPartsFinish((MenuTask*)t);
+            t->w->state = 20;
+            if (fn_801AACB0(t)) {
+                t->w->xa = 4;
+            }
+            fn_801AACB0(t);
+            SHOP_SLOT_CMDS(t, cmd, o);
+        }
+        break;
+    case 20:
+        if (fn_801C09F8(0, 1)) {
+            if (t->w->xa >= 4 || t->w->xc[t->w->xa] == 0) {
+                break;
+            }
+            if (t->w->b37 == 0) {
+                lbl_8030B7F4.h1580[t->w->xa] = t->w->stat[0][t->w->xa];
+            } else {
+                lbl_8030B7F4.h158a[t->w->xa] = t->w->stat[0][t->w->xa];
+            }
+            t->w->xc[t->w->xa] = 0;
+            fn_8021B1CC(lbl_8030B4D4 + 0x2dc, &lbl_8030B7F4.b1568);
+            fn_801C1E48();
+            fn_801C0FBC(t->w->item);
+            fn_801AACB0(t);
+            SHOP_SLOT_CMDS(t, cmd, o);
+        } else if (PAD_A) {
+            switch (t->w->xa) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+                if (t->w->b37 == 0) {
+                    if (lbl_8030B7F4.h1580[(u8)t->w->xa] != t->w->item && t->w->x9 != 0) {
+                        lbl_8030B7F4.h1580[(u8)t->w->xa] = t->w->item;
+                        t->w->xc[t->w->xa] = 1;
+                        fn_801C08B4(0x16);
+                    } else {
+                        fn_801C08B4(3);
+                        break;
+                    }
+                } else {
+                    old = lbl_8030B7F4.h158a[(u8)t->w->xa] == (s16)t->w->item;
+                    if (!old && t->w->x9 != 0) {
+                        lbl_8030B7F4.h158a[t->w->xa] = t->w->item;
+                        t->w->xc[t->w->xa] = 1;
+                        fn_801C08B4(0x16);
+                    } else {
+                        fn_801C08B4(3);
+                        break;
+                    }
+                }
+                fn_801C08B4(2);
+                fn_8021B1CC(lbl_8030B4D4 + 0x2dc, &lbl_8030B7F4.b1568);
+                fn_801C1E48();
+                fn_801C0FBC(t->w->item);
+                if (fn_801AACB0(t)) {
+                    t->w->xa = 4;
+                }
+                fn_801AACB0(t);
+                SHOP_SLOT_CMDS(t, cmd, o);
+                break;
+            case 4:
+                if (t->w->b37 == 0) {
+                    for (cnt = 0, d = 8; cnt < 4; cnt++, d -= 2) {
+                        UiObjMoveToX(t->w->parts[lbl_802B69E8[cnt].idx]->obj, 6, 4, lbl_802B69E8[cnt].x2);
+                        UiObjSetCommand(t->w->parts[lbl_802B69E8[cnt].idx]->obj, 15, d + 2);
+                    }
+                    UiObjMoveToX(t->w->parts[12]->obj, 6, 5, -348.0f);
+                    UiObjSetCommand(t->w->parts[12]->obj, 15, 12);
+                    UiObjMoveToX(t->w->parts[18]->obj, 6, 5, -348.0f);
+                    UiObjSetCommand(t->w->parts[18]->obj, 15, 0);
+                    UiObjMoveToX(t->w->parts[10]->obj, 6, -1, 648.0f);
+                    UiObjSetCommand(t->w->parts[10]->obj, 15, 6);
+                    UiObjMoveToX(t->w->parts[10]->obj2, 6, -1, 648.0f);
+                    UiObjSetCommand(t->w->parts[10]->obj2, 15, 4);
+                    UiObjMoveToX(t->w->parts[11]->obj, 6, -1, 648.0f);
+                    UiObjSetCommand(t->w->parts[11]->obj, 15, 2);
+                    UiObjMoveToX(t->w->parts[11]->obj2, 6, -1, 648.0f);
+                    UiObjSetCommand(t->w->parts[11]->obj2, 15, 0);
+                } else {
+                    for (cnt = 0, d = 6; cnt < 3; cnt++, d -= 2) {
+                        UiObjMoveToX(t->w->parts[lbl_802B69E8[cnt].idx]->obj, 6, 4, lbl_802B69E8[cnt].x2);
+                        UiObjSetCommand(t->w->parts[lbl_802B69E8[cnt].idx]->obj, 15, d + 2);
+                    }
+                    UiObjMoveToX(t->w->parts[12]->obj, 6, 5, -348.0f);
+                    UiObjSetCommand(t->w->parts[12]->obj, 15, 10);
+                    UiObjMoveToX(t->w->parts[18]->obj, 6, 5, -348.0f);
+                    UiObjSetCommand(t->w->parts[18]->obj, 15, 0);
+                    UiObjMoveToX(t->w->parts[10]->obj, 6, -1, 648.0f);
+                    UiObjSetCommand(t->w->parts[10]->obj, 15, 6);
+                    UiObjMoveToX(t->w->parts[10]->obj2, 6, -1, 648.0f);
+                    UiObjSetCommand(t->w->parts[10]->obj2, 15, 4);
+                    UiObjMoveToX(t->w->parts[11]->obj, 6, -1, 648.0f);
+                    UiObjSetCommand(t->w->parts[11]->obj, 15, 2);
+                    UiObjMoveToX(t->w->parts[11]->obj2, 6, -1, 648.0f);
+                    UiObjSetCommand(t->w->parts[11]->obj2, 15, 0);
+                }
+                t->w->state = 21;
+                fn_801C08B4(2);
+                break;
+            }
+        } else if (fn_801C09F8(0, 4)) {
+            row = t->w->xa;
+            if (t->w->b37 == 0) {
+                if (t->w->xa == 0) {
+                    t->w->xa = 4;
+                } else {
+                    t->w->xa--;
+                }
+            } else if (t->w->xa == 0) {
+                t->w->xa = 4;
+            } else if (t->w->xa == 4) {
+                t->w->xa = 2;
+            } else {
+                t->w->xa--;
+            }
+            if ((n = t->w->xa) != 4) {
+                ((ShopMObj*)t->w->parts[11]->obj)->h56 = n;
+                ((ShopMObj*)t->w->parts[10]->obj)->h56 = n;
+            }
+            if (row != t->w->xa) {
+                MenuPlaySe(4);
+            }
+            SHOP_SLOT_CMDS(t, cmd, o);
+        } else if (fn_801C09F8(0, 5)) {
+            row = t->w->xa;
+            if (t->w->b37 == 0) {
+                t->w->xa++;
+                if (t->w->xa == 5) {
+                    t->w->xa = 0;
+                }
+            } else {
+                t->w->xa++;
+                if (t->w->xa == 3) {
+                    t->w->xa = 4;
+                } else if (t->w->xa == 5) {
+                    t->w->xa = 0;
+                }
+            }
+            if ((n = t->w->xa) != 4) {
+                ((ShopMObj*)t->w->parts[11]->obj)->h56 = n;
+                ((ShopMObj*)t->w->parts[10]->obj)->h56 = n;
+            }
+            SHOP_SLOT_CMDS(t, cmd, o);
+            if (row != t->w->xa) {
+                MenuPlaySe(4);
+            }
+        }
+        break;
+    case 21:
+        if (fn_801C09F8(0, 1) || PAD_A) {
+            MenuPartsFinish((MenuTask*)t);
+        } else if (UiObjIsBusy(t->w->parts[12]->obj)) {
+            break;
+        }
+        MenuPartFree((MenuTask*)t, 12);
+        MenuPartFree((MenuTask*)t, 18);
+        MenuPartFree((MenuTask*)t, 10);
+        MenuPartFree((MenuTask*)t, 11);
+        MenuPartFree((MenuTask*)t, 14);
+        MenuPartFree((MenuTask*)t, 14);
+        MenuPartFree((MenuTask*)t, 15);
+        MenuPartFree((MenuTask*)t, 16);
+        MenuPartFree((MenuTask*)t, 17);
+        fn_801AB328((Self_801AB328*)t);
+        t->w->state = 0x17;
+        break;
+    case 23:
+        if (UiObjIsBusy(t->w->parts[1]->obj) == 0) {
+            t->w->state = 3;
+            t->w->parts[8]->x38->ha = 1 < t->buf->pages;
+        } else if (PAD_A || fn_801C09F8(0, 1)) {
+            MenuPartsFinish((MenuTask*)t);
+            t->w->state = 3;
+            t->w->parts[8]->x38->ha = 1 < t->buf->pages;
+        }
+        break;
+    case 24:
+        UiObjMoveTo(t->w->parts[7]->obj, 6, -1, 640.0f, 480.0f);
+        UiObjSetCommand(t->w->parts[7]->obj, 15, 0);
+        UiObjMoveToX(t->w->parts[8]->obj, 6, -1, 648.0f);
+        UiObjSetCommand(t->w->parts[8]->obj, 15, 0);
+        UiObjMoveToX(t->w->parts[9]->obj, 6, -1, -624.0f);
+        UiObjSetCommand(t->w->parts[9]->obj, 15, 0);
+        UiObjMoveToX(t->w->parts[9]->obj2, 6, -1, -624.0f);
+        UiObjSetCommand(t->w->parts[9]->obj2, 15, 0);
+        t->w->state = 25;
+    case 25:
+        if (fn_801C09F8(0, 1)) {
+            MenuPartFree((MenuTask*)t, 7);
+            MenuPartFree((MenuTask*)t, 8);
+            MenuPartFree((MenuTask*)t, 9);
+            MenuPartFree((MenuTask*)t, 2);
+            *t->w->parts[4]->flag = 0;
+            *t->w->parts[5]->flag = 0;
+            t->w->state = 26;
+        } else if (UiObjIsBusy(t->w->parts[7]->obj) == 0) {
+            MenuPartFree((MenuTask*)t, 7);
+            MenuPartFree((MenuTask*)t, 8);
+            MenuPartFree((MenuTask*)t, 9);
+            MenuPartFree((MenuTask*)t, 2);
+            *t->w->parts[4]->flag = 0;
+            *t->w->parts[5]->flag = 0;
+            t->w->state = 26;
+        }
+        break;
+    case 26:
+        t->state = 5;
+        break;
+    }
+}
+
 void fn_801A2C58(void) {
     if (lbl_8034718C[1] != 0) {
         s32 r;
@@ -4648,7 +5827,8 @@ void fn_801A2C58(void) {
 }
 
 s32 fn_801B5868(s16 id) {
-    switch (fn_801F4C24(id)) {
+    s16 kind = fn_801F4C24(id);
+    switch (kind) {
     case 0:
     case 1:
     case 2:
@@ -4857,7 +6037,7 @@ CardRec *fn_801A41EC(SaveData *p, s32 chan, const char *name) {
     return rec;
 }
 
-s32 fn_801AAFAC(Self_801AAFAC *self) {
+s32 fn_801AAFAC(ShopTask *self) {
     u32 i;
     u32 n;
     s32 done = 0;
@@ -4907,7 +6087,7 @@ void fn_801ABD40(PanelTask_801ABD40* t) {
     }
 }
 
-PanelTask_801AFBE8* fn_801AFBE8(void* parent, u16 idx, u16 mode, f32 alpha) {
+void* fn_801AFBE8(void* parent, u16 idx, u16 mode, f32 alpha) {
     PanelTask_801AFBE8* t = fn_802267AC(parent, fn_801AFAA4);
 
     t->w = fn_801E1A74(1, 0x58);
