@@ -496,18 +496,36 @@ typedef struct Xf_80224F28 {
     A3 *rot;
     V3p *pos2;
     A3 *rot2;
+    u8 pad30[0x6c - 0x30];
+    s16 near[0x10];     /* 0x6c: the parts to try next when this one misses */
+    s16 nnear;          /* 0x8c */
+    u16 key;            /* 0x8e */
 } Xf_80224F28;
-typedef struct Cmp {
-    u8 pad0[0x24];
+/* A model's collision parts. */
+typedef struct XfSet {
+    Xf_80224F28 *parts;
+    u8 pad4[4];
     u16 id;
-    u8 pad26[0xa];
-    u16 flags;
+    s16 count;
+} XfSet;
+/* A collision query's result: the triangle hit and what it belongs to. */
+typedef struct Cmp {
+    NJS_POINT3 v[3];
+    u16 id;         /* 0x24 */
+    u8 pad26[4];
+    u16 key;        /* 0x2a */
+    u8 pad2c[2];
+    s16 idx;        /* 0x2e */
+    u16 flags;      /* 0x30 */
+    s16 w32;
 } Cmp;
-extern s32 fn_801D38D4(s32, void *, Cmp *);
-extern s32 fn_801D3574(s32, void *, Cmp *);
-extern s32 fn_801D3BC8(s32, void *, Cmp *);
-extern s32 fn_801D3360(s32, void *, Cmp *);
-extern s32 fn_801D30DC(s32, void *, Cmp *);
+extern s32 fn_801D38D4(NJS_POINT3 *, void *, Cmp *);
+extern s32 fn_801D3574(NJS_POINT3 *, void *, Cmp *);
+extern s32 fn_801D3BC8(NJS_POINT3 *, void *, Cmp *);
+extern s32 fn_801D3360(NJS_POINT3 *, void *, Cmp *);
+extern s32 fn_801D30DC(NJS_POINT3 *, void *, Cmp *);
+s32 fn_80224F28(Xf_80224F28 *x, NJS_POINT3 *p, Cmp *c);
+s32 fn_801C812C(NJS_POINT3 *tri, f32 x, f32 z, f32 *y);
 typedef struct Item {
     s32 active;
     s32 mode;
@@ -730,6 +748,15 @@ typedef struct MenuEnt {
     u8 pad50[0x14];
 } MenuEnt;
 extern MenuEnt lbl_802D6740[5];
+typedef struct Seg {
+    NJS_POINT3 pos;
+    f32 y;          /* the ground height found */
+    s16 found;
+    u16 id;
+    u16 group;
+    u16 key;
+} Seg;
+s32 fn_802250E4(XfSet *o, NJS_POINT3 *p, Cmp *res);
 
 void fn_80219378(s32 a)
 {
@@ -2712,7 +2739,7 @@ void fn_80223628(NJS_POINT3* out, NJS_POINT3* in, Obj_80223628* o)
     njCalcPoint(m, &p, out);
 }
 
-s32 fn_80224F28(Xf_80224F28 *x, s32 b, Cmp *c) {
+s32 fn_80224F28(Xf_80224F28 *x, NJS_POINT3 *b, Cmp *c) {
     Shape_80224F28 *sh = x->shape;
     s32 r;
 
@@ -3382,4 +3409,148 @@ s32 fn_8021AA48(Src* p, void* q, s32 k)
         }
     }
     return r;
+}
+
+void fn_8022445C(XfSet* g, Seg* segs, s32 count)
+{
+    Cmp hit;
+    f32 hy;
+    Xf_80224F28* p;
+    Seg* seg;
+    s32 found;
+    s32 n;
+    u16 id;
+    f32 best;
+    hit.flags = 1;
+    seg = segs;
+    id = g->id;
+    do {
+        found = seg->found;
+        p = g->parts;
+        if (found != 0) {
+            best = seg->pos.y - seg->y;
+        }
+        n = g->count;
+        for (; n > 0; p++, n--) {
+            if (fn_80224F28(p, &seg->pos, &hit) != 0 && fn_801C812C(hit.v, seg->pos.x, seg->pos.z, &hy) != 0 && seg->pos.y > hy) {
+                f32 d = seg->pos.y - hy;
+                if (found == 0) {
+                    seg->y = hy;
+                    best = d;
+                    found = 1;
+                    seg->found = 1;
+                    seg->id = hit.id;
+                    seg->key = p->key;
+                    seg->group = id;
+                } else if (best > d) {
+                    seg->y = hy;
+                    best = d;
+                    seg->id = hit.id;
+                    seg->key = p->key;
+                    seg->group = id;
+                }
+            }
+        }
+        seg++;
+    } while (--count > 0);
+}
+
+s32 fn_802250E4(XfSet *o, NJS_POINT3 *p, Cmp *res) {
+    Xf_80224F28 *r = o->parts;
+    s32 ret = 0;
+    s32 i;
+    f32 best;
+    f32 d;
+    f32 out;
+    NJS_POINT3 p2;
+    Cmp tmp;
+
+    if (res->flags & 1) {
+        i = 0;
+        tmp.flags = 1;
+        p2.x = p->x;
+        p2.y = p->y;
+        p2.z = p->z;
+        for (; i < o->count; r++, i++) {
+            if (fn_80224F28(r, &p2, &tmp) == 0) continue;
+            fn_801C812C(tmp.v, p2.x, p2.z, &out);
+            if (ret != 0) {
+                if (0.0f <= (d = p2.y - out) && best > d) {
+                    best = d;
+                    res->v[0] = tmp.v[0];
+                    res->v[1] = tmp.v[1];
+                    res->v[2] = tmp.v[2];
+                    res->id = tmp.id;
+                    res->key = r->key;
+                    res->idx = i;
+                    res->w32 = tmp.w32;
+                    p->y = out;
+                }
+            } else {
+                if (0.0f <= (best = p2.y - out)) {
+                    ret = 1;
+                    res->v[0] = tmp.v[0];
+                    res->v[1] = tmp.v[1];
+                    res->v[2] = tmp.v[2];
+                    res->id = tmp.id;
+                    res->key = r->key;
+                    res->idx = i;
+                    res->w32 = tmp.w32;
+                    p->y = out;
+                }
+            }
+        }
+    } else {
+        for (i = 0; i < o->count; i++) {
+            ret = fn_80224F28(r, p, res);
+            if (ret == 1) {
+                fn_801C812C(res->v, p->x, p->z, &p->y);
+                res->idx = i;
+                res->key = r->key;
+                break;
+            }
+            r++;
+        }
+    }
+    return ret;
+}
+
+static inline s16 XfFind(Xf_80224F28 *r, u16 key, s16 n) {
+    int i;
+    for (i = 0; i < n; r++, i++) {
+        if (r->key == key) return i;
+    }
+    return -1;
+}
+
+s32 fn_80225330(XfSet *o, NJS_POINT3 *p, Cmp *res) {
+    u16 key = res->key;
+    s32 ret;
+    Xf_80224F28 *rec;
+    s32 s;
+    s32 k;
+
+    if (key == 0xffff) return fn_802250E4(o, p, res);
+    if (res->idx < 0) res->idx = XfFind(o->parts, key, o->count);
+    if (res->idx < 0) {
+        ret = 0;
+    } else {
+        rec = &o->parts[res->idx];
+        ret = fn_80224F28(rec, p, res);
+    }
+    if (ret == 0 && res->idx >= 0 && !(res->flags & 2)) {
+        for (k = 0; k < rec->nnear; k++) {
+            s = rec->near[k];
+            ret = fn_80224F28(&o->parts[s], p, res);
+            if (ret != 0) {
+                res->key = o->parts[s].key;
+                res->idx = s;
+                break;
+            }
+        }
+        if (ret == 0) return 0;
+    } else if (ret == 0) {
+        return 0;
+    }
+    return fn_801C812C(res->v, p->x, p->z, &p->y);
 }
