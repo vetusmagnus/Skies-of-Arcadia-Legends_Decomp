@@ -1341,3 +1341,12 @@ Matched in the agents' copies but rejected in review, with the unit left as it w
 
 Not matched in the unit: fn_80021934 and fn_80166220 (only with byte-offset casts), fn_80077228 and fn_801EF7E0 (need fields
 named in the shared headers include/game/save_8030B7F4.h and stat_8030B4D4.h, which the agents were not allowed to edit).
+
+### Shared save and stat headers (2026-10-27)
+
+fn_80077228 (unit_80074D9C.c, builds the battle copy of a character) and fn_801EF7E0 (evobj.c, party totals) are merged
+(4,442 to 4,444) after naming their fields in the shared headers. `StatRec` (include/game/stat_8030B4D4.h) now has `x0`, `x2`,
+`x8`-`xe`, `x14` (flags), `x1c[6]`, `x28[16]`, `x48[5]` and `x52[6]`; the old `x48`..`x50` scalars are `x48[0..4]` in their two
+users. `StatBlock` names `x2d0`, `x2d2`, `x2d4` and `x2d5[5]`. `SaveChar` names `xf`, `x20` and `x22`. All nine units that
+include the headers still match everything they matched before; the 0x98-byte records at `lbl_802C4860` are a struct in
+unit_80074D9C.c.

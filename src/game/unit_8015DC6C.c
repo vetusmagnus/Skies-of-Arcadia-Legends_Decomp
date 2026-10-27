@@ -8722,11 +8722,11 @@ s16 fn_801838C8(s32 kind, s32 idx) {
     StatRec* s = &lbl_8030B4D4.chr[idx];
     s16 r = 0;
     switch (kind) {
-    case 0x36: r = s->x48; break;
-    case 0x37: r = s->x4a; break;
-    case 0x38: r = s->x4c; break;
-    case 0x39: r = s->x4e; break;
-    case 0x3a: r = s->x50; break;
+    case 0x36: r = s->x48[0]; break;
+    case 0x37: r = s->x48[1]; break;
+    case 0x38: r = s->x48[2]; break;
+    case 0x39: r = s->x48[3]; break;
+    case 0x3a: r = s->x48[4]; break;
     case 0x3b: r = c->x1a; break;
     case 0x3c: r = c->xe; break;
     }

@@ -1542,7 +1542,7 @@ void fn_80135290(PcView *v, s32 slot, s32 add)
     v->stat[6] = e->stat[6];
     v->stat[7] = e->stat[7];
     info = &lbl_8030B4D4.chr[id];
-    v->s18 = info->x4a + add;
+    v->s18 = info->x48[1] + add;
     v->s1a = 0;
 }
 

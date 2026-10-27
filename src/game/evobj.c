@@ -3108,3 +3108,56 @@ void fn_801F1774(Menu *m)
         break;
     }
 }
+
+extern void fn_801EE5A4(s32);
+extern void fn_801EF300(void);
+
+void fn_801EF7E0(void)
+{
+    StatBlock *h = &lbl_8030B4D4;
+    s32 i;
+    s16 a = 0;
+    s16 b = 0;
+    s32 id;
+    s32 flag;
+    s32 j;
+
+    h->x2d5[0] = -1;
+    h->x2d5[1] = -1;
+    h->x2d5[2] = -1;
+    h->x2d5[3] = -1;
+    h->x2d5[4] = -1;
+    h->x2d4 = 0;
+    for (i = 0; i < 4; i++) {
+        if (lbl_8030B7F4.party[i] != -1) {
+            h->x2d4++;
+        }
+    }
+    for (j = 0; j < 6; j++) {
+        fn_801EE5A4(j);
+    }
+    flag = 0;
+    for (i = 0; i < 4; i++) {
+        id = lbl_8030B7F4.party[i];
+        if (id == -1) {
+            break;
+        }
+        if (lbl_8030B4D4.chr[id].x14 >> 16 & 1) {
+            flag = 1;
+        }
+        a += h->chr[id].x8;
+        b += h->chr[id].x6;
+    }
+    if (a >= 100) {
+        a = 99;
+    }
+    if (b >= 100) {
+        b = 99;
+    }
+    h->x2d0 = a;
+    h->x2d2 = b;
+    if (flag == 1) {
+        h->x2d2 = 0;
+    }
+    fn_801EF300();
+}

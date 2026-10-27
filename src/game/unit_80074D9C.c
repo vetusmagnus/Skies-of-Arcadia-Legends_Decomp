@@ -3,6 +3,7 @@
 #include <math.h>
 #include "game/task.h"
 #include "game/save_8030B7F4.h"
+#include "game/stat_8030B4D4.h"
 extern s16 lbl_803097F0[];
 extern u32 lbl_802B0830[];
 extern s32 lbl_80347330;
@@ -3606,4 +3607,104 @@ s32 fn_80088F64(void) {
         return RandomLivingAlly();
     }
     return best;
+}
+
+/* The 0x98-byte records at lbl_802C4860, one per character. */
+typedef struct Rec_802C4860 {
+    u8 pad0[0xd];
+    u8 xd;
+    u8 xe;
+    u8 padf[9];
+    s16 x18;
+    u8 pad1a[0x30 - 0x1a];
+    f32 x30;
+    u8 pad34[0x98 - 0x34];
+} Rec_802C4860;
+extern Rec_802C4860 lbl_802C4860[];
+
+/* The battle copy of a character, filled by fn_80077228. */
+typedef struct Dst_80077228 {
+    s16 x0; s16 x2; u8 x4; u8 x5; u8 x6; u8 pad7; s16 x8; s16 xa; s16 xc; s16 xe; u8 pad10[4];
+    s32 x14; s32 x18; s32 x1c; s32 x20; u8 pad24[4];
+    s16 x28[6]; s16 x34[6]; s16 x40[16]; s16 x60[16]; s16 x80[5]; s16 x8a[5]; s16 x94[6]; s16 xa0[6];
+    u8 xac; u8 xad; s16 xae; f32 xb0; s16 xb4; s16 xb6; u8 xb8; u8 xb9; s16 xba;
+    s16 xbc[6]; s16 xc8[16]; s16 xe8[5]; s16 xf2[6];
+    u8 xfe; u8 xff; u8 x100; u8 pad101; s16 x102; s16 x104; u8 x106; u8 pad107; s16 x108; s16 x10a; s16 x10c; u8 pad10e[2];
+    Rec_802C4860* x110;
+} Dst_80077228;
+
+void fn_80077228(s8 idx, Dst_80077228* d)
+{
+    StatRec* a = &lbl_8030B4D4.chr[idx];
+    SaveChar* b = &lbl_8030B7F4.chr[idx];
+    Rec_802C4860* c = &lbl_802C4860[idx];
+    int i;
+    s8 cd;
+    u8 ce;
+    s16 ca;
+    f32 fv;
+    d->xb8 = a->x0;
+    d->x0 = (s8)a->x0;
+    d->x2 = 0;
+    d->x4 = 0;
+    d->xb9 = a->x2;
+    d->x5 = a->x2;
+    d->x6 = 0;
+    d->x14 = b->hp;
+    d->x18 = b->hpMax;
+    d->xba = a->xe;
+    d->x8 = a->xe;
+    d->xa = 0;
+    d->xc = 0;
+    d->xe = 0;
+    i = 0;
+    do {
+        d->xbc[i] = a->x1c[i];
+        d->x28[i] = a->x1c[i];
+        d->x34[i] = 0;
+        i++;
+    } while (i < 6);
+    i = 0;
+    do {
+        d->xc8[i] = a->x28[i];
+        d->x40[i] = a->x28[i];
+        d->x60[i] = 0;
+        i++;
+    } while (i < 16);
+    i = 0;
+    do {
+        d->xe8[i] = a->x48[i];
+        d->x80[i] = a->x48[i];
+        d->x8a[i] = 0;
+        i++;
+    } while (i < 5);
+    i = 0;
+    do {
+        d->xf2[i] = a->x52[i];
+        d->x94[i] = a->x52[i];
+        d->xa0[i] = 0;
+        i++;
+    } while (i < 6);
+    cd = c->xd;
+    ce = c->xe;
+    d->xac = cd;
+    ca = c->x18;
+    d->xad = ce;
+    fv = c->x30;
+    d->xae = ca;
+    d->xb4 = b->x20;
+    d->xb6 = b->slot0;
+    d->x1c = a->x14;
+    d->x20 = a->x14;
+    d->x10a = a->xa;
+    d->x10c = a->xc;
+    d->xb0 = fv;
+    d->xfe = b->mp;
+    d->xff = b->mpMax;
+    d->x100 = b->xf;
+    d->x102 = b->slot1;
+    d->x104 = b->slot2;
+    d->x106 = b->xc;
+    d->x108 = b->x22;
+    d->x110 = c;
 }

@@ -11,14 +11,17 @@ typedef struct SaveChar {
     u8 xc;
     s8 mp;                  /* 0x0d */
     s8 mpMax;
-    u8 pad0f;
+    u8 xf;
     s16 slot0;              /* 0x10 */
     s16 slot1;
     s16 slot2;
     u8 pad16[2];
     s16 hp;                 /* 0x18 */
     s16 hpMax;
-    u8 pad1c[0xc];
+    u8 pad1c[4];
+    s16 x20;
+    s16 x22;
+    u8 pad24[4];
     f32 x28;
     u8 pad2c[0xe];
     s16 s3a;

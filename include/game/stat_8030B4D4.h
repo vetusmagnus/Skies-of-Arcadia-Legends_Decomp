@@ -5,23 +5,32 @@
 
 /* lbl_8030B4D4: six 0x78-byte per-character stat records, then the block's limit word. */
 typedef struct {
-    u8 pad00[6];
+    s16 x0;
+    u8 x2;
+    u8 pad03[3];
     s16 x6;
-    u8 pad08[0x18 - 8];
+    s16 x8;
+    s16 xa;
+    s16 xc;
+    s16 xe;
+    u8 pad10[4];
+    s32 x14;                /* flags; bit 16 is tested by fn_801EF7E0 */
     s32 x18;
-    u8 pad1c[0x48 - 0x1c];
-    s16 x48;
-    s16 x4a;
-    s16 x4c;
-    s16 x4e;
-    s16 x50;
-    u8 pad52[0x60 - 0x52];
+    s16 x1c[6];
+    s16 x28[16];
+    s16 x48[5];
+    s16 x52[6];
+    u8 pad5e[2];
     s32 x60[6];
 } StatRec;
 
 typedef struct {
     StatRec chr[6];
-    u8 pad2d0[0x2dc - 0x2d0];
+    s16 x2d0;
+    s16 x2d2;
+    u8 x2d4;
+    s8 x2d5[5];
+    u8 pad2da[2];
     s32 limit;
     u8 pad2e0[0x320 - 0x2e0];
 } StatBlock;
