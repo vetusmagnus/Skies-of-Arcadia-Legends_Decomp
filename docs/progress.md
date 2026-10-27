@@ -1,8 +1,8 @@
 Progress and handoff
 ====================
 
-State of the work as of 2026-10-27 (after the tier 3 batch): 33.1% of code matched (4,018 / 7,116
-functions), 3,098 functions unmatched: about 2,470 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
+State of the work as of 2026-10-27 (after the structural pass): 33.3% of code matched (4,044 / 7,116
+functions), 3,072 functions unmatched: about 2,470 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
 (the size split of the game functions predates the duplicate-copy batch: 2,193 under 632 bytes, 466 at 632-1000,
 355 at 1-2 KB, 101 at 2-5 KB, 16 over 5 KB). Numbers live in the README status block and on
 [ByteMatch](https://bytematch.dev/vetusmagnus/SoAL-Decomp); this page covers what's in flight.
@@ -889,4 +889,51 @@ What stays unmerged (about 94), by reason:
 Not worth chasing as it stands: fn_801FD44C needs `fn_8010A164` to take a `u16` (the unit declares `u32`, and its other
 callers would change), fn_80016B20 changes once `lbl_80309DE4` is a typed array in unit_80005B50.c, and the per-function
 `Task`/`Tk` views (`work` typed differently in every function) need one struct per task object, which is multi-view work.
+
+### Structural pass over the type-clash leftovers (2026-10-27)
+
+26 more of the stuck functions are in (4,018 to 4,044 matched, 926,860 bytes, 33.31%). Every touched unit passes fdiff over all
+its functions and `floatcheck.py` (evobj.c's 13 near misses are the same as before), `main.dol` force-relinks to the
+`build.sha1` SHA-1 and a fresh worktree builds to the same hash. No agents, no call-site casts.
+
+Shared structs now in headers (and the units that had private copies use them):
+
+- `include/game/camera_803119E0.h`: `Camera803119E0` (eye `pos`, look-at `dir`, angle `x1a`); replaced the `NJS_POINT3[2]` in
+  evobj.c, `Vec3[2]` in unit_8015DC6C.c and `f32[8]` in unit_80219378.c.
+- `include/game/save_8030B7F4.h`: `SaveData` (eight `SaveChar` records, party table, inventory tables, gold, option bytes);
+  replaces evobj.c's `Game`/`Char`, unit_80199B9C.c's `Stat` and two cast views, and is what unit_801F224C.c now reads.
+  Gold is `s32`; `fn_801AB82C` divides `(u32)` of it, which is the only unsigned use.
+- `include/game/stat_8030B4D4.h`: `StatBlock`/`StatRec` (six 0x78-byte records plus the limit word); replaces `Cfg`,
+  `Stat`, `Stat_801838C8`, `PcInfoWork`. unit_801F224C.c keeps `u8[]` for it because the struct form schedules
+  `fn_801F2894`/`fn_801F28B4` differently.
+- `Work8030CEA0.tbl[64]` overlaps `x1674[]` as a union (the handle table and the float block are the same bytes).
+- Per unit: `Sys_8030A10C` and `WorkRec` gained the fields of the agent views (unit_80055E94.c); `Node`, `Blk_UNIT0000`
+  (one record list with a sentinel), `TblC`, `Obj_802239A4`, `C0`/`TblRoot`, `Spr` in unit_80219378.c; `Sub_80168A04` in
+  unit_8015DC6C.c. Unit prototypes follow the definition when the agent's was the real one (`fn_80023FEC` returns the object,
+  `fn_801E1A74` returns `void *`, `fn_802268E8` returns `void *` and the casts at its callers are gone, `fn_801CBB9C`/`BBAC`
+  take only the float).
+
+Merged: fn_8021A620, fn_8021A6E8, fn_8021A1C4, fn_80221D04, fn_80222010, fn_80222F14, fn_8022300C, fn_802233EC, fn_8022436C,
+fn_8021B2B4, fn_8022A38C, fn_8022A46C, fn_8022A728, fn_8022BC64, fn_80229D74, fn_80226848, fn_8022C364, fn_8022AE94
+(unit_80219378.c); fn_801F3E6C, fn_801F4D14 (unit_801F224C.c); fn_80023FEC (unit_80020B50.c); fn_8006CF54, fn_80061518
+(unit_80055E94.c); fn_8012BC48 (unit_8012ADB4.c); fn_801B65CC (unit_80199B9C.c); fn_801D6998 (unit_801D1AE8.c).
+
+Why the other ~145 stay unmerged: each needs its own chain, and merging one pulls the next in. `build/agents/st_rep.txt`
+(local) has the first compile error per function. By reason:
+
+- A callee's parameter is a per-function view of one object (`fn_80167EF0`, `fn_80168BD4`, `fn_80217830`, ...): the fix is
+  retyping the callee and every other caller, e.g. the task-work family around `Sub_80168A04` (fn_801680B4, fn_801684E8,
+  fn_80168E54, fn_8016EA60), the `Msg *, s16` wrapper family (fn_801CBC90, fn_801C64DC, fn_802281BC, fn_8022F050: callers pass
+  one argument, so the real boundary is a TU split, not a type) and `fn_802173F4`/`fn_801F4C24`.
+- The unit calls the function before declaring it, so the agent's extern lands after an implicit declaration (fn_801E66E0,
+  fn_80118AA4, `njTranslate`, `sndSeqStop`, `GXSetDispCopyYScale`): needs the prototype hoisted above the first caller.
+- Shared globals with several unfinished views: `lbl_803471B8` (the shop task: `p24` as a record array, a stat block and a
+  sheet; fn_801B0838, fn_801B46EC, fn_801B4CF0, fn_801B914C, fn_801C12C8), `lbl_8030E830` (fn_801D9728, fn_801D9864, fn_801D9B34,
+  fn_801DA0AC, fn_801DA1C0), `lbl_80346FC8` (fn_8014F99C, fn_80153DC8, fn_8015432C), `lbl_80309E5C`/`lbl_80309DE4`/`lbl_80309E24`
+  (unit_80005B50.c vs unit_80055E94.c), `lbl_80346BD8` (`in` member), `lbl_80311AC0`, `lbl_8034710C` (`holder->ctl`),
+  `lbl_80311970`.
+- Match only in isolation (the unit changes the code): fn_80014EC4, fn_80015B94, fn_80018AFC, fn_80064AC8, fn_8006097C,
+  fn_80181F58, fn_801822A0, fn_801CBA98, fn_801D0DCC, fn_801D22CC, fn_801D77B8, fn_80207554, fn_80217608, fn_80218570.
+- Agent tag collides with a different unit type (`Task`, `MenuUi`, `Lim`, `Ent`, `Cmd`): fn_8000BF48, fn_8000C7C0,
+  fn_80016B20, fn_80068640, fn_8019BED8, fn_801B057C, fn_801B06CC and the rest of the earlier list.
 
