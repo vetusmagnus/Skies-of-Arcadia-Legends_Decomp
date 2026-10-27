@@ -184,11 +184,13 @@ typedef struct Thing {
     s16 a30;
 } Thing;
 void *fn_801E1C7C(u32 size);
+/* A model's collision parts (lbl_8034752C: the live ones, keyed by key8). */
 typedef struct Slot {
-    void *p0;
+    struct Xf_80224F28 *p0;
     void *ptr4;
     u16 key8;
-    u8 pad[6];
+    s16 count;
+    u8 pad[4];
 } Slot;
 extern Slot *lbl_8034752C;
 extern s16 lbl_8034752A;
@@ -501,13 +503,6 @@ typedef struct Xf_80224F28 {
     s16 nnear;          /* 0x8c */
     u16 key;            /* 0x8e */
 } Xf_80224F28;
-/* A model's collision parts. */
-typedef struct XfSet {
-    Xf_80224F28 *parts;
-    u8 pad4[4];
-    u16 id;
-    s16 count;
-} XfSet;
 /* A collision query's result: the triangle hit and what it belongs to. */
 typedef struct Cmp {
     NJS_POINT3 v[3];
@@ -756,7 +751,7 @@ typedef struct Seg {
     u16 group;
     u16 key;
 } Seg;
-s32 fn_802250E4(XfSet *o, NJS_POINT3 *p, Cmp *res);
+s32 fn_802250E4(Slot *o, NJS_POINT3 *p, Cmp *res);
 
 void fn_80219378(s32 a)
 {
@@ -2298,7 +2293,21 @@ void fn_80222010(In_80222010 *in) {
     }
 }
 
-typedef struct { u8 pad[0x14]; s16 x14; s16 x16; u8 pad18[0xc]; } Arr;
+/* A height probe: the ceiling and floor found above and below pos, with their triangle id,
+ * part key and model key. */
+typedef struct Arr {
+    NJS_POINT3 pos;
+    f32 ceil;
+    f32 floor;
+    s16 hasCeil;    /* 0x14 */
+    s16 hasFloor;
+    u16 ceilId;
+    u16 floorId;
+    u16 ceilGrp;
+    u16 ceilKey;
+    u16 floorGrp;
+    u16 floorKey;
+} Arr;
 extern void fn_802241B0(Slot* s, Arr* a, s32 n);
 
 s32 fn_8022436C(u32 id, Arr* arr, s32 count)
@@ -2315,8 +2324,8 @@ s32 fn_8022436C(u32 id, Arr* arr, s32 count)
     i = count;
     q = arr;
     do {
-        q->x16 = 0;
-        q->x14 = 0;
+        q->hasFloor = 0;
+        q->hasCeil = 0;
         q++;
     } while (--i > 0);
     key = (u16)id;
@@ -3411,7 +3420,7 @@ s32 fn_8021AA48(Src* p, void* q, s32 k)
     return r;
 }
 
-void fn_8022445C(XfSet* g, Seg* segs, s32 count)
+void fn_8022445C(Slot* g, Seg* segs, s32 count)
 {
     Cmp hit;
     f32 hy;
@@ -3423,10 +3432,10 @@ void fn_8022445C(XfSet* g, Seg* segs, s32 count)
     f32 best;
     hit.flags = 1;
     seg = segs;
-    id = g->id;
+    id = g->key8;
     do {
         found = seg->found;
-        p = g->parts;
+        p = g->p0;
         if (found != 0) {
             best = seg->pos.y - seg->y;
         }
@@ -3455,8 +3464,8 @@ void fn_8022445C(XfSet* g, Seg* segs, s32 count)
     } while (--count > 0);
 }
 
-s32 fn_802250E4(XfSet *o, NJS_POINT3 *p, Cmp *res) {
-    Xf_80224F28 *r = o->parts;
+s32 fn_802250E4(Slot *o, NJS_POINT3 *p, Cmp *res) {
+    Xf_80224F28 *r = o->p0;
     s32 ret = 0;
     s32 i;
     f32 best;
@@ -3523,7 +3532,7 @@ static inline s16 XfFind(Xf_80224F28 *r, u16 key, s16 n) {
     return -1;
 }
 
-s32 fn_80225330(XfSet *o, NJS_POINT3 *p, Cmp *res) {
+s32 fn_80225330(Slot *o, NJS_POINT3 *p, Cmp *res) {
     u16 key = res->key;
     s32 ret;
     Xf_80224F28 *rec;
@@ -3531,19 +3540,19 @@ s32 fn_80225330(XfSet *o, NJS_POINT3 *p, Cmp *res) {
     s32 k;
 
     if (key == 0xffff) return fn_802250E4(o, p, res);
-    if (res->idx < 0) res->idx = XfFind(o->parts, key, o->count);
+    if (res->idx < 0) res->idx = XfFind(o->p0, key, o->count);
     if (res->idx < 0) {
         ret = 0;
     } else {
-        rec = &o->parts[res->idx];
+        rec = &o->p0[res->idx];
         ret = fn_80224F28(rec, p, res);
     }
     if (ret == 0 && res->idx >= 0 && !(res->flags & 2)) {
         for (k = 0; k < rec->nnear; k++) {
             s = rec->near[k];
-            ret = fn_80224F28(&o->parts[s], p, res);
+            ret = fn_80224F28(&o->p0[s], p, res);
             if (ret != 0) {
-                res->key = o->parts[s].key;
+                res->key = o->p0[s].key;
                 res->idx = s;
                 break;
             }
@@ -3553,4 +3562,68 @@ s32 fn_80225330(XfSet *o, NJS_POINT3 *p, Cmp *res) {
         return 0;
     }
     return fn_801C812C(res->v, p->x, p->z, &p->y);
+}
+
+void fn_802241B0(Slot *o, Arr *h, s32 n) {
+    f32 out;
+    Cmp tmp;
+    Xf_80224F28 *r;
+    Arr *p;
+    int hasB;
+    int hasA;
+    int m;
+    u16 w;
+    f32 db, da, d, nd;
+
+    p = h;
+    tmp.flags = 0;
+    w = o->key8;
+    do {
+        hasA = p->hasCeil;
+        r = o->p0;
+        if (hasA != 0) da = p->ceil - p->pos.y;
+        hasB = p->hasFloor;
+        if (hasB != 0) db = p->pos.y - p->floor;
+        m = o->count;
+        for (; m > 0; r++, m--) {
+            if (!fn_80224F28(r, &p->pos, &tmp)) continue;
+            if (!fn_801C812C(tmp.v, p->pos.x, p->pos.z, &out)) continue;
+            d = p->pos.y - out;
+            if (-0.0f <= d) {
+                if (hasB == 0) {
+                    p->floor = out;
+                    hasB = 1;
+                    db = d;
+                    p->hasFloor = 1;
+                    p->floorId = tmp.id;
+                    p->floorKey = r->key;
+                    p->floorGrp = w;
+                } else if (db > d) {
+                    p->floor = out;
+                    db = d;
+                    p->floorId = tmp.id;
+                    p->floorKey = r->key;
+                    p->floorGrp = w;
+                }
+            } else {
+                nd = -d;
+                if (hasA == 0) {
+                    p->ceil = out;
+                    hasA = 1;
+                    da = nd;
+                    p->hasCeil = 1;
+                    p->ceilId = tmp.id;
+                    p->ceilKey = r->key;
+                    p->ceilGrp = w;
+                } else if (da > nd) {
+                    p->ceil = out;
+                    da = nd;
+                    p->ceilId = tmp.id;
+                    p->ceilKey = r->key;
+                    p->ceilGrp = w;
+                }
+            }
+        }
+        p++;
+    } while (--n > 0);
 }
