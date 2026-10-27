@@ -303,7 +303,7 @@ typedef struct MenuUi {
     u16 cmd;
     s16 se;
     u16 pad4A;
-    u32 w4c;
+    const char* w4c;
     s16 h50;
     s16 h52;
     s16 h54;
@@ -359,7 +359,7 @@ typedef struct Task_801B0F1C {
     Pan_801B0F1C *pan;  /* 0x28 */
 } Task_801B0F1C;
 void fn_801B0F1C(Task_801B0F1C *t);
-extern s32 fn_801F4AE4(s16 v);
+extern const char* fn_801F4AE4(s16 v);
 typedef struct Task_801B1104 {
     u8 pad00[0x24];
     u8* p24;
@@ -385,14 +385,33 @@ typedef struct {
     u8 pad0[4];
     s16* g[5][81]; /* 0x04 */
 } Tables;
+typedef struct {
+    u8 pad0[0x18];
+    u16 a;      /* 0x18 */
+    u16 c;      /* 0x1A */
+    u16 kind;   /* 0x1C */
+} Sel;
+typedef struct {
+    u8 pad0[0x30];
+    Sel* sel;   /* 0x30 */
+} Inner;
+typedef struct ShopSelOwner {
+    u8 pad[0x218];
+    struct {
+        u8 pad[0x30];
+        Sel* s;
+    }* in;
+} ShopSelOwner;
 typedef struct Game_UNIT {
     u8 pad00[0x24];
-    Sub_801B1104* p24;
+    union { Sub_801B1104* p24; ShopSelOwner* o; };
     u8 pad28[0x8];
     union { Pl* p30; Tables* t; };
 } Game_UNIT;
 extern Game_UNIT* lbl_803471B8;
-extern void fn_801B11EC(void);
+extern s32 fn_801B93E8(Game_UNIT* t);
+struct Task_801B11EC;
+extern void fn_801B11EC(struct Task_801B11EC* t);
 typedef struct Task_801B1A78 {
     u8 pad00[0x24];
     u8* p24;
@@ -971,26 +990,6 @@ extern const char* lbl_802EBF7C[16];
 extern u32 lbl_802EBFBC[8];
 extern char lbl_802B8F94[];
 extern char lbl_802B8F70[];
-typedef struct {
-    u8 pad0[0x18];
-    u16 a;      /* 0x18 */
-    u16 c;      /* 0x1A */
-    u16 kind;   /* 0x1C */
-} Sel;
-typedef struct {
-    u8 pad0[0x30];
-    Sel* sel;   /* 0x30 */
-} Inner;
-typedef struct {
-    u8 pad[0x24];
-    struct {
-        u8 pad[0x218];
-        struct {
-            u8 pad[0x30];
-            Sel* s;
-        }* in;
-    }* o;
-} TaskSel;
 typedef struct {
     u8 pad0[0x20];
     s32 *a0;
@@ -2845,6 +2844,121 @@ Task_801B1104* fn_801B1104(void* a)
     return o;
 }
 
+/* The two stat buffers the item and equip windows fill from an item id. */
+typedef struct CmpEq { s16 id; s16 x2; s16 col; s16 v[9]; } CmpEq;
+extern void fn_801C2E48(CmpEq* out, s16 id);
+extern void fn_801C2CF4(CmpEq* out, s16 id);
+/* The item window of the shop: the item's name, "x" and how many are held, then its stats. */
+typedef struct Task_801B11EC {
+    u8 pad00[0x18];
+    u8 flags; /* 0x18 */
+    u8 state; /* 0x19 */
+    u8 pad1a[0x24 - 0x1a];
+    u8* flag;  /* 0x24 */
+    MObj* obj; /* 0x28 */
+} Task_801B11EC;
+
+/* Draws a signed number: a minus sign at (x, y), then the digits like TextPrintNumber. Its
+ * arguments are in TextPrintNumber's order, position first; the float arguments are evaluated
+ * before the value, which is what fixes the registers here. */
+extern void UiDrawNumberText(f32 x, f32 y, s32 value, u16 flags);
+#define IT_NUM(val, x, y, k) UiDrawNumberText((x) + lbl_802B8E4C[k].x, (y) + lbl_802B8E4C[k].y, (val), 0xC004)
+#define IT_SNUM(val, ix, iy, tbl, k, fl) TextPrintNumber((ix) + (tbl)[k], (iy), (val), (fl))
+#define IT_HEAD(t, id)                                                                           \
+    fn_801B6BB4((t)->obj, &(t)->obj->o.x, (id), -1, 8, 6, 1.0f);                                \
+    if ((id) != -1) {                                                                             \
+        TextPrint(42.0f + (t)->obj->o.x, 6.0f + (t)->obj->o.y, fn_801F4AE4(id));       \
+    }                                                                                             \
+    TextPrint(248.0f + (t)->obj->o.x, 6.0f + (t)->obj->o.y, "\x81\x7e");              \
+    TextPrintNumber(20.0f + (248.0f + (t)->obj->o.x), 6.0f + (t)->obj->o.y, fn_801F452C(id), 0xC002);
+
+void fn_801B11EC(Task_801B11EC* t) {
+    f32 x;
+    f32 y;
+    f32 z;
+    s16 id;
+    CmpEq eq;
+    CmpEq eq2;
+    s16 ix;
+    s16 iy;
+
+    if (lbl_803475D8 != 0) {
+        t->state = 0xff;
+    }
+    switch (t->state) {
+    case 0:
+    case 1:
+    case 0xFE:
+        if (t->flag[0] == 1) {
+            return;
+        }
+        UiObjUpdate(&t->obj->o);
+        z = TextGetZ();
+        TextPushColor();
+        TextSetColor(0xFF201008);
+        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, (LayoutPart*)lbl_802B7700[t->obj->h52 * 2],
+                     (u32)lbl_802B7700[t->obj->h52 * 2 + 1], &t->obj->o.x, t->obj->o.z, 1.0f, 1.0f);
+        TextSetZ(-27.5f + t->obj->o.z);
+        id = fn_801B93E8(lbl_803471B8);
+        switch (fn_801F4C24(id)) {
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+        case 7:
+            fn_801C2E48(&eq, id);
+            break;
+        case 5:
+        case 6:
+            fn_801C2CF4(&eq2, id);
+            break;
+        }
+        TextSetColor(0xFF201008);
+        switch (t->obj->h52) {
+        case 0:
+            IT_HEAD(t, id);
+            y = 30.0f + t->obj->o.y;
+            x = t->obj->o.x - 14.0f;
+            IT_NUM(eq.v[0], x, y, 7);
+            IT_NUM(eq.v[1], x, y, 8);
+            IT_NUM(eq.v[2], x, y, 9);
+            IT_NUM(eq.v[3], x, y, 10);
+            IT_NUM(eq.v[4], x, y, 11);
+            IT_NUM(eq.v[5], x, y, 12);
+            IT_NUM(eq.v[6], x, y, 13);
+            break;
+        case 2:
+            IT_HEAD(t, id);
+            iy = 30.0f + t->obj->o.y;
+            ix = t->obj->o.x - 14.0f;
+            IT_SNUM(eq2.v[0], ix, iy, lbl_802B8EBC, 4, 0xC004);
+            IT_SNUM(eq2.v[3], ix, iy, lbl_802B8EBC, 5, 0xC004);
+            IT_SNUM(eq2.v[5], ix, iy, lbl_802B8EBC, 6, 0xC004);
+            IT_SNUM(eq2.v[6], ix, iy, lbl_802B8EBC, 7, 0xC001);
+            break;
+        case 1:
+            IT_HEAD(t, id);
+            iy = 30.0f + t->obj->o.y;
+            ix = t->obj->o.x - 14.0f;
+            IT_SNUM(eq2.v[1], ix, iy, lbl_802B8ECC, 4, 0xC004);
+            IT_SNUM(eq2.v[2], ix, iy, lbl_802B8ECC, 5, 0xC004);
+            IT_SNUM(eq2.v[4], ix, iy, lbl_802B8ECC, 6, 0xC004);
+            IT_SNUM(eq2.v[7], ix, iy, lbl_802B8ECC, 7, 0xC004);
+            break;
+        case 3:
+            IT_HEAD(t, id);
+            break;
+        }
+        TextPopColor(1);
+        TextSetZ(z);
+        break;
+    case 0xFF:
+        MenuDummy(t);
+        t->flags |= 0x40;
+        break;
+    }
+}
+
 Task_801B1A78* fn_801B1A78(void* a)
 {
     Task_801B1A78* o = fn_802267AC(a, fn_801B11EC);
@@ -3682,7 +3796,7 @@ Task2_801B6838* fn_801B6838(void* arg) {
 }
 
 
-s32 fn_801B93E8(TaskSel* t) {
+s32 fn_801B93E8(Game_UNIT* t) {
     s32 r = -1;
     Sel* s = t->o->in->s;
     u16 idx = s->c + s->a * 6;

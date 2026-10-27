@@ -15,7 +15,6 @@
  * colours, page 2: the item they have on now). Ship items show their four stats instead. */
 
 /* An equipment slot or a stat block: an id, then values from +6 (0x18). */
-typedef struct CmpEq { s16 id; s16 x2; s16 col; s16 v[9]; } CmpEq;
 /* A character's stats, before and after (0x34). */
 typedef struct CmpStat { s16 id; s16 x2; s16 col; s16 v[9]; u32 c[7]; } CmpStat;
 typedef struct CmpChr { u32 x0; CmpEq eq[2]; CmpStat st[2]; } CmpChr; /* 0x9C */
@@ -32,8 +31,6 @@ typedef struct EqWork { u8 pad0[8]; u32 id; u8 padc[4]; u32 page; } EqWork;
 extern s32 fn_801F3FD0(s32 who, s16 id);
 extern s32 fn_801C0B88(s16 id, u8 who);
 extern void fn_801C1FC0(s16 id, s32 who);
-extern void fn_801C2E48(CmpEq* out, s16 id);
-extern void fn_801C2CF4(CmpEq* out, s16 id);
 extern const char* fn_801C2CBC(s16 id);
 extern void fn_801B4CF0(Task* t);
 extern void fn_801B49B0(Task* t);
@@ -45,7 +42,7 @@ extern void fn_801B42F8(Task* t);
 #define EQ_GREY 0x40201008
 #define EQ_POS lbl_802B8E4C
 /* One stat number at grid position k, plain. */
-#define EQ_NUM(val, x, y, k) UiDrawNumberText((val), 0xC004, (x) + EQ_POS[k].x, (y) + EQ_POS[k].y)
+#define EQ_NUM(val, x, y, k) UiDrawNumberText((x) + EQ_POS[k].x, (y) + EQ_POS[k].y, (val), 0xC004)
 /* The same, in the stat's colour. The two float temporaries are the window's x and y, reused the
  * other way round (y holds the column, x the row): that is how the original's registers fall. */
 #define EQ_NUM_COL(val, col, ix, iy, k)    \
@@ -54,7 +51,7 @@ extern void fn_801B42F8(Task* t);
         y = (ix) + EQ_POS[k].x;             \
         v = (val);                          \
         TextSetColor(col);                  \
-        UiDrawNumberText(v, 0xC004, y, x);  \
+        UiDrawNumberText(y, x, v, 0xC004);  \
     }
 /* A ship stat number at column k. */
 #define EQ_SNUM(val, ix, iy, tbl, k, fl) TextPrintNumber((ix) + (tbl)[k], (iy), (val), (fl))
@@ -150,7 +147,6 @@ void fn_801B28D4(Task* task) {
     s16 d2[7];
     CmpChr* chr;
     u32 i;
-    u32 k;
     f32 y;
     f32 x;
     s16 ix;
@@ -183,8 +179,8 @@ void fn_801B28D4(Task* task) {
         EQ_NUM(eq.v[6], x, y, 6);
         if (obj->h56 != ((EqWork*)task->work)->id) {
             ((EqWork*)task->work)->id = obj->h56;
-            for (k = 0; k < EQ_PARTY->info->count; k++) {
-                fn_801C1FC0(obj->h56, (u16)k);
+            for (i = 0; i < EQ_PARTY->info->count; i++) {
+                fn_801C1FC0(obj->h56, (u16)i);
             }
         }
         for (i = 0; i < EQ_PARTY->info->count; i++) {
