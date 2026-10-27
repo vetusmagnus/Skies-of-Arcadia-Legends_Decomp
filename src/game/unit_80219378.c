@@ -2190,3 +2190,25 @@ s32 fn_8022AE94(void) {
     }
     return b->f8;
 }
+
+s32 fn_8021A1C4(s8* out)
+{
+    s32 ret = 0;
+    if (out != 0) {
+        s8* p = out;
+        s32 i = 0;
+        s32 n = 0;
+        for (; i < 22 && n < 22; i++) {
+            if (fn_801E4BBC(i) != 0) {
+                *p = i;
+                n++;
+                p++;
+            }
+        }
+        ret = n;
+        for (i = n; i < 22; i++) {
+            out[i] = -1;
+        }
+    }
+    return ret;
+}

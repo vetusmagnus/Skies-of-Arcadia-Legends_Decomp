@@ -6819,3 +6819,32 @@ void fn_8019D598(Self* o) {
         }
     }
 }
+
+typedef struct { u8 b0; } W_801B65CC;
+typedef struct { u8 pad[0x24]; W_801B65CC* w; MObj* obj; u32 w2c; } T_801B65CC;
+typedef struct { const char* text; f32 x; } NameEnt;
+extern const f32 lbl_802B8EDC[];
+extern NameEnt lbl_802EC01C[];
+
+T_801B65CC* fn_801B65CC(void* a, u16 idx, f32 y) {
+    T_801B65CC* t = fn_802267AC(a, fn_801B6420);
+    t->w = fn_801E1A74(1, 0x58);
+    t->obj = fn_801E1A74(1, 0x6c);
+    t->w2c = 0;
+    t->w2c = 0;
+    t->obj->h54 = idx;
+    t->w->b0 = 0;
+    t->obj->o.alpha_en = 1;
+    t->obj->o.x = -260.0f;
+    t->obj->o.tx = -260.0f;
+    t->obj->o.y = y;
+    t->obj->o.ty = y;
+    t->obj->o.z = lbl_802B8EDC[idx];
+    t->obj->o.rdx = 0.0f;
+    t->obj->o.rdy = 0.0f;
+    t->obj->o.alpha = 1.0f;
+    t->obj->text = lbl_802EC01C[idx].text;
+    t->obj->h56 = idx;
+    UiObjSetLowered(&t->obj->o);
+    return t;
+}

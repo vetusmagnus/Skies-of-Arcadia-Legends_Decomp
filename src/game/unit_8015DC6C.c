@@ -231,8 +231,17 @@ typedef struct TaskWork_80169294 {
 extern u32 lbl_80347088;
 typedef struct Sub_80168A04 {
     u32 w0;
-    u8 pad4[0xB];
+    s32 id;
+    u8 pad8[4];
+    u8 fc;
+    u8 fd;
+    u8 pade;
     s8 bF;
+    u8 pad10[8];
+    u32 f18;
+    u8 pad1c[0x30 - 0x1c];
+    Task* x30;
+    Task* x34;
 } Sub_80168A04;
 typedef struct Obj_80168A04 {
     u8 pad[0x19];

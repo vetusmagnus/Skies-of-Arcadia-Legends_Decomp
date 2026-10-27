@@ -2547,3 +2547,14 @@ void fn_801D9508(void)
         break;
     }
 }
+
+void fn_801D6998(DataTable *t, s32 *data)
+{
+    t->data = data;
+    t->count = t->data[0];
+    t->base = (u8 *)t->data + (t->count + 1) * 4;
+    t->offsets = t->data + 1;
+    t->work = fn_801E1C7C(t->count * 4);
+    ClearWork(t);
+    Relocate(t);
+}

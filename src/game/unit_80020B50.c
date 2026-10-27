@@ -442,3 +442,47 @@ s32 fn_80021EB8(Tsk *t) {
     }
     return 0;
 }
+
+extern void fn_801D68C4(s32 a, s32 b);
+extern s32 lbl_8034762C;
+
+Obj* fn_80023FEC(s16 a) {
+    switch (a) {
+    case -1:
+        fn_801D68C4(lbl_8034762C, 7);
+        break;
+    case 0:
+        fn_801D68C4(lbl_8034762C, 8);
+        break;
+    case 1:
+        fn_801D68C4(lbl_8034762C, 9);
+        break;
+    case 2:
+        fn_801D68C4(lbl_8034762C, 10);
+        break;
+    case 3:
+        fn_801D68C4(lbl_8034762C, 11);
+        break;
+    case 4:
+        fn_801D68C4(lbl_8034762C, 12);
+        break;
+    case 5:
+        fn_801D68C4(lbl_8034762C, 13);
+        break;
+    case 6:
+        fn_801D68C4(lbl_8034762C, 14);
+        break;
+    case 7:
+        fn_801D68C4(lbl_8034762C, 15);
+        break;
+    case 8:
+        fn_801D68C4(lbl_8034762C, 16);
+        break;
+    case 9:
+        fn_801D68C4(lbl_8034762C, 17);
+        break;
+    default:
+        fn_801D68C4(lbl_8034762C, 7);
+        break;
+    }
+}

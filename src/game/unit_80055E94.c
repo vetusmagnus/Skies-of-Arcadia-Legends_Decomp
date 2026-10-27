@@ -21,7 +21,13 @@ typedef struct {
     u8 pad4[0x64];
     u32 f68;
     u32 f6c;
-    u8 pad70[0xCC - 0x70];
+    u8 pad70[4];
+    u32 x74;
+    u32 x78;
+    u32 x7c;
+    u32 x80;
+    u8 x84[0x20];
+    u8 xa4[0xCC - 0xA4];
     Slot_8030A10C e[2];
     u8 pad_ec[0xF8 - 0xEC];
     void *pf8;
@@ -30,16 +36,20 @@ typedef struct {
     u32 a134[12];
     u8 pad164[4];
     void *f168;
-    u8 p16c[2];
+    u8 b16c;
+    u8 b16d;
     u8 b16e;
-    u8 pad16f[0x1C4 - 0x16F];
+    u8 b16f;
+    u8 b170;
+    u8 pad171[0x1C4 - 0x171];
     s32 count;
     u8 pad1c8[4];
     u32 f1cc;
 } Sys_8030A10C;
 extern Sys_8030A10C lbl_8030A10C;
 typedef struct WorkRec {
-    u8 pad0[4];
+    s16 x0;
+    s16 x2;
     u32 x04;
     u8 pad8[0x3c - 8];
     s32 x3c;
@@ -1271,7 +1281,7 @@ typedef struct ObjA {
     SubRec *sub;
 } ObjA;
 extern void *lbl_803475A8;
-extern ObjA *fn_802268E8(void *a, void *fp);
+extern void *fn_802268E8(void *a, void *fp);
 void fn_8006DDBC(O6DDBC *o);
 s32 fn_8006DBDC(void)
 
@@ -3109,7 +3119,7 @@ void fn_8006C5B4(void) {
     fn_8025CB24(buf, lbl_802B06A8, c);
     AddName(buf);
     if (SetOnce()) {
-        t = (Task6C124*)fn_802268E8(lbl_803475A8, fn_8006C124);
+        t = fn_802268E8(lbl_803475A8, fn_8006C124);
         fn_80061F58(&t->work, 0xac, 0);
         t->work->recs = (u32)lbl_80347398;
         t->work->xa8 = 0;
@@ -3127,7 +3137,7 @@ void fn_8006C710(s8 mode, u8 flag) {
     fn_8002FE10();
     fn_8002FD58();
     if (SetOnce()) {
-        t = (Task6C124*)fn_802268E8(lbl_803475A8, fn_8006C124);
+        t = fn_802268E8(lbl_803475A8, fn_8006C124);
         fn_80061F58(&t->work, 0xac, 0);
         t->work->recs = (u32)lbl_80347398;
         t->work->xa8 = flag;
@@ -3240,7 +3250,7 @@ void fn_80067CA4(Arg80067CA4 *arg) {
     idx = fn_80020060(list);
     while (idx < 0) {
     }
-    task = (Tk80067CA4 *)fn_802268E8(lbl_803475A8, lbl_802DF2B8[list[idx].type]);
+    task = fn_802268E8(lbl_803475A8, lbl_802DF2B8[list[idx].type]);
     fn_80061F58(&task->work, 0x58, 0);
     w = task->work;
     w->base = *src->base;
@@ -3604,7 +3614,7 @@ void fn_80055EB8(Ent80055EB8 *self)
 s32 fn_80060AB4(void)
 {
     if ((lbl_8030A10C.f6c & 0x200000) && (lbl_8030A10C.f6c & 0x100000)) {
-        fn_801D6CBC(lbl_8030A10C.f168, lbl_8030A10C.p16c);
+        fn_801D6CBC(lbl_8030A10C.f168, &lbl_8030A10C.b16c);
         lbl_8030A10C.f6c &= ~0x200000;
     }
     lbl_8030A10C.b16e = 0;
@@ -4160,4 +4170,54 @@ void fn_80071990(void) {
             i++;
         } while (i < 12);
     }
+}
+
+extern int strncmp(const char *a, const char *b, u32 n);
+extern void fn_80075040(char *p, s32 a, s32 b);
+typedef struct Cursor { char *cur; } Cursor;
+typedef struct Link { u8 pad0[4]; Cursor *c; } Link;
+typedef struct Item { u8 pad0[0x14]; Link *link; u8 pad18[0x68 - 0x18]; } Item;
+typedef struct Items { u32 count; Item *items; } Items;
+
+void fn_8006CF54(Out6EB88 *out) {
+    u8 i;
+    Item *items;
+    Items *list;
+    list = out->f8;
+    items = list->items;
+    for (i = 0; i < list->count; i++) {
+        Cursor *c = items[i].link->c;
+        if (c != 0) {
+            if (strncmp(c->cur, "NJCM", 4) == 0) {
+                c->cur += 8;
+                fn_80075040(c->cur, 0x80000000, 0);
+            } else if (strncmp(c->cur, "NJBM", 4) == 0) {
+                c->cur += 8;
+            }
+        }
+    }
+}
+
+extern void njSetMatrix(void *m, void *arg);
+
+void fn_80061518(V3 *src, V3 *out, void *m) {
+    NJS_POINT3 a;
+    NJS_POINT3 b;
+
+    if (m == 0) {
+        fn_80071CF0(src, out);
+        return;
+    }
+    a.x = src->x;
+    a.y = src->y;
+    a.z = src->z;
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    njSetMatrix(0, m);
+    njCalcPoint(0, &a, &b);
+    njPopMatrixEx();
+    out->x = b.x;
+    out->y = b.y;
+    out->z = b.z;
 }

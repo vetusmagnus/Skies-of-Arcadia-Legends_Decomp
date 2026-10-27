@@ -890,3 +890,41 @@ void fn_8012CFC8(void)
         (*(HolderB_8012CFC8**)&lbl_80346F20)->x24->mode = -1;
     }
 }
+
+Spr* fn_8012BC48(s8 n) {
+    switch (n) {
+    case 0:
+        fn_801D68C4(lbl_80346F04, 0x21);
+        break;
+    case 1:
+        fn_801D68C4(lbl_80346F04, 0x22);
+        break;
+    case 2:
+        fn_801D68C4(lbl_80346F04, 0x23);
+        break;
+    case 3:
+        fn_801D68C4(lbl_80346F04, 0x24);
+        break;
+    case 4:
+        fn_801D68C4(lbl_80346F04, 0x25);
+        break;
+    case 5:
+        fn_801D68C4(lbl_80346F04, 0x26);
+        break;
+    case 6:
+        fn_801D68C4(lbl_80346F04, 0x27);
+        break;
+    case 7:
+        fn_801D68C4(lbl_80346F04, 0x28);
+        break;
+    case 8:
+        fn_801D68C4(lbl_80346F04, 0x29);
+        break;
+    case 9:
+        fn_801D68C4(lbl_80346F04, 0x2a);
+        break;
+    default:
+        fn_801D68C4(lbl_80346F04, 0x21);
+        break;
+    }
+}
