@@ -8,23 +8,23 @@ typedef struct {
 } BitOwner;
 extern u8 lbl_802C8E54[];
 s8 fn_801EF300(void);
-u32 fn_801F4C24(void);
+u32 fn_801F4C24(s16 id);
 s8 fn_801EFCC4(s16 id, s32 n);
-typedef struct { u8 pad[0x12]; u8 f; u8 pad2[0xd]; } T0;
+typedef struct { u8 pad[0x12]; u8 f; u8 g; u8 pad2[0xc]; } T0;
 extern T0 lbl_802C5790[];
-typedef struct { u8 pad[0x12]; u8 f; u8 pad2[0x15]; } T1;
+typedef struct { u8 pad[0x12]; u8 f; u8 g; u8 pad2[0x14]; } T1;
 extern T1 lbl_802C6190[];
-typedef struct { u8 pad[0x12]; u8 f; u8 pad2[0x15]; } T2;
+typedef struct { u8 pad[0x12]; u8 f; u8 g; u8 pad2[0x14]; } T2;
 extern T2 lbl_802C6E10[];
-typedef struct { u8 pad[0x15]; u8 f; u8 pad2[0xe]; } T3;
+typedef struct { u8 pad[0x15]; u8 f; u8 g; u8 pad2[0xd]; } T3;
 extern T3 lbl_802C7C34[];
-typedef struct { u8 pad[0x11]; u8 f; u8 pad2[0x4]; } T4;
+typedef struct { u8 pad[0x11]; u8 f; u8 g; u8 pad2[0x3]; } T4;
 extern T4 lbl_802C8774[];
-typedef struct { u8 pad[0x20]; u8 f; u8 pad2[0x3]; } T5;
+typedef struct { u8 pad[0x20]; u8 f; u8 g; u8 pad2[0x2]; } T5;
 extern T5 lbl_802D7E4C[];
-typedef struct { u8 pad[0x24]; u8 f; u8 pad2[0x3]; } T6;
+typedef struct { u8 pad[0x24]; u8 f; u8 g; u8 pad2[0x2]; } T6;
 extern T6 lbl_802D83EC[];
-typedef struct { u8 pad[0x18]; u8 f; u8 pad2[0xb]; } T7;
+typedef struct { u8 pad[0x18]; u8 f; u8 g; u8 pad2[0xa]; } T7;
 extern T7 lbl_802D8A2C[];
 extern const s8 lbl_802D4600[24];
 s32 fn_801E4BBC(s8 i);
@@ -77,10 +77,10 @@ void *fn_801F2860(void) {
     return &lbl_802C8E54[i * 0x22];
 }
 
-s32 fn_801F49DC(void) {
+s32 fn_801F49DC(s16 id) {
     u32 k;
 
-    k = fn_801F4C24();
+    k = fn_801F4C24(id);
     switch (k) {
     case 0:
         return 0x0;
@@ -103,10 +103,10 @@ s32 fn_801F49DC(void) {
     }
 }
 
-s32 fn_801F4A60(void) {
+s32 fn_801F4A60(s16 id) {
     u32 k;
 
-    k = fn_801F4C24();
+    k = fn_801F4C24(id);
     switch (k) {
     case 0:
         return 0x50;
@@ -144,7 +144,7 @@ s8 fn_801F4CA0(void) {
 
 s32 fn_801F464C(s16 id)
 {
-    switch (fn_801F4C24()) {
+    switch (fn_801F4C24(id)) {
     case 0:
         return lbl_802C5790[id].f;
     case 1:
@@ -248,4 +248,41 @@ s32 fn_801F52AC(void)
         }
     }
     return cnt;
+}
+
+void* fn_801F4AE4(s16 id) {
+    if (id == -1) return 0;
+    switch (fn_801F4C24(id)) {
+    case 0: return &lbl_802C5790[id];
+    case 1: return &lbl_802C6190[id - 0x50];
+    case 2: return &lbl_802C6E10[id - 0xa0];
+    case 3: return &lbl_802C7C34[id - 0xf0];
+    case 4: return &lbl_802C8774[id - 0x140];
+    case 5: return &lbl_802D7E4C[id - 0x190];
+    case 6: return &lbl_802D83EC[id - 0x1b8];
+    case 7: return &lbl_802D8A2C[id - 0x1e0];
+    }
+    return 0;
+}
+
+s32 fn_801F5100(s16 *a, s16 *b)
+{
+    u8 p;
+    s16 x = *a;
+    s16 y = *b;
+    u8 q;
+    if (x == -1 && y == -1) return 0;
+    if (x == -1) return 1;
+    if (y == -1) return -1;
+    switch (fn_801F4C24(x)) {
+    case 0: p = lbl_802C5790[x].g; q = lbl_802C5790[y].g; break;
+    case 1: p = lbl_802C6190[x - 0x50].g; q = lbl_802C6190[y - 0x50].g; break;
+    case 2: p = lbl_802C6E10[x - 0xa0].g; q = lbl_802C6E10[y - 0xa0].g; break;
+    case 3: p = lbl_802C7C34[x - 0xf0].g; q = lbl_802C7C34[y - 0xf0].g; break;
+    case 4: p = lbl_802C8774[x - 0x140].g; q = lbl_802C8774[y - 0x140].g; break;
+    case 5: p = lbl_802D7E4C[x - 0x190].g; q = lbl_802D7E4C[y - 0x190].g; break;
+    case 6: p = lbl_802D83EC[x - 0x1b8].g; q = lbl_802D83EC[y - 0x1b8].g; break;
+    case 7: p = lbl_802D8A2C[x - 0x1e0].g; q = lbl_802D8A2C[y - 0x1e0].g; break;
+    }
+    return p - q;
 }
