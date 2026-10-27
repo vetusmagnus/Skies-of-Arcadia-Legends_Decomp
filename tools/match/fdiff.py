@@ -26,7 +26,7 @@ FLAGS = ('-nodefaults -proc gekko -align powerpc -enum int -fp hardware -Cpp_exc
          '-fp_contract on -str reuse -multibyte -i include -i build/GEAE8P/include -use_lmw_stmw on '
          '-i extern/sdk/include -i extern/sdk/libc -inline noauto')
 INS = re.compile(r"^/\* ([0-9A-F]{8}) [0-9A-F]{8}  (?:[0-9A-F]{2} ){4}\*/\s+(.*)$")
-SYM = re.compile(r"(\"[^\"]*\"|[A-Za-z_@$][\w@$.]*)((?:[+-]0x[0-9A-Fa-f]+)?)@(ha|l|h|sda21)\b")
+SYM = re.compile(r"(\"[^\"]*\"|[A-Za-z_@$.][\w@$.]*)((?:[+-]0x[0-9A-Fa-f]+)?)@(ha|l|h|sda21)\b")
 CALL = re.compile(r"^(?:bl|b) (?!\.L)(\S+)$")
 LABEL = re.compile(r"\.L_([0-9A-F]+)")
 ADDR_NAME = re.compile(r"^(?:fn|lbl|jumptable)_([0-9A-F]{8})$")
@@ -66,7 +66,7 @@ def place(name, off, syms, orig):
 
 def simp(x):
     x = re.sub(r"\s+", " ", x.strip())
-    x = re.sub(r"(\"[^\"]*\"|[A-Za-z_@$][\w@$.]*)(?:[+-]0x[0-9A-Fa-f]+)?@(ha|l|h|sda21)\b", "S", x)
+    x = re.sub(r"(\"[^\"]*\"|[A-Za-z_@$.][\w@$.]*)(?:[+-]0x[0-9A-Fa-f]+)?@(ha|l|h|sda21)\b", "S", x)
     x = re.sub(r"\"[^\"]*\"", "S", x)
     x = re.sub(r"^(bl|b) (?!\.L)\S+$", r"\1 S", x)
     x = re.sub(r"\b(lbl|jumptable|fn)_[0-9A-F]+", "S", x)

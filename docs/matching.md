@@ -88,6 +88,33 @@ Found matching `fn_801A6BDC` (the 16.6 KB shop state machine in `unit_80199B9C.c
   and which the counter fixed it. Block-scoped temporaries (in the macros) get their own
   registers and were what the original's temporaries needed.
 
+From `fn_801AD1D4` (10.4 KB, the shop's stat-comparison windows, same file; a near miss kept in
+[near/fn_801AD1D4.c](near/fn_801AD1D4.c)):
+
+- **A function can reach its file's data through the section base.** It loads
+  `lis r31, lbl_802B6A18@ha; addi r31, r31, lbl_802B6A18@l` once and reads every table at a fixed
+  offset from it (`addi r4, r31, 0x2434`). That's MWCC pooling a section it references many
+  times, and it does this for globals as well as statics. The base is the start of the original
+  file's `.rodata`, so the code only comes out this way if the file's data is defined in C, before
+  any other `.rodata` the file emits, with every object at its original offset.
+  `tools/match/gen_rodata.py` writes such a range as C (objects sized to the next boundary,
+  padding included, pointer tables kept as relocations); `tools/match/rodata_80199B9C.py` has the
+  extra boundaries and typed objects for `unit_80199B9C.c`. With that block in the unit, all of its
+  matching functions still match. Six functions in the file use the base (fn_801AD1D4,
+  fn_801B02F4, fn_801B0B9C, fn_801B11EC, fn_801B1B3C, fn_801B28D4).
+- **fdiff masks section symbols** (`...rodata.0@ha`) now, the same as named ones.
+- **Unrolled 7-stat blocks are macros**: the original repeats the block for each stat, and
+  MWCC doesn't unroll any loop form of it (`s32`, `s16`, `int` counters, with or without temps).
+- **Where the registers stand**: the instruction stream is exact (2612/2612 with registers
+  masked); 433 lines are register numbers. What moved it: block-local variables per display
+  block (1268 → 1060 changed lines), a declaration order per block instance (→ 930), the colour
+  row's `cy` at function scope (→ 870), the diff block using a function-scope `iy` (→ 866).
+  Reshaping the number macro (temps, an inline helper, value first) changed nothing. What's left
+  is systematic: in the ship windows the original keeps the drawn value in r21 in every copy and
+  swaps the roles of r27/r29 (`ix`/`iy`), and each window's header holds the party pointer in r7
+  where we use r6. One register for every copy of a value looks like a single variable whose live
+  range spans the whole function, but hoisting `v` alone makes it worse (996).
+
 Open
 ----
 
