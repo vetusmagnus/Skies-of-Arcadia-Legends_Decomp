@@ -1,7 +1,7 @@
 Progress and handoff
 ====================
 
-State of the work as of 2026-10-27 (after the structural pass): 33.3% of code matched (4,044 / 7,116
+State of the work as of 2026-10-27 (after the tier 3 second half): 34.6% of code matched (4,124 / 7,116
 functions), 3,072 functions unmatched: about 2,470 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
 (the size split of the game functions predates the duplicate-copy batch: 2,193 under 632 bytes, 466 at 632-1000,
 355 at 1-2 KB, 101 at 2-5 KB, 16 over 5 KB). Numbers live in the README status block and on
@@ -969,3 +969,28 @@ What the agents found (new):
 - Unit changes made for fn_801B11EC: `fn_801F4AE4` returns `const char*` (and the `w4c` field it is stored into),
   `Game_UNIT` has a `ShopSelOwner* o` view at 0x24 so `fn_801B93E8` takes it without a cast, `CmpEq` and the two stat
   fillers are declared once in the unit.
+
+
+### Tier 3, second half: never-tried functions of 329-631 bytes (2026-10-27)
+
+16 Sonnet 5.5 agents (set explicitly, no Opus, no retries, no merge agents), 16-17 functions each in contiguous address runs:
+all 268 never-tried game functions of 329-631 bytes that were not defined in `src/`, not mentioned on this page and not a
+duplicate copy (the page's earlier count of 428 included duplicates and already-logged functions). About 10 tries per
+function. 185 matched in isolation (re-checked with fdiff by the coordinating session); 83 stayed near misses (one,
+fn_801D184C, was not attempted). `merge8.py` and then hand fixes put **79 into the unit files** (4,044 to 4,124 matched,
+963,748 bytes, 34.63%). Every function of every touched unit passes fdiff and `floatcheck.py`, `main.dol` force-relinks to
+the `build.sha1` SHA-1. What unlocked the script-handler family (unit_801F5334.c, 36 more): `Work8030CEA0` gained
+`x0`/`x4`, `x0a`, `xc`, `x818`-`x844` (`x820`/`x824` the loaded-resource pointer and count, `x830` a float), `xc4a`/`xc4b`,
+`xc68`/`xc70`, `xc84`/`xc88`, `x1568`, `x1878`, `x1914`/`x1918`; `fn_80211058`/`fn_802110E8` take `void *` for the script and work
+blocks; the agents' private `ReadInt` copies were dropped for the unit's.
+
+**106 matched in isolation but not merged** (struct or prototype views that still differ; for example `fn_8010A164`'s
+`Obj10A` against per-function task types, `lbl_8030A10C` and `lbl_80309DE4` rows in unit_80005B50.c, `Elem`/`Pool`/`KeySet`/`SaveData` tags,
+`ScrWord`-typed `ReadInt` variants, `lbl_8034752C` slot views in unit_80219378.c): fn_800079AC, fn_8000832C, fn_80008C68, fn_800091E0, fn_8000A118, fn_8000C9F8, fn_8000D734, fn_80010B64, fn_80010CF4, fn_80011208, fn_800117EC, fn_80014808, fn_80014D1C, fn_80015880, fn_80015EC8, fn_8001604C, fn_80016234, fn_80018178, fn_8001C474, fn_8001D41C, fn_8001F814, fn_8001FE44, fn_80020250, fn_800208F4, fn_80020B8C, fn_80021FCC, fn_80022850, fn_80028E28, fn_80029980, fn_801C0FE8, fn_801C1148, fn_801C1E48, fn_801CB744, fn_801CBE38, fn_801D150C, fn_801D1ED4, fn_801D4A2C, fn_801D7ED4, fn_801D8840, fn_801D8B94, fn_801DB2C8, fn_801DB818, fn_801DBA70, fn_801DDAB0, fn_801DE9BC, fn_801E13B0, fn_801E5608, fn_801F39EC, fn_801F4F54, fn_801F5100, fn_801F7958, fn_801F9454, fn_801FA060, fn_801FA4C0, fn_801FBD9C, fn_801FBF90, fn_801FCFF0, fn_801FD264, fn_801FD668, fn_801FE310, fn_801FE560, fn_801FE7A0, fn_801FE960, fn_801FF470, fn_801FF714, fn_801FF8D4, fn_801FFA60, fn_801FFC20, fn_80201458, fn_802015AC, fn_80205C24, fn_80205F14, fn_80209B94, fn_8020A584, fn_8020D2A8, fn_8020D488, fn_8020D668, fn_8020D848, fn_8020DA2C, fn_8020DBC4, fn_8020E984, fn_8020F278, fn_8020F998, fn_8020FB10, fn_8020FC7C, fn_8020FDE0, fn_802100C8, fn_80211298, fn_802150FC, fn_8021B4B4, fn_8021B91C, fn_8021BD7C, fn_8021F0EC, fn_80222224, fn_802234D4, fn_8022377C, fn_80224D08, fn_802250E4, fn_80225330, fn_80225CAC, fn_8022642C, fn_80226984, fn_80227268, fn_802285AC, fn_8022B318, fn_8022F408.
+
+**83 near misses** (mostly register allocation; a few need the Dolphin `__OSu8tof32`/`__OSf32tos16` fast casts added to
+`OSFastCast.h`: fn_8000B77C, fn_8023152C, fn_801D61F4, fn_801D6398): fn_8000C8AC, fn_80005B9C, fn_801DA51C, fn_801F2ED4, fn_8000F718, fn_801C2CF4, fn_801DFC5C, fn_80223A34, fn_80011694, fn_802109E8, fn_8022ACA8, fn_8023152C, fn_80009E5C, fn_80219834, fn_8000B77C, fn_80015138, fn_801F28CC, fn_80226EFC, fn_8001ECB4, fn_801FF210, fn_80224040, fn_801DEDC0, fn_801CB8E0, fn_80222C80, fn_8000C014, fn_80200634, fn_802295D0, fn_801D6398, fn_8020ED58, fn_8001D288, fn_801C153C, fn_801C6C7C, fn_80017B18, fn_80210B44, fn_801D61F4, fn_80213178, fn_80021934, fn_801D0BC0, fn_801FE06C, fn_80228C50, fn_801D7A90, fn_8023182C, fn_801F9EA8, fn_80230634, fn_80020094, fn_801F3CB0, fn_802241B0, fn_802273E0, fn_80016C54, fn_802009C4, fn_80231360, fn_802168CC, fn_80200460, fn_801C1364, fn_801DEBE4, fn_80207A40, fn_8021E75C, fn_802293E0, fn_800177C0, fn_801D184C, fn_801D20D8, fn_8021E94C, fn_80016E1C, fn_802007C0, fn_8020A734, fn_801F72F8, fn_80019B70, fn_800184F0, fn_8023114C, fn_80225958, fn_8022B4D8, fn_8020527C, fn_8000CCBC, fn_8021AF94, fn_8000B8E4, fn_8020A338, fn_80221AAC, fn_8020EAF4, fn_802001F8, fn_801CA66C, fn_801DAEB8, fn_80227AF0, fn_8000DB88.
+
+Notes: fn_8020A338 and fn_8020A734 differ only in string-pool offsets (they match inside the full unit); fn_801C2CF4 and
+fn_801C2E48 need one `goto` for the shared clear block; fn_801DB2C8 matches only with an integer-add cast. Per-function files
+are in `build/agents/t4_*/` (gitignored).

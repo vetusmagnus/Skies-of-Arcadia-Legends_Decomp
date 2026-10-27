@@ -18,6 +18,19 @@ extern s32 fn_801F4C24(s16 id);
 extern void fn_801F4E6C(s32 i, s16 v);
 extern void fn_801F4E38(s32 i, s16 v);
 extern void fn_801F4E04(s32 i, s16 v);
+typedef struct Info {
+    s16 id;
+    s16 cat;
+    s16 x4;
+    s16 x6;
+    s16 x8;
+    s16 xa;
+    s16 xc;
+    s16 xe;
+    s16 x10;
+    s16 x12;
+} Info;
+extern s16 fn_801EE344(s16 id, s32 stat);
 
 void fn_801C09A4(void)
 {
@@ -80,4 +93,56 @@ void fn_801C0AB4(s32 a, u8 i)
         fn_801F4E04((*(Party_801C0AB4**)&lbl_803471B8)->sheet->rows[i].slot, id);
         break;
     }
+}
+
+s32 fn_801C2E48(Info* o, s16 id) {
+    s32 cat;
+    if (id == -1) {
+        goto clear;
+    }
+    cat = fn_801F4C24(id);
+    switch (cat) {
+    case 4:
+    default:
+    clear:
+        o->cat = -1;
+        o->id = id;
+        o->x4 = -1;
+        o->x12 = 0;
+        o->x10 = 0;
+        o->xe = 0;
+        o->xc = 0;
+        o->xa = 0;
+        o->x8 = 0;
+        o->x6 = 0;
+        return 0;
+    case 0:
+    case 1:
+    case 2:
+        o->cat = cat;
+        o->id = id;
+        o->x4 = -1;
+        o->x6 = fn_801EE344(id, 0x10);
+        o->x8 = fn_801EE344(id, 0x11);
+        o->xa = fn_801EE344(id, 1);
+        o->xc = fn_801EE344(id, 0x12);
+        o->xe = fn_801EE344(id, 0x13);
+        o->x10 = fn_801EE344(id, 0x14);
+        o->x12 = fn_801EE344(id, 4);
+        break;
+    case 3:
+        o->cat = cat;
+        o->id = id;
+        break;
+    case 5:
+    case 6:
+        o->cat = cat;
+        o->id = id;
+        break;
+    case 7:
+        o->cat = cat;
+        o->id = id;
+        break;
+    }
+    return 1;
 }

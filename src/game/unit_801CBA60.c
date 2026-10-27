@@ -32,6 +32,8 @@ extern u32 strlen(const char*);
 extern void* fn_801E1BDC(s32 size);
 extern void fn_801DBE1C(const char*, ...);
 extern void fn_8025F120(char*, const char*);
+extern u32 lbl_80310B3C[0x356];
+extern u8 lbl_80310A1C[0x120];
 
 s32 fn_801CAE84(void) {
     return 1;
@@ -450,4 +452,14 @@ FioName* fn_801CC1B4(const char* name)
     }
     *pp = req;
     return n;
+}
+
+void fn_801CAF30(void) {
+    u32 i;
+    for (i = 0; i < 0x356; i++) {
+        lbl_80310B3C[i] = 0;
+    }
+    for (i = 0; i < 0x120; i++) {
+        lbl_80310A1C[i] = 0;
+    }
 }

@@ -563,6 +563,19 @@ extern void fn_80219C84(void);
 extern u8 lbl_802F8CF0[], lbl_802F8E80[], lbl_802F8D40[], lbl_802F8D90[];
 void fn_801D8840(Anim *a);
 f32 fn_8022975C(void *a, s32 b, s32 c, f32 x, f32 y, f32 z, f32 w);
+typedef struct Key {
+    f32 a[3];
+    u8 pad0c[0xc];
+    f32 b[3];
+    u8 pad24[0xc];
+    f32 c[4];
+    u8 pad40[0x10];
+} Key;
+/* 0x50 */
+typedef struct KeySet {
+    Key* keys;
+    s32 count;
+} KeySet;
 
 void fn_801D1AE8(void) {
     VISetNextFrameBuffer(lbl_803476AC);
@@ -2557,4 +2570,133 @@ void fn_801D6998(DataTable *t, s32 *data)
     t->work = fn_801E1C7C(t->count * 4);
     ClearWork(t);
     Relocate(t);
+}
+
+s32 fn_801D3360(NJS_POINT3* p, Node_801D30DC* n, Hit* out)
+{
+    Mesh* m;
+    s32 tri;
+    f32 *va, *vb, *vc;
+    s32 cnt;
+    Vtx* r;
+    f32* base;
+    s32 hit;
+    f32 loc[2];
+    NJS_POINT3 q;
+
+    hit = 0;
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    njTranslateEx(n->pos);
+    njRotateEx(n->rot, 0);
+    njScaleEx(n->scl);
+    m = n->mesh;
+    if (m != 0) {
+        cnt = m->count;
+        if (cnt > 0) {
+            njPushMatrixEx();
+            fn_80286EE8();
+            fn_8028B498();
+            njInvertMatrix(0);
+            njCalcPoint(0, p, &q);
+            njPopMatrixEx();
+            loc[0] = q.x - m->cx;
+            loc[1] = q.z - m->cz;
+            if (m->r2 >= loc[0] * loc[0] + loc[1] * loc[1]) {
+                loc[0] = q.x;
+                loc[1] = q.z;
+                r = (Vtx*)((u8*)m + 0x58);
+                base = m->verts;
+                do {
+                    tri = r->idx - 2;
+                    r++;
+                    do {
+                        s16 fl = r[2].flag;
+                        s32 i1 = r[1].idx;
+                        s32 i0 = r[0].idx;
+                        s32 i2 = r[2].idx;
+                        vb = (f32*)((u8*)base + (i1 << 2));
+                        if (fl < 0) {
+                            va = (f32*)((u8*)base + (i2 << 2));
+                            vc = (f32*)((u8*)base + (i0 << 2));
+                        } else {
+                            va = (f32*)((u8*)base + (i0 << 2));
+                            vc = (f32*)((u8*)base + (i2 << 2));
+                        }
+                        hit = fn_801D48BC(loc, va, vb, vc);
+                        if (hit != 0) {
+                            if (out != 0) {
+                                njCalcPoint(0, (NJS_POINT3*)va, &out->a);
+                                njCalcPoint(0, (NJS_POINT3*)vb, &out->b);
+                                njCalcPoint(0, (NJS_POINT3*)vc, &out->c);
+                                out->id = n->id;
+                                out->flag = r[2].flag & 0x7FFF;
+                            }
+                            break;
+                        }
+                        r++;
+                    } while (--tri > 0);
+                    r += 2;
+                } while (--cnt > 0 && hit == 0);
+            }
+        }
+    }
+    if (n->child != 0 && hit == 0) {
+        hit = fn_801D3360(p, n->child, out);
+    }
+    njPopMatrixEx();
+    if (n->next != 0 && hit == 0) {
+        hit = fn_801D3360(p, n->next, out);
+    }
+    return hit;
+}
+
+s32 fn_801DE6F0(f32* a, f32* b, f32* c, f32 t, KeySet* ks) {
+    Key* k = ks->keys;
+    s32 n = ks->count;
+    s32 i;
+    f32 frac;
+    if ((f32)(n - 1) >= t) {
+        i = (s32)t;
+        k += i;
+        frac = t - (f32)i;
+        if (frac == 0.0f) {
+            if (a != NULL) {
+                a[0] = k->a[0];
+                a[1] = k->a[1];
+                a[2] = k->a[2];
+            }
+            if (b != NULL) {
+                b[0] = k->b[0];
+                b[1] = k->b[1];
+                b[2] = k->b[2];
+            }
+            if (c != NULL) {
+                c[0] = k->c[0];
+                c[1] = k->c[1];
+                c[2] = k->c[2];
+                c[3] = k->c[3];
+            }
+        } else {
+            if (a != NULL) {
+                a[0] = k->a[0] + frac * (k[1].a[0] - k->a[0]);
+                a[1] = k->a[1] + frac * (k[1].a[1] - k->a[1]);
+                a[2] = k->a[2] + frac * (k[1].a[2] - k->a[2]);
+            }
+            if (b != NULL) {
+                b[0] = k->b[0] + frac * (k[1].b[0] - k->b[0]);
+                b[1] = k->b[1] + frac * (k[1].b[1] - k->b[1]);
+                b[2] = k->b[2] + frac * (k[1].b[2] - k->b[2]);
+            }
+            if (c != NULL) {
+                c[0] = k->c[0] + frac * (k[1].c[0] - k->c[0]);
+                c[1] = k->c[1] + frac * (k[1].c[1] - k->c[1]);
+                c[2] = k->c[2] + frac * (k[1].c[2] - k->c[2]);
+                c[3] = k->c[3] + frac * (k[1].c[3] - k->c[3]);
+            }
+        }
+        return 1;
+    }
+    return 0;
 }

@@ -3,6 +3,7 @@
 #include "game/save_8030B7F4.h"
 #include "game/drawstate.h"
 #include "game/stat_8030B4D4.h"
+#include "ninja.h"
 extern void fn_802193BC(s32 a, s32 b);
 extern s32 fn_801D168C(void);
 extern void fn_801D150C(s32 v);
@@ -402,6 +403,169 @@ void fn_80221D04(f32* out, f32* a, f32* b);
 void fn_80221AAC(f32* out, f32* a, f32* b);
 void fn_802205E0(f32* out, f32* a, f32* b);
 void fn_80221328(f32* out, f32* a, f32* b);
+typedef struct { f32 x, y; } NJS_POINT2;
+typedef struct {
+    NJS_POINT2* p;
+    u32* col;
+    NJS_POINT2* tex;
+    u32 num;
+} NJS_POINT2COL;
+extern f32 fn_801DBD9C(f32 z);
+extern void fn_8000610C(NJS_POINT2COL* p, s32 n, s32 attr);
+typedef struct { s16 x, y; } Pt;
+typedef struct {
+    Pt a;       /* 0x00 */
+    Pt b;       /* 0x04 */
+    s16 r[4];   /* 0x08 */
+    s16 h10;    /* 0x10 */
+    s16 h12;    /* 0x12 */
+} Box;
+typedef struct {
+    u8 pad0[4];
+    s32 w4;
+    s32 w8;
+    u8 padc[0x24 - 0xc];
+    s32 w24;
+    Box* box;   /* 0x28 */
+    Box b;      /* 0x2c */
+} Obj_8021EF80;
+typedef union Shape_802226A8 {
+    s32 kind;
+    struct { /* kind 0: eight points */
+        s32 kind;
+        NJS_POINT3 src[8];
+        NJS_POINT3 dst[8];
+        u8 end[4];
+    } box;
+    struct { /* kind 1: sphere */
+        s32 kind;
+        NJS_POINT3 c;
+        f32 r;
+        NJS_POINT3 wc;
+        f32 wr;
+        u8 end[4];
+    } sph;
+    struct { /* kind 2: segment */
+        s32 kind;
+        NJS_POINT3 a;
+        NJS_POINT3 b;
+        f32 r;
+        NJS_POINT3 wa;
+        NJS_POINT3 wb;
+        f32 wr;
+        u8 end[4];
+    } seg;
+} Shape_802226A8;
+typedef struct { Angle x, y, z; } Ang3;
+typedef struct {
+    u8 pad0[0x1c];
+    NJS_POINT3* pos;   /* 0x1c */
+    NJS_POINT3* scale; /* 0x20 */
+    Ang3* ang;         /* 0x24 */
+    NJS_POINT3* pos2;  /* 0x28 */
+    Ang3* ang2;        /* 0x2c */
+    NJS_POINT3 oPos;   /* 0x30 */
+    NJS_POINT3 oScale; /* 0x3c */
+    Ang3 oAng;         /* 0x48 */
+    NJS_POINT3 oPos2;  /* 0x54 */
+    Ang3 oAng2;        /* 0x60 */
+} Obj_80223628;
+extern void njInvertMatrix(NJS_MATRIX m);
+typedef struct V3p {
+    f32 x, y, z;
+} V3p;
+typedef struct A3 {
+    Angle x, y, z;
+} A3;
+typedef struct Shape_80224F28 {
+    void *p0;
+    s16 kind;
+} Shape_80224F28;
+typedef struct Xf_80224F28 {
+    u8 pad0[8];
+    Shape_80224F28 *shape;
+    u8 padc[0x10];
+    V3p *pos;
+    V3p *scale;
+    A3 *rot;
+    V3p *pos2;
+    A3 *rot2;
+} Xf_80224F28;
+typedef struct Cmp {
+    u8 pad0[0x24];
+    u16 id;
+    u8 pad26[0xa];
+    u16 flags;
+} Cmp;
+extern s32 fn_801D38D4(s32, void *, Cmp *);
+extern s32 fn_801D3574(s32, void *, Cmp *);
+extern s32 fn_801D3BC8(s32, void *, Cmp *);
+extern s32 fn_801D3360(s32, void *, Cmp *);
+extern s32 fn_801D30DC(s32, void *, Cmp *);
+typedef struct Item {
+    s32 active;
+    u8 pad4[4];
+    f32 cur;
+    f32 *target;
+    u8 pad10[0xc];
+    f32 init;
+    u8 pad20[0x3c];
+} Item;
+typedef struct Anim_8022842C {
+    u32 flags;
+    u8 pad4[2];
+    s16 len;
+    f32 t;
+    f32 dt;
+    u8 pad10[4];
+    s16 count;
+    u8 pad16[2];
+    Item *items;
+} Anim_8022842C;
+extern void fn_802285AC(Item *, f32);
+typedef struct Cfg {
+    f32 a;
+    f32 b;
+    f32 c;
+    f32 d;
+    f32 e;
+} Cfg;
+typedef struct Sub {
+    u8 pad0[0x34];
+    f32 f34;
+    f32 f38;
+    f32 f3c;
+    f32 f40;
+    u8 pad44[0x50 - 0x44];
+} Sub;
+typedef struct Obj_80229BEC {
+    u8 pad0[0xf4];
+    u16 state;
+    u8 padf6[2];
+    u8 prev;
+    u8 cur;
+    s16 timer;
+    u8 padfc[4];
+    f32 fade;
+    u8 pad104[0x2b8 - 0x104];
+    Sub sub;
+    Sub sub2;
+} Obj_80229BEC;
+extern Cfg lbl_802F915C[];
+extern f32 lbl_8034C648;
+extern f32 lbl_8034C688;
+extern f32 lbl_8034C68C;
+extern void fn_801D89D4(void *p, s32 a, s32 b, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6, f32 f7, f32 f8);
+extern void fn_801D8AB4(void *p, s32 a, s32 b, f32 f1, f32 f2);
+typedef struct Spec {
+    u8 pad0[0x3c];
+    f32 amp1;
+    s32 ang1;
+    f32 amp2;
+    s32 ang2;
+} Spec;
+extern void njCalcVector(NJS_MATRIX m, NJS_POINT3 *v, NJS_POINT3 *out);
+extern f32 njCos(Angle a);
 
 void fn_80219378(s32 a)
 {
@@ -2211,4 +2375,319 @@ s32 fn_8021A1C4(s8* out)
         }
     }
     return ret;
+}
+
+void fn_8021C36C(s16 x0, s16 y0, s16 x1, s16 y1, u32* colors, f32 z)
+{
+    NJS_POINT2COL p2c;
+    u32 col[4];
+    NJS_POINT2 pts[4];
+    p2c.p = pts;
+    p2c.col = col;
+    p2c.tex = NULL;
+    p2c.num = 4;
+    p2c.p[0].x = x0;
+    p2c.p[0].y = y0;
+    p2c.col[0] = colors[0];
+    p2c.p[1].x = x1;
+    p2c.p[1].y = y0;
+    p2c.col[1] = colors[1];
+    p2c.p[2].x = x1;
+    p2c.p[2].y = y1;
+    p2c.col[2] = colors[2];
+    p2c.p[3].x = x0;
+    p2c.p[3].y = y1;
+    p2c.col[3] = colors[3];
+    fn_801DBD9C(z);
+    fn_8000610C(&p2c, 4, 0);
+}
+
+void fn_8021C4D4(s16 x0, s16 y0, s16 x1, s16 y1, u32 color, f32 z)
+{
+    NJS_POINT2COL p2c;
+    u32 col[4];
+    NJS_POINT2 pts[4];
+    p2c.p = pts;
+    p2c.col = col;
+    p2c.tex = NULL;
+    p2c.num = 4;
+    p2c.p[0].x = x0;
+    p2c.p[0].y = y0;
+    p2c.col[0] = color;
+    p2c.p[1].x = x1;
+    p2c.p[1].y = y0;
+    p2c.col[1] = color;
+    p2c.p[2].x = x1;
+    p2c.p[2].y = y1;
+    p2c.col[2] = color;
+    p2c.p[3].x = x0;
+    p2c.p[3].y = y1;
+    p2c.col[3] = color;
+    fn_801DBD9C(z);
+    fn_8000610C(&p2c, 4, 0);
+}
+
+void fn_8021EF80(Obj_8021EF80* o, Pt* p, s16* r, s16 mode)
+{
+    o->b.a.x = p->x;
+    o->b.a.y = p->y;
+    switch (mode) {
+    default:
+    case 0:
+        o->b.b.x = p->x / 2;
+        o->b.b.y = p->y / 2;
+        break;
+    case 1:
+        o->b.b.x = 0;
+        o->b.b.y = 0;
+        break;
+    case 2:
+        o->b.b.x = p->x;
+        o->b.b.y = 0;
+        break;
+    case 3:
+        o->b.b.x = 0;
+        o->b.b.y = p->y;
+        break;
+    case 4:
+        o->b.b.x = p->x;
+        o->b.b.y = p->y;
+        break;
+    case 5:
+        o->b.b.x = p->x / 2;
+        o->b.b.y = 0;
+        break;
+    case 6:
+        o->b.b.x = p->x / 2;
+        o->b.b.y = p->y;
+        break;
+    case 7:
+        o->b.b.x = 0;
+        o->b.b.y = p->y / 2;
+        break;
+    case 8:
+        o->b.b.x = p->x;
+        o->b.b.y = p->y / 2;
+        break;
+    }
+    o->b.r[0] = r[0];
+    o->b.r[1] = r[1];
+    o->b.r[2] = r[2];
+    o->b.r[3] = r[3];
+    o->b.h10 = o->w8;
+    o->b.h12 = 0;
+    o->w24 = o->w4;
+    o->box = &o->b;
+}
+
+static inline s32 KindOf(Shape_802226A8* s)
+{
+    return s->kind;
+}
+
+void* fn_802226A8(NJS_MATRIX m, NJS_POINT3* scale, void* p)
+{
+    switch (KindOf(p)) {
+    case 0: {
+        Shape_802226A8* q = p;
+        if (scale != 0) {
+            njScale(m, scale->x, scale->y, scale->z);
+        }
+        njCalcPoint(m, &q->box.src[0], &q->box.dst[0]);
+        njCalcPoint(m, &q->box.src[1], &q->box.dst[1]);
+        njCalcPoint(m, &q->box.src[2], &q->box.dst[2]);
+        njCalcPoint(m, &q->box.src[3], &q->box.dst[3]);
+        njCalcPoint(m, &q->box.src[4], &q->box.dst[4]);
+        njCalcPoint(m, &q->box.src[5], &q->box.dst[5]);
+        njCalcPoint(m, &q->box.src[6], &q->box.dst[6]);
+        njCalcPoint(m, &q->box.src[7], &q->box.dst[7]);
+        p = q->box.end;
+        break;
+    }
+    case 1: {
+        Shape_802226A8* q = p;
+        f32 k;
+        njCalcPoint(m, &q->sph.c, &q->sph.wc);
+        if (scale != 0) {
+            k = scale->x;
+            if (k < scale->y) {
+                k = scale->y;
+            }
+            if (k < scale->z) {
+                k = scale->z;
+            }
+        } else {
+            k = 1.0f;
+        }
+        q->sph.wr = q->sph.r * k;
+        p = q->sph.end;
+        break;
+    }
+    case 2: {
+        Shape_802226A8* q = p;
+        njCalcPoint(m, &q->seg.a, &q->seg.wa);
+        njCalcPoint(m, &q->seg.b, &q->seg.wb);
+        q->seg.wr = q->seg.r;
+        p = q->seg.end;
+        break;
+    }
+    }
+    return p;
+}
+
+void fn_80223628(NJS_POINT3* out, NJS_POINT3* in, Obj_80223628* o)
+{
+    NJS_MATRIX m;
+    NJS_POINT3 p;
+    njUnitMatrix(m);
+    njTranslate(m, o->oPos.x, o->oPos.y, o->oPos.z);
+    njRotateZXY(m, o->oAng.x, o->oAng.y, o->oAng.z);
+    njScale(m, o->oScale.x, o->oScale.y, o->oScale.z);
+    njTranslate(m, o->oPos2.x, o->oPos2.y, o->oPos2.z);
+    njRotateZXY(m, o->oAng2.x, o->oAng2.y, o->oAng2.z);
+    njInvertMatrix(m);
+    njCalcPoint(m, in, &p);
+    njUnitMatrix(m);
+    njTranslate(m, o->pos->x, o->pos->y, o->pos->z);
+    njRotateZXY(m, o->ang->x, o->ang->y, o->ang->z);
+    njScale(m, o->scale->x, o->scale->y, o->scale->z);
+    njTranslate(m, o->pos2->x, o->pos2->y, o->pos2->z);
+    njRotateZXY(m, o->ang2->x, o->ang2->y, o->ang2->z);
+    njCalcPoint(m, &p, out);
+}
+
+s32 fn_80224F28(Xf_80224F28 *x, s32 b, Cmp *c) {
+    Shape_80224F28 *sh = x->shape;
+    s32 r;
+
+    if (sh == 0) return 0;
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    njUnitMatrix(0);
+    njTranslate(0, x->pos->x, x->pos->y, x->pos->z);
+    njRotateZXY(0, x->rot->x, x->rot->y, x->rot->z);
+    njScale(0, x->scale->x, x->scale->y, x->scale->z);
+    njTranslate(0, x->pos2->x, x->pos2->y, x->pos2->z);
+    njRotateZXY(0, x->rot2->x, x->rot2->y, x->rot2->z);
+    switch (sh->kind) {
+    case 1:
+        if (c->flags & 1) {
+            r = fn_801D38D4(b, sh->p0, c);
+        } else if (c->flags & 4) {
+            r = fn_801D3574(b, sh->p0, c);
+        } else {
+            r = fn_801D3BC8(b, sh->p0, c);
+        }
+        break;
+    case 2:
+        if (!(c->flags & 1)) {
+            r = fn_801D3360(b, sh->p0, c);
+        } else {
+            r = fn_801D30DC(b, sh->p0, c);
+        }
+        break;
+    default:
+        r = 0;
+        break;
+    }
+    njPopMatrixEx();
+    if (r != 0) c->id = fn_80223228(c->id);
+    return r;
+}
+
+s32 fn_8022842C(Anim_8022842C *a) {
+    f32 r;
+    s32 i;
+    Item *it;
+    s32 n;
+
+    if (a->t > a->len) return -1;
+    a->t = a->t + a->dt;
+    n = a->count;
+    r = a->t / a->len;
+    if (n < 0) return -1;
+    it = a->items;
+    for (i = 0; i < n; i++, it++) {
+        if (it->active != 0) fn_802285AC(it, r);
+    }
+    if (a->t >= a->len) {
+        a->flags |= 2;
+        it = a->items;
+        for (i = 0; i < n; i++, it++) {
+            if (it->active != 0) {
+                it->cur = it->init;
+                if (it->target != 0) *it->target = it->cur;
+            }
+        }
+        return 0;
+    }
+    return 1;
+}
+
+void fn_80229BEC(Obj_80229BEC *o) {
+    u32 lim[5] = {0, 0x30c, 0xf0, 0x30c, 0x10e};
+    Sub *s;
+    s32 i;
+    switch (o->state) {
+    case 0:
+        if (o->timer < lim[o->cur]) {
+            o->timer++;
+        } else {
+            o->fade = lbl_8034C648;
+            o->prev = o->cur;
+            if (o->cur < 4) {
+                o->cur++;
+            } else {
+                o->cur = 1;
+            }
+            o->timer = 0;
+            o->state = 1;
+            s = &o->sub;
+            i = (u8)(o->cur - 1);
+            fn_801D89D4(s, 200, 10, s->f34, s->f38, s->f3c, s->f40, lbl_802F915C[i].a, lbl_802F915C[i].b, lbl_802F915C[i].c, lbl_802F915C[i].d);
+            fn_801D8AB4(&s[1], 0x104, 0x1e, s[1].f34, lbl_802F915C[i].e);
+        }
+        break;
+    case 1:
+        if (o->fade > lbl_8034C688) {
+            o->fade -= lbl_8034C68C;
+        } else {
+            o->state = 0;
+        }
+        break;
+    default:
+        o->state = 0;
+        break;
+    }
+}
+
+void fn_8022D1F8(NJS_POINT3 *out, Spec *s, Angle *rot) {
+    NJS_MATRIX m;
+    NJS_POINT3 v;
+    NJS_POINT3 r;
+    f32 k;
+    if (0.0f != s->amp1 || 0.0f != s->amp2) {
+        njUnitMatrix(m);
+        njRotateXYZ(m, rot[0], rot[1], rot[2]);
+        v.z = 0.0f;
+        if (0.0f != s->amp1) {
+            v.x = 0.0f;
+            v.y = 1.0f;
+            njCalcVector(m, &v, &r);
+            k = s->amp1 * njCos(s->ang1);
+            out->x += r.x * k;
+            out->y += r.y * k;
+            out->z += r.z * k;
+        }
+        if (0.0f != s->amp2) {
+            v.y = 0.0f;
+            v.x = 1.0f;
+            njCalcVector(m, &v, &r);
+            k = s->amp2 * njCos(s->ang2);
+            out->x += r.x * k;
+            out->y += r.y * k;
+            out->z += r.z * k;
+        }
+    }
 }

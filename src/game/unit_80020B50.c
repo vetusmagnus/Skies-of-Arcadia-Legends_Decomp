@@ -1,5 +1,6 @@
 #include "types.h"
 #include "ninja.h"
+#include "game/task.h"
 typedef struct Inner { u8 pad0[0x6]; s16 f6; s16 f8; u8 pad1[0xa]; s16 f14; s16 f16; u8 pad2[0x68-0x18]; float f68; u8 pad3[0xec-0x6c]; u32 fec; u32 ff0; } Inner;
 typedef struct Mid { u8 pad[0x4c]; Inner *inner; } Mid;
 typedef struct Top { u8 pad[0x24]; Mid *mid; } Top;
@@ -106,6 +107,64 @@ typedef struct Wk { u8 pad_00[0x4c]; Dat *x4c; } Wk;
 typedef struct Tsk { u8 pad_00[0x24]; Wk *work; } Tsk;
 extern s32 fn_80020470(Tsk *t, s16 st);
 extern s16 fn_80020094(Wk *w, s16 a, s16 b, s16 c);
+typedef struct Rec_80021AE0 { u8 pad[0x30]; struct Std_80021AE0* std; } Rec_80021AE0;
+typedef struct Ent_80021AE0 { s16 id; s16 type; u8 pad[0x14]; } Ent_80021AE0;
+typedef struct Std_80021AE0 {
+    u8 pad0[8];
+    s32 count;
+    Ent_80021AE0* ents;
+    s16 s10;
+    s16 s12;
+    s32 w14;
+    s32 w18;
+    s32 w1c;
+} Std_80021AE0;
+typedef struct Ref_80021AE0 { Rec_80021AE0* rec; void* out; } Ref_80021AE0;
+typedef struct Out { u8 pad[0x50]; } Out;
+extern Rec_80021AE0* fn_80074E2C(char* a, char* b, Out* out, s32 id, s32 kind);
+extern s32 fn_8006EAB4(Rec_80021AE0* r);
+extern char* fn_8025F120(char* dst, const char* src);
+extern char* fn_8025F0B0(char* dst, const char* src);
+extern int fn_8025CB24(char*, const char*, ...);
+extern void fn_80061048(char* s);
+extern void* fn_801CC69C(char* name);
+extern void fn_801CC608(void* h, void* buf, s32 size);
+extern void fn_801CC65C(void* h);
+extern void fn_80009860(Ref_80021AE0* r, Std_80021AE0* s);
+extern void fn_800091A4(Std_80021AE0* s);
+extern void fn_80009750(char* name, char* path, Std_80021AE0** slot);
+typedef struct Info { s16 id; u8 pad2[2]; f32 t; } Info;
+typedef struct Res { s32 w0; u32 w4; } Res;
+typedef struct Res10 { u8 pad[8]; void* p8; } Res10;
+typedef struct Work21CBC {
+    void* w0;
+    u8 pad4[4];
+    void* w8;
+    u8 padC[4];
+    Res10* w10;
+    u8 pad14[2];
+    s16 s16_;
+    u8 pad18[4];
+    f32 px, py, pz;
+    s32 rx, ry, rz;
+    f32 sx, sy, sz;
+    u8 pad40[4];
+    u8 b44;
+    u8 pad45[7];
+    Info* info;
+} Work21CBC;
+extern void fn_80299040(void* p);
+extern void njPushMatrixEx(void);
+extern void njPopMatrixEx(void);
+extern void fn_80286EE8(void);
+extern void fn_8028B498(void);
+extern void njTranslate(NJS_MATRIX m, f32 x, f32 y, f32 z);
+extern void njScale(NJS_MATRIX m, f32 x, f32 y, f32 z);
+extern s32 fn_8006CEEC(void* a, Res** out, s32 b, s32 c);
+extern void fn_80035380(void* a, Res* r, f32 t, s32 b);
+extern void fn_80035140(void* a, s32 b);
+extern void fn_8007E264(f32* p, f32 a, f32 b);
+extern void fn_801E17E0(void* p);
 
 void fn_80020B50(Top *t, s16 *out1, s16 *out2) {
   Inner *i = t->mid->inner;
@@ -483,6 +542,93 @@ Obj* fn_80023FEC(s16 a) {
         break;
     default:
         fn_801D68C4(lbl_8034762C, 7);
+        break;
+    }
+}
+
+void fn_80021AE0(char* path, char* name) {
+    Ref_80021AE0 ref;
+    Out out;
+    void* h;
+    Ent_80021AE0* ents;
+    Std_80021AE0* std;
+
+    ref.rec = fn_80074E2C(path, name, &out, 0, 3);
+    if (ref.rec != 0) {
+        ref.out = &out;
+        if (fn_8006EAB4(ref.rec) != 0) {
+            char buf10[0x40];
+            char buf50[0x80];
+            fn_8025F120(buf10, name);
+            fn_80061048(buf10);
+            if (path[0] != '/') {
+                fn_8025F120(buf50, "/");
+                fn_8025F0B0(buf50, path);
+                fn_8025F0B0(buf50, buf10);
+                fn_8025F0B0(buf50, ".STD");
+            } else {
+                fn_8025CB24(buf50, "%s%s.STD", path, buf10);
+            }
+            std = fn_801E1C7C(0x20);
+            h = fn_801CC69C(buf50);
+            fn_801CC608(h, std, 0x10);
+            ents = fn_801E1C7C((std->count + 1) * 0x18);
+            fn_801CC608(h, ents, std->count * 0x18);
+            ents[std->count].id = 0x26;
+            ents[std->count].type = 3;
+            fn_801CC65C(h);
+            std->ents = ents;
+            std->s10 = -1;
+            std->s12 = -1;
+            std->w14 = 0;
+            std->w18 = 0;
+            std->w1c = 0;
+            fn_80009860(&ref, std);
+            fn_800091A4(std);
+            ref.rec->std = std;
+            fn_8025F0B0(buf10, "0.STD");
+            fn_80009750(path, buf10, &ref.rec->std);
+        } else {
+            fn_80009860(&ref, ref.rec->std);
+            fn_800091A4(ref.rec->std);
+        }
+    }
+}
+
+void fn_80021CBC(Task* task) {
+    Work21CBC* w = task->work;
+    Info* info = w->info;
+    Res* r;
+
+    switch (task->state) {
+    case 0:
+        task->state = 1;
+        break;
+    case 1:
+        fn_80299040(w->w8);
+        njPushMatrixEx();
+        fn_80286EE8();
+        fn_8028B498();
+        njTranslate(0, w->px, w->py, w->pz);
+        njRotateXYZ(0, (Angle)(w->rx * 182.04445f), (Angle)(w->ry * 182.04445f), (Angle)(w->rz * 182.04445f));
+        njScale(0, w->sx, w->sy, w->sz);
+        if (fn_8006CEEC(w->w10->p8, &r, info->id, w->s16_)) {
+            fn_80035380(w->w0, r, info->t, w->b44);
+        } else {
+            fn_80035140(w->w0, w->b44);
+        }
+        fn_8007E264(&w->py, w->px, w->pz);
+        njPopMatrixEx();
+        if (info != 0) {
+            info->t += 1.0f;
+            if (info->t >= (f32)r->w4) {
+                info->t = 0.0f;
+            }
+        }
+        break;
+    case 2:
+        fn_801E17E0(info);
+        task->flags |= 0x40;
         break;
     }
 }

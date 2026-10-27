@@ -851,6 +851,58 @@ typedef struct Wk1E_8001E238 {
 typedef struct Tk1E_8001E238 { u8 pad00[0x24]; Wk1E_8001E238 *work; } Tk1E_8001E238;
 typedef struct Wk_80014BA8 { u8 pad[0x4c]; u8* x4c; } Wk_80014BA8;
 extern void fn_8002923C(s8 id, u16 mask, s32 c);
+typedef struct ArcInfo {
+    s32 x0;
+    s32 x4;
+    u8 pad8[8];
+    s32 x10;
+    s32 x14;
+} ArcInfo;
+typedef struct ArcSlot {
+    ArcInfo* info;
+    s32 x4;
+    s32 x8;
+} ArcSlot;
+typedef struct ArcSet {
+    ArcSlot* slots;
+} ArcSet;
+typedef struct ArcHdr {
+    s32 x0;
+    s16 x4;
+    s16 x6;
+} ArcHdr;
+extern void fn_80298E48(void);
+extern s32 fn_80297558(ArcSet* set, s32 idx, u32* a, s32* b);
+extern s32 fn_80298798(ArcHdr* hdr, s32* c, ArcInfo* info);
+extern s32 fn_80298A04(ArcSet* set, s32 idx, s32 c, s32 b, ArcHdr* hdr, s32* out);
+extern s32 fn_80298BF8(s32 out, s32 x);
+extern void fn_80298BCC(s32 out);
+typedef struct Fn108EC {
+    u8 pad0[0x1c];
+    u32 flags;
+    u8 pad1[0x28 - 0x20];
+    s16 stat[6];
+} Fn108EC;
+extern s32 fn_8001604C(void* t, s8* arr, s32 a, s32 b);
+extern s32 fn_80016234(void* t, s8 flag, s32 a, s32 b, s32 c);
+extern s32 fn_80015EC8(void* t, s8* arr, s8 flag);
+typedef struct { f32 x, y, z; } V3;
+typedef struct F163A4Unit {
+    s8 x0;
+    u8 pad1[3];
+    s8 x4;
+} F163A4Unit;
+typedef struct F163A4Work {
+    u8 pad0[0x4c];
+    F163A4Unit* unit;
+} F163A4Work;
+typedef struct F163A4Task {
+    u8 pad0[0x24];
+    F163A4Work* wk;
+} F163A4Task;
+extern void fn_8001E6DC(V3* out, s8 v);
+extern s32 fn_80018398(V3* v, s32 a);
+extern s32 fn_8001D944(s8 id, void* t);
 
 void* fn_80005B50(void* heap, u32 size) {
     void* p = fn_80005B9C(heap);
@@ -3230,4 +3282,151 @@ void fn_80014BA8(void) {
             }
         }
     }
+}
+
+s32 fn_8000785C(ArcSet* set, s32 idx) {
+    ArcHdr hdr;
+    s32 c;
+    u32 a;
+    s32 b;
+    s32 out;
+    s32 r;
+    s32 x;
+    s32 magic;
+    ArcInfo* info;
+
+    fn_80298E48();
+    r = fn_80297558(set, idx, &a, &b);
+    if (r != 0) return r;
+    x = fn_80298798(&hdr, &c, (ArcInfo*)set->slots[idx].info);
+    if (x == 0) {
+        x = fn_80298798(&hdr, &c, (ArcInfo*)set->slots[idx].info->x0);
+        if (x == 0) {
+            info = set->slots[idx].info;
+            hdr.x4 = info->x10;
+            hdr.x6 = info->x14;
+            hdr.x0 = info->x4;
+            x = info->x0;
+        } else {
+            magic = *(s32*)set->slots[idx].info->x0;
+        }
+    } else {
+        magic = *(s32*)set->slots[idx].info;
+    }
+    if (magic == 0x47434958) {
+        if (a != -1) c = a;
+        r = fn_80298A04(set, idx, c, b, &hdr, &out);
+        if (r != 0) return r;
+        if (fn_80298BF8(out, x) < 0) {
+            fn_80298BCC(out);
+            return -1;
+        }
+    } else {
+        return -1;
+    }
+    return 1;
+}
+
+s16 fn_800108EC(s32 a, s32 b, s32 unused, Fn108EC* c) {
+    f32 x = a;
+    f32 y;
+    s32 v;
+    if (x < 0.0f) {
+        x = 0.0f;
+    }
+    y = x;
+    x *= 0.975f;
+    y *= 0.05f;
+    x += y * (0.000030517578f * fn_8025ECC4());
+    if ((fn_8025ECC4() & 7) == 0) {
+        x += 1.0f;
+    }
+    if (b <= 5) {
+        x *= c->stat[b];
+        x /= 10.0f;
+    }
+    v = (s16)x;
+    if (c->flags & 1) {
+        v = (s16)(x / 2);
+    }
+    if (v >= 10000) {
+        v = 9999;
+    }
+    return v;
+}
+
+s32 fn_80015D78(void* t, s32 id, s32 p5, s32 p6, s32 p7, s16 mode) {
+    s8 arr[14];
+    s8 i;
+    for (i = 0; i < 14; i++) {
+        arr[i] = -1;
+    }
+    switch (mode) {
+    case 0:
+        fn_8001604C(t, arr, p5, 2);
+        break;
+    case 1:
+        return fn_80016234(t, 0, id, p6, p7);
+    case 2:
+        return fn_80016234(t, 1, id, p6, p7);
+    case 3:
+        fn_80015EC8(t, arr, 0);
+        break;
+    }
+    for (i = 0; i < 14; i++) {
+        if (arr[i] == (s16)id) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+s32 fn_800163A4(F163A4Task* t, s8 flag, s8 mode, s16 want, s16 cols, s16 rows) {
+    F163A4Unit* u = t->wk->unit;
+    V3 v;
+    f32 step;
+    f32 x0;
+    s8 j;
+    s8 i;
+    s32 id;
+    s32 sel;
+    if (u->x0 == want) {
+        return 0;
+    }
+    if (flag != 0) {
+        sel = u->x4;
+    } else {
+        sel = u->x0;
+    }
+    fn_8001E6DC(&v, sel);
+    step = 15.0f;
+    v.x = v.x - step * (cols / 2);
+    x0 = v.x;
+    v.z = v.z - step * (rows / 2);
+    for (i = 0; i < rows; i++) {
+        for (j = 0; j < cols; j++) {
+            id = fn_80018398(&v, 1);
+            if ((s8)id >= 0 && (s8)id < 12 && (s8)id == want) {
+                return 1;
+            }
+            v.x = v.x + step;
+        }
+        v.x = x0;
+        v.z = v.z + step;
+    }
+    switch (mode) {
+    default:
+        return 0;
+    case 1:
+        if (fn_8001D944(want, t) == 0) {
+            return 0;
+        }
+        break;
+    case 2:
+        if (fn_8001D944(want, t) != 0) {
+            return 0;
+        }
+        break;
+    }
+    return 1;
 }

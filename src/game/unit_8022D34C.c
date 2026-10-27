@@ -1,4 +1,5 @@
 #include "types.h"
+#include <dolphin/gx.h>
 typedef struct {
     u8 pad[0x4c];
     s32 a;
@@ -36,6 +37,19 @@ typedef struct Rng {
 typedef struct { u8 pad[4]; void* x4; } Src;
 typedef struct { s16 x0; s16 x2; s16 x4; u8 pad6[2]; s16* x8; } Out;
 extern s32 fn_80230D10(u8 id, Src* s, s16** out);
+extern void fn_80230BD4(u8 id, void *node, u32 **out, u16 idx);
+#define STEP(n)                  \
+    p += (n);                    \
+    count++;                     \
+    if (dst != 0) {              \
+        if (dir) {               \
+            *p = *dst;           \
+        } else {                 \
+            *dst = *p;           \
+        }                        \
+        dst++;                   \
+    }
+#define STEP_8022E4CC(n)                              q = (p += (n));                          if (dir == 0) {                              if (*q != cmp) {                             *q = val;                            }                                    } else {                                     *q = val;                            }
 
 void fn_8022D34C(s32 a, f32 b) {
     if (a > 0) {
@@ -257,4 +271,141 @@ s32 fn_802301A0(Src* src, Out* out) {
     p++;
     out->x8 = p;
     return 1;
+}
+
+s32 fn_8022E258(void *node, u32 *dst, u8 kind, s8 dir) {
+    u16 idx;
+    u16 id;
+    s32 count = 0;
+    u32 *p = 0;
+    for (id = 0x10; id < 0x20; id++) {
+        for (idx = 1;; idx++) {
+            fn_80230BD4(id, node, &p, idx);
+            if (p == 0) break;
+            switch (kind) {
+            case 0:
+                switch (id) {
+                case 0x11:
+                case 0x13:
+                case 0x15:
+                case 0x17:
+                    STEP(1)
+                    break;
+                }
+                break;
+            case 1:
+                switch (id) {
+                case 0x13:
+                case 0x17:
+                    STEP(2)
+                    break;
+                case 0x12:
+                case 0x16:
+                    STEP(1)
+                    break;
+                }
+                break;
+            case 2:
+                switch (id) {
+                case 0x17:
+                    STEP(3)
+                    break;
+                case 0x14:
+                    STEP(1)
+                    break;
+                case 0x15:
+                case 0x16:
+                    STEP(2)
+                    break;
+                }
+                break;
+            }
+        }
+    }
+    return count;
+}
+
+void fn_8022E4CC(void *node, u32 val, u32 cmp, s8 dir, u8 kind, u8 first) {
+    u16 idx;
+    u8 id;
+    u8 end;
+    u32 *p = 0;
+    u32 *q;
+    if (kind >= 3) {
+        end = first + 1;
+    } else {
+        first = 0x10;
+        end = 0x20;
+    }
+    for (id = first; id < end; id++) {
+        for (idx = 1;; idx++) {
+            fn_80230BD4(id, node, &p, idx);
+            if (p == 0) break;
+            switch (kind) {
+            case 0:
+            case 3:
+                switch (id) {
+                case 0x11:
+                case 0x13:
+                case 0x15:
+                case 0x17:
+                    STEP_8022E4CC(1)
+                    break;
+                }
+                break;
+            case 1:
+            case 4:
+                switch (id) {
+                case 0x13:
+                case 0x17:
+                    STEP_8022E4CC(2)
+                    break;
+                case 0x12:
+                case 0x16:
+                    STEP_8022E4CC(1)
+                    break;
+                }
+                break;
+            case 2:
+            case 5:
+                switch (id) {
+                case 0x17:
+                    STEP_8022E4CC(3)
+                    break;
+                case 0x14:
+                    STEP_8022E4CC(1)
+                    break;
+                case 0x15:
+                case 0x16:
+                    STEP_8022E4CC(2)
+                    break;
+                }
+                break;
+            }
+        }
+    }
+}
+
+void fn_80231688(s32 mode) {
+    GXSetNumTexGens(1);
+    GXSetTexCoordGen2(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, GX_IDENTITY, GX_FALSE, GX_PTIDENTITY);
+    GXSetNumTevStages(2);
+    GXSetTevOrder(GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR1A1);
+    GXSetTevKColorSel(GX_TEVSTAGE0, GX_TEV_KCSEL_1);
+    GXSetTevColorIn(GX_TEVSTAGE0, GX_CC_ZERO, GX_CC_KONST, GX_CC_TEXC, GX_CC_ZERO);
+    GXSetTevColorOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+    GXSetTevAlphaIn(GX_TEVSTAGE0, GX_CA_ZERO, GX_CA_TEXA, GX_CA_RASA, GX_CA_ZERO);
+    GXSetTevAlphaOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+    GXSetTevOrder(GX_TEVSTAGE1, GX_TEXCOORD_NULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+    GXSetTevColorIn(GX_TEVSTAGE1, GX_CC_ZERO, GX_CC_CPREV, GX_CC_RASC, GX_CC_ZERO);
+    GXSetTevColorOp(GX_TEVSTAGE1, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+    GXSetTevAlphaIn(GX_TEVSTAGE1, GX_CA_ZERO, GX_CA_APREV, GX_CA_RASA, GX_CA_ZERO);
+    GXSetTevAlphaOp(GX_TEVSTAGE1, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+    if (mode == 1) {
+        GXSetZCompLoc(GX_FALSE);
+        GXSetAlphaCompare(GX_GREATER, 0, GX_AOP_AND, GX_ALWAYS, 0);
+    } else {
+        GXSetZCompLoc(GX_TRUE);
+        GXSetAlphaCompare(GX_ALWAYS, 0, GX_AOP_AND, GX_ALWAYS, 0);
+    }
 }
