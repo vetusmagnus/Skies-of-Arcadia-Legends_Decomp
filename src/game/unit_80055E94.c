@@ -867,6 +867,54 @@ typedef struct O_8005D614 {
 extern s32 lbl_8034737C;
 extern void fn_8002FEB0(void *, void *, s32);
 extern void fn_8002F53C(void);
+extern void fn_802A75C8(f32, f32, f32);
+extern void fn_802A75B0(f32, f32);
+extern void fn_802A7598(f32, f32, f32);
+extern void fn_802A210C(f32, f32, f32);
+extern void fn_802A20F4(f32, f32);
+extern void fn_802A20DC(f32, f32, f32);
+typedef struct TblEnt_8006B71C {
+    void *f0;
+    void *f4;
+    u32 f8;
+    u8 fc;
+    u8 pad[3];
+} TblEnt_8006B71C;
+extern void fn_802872C4(s32);
+extern void fn_80287274(s32, s32);
+extern void fn_8028B870(s32);
+extern void fn_8028B820(s32, s32);
+extern void fn_8006C9E4(void *, s32, s16 *, s32 *);
+typedef struct Tab_8006CEEC {
+    u32 count;
+    u32 v[1];
+} Tab_8006CEEC;
+typedef struct Ent_8006CEEC {
+    u8 pad0[0x1c];
+    Tab_8006CEEC *x1c;
+    u8 pad20[0x68 - 0x20];
+} Ent_8006CEEC;
+typedef struct Ctx_8006CEEC {
+    u8 pad0[4];
+    Ent_8006CEEC *x4;
+} Ctx_8006CEEC;
+typedef struct Node_8006D888 {
+    s32 x0;
+    s32 x4;
+    u8 pad8[8];
+    struct Node_8006D888 *x10;
+} Node_8006D888;
+extern Node_8006D888 *lbl_8034739C;
+extern f64 atan2(f64 y, f64 x);
+extern f32 lbl_80348A1C;
+typedef struct {
+    u8 pad0[0x1c];
+    f32 x;
+    u8 pad1[4];
+    f32 y;
+} Pt;
+extern f32 fn_80291A5C(f32 x);
+extern void njUnitVector(NJS_VECTOR *v);
 
 void fn_80055E94(u8 *p) {
     p[0x18] |= 0x40;
@@ -3238,4 +3286,123 @@ void fn_8005D614(O_8005D614 *o) {
     }
     s->cnt++;
     fn_80037FD8(s->tab, &o->state);
+}
+
+void fn_80061048(char *s)
+{
+    s8 i = 0;
+    while (s[i] != 0) {
+        if (s[i] == '.') {
+            s[i] = 0;
+            return;
+        }
+        i++;
+    }
+}
+
+void fn_800615B4(NJS_POINT3 *src, NJS_POINT3 *out, Angle *rot)
+{
+    NJS_POINT3 a;
+    NJS_POINT3 b;
+
+    a.x = src->x;
+    a.y = src->y;
+    a.z = src->z;
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    njUnitMatrix(0);
+    njRotateXYZ(0, rot[0], rot[1], rot[2]);
+    njCalcPoint(0, &a, &b);
+    njPopMatrixEx();
+    out->x = b.x;
+    out->y = b.y;
+    out->z = b.z;
+}
+
+void fn_8006B3EC(void)
+{
+    fn_802A75C8(0.0f, 0.0f, 1.0f);
+    fn_802A75B0(0.2f, 0.8f);
+    fn_802A7598(1.0f, 1.0f, 1.0f);
+    fn_802A210C(0.0f, 0.0f, 1.0f);
+    fn_802A20F4(0.0f, 0.0f);
+    fn_802A20DC(0.0f, 0.0f, 0.0f);
+}
+
+void fn_8006B71C(void)
+{
+    memset(lbl_80309E88, 0, 0x40);
+    fn_802872C4(4);
+    fn_80287274(0, 0);
+    fn_8028B870(4);
+    fn_8028B820(0, 0);
+}
+
+s32 fn_8006C9AC(void *p, s32 x)
+{
+    s16 a = 0;
+    s32 b = 0;
+
+    fn_8006C9E4(p, x, &a, &b);
+    return b;
+}
+
+s32 fn_8006CEEC(Ctx_8006CEEC *c, u32 *out, u32 idx, s32 slot)
+{
+    Tab_8006CEEC *t = c->x4[slot].x1c;
+
+    if (idx >= t->count) {
+        return 0;
+    }
+    *out = t->v[idx];
+    return 1;
+}
+
+s32 fn_8006D888(void)
+{
+    Node_8006D888 *n = lbl_8034739C;
+
+    if (n == 0) {
+        return 0;
+    }
+    for (;;) {
+        if (n->x4 != 0 && n->x0 > 0) {
+            return 0;
+        }
+        if (n->x10 == 0) {
+            break;
+        }
+        n = n->x10;
+    }
+    return 1;
+}
+
+s32 fn_80071C34(f32 x0, f32 y0, f32 x1, f32 y1) {
+    f32 dx = x1 - x0;
+    f32 dy = y1 - y0;
+    return (s32)(lbl_80348A1C * (f32)atan2(dx, dy));
+}
+
+s32 fn_80071C74(Pt *p, f32 x, f32 y) {
+    f32 dx = x - p->x;
+    f32 dy = y - p->y;
+    return (s32)(lbl_80348A1C * (f32)atan2(dx, dy));
+}
+
+f32 fn_80071E5C(NJS_VECTOR *a, NJS_VECTOR *b) {
+    f32 dx = b->x - a->x;
+    f32 dz = b->z - a->z;
+    return fn_80291A5C(dx * dx + dz * dz);
+}
+
+void fn_80072130(NJS_VECTOR *v) {
+    NJS_VECTOR t;
+    t.x = v->x;
+    t.y = v->y;
+    t.z = v->z;
+    njUnitVector(&t);
+    v->x = t.x;
+    v->y = t.y;
+    v->z = t.z;
 }

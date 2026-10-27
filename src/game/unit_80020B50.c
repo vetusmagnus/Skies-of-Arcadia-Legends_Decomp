@@ -1,4 +1,5 @@
 #include "types.h"
+#include "ninja.h"
 typedef struct Inner { u8 pad0[0x6]; s16 f6; s16 f8; u8 pad1[0xa]; s16 f14; s16 f16; u8 pad2[0x68-0x18]; float f68; u8 pad3[0xec-0x6c]; u32 fec; u32 ff0; } Inner;
 typedef struct Mid { u8 pad[0x4c]; Inner *inner; } Mid;
 typedef struct Top { u8 pad[0x24]; Mid *mid; } Top;
@@ -70,6 +71,9 @@ extern void fn_80061F58(void*, s32, s32);
 extern void* memset(void*, int, u32);
 extern f32 fn_800177C0(s32, void*);
 extern s32 fn_80015B94(s32, void*);
+extern s32 fn_80020FF0(s32 idx);
+extern s32 lbl_80302A38[6];
+extern void fn_80028E28(s32 *p);
 
 void fn_80020B50(Top *t, s16 *out1, s16 *out2) {
   Inner *i = t->mid->inner;
@@ -287,5 +291,41 @@ void fn_8002969C(s16 id) {
         if (i != id && ((HudWork**)lbl_80302AB0)[i] != 0) {
             w->s70++;
         }
+    }
+}
+
+s32 fn_80020F68(void)
+{
+    switch (fn_80020FF0(0)) {
+    default:
+        return 0;
+    case 17:
+        return 1;
+    case 11:
+        return 2;
+    case 19:
+        return 3;
+    case 35:
+        return 4;
+    case 9:
+        return 5;
+    case 1:
+        return 6;
+    case 33:
+        return 7;
+    case 2:
+        return 8;
+    }
+}
+
+void fn_80028DE4(void)
+{
+    fn_80028E28(lbl_80302A38);
+}
+
+void fn_80028E0C(void)
+{
+    if (lbl_80302A38[0] == 1) {
+        lbl_80302A38[0] = 2;
     }
 }

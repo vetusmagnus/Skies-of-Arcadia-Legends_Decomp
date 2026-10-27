@@ -1,5 +1,4 @@
 #include "types.h"
-
 typedef struct Ent {
     float a;
     s32 b;
@@ -15,8 +14,11 @@ extern f32 lbl_80347510;
 extern u32 lbl_80347508;
 extern u32 lbl_80347504;
 extern s32 fn_8023A4B0(void);
-
 extern u32 lbl_803474F4;
+s32 fn_801CB0A4(s32 c);
+extern f32 lbl_80347514;
+void fn_801C6C7C(void* p);
+
 s32 fn_801CAE84(void) {
     return 1;
 }
@@ -318,4 +320,36 @@ void fn_801CE1A4(DrawVtx *v, s32 n, s32 a, u32 flags) {
         DrawStateReapply();
         fn_8028A418(v, n, a);
     }
+}
+
+void* fn_801CB12C(u16* p) {
+    s32 c;
+    u16* q;
+    u16* next;
+    s32 r;
+    if (p == 0) return 0;
+    q = p;
+    do {
+        c = (u8)q[1];
+        next = q + 2;
+        r = fn_801CB0A4(c);
+        if (r >= 0) return q;
+        q = (u16*)((u8*)next + ((u16)r << 2));
+    } while (c != 0xff);
+    return 0;
+}
+
+void fn_801CBB9C(f32 f) {
+    lbl_80347514 = f;
+    lbl_80347518 = 0;
+}
+
+void fn_801CBBAC(f32 f) {
+    lbl_80347514 = f;
+    lbl_80347518 = 1;
+}
+
+void fn_801CC608(u8* p, s32 v) {
+    *(s32*)(p + 0x48) = v;
+    fn_801C6C7C(p);
 }

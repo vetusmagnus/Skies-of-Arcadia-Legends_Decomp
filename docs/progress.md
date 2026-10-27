@@ -1,7 +1,7 @@
 Progress and handoff
 ====================
 
-State of the work as of 2026-10-26 (after the hand-merge of clashing functions): 30.8% of code matched (3,724 / 7,116
+State of the work as of 2026-10-26 (after tier 2, the under-200-byte never-tried batch): 31.2% of code matched (3,830 / 7,116
 functions), 3,392 functions unmatched: about 2,470 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
 (the size split of the game functions predates the duplicate-copy batch: 2,193 under 632 bytes, 466 at 632-1000,
 355 at 1-2 KB, 101 at 2-5 KB, 16 over 5 KB). Numbers live in the README status block and on
@@ -752,3 +752,27 @@ Good next targets
 - The near misses above, ideally with decomp-permuter (`tools/match/permsetup.py`) running in the
   background while new code is matched.
 - The Ninja library (0x80286EE8-0x802AC7E0), 0% so far; see [ninja.md](ninja.md).
+
+Tier 2: never-tried functions under 200 bytes (2026-10-27)
+----------------------------------------------------------
+
+16 Haiku 5.5 agents (set explicitly, no retries, no merge agents), 20 functions each: the 320 smallest game functions
+(0x80005B50-0x80231A7C, 16 to 196 bytes) that were not defined in `src/`, not mentioned in this page and not a
+duplicate copy (one representative per group in `docs/duplicates.txt`). About 10 tries per function. 205 matched in
+isolation (re-checked with fdiff); 111 stayed near misses. Merged in the coordinating session with
+`build/agents/merge8.py` (merge7 without the call-site cast fallback, so a type clash rejects the function instead of
+casting): **106 functions are in the unit files now** (3,724 to 3,830 matched, 866,948 bytes, 31.15%). All 783 functions
+of the touched units pass fdiff and `floatcheck.py`; `main.dol` force-relinks to the SHA-1 in `build.sha1`.
+
+**98 matched in isolation but not merged** (the unit declares the same global or prototype with another type, or the
+agent file defines its own struct for it). The clusters, for whoever widens the unit's shared struct instead of casting:
+`lbl_8030CEA0` (the 0x1920-byte work area) as `u8[]` in unit_801F5334.c against field accesses in fn_801F5D08, fn_801F7B04,
+fn_801FD1D0, fn_8020A2C8, fn_8020F078/F0F0; `lbl_80311AD4` (state struct, `s32[11]` elsewhere) in unit_80219378.c
+(fn_80228A20, 80228AD4, 80228BE4, 8022A2E4, 8022A548, 8022BB94/BBC4/BBF4); `lbl_80309DE4`/`lbl_80309700`/`lbl_80309730`
+Chr/Tk/Ent tables in unit_80055E94.c and unit_80005B50.c (fn_80065608, 80068778, 80068944, 800691D8, 8006A078,
+fn_80014EC4, 80014F90, 800152A0, 80015344, 8001D14C, 8001DCA0); `lbl_8030A10C` (fn_80055EB8, 80060AB4, 8006EB04);
+`lbl_80309E5C` (fn_8007E274/E2D8/E344/E3A8); Task* prototype of fn_800215EC; sound-list and node structs in
+unit_80219378.c (fn_80223104, 80223194, 8022394C, 802239A4, 80226848). Unmerged list: fn_80008C00, fn_8000B6F0, fn_8000FBA8, fn_80012130, fn_80013504, fn_8001359C, fn_8001363C, fn_80014784, fn_80014EC4, fn_80014F90, fn_800152A0, fn_80015344, fn_80015B94, fn_80018700, fn_80018AFC, fn_8001D14C, fn_8001D5C0, fn_8001DCA0, fn_8001E4A0, fn_80025518, fn_80055EB8, fn_80060AB4, fn_80061518, fn_80061F58, fn_80065608, fn_80068778, fn_80068944, fn_800691D8, fn_8006A078, fn_8006D8DC, fn_8006DAF8, fn_8006EAB4, fn_8006EB04, fn_8007651C, fn_8007E274, fn_8007E2D8, fn_8007E344, fn_8007E3A8, fn_800CD0B8, fn_80100270, fn_80100B74, fn_80109E7C, fn_80117748, fn_80148E4C, fn_8014F99C, fn_80153730, fn_80154B38, fn_80155910, fn_801586D4, fn_8019F898, fn_801C12C8, fn_801C6308, fn_801CBC30, fn_801CC3C4, fn_801D6738, fn_801D67DC, fn_801D6C3C, fn_801D77B8, fn_801D8AB4, fn_801D8B2C, fn_801D8D54, fn_801D9BFC, fn_801D9C64, fn_801DAE58, fn_801E150C, fn_801E1584, fn_801E1718, fn_801E1CCC, fn_801F5334, fn_801F5D08, fn_801F7B04, fn_801FD1D0, fn_8020A2C8, fn_8020F078, fn_8020F0F0, fn_8020F934, fn_80210064, fn_80210CE4, fn_80216D14, fn_8021730C, fn_80217380, fn_80217608, fn_80217790, fn_80223104, fn_80223194, fn_8022394C, fn_802239A4, fn_80226848, fn_80228A20, fn_80228AD4, fn_80228BE4, fn_8022A2E4, fn_8022A548, fn_8022A68C, fn_8022BB94, fn_8022BBC4, fn_8022BBF4, fn_8022F050.
+The per-function files are in `build/agents/t2_*/` (gitignored).
+
+Near misses from this batch (111; mostly register allocation or scheduling): fn_800096BC, fn_8000DEC8, fn_8000F168, fn_800102C8, fn_800110C8, fn_80011394, fn_80012078, fn_80014A54, fn_80015460, fn_80017A7C, fn_8001C410, fn_8001FD7C, fn_8001FDD8, fn_800292F8, fn_80061080, fn_8006116C, fn_8006228C, fn_80064C00, fn_80067DFC, fn_80068348, fn_80068D7C, fn_80068F68, fn_8006AB6C, fn_8006D02C, fn_80071EEC, fn_80071F84, fn_80072E8C, fn_8008F1F8, fn_80090378, fn_8009E4D4, fn_800D208C, fn_800D6580, fn_80109EEC, fn_80142C78, fn_8014912C, fn_801532F0, fn_801568F8, fn_801570BC, fn_80167604, fn_80191E94, fn_8019438C, fn_801943C0, fn_801943F4, fn_80194428, fn_8019445C, fn_80194490, fn_80194ECC, fn_80195EA4, fn_801C08B4, fn_801C0C14, fn_801C0CA0, fn_801C16D0, fn_801C58FC, fn_801C599C, fn_801C5BF4, fn_801C5D88, fn_801C6180, fn_801C83B4, fn_801C8450, fn_801C84EC, fn_801C8590, fn_801C8634, fn_801C87C8, fn_801C8930, fn_801CAE98, fn_801CB0A4, fn_801CB1AC, fn_801CB6A0, fn_801D0AB4, fn_801D0D70, fn_801D289C, fn_801D2934, fn_801D29CC, fn_801D48BC, fn_801D616C, fn_801D66D4, fn_801D722C, fn_801D80A0, fn_801DA6A8, fn_801DB124, fn_801DB1A4, fn_801DB244, fn_801DCDC0, fn_801DDC48, fn_801DFDB0, fn_801E1BDC, fn_801F2E44, fn_801F52AC, fn_801F5A74, fn_801F5B14, fn_801F5BD0, fn_801F5C30, fn_801FF05C, fn_80211058, fn_802110E8, fn_80215F94, fn_80216D98, fn_80219ACC, fn_80219B24, fn_8021A7B0, fn_8021A940, fn_8021A9C4, fn_80222964, fn_80225E58, fn_80225FDC, fn_8022638C, fn_80228014, fn_8022807C, fn_802289AC, fn_80228B74, fn_8022AE04.

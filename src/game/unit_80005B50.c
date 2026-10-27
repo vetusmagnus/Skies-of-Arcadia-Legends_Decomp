@@ -1,6 +1,8 @@
 #include "types.h"
 #include "ninja.h"
 #include "game/drawstate.h"
+#include <dolphin/os.h>
+#include "game/task.h"
 #define PTR(p, off) (*(void**)((u8*)(p) + (off)))
 extern void* fn_80005B9C(void* heap);
 extern void* memset(void* dst, s32 c, u32 n);
@@ -533,6 +535,65 @@ extern void fn_8006CEEC(void*, void*, int, s16);
 extern void fn_8022F00C(void*);
 extern int fn_8000CF94(void*);
 extern void fn_8000B8E4(void*, void*);
+/* Packed date stamp filled from the RTC (OSGetTime). Field names are ours. */
+typedef struct CalendarStamp {
+    s16 year;
+    u8 month;
+    u8 day;
+    u8 hour;
+    u8 minute;
+    u8 second;
+    u8 weekday;
+    u8 pad;
+} CalendarStamp;
+extern s32 fn_80007BFC(void* a, void* b);
+typedef struct Slot {
+    s16 id;
+    u8 pad[0xa];
+    void* ptr;
+} Slot;
+#define FLD(p, off, T) (*(T*)((u8*)(p) + (off)))
+s8 fn_80020E10(void* p);
+s16 fn_80008274(s16 v);
+void fn_800615B4(void* p, f32* v, void* b);
+s32 fn_8003DCF4(void* a, void* b);
+void fn_80061518(void* a, NJS_POINT3* b);
+void fn_80012130(NJS_POINT3* a);
+typedef struct {
+    u8 pad[0x1c];
+    NJS_POINT3 pos;
+} Ctx8001E19C;
+typedef struct {
+    u8 pad[0x24];
+    Ctx8001E19C *obj;
+} Ctx8001E19C_outer;
+extern void fn_80071D0C(NJS_POINT3 *out, NJS_POINT3 *a, NJS_POINT3 *b, f32 s);
+typedef struct Inner8001FA18 {
+    u8 pad0[0xf0];
+    u32 flags;
+    u8 pad1[0x10];
+    NJS_POINT3 v104;
+    NJS_POINT3 v110;
+    NJS_POINT3 v11c;
+} Inner8001FA18;
+typedef struct Obj8001FA18 {
+    u8 pad0[0x24];
+    struct Obj8001FA18 *sub;
+    u8 pad1[0x4];
+    u32 f2c;
+    u8 pad2[0x1c];
+    Inner8001FA18 *inner;
+} Obj8001FA18;
+typedef struct Obj80020B28 {
+    u8 pad0[0x6];
+    s16 x6;
+    s16 x8;
+    u8 pad1[0xa];
+    s16 x14;
+    s16 x16;
+    u8 pad2[0xd4];
+    u32 flags;
+} Obj80020B28;
 
 void* fn_80005B50(void* heap, u32 size) {
     void* p = fn_80005B9C(heap);
@@ -1958,5 +2019,211 @@ void fn_8000BB28(u8 idx)
             w->x4c->x50 |= 0x40000000;
         }
         break;
+    }
+}
+
+s32 fn_800073C0(CalendarStamp* out) {
+    OSCalendarTime td;
+
+    OSTicksToCalendarTime(OSGetTime(), &td);
+    out->year = td.year;
+    out->month = td.mon + 1;
+    out->day = td.mday;
+    out->hour = td.hour;
+    out->minute = td.min;
+    out->second = td.sec;
+    out->weekday = td.wday;
+    out->pad = 0;
+    return 1;
+}
+
+s32 fn_8000810C(void* a, void* b) {
+    s32 r = 0;
+    while (r == 0) {
+        r = fn_80007BFC(a, b);
+        if (r < 0) {
+            return -1;
+        }
+    }
+    return 1;
+}
+
+void fn_80009800(Slot* list) {
+    Slot* s = list;
+
+    for (;;) {
+        if (s->id < 0) {
+            break;
+        }
+        if (s->ptr != 0) {
+            fn_801E17E0(s->ptr);
+        }
+        s++;
+    }
+    fn_801E17E0(list);
+}
+
+s32 fn_80012160(void) {
+    if (lbl_80347394 != 0) {
+        return -1;
+    }
+    switch (lbl_8034733C) {
+    case 0:
+        return 1;
+    case 1:
+        return 2;
+    case 2:
+        return 5;
+    case 3:
+        return 4;
+    case 4:
+        return 7;
+    case 5:
+        return 8;
+    case 6:
+        return 9;
+    case 7:
+    case 8:
+    default:
+        return -1;
+    }
+}
+
+s32 fn_80015CFC(void* x) {
+    u32 n = FLD(x, 4, u32);
+    s32 i;
+    for (i = 0; (u32)(s16)i < n; i++) {
+        char* s = *(char**)((u8*)FLD(x, 0, void*) + i * 12);
+        if (s[0] == 't' || s[0] == 'T') {
+            if (s[1] == 'k' || s[1] == 'K' || s[1] == 'x' || s[1] == 'X') {
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+
+s32 fn_800176DC(s8 kind) {
+    s32 i;
+    for (i = 0; (s8)i < 0xc; i++) {
+        Task* t = lbl_80309E24[i];
+        if (t) {
+            void* w = t->work;
+            s8 id = fn_80020E10((u8*)FLD(w, 0x10, void*) + 0xc);
+            if (kind == id) {
+                return FLD(FLD(w, 0x4c, void*), 0, u8);
+            }
+        }
+    }
+    return -1;
+}
+
+void fn_80018C94(void) {
+    DrawStatePop(0);
+    fn_800D2048();
+}
+
+s32 fn_8001BC38(Task* t) {
+    s16 v = fn_80008274(FLD(FLD(t->work, 0x4c, void*), 2, s16));
+    switch (v) {
+    case 0x8d:
+    case 0x95:
+    case 0x97:
+    case 0x99:
+    case 0x9d:
+    case 0xee:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+void fn_8001D200(Task* t, f32* v) {
+    u8* w = t->work;
+    u8* d = FLD(w, 0x4c, u8*);
+    s16 idx = FLD(w, 0x14, s16);
+    fn_800615B4(FLD(d, 0x154, u8*) + (idx - 1) * 0x34 + 8, v, w + 0x28);
+    v[0] = v[0] + FLD(w, 0x1c, f32);
+    v[1] = v[1] + FLD(w, 0x20, f32);
+    v[2] = v[2] + FLD(w, 0x24, f32);
+}
+
+s32 fn_8001DDE0(Task* t, u8* list) {
+    u8* p;
+    void* d = FLD(t->work, 0x4c, void*);
+    if (list) {
+        for (p = list;; p += 0x10) {
+            s16 lo = FLD(p, 0, s16);
+            s16 hi = FLD(p, 2, s16);
+            void* obj;
+            if (lo < 0) {
+                break;
+            }
+            if ((((s32)hi << 16) | lo) == 0x30032) {
+                obj = FLD(p, 0xc, void*);
+                if (fn_8003DCF4(obj, d)) {
+                    return FLD(obj, 0x10, s16);
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+void fn_8001E138(void* a, void* b, u32 c) {
+    NJS_POINT3 v14;
+    NJS_POINT3 v8;
+    if (c) {
+        fn_80061518(b, &v8);
+    } else {
+        fn_80071CF0(b, &v8);
+    }
+    fn_80012130(&v14);
+    fn_80071F84(a, &v8, &v14);
+}
+
+void fn_8001E19C(NJS_POINT3 *self, NJS_POINT3 *out, void *ctx, NJS_POINT3 *v)
+{
+    NJS_POINT3 b;
+    NJS_POINT3 d;
+    NJS_POINT3 a;
+    NJS_POINT3 c;
+    Ctx8001E19C *o = ((Ctx8001E19C_outer *)ctx)->obj;
+
+    fn_80071CF0(&o->pos, &a);
+    a.y = a.y + self->y;
+    fn_80071CF0(v, &b);
+    fn_80071F84(&c, v, &a);
+    fn_80071D0C(out, &a, &c, self->x);
+    fn_80071CF0(out, &d);
+}
+
+int fn_8001FA18(Obj8001FA18 *a, Obj8001FA18 *b)
+{
+    Inner8001FA18 *in_b;
+    Inner8001FA18 *in_a;
+    Obj8001FA18 *o;
+    o = b->sub;
+    in_b = o->inner;
+    in_a = a->sub->inner;
+
+    fn_80071CF0(&in_a->v110, &in_b->v110);
+    fn_80071CF0(&in_a->v104, &in_b->v104);
+    fn_80071CF0(&in_a->v11c, &in_b->v11c);
+    if (in_a->flags & 0x200) {
+        o->f2c = a->sub->f2c;
+    }
+    if (!(in_a->flags & 0x400)) {
+        return 0;
+    }
+    return 1;
+}
+
+void fn_80020B28(Obj80020B28 *o)
+{
+    if (o->flags & 0x8000) {
+        o->flags = o->flags & ~0x8000;
+        o->x6 = o->x14;
+        o->x8 = o->x16;
     }
 }

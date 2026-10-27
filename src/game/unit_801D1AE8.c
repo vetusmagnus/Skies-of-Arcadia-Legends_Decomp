@@ -215,6 +215,120 @@ typedef struct DataTable {
 extern s32 *fn_8022ACA8(s32);
 extern void *fn_801E1C7C(s32);
 extern void *fn_801CC3C4(const char *name);
+extern f32 lbl_80347F28;
+extern f32 lbl_80347F2C;
+extern const char lbl_802C456C[];
+void fn_801DBE1C(const char *fmt, ...);
+extern s32 lbl_803475CC;
+extern s32 lbl_80311AD4[11];
+void njRotateZXY(NJS_MATRIX m, s32 x, s32 y, s32 z);
+extern NJS_VECTOR lbl_802F66AC;
+extern NJS_VECTOR lbl_802F6694;
+extern NJS_VECTOR lbl_802F66A0;
+extern NJS_VECTOR lbl_802F6688;
+extern s32 lbl_8030EA10[3];
+double atan2(double y, double x);
+extern const char lbl_802C4698[];
+typedef struct TblEnt {
+    s16 a;
+    s16 b;
+} TblEnt;
+typedef struct Cursor {
+    s16 out0;
+    s16 count;
+    TblEnt *tbl;
+    u32 f8;
+    s16 idx;
+    s16 outB;
+    s16 pad10;
+    s16 mode;
+} Cursor;
+typedef struct Holder {
+    void *a;
+    u32 pad04;
+    u32 pad08;
+    void *c;
+    u32 pad10;
+    void *e;
+} Holder;
+void fn_801E8580(void *p);
+typedef struct Ctx_801DDECC {
+    void *r0;
+    void *a;
+    u32 b;
+    u32 zero0c;
+    void *c;
+    void *r14;
+    u8 sub[2];
+    s16 k1a;
+    s16 k1c;
+    s16 k1e;
+} Ctx_801DDECC;
+void *fn_801E84C0(void *p);
+void *fn_801DDF48(void *sub, void *c, s16 x, s16 y);
+extern s32 DVDGetDriveStatus(void);
+extern u32 lbl_80347268;
+typedef struct {
+    s32 a;
+    s32 b;
+    s32 c;
+} Vec3i;
+typedef struct {
+    Vec3i cur;
+    Vec3i next;
+} Pair3i;
+typedef struct {
+    s32 a;
+    s32 b;
+    s32 c;
+    f32 d;
+    f32 e;
+    f32 f;
+    f32 g;
+} Rec28;
+typedef struct {
+    s32 a0;
+    s32 a4;
+    u32 a8;
+    void* ac;
+    void* b0;
+} Obj68DC;
+typedef struct {
+    unsigned char pad[0xa];
+    s8 err;
+} PadStatus71C4;
+extern PadStatus71C4* lbl_8034763C;
+extern void PADControlMotor(s32 chan, u32 cmd);
+extern s32 PADRecalibrate(u32 mask);
+extern u32 PADRead(PadStatus71C4* status);
+extern u32 lbl_802F6558[];
+extern u32 lbl_80311A00[];
+extern s32 lbl_8034757C;
+extern s32 lbl_80347630;
+extern s32 lbl_80347634;
+extern s32 lbl_80347640;
+typedef struct {
+    u16 a;
+    u16 pad;
+    f32 b;
+    f32 c;
+    f32 d;
+    s32 e;
+    s32 f;
+    f32 g;
+    f32 h;
+    s32 i;
+    s32 j;
+    s32 k;
+    s32 l;
+    s32 m;
+    f32 n;
+    f32 o;
+    f32 p;
+    f32 q;
+    f32 r;
+    f32 s;
+} Obj7A28;
 
 void fn_801D1AE8(void) {
     VISetNextFrameBuffer(lbl_803476AC);
@@ -1277,4 +1391,228 @@ void fn_801D6B58(DataTable *t, const char *name)
     t->work = fn_801E1C7C(t->count * 4);
     ClearWork(t);
     Relocate(t);
+}
+
+void fn_801DB9B4(void) {
+    s32 i;
+    for (i = 0; i < 16; i++) {
+        if (lbl_80312D00[i] != 0) TaskDelete((void *)lbl_80312D00[i]);
+    }
+}
+
+f32 fn_801DBD9C(f32 z) {
+    if (z > -1.0f) z = -1.0f;
+    if (z < -65535.0f) fn_801DBE1C(lbl_802C456C, z);
+    return lbl_80347F28 - ((z + 1.0f) / -65535.0f) * (lbl_80347F28 - lbl_80347F2C);
+}
+
+void fn_801DBE6C(s32 i) {
+    lbl_803475CC = i;
+    lbl_80311AD4[i] = 0;
+}
+
+void fn_801DCEB0(NJS_VECTOR *out, s32 *rot, f32 d) {
+    NJS_MATRIX m;
+    NJS_VECTOR v;
+    v.y = 0.0f;
+    v.x = 0.0f;
+    v.z = -d;
+    njUnitMatrix(m);
+    njRotateZXY(m, rot[0], rot[1], rot[2]);
+    njCalcVector(m, &v, out);
+}
+
+void fn_801DCF24(NJS_VECTOR *out, s32 *rot, s32 rz, f32 y) {
+    NJS_MATRIX m;
+    lbl_802F66AC.y = y;
+    njUnitMatrix(m);
+    njRotateZXY(m, rot[0], rot[1], rz);
+    njCalcVector(m, &lbl_802F66AC, out);
+}
+
+void fn_801DD334(NJS_VECTOR *a, NJS_VECTOR *b, s32 *rot) {
+    NJS_MATRIX m;
+    njUnitMatrix(m);
+    njRotateZXY(m, rot[0], rot[1], rot[2]);
+    njCalcVector(m, &lbl_802F6694, a);
+    njCalcVector(m, &lbl_802F66A0, b);
+}
+
+void fn_801DD460(NJS_VECTOR *out, s32 *rot) {
+    NJS_MATRIX m;
+    njUnitMatrix(m);
+    njRotateZXY(m, rot[0], rot[1], rot[2]);
+    njCalcVector(m, &lbl_802F6688, out);
+}
+
+s32 fn_801DD4C4(f32 x, f32 z) {
+    f32 a;
+    if (x != 0.0f || z != 0.0f) {
+        a = (f32)atan2(x, z);
+        lbl_8030EA10[1] = 0;
+        return ((s32)(10430.381f * a) + 0x8000) & 0xffff;
+    }
+    lbl_8030EA10[1] = 1;
+    return 0;
+}
+
+void fn_801DD76C(const void *src) {
+    s32 n;
+    memcpy(lbl_8030EA1C + (lbl_8034754C << 6), src, 0x40);
+    n = lbl_8034754C + 1;
+    lbl_8034754C = n;
+    if (n > 0x80) fn_801DBE1C(lbl_802C4698);
+}
+
+void fn_801DD8EC(Cursor *c, TblEnt *tbl, s32 count, s32 mode) {
+    if (tbl != NULL && count > 0) {
+        c->tbl = tbl;
+        c->count = count;
+        c->mode = mode;
+        c->f8 = 0;
+        c->idx = (mode >= 0) ? 0 : c->count - 1;
+        c->out0 = tbl[c->idx].a;
+        c->outB = tbl[c->idx].b;
+    } else {
+        c->out0 = 0;
+    }
+}
+
+void fn_801DDE5C(Holder *h) {
+    if (h->a != NULL) {
+        fn_801E8580(h->a);
+        h->a = NULL;
+    }
+    if (h->c != NULL) {
+        fn_801E17E0(h->c);
+        h->c = NULL;
+    }
+    if (h->e != NULL) {
+        fn_801E17E0(h->e);
+        h->e = NULL;
+    }
+}
+
+void fn_801DDECC(Ctx_801DDECC *o, void *a, u32 b, void *c) {
+    o->r0 = NULL;
+    o->a = a;
+    o->b = b;
+    o->c = c;
+    o->r14 = NULL;
+    o->k1a = -1;
+    o->zero0c = 0;
+    o->r0 = fn_801E84C0((u8 *)a + 8);
+    o->r14 = fn_801DDF48(o->sub, c, o->k1c, o->k1e);
+}
+
+s32 fn_801D168C(void) {
+    switch (DVDGetDriveStatus() + 1) {
+    case 0:
+        return 0;
+    case 5:
+        lbl_80347268 = 1;
+        return 1;
+    case 6:
+        lbl_80347268 = 1;
+        return 2;
+    case 7:
+        lbl_80347268 = 1;
+        return 3;
+    case 12:
+        return 4;
+    default:
+        return -1;
+    }
+}
+
+void fn_801D3E58(Pair3i* out, s32 idx, Vec3i* tbl) {
+    s32 n;
+
+    if (idx < 0) {
+        return;
+    }
+    n = idx + 1;
+    if (n > 2) {
+        n = 0;
+    }
+    out->cur = tbl[idx];
+    out->next = tbl[n];
+}
+
+void* fn_801D497C(Rec28* src) {
+    Rec28* dst = fn_801E1C7C(0x1c);
+
+    dst->a = src->a;
+    dst->b = src->b;
+    dst->c = src->c;
+    dst->d = src->d;
+    dst->e = src->e;
+    dst->f = src->f;
+    dst->g = src->g;
+    return dst;
+}
+
+void fn_801D68DC(Obj68DC* o) {
+    if (o == 0) {
+        return;
+    }
+    if (o->a8 != 0) {
+        o->a8 = 0;
+    }
+    if (o->ac != 0) {
+        fn_801E17E0(o->ac);
+        o->ac = 0;
+    }
+    fn_801E17E0(o->b0);
+    o->b0 = 0;
+}
+
+void fn_801D71C4(void) {
+    s32 done;
+
+    PADControlMotor(0, 2);
+    do {
+        done = PADRecalibrate(0x80000000);
+        if (done == 0) {
+            PADRead(lbl_8034763C);
+            if (lbl_8034763C->err == -1) {
+                done = 1;
+            }
+        }
+    } while (done == 0);
+}
+
+void fn_801D7810(void) {
+    s32 i;
+
+    lbl_8034757C = 0;
+    lbl_80347640 = 1;
+    lbl_80347630 = 0;
+    i = 5;
+    while (--i >= 0) {
+        lbl_80311A00[i] = lbl_802F6558[i];
+    }
+    lbl_80347634 = 0;
+}
+
+void fn_801D7A28(Obj7A28* obj, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6, f32 f7) {
+    obj->a = 1;
+    obj->b = 256.0f;
+    obj->c = f1;
+    obj->d = 0.0f;
+    obj->e = 0;
+    obj->f = 0;
+    obj->g = 1.0f;
+    obj->h = 1.0f;
+    obj->i = 1;
+    obj->j = -1;
+    obj->k = -1;
+    obj->l = -1;
+    obj->m = -1;
+    obj->n = f2;
+    obj->o = f3;
+    obj->p = f4;
+    obj->q = f5;
+    obj->r = f6;
+    obj->s = f7;
 }

@@ -11,6 +11,12 @@ extern void fn_8022F64C(void *p, u32 flags);
 typedef struct Node { u8 pad_00[0x2c]; struct Node *child; struct Node *next; } Node;
 extern void fn_8022F408(Node *n, s32 a, s32 b);
 void fn_8022F0CC(Node *n, s32 a, s32 b);
+extern s32 fn_8022E068(void *p, u16 i, s32 *a, s32 *b, s32 *c, s32 *d);
+extern s32 lbl_80347884;
+extern void fn_8023182C(void);
+extern void fn_80230FCC(void);
+extern void fn_80288DE4(void *p, void (*f)(void));
+extern void fn_80296F28(void);
 
 void fn_8022D34C(s32 a, f32 b) {
     if (a > 0) {
@@ -127,4 +133,30 @@ void fn_8022F0CC(Node *n, s32 a, s32 b)
     if (n->next != 0) {
         walk2(n->next, a, b);
     }
+}
+
+s32 fn_8022DFFC(void *p) {
+    s32 d;
+    s32 a;
+    s32 b;
+    s32 c;
+    s32 i = 0;
+    s32 ret;
+    for (;;) {
+        ret = fn_8022E068(p, (u16)i, &a, &b, &c, &d);
+        if (ret == 0 && (u16)i != 0) {
+            break;
+        }
+        i++;
+    }
+    return i;
+}
+
+void fn_80230F6C(void *p) {
+    fn_8023182C();
+    lbl_80347884 = 0;
+    fn_80288DE4(p, fn_80230FCC);
+    lbl_80347884 = 1;
+    fn_80288DE4(p, fn_80230FCC);
+    fn_80296F28();
 }

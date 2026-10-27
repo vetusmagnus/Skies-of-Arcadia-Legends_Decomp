@@ -1108,6 +1108,19 @@ typedef struct {
     s32 valid;      /* 0x600 */
 } Obj_801541D8;
 extern char lbl_802B3C34[];
+extern s32 SePlay(s32 bank, s8 arg1, s8 id);
+struct Pose {
+    u8 pad[0x38];
+    f32 tx, ty, tz;
+    s32 rx, ry, rz;
+};
+typedef struct Flags { u32 w; } Flags;
+typedef struct Owner_8015C8F4 { u8 pad[0x1d8]; Flags *fl; } Owner_8015C8F4;
+typedef struct Arg_8015C8F4 { u8 pad[0x1c]; u32 on; } Arg_8015C8F4;
+typedef struct Sub { u8 pad[8]; void *p; } Sub;
+typedef struct Owner_8015C928 { u8 pad[0x1d8]; Sub *fl; } Owner_8015C928;
+typedef struct Arg_8015C928 { u8 pad[0x1c]; s32 v; } Arg_8015C928;
+void fn_801E5EA4(void *p, s16 v);
 
 void fn_8014F970(u8 *self) {
     fn_80153270(self + 0x95c);
@@ -3990,4 +4003,28 @@ void fn_801541D8(s32 idx)
         o->cz = 0.0f;
         o->valid = 0;
     }
+}
+
+s32 fn_80155FF0(s32 a, s32 b, s32 bank) {
+    return SePlay(bank, a, b);
+}
+
+void fn_80156C6C(void *m, struct Pose *p) {
+    njTranslate(m, p->tx, p->ty, p->tz);
+    njRotateZXY(m, p->rx, p->ry, p->rz);
+}
+
+s32 fn_8015C8F4(Owner_8015C8F4 *o, Arg_8015C8F4 *a) {
+    Flags *f = o->fl;
+    if (a->on) {
+        f->w |= 0x10;
+    } else {
+        f->w &= ~0x10;
+    }
+    return 0;
+}
+
+s32 fn_8015C928(Owner_8015C928 *o, Arg_8015C928 *a) {
+    fn_801E5EA4(o->fl->p, (s16)a->v);
+    return 0;
 }

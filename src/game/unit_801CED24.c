@@ -37,6 +37,7 @@ extern void fn_801D1714(void);
 extern void fn_801DBCD4(void);
 extern void GXFlush(void);
 extern void fn_802A8AE4(void* tex);
+extern s32 lbl_8034722C;
 
 void fn_801CED24(u32 a, u32 b, u32 c, f32 d, u32 e)
 {
@@ -359,4 +360,60 @@ void fn_801D0F80(void)
             FogOff();
         }
     }
+}
+
+void fn_801CF0C8(s32 a, s32 b) {
+    lbl_80347230 = a;
+    lbl_80347228 = 0x80;
+    lbl_80347248 = b;
+    fn_801CF248();
+}
+
+void fn_801CF0F8(s32 a, s32 b) {
+    lbl_80347230 = a;
+    lbl_80347228 = 0x40;
+    lbl_80347248 = b;
+    fn_801CF248();
+}
+
+void fn_801CF128(s32 a, s32 b) {
+    lbl_80347230 = a;
+    lbl_80347228 = 0x20;
+    lbl_80347248 = b;
+    fn_801CF248();
+}
+
+void fn_801CF158(s32 a, s32 b) {
+    lbl_80347230 = a;
+    lbl_80347228 = 0x10;
+    lbl_80347248 = b;
+    fn_801CF248();
+}
+
+void fn_801CF188(s32 a, s32 b) {
+    lbl_8034722C = a;
+    lbl_80347228 = 0x8;
+    lbl_80347248 = b;
+    fn_801CF248();
+}
+
+void fn_801CF1B8(s32 a, s32 b) {
+    lbl_8034722C = a;
+    lbl_80347228 = 0x4;
+    lbl_80347248 = b;
+    fn_801CF248();
+}
+
+void fn_801CF1E8(s32 a, s32 b) {
+    lbl_8034722C = a;
+    lbl_80347228 = 0x2;
+    lbl_80347248 = b;
+    fn_801CF248();
+}
+
+void fn_801CF218(s32 a, s32 b) {
+    lbl_8034722C = a;
+    lbl_80347228 = 0x1;
+    lbl_80347248 = b;
+    fn_801CF248();
 }

@@ -15,6 +15,8 @@ typedef struct { u8 pad[0x128]; u32 x128; u8 pad2[0x1F8 - 0x12C]; void* parts[19
 typedef struct { s32 a; s16 b; s16 c; } Q;
 typedef struct { u8 pad[0x24]; W* w; void* p28; Q* p2c; void* p30; } T;
 void fn_801BE670(Task* t);
+typedef struct Ctl { u8 pad0[0x11c]; u32 v; u8 pad1[4]; s32 out; } Ctl;
+typedef struct Obj { u8 pad[0x24]; Ctl *c; } Obj;
 
 T* fn_801BEB10(void* a, s32 b, s32 c, s32 d) {
     extern void MenuDummy(Task* t);
@@ -44,4 +46,24 @@ T* fn_801BEB10(void* a, s32 b, s32 c, s32 d) {
     lbl_803473BF = b;
     lbl_803473BC = c;
     return lbl_803471B8;
+}
+
+void fn_801C0814(Obj *o) {
+    Ctl *c = o->c;
+    u32 v = c->v;
+    if (v > 1000000) {
+        c->out = 100000;
+    } else if (v > 100000) {
+        c->out = 10000;
+    } else if (v > 10000) {
+        c->out = 1000;
+    } else if (v > 1000) {
+        c->out = 100;
+    } else if (v > 100) {
+        c->out = 10;
+    } else if (v > 50) {
+        c->out = 5;
+    } else {
+        c->out = 1;
+    }
 }
