@@ -640,12 +640,10 @@ typedef struct {           /* 0x18 */
     s16 h14;     /* 0x14 */
     s16 h16;     /* 0x16 */
 } ResSpr;
-
 typedef struct {           /* 0x6C */
     UiObj o;
     u8 pad4c[0x20];
 } ResPanel;
-
 typedef struct {           /* 0x0C */
     u8 pad0[4];
     s16 id;      /* 0x04 */
@@ -653,13 +651,11 @@ typedef struct {           /* 0x0C */
     s16 flags;   /* 0x08 */
     s16 ha;      /* 0x0A */
 } ResEv;
-
 typedef struct {           /* 0x14 */
     s16 sel;     /* 0x00 */
     s8 on[6];    /* 0x02 */
     s16 slot[6]; /* 0x08 */
 } ResMem;
-
 typedef struct {           /* 0x42 */
     u8 b0;       /* 0x00 */
     u8 pad1;
@@ -668,7 +664,6 @@ typedef struct {           /* 0x42 */
     u8 b17;      /* 0x17 */
     u8 pad18[0x2a];
 } ResRow;
-
 typedef struct {           /* 0x6E */
     s16 h0;      /* 0x00 */
     s16 h2;      /* 0x02 */
@@ -678,7 +673,6 @@ typedef struct {           /* 0x6E */
     u8 b6c;      /* 0x6C */
     u8 b6d;      /* 0x6D */
 } ResStat;
-
 typedef struct {
     u32 w0;              /* 0x00 */
     s32 state;           /* 0x04 */
@@ -713,7 +707,6 @@ typedef struct {
     u8 sub[0x14];        /* 0x15F8 */
     s32 active;          /* 0x160C */
 } Ctx3594;
-
 extern Ctx3594* lbl_80346DCC;
 extern s32 lbl_80346DC8;
 extern u8 lbl_802B1B20[0x14];
@@ -2314,6 +2307,10 @@ typedef struct {
 } Obj_800DA564;
 extern s32 fn_800B2DC0(void* c, s32 idx, s32 a, s16 b, f32 f);
 extern void fn_800DA744(s32 id, s32* out);
+extern s32 fn_801CC62C(char *name);
+extern void *fn_801DB244(char *path);
+extern void fn_80224040(u16 id, void *p);
+extern void fn_8010A278(void *p);
 
 void fn_800D81E8(void) {
     fn_80226D14();
@@ -7653,4 +7650,39 @@ void fn_800FF7A0(void) {
         lbl_80347450->sub->x2e = -1;
         lbl_80347450->sub->x2c = -1;
     }
+}
+
+inline Entry *fn_80109F90_find(char *name) {
+    char buf[0x20];
+    Entry *e;
+    fn_801CC434(name, 0, buf);
+    for (e = lbl_80347460; e != 0; e = e->next) {
+        if (fn_801E1098(buf, e->name) == 0) {
+            return e;
+        }
+    }
+    return 0;
+}
+
+inline void *fn_80109F90_load(char *path, u16 id) {
+    void *p = fn_801DB244(path);
+    if (id != 0x7fff) {
+        fn_80224040(id, p);
+    }
+    fn_8010A278(p);
+    fn_800D2B1C(p);
+    return p;
+}
+void *fn_80109F90(char *name, u16 id) {
+    char path[0x40];
+    void *p;
+    fn_801096FC(0, id, 0, name);
+    if (fn_801CC62C(name) == 0) {
+        fn_8025CB24(path, "%stest.mld", lbl_8034746C);
+    } else {
+        fn_8025F120(path, name);
+    }
+    p = fn_80109F90_load(path, id);
+    fn_80109F90_find(name)->ptr = (u32)p;
+    return p;
 }

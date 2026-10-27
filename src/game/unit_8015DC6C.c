@@ -2509,6 +2509,32 @@ typedef struct { u8 pad0[8]; s32 a8; u8 padc[4]; s32 a10; u8 pad14[0x5c - 0x14];
 typedef struct { u8 pad[8]; UiObj obj; u8 pad2[0xBC - 8 - sizeof(UiObj)]; Leaf_801763B8* leaf; } Mid_801763B8;
 typedef struct { u8 pad[0x24]; Mid_801763B8* mid; } Elem_801763B8;
 #define OBJ_801763B8(i) (&((Elem_801763B8*)camp_work.objs[i])->mid->obj)
+/* fn_80167578: walk the object chain, return the i-th table entry's data. */
+#include "types.h"
+
+typedef struct Ent_80167578 {
+    u32 x0;
+    u32 x4;
+    u8 x8[1];
+} Ent_80167578;
+typedef struct Tbl_80167578 {
+    s32 n;
+    Ent_80167578 *e[1];
+} Tbl_80167578;
+typedef struct Mdl_80167578 {
+    u8 pad[0x14];
+    Tbl_80167578 *tbl;
+} Mdl_80167578;
+typedef struct Obj_80167578 {
+    u8 pad[0x1c8];
+    Mdl_80167578 *m;
+    u8 pad1cc[4];
+    struct Obj_80167578 *next;
+} Obj_80167578;
+typedef struct Table_80167604 { s32 n; s32* e[1]; } Table_80167604;
+typedef struct Hold_80167604 { u8 pad[0x14]; Table_80167604* t; } Hold_80167604;
+typedef struct Node_80167604 Node_80167604;
+struct Node_80167604 { u8 pad0[0x1c8]; Hold_80167604* h; u8 pad1[4]; Node_80167604* parent; };
 
 s32 fn_8015DC6C(Obj_8015DC6C* self, Src* src)
 {
@@ -9194,4 +9220,42 @@ f32 fn_8018E73C(Sub_8018DFC4 *s)
         break;
     }
     return w;
+}
+
+static inline Ent_80167578 *Find(Obj_80167578 *o, s32 i) {
+    Tbl_80167578 *t = o->m->tbl;
+    return (t->n > i) ? *(Ent_80167578 **)((u8 *)t->e + i * 4) : NULL;
+}
+
+void *fn_80167578(Obj_80167578 *o, s32 i)
+{
+    Ent_80167578 *e = Find(o, i);
+    if (e != NULL) {
+        return e->x8;
+    }
+    for (o = o->next; o != NULL; o = o->next) {
+        e = Find(o, i);
+        if (e != NULL) {
+            return e->x8;
+        }
+    }
+    return NULL;
+}
+
+static inline s32* Lookup(Node_80167604* n, int idx)
+{
+    Table_80167604* t = n->h->t;
+    return (t->n > idx) ? *(s32 **)((u8 *)t->e + idx * 4) : NULL;
+}
+
+s32 fn_80167604(Node_80167604* self, int idx)
+{
+    Node_80167604* n;
+    s32* e = Lookup(self, idx);
+    if (e != NULL) return *e;
+    for (n = self->parent; n != NULL; n = n->parent) {
+        e = Lookup(n, idx);
+        if (e != NULL) return *e;
+    }
+    return 0;
 }

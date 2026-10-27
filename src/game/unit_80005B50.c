@@ -1119,6 +1119,21 @@ typedef struct Wrap8001FD7C {
     u8 pad0[0x24];
     Wk_8001FABC *ent;
 } Wrap8001FD7C;
+typedef struct Ent8001FDD8 {
+    s16 key0;
+    s16 type;
+    u8 pad0[8];
+    s16 key12;
+    u8 pad1[10];
+} Ent8001FDD8;
+typedef struct Inner8001FDD8 {
+    u8 pad0[0xdc];
+    Ent8001FDD8 *tab;
+} Inner8001FDD8;
+typedef struct Obj8001FDD8 {
+    u8 pad0[0x4c];
+    Inner8001FDD8 *inner;
+} Obj8001FDD8;
 
 void* fn_80005B50(void* heap, u32 size) {
     void* p = fn_80005B9C(heap);
@@ -4083,4 +4098,20 @@ void fn_8001FD7C(Wrap8001FD7C *w)
     if (in->ents[in->xe4].flags & 0x10000) {
         e->x2c = fn_80071C74(e, 0.0f, 0.0f);
     }
+}
+
+s32 fn_8001FDD8(Obj8001FDD8 *obj, s16 a, s16 b)
+{
+    s32 i;
+    for (i = 0; obj->inner->tab[i].type != 3; i++) {
+        Ent8001FDD8 *e = &obj->inner->tab[i];
+        if (a == e->key0) {
+            if (b >= 0) {
+                if (b == e->key12) return i;
+            } else {
+                return i;
+            }
+        }
+    }
+    return -1;
 }

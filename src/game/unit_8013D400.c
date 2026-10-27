@@ -741,10 +741,17 @@ typedef struct {
 } Obj_80141390;
 extern Pad_80141390 *lbl_80311A60[6];
 extern s32 fn_8012C5DC(void);
-extern s8 fn_80141314(s32 v);
+extern s32 fn_801410D4(s32 a, s32 d);
+s32 fn_80141314(s32 a);
 extern void fn_8012C5FC(s8 v);
 extern void fn_8012C614(s32 v);
 extern void fn_8012C390(s32 v);
+extern void fn_80140750(s32 cols, s32 rows);
+extern int fn_80136B10(s8 *dst, u8 *src);
+extern void fn_801315A8(s8 *src);
+extern void fn_80131598(s8 v);
+extern void fn_801315EC(s8 v);
+extern void fn_801315FC(s8 v);
 
 void fn_8013D400(s32 a, s32 b) {
     fn_80136A28(a, b, 3, -1, -1, -1);
@@ -2578,4 +2585,58 @@ s32 fn_80141390(Obj_80141390 *o) {
         }
     }
     return res;
+}
+
+s32 fn_80141314(s32 a)
+{
+    u32 f = lbl_8030A6D4[lbl_8034757C].xc;
+    s32 d = 0;
+    if (f & 8) d = -1;
+    if (f & 4) d++;
+    if (d == 0) {
+        d = 0;
+        if (f & 1) d = -1;
+        if (f & 2) d++;
+    }
+    return fn_801410D4(a + d, d);
+}
+
+void fn_80140800(s32 mode)
+{
+    s32 cols;
+    s32 m;
+    s32 n;
+    s8 *p;
+    s8 buf[8];
+    u8 *w;
+
+    w = fn_80135598();
+    n = 0;
+    p = (s8 *)fn_80135598();
+    if (p != NULL) {
+        for (n = 0; n < 4; n++) {
+            if (p[n] < 0) {
+                break;
+            }
+        }
+    }
+    cols = n * 2;
+    m = 0;
+    p = (s8 *)fn_80135598();
+    if (p != NULL) {
+        for (m = 0; m < 4; m++) {
+            if (p[m] < 0) {
+                break;
+            }
+        }
+    }
+    fn_80140750(cols, m);
+    if (w != NULL) {
+        fn_80136B10(buf, w);
+        fn_801315A8(buf);
+    }
+    fn_80131598(mode);
+    fn_801315EC(mode);
+    fn_801315FC(1);
+    fn_801316B4(0);
 }

@@ -201,6 +201,10 @@ extern void fn_80035380(void* a, Res* r, f32 t, s32 b);
 extern void fn_80035140(void* a, s32 b);
 extern void fn_8007E264(f32* p, f32 a, f32 b);
 extern void fn_801E17E0(void* p);
+typedef struct D21 { s8 kind; } D21;
+typedef struct W21 { u8 pad00[0x4c]; D21 *d; } W21;
+typedef struct T21 { u8 pad00[0x24]; W21 *work; } T21;
+extern T21 *lbl_80309E24[14];
 
 void fn_80020B50(Top *t, s16 *out1, s16 *out2) {
   Inner *i = t->mid->inner;
@@ -795,4 +799,24 @@ void fn_80029980(Obj* p) {
         }
         p->f5c = p->f5c + p->f64;
     }
+}
+
+static inline T21 *Find21(s8 id)
+{
+    s8 i;
+    for (i = 0; i < 14; i++) {
+        T21 *t = lbl_80309E24[i];
+        if (t != NULL && t->work->d->kind == id) {
+            return lbl_80309E24[i];
+        }
+    }
+    return NULL;
+}
+T21 *fn_80021658(s8 id)
+{
+    T21 *r = Find21(id);
+    if (r != NULL) {
+        return r;
+    }
+    return Find21(0);
 }

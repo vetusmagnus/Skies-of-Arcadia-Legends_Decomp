@@ -1249,3 +1249,29 @@ More (2026-10-27)
   differ in registers. It only inlines fully under GC/1.3: under 1.3.2 it goes over the inline
   budget (matching.md). Whether this unit was built with 1.3 is open. Everything that matches in
   the unit is identical under both.
+
+### Opus pass over the remaining near misses under 632 bytes (2026-10-27)
+
+16 Opus 5.5 agents (model set explicitly, no retry or merge agents), 19 functions each (299 near misses left after the last
+pass, in address runs), about 10 tries per function, starting from the earlier attempts. 63 more matched in isolation (checked
+with fdiff and `floatcheck.py` by the coordinating session); **17 are merged** (4,399 to 4,416), `main.dol` force-relinks to
+the `build.sha1` SHA-1. 237 stayed near.
+
+Matched in isolation but held back: fn_800A12D8 (needs a self-assignment `d.x = d.x;`, a fakematch), fn_80155CD8,
+fn_80156768, fn_80168908, fn_8016CCD8 (match only as `s32 f()` with no `return`), fn_801E184C (needs `lbl_80346720` volatile),
+fn_80069B58 (value casts at the call site), fn_800C24CC and fn_80159D48 (need the unit's string pool or `.data` defined in C).
+Matched in isolation, not merged (struct or prototype clashes; files in `build/agents/n12_*/`, gitignored): fn_8001ECB4,
+fn_80020094, fn_80021934, fn_800472DC, fn_8004DD54, fn_80017B18, fn_80067E8C, fn_800683D8, fn_80068E20, fn_80068F68,
+fn_80077228, fn_80084A08, fn_8009D400, fn_800B2C1C, fn_800CB6D0, fn_800D57E8, fn_80134E7C, fn_8013D718, fn_8013FB48,
+fn_801523A4, fn_80166220, fn_80188098, fn_8018E3D0, fn_801942A4, fn_80197654, fn_801A53D4 (prototype `s16 idx`), fn_801AC48C,
+fn_801AC678, fn_801BE468, fn_801C83B4, fn_802109E8, fn_80210B44, fn_8021BF80, fn_80221AAC, fn_80226120, fn_802273E0,
+fn_801EF7E0.
+
+Found on the way:
+
+- fn_801D1C04-fn_801D20D8 (gp_check.c) match with `-str reuse,readonly -inline noauto,deferred` and the functions in descending
+  address order (fn_801D1D2C, the FIFO-limits reinit, is new); fn_80073024 matches with `-str reuse,readonly`.
+- fn_80141314 needs fn_801410D4 to take `(s32 pos, s32 dir)`; fn_801523A4 needs fn_801677D0 as
+  `(s32, s32, f32, f32, f32, f32, s8, s32)`; fn_80171B64 takes a second argument.
+- A temp of a different type fixes a folded copy (`s16` into an `int` local, a `u8` field into an `s8` temp); an `int` loop
+  counter instead of `s32` changes the loop entry; moving a loop into a `static inline` fixes counter/pointer register identity.

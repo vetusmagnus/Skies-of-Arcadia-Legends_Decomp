@@ -726,6 +726,32 @@ extern Task *fn_802267AC(void *parent, TaskFunc fn);
 extern u32 strlen(const char*);
 extern char* fn_8025F120(char*, const char*);
 extern const char lbl_802C46C0[];
+typedef struct Key_801DEBE4 {
+    f32 a[3];
+    f32 da[3];
+    f32 b[3];
+    f32 db[3];
+    f32 c[4];
+    f32 dc[4];
+} Key_801DEBE4;
+/* 0x50 */
+typedef struct KeySet_801DEBE4 {
+    Key_801DEBE4* keys;
+    s32 count;
+} KeySet_801DEBE4;
+typedef struct Key_801DEDC0 {
+    f32 a[3];
+    f32 da[3];
+    f32 b[3];
+    f32 db[3];
+    f32 c[4];
+    f32 dc[4];
+} Key_801DEDC0;
+/* 0x50 */
+typedef struct KeySet_801DEDC0 {
+    Key_801DEDC0* keys;
+    s32 count;
+} KeySet_801DEDC0;
 
 void fn_801D1AE8(void) {
     VISetNextFrameBuffer(lbl_803476AC);
@@ -3376,4 +3402,148 @@ void *fn_801E13B0(void *p, u32 size) {
         fn_801DBE1C(lbl_802C46C0);
     }
     return fn_801E1138(&lbl_802F6748[idx], p, size, 1);
+}
+
+s32 fn_801DCFA0(NJS_POINT3* v, Angle* a)
+{
+    NJS_MATRIX m;
+    NJS_POINT3 r;
+    s32 res;
+    njUnitMatrix(m);
+    njRotateX(m, -a[0]);
+    njRotateY(m, -a[1]);
+    njCalcVector(m, v, &r);
+    if (r.x != 0.0f || r.y != 0.0f) {
+        res = -(s32)(10430.381f * (f32)atan2(r.x, r.y));
+        lbl_8030EA10[2] = 0;
+        res &= 0xffff;
+    } else {
+        lbl_8030EA10[2] = 1;
+        res = 0;
+    }
+    return res;
+}
+
+/* Heading (16-bit angle) of v seen from the rotation fn_801DD5E8 derives from p. */
+s32 fn_801DD078(NJS_POINT3 *v, NJS_POINT3 *p)
+{
+    NJS_POINT3 r;
+    Angle a[3];
+    NJS_MATRIX m;
+    s32 res;
+    fn_801DD5E8(a, p);
+    njUnitMatrix(m);
+    njRotateX(m, -a[0]);
+    njRotateY(m, -a[1]);
+    njCalcVector(m, v, &r);
+    if (r.x != 0.0f || r.y != 0.0f) {
+        f32 ang = atan2(r.x, r.y);
+        lbl_8030EA10[2] = 0;
+        res = -(s32)(10430.381f * ang);
+        res &= 0xffff;
+    } else {
+        lbl_8030EA10[2] = 1;
+        res = 0;
+    }
+    return res;
+}
+
+/* Fills b[0..2] of every key from (time, value) pairs, linearly between the pair times. */
+void fn_801DEBE4(KeySet_801DEBE4* ks, f32* tv, s32 n) {
+    f32 t0;
+    f32 v0;
+    f32 last;
+    f32 slope;
+    f32 f;
+    f32 dt;
+    s32 i1, i, cnt;
+    Key_801DEBE4* k;
+    if (n < 1 || (cnt = ks->count) < 3) return;
+    {
+        v0 = tv[1];
+        last = (f32)cnt - 1.0f;
+        ks->keys[0].b[2] = v0;
+        ks->keys[0].b[1] = v0;
+        ks->keys[0].b[0] = v0;
+        t0 = 0.0f;
+        while (last >= tv[0]) {
+            dt = tv[0] - t0;
+            i = (s32)t0;
+            f = 1.0f - (t0 - (f32)i);
+            i++;
+            k = ks->keys + i;
+            i1 = (s32)tv[0];
+            slope = tv[1] - v0;
+            if (0.0f < dt) {
+                slope /= dt;
+            }
+            while (i1 >= i++) {
+                k->b[0] = k->b[1] = k->b[2] = slope * f + v0;
+                f += 1.0f;
+                k++;
+            }
+            if (--n <= 0) break;
+            t0 = tv[0];
+            v0 = tv[1];
+            tv += 2;
+        }
+        i = (s32)tv[0];
+        f = tv[1];
+        i++;
+        k = ks->keys + i;
+        for (cnt = ks->count - i; cnt > 0; cnt--) {
+            k->b[2] = f;
+            k->b[1] = f;
+            k->b[0] = f;
+            k++;
+        }
+    }
+}
+
+/* Fills b[0..2] of every key from (time, value) pairs, linearly between the pair times. */
+void fn_801DEDC0(KeySet_801DEDC0* ks, f32* tv, s32 n) {
+    f32 t0;
+    f32 v0;
+    f32 last;
+    f32 slope;
+    f32 f;
+    f32 dt;
+    s32 i1, i, cnt;
+    Key_801DEDC0* k;
+    if (n < 1 || (cnt = ks->count) < 3) return;
+    {
+        v0 = tv[1];
+        ks->keys[0].c[0] = v0;
+        t0 = 0.0f;
+        last = (f32)cnt - 1.0f;
+        while (last >= tv[0]) {
+            dt = tv[0] - t0;
+            i = (s32)t0;
+            f = 1.0f - (t0 - (f32)i);
+            i++;
+            k = ks->keys + i;
+            i1 = (s32)tv[0];
+            slope = tv[1] - v0;
+            if (0.0f < dt) {
+                slope /= dt;
+            }
+            while (i1 >= i++) {
+                k->c[0] = slope * f + v0;
+                f += 1.0f;
+                k++;
+            }
+            if (--n <= 0) break;
+            t0 = tv[0];
+            v0 = tv[1];
+            tv += 2;
+        }
+        i = (s32)tv[0];
+        f = tv[1];
+        i++;
+        k = ks->keys + i;
+        for (cnt = ks->count - i; cnt > 0; cnt--) {
+            k->c[0] = f;
+            k++;
+        }
+    }
 }

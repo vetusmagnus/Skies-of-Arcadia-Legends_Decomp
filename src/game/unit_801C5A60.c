@@ -157,6 +157,38 @@ typedef struct Tk {
 } Tk;
 extern s32 lbl_802C3EA8[];
 extern s32 fn_801E4BF4(s8 i);
+typedef struct NJS_MOTION NJS_MOTION;
+typedef struct { u32 count; NJS_MOTION *items[1]; } MotionList;
+typedef struct { u8 pad0[0x1c]; MotionList *motions; } EvExt;
+typedef struct {
+    u8 pad0[0xe8]; NJS_MOTION *motion; u8 padEC[4]; NJS_MOTION *prev;
+    u8 padF4[0x18c - 0xf4]; f32 x18c; u8 pad190[0x198 - 0x190];
+    s32 x198; s32 x19c; f32 x1a0; f32 x1a4; u8 pad1A8[0x1c8 - 0x1a8]; EvExt *ext;
+} EvObj;
+typedef struct AkRd {
+    s32 state;
+    u8 info[0x3c];
+    s32 mode;
+    u8 pad44[4];
+    void* dst;
+    u8 pad4c[8];
+    s32 size;
+    u8 pad58[4];
+    u8 b5c;
+    u8 b5d;
+    u8 pad5e[6];
+    s32 w64;
+    s32 w68;
+    s32 w6c;
+    u8 pad70[4];
+    s32 w74;
+    u8* buf;
+    u8 pad7c[4];
+    s32 w80;
+} AkRd;
+extern void fn_801C74D0(AkRd* f);
+typedef struct { f32 x, y, z; } Vtx;
+typedef struct { s16 i[4]; } Quad;
 
 void fn_801C5A60(NJS_MATRIX m, NJS_POINT3 *p, NJS_POINT3 *out)
 {
@@ -853,4 +885,125 @@ s32 fn_801C6308(Node* n) {
         }
     }
     return 1;
+}
+
+static inline s32 MotionValid(EvObj *obj, u32 i)
+{
+    return obj != NULL && obj->ext != NULL && obj->ext->motions != NULL &&
+        obj->ext->motions->count != 0 && obj->ext->motions->count > i;
+}
+
+static inline NJS_MOTION *MotionGet(EvObj *obj, u32 i)
+{
+    NJS_MOTION *m = NULL;
+    if (MotionValid(obj, i)) {
+        m = obj->ext->motions->items[i];
+    }
+    return m;
+}
+void fn_801C5BF4(EvObj *obj, u32 i)
+{
+    if (obj == NULL) {
+        return;
+    }
+    obj->x1a0 = obj->x18c;
+    obj->x18c = 0.0f;
+    obj->x1a4 = 0.0f;
+    obj->x198 = 0;
+    obj->x19c = 0;
+    obj->prev = obj->motion;
+    obj->motion = MotionGet(obj, i);
+}
+
+s32 fn_801C6C7C(AkRd* f) {
+    int i;
+    s32 r;
+
+    if (f->state == 2) {
+        f->state = 0;
+        fn_801DBA70("akFIO.c", 0x1db, "akFioRead() : Invalid FileOpenMode");
+        return f->state;
+    }
+    if (f->mode == 0) {
+        fn_8023AB88(f->info, f->dst, f->size, 0, 0, 2);
+        while (fn_8023CD10(f->info) != 0) {
+            fn_801DBF94(0);
+            r = fn_801D168C();
+            if (r != -1) {
+                fn_801D150C(r);
+            }
+        }
+        f->state = 4;
+        return f->size;
+    }
+    f->w64 = 0x10;
+    f->w6c = f->w68 = i = 0;
+    f->w74 = 0xfee;
+    for (; i < 0xfee; i++) {
+        f->buf[i] = 0;
+    }
+    f->w80 = 0;
+    f->b5c = 6;
+    f->b5d = 1;
+    fn_801C74D0(f);
+    f->state = 4;
+    return f->size;
+}
+
+/* Is (px, pz) inside the quad? (2D cross product of each edge, using the vertices' y and z.) */
+s32 fn_801C81DC(Quad* q, Vtx* v, f32 px, f32 pz)
+{
+    f32 zero = 0.0f;
+    f32 ax, az;
+    f32 t0, t1;
+    az = v[q->i[0]].z - pz;
+    ax = v[q->i[0]].y - px;
+    t0 = az * (v[q->i[1]].y - px);
+    t1 = v[q->i[1]].z - pz;
+    t1 *= ax;
+    if (zero > t1 - t0) {
+        return 0;
+    }
+    t0 = (v[q->i[1]].z - pz) * (v[q->i[2]].y - px);
+    t1 = (v[q->i[2]].z - pz) * (v[q->i[1]].y - px);
+    if (zero > t1 - t0) {
+        return 0;
+    }
+    t0 = (v[q->i[2]].z - pz) * (v[q->i[3]].y - px);
+    t1 = (v[q->i[3]].z - pz) * (v[q->i[2]].y - px);
+    if (zero > t1 - t0) {
+        return 0;
+    }
+    t1 = (v[q->i[3]].z - pz) * (v[q->i[0]].y - px);
+    t0 = (v[q->i[0]].z - pz) * (v[q->i[3]].y - px);
+    return !(zero > t0 - t1);
+}
+
+/* Is (px, pz) inside the quad? (2D cross product of each edge, using the vertices' x and y.) */
+s32 fn_801C82C8(Quad* q, Vtx* v, f32 px, f32 pz)
+{
+    f32 zero = 0.0f;
+    f32 ax, az;
+    f32 t0, t1;
+    az = v[q->i[0]].y - pz;
+    ax = v[q->i[0]].x - px;
+    t0 = az * (v[q->i[1]].x - px);
+    t1 = v[q->i[1]].y - pz;
+    t1 *= ax;
+    if (zero > t1 - t0) {
+        return 0;
+    }
+    t0 = (v[q->i[1]].y - pz) * (v[q->i[2]].x - px);
+    t1 = (v[q->i[2]].y - pz) * (v[q->i[1]].x - px);
+    if (zero > t1 - t0) {
+        return 0;
+    }
+    t0 = (v[q->i[2]].y - pz) * (v[q->i[3]].x - px);
+    t1 = (v[q->i[3]].y - pz) * (v[q->i[2]].x - px);
+    if (zero > t1 - t0) {
+        return 0;
+    }
+    t1 = (v[q->i[3]].y - pz) * (v[q->i[0]].x - px);
+    t0 = (v[q->i[0]].y - pz) * (v[q->i[3]].x - px);
+    return !(zero > t0 - t1);
 }

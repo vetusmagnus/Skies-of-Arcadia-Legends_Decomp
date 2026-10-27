@@ -5504,3 +5504,13 @@ void fn_800631B0(CamTask* t)
         break;
     }
 }
+
+f32 fn_8006116C(int x)
+{
+    f32 r;
+    r = (360.0 * (s32)(u16)x) / 65536.0;
+    if (r < 0.0f) {
+        r = 360.0f + r;
+    }
+    return r;
+}

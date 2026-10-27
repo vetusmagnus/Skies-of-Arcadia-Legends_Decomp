@@ -1,3 +1,4 @@
+#include "types.h"
 /* Effect and particle task handlers (0x80040010 - 0x80047210): blend-mode and object-flag
  * helpers, matrix create/free helpers for effect tasks, the animation-table picker
  * (fn_800403AC), and the per-effect task handlers: ring spawner fn_800405EC, emitters and their
@@ -11,7 +12,6 @@
 #include "game/drawstate.h"
 
 typedef NJS_POINT3 Vec;
-
 typedef struct { u8 pad[0x154]; void* x154; } Body;
 /* Task data the effect handlers read: position, yaw and the model body. */
 typedef struct {
@@ -23,7 +23,6 @@ typedef struct {
     Body* body;         /* 0x4C */
 } TaskData;
 typedef struct { u8 pad[0x24]; TaskData* data; } TaskRef;
-
 typedef struct {
     u8 pad[0x18];
     u8 flags;
@@ -31,7 +30,6 @@ typedef struct {
     u8 pad1a[0x24 - 0x1A];
     void* work;
 } Node;
-
 typedef struct {
     u8 pad0[0x6C];
     u32 input;          /* 0x6C */
@@ -43,15 +41,12 @@ typedef struct {
     s16 x1ca;
     u32 flags;          /* 0x1CC */
 } ObjStats;
-
 typedef struct { u8 pad[4]; u32 n; } TexList;
-
 /* Animation table entry (fn_800403AC). */
 typedef struct {
     s16 id;
     s16 weight;
 } AnimEnt;
-
 /* Command header shared by every effect command (fn_80037FD8). */
 typedef struct {
     u8 pad0[0x6];
@@ -103,7 +98,6 @@ typedef struct {
     Part* data;
     u8 pad50[8];
 } Work_80040508;
-
 /* Ring spawner (fn_800405EC). */
 typedef struct {
     u8 pad0[0x6];
@@ -130,7 +124,6 @@ typedef struct {
     s16 animA;          /* 0x158 */
     s16 animB;          /* 0x15A */
 } Cmd;
-
 typedef struct {
     s16 start;          /* 0x00 */
     s16 end;            /* 0x02 */
@@ -146,7 +139,6 @@ typedef struct {
     s32 rot[3];         /* 0x1C */
     Cmd c;              /* 0x28 */
 } Sub_800405EC;
-
 typedef struct {
     u8 pad0[0x8];
     NJS_TEXLIST* tex;   /* 0x08 */
@@ -155,7 +147,6 @@ typedef struct {
     s32 x50;
     s32 x54;
 } Work_800405EC;
-
 typedef struct {
     s32 unk0;
     Vec pos;            /* 0x04 */
@@ -169,7 +160,8 @@ typedef struct {
     s32 unk38;          /* 0x38 */
     u8 col[4][4];       /* 0x3C */
     NJS_TEXLIST* tex;   /* 0x4C */
-} Quad; /* 0x50 */
+} Quad;
+/* 0x50 */
 
 /* Emitter (fn_80040AA0) and its particles (fn_80040DC4). */
 typedef struct {
@@ -198,7 +190,6 @@ typedef struct {
     s16 animA;      /* 0x146 */
     s16 animB;      /* 0x148 */
 } Obj;
-
 typedef struct {
     s16 timer;      /* 0x00 */
     s16 count;      /* 0x02 */
@@ -214,9 +205,7 @@ typedef struct {
     u8 pad32[2];
     Obj* owner;     /* 0x34 */
 } Sub;
-
 typedef struct { u8 d[0x4C]; } Buf;
-
 typedef struct {
     u8 pad0[0x1C];
     Vec pos;        /* 0x1C */
@@ -227,7 +216,6 @@ typedef struct {
     s32 x50;
     s32 x54;
 } Work;
-
 extern ObjStats lbl_8030A10C;
 extern void* memset(void*, int, unsigned long);
 extern void fn_8006D954(s32);
@@ -7233,4 +7221,48 @@ void fn_8004F84C(NJS_VECTOR* v) {
     v->x = -1.16f;
     v->y = -0.23f;
     v->z = -0.71f;
+}
+
+void fn_8004F664(f32 *base, f32 *out1, f32 *out2, f32 *src, s16 div, s8 mode) {
+    f32 *p;
+    s8 i;
+
+    if (base != 0) {
+        switch (mode) {
+        case 0:
+        default:
+            p = base + 15;
+            break;
+        case 1:
+            p = base + 12;
+            break;
+        case 2:
+            p = base + 3;
+            break;
+        case 4:
+            p = out2;
+            break;
+        }
+    }
+    if (base != 0) {
+        for (i = 0; i < 3; i++) {
+            out1[i] = (src[i] - p[i]) / (f32)div;
+            if (mode < 3) {
+                out2[i] = p[i];
+            } else {
+                out2[i] += out1[i];
+            }
+        }
+    } else {
+        for (i = 0; i < 3; i++) {
+            *out1 = *src++ / (f32)div;
+            if (mode < 3) {
+                *out2 = *out1;
+            } else {
+                *out2 += *out1;
+            }
+            out1++;
+            out2++;
+        }
+    }
 }
