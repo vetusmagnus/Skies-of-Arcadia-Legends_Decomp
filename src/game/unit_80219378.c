@@ -481,8 +481,11 @@ typedef struct V3p {
 typedef struct A3 {
     Angle x, y, z;
 } A3;
+/* A model's node tree (unit_801D1AE8.c draws it with fn_801D25DC). */
+typedef struct ModelNode ModelNode;
+void fn_801D25DC(ModelNode *n);
 typedef struct Shape_80224F28 {
-    void *p0;
+    ModelNode *p0;
     s16 kind;
 } Shape_80224F28;
 typedef struct Xf_80224F28 {
@@ -510,11 +513,11 @@ typedef struct Cmp {
     u16 flags;      /* 0x30 */
     s16 w32;
 } Cmp;
-extern s32 fn_801D38D4(NJS_POINT3 *, void *, Cmp *);
-extern s32 fn_801D3574(NJS_POINT3 *, void *, Cmp *);
-extern s32 fn_801D3BC8(NJS_POINT3 *, void *, Cmp *);
-extern s32 fn_801D3360(NJS_POINT3 *, void *, Cmp *);
-extern s32 fn_801D30DC(NJS_POINT3 *, void *, Cmp *);
+extern s32 fn_801D38D4(NJS_POINT3 *, ModelNode *, Cmp *);
+extern s32 fn_801D3574(NJS_POINT3 *, ModelNode *, Cmp *);
+extern s32 fn_801D3BC8(NJS_POINT3 *, ModelNode *, Cmp *);
+extern s32 fn_801D3360(NJS_POINT3 *, ModelNode *, Cmp *);
+extern s32 fn_801D30DC(NJS_POINT3 *, ModelNode *, Cmp *);
 s32 fn_80224F28(Xf_80224F28 *x, NJS_POINT3 *p, Cmp *c);
 s32 fn_801C812C(NJS_POINT3 *tri, f32 x, f32 z, f32 *y);
 typedef struct Item {
@@ -1580,7 +1583,7 @@ void fn_8022394C(Obj_8022394C *o)
     o->w48[2] = w[2];
 }
 
-typedef struct Sub_802239A4 { s32 f0; s16 f4; } Sub_802239A4;
+typedef struct Sub_802239A4 { ModelNode *f0; s16 f4; } Sub_802239A4;
 typedef struct Obj_802239A4 {
     u8 pad0[8];
     Sub_802239A4 *sub;
@@ -2119,7 +2122,6 @@ void fn_80221D04(f32 *out, f32 *a, f32 *b) {
     }
 }
 
-extern void fn_801D25DC(s32 v);
 
 void fn_802233EC(Obj_802239A4 *o) {
     Sub_802239A4 *s = o->sub;
