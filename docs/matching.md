@@ -181,6 +181,15 @@ misses in `docs/near/`:
   that has a loop.
 - **A conversion into a local is kept, into a parameter it isn't.** An `s16` parameter only
   stored with `sth` is never extended; an `s16` local holding the same value is (`extsh`).
+- **A switch's compare tree shows its case set.** `cmpwi 5; beq; bge; cmpwi 4; bge; cmpwi 6; beq`
+  is a switch on {4, 5} with `if (x == 6)` in the default; `cmpwi 1; beq; bge; ...; cmpwi 3` is
+  {0, 1, 2} with an empty `case 0:` (fn_800631B0, fn_80141610).
+- **`mr` copies into saved registers in a prologue are the order of the first assignments.**
+  fn_800631B0 only matched with `actor = w->p0; chr = w->p0->body->chr; body = actor->body;`: the
+  chain is loaded once for `chr` and the variables take copies. Brute-forcing the order and the
+  spelling of those few statements is cheap and found it after everything else failed.
+- **A message pooled behind `addi rN, rBase, 0x0`** in a function is the section-base pooling
+  again: the base register is set up in the prologue and colours the whole function.
 - **`i = n = 0`** (the counter's zero copied into the index) is what gives a strength-reduced
   pointer that starts with `mulli rN, r<counter>, stride`.
 

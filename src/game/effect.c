@@ -5017,7 +5017,7 @@ s32 fn_800482E0(ModelParts_800482E0* parts, ModelNode_800482E0* node, NJS_POINT3
 void fn_800483EC(T800483EC* a, s32* out);
 int fn_80048B08(N80048B08* node, f32* out, s16 idx);
 void fn_80048C40(W80048C40* src, f32* mat, s16 a, f32 f1, NJS_POINT3* pt, s16 b, s16 c, s32 d, Q16* q, f32 f2);
-void fn_80048DF0(NJS_MATRIX m, NJS_VECTOR* v, RotParam* r);
+void fn_80048DF0(NJS_MATRIX m, NJS_VECTOR* v, RotParam* r, s32 a);
 void fn_80048E58(NodeSrc* node);
 void fn_80049130(Node_80049130* node);
 void fn_800492C0(Node_800492C0* node);
@@ -5479,7 +5479,7 @@ void fn_80048C40(W80048C40* src, f32* mat, s16 a, f32 f1, NJS_POINT3* pt, s16 b,
     e->x30 = d;
 }
 
-void fn_80048DF0(NJS_MATRIX m, NJS_VECTOR* v, RotParam* r) {
+void fn_80048DF0(NJS_MATRIX m, NJS_VECTOR* v, RotParam* r, s32 a) {
     NJS_VECTOR t;
     t.x = v->x;
     t.y = v->y;

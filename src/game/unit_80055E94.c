@@ -1,4 +1,5 @@
 #include "types.h"
+#include <math.h>
 #include "game/stat_8030B4D4.h"
 #include "ninja.h"
 #include "game/drawstate.h"
@@ -367,21 +368,26 @@ extern void njRotateZ(NJS_MATRIX m, Angle a);
 extern void fn_80286EE8(void);
 extern void fn_8028B498(void);
 typedef struct G800624FC {
-    u8 pad_0[0x8];
-    f32 x8;
-    f32 xc;
-    f32 x10;
+    u8 pad_0[0x4];
+    s32 w4;
+    f32 v8[3];
     f32 x14;
     f32 x18;
     f32 x1c;
     f32 x20;
-    u8 pad_24[0x4];
-    f32 f28;
-    u8 pad_2c[0x10];
+    f32 ang[3]; /* degrees */
+    u8 pad_30[0xc];
     f32 v[3];
-    u8 pad_48[0x34];
+    u8 pad_48[0x8];
+    f32 f50;
+    u8 pad_54[0x18];
+    f32 f6c;
+    u8 pad_70[0xc];
     u32 f7c;
-    u8 pad_80[0x8];
+    u8 pad_80[0x2];
+    s16 h82;
+    u8 pad_84[0x2];
+    s16 h86;
     s16 x88;
     s16 x8a;
     s16 x8c;
@@ -2038,12 +2044,12 @@ void fn_800624FC(O800624FC *o) {
     switch (o->state) {
     case 0:
         o->state = 1;
-        s->f4 = (lbl_80346BD8->x18 + lbl_80346BD8->xc) / (f32)s->s0e;
-        s->f8 = (lbl_80346BD8->x18 + lbl_80346BD8->xc) / (f32)(s->s10 - s->s0e);
+        s->f4 = (lbl_80346BD8->x18 + lbl_80346BD8->v8[1]) / (f32)s->s0e;
+        s->f8 = (lbl_80346BD8->x18 + lbl_80346BD8->v8[1]) / (f32)(s->s10 - s->s0e);
     case 1:
         lbl_80346BD8->x20 = lbl_80346BD8->x20 - s->f4;
-        if (lbl_80346BD8->x20 + lbl_80346BD8->xc <= 0.0f) {
-            lbl_80346BD8->x20 = -lbl_80346BD8->xc;
+        if (lbl_80346BD8->x20 + lbl_80346BD8->v8[1] <= 0.0f) {
+            lbl_80346BD8->x20 = -lbl_80346BD8->v8[1];
             o->state = 2;
             fn_80075FF0(p, 0xf, -1);
         }
@@ -4636,9 +4642,9 @@ void fn_8006228C(O800624FC *self)
     case 0:
         self->state = 1;
     case 1:
-        lbl_80346BD8->f28 = lbl_80346BD8->f28 - 10.0f;
-        if (lbl_80346BD8->f28 <= 0.0f) {
-            lbl_80346BD8->f28 = 0.0f;
+        lbl_80346BD8->ang[1] = lbl_80346BD8->ang[1] - 10.0f;
+        if (lbl_80346BD8->ang[1] <= 0.0f) {
+            lbl_80346BD8->ang[1] = 0.0f;
             self->state = 3;
         }
         break;
@@ -4837,19 +4843,664 @@ void fn_80064C00(Obj_80064C00 *o)
 
     switch (o->state) {
     case 0:
-        lbl_80346BD8->x8 = s->x14;
+        lbl_80346BD8->v8[0] = s->x14;
         lbl_80346BD8->x14 = s->x14;
-        lbl_80346BD8->xc = s->x18;
+        lbl_80346BD8->v8[1] = s->x18;
         lbl_80346BD8->x18 = s->x18;
-        lbl_80346BD8->x10 = s->x1c;
+        lbl_80346BD8->v8[2] = s->x1c;
         lbl_80346BD8->x1c = s->x1c;
-        lbl_80346BD8->xc = 0.0f;
+        lbl_80346BD8->v8[1] = 0.0f;
         lbl_80346BD8->x20 = s->x18;
         o->state = 2;
     case 2:
         o->flags |= 0x40;
         break;
     case 1:
+        break;
+    }
+}
+
+/* fn_800631B0: a battle action that moves its actor (work->p0) to a target and back: the move, an
+ * attack by kind (work->kind), the return and the fade. */
+typedef struct {
+    u8 b0;               /* 0x00 */
+    u8 pad1[3];
+    u8 b4;               /* 0x04 */
+    u8 pad5;
+    s16 h6;              /* 0x06 */
+    s16 h8;              /* 0x08 */
+    u8 padA[0x52];
+    struct { u8 pad[4]; u32 w4; }* p5c; /* 0x5C */
+    u8 pad60[0x8c];
+    u32 fec;             /* 0xEC */
+    u32 ff0;             /* 0xF0 */
+    u8 padF4[0x70];
+    f32 f164;            /* 0x164 */
+    u8 pad168[0x94];
+    void* p1fc;          /* 0x1FC */
+    u8 pad200[8];
+    f32 f208;            /* 0x208 */
+} CamChr;
+
+typedef struct {
+    u8 pad0[0x1c];
+    f32 pos[3];          /* 0x1C */
+    s32 rot[3];          /* 0x28 */
+    f32 scale[3];        /* 0x34 */
+    u8 pad40[0xc];
+    CamChr* chr;         /* 0x4C */
+} CamBody;
+
+typedef struct {
+    u8 pad0[0x24];
+    CamBody* body;       /* 0x24 */
+} CamObj;
+
+typedef struct {
+    CamObj* p0;          /* 0x00 */
+    f32 v4[3];           /* 0x04 start */
+    f32 v10[3];          /* 0x10 target */
+    f32 v1c[3];          /* 0x1C */
+    u8 pad28[0xc];
+    f32 v34[3];          /* 0x34 step */
+    f32 v40[3];          /* 0x40 */
+    f32 v4c[3];          /* 0x4C */
+    f32 v58[3];          /* 0x58 */
+    f32 v64[3];          /* 0x64 */
+    f32 f70;             /* 0x70 */
+    f32 f74;             /* 0x74 */
+    f32 f78;             /* 0x78 */
+    f32 f7c;             /* 0x7C */
+    s16 h80;             /* 0x80 */
+    s16 h82;             /* 0x82 frames */
+    s16 kind;            /* 0x84 */
+    s16 h86;             /* 0x86 counter */
+    void* mtx;           /* 0x88 */
+    s32 rx, ry, rz;      /* 0x8C */
+    s16 h98;             /* 0x98 */
+    s16 h9a;             /* 0x9A */
+    s16 h9c;             /* 0x9C */
+    s16 h9e;             /* 0x9E */
+    s32 a0;              /* 0xA0 */
+} CamWork;
+
+typedef struct {
+    u8 pad0[0x18];
+    u8 flags;            /* 0x18 */
+    u8 state;            /* 0x19 */
+    u8 pad1a[0xa];
+    CamWork* w;          /* 0x24 */
+} CamTask;
+
+extern f32 fn_80071E9C(NJS_POINT3 *, NJS_POINT3 *);
+extern void fn_80061450(NJS_POINT3 *, NJS_POINT3 *, NJS_POINT3 *);
+extern s32 fn_80012F24(s32 idx);
+extern void fn_8001F814(u8 id, u8 b);
+extern void fn_8001D200(CamObj* o, f32* out);
+extern f32 fn_800177C0(s32 id, f32* out);
+extern void fn_80048DF0(void* mtx, f32* pos, s32* rot, s32 a);
+extern void fn_80020B8C(CamObj* o, s16 a, s16 b, s32 c);
+extern void fn_8001D14C(CamChr* c);
+
+#define CAM_ABS_SMALL(v) ((f32)fabs(v) <= 0.01f)
+
+void fn_800631B0(CamTask* t)
+{
+    CamBody* b3;
+    CamWork* w;
+    CamObj* actor;
+    CamObj* o3;
+    CamObj* tgt;
+    CamChr* chr;
+    CamChr* c3;
+    CamChr* tchr;
+    CamBody* body;
+    s32 i;
+    NJS_POINT3 a;
+    NJS_POINT3 b;
+    s32 rot[3];
+
+    w = t->w;
+    actor = w->p0;
+    chr = w->p0->body->chr;
+    body = actor->body;
+    tgt = (CamObj*)fn_80021658((s8)lbl_80346BD8->x90);
+    tchr = tgt->body->chr;
+    o3 = (CamObj*)fn_8001E05C((P57BD0*)tgt);
+    b3 = o3->body;
+    c3 = b3->chr;
+
+    lbl_80346BD8->f7c &= ~0x02000000;
+    switch (t->state) {
+    case 0:
+        lbl_80346BD8->f7c |= 0x02000000;
+        t->state = 1;
+        lbl_80346BD8->w4 = 1;
+        lbl_80346BD8->h86 = w->h82;
+        w->h86 = 0;
+        tchr->fec |= 0x80000;
+        tchr->fec |= 0x40000;
+        w->h98 = tchr->h6;
+        w->h9a = tchr->h8;
+        lbl_80346BD8->x88 = 0;
+        chr->ff0 |= 0x80000000;
+        if (lbl_80346BD8->f7c & 0x80000000) {
+            w->a0 = 1;
+        } else {
+            w->a0 = 0;
+        }
+        lbl_80347378 |= 1 << lbl_80346BD8->x90;
+        if (w->kind == 1) {
+            if (fn_80012F24(chr->b4) == 1) {
+                fn_8001F814(chr->b4, tchr->b0);
+            }
+            break;
+        }
+    case 1:
+        lbl_80346BD8->f7c |= 0x02000000;
+        switch (w->kind) {
+        case 0:
+        case 3:
+        case 5:
+        case 6:
+            t->state = 3;
+            break;
+        default:
+            t->state = 2;
+            break;
+        }
+        lbl_80346BD8->h82 = 0;
+        fn_80071CF0((V3*)body->pos, (V3*)w->v4);
+        rot[0] = (s32)(182.04445f * lbl_80346BD8->ang[0]) + body->rot[0];
+        rot[1] = (s32)(182.04445f * lbl_80346BD8->ang[1]) + body->rot[1];
+        rot[2] = (s32)(182.04445f * lbl_80346BD8->ang[2]) + body->rot[2];
+        fn_800615B4((NJS_POINT3*)lbl_80346BD8->v8, (NJS_POINT3*)w->v58, rot);
+        switch (w->kind) {
+        default:
+            if (w->kind != 6) {
+                fn_8001D200(o3, w->v10);
+                w->v10[0] -= w->v58[0];
+                w->v10[2] -= w->v58[2];
+                if (w->kind != 3) {
+                    w->v10[1] -= lbl_80346BD8->x20 - lbl_80346BD8->v8[1];
+                } else {
+                    w->v10[1] -= (lbl_80346BD8->x20 - lbl_80346BD8->v8[1]) - w->f78;
+                }
+            } else {
+                fn_800177C0(chr->b4, w->v10);
+                w->v10[0] -= w->v58[0];
+                w->v10[1] -= (lbl_80346BD8->x20 + lbl_80346BD8->v8[1]) - w->f78;
+                w->v10[2] -= w->v58[2];
+            }
+            for (i = 0; i < 3; i++) {
+                w->v1c[i] = w->v10[i] - w->v4[i];
+                if (0.0f == w->v1c[i]) {
+                    w->v34[i] = 0.0f;
+                } else {
+                    w->v34[i] = w->v1c[i] / (f32)w->h82;
+                }
+                if (CAM_ABS_SMALL(w->v34[i])) {
+                    w->v34[i] = 0.0f;
+                }
+            }
+            fn_80061450((NJS_POINT3*)w->v4, (NJS_POINT3*)w->v10, (NJS_POINT3*)w->v4c);
+            break;
+        case 4:
+            fn_800177C0(chr->b4, w->v10);
+            w->v10[0] -= w->v58[0];
+            w->v10[1] -= (lbl_80346BD8->x20 + lbl_80346BD8->v8[1]) - w->f78;
+            w->v10[2] -= w->v58[2];
+            a.x = 10.0f;
+            a.y = 0.0f;
+            a.z = 0.0f;
+            fn_800615B4(&a, (NJS_POINT3*)w->v1c, body->rot);
+            w->v34[0] = w->v1c[0] / 10.0f;
+            if (CAM_ABS_SMALL(w->v34[0])) {
+                w->v34[0] = 0.0f;
+            }
+            w->v34[1] = 0.0f;
+            w->v34[2] = w->v1c[2] / 10.0f;
+            if (CAM_ABS_SMALL(w->v34[2])) {
+                w->v34[2] = 0.0f;
+            }
+            w->v1c[0] += w->v10[0];
+            w->v1c[1] += w->v10[1];
+            w->v1c[2] += w->v10[2];
+            fn_80061450((NJS_POINT3*)w->v10, (NJS_POINT3*)w->v1c, (NJS_POINT3*)w->v4c);
+            break;
+        case 5:
+            if (w->a0 == 1) {
+                w->mtx = fn_801E1C7C(0x40);
+                fn_80048DF0(w->mtx, b3->pos, b3->rot, 0);
+                c3->ff0 |= 0x40000000;
+                c3->p1fc = w->mtx;
+            }
+            fn_80071CF0((V3*)b3->pos, (V3*)w->v10);
+            w->v10[0] -= w->v58[0];
+            w->v10[2] -= w->v58[2];
+            for (i = 0; i < 3; i++) {
+                w->v1c[i] = w->v10[i] - w->v4[i];
+                w->v34[i] = w->v1c[i] / 37.0f;
+                if (CAM_ABS_SMALL(w->v34[i])) {
+                    w->v34[i] = 0.0f;
+                }
+                w->v64[i] = b3->scale[i];
+            }
+            fn_80061450((NJS_POINT3*)w->v4, (NJS_POINT3*)w->v10, (NJS_POINT3*)w->v4c);
+            w->f7c = c3->f208;
+            break;
+        }
+        a.x = w->v4c[0];
+        a.y = 0.0f;
+        a.z = w->v4c[2];
+        b.x = w->v10[0];
+        b.y = 0.0f;
+        b.z = w->v10[2];
+        w->f70 = fn_80071E9C(&a, &b);
+        w->h86 = 0;
+        w->h9c = 0;
+        if (w->kind == 3 || w->kind == 6) {
+            fn_80075FF0(actor, 0x1d, 0);
+            w->h98 = chr->h6;
+            w->h9a = chr->h8;
+        } else if (w->kind == 2) {
+            lbl_80346BD8->x88 = 1;
+            lbl_80346BD8->x8a = 0;
+            lbl_80346BD8->x8c = (f32)chr->p5c->w4 - 1.0f;
+        }
+        break;
+    case 2:
+        lbl_80346BD8->f7c |= 0x02000000;
+        w->h86++;
+        switch (w->kind) {
+        case 2:
+            lbl_80346BD8->v8[1] += w->f78 / (f32)w->h80;
+            break;
+        }
+        if (w->h86 >= w->h80) {
+            t->state = 3;
+            w->h86 = 0;
+        }
+        break;
+    case 3:
+        lbl_80346BD8->f7c |= 0x02000000;
+        switch (w->kind) {
+        case 1:
+            lbl_80346BD8->f50 += 30.0f;
+        case 0:
+            w->h86++;
+            for (i = 0; i < 3; i++) {
+                body->pos[i] += w->v34[i];
+                if ((s32)w->v10[i] != (s32)w->v4[i] && !CAM_ABS_SMALL(w->v34[i])) {
+                    if (w->v10[i] >= w->v4[i]) {
+                        if (body->pos[i] > w->v10[i] && w->a0 == 1) {
+                            body->pos[i] = w->v10[i];
+                        }
+                    } else {
+                        if (body->pos[i] < w->v10[i] && w->a0 == 1) {
+                            body->pos[i] = w->v10[i];
+                        }
+                    }
+                }
+            }
+            if (w->h86 < w->h82) {
+                break;
+            }
+            if (w->a0 == 1) {
+                t->state = 4;
+                w->h86 = 0;
+                fn_80071CF0((V3*)body->pos, (V3*)w->v40);
+                fn_80020B8C(tgt, w->h98, w->h9a, 0);
+            } else {
+                if (w->h86 == w->h82) {
+                    fn_80020B8C(tgt, w->h98, w->h9a, 0);
+                }
+                lbl_80346BD8->f6c -= 0.2f;
+                if (lbl_80346BD8->f6c <= -1.0f) {
+                    lbl_80346BD8->f6c = -1.0f;
+                    t->state = 5;
+                    w->h86 = 0;
+                    fn_80071CF0((V3*)w->v4, (V3*)body->pos);
+                    lbl_80346BD8->f50 = 0.0f;
+                    if (lbl_80346BD8->x8e == -1) {
+                        fn_80075FF0(actor, 2, -1);
+                    } else {
+                        fn_80075FF0(actor, 0x1d, lbl_80346BD8->x8e);
+                    }
+                    lbl_80346BD8->h82 = -1;
+                }
+            }
+            fn_8001D14C(tchr);
+            break;
+        case 2:
+        case 7:
+            w->h86++;
+            if (w->h86 > 20 && w->h86 < w->h9e) {
+                lbl_80346BD8->v8[1] -= (10.0f + w->f78) / (f32)(w->h9e - 20);
+            } else if (w->h86 == w->h9e) {
+                fn_80020B8C(tgt, w->h98, w->h9a, 0);
+            }
+            if (w->h86 > w->h82) {
+                fn_8001D14C(tchr);
+                t->state = 4;
+                w->h86 = 0;
+                lbl_80346BD8->h82 = -1;
+            }
+            break;
+        case 3:
+        case 6:
+            switch (w->h9c) {
+            case 0:
+                w->h86++;
+                if (w->h86 > 7) {
+                    lbl_80346BD8->f6c -= 0.125f;
+                }
+                if (w->h86 > 15) {
+                    w->h9c++;
+                    w->h86 = 0;
+                    lbl_80346BD8->f6c = -1.0f;
+                    body->pos[0] = w->v10[0] - w->v58[0] * w->f74;
+                    body->pos[1] = w->v10[1];
+                    body->pos[2] = w->v10[2] - w->v58[2] * w->f74;
+                    fn_80075FF0(actor, w->h98, w->h9a);
+                    lbl_80346BD8->x88 = 4;
+                }
+                break;
+            case 1:
+                lbl_80346BD8->f6c += 1.0f / (f32)w->h80;
+                if (lbl_80346BD8->f6c >= 0.0f) {
+                    w->h9c++;
+                    lbl_80346BD8->f6c = 0.0f;
+                    if (w->kind != 6 || w->a0 != 0) {
+                        lbl_80346BD8->x88 = 0;
+                    } else {
+                        lbl_80346BD8->x88 = 1;
+                        lbl_80346BD8->x8a = 0;
+                        lbl_80346BD8->x8c = 27;
+                    }
+                }
+                break;
+            default:
+                w->h86++;
+                if (w->h86 == w->h9e) {
+                    fn_80020B8C(tgt, w->h98, w->h9a, 0);
+                }
+                if (w->h86 > w->h82) {
+                    fn_8001D14C(tchr);
+                    t->state = 4;
+                }
+                break;
+            }
+            break;
+        case 4:
+            switch (w->h86) {
+            case 0:
+                lbl_80346BD8->f6c -= 1.0f / (f32)w->h80;
+                if (lbl_80346BD8->f6c <= -1.0f) {
+                    w->h86++;
+                    chr->f164 = -1.0f;
+                    lbl_80346BD8->f6c = -1.0f;
+                    body->pos[0] = w->v10[0];
+                    body->pos[1] = 32.0f + w->v10[1];
+                    body->pos[2] = w->v10[2];
+                }
+                break;
+            case 1:
+                lbl_80346BD8->f6c = 0.0f;
+            default:
+                body->pos[1] = (32.0f + w->v10[1]) - 0.5f * (f32)(w->h86 * w->h86);
+                w->h86++;
+                if (w->a0 == 1) {
+                    if (body->pos[1] <= w->v10[1]) {
+                        body->pos[1] = w->v10[1];
+                        w->h86 = 0;
+                        fn_80071CF0((V3*)body->pos, (V3*)w->v40);
+                        t->state = 4;
+                        fn_80020B8C(tgt, w->h98, w->h9a, 0);
+                        fn_8001D14C(tchr);
+                    }
+                } else {
+                    if (w->h86 == 8) {
+                        fn_80020B8C(tgt, w->h98, w->h9a, 0);
+                        fn_8001D14C(tchr);
+                    }
+                    if (body->pos[1] <= w->f78 - lbl_80346BD8->x20) {
+                        body->pos[1] = w->f78 - lbl_80346BD8->x20;
+                        w->h86 = 0;
+                        t->state = 4;
+                    }
+                }
+                break;
+            }
+            break;
+        case 5:
+            if (w->h86 <= 0x11) {
+                body->pos[1] += 0.5f;
+                body->scale[0] += 0.2f;
+                body->scale[1] += 0.2f;
+                body->scale[2] += 0.2f;
+            } else if (w->h86 <= 0x36) {
+                if (w->h86 == 0x12) {
+                    o3->body->rot[1] = fn_80071C74((Pt*)o3->body, actor->body->pos[0], actor->body->pos[2]);
+                }
+                if (w->a0 == 1) {
+                    fn_80048DF0(w->mtx, b3->pos, b3->rot, 0);
+                    w->v40[0] = 0.0f;
+                    w->v40[1] = 26.0f;
+                    w->v40[2] = 0.0f;
+                    njTranslate(w->mtx, w->v40[0], w->v40[1], w->v40[2]);
+                    w->v40[0] = 0.0f;
+                    w->v40[1] = -26.0f + 26.0f * (((f32)w->h86 - 18.0f) / 36.0f);
+                    w->v40[2] = (w->f70 * (f32)(w->h86 - 18)) / 18.0f;
+                    w->rx = 0;
+                    w->ry = 0;
+                    w->rz += (s32)(182.04445f * ((f32)w->h86 - 18.0f));
+                    njRotateXYZ(w->mtx, w->rx, w->ry, w->rz);
+                    njTranslate(w->mtx, w->v40[0], w->v40[1], w->v40[2]);
+                    b3->scale[0] = w->v64[0] - w->v64[0] * (((f32)w->h86 - 18.0f) / 37.0f);
+                    b3->scale[1] = w->v64[1] - w->v64[1] * (((f32)w->h86 - 18.0f) / 37.0f);
+                    b3->scale[2] = w->v64[2] - w->v64[2] * (((f32)w->h86 - 18.0f) / 37.0f);
+                    c3->f208 -= (1.0f + w->f7c) / 10.0f;
+                    if (c3->f208 <= -1.0f) {
+                        c3->f208 = -1.0f;
+                    }
+                } else if (w->h86 == 0x13) {
+                    fn_80020B8C(tgt, w->h98, w->h9a, 0);
+                }
+            } else if (w->h86 > 0x51) {
+                if (w->h86 <= 0x58) {
+                    if (w->a0 == 1) {
+                        fn_80048DF0(w->mtx, b3->pos, b3->rot, 0);
+                        w->v40[0] = 0.0f;
+                        w->v40[1] = 26.0f - 26.0f * (((f32)w->h86 - 82.0f) / 6.0f);
+                        w->v40[2] = 2.0f * w->f70 - (w->f70 * (f32)(w->h86 - 82)) / 3.0f;
+                        njTranslate(w->mtx, w->v40[0], w->v40[1], w->v40[2]);
+                        b3->scale[0] = w->v64[0] * (((f32)w->h86 - 82.0f) / 7.0f);
+                        b3->scale[1] = w->v64[1] * (((f32)w->h86 - 82.0f) / 7.0f);
+                        b3->scale[2] = w->v64[2] * (((f32)w->h86 - 82.0f) / 7.0f);
+                        c3->f208 += (1.0f + w->f7c) / 5.0f;
+                        if (c3->f208 >= w->f7c) {
+                            c3->f208 = w->f7c;
+                        }
+                    }
+                } else {
+                    fn_8001D14C(tchr);
+                    t->state = 4;
+                    w->h86 = 0;
+                    lbl_80346BD8->h82 = -1;
+                    c3->ff0 &= ~0x40000000;
+                    b3->scale[0] = w->v64[0];
+                    b3->scale[1] = w->v64[1];
+                    b3->scale[2] = w->v64[2];
+                    c3->p1fc = 0;
+                    if (w->a0 == 1) {
+                        fn_80020B8C(tgt, w->h98, w->h9a, 0);
+                    }
+                }
+            }
+            w->h86++;
+            break;
+        }
+        break;
+    case 4:
+        lbl_80346BD8->f7c |= 0x02000000;
+        switch (w->kind) {
+        case 0:
+            for (i = 0; i < 3; i++) {
+                w->v40[i] -= w->v34[i];
+                body->pos[i] = w->v40[i];
+                if ((s32)w->v4[i] != (s32)w->v10[i] && !CAM_ABS_SMALL(w->v34[i])) {
+                    if (w->v4[i] < w->v10[i]) {
+                        if (body->pos[i] < w->v4[i]) {
+                            body->pos[i] = w->v40[i] = w->v4[i];
+                        }
+                    } else {
+                        if (body->pos[i] > w->v4[i]) {
+                            body->pos[i] = w->v40[i] = w->v4[i];
+                        }
+                    }
+                }
+            }
+            w->h86++;
+            a.x = w->v4c[0];
+            a.y = 0.0f;
+            a.z = w->v4c[2];
+            b.x = body->pos[0];
+            b.y = 0.0f;
+            b.z = body->pos[2];
+            body->pos[1] += 0.5f * (w->f70 * njSin((s32)(10430.381f * (f32)acos(fn_80071E9C(&a, &b) / w->f70))));
+            if (w->h86 >= w->h82) {
+                t->state = 6;
+                lbl_80346BD8->h82 = -1;
+            }
+            break;
+        case 1:
+            lbl_80346BD8->f50 += 30.0f;
+        case 3:
+        case 6:
+            w->h86++;
+            if (w->h86 > w->h80) {
+                lbl_80346BD8->f6c -= 1.0f / (f32)w->h82;
+                if (lbl_80346BD8->f6c <= -1.0f) {
+                    lbl_80346BD8->f6c = -1.0f;
+                    body->pos[0] = w->v4[0];
+                    body->pos[1] = w->v4[1];
+                    body->pos[2] = w->v4[2];
+                    t->state = 5;
+                    w->h86 = 0;
+                    if (lbl_80346BD8->x8e == -1) {
+                        fn_80075FF0(actor, 2, -1);
+                    } else {
+                        fn_80075FF0(actor, 0x1d, lbl_80346BD8->x8e);
+                    }
+                    lbl_80346BD8->x88 = 0;
+                    lbl_80346BD8->h82 = -1;
+                    lbl_80346BD8->f50 = 0.0f;
+                }
+            }
+            break;
+        case 2:
+        case 7:
+            w->h86++;
+            lbl_80346BD8->v8[1] += 10.0f / (f32)w->h80;
+            if (lbl_80346BD8->v8[1] >= 0.0f) {
+                lbl_80346BD8->v8[1] = 0.0f;
+            }
+            if (w->h86 > w->h80) {
+                t->state = 6;
+                lbl_80346BD8->x88 = 0;
+            }
+            break;
+        case 4:
+            if (w->a0 == 1) {
+                f32 d;
+                w->v40[0] += w->v34[0];
+                body->pos[0] = w->v40[0];
+                w->v40[1] += w->v34[1];
+                body->pos[1] = w->v40[1];
+                w->v40[2] += w->v34[2];
+                body->pos[2] = w->v40[2];
+                lbl_80346BD8->f50 -= 10.0f;
+                a.x = w->v4c[0];
+                a.y = 0.0f;
+                a.z = w->v4c[2];
+                b.x = body->pos[0];
+                b.y = 0.0f;
+                b.z = body->pos[2];
+                d = fn_80071E9C(&a, &b);
+                body->pos[1] += 5.0f - 0.2f * d * d;
+            }
+            if (w->h86 > 10) {
+                lbl_80346BD8->f6c -= 0.2f;
+                if (lbl_80346BD8->f6c <= -1.0f) {
+                    lbl_80346BD8->f6c = -1.0f;
+                    body->pos[0] = w->v4[0];
+                    body->pos[1] = w->v4[1];
+                    body->pos[2] = w->v4[2];
+                    lbl_80346BD8->f50 = 0.0f;
+                    t->state = 5;
+                    w->h86 = 0;
+                    if (lbl_80346BD8->x8e == -1) {
+                        fn_80075FF0(actor, 2, -1);
+                    } else {
+                        fn_80075FF0(actor, 0x1d, lbl_80346BD8->x8e);
+                    }
+                    lbl_80346BD8->h82 = -1;
+                }
+            }
+            w->h86++;
+            break;
+        case 5:
+            body->pos[1] -= 0.9f;
+            body->scale[0] -= 0.36f;
+            body->scale[1] -= 0.36f;
+            body->scale[2] -= 0.36f;
+            w->h86++;
+            if (w->h86 >= 10) {
+                c3->p1fc = 0;
+                body->pos[0] = w->v4[0];
+                body->pos[1] = w->v4[1];
+                body->pos[2] = w->v4[2];
+                body->scale[0] = 1.0f;
+                body->scale[1] = 1.0f;
+                body->scale[2] = 1.0f;
+                t->state = 6;
+                w->h86 = 0;
+            }
+            break;
+        default:
+            body->pos[0] = w->v4[0];
+            body->pos[1] = w->v4[1];
+            body->pos[2] = w->v4[2];
+            lbl_80346BD8->h82 = -1;
+            break;
+        }
+        break;
+    case 5:
+        lbl_80346BD8->f7c |= 0x02000000;
+        lbl_80346BD8->f6c += 1.0f / (f32)w->h80;
+        if (lbl_80346BD8->f6c >= 0.0f) {
+            lbl_80346BD8->f6c = 0.0f;
+            t->state = 6;
+        }
+        break;
+    case 6:
+        lbl_80346BD8->f7c |= 0x02000000;
+        lbl_80346BD8->v[1] -= 9.0f;
+        if (lbl_80346BD8->v[1] <= 0.0f) {
+            lbl_80346BD8->v[1] = 0.0f;
+            t->state = 7;
+        }
+        break;
+    case 7:
+        chr->ff0 &= ~0x80000000;
+        lbl_80347378 &= ~(1 << lbl_80346BD8->x90);
+        if (w->mtx != 0) {
+            fn_801E17E0(w->mtx);
+            w->mtx = 0;
+        }
+        lbl_80346BD8->w4 = 0;
+        t->flags |= 0x40;
         break;
     }
 }

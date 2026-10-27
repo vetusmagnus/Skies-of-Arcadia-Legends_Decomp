@@ -1222,3 +1222,20 @@ fn_800E4644 (7.9 KB, the battle result screen's state machine) is a near miss in
 130 lines of register numbers are left. Its work (lbl_80346DCC, 0x1610 bytes) is now typed in the
 unit as `Ctx3594` (rows per member, 22 sprite states and panels, the request ring at 0x1538), and
 every matched function in the unit still matches. See matching.md for what it showed.
+
+More (2026-10-27)
+----------------
+
+- fn_800631B0 (6.4 KB, unit_80055E94.c, a battle action that moves its actor to the target and
+  back) matches; it is in the unit, which now includes `<math.h>` (fabs). The last copy (`mr r29,
+  r5`) came from the order of the first three assignments: `actor = w->p0; chr =
+  w->p0->body->chr; body = actor->body;`. Its camera work (lbl_80346BD8) is the unit's own
+  `G800624FC`, which now has its arrays (`v8[3]`, `ang[3]`) and the fields it uses. Prototypes:
+  fn_80048DF0 takes a fourth argument (every caller sets `r6` to 0; effect.c's definition has it
+  now), fn_80012F24 returns `s32` (the compare is `cmpwi`), fn_800177C0 is the `f32 (s32, ...)`
+  that unit_80020B50.c already declares. The radians-to-angle factor is `10430.381f`, as in
+  the other units (floatcheck catches `10430.378f`).
+- fn_80141610 (5.7 KB, unit_8013D400.c, the party-member menu): [near/fn_80141610.c](near/fn_80141610.c),
+  15 lines with registers masked. The original reaches its messages through a pooled base register
+  (`addi r26, ...` in the prologue), which needs the file's `.rodata` defined in C; until then the
+  register colouring is off throughout.
