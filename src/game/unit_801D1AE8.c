@@ -6,6 +6,7 @@
 #include <dolphin/vi.h>
 #include <dolphin/gx.h>
 #include <dolphin/types.h>
+#include "game/task.h"
 void VISetNextFrameBuffer(void *fb);
 void VIFlush(void);
 void VIWaitForRetrace(void);
@@ -68,7 +69,17 @@ typedef struct Req { u32 key; void *next; } Req;
 extern Ent lbl_802F65C0[8];
 typedef struct RelocEnt { u32 ptr; u32 b; u32 c; } RelocEnt;
 typedef struct RelocTbl { RelocEnt *ents; s32 count; } RelocTbl;
-extern u32 lbl_80312D00[16];
+/* The work of a model-load task (fn_801DB818); lbl_80312D00 holds the live tasks. */
+typedef struct MldWork {
+    u32 w00;
+    char *name;
+    void *x8;
+    u8 pad0c[4];
+    u32 w10;
+    s32 w14;
+    u32 w18;
+} MldWork;
+extern Task *lbl_80312D00[16];
 void *memcpy(void *dst, const void *src, u32 n);
 extern s32 lbl_8034754C;
 extern u8 lbl_8030EA1C[];
@@ -85,8 +96,23 @@ void njPopMatrixEx(void);
 void fn_80286EE8(void);
 void fn_8028B498(void);
 void fn_801E04E8(void *m, s32 a, void *b, void *c);
-void *fn_801E184C(void *obj, s32 idx, void *src, s32 n);
-extern u8 lbl_802F6748[];
+/* A heap block's 0x20-byte header (the user pointer is 0x20 past it). */
+typedef struct MemBlk {
+    void *data;
+    u32 size;
+    u8 pad8[0x14 - 8];
+    struct MemBlk *prev;
+    struct MemBlk *next;
+    u8 pad1c;
+    s8 tag;
+    u8 tag2;
+    s8 flag;
+} MemBlk;
+typedef struct MemHeap {
+    MemBlk *first;
+} MemHeap;
+void *fn_801E184C(MemHeap *heap, s32 idx, s32 mode, u32 n);
+extern MemHeap lbl_802F6748[];
 void fn_8024DF5C(u32 a);
 void GXClearGPMetric(void);
 void GXInvalidateVtxCache(void);
@@ -100,7 +126,7 @@ typedef struct Holder801D { u8 pad_0[0x18];
 extern Holder801D *lbl_80347654;
 extern Holder801D *lbl_80347660;
 extern u32 lbl_80312D40[4];
-void fn_801E1A74(s32 a, s32 b);
+void *fn_801E1A74(s32 a, u32 n);
 extern s32 lbl_80347550;
 typedef struct {
     s32 active;
@@ -378,7 +404,7 @@ void MemCopy(void *dst, void *src, u32 n);
 void fn_8028B784(void *p, f32 a, f32 b, f32 c);
 extern const char lbl_802C46EC[];
 extern s32 lbl_80347700;
-void fn_801E15FC(void *a, void *p);
+void fn_801E15FC(MemHeap *h, void *p);
 typedef struct Ent_801DDCA8 {
     s32 x0;
     void* x4;
@@ -393,8 +419,6 @@ typedef struct Pool_801DDCA8 {
     s16 count;
     s16 x6;
 } Pool_801DDCA8;
-typedef struct W1DB { u8 pad00[8]; void *x8; u8 pad0c[8]; s32 x14; } W1DB;
-typedef struct T1DB { u8 pad00[0x24]; W1DB *work; } T1DB;
 extern u8 lbl_80302A00[];
 extern u8 lbl_8031693C[];
 extern u8 lbl_80346A80[];
@@ -416,7 +440,7 @@ extern void fn_801D22CC(void);
 extern void fn_801C62D8(void);
 extern void fn_801C6248(s32 a);
 extern void fn_80296F48(void);
-extern void fn_801DD5E8(void);
+void fn_801DD5E8(Angle *rot, NJS_POINT3 *p);
 extern void njRotateX(NJS_MATRIX m, s32 a);
 extern void njRotateY(NJS_MATRIX m, s32 a);
 typedef struct { u8 pad[4]; f32 x, y, z; u8 pad2[0x1c - 0x10]; } Ent_801DFB7C;
@@ -641,7 +665,7 @@ typedef struct {
     u32 c;
 } Triple616C;
 s32 fn_80227AF0(s32 i, void *p);
-void *fn_801E13B0(void *p, u32 off);
+void *fn_801E13B0(void *p, u32 size);
 void fn_801DAEB8(void *p);
 typedef struct TexHdr {
     u8 pad0[0x10];
@@ -689,6 +713,19 @@ void fn_80005D98(Obj20* obj, s32 a, s32 b, f32 z);
 void fn_801D8F18(void);
 s32 fn_801D91F4(void);
 void fn_801D9508(void);
+extern s32 MemEqual(const void *a, const void *b, s32 size);
+extern char *strncpy(char *dst, const char *src, u32 n);
+extern s32 lbl_803476E0;
+extern void *lbl_803476F0;
+extern u32 lbl_803476FC;
+extern s32 lbl_803476E4;
+void *fn_801E1138(MemHeap *heap, void *p, u32 size, s32 mode);
+extern s32 lbl_803474DC;
+extern void fn_801DB2C8(Task *t);
+extern Task *fn_802267AC(void *parent, TaskFunc fn);
+extern u32 strlen(const char*);
+extern char* fn_8025F120(char*, const char*);
+extern const char lbl_802C46C0[];
 
 void fn_801D1AE8(void) {
     VISetNextFrameBuffer(lbl_803476AC);
@@ -1147,7 +1184,6 @@ void fn_801E0CB8(Mo *o) {
 }
 
 extern char lbl_802C4710[];
-extern void fn_801E15FC(void*, void*);
 void fn_801E1784(void* p) {
     if (p != 0) {
         if (*(u32*)((u8*)p - 0x10) != 0) {
@@ -1167,12 +1203,12 @@ void fn_801E17E0(void* p) {
     }
 }
 
-void fn_801E1A2C(void *src, u32 n) {
+void fn_801E1A2C(s32 mode, u32 n) {
     void *q;
     if (n == 0) {
         n = 0x20;
     }
-    q = fn_801E184C(lbl_802F6748, -1, src, n);
+    q = fn_801E184C(lbl_802F6748, -1, mode, n);
     *(u32 *)((u8 *)q - 0x10) = 0;
 }
 
@@ -1756,7 +1792,7 @@ void fn_801D6B58(DataTable *t, const char *name)
 void fn_801DB9B4(void) {
     s32 i;
     for (i = 0; i < 16; i++) {
-        if (lbl_80312D00[i] != 0) TaskDelete((void *)lbl_80312D00[i]);
+        if (lbl_80312D00[i] != 0) TaskDelete(lbl_80312D00[i]);
     }
 }
 
@@ -2048,7 +2084,7 @@ void fn_801E1718(void *p) {
         if (*(u32 *)((u8 *)p - 0x10) != 2) {
             fn_801DBE1C(lbl_802C46EC, p);
         }
-        fn_801E15FC(lbl_802F6748 + 8, p);
+        fn_801E15FC(&lbl_802F6748[2], p);
         lbl_80347700--;
     }
 }
@@ -2080,16 +2116,15 @@ void fn_801DDCA8(Pool_801DDCA8* p) {
     p->x6 = 0;
 }
 
-void *fn_801DB528(u32 a)
+void *fn_801DB528(Task *t)
 {
     s32 i;
-    u32 *p = lbl_80312D00;
-    W1DB *w;
-    T1DB *t = (T1DB *)a;
+    Task **p = lbl_80312D00;
+    MldWork *w;
     void *r;
 
     for (i = 0; i < 16; p++, i++) {
-        if (*p == a) {
+        if (*p == t) {
             break;
         }
     }
@@ -2098,7 +2133,7 @@ void *fn_801DB528(u32 a)
     }
     w = t->work;
     r = NULL;
-    if (w->x14 == 1) {
+    if (w->w14 == 1) {
         r = w->x8;
         w->x8 = NULL;
     }
@@ -2150,11 +2185,11 @@ void fn_801DC420(void) {
     lbl_803476AC = (lbl_803476AC == lbl_803476B4) ? lbl_803476B0 : lbl_803476B4;
 }
 
-void fn_801DD14C(s32* rot, s32 unused, NJS_VECTOR* in) {
+void fn_801DD14C(Angle* rot, NJS_POINT3* p, NJS_VECTOR* in) {
     NJS_MATRIX m;
     NJS_VECTOR v;
     s32 r;
-    fn_801DD5E8();
+    fn_801DD5E8(rot, p);
     njUnitMatrix(m);
     njRotateX(m, -rot[0]);
     njRotateY(m, -rot[1]);
@@ -3167,4 +3202,178 @@ void fn_801D8840(Anim *a) {
         a->cur[2] = a->end[2];
         a->cur[3] = a->end[3];
     }
+}
+
+void *fn_801DAE58(const char *name) {
+    s32 i;
+    void *p;
+    p = fn_801CC3C4(name);
+    i = 0;
+    for (;;) {
+        if (fn_80227AF0(i, p) == 0) break;
+        i++;
+    }
+    fn_801DAEB8(p);
+    return p;
+}
+
+void fn_801DD5E8(s32 *rot, NJS_VECTOR *v) {
+    f32 len = fn_80291A5C(v->x * v->x + v->z * v->z);
+    if (v->y != 0.0f || len != 0.0f) {
+        f32 a = (f32)atan2(v->y, len);
+        rot[0] = (s32)(10430.381f * a) & 0xffff;
+        lbl_8030EA10[0] = 0;
+    } else {
+        rot[0] = 0;
+        lbl_8030EA10[0] = 1;
+    }
+    if (v->x != 0.0f || v->z != 0.0f) {
+        f32 a = (f32)atan2(v->x, v->z);
+        rot[1] = ((s32)(10430.381f * a) + 0x8000) & 0xffff;
+        lbl_8030EA10[1] = 0;
+    } else {
+        rot[1] = 0;
+        lbl_8030EA10[1] = 1;
+    }
+    rot[2] = 0;
+}
+
+void fn_801DD22C(Angle *out, NJS_POINT3 *p, NJS_VECTOR *v) {
+    NJS_POINT3 n;
+    NJS_VECTOR r;
+    NJS_MATRIX m;
+    Angle a;
+    n.x = -p->x;
+    n.y = -p->y;
+    n.z = -p->z;
+    fn_801DD5E8(out, &n);
+    njUnitMatrix(m);
+    njRotateX(m, -out[0]);
+    njRotateY(m, -out[1]);
+    njCalcVector(m, v, &r);
+    if (r.x != 0.0f || r.y != 0.0f) {
+        a = (s32)(10430.381f * (f32)atan2(r.x, r.y));
+        a = -a;
+        a &= 0xffff;
+        lbl_8030EA10[2] = 0;
+    } else {
+        lbl_8030EA10[2] = 1;
+        a = 0;
+    }
+    out[2] = a;
+}
+
+void fn_801E15FC(MemHeap *h, void *p) {
+    MemBlk *b;
+    void *saved;
+    lbl_803476F0 = p;
+    lbl_803476E0 = lbl_803476E0 - 1;
+    if (p != 0) {
+        b = (MemBlk *)((u8 *)p - 0x20);
+        if (MemEqual(&b->tag2, "_AMEM", 1) != 1) {
+            fn_801DBE1C("memFree Error");
+        }
+        if (b->tag == 'M' || b->tag == 'R') {
+            if (b->prev == 0) {
+                h->first = b->next;
+                if (b->next != 0) {
+                    b->next->prev = 0;
+                }
+            } else {
+                b->prev->next = b->next;
+            }
+            if (b->next != 0) {
+                b->next->prev = b->prev;
+            }
+            saved = lbl_80346720;
+            lbl_803476FC = lbl_803476FC - b->size;
+            if (b->flag == 1) {
+                lbl_80346720 = lbl_803476A0;
+            }
+            strncpy((char *)&b->tag, "D_AMEM", 2);
+            fn_80005AD8(lbl_80346720, b);
+            lbl_80346720 = saved;
+        }
+    }
+}
+
+void fn_801E150C(void *p, u32 v) {
+    if (p != NULL) {
+        fn_801E1138(lbl_802F6748, p, v, 0);
+    } else {
+        if (v == 0) {
+            v = 0x20;
+        }
+        lbl_803476E4 = 1;
+        p = fn_801E184C(lbl_802F6748, -1, 1, v);
+        *(s32 *)((u8 *)p - 0x10) = 0;
+        lbl_803476E4 = 0;
+    }
+}
+
+void fn_801E1584(void *p, u32 v) {
+    if (p != NULL) {
+        fn_801E1138(lbl_802F6748, p, v, 1);
+    } else {
+        if (v == 0) {
+            v = 0x20;
+        }
+        lbl_803476E4 = 1;
+        p = fn_801E184C(lbl_802F6748, -1, 1, v);
+        *(s32 *)((u8 *)p - 0x10) = 0;
+        lbl_803476E4 = 0;
+    }
+}
+
+Task *fn_801DB818(void *parent, const char *name) {
+    Task *h;
+    s32 i;
+    for (i = 0; i < 16; i++) {
+        if (lbl_80312D00[i] == NULL) break;
+    }
+    if (i >= 16) {
+        fn_801DBE1C("MLD FAST HANDLE IS EMPTY");
+    }
+    h = fn_802267AC(parent, fn_801DB2C8);
+    lbl_80312D00[i] = h;
+    h->work = fn_801E1A74(1, strlen(name) + 0x29);
+    if (h->work == NULL) {
+        fn_801DBE1C("mldTaskLoadMldDataAll Malloc Error");
+    }
+    ((MldWork *)h->work)->name = (char *)h->work + 0x20;
+    fn_8025F120(((MldWork *)h->work)->name, name);
+    ((MldWork *)h->work)->w00 = 0;
+    ((MldWork *)h->work)->w10 = 0;
+    ((MldWork *)h->work)->w14 = 0;
+    ((MldWork *)h->work)->w18 = 0;
+    lbl_803474DC++;
+    return h;
+}
+
+/* The size of p's block when p was allocated from heap h, else 0. */
+static inline u32 MemOwns(MemHeap *h, void *p) {
+    MemBlk *n = h->first;
+    while (n != NULL) {
+        if (n->data == p) break;
+        n = n->next;
+    }
+    if (n == NULL) return 0;
+    return n->size;
+}
+
+void *fn_801E13B0(void *p, u32 size) {
+    s32 idx;
+    if (MemOwns(&lbl_802F6748[2], p) != 0) {
+        idx = 2;
+    } else if (MemOwns(&lbl_802F6748[0], p) != 0) {
+        idx = 0;
+    } else if (MemOwns(&lbl_802F6748[1], p) != 0) {
+        idx = 1;
+    } else {
+        idx = -1;
+    }
+    if (idx == -1) {
+        fn_801DBE1C(lbl_802C46C0);
+    }
+    return fn_801E1138(&lbl_802F6748[idx], p, size, 1);
 }
