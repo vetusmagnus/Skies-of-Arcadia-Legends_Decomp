@@ -1153,3 +1153,63 @@ boundaries inside the guessed 0x801F5334-0x80219378 range:
   the no-call-site-cast rule leaves open.
 - fn_801F7958: its three strings are addressed from the pool base (`lbl_802D4720` + 0xa4/0xc8/0xe8), so it only
   matches once the unit's string pool is laid out like the original's.
+
+### Real prototypes for the placeholder externs (2026-10-27)
+
+By hand, no agents. Of the 122 functions in list C above (blocked by a placeholder `void fn(Msg *, s16)` or `fn()`
+extern), 14 had been merged by the passes since; **36 more are merged now** (4,363 to 4,399). Every function of the nine
+touched units passes fdiff and `floatcheck.py`, `main.dol` force-relinks to the `build.sha1` SHA-1 and a fresh worktree
+builds to it. No casts were added at call sites and no `void *` parameters; every already-matched caller still matches.
+
+The placeholders were mostly one-call wrappers matched as `void w(Msg *a, s16 i) { f(a, i); }`: they pass r3/r4 through, so
+they compile the same with the callee's real signature. Each wrapper now has the callee's real parameters and returns its
+result where callers use it:
+
+- unit_801CBA60.c (akFIO): `AkFio` (the open file), `FioReq` with its `FioOut` read target and `FioCb` callback block,
+  `FioResult` (fn_801CC5BC's body, also inlined in fn_801CBD48). fn_801C63EC/fn_801C64DC open a file by name,
+  fn_801C6BC8/fn_801C6384 take the `AkFio`, fn_801CBC90/fn_801CBE38/fn_801CBC10/fn_801CC3A4 take nothing,
+  fn_801CC608 is `(AkFio *, void *buf, u32 size)` (the size goes unused). Merged fn_801CBC30, fn_801CBC90, fn_801CBD48,
+  fn_801CBE38, fn_801CC3C4.
+- unit_801D1AE8.c: `MemHeap lbl_802F6748[]` (4-byte heads; the `+ 8` was heap 2) and `MemBlk`; fn_801E184C's third
+  word is a mode, fn_801E1138 returns the block, fn_801E13B0 returns fn_801E1138's result. `lbl_80312D00` is `Task *[16]`
+  with an `MldWork` work block (fn_801DB818 reaches it through `((MldWork *)h->work)`, the file's usual task-work access).
+  fn_801DD14C passes its rotation and point to fn_801DD5E8. Merged fn_801DAE58, fn_801DB818, fn_801DD22C, fn_801DD5E8,
+  fn_801E13B0, fn_801E150C, fn_801E1584, fn_801E15FC.
+- unit_80219378.c: one collision result `Cmp` (the triangle hit, id, key, index, flags) for fn_80224F28 and the five
+  mesh tests, `Slot` holds a model's collision parts (`Xf_80224F28` gained the neighbour list and key at 0x6c-0x8e), `Arr`
+  is the height probe; fn_801C812C is `(NJS_POINT3 *tri, f32 x, f32 z, f32 *y)`. Also: `Src` starts with the menu id,
+  fn_802281BC/fn_802979B8, `OSAlarm lbl_80316578` and the alarm handler's real signature, `const char *lbl_802F9238[]`,
+  the task-layer roots `lbl_80347580`-`lbl_803475A8` as task nodes (the `u32_8022xxxx` typedefs and their casts are gone),
+  `lbl_80347520` the list tail, `s16 lbl_8034751C`, `ModelNode` for the shape's model. Merged fn_80228014, fn_8022A68C,
+  fn_8021A7B0, fn_8021AA48, fn_8022445C, fn_802250E4, fn_80225330, fn_802241B0, fn_802289AC, fn_8022B318, fn_80226170,
+  fn_80222964.
+- unit_8010E164.c: one formation table `FormTbl` (12 `FormEnt` slots of id + 12 data bytes, camera floats) for
+  `In_80126BF0.tab` and all its builders (the `Tbl_*`, `Tab`, `T_80128108` views and fn_801286F4's byte offsets are gone);
+  fn_8011B024 is `(f32 *pts, int n, int deg, f32 *out, f32 t)` (parameter order and `int` decide its register
+  allocation). Merged fn_80128670, fn_80128938, fn_80128B34, fn_80128E7C, fn_8011B024.
+- unit_8022D34C.c: fn_8022F030/fn_8022F050 `(void *chunk, s32, s32)` like their neighbours, fn_802307EC/fn_8023080C
+  `s16 *(void *chunk, s16 *v, s16 *res)`, fn_80230FCC is an `s32 (Res230 *)` callback. Merged fn_8022F050, fn_8023080C.
+- unit_801F224C.c: fn_801F4C24 and its three wrappers take the item id; the item tables have the second byte the sort
+  reads. Merged fn_801F4AE4, fn_801F5100.
+- unit_800B2DA0.c: fn_800D208C takes the fog start (both callers pass it), fn_800C285C returns fn_800C2A88's result.
+  Merged fn_800D208C, fn_800C2A88.
+- Prototypes fixed with the function still waiting: unit_80199B9C.c's shop part builders take `u8 kind, u16 id`
+  (fn_801C16D0 returns `s32`), unit_8014F970.c's fn_80155FF0 takes the callers' fourth word, unit_8022D34C.c's
+  fn_8022E068 has its `f32` pointers.
+
+Still blocked in list C (72), by cause:
+
+- Caller and callee disagree in one unit, which points at a TU boundary: fn_8022E068 (its caller fn_8022DFFC only matches
+  seeing a `u16` index, the body compares an `int`), fn_80230FCC (passes a word to fn_8023114C's `u8 kind` with no
+  `clrlwi`), fn_800D5348 (passes an argument to fn_800C8D90, whose body ignores r3).
+- A per-function view of a shared object at every caller (D): unit_80199B9C.c's shop parts (the part's panel is a
+  `MenuUi`, the unit's `ShopPart` has `UiObj *`; 324 accesses), unit_8010E164.c's model object (fn_80118948,
+  fn_801189F0, fn_80112BB4, fn_80129058; callers pass it through `(void *)`), unit_80219378.c's transform object
+  (fn_802234D4: `Xf_80224F28`, `Obj_80223628`, `Obj_8022394C`, `Obj_802239A4`), fn_8021E75C, fn_800C35C4, fn_801DA51C.
+- A raw byte or word view of a global the agent reads as a struct (A): fn_80152284 and fn_8014F99C (`lbl_80346FC8`),
+  fn_80150014/fn_80154B6C/fn_80156024 (unit_8014F970.c's `s32` and `u8 *` heap pointers passed to `fn_801E17E0(s32)`),
+  unit_80005B50.c (15: task callbacks typed `void (*)(void *)`, `lbl_80309E24`/`lbl_8030A10C` read as bytes), and the
+  rest of the list.
+- fn_801DB1A4: fn_8022ACA8/fn_8022AE04 take an id in unit_80055E94.c (7) and a resource pointer here.
+- fn_80153790: the three sound starters return `s32`, `s32` and `void *` into one variable.
+- fn_801DBA70: its prototype is fixed (the SDK's `OSGetStackPointer`), only its string pool offsets differ now (E).
