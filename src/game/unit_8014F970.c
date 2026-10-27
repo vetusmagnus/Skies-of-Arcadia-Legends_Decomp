@@ -4022,7 +4022,7 @@ void fn_801541D8(s32 idx)
     }
 }
 
-s32 fn_80155FF0(s32 a, s32 b, s32 bank) {
+s32 fn_80155FF0(s32 a, s32 b, s32 bank, s32 unused) {
     return SePlay(bank, a, b);
 }
 
