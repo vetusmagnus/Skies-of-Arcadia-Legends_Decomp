@@ -1,4 +1,5 @@
 #include "types.h"
+#include "game/work_8030CEA0.h"
 #include "ninja.h"
 #include "game/task.h"
 #include <math.h>
@@ -705,10 +706,6 @@ typedef struct {
     void* data; /* 0x08 */
 } EvMsg;
 
-typedef struct {
-    u8 pad0[0x15C8];
-    s32 x15c8;
-} Global8030CEA0;
 
 typedef struct {
     f32 v[3];
@@ -725,7 +722,6 @@ typedef struct {
 extern EvMsg* lbl_80347788;
 extern s32 lbl_80347798;
 extern u8 lbl_802C4824[];
-extern Global8030CEA0 lbl_8030CEA0;
 extern ColKeys lbl_802C47B4;
 extern ColNext lbl_802C4808;
 extern f32 lbl_802F6810[3];

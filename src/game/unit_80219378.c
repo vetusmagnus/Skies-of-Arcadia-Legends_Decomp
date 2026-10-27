@@ -58,7 +58,16 @@ extern void njRotateZXY(void *m, s32 x, s32 y, s32 z);
 typedef struct Vec { f32 x; f32 y; f32 z; } Vec;
 extern double atan2(double y, double x);
 extern s32 lbl_80347520;
-extern s32 lbl_80347524;
+typedef struct Node {
+    u8 pad0[0x10];
+    u16 mask10;
+    u16 id12;
+    s16 flag14;
+    u8 pad16[0x2c - 0x16];
+    struct Node *prev;
+    struct Node *next;
+} Node;
+extern Node *lbl_80347524;
 extern u16 lbl_8034751C;
 void fn_80222964(void *p);
 void fn_801E17E0(void *p);
@@ -118,12 +127,11 @@ typedef struct Unk_80228418 {
 } Unk_80228418;
 extern u8 lbl_80316578[];
 extern void OSCancelAlarm(void *alarm);
-typedef unsigned int u32_80228B40;
 extern void fn_801D8B2C(void);
 extern void fn_8022642C(void);
-extern u32_80228B40 lbl_80311AD4[];
+typedef struct SoalState { u8 pad[0xc]; s32 state; } SoalState;
+extern SoalState lbl_80311AD4;
 typedef unsigned int u32_8022A36C;
-extern u32_8022A36C lbl_80311AD4[];
 extern u32_8022A36C lbl_80347820;
 extern u32_8022A36C lbl_80347824;
 extern void *memcpy(void *dst, const void *src, unsigned long n);
@@ -189,6 +197,28 @@ extern Ref lbl_80311A60;
 extern u8 lbl_802F9238[];
 extern void *TextPrint(s16 x, s16 y, const char *str);
 typedef struct Obj1E4 { u8 pad[8]; s32 a8; u8 pad2[0x10]; s32 a1c; } Obj1E4;
+s32 fn_80222B30(Node *a, Node *b);
+extern s32 lbl_80347848;
+extern s32 fn_801D8D18(void);
+typedef struct Flags88 { u8 pad[0x88]; u32 f88; } Flags88;
+extern Flags88 lbl_80310B3C;
+extern s32 lbl_803475D4;
+extern u8 lbl_8030A794[];
+extern void fn_801CAF30(void);
+extern void fn_801F01E4(void);
+extern void fn_801E0FD4(void *p, s32 n);
+extern void fn_801F7B04(s32 a);
+extern void fn_8022AFD0(void);
+extern TexRoot *lbl_80347850;
+extern void fn_801A372C(void);
+extern u8 lbl_802D973C[];
+extern u8 lbl_802D9750[];
+extern TexRoot *fn_801DB244(void *p);
+extern void fn_80227810(void *list);
+extern void fn_801DBA58(u32 a, u32 b, u32 c);
+extern void fn_801CBC30(void);
+extern void fn_801CBBBC(void);
+extern void njRotateXYZ(void *m, s32 x, s32 y, s32 z);
 
 void fn_80219378(s32 a)
 {
@@ -647,11 +677,11 @@ void fn_80228984(void) {
 void fn_80228B40(void) {
     fn_801D8B2C();
     fn_8022642C();
-    lbl_80311AD4[3] = 0x11;
+    lbl_80311AD4.state = 0x11;
 }
 
 void fn_8022A36C(void) {
-    lbl_80311AD4[3] = 6;
+    lbl_80311AD4.state = 6;
     lbl_80347820 = 0;
     lbl_80347824 = 0;
 }
@@ -873,4 +903,189 @@ void fn_8022B1E4(Obj1E4 *o) {
             o->a8 = 0;
         }
     }
+}
+
+Node *fn_80223104(u16 id, Node *stop)
+{
+    Node *n;
+    for (n = lbl_80347524; n != NULL; n = n->next) {
+        if (n == stop) {
+            continue;
+        }
+        if (n->flag14 >= 0 && id == n->id12) {
+            if (fn_80222B30(stop, n) == 1) {
+                return n;
+            }
+        }
+    }
+    return NULL;
+}
+
+Node *fn_80223194(u16 id, Node *stop)
+{
+    Node *n;
+    for (n = lbl_80347524; n != NULL; n = n->next) {
+        if (n == stop) {
+            continue;
+        }
+        if (n->flag14 >= 0 && (id & n->mask10) == id) {
+            if (fn_80222B30(stop, n) == 1) {
+                return n;
+            }
+        }
+    }
+    return NULL;
+}
+
+void fn_80228AD4(void) {
+    s32 r = fn_801D8D18();
+    lbl_80347848 = r;
+    if (r != -1) {
+        if (r == 1) {
+            lbl_80311AD4.state = 9;
+        } else {
+            lbl_80311AD4.state = 0x12;
+            fn_801DBE6C(6);
+        }
+        fn_8022642C();
+        fn_8022642C();
+    }
+    fn_8022642C();
+}
+
+void fn_80228BE4(void) {
+    fn_801CAF30();
+    fn_801F01E4();
+    fn_801E0FD4(lbl_8030A794, 0xcc0);
+    fn_801F7B04(0);
+    lbl_803475D4 = 1;
+    lbl_80310B3C.f88 |= 0x20;
+    fn_8022AFD0();
+    lbl_80311AD4.state = 0xf;
+}
+
+void fn_8022A2E4(void) {
+    s32 st;
+    s32 v;
+    fn_802275A4(lbl_80347854->inner->list, 1);
+    fn_801E17E0(lbl_80347854);
+    lbl_80347854 = 0;
+    fn_802275A4(lbl_80347850->inner->list, 1);
+    fn_801E17E0(lbl_80347850);
+    lbl_80347850 = 0;
+    fn_801A372C();
+    v = lbl_8034781C;
+    st = (v & 1) + 7;
+    lbl_8034781C = v + 1;
+    lbl_80311AD4.state = st;
+}
+
+void fn_8022A548(void) {
+    lbl_80347854 = fn_801DB244(lbl_802D973C);
+    fn_80227810(lbl_80347854->inner->list);
+    lbl_80347850 = fn_801DB244(lbl_802D9750);
+    fn_80227810(lbl_80347850->inner->list);
+    fn_801DBA58(0xff000000, 0xff000000, 0xff000000);
+    fn_801CBC30();
+    fn_801CBBBC();
+    lbl_80311AD4.state = 3;
+    lbl_80347820 = 0;
+    lbl_80347824 = 0;
+}
+
+void fn_8022BB94(void *m, s32 x, s32 y, s32 z) {
+    njRotateXYZ(m, x, y, lbl_80311970.f34 + z);
+}
+
+void fn_8022BBC4(void *m, s32 x, s32 y, s32 z) {
+    njRotateXYZ(m, x, lbl_80311970.f20 + y, z);
+}
+
+void fn_8022BBF4(void *m, s32 x, s32 y, s32 z) {
+    njRotateXYZ(m, lbl_80311970.f1c + x, y, z);
+}
+
+typedef struct Obj_8022394C {
+    u8 pad0[0x1c];
+    Vec3 *p1c;
+    Vec3 *p20;
+    u32 *p24;
+    Vec3 *p28;
+    u32 *p2c;
+    Vec3 v30;
+    Vec3 v3c;
+    u32 w48[3];
+    Vec3 v54;
+    u32 w60[3];
+} Obj_8022394C;
+
+void fn_8022394C(Obj_8022394C *o)
+{
+    Vec3 *s = o->p1c;
+    u32 *w;
+    o->v30.x = s->x;
+    o->v30.y = s->y;
+    o->v30.z = s->z;
+    s = o->p20;
+    o->v3c.x = s->x;
+    o->v3c.y = s->y;
+    o->v3c.z = s->z;
+    w = o->p24;
+    o->w48[0] = w[0];
+    o->w48[1] = w[1];
+    o->w48[2] = w[2];
+}
+
+typedef struct Obj_802239A4 {
+    u8 pad0[0x1c];
+    Vec3 *p1c;
+    Vec3 *p20;
+    u32 *p24;
+    Vec3 *p28;
+    u32 *p2c;
+    Vec3 v30;
+    Vec3 v3c;
+    u32 w48[3];
+    Vec3 v54;
+    u32 w60[3];
+} Obj_802239A4;
+
+void fn_802239A4(Obj_802239A4 *o)
+{
+    Vec3 *s = o->p1c;
+    u32 *w;
+    o->v30.x = s->x;
+    o->v30.y = s->y;
+    o->v30.z = s->z;
+    s = o->p20;
+    o->v3c.x = s->x;
+    o->v3c.y = s->y;
+    o->v3c.z = s->z;
+    s = o->p28;
+    o->v54.x = s->x;
+    o->v54.y = s->y;
+    o->v54.z = s->z;
+    w = o->p24;
+    o->w48[0] = w[0];
+    o->w48[1] = w[1];
+    o->w48[2] = w[2];
+    w = o->p2c;
+    o->w60[0] = w[0];
+    o->w60[1] = w[1];
+    o->w60[2] = w[2];
+}
+
+extern void (*lbl_802F91AC[])(void);
+extern void fn_801A3510(void);
+
+void fn_80228A20(void) {
+    s32 st = lbl_80311AD4.state;
+    if (st >= 9 && st <= 13) {
+        fn_801A3510();
+    }
+    if (lbl_80347858 != (st = lbl_80311AD4.state)) {
+        lbl_80347818 = 0;
+    }
+    lbl_80347858 = st;
+    lbl_802F91AC[st]();
 }

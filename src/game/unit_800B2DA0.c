@@ -1,4 +1,5 @@
 #include "types.h"
+#include "game/work_8030CEA0.h"
 #include "ninja.h"
 #include "game/sprite.h"
 #include "game/util.h"
@@ -2407,7 +2408,6 @@ typedef struct {
     u8 pad9[0x14 - 9];
 } Key_800CE2B4;
 extern u8 lbl_8030B7F4[0x16A0];
-extern u8 lbl_8030CEA0[0x1920];
 extern s32 fn_8021A1C4(void* buf);
 extern s32 fn_8021ADA0(void* a, void* b);
 extern void fn_80100178(void* p);
@@ -3033,6 +3033,14 @@ typedef struct Work_800C4C54 {
 } Work_800C4C54;
 extern s32 fn_800912FC(f32* pos, void* o);
 extern s32 fn_801DD4C4(f32 x, f32 z);
+typedef struct {
+    void *base;
+    u8 pad4[4];
+    s16 cap;
+    s16 cur;
+    s16 step;
+    s16 used;
+} Queue;
 
 void fn_800B2DA0(u8* p, u32 v) {
     u8* q = *(u8**)(p + 0x268);
@@ -7075,10 +7083,10 @@ void fn_800CE2B4(void) {
     }
     {
         Cam_800CE2B4* c = (*(Cam_800CE2B4**)&lbl_80347450);
-        *(f32*)&lbl_8030CEA0[0x1774] = c->pos[0];
-        *(f32*)&lbl_8030CEA0[0x1778] = c->pos[1];
-        *(f32*)&lbl_8030CEA0[0x177C] = c->pos[2];
-        *(f32*)&lbl_8030CEA0[0x1780] = 0.005493164f * (f32)(c->v48 & 0xFFFF);
+        lbl_8030CEA0.x1774 = c->pos[0];
+        lbl_8030CEA0.x1778 = c->pos[1];
+        lbl_8030CEA0.x177c = c->pos[2];
+        lbl_8030CEA0.x1780 = 0.005493164f * (f32)(c->v48 & 0xFFFF);
     }
     fn_80100178(ent->tbl[kind]);
     fn_801F7B04(0x7530);
@@ -8501,4 +8509,18 @@ void fn_800C4C54(NJS_VECTOR* out, void* c) {
         out->y = w->f68 + w->fa4 * w->fd0;
         out->z = w->f6c + w->fa8 * w->fd0;
     }
+}
+
+s32 fn_800CD0B8(s32 a, s32 b, s32 c, s32 d) {
+    if (lbl_80305B08.h0e < lbl_80305B08.h08) {
+        s32 *e = (s32 *)((u8 *)lbl_80305B08.p00 + (lbl_80305B08.h0a << 4));
+        e[0] = a;
+        e[1] = b;
+        e[2] = c;
+        e[3] = d;
+        lbl_80305B08.h0a = lbl_80305B08.h0a + 1;
+        lbl_80305B08.h0e = lbl_80305B08.h0a + lbl_80305B08.h0c;
+        return 1;
+    }
+    return 0;
 }

@@ -30,6 +30,8 @@ typedef struct HudEnt {
     u8 pad0[0x14];
     s32 s14;
     s32 s18;
+    u8 pad1c[0x100 - 0x1c];
+    s8 kind;
 } HudEnt;
 typedef struct HudSlot {
     u8 pad0[0x24];
@@ -74,6 +76,11 @@ extern s32 fn_80015B94(s32, void*);
 extern s32 fn_80020FF0(s32 idx);
 extern s32 lbl_80302A38[6];
 extern void fn_80028E28(s32 *p);
+typedef struct Ent80025518 {
+    u8 pad0[0x4];
+    s32 *out_ptr;
+} Ent80025518;
+extern s32 lbl_8034732C;
 
 void fn_80020B50(Top *t, s16 *out1, s16 *out2) {
   Inner *i = t->mid->inner;
@@ -328,4 +335,34 @@ void fn_80028E0C(void)
     if (lbl_80302A38[0] == 1) {
         lbl_80302A38[0] = 2;
     }
+}
+
+void fn_80025518(Ent80025518 *self)
+{
+    HudEnt *s = lbl_80309DE4[lbl_8034732C];
+    s32 v;
+    switch (s->kind) {
+    case 0:
+        v = 0xFF20FF0A;
+        break;
+    case 1:
+        v = 0xFFFF4020;
+        break;
+    case 2:
+        v = 0xFFC800FF;
+        break;
+    case 3:
+        v = 0xFF0096FF;
+        break;
+    case 4:
+        v = -0x3800;
+        break;
+    case 5:
+        v = 0xFFDCDCDC;
+        break;
+    default:
+        v = -1;
+        break;
+    }
+    *(s32 *)((u8 *)self->out_ptr + 0x14) = v;
 }

@@ -14,7 +14,8 @@ typedef struct { u32 a, b; void* p; } E12;
 typedef struct { s32 flag; u8 pad[0x10]; f32 pos[3]; s32 ints[3]; } Obj_80158200;
 typedef struct {
     u32 flags;
-    u8 pad4[0xe];
+    s32 f4;
+    u8 pad8[0xa];
     s16 h12;
     s32 f14;
     u8 pad18[0x10];
@@ -28,7 +29,8 @@ typedef struct {
     u16 h40;
     u8 pad42[0x2a];
     s16 h6c;
-    u8 pad6e[0x1ee - 0x6e];
+    s16 h6e;
+    u8 pad70[0x1ee - 0x70];
     s16 h1ee;
 } Obj_8015854C;
 typedef struct Inner_UNIT0000 { u8 pad[0x8]; void *x8; } Inner_UNIT0000;
@@ -71,7 +73,6 @@ void *memcpy(void *dst, const void *src, u32 n);
 void *memset(void *p, s32 c, u32 n);
 extern u8 lbl_803067A8[];
 extern u8 lbl_80306938[];
-extern s32 lbl_80306758[];
 typedef struct {
     u8 v[4];
 } Cell;
@@ -860,6 +861,7 @@ typedef struct {
     u8 buf[0x4c - 0xc];
     s32 f4c;
 } Obj_80153518;
+extern Obj_80153518 lbl_80306758;
 extern char lbl_802B3BCC[];
 extern s32 fn_80109E7C(u8* b, s32 n);
 typedef struct {
@@ -1121,6 +1123,7 @@ typedef struct Sub { u8 pad[8]; void *p; } Sub;
 typedef struct Owner_8015C928 { u8 pad[0x1d8]; Sub *fl; } Owner_8015C928;
 typedef struct Arg_8015C928 { u8 pad[0x1c]; s32 v; } Arg_8015C928;
 void fn_801E5EA4(void *p, s16 v);
+extern void *fn_80109D74(s32 h);
 
 void fn_8014F970(u8 *self) {
     fn_80153270(self + 0x95c);
@@ -1213,23 +1216,23 @@ void fn_801532B4(u8* p) {
 }
 
 void fn_80153498(void) {
-    if (lbl_80306758[2] != 0) {
-        fn_80109A94((u8*)lbl_80306758 + 0xc);
+    if (lbl_80306758.f8 != 0) {
+        fn_80109A94(lbl_80306758.buf);
     }
-    lbl_80306758[2] = 0;
-    lbl_80306758[0] = 0;
+    lbl_80306758.f8 = 0;
+    lbl_80306758.f0 = 0;
 }
 
 void fn_801534E8(void) {
-    memset(lbl_80306758, 0, 0x50);
+    memset(&lbl_80306758, 0, 0x50);
 }
 
 void fn_801536E0(void) {
-    if (lbl_80306758[2] != 0) {
-        fn_80109A94((u8*)lbl_80306758 + 0xc);
+    if (lbl_80306758.f8 != 0) {
+        fn_80109A94(lbl_80306758.buf);
     }
-    lbl_80306758[2] = 0;
-    lbl_80306758[0] = 0;
+    lbl_80306758.f8 = 0;
+    lbl_80306758.f0 = 0;
 }
 
 typedef struct Msg {
@@ -3347,13 +3350,13 @@ void fn_8015A888(void) {
 void fn_80153518(s32 n) {
     u8* b;
 
-    b = (*(Obj_80153518*)&lbl_80306758).buf;
+    b = lbl_80306758.buf;
     if (fn_8010A164(n) == NULL) {
-        if ((*(Obj_80153518*)&lbl_80306758).f8 != 0) {
+        if (lbl_80306758.f8 != 0) {
             fn_80109A94((void *)(b));
         }
-        (*(Obj_80153518*)&lbl_80306758).f8 = 0;
-        (*(Obj_80153518*)&lbl_80306758).f0 = 0;
+        lbl_80306758.f8 = 0;
+        lbl_80306758.f0 = 0;
         fn_8025F120((void *)(b), (void *)(lbl_802B3BCC));
         b[0xa] = n / 10000 + '0';
         b[0xb] = n % 10000 / 1000 + '0';
@@ -3365,10 +3368,10 @@ void fn_80153518(s32 n) {
         b[0x11] = 'l';
         b[0x12] = 'd';
         b[0x13] = 0;
-        (*(Obj_80153518*)&lbl_80306758).f4c = fn_80109E7C(b, 0x7fff);
-        (*(Obj_80153518*)&lbl_80306758).f4 = 1;
-        (*(Obj_80153518*)&lbl_80306758).f8 = 0;
-        (*(Obj_80153518*)&lbl_80306758).f0 = n;
+        lbl_80306758.f4c = fn_80109E7C(b, 0x7fff);
+        lbl_80306758.f4 = 1;
+        lbl_80306758.f8 = 0;
+        lbl_80306758.f0 = n;
     }
 }
 
@@ -4027,4 +4030,29 @@ s32 fn_8015C8F4(Owner_8015C8F4 *o, Arg_8015C8F4 *a) {
 s32 fn_8015C928(Owner_8015C928 *o, Arg_8015C928 *a) {
     fn_801E5EA4(o->fl->p, (s16)a->v);
     return 0;
+}
+
+void fn_80154B38(void) {
+    lbl_80346FE0 = fn_801E1C7C(0x1d8);
+    memset(lbl_80346FE0, 0, 0x1d8);
+}
+
+void fn_80155910(void) {
+    lbl_80346FE8 = fn_801E1C7C(0x280);
+    memset(lbl_80346FE8, 0, 0x280);
+}
+
+void fn_801586D4(s16 idx) {
+    if (lbl_80306DB8[idx] == 0) return;
+    lbl_80306DB8[idx]->f4 = 1;
+    lbl_80306DB8[idx]->h6e = 0xff;
+}
+
+void fn_80153730(void) {
+    if (lbl_80306758.f4 != 0) {
+        if (fn_80109D74(lbl_80306758.f4c) != 0) {
+            lbl_80306758.f4 = 0;
+            lbl_80306758.f8 = 1;
+        }
+    }
 }

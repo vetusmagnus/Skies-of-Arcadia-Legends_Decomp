@@ -1,8 +1,8 @@
 Progress and handoff
 ====================
 
-State of the work as of 2026-10-26 (after tier 2, the under-200-byte never-tried batch): 31.8% of code matched (3,831 / 7,116
-functions), 3,285 functions unmatched: about 2,470 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
+State of the work as of 2026-10-27 (after the hand-merge of the tier 2 type-clash leftovers): 32.0% of code matched (3,899 / 7,116
+functions), 3,217 functions unmatched: about 2,470 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
 (the size split of the game functions predates the duplicate-copy batch: 2,193 under 632 bytes, 466 at 632-1000,
 355 at 1-2 KB, 101 at 2-5 KB, 16 over 5 KB). Numbers live in the README status block and on
 [ByteMatch](https://bytematch.dev/vetusmagnus/SoAL-Decomp); this page covers what's in flight.
@@ -270,6 +270,54 @@ struct unification larger than a prototype, or the function only matches in isol
   fn_801822A0, fn_8019BED8, fn_801AACB0, fn_801B46EC, fn_801B914C, fn_801BDEF4, fn_801B057C, fn_801B06CC, fn_801B65CC,
   fn_801BE17C, fn_801BE2F0, fn_801A20AC, fn_80170C64, fn_8017567C, fn_80175DC4, fn_801763B8, fn_80178BC8,
   fn_80185864, fn_800C0368, fn_800CF6A8 (mostly `lbl_*` struct views and per-file `Task`/`MenuUi` tags).
+
+### Hand-merging the tier 2 type-clash leftovers (2026-10-27)
+
+68 of the 98 under-200-byte functions that matched in isolation but clashed with their unit are in the unit files now
+(3,831 to 3,899 matched, 891,040 bytes, 32.02%). Every touched unit passes fdiff over all its functions and
+`floatcheck.py`, and `main.dol` force-relinks to the SHA-1 in `build.sha1`. No agents, no call-site casts.
+
+- `lbl_8030CEA0` is one struct now: `include/game/work_8030CEA0.h` (`Work8030CEA0`, plus `Slot8`) replaces the five private
+  views in evobj.c, unit_8010E164.c, unit_8013D400.c (`Work`), unit_801F5334.c (`Glob8020C`) and the `u8[]` casts in
+  unit_800B2DA0.c, unit_800D81E8.c, unit_8015DC6C.c. The 256-entry `ent[i][0]` table at 0x18, the shop/script cursor stack
+  (`sp`, `stack[0x20]`, which is also the `0x20` bound fn_801F5C30 checks) and the 0x18fc float/int block are named.
+  fn_801F5D08, 7B04, FD1D0, 8020A2C8, 8020F078/F0F0 and 80210CE4 merged on it.
+- Per-unit unification instead of a header where only one unit sees the object: `lbl_80311AD4` (`SoalState`, the state word
+  at 0xc) and `lbl_80311970` (`Pos`, floats and words at 0x10/0x1c) in unit_80219378.c; `lbl_80309E5C`
+  (`flags`/`f10`/`f14`) in unit_80074D9C.c; `lbl_8030A10C` (`f0`, `p168`/`b16e`) and the character/task tables
+  `lbl_80309DE4`/`lbl_80309700` (`ChrRec`/`TkRec`/`WorkRec` replacing the `CHR_*`/`WK_*` offset macros) in
+  unit_80055E94.c; `lbl_80346BD8` (one struct instead of a struct and a cast view); the `State801D` status bytes (`st[9]`)
+  that a second cast view duplicated in unit_801D1AE8.c; `lbl_80306758` and `Obj_8015854C` in unit_8014F970.c;
+  `Entry16.b9`, `Sys_80309EC8.x4c` and a wider `W` (the transform fields) in unit_80005B50.c.
+- Prototypes follow the real use: `fn_800215EC` returns a `Task*` (the unit declared `u32` and cast), `fn_800114AC`
+  returns `f32`, `fn_80015020` takes `s8`, `fn_80014AB8(s32, void*)`, `fn_80210CE4(void)`, `fn_80210064` returns `s32`.
+  Where an agent's parameter order differed only in argument classes (`fn_801D8AB4`) the agent's was reordered to match.
+- Functions where the unit already declared the same shape under another tag were adapted to the unit's types
+  (`Node`, `Holder801D`, `Ent6EB88`, `HudEnt`, `SndSlot.flag`).
+
+Still unmerged from that list (30; each needs a decision, not just a field):
+
+- Callee prototype disagrees between callers and the function: fn_80013504 (fn_80071F84 takes three arguments in the
+  unit and a stale float as a fourth in the function), fn_80216D14, fn_8021730C, fn_80217380 (fn_802173F4's first
+  argument is a pointer in fn_802172C8 and a mode integer here), fn_801D6738, fn_801D67DC (`fn_802275A4` takes an
+  `s32` in the unit and a pointer here), fn_801DAE58 (fn_801CC3C4's argument), fn_801E150C, fn_801E1584 (fn_801E184C's
+  third argument), fn_8022A68C (fn_802281BC is a `(Msg*, s16)` wrapper in the unit, called with one `int` everywhere
+  else), fn_801CBC30, fn_801CC3C4, fn_8022F050 (the same wrapper family: fn_801CBC90, fn_801C64DC, fn_8022F050 are
+  `(Msg*, s16)` in the unit and called without arguments), fn_80100B74, fn_80109E7C, fn_80148E4C, fn_8019F898,
+  fn_801C6308, fn_80061518, fn_80061F58 (a callee takes a different struct pointer in the unit than here).
+- Real multi-view struct work: fn_80226848 (lbl_80311A78 is a list head with a sentinel in the unit and a record
+  pointer pair here), fn_8014F99C (`lbl_80346FC8` is read through `AT(...)` offsets throughout unit_8014F970.c),
+  fn_801C12C8 (`lbl_803471B8` is a `u8*` in unit_801C09A4.c and read through four different structs in
+  unit_80199B9C.c).
+- Match in isolation only (the unit changes the code): fn_80014EC4 (the original passes a `u8` field to an `s8`
+  parameter with no `extsb`), fn_80015B94, fn_80018AFC, fn_801D77B8, fn_80217608.
+- fn_80018700: `lbl_8030A10C` is an `s8` row here and a `u8` array in unit_80005B50.c; fn_801F5334 was already in the
+  unit (the list entry was stale).
+
+The 61 older leftovers (the previous section) were looked at once more after these changes: none unlocked. The remaining
+reasons are the ones listed there (several struct views of `lbl_803471B8`/`lbl_80311A60` in unit_80199B9C.c and
+unit_8015DC6C.c, `Task`/`MenuUi` tags per file, `fn_800C0368` needing a track table that overlaps the tail of
+`Work8030CEA0`, the header `TextPrintNumber` signature).
 
 ### Partials batch (2026-10-26)
 

@@ -1,4 +1,5 @@
 #include "types.h"
+#include "game/work_8030CEA0.h"
 #include <dolphin/types.h>
 extern void fn_80136A28(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f);
 extern void fn_8013DA50(s32 a, s32 b);
@@ -25,7 +26,6 @@ typedef struct {
     Inner* inner; /* 0x24 */
 } Outer_8013D400;
 extern Outer_8013D400* lbl_803472A0;
-extern u8 lbl_8030CEA0[];
 extern f32 lbl_803472E0;
 extern void* lbl_803472CC;
 extern void fn_801E17E0(void* p);
@@ -386,12 +386,6 @@ typedef struct {
     u8 pad4[0xC];
     s32 idx;
 } Slot_80147EAC;
-typedef struct {
-    u8 pad00[0x15D8];
-    s32 x15d8, x15dc, x15e0, x15e4, x15e8, x15ec, x15f0, x15f4, x15f8, x15fc, x1600, x1604, x1608;
-    s32 x160c;
-    s32 x1610;
-} Work;
 extern Slot_80147EAC lbl_80308EF8[];
 extern s32 lbl_8034729C;
 extern char lbl_802B3588[];
@@ -885,7 +879,7 @@ void fn_80148124(void) {
 }
 
 void fn_80148160(void) {
-    *(s32*)(lbl_8030CEA0 + 0x1614) = (s32)lbl_803472E0;
+    lbl_8030CEA0.x1614 = (s32)lbl_803472E0;
 }
 
 typedef struct Msg {
@@ -1766,8 +1760,8 @@ void fn_80147EAC(s32 id)
     if (id == 0 || id == 0xFFFF) {
         Base* b = ((Base*)fn_80135598());
         e = (Ent_80147EAC*)((u8*)b + 0x238);
-        (*(Work*)&lbl_8030CEA0).x160c = b->x8;
-        (*(Work*)&lbl_8030CEA0).x1610 = fn_80148024(0, id);
+        lbl_8030CEA0.x160c = b->x8;
+        lbl_8030CEA0.x1610 = fn_80148024(0, id);
     } else {
         int i;
         int found = -1;
@@ -1781,22 +1775,22 @@ void fn_80147EAC(s32 id)
             fn_801DBE1C((void *)(lbl_802B3588), id);
         }
         e = (Ent_80147EAC*)(((u8*)fn_8013558C()) + found * 0x10C);
-        (*(Work*)&lbl_8030CEA0).x160c = 0;
-        (*(Work*)&lbl_8030CEA0).x1610 = fn_80148024(1, id);
+        lbl_8030CEA0.x160c = 0;
+        lbl_8030CEA0.x1610 = fn_80148024(1, id);
     }
-    (*(Work*)&lbl_8030CEA0).x15d8 = fn_80129D40(id)[2];
-    (*(Work*)&lbl_8030CEA0).x15dc = e->x14;
-    (*(Work*)&lbl_8030CEA0).x15e0 = e->x76;
-    (*(Work*)&lbl_8030CEA0).x15e4 = e->x98;
-    (*(Work*)&lbl_8030CEA0).x15e8 = e->xba;
-    (*(Work*)&lbl_8030CEA0).x15ec = e->xdc;
-    (*(Work*)&lbl_8030CEA0).x15f0 = e->x7a;
-    (*(Work*)&lbl_8030CEA0).x15f4 = e->x9c;
-    (*(Work*)&lbl_8030CEA0).x15f8 = e->xbe;
-    (*(Work*)&lbl_8030CEA0).x15fc = e->xe0;
-    (*(Work*)&lbl_8030CEA0).x1600 = e->x1c;
-    (*(Work*)&lbl_8030CEA0).x1604 = e->x20;
-    (*(Work*)&lbl_8030CEA0).x1608 = e->x24;
+    lbl_8030CEA0.x15d8 = fn_80129D40(id)[2];
+    lbl_8030CEA0.x15dc = e->x14;
+    lbl_8030CEA0.x15e0 = e->x76;
+    lbl_8030CEA0.x15e4 = e->x98;
+    lbl_8030CEA0.x15e8 = e->xba;
+    lbl_8030CEA0.x15ec = e->xdc;
+    lbl_8030CEA0.x15f0 = e->x7a;
+    lbl_8030CEA0.x15f4 = e->x9c;
+    lbl_8030CEA0.x15f8 = e->xbe;
+    lbl_8030CEA0.x15fc = e->xe0;
+    lbl_8030CEA0.x1600 = e->x1c;
+    lbl_8030CEA0.x1604 = e->x20;
+    lbl_8030CEA0.x1608 = e->x24;
 }
 
 void fn_80143FA4(u8* s, s32 idx, s32 slot) {

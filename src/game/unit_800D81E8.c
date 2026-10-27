@@ -1,4 +1,5 @@
 #include "types.h"
+#include "game/work_8030CEA0.h"
 #include <string.h>
 #include "game/util.h"
 #include "ninja.h"
@@ -1542,7 +1543,6 @@ typedef struct {
     f32 f20;
     Work_800D9BA0* work;
 } Obj_800D9BA0;
-extern u8 lbl_8030CEA0[0x1920];
 extern void fn_80090B68(IVec_800D9BA0* k, Vec_800D9BA0* v);
 extern void fn_80090BE4(f32* p, IVec_800D9BA0* k);
 extern void fn_80090A7C(f32* p, Vec_800D9BA0* v);
@@ -5433,7 +5433,7 @@ void fn_800D9BA0(Obj_800D9BA0* o) {
         w->pos[1] = w->save[1];
         w->pos[2] = (w->save[2] + v.z) - 2400.0f * (f32)k.z;
         fn_800E126C(w);
-        if (*(s32*)&lbl_8030CEA0[0x1874] != 1) {
+        if (lbl_8030CEA0.x1874 != 1) {
             lbl_80347444 = 0;
             o->state--;
         }
@@ -7389,4 +7389,12 @@ void fn_800D8214(T *self)
         fn_800D7B28(e);
     }
     fn_8022DBC8();
+}
+
+void fn_80100270(void *arg) {
+    if (arg == 0) {
+        fn_801DBE1C(lbl_802B2348, arg);
+    }
+    fn_8025F120(lbl_80305CF0, arg);
+    lbl_80311AD4[6] = 15;
 }

@@ -1,5 +1,4 @@
 #include "types.h"
-
 void *fn_801E184C(void *base, s32 idx, s32 a, s32 n);
 extern u32 lbl_802F6748[4];
 extern s32 lbl_803476E4;
@@ -9,6 +8,12 @@ extern u32 lbl_803476FC;
 extern u32 lbl_80347700;
 extern u32 lbl_803476E8;
 extern u32 lbl_803476EC;
+typedef struct Node {
+    void *data;
+    u32 pad04[5];
+    struct Node *next;
+} Node;
+void fn_801E15FC(void *slot, void *data);
 
 void fn_801E1A74(s32 a, u32 n) {
     void *p;
@@ -78,4 +83,19 @@ void fn_801E1F08(void)
     lbl_803476E8 = 0;
     lbl_803476EC = 0;
     lbl_803476E4 = 0;
+}
+
+void fn_801E1CCC(void) {
+    Node *next;
+    u32 *slot;
+    Node *n;
+
+    slot = lbl_802F6748 + 1;
+    n = *(Node **)slot;
+    while (n != NULL) {
+        next = n->next;
+        fn_801E15FC(slot, n->data);
+        n = next;
+    }
+    *(Node **)slot = NULL;
 }

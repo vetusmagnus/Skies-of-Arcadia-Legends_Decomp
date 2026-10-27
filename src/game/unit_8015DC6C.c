@@ -1,4 +1,5 @@
 #include "types.h"
+#include "game/work_8030CEA0.h"
 #include "game/task.h"
 #include "game/menu.h"
 #include "ninja.h"
@@ -5075,7 +5076,6 @@ void fn_8015E314(Ent *self) {
 }
 
 void fn_8015EBF4(Ent_8015EBF4 *self) {
-    extern s32 lbl_8030CEA0[];
     extern void fn_801601AC(Ent_8015EBF4 *e);
     extern V3 *fn_8016748C(Ent_8015EBF4 *e, s32 a);
     extern void fn_801E1784(void *p);
@@ -5121,7 +5121,7 @@ void fn_8015EBF4(Ent_8015EBF4 *self) {
         fn_80210D7C(self->h17a);
         r = (s16)fn_801F6EC8(self->h17a);
         if (r != -1) {
-            lbl_8030CEA0[r * 2 + 6] = 0;
+            lbl_8030CEA0.ent[r][0] = 0;
         }
         self->x1d4 = 0;
     }

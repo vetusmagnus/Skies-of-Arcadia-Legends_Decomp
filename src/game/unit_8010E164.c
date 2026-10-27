@@ -1,4 +1,5 @@
 #include "types.h"
+#include "game/work_8030CEA0.h"
 #include "game/util.h"
 #include "ninja.h"
 #include <stdarg.h>
@@ -2408,10 +2409,6 @@ typedef struct {
     s16 kind;
     u8 pad30[0xe];
 } Ent_8034727C;
-typedef struct {
-    u8 pad0[0xc5c];
-    s32 xc5c;
-} Global8030CEA0;
 extern s32 lbl_80347280;
 extern s32 lbl_80346EE8;
 extern s32 lbl_803472C8;
@@ -2420,7 +2417,6 @@ extern s32 lbl_803473EC;
 extern s32 lbl_803473E8;
 extern Ent_8034727C* lbl_8034727C;
 extern Ent_80308F98 lbl_80308F98[];
-extern Global8030CEA0 lbl_8030CEA0;
 extern void fn_80158A80(void);
 extern void fn_8015C6A8(void);
 extern void fn_80156024(void);
@@ -2532,6 +2528,15 @@ typedef struct Obj_80112868 {
 } Obj_80112868;
 extern char lbl_80346E70, lbl_80346E71;
 extern void fn_80217830(s32 h);
+extern void fn_801C6170(void *p);
+struct Sub_80117748 {
+    u8 pad[0x1bc];
+    void *anim;
+};
+struct Obj_80117748 {
+    u8 pad[0x24];
+    struct Sub_80117748 *sub;
+};
 
 void fn_8010E164(u8 *obj) {
     if (obj[0x19] == 0xff) {
@@ -7629,4 +7634,13 @@ void fn_80112868(Obj_80112868 *o) {
     o->w110 = o->w44;
     o->w114 = o->w48;
     o->w118 = o->w4c;
+}
+
+void fn_80117748(struct Obj_80117748 *o) {
+    if (o->sub->anim != 0) {
+        fn_80222964(o->sub->anim);
+        fn_801E1784(o->sub->anim);
+        o->sub->anim = 0;
+    }
+    fn_801C6170(o);
 }
