@@ -713,7 +713,7 @@ typedef struct {
     u8 pad[0x260];
     Part_800BA444* parts;
 } Obj_800BA444;
-extern void fn_800D208C(s32 a);
+void fn_800D208C(u32 col, f32 start);
 extern void fn_800D2048(void);
 extern u8 fn_8009E4D4(f32 v);
 extern void fn_800A2830(Emit_800BA444* e, Part_800BA444* p, void* q);
@@ -3118,6 +3118,11 @@ typedef struct {
     f32 f254;
     f32 f258;
 } Obj_800D3668;
+extern void* lbl_803470E8;
+extern void* lbl_803470F0;
+extern void* lbl_803470F4;
+extern void fn_801D4F0C(Sprite* s, s32 a, s32 b, s32 c, f32 f1, f32 f2, f32 f3, f32 f4);
+extern void fn_801D52A8(Sprite* s, s32 a, s32 b, f32 f1, f32 f2, f32 f3, f32 f4);
 
 void fn_800B2DA0(u8* p, u32 v) {
     u8* q = *(u8**)(p + 0x268);
@@ -3144,9 +3149,9 @@ typedef struct Msg {
     s32 x8;
     s32 xc;
 } Msg;
-extern void fn_800C2A88(Msg*, s16);
-void fn_800C285C(Msg* a, s16 i) {
-    fn_800C2A88(a, i);
+f32 fn_800C2A88(Arg_800C2650 *a);
+f32 fn_800C285C(Arg_800C2650 *a) {
+    return fn_800C2A88(a);
 }
 
 f32 fn_800C287C(Arg_800C2650 *a)
@@ -4204,7 +4209,7 @@ void fn_800BA444(Obj_800BA444* o, Work_800BA444* w) {
     Part_800BA444* next;
     f32 zero = 0.0f;
     if (w->x11c != zero) {
-        fn_800D208C(w->x118);
+        fn_800D208C(w->x118, w->x11c);
     }
     while (p != NULL) {
         p->life--;
@@ -5879,7 +5884,7 @@ void fn_800BA220(W_800BA220 *w, X_800BA220 *x)
     sc = w->c;
     w->w2c = 0;
     if (x->f11c != zero) {
-        fn_800D208C(x->w118);
+        fn_800D208C(x->w118, x->f11c);
     }
     while (n != 0) {
         n->h2e--;
@@ -8687,4 +8692,46 @@ void fn_800D3668(Obj_800D3668* o) {
     v2.z = v2.z - o->p_b4.z;
     fn_801DD5E8(&o->s44, &v2);
     o->s44.ang = (u16)(-o->s44.ang);
+}
+
+void fn_800D208C(u32 col, f32 start) {
+    GXColor c;
+    c.r = col >> 8;
+    c.g = col >> 16;
+    c.b = col >> 24;
+    c.a = 0xff;
+    GXSetFog(2, -20000.0f * start, -lbl_8034678C, -lbl_80346788, -lbl_8034678C, c);
+    fn_80296F28();
+}
+
+f32 fn_800C2A88(Arg_800C2650* a) {
+    f32 x = a->f0;
+    Sprite* s;
+
+    s = fn_801D68C4(lbl_803470F0, 0x50);
+    s->x = a->h4;
+    s->y = a->h6;
+    fn_801D4F0C(s, 0, 0, 1, x, 0.0f, a->fc, a->f8);
+    x += 10.0f;
+    s = fn_801D68C4(lbl_803470E8, 6);
+    s->x = a->h4;
+    s->y = a->h6;
+    fn_801D4F0C(s, 0, 0, 0, x, 0.0f, a->fc, a->f8);
+    x += 100.0f;
+    s = fn_801D68C4(lbl_803470F0, 0x53);
+    s->x = a->h4;
+    s->y = a->h6;
+    fn_801D4F0C(s, 0, 0, 1, x, 0.0f, a->fc, a->f8);
+    x += 20.0f;
+    s = fn_801D68C4(lbl_803470F4, 0x46);
+    s->x = a->h4 + 0x20;
+    s->y = a->h6 + 0x1f;
+    fn_801D52A8(s, 0, 0, x, 0.0f, a->fc, a->f8);
+    x += 20.0f;
+    s = fn_801D68C4(lbl_803470F0, 0x70);
+    s->x = a->h4 + 0x1d0;
+    s->y = a->h6 - 0x1b;
+    fn_801D4F0C(s, 0, 0, 1, x, 0.0f, a->fc, a->f8);
+    x += 20.0f;
+    return x;
 }
