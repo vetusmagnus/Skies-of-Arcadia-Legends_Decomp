@@ -5573,12 +5573,12 @@ typedef struct ShopSlotPos {
     f32 x2;  /* hidden */
 } ShopSlotPos;
 extern const ShopSlotPos lbl_802B69E8[];
-extern ShopPart* fn_801AD00C(ShopTask* t, u16 kind, s32 who);
-extern ShopPart* fn_801B057C(ShopTask* t, u16 kind, s32 who);
-extern ShopPart* fn_801B06CC(ShopTask* t, u16 i, s32 who, f32 alpha);
+extern ShopPart* fn_801AD00C(ShopTask* t, u8 kind, u16 who);
+extern ShopPart* fn_801B057C(ShopTask* t, u16 kind, u16 who);
+extern ShopPart* fn_801B06CC(ShopTask* t, u16 i, u16 who, f32 alpha);
 extern void* fn_801AFBE8(void* t, u16 i, u16 kind, f32 alpha);
 extern void fn_801C1FC0(s16 id, s32 who);
-extern u16 fn_801C16D0(s16 id);
+extern s32 fn_801C16D0(s16 id);
 extern void fn_801C1728(s16 id, s32 slot);
 extern s32 fn_801AAFAC(ShopTask* t);
 extern void fn_801C0AB4(u16 id, u8 who);
