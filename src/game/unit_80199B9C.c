@@ -1,4 +1,5 @@
 #include "types.h"
+#include "game/save_8030B7F4.h"
 #include "game/task.h"
 #include "game/uiobj.h"
 #include "ninja.h"
@@ -433,17 +434,6 @@ typedef struct Flags_UNIT0000 {
     u8 pad00[8];
     u32 w08;
 } Flags_UNIT0000;
-typedef struct Stat {
-    u8 pad00[0x34C];
-    s32 w34c; /* gold */
-    u8 pad350[0x1568 - 0x350];
-    s8 b1568;
-    u8 pad1569[0x1580 - 0x1569];
-    s16 h1580[5];
-    s16 h158a[4];
-    u8 pad1592[0x16A0 - 0x1592];
-} Stat;
-extern Stat lbl_8030B7F4;
 extern void* lbl_803470EC;
 extern void* lbl_803470F4;
 typedef struct St {
@@ -1211,17 +1201,9 @@ typedef struct Self_801AB580 {
     u8 pad0[0x2c];
     Buf_801AB580 *buf;
 } Self_801AB580;
-typedef struct Game_801AB580 {
-    u8 pad0[0x34c];
-    s32 w34c;
-} Game_801AB580;
 extern s32 fn_801F4C24(s16 id);
 extern u16 fn_801F477C(s16 id);
 extern s8 fn_801F452C(s16 id);
-typedef struct Game_801AB82C {
-    u8 pad0[0x34c];
-    u32 w34c;
-} Game_801AB82C;
 #define MenuDummy MenuDummy_hdr
 #undef MenuDummy
 typedef struct { UiObj o; const char* text; u16 h50, h52, h54, h56; } MObj;
@@ -2006,11 +1988,11 @@ typedef struct CardRec {
     s32 w1c;
     SaveStamp stamp;
 } CardRec;
-typedef struct SaveData {
+typedef struct CardSaveData {
     u8 pad0[0x31f2];
     u8 stamp[10];
     u32 sum;
-} SaveData;
+} CardSaveData;
 extern CardStampBuf lbl_80308198;
 extern CardRec lbl_803081A4;
 extern void *memcpy(void *, const void *, u32);
@@ -4028,7 +4010,7 @@ void fn_801AB580(Self_801AB580 *self) {
             id = (u16)row->e[i];
             if (fn_801F477C(id) == 0) {
                 flag = 1;
-            } else if ((*(Game_801AB580*)&lbl_8030B7F4).w34c / fn_801F477C(id) == 0) {
+            } else if (lbl_8030B7F4.w34c / fn_801F477C(id) == 0) {
                 flag = 1;
             } else if (fn_801F452C(id) == 99) {
                 flag = 1;
@@ -4053,7 +4035,7 @@ u8 fn_801AB82C(s32 mode, u8 cur, s32 idxp) {
     u32 v;
     s32 lim;
 
-    max = (*(Game_801AB82C*)&lbl_8030B7F4).w34c / fn_801F477C(idx);
+    max = (u32)lbl_8030B7F4.w34c / fn_801F477C(idx);
     if (max == 0) {
         return 0;
     }
@@ -5849,7 +5831,7 @@ void fn_801A6BDC(ShopTask* t) {
             fn_801C1728(t->w->item, 2);
             fn_801C1728(t->w->item, 3);
             for (i = 0; i < 4; i++) {
-                t->w->parts[lbl_802B69E8[i].idx] = fn_801AFBE8(t, i, 0, lbl_8030B7F4.h158a[i] == t->w->item ? 0.7f : 1.0f);
+                t->w->parts[lbl_802B69E8[i].idx] = fn_801AFBE8(t, i, 0, lbl_8030B7F4.s158a[i] == t->w->item ? 0.7f : 1.0f);
                 UiObjMoveToX(t->w->parts[lbl_802B69E8[i].idx]->obj, 6, 4, lbl_802B69E8[i].x);
                 UiObjSetCommand(t->w->parts[lbl_802B69E8[i].idx]->obj, 15, i * 2 + 2);
             }
@@ -5870,7 +5852,7 @@ void fn_801A6BDC(ShopTask* t) {
             fn_801C1728(t->w->item, 1);
             fn_801C1728(t->w->item, 2);
             for (i = 0; i < 3; i++) {
-                t->w->parts[lbl_802B69E8[i].idx] = fn_801AFBE8(t, i, 1, lbl_8030B7F4.h1580[i] == t->w->item ? 0.7f : 1.0f);
+                t->w->parts[lbl_802B69E8[i].idx] = fn_801AFBE8(t, i, 1, lbl_8030B7F4.s1580[i] == t->w->item ? 0.7f : 1.0f);
                 UiObjMoveToX(t->w->parts[lbl_802B69E8[i].idx]->obj, 6, 4, lbl_802B69E8[i].x);
                 UiObjSetCommand(t->w->parts[lbl_802B69E8[i].idx]->obj, 15, i * 2 + 2);
             }
@@ -6152,9 +6134,9 @@ void fn_801A6BDC(ShopTask* t) {
                 break;
             }
             if (t->w->b37 == 0) {
-                lbl_8030B7F4.h1580[t->w->xa] = t->w->stat[0][t->w->xa];
+                lbl_8030B7F4.s1580[t->w->xa] = t->w->stat[0][t->w->xa];
             } else {
-                lbl_8030B7F4.h158a[t->w->xa] = t->w->stat[0][t->w->xa];
+                lbl_8030B7F4.s158a[t->w->xa] = t->w->stat[0][t->w->xa];
             }
             t->w->xc[t->w->xa] = 0;
             fn_8021B1CC(lbl_8030B4D4 + 0x2dc, &lbl_8030B7F4.b1568);
@@ -6169,8 +6151,8 @@ void fn_801A6BDC(ShopTask* t) {
             case 2:
             case 3:
                 if (t->w->b37 == 0) {
-                    if (lbl_8030B7F4.h1580[(u8)t->w->xa] != t->w->item && t->w->x9 != 0) {
-                        lbl_8030B7F4.h1580[(u8)t->w->xa] = t->w->item;
+                    if (lbl_8030B7F4.s1580[(u8)t->w->xa] != t->w->item && t->w->x9 != 0) {
+                        lbl_8030B7F4.s1580[(u8)t->w->xa] = t->w->item;
                         t->w->xc[t->w->xa] = 1;
                         fn_801C08B4(0x16);
                     } else {
@@ -6178,9 +6160,9 @@ void fn_801A6BDC(ShopTask* t) {
                         break;
                     }
                 } else {
-                    old = lbl_8030B7F4.h158a[(u8)t->w->xa] == (s16)t->w->item;
+                    old = lbl_8030B7F4.s158a[(u8)t->w->xa] == (s16)t->w->item;
                     if (!old && t->w->x9 != 0) {
-                        lbl_8030B7F4.h158a[t->w->xa] = t->w->item;
+                        lbl_8030B7F4.s158a[t->w->xa] = t->w->item;
                         t->w->xc[t->w->xa] = 1;
                         fn_801C08B4(0x16);
                     } else {
@@ -6537,7 +6519,7 @@ s32 fn_801A2500(s32 chan, s32 *out) {
     return r;
 }
 
-CardRec *fn_801A41EC(SaveData *p, s32 chan, const char *name) {
+CardRec *fn_801A41EC(CardSaveData *p, s32 chan, const char *name) {
     CardRec *rec = &lbl_803081A4;
     u32 sum;
     s32 i;

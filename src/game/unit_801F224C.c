@@ -1,6 +1,6 @@
 #include "types.h"
+#include "game/save_8030B7F4.h"
 extern u8 lbl_8030B4D4[];
-extern u8 lbl_8030B7F4[];
 void fn_801EF7E0(void *p);
 typedef struct {
     u8 pad[0x2c];
@@ -43,23 +43,23 @@ s32 fn_801F28B4(s32 a)
 }
 
 void fn_801F4E04(s32 i, s16 v) {
-    u8 *p = lbl_8030B7F4;
-    p += i * 0x5c;
-    *(s16 *)(p + 0x14) = v;
+    SaveChar *p = lbl_8030B7F4.chr;
+    p += i;
+    p->slot2 = v;
     fn_801EF7E0(p);
 }
 
 void fn_801F4E38(s32 i, s16 v) {
-    u8 *p = lbl_8030B7F4;
-    p += i * 0x5c;
-    *(s16 *)(p + 0x12) = v;
+    SaveChar *p = lbl_8030B7F4.chr;
+    p += i;
+    p->slot1 = v;
     fn_801EF7E0(p);
 }
 
 void fn_801F4E6C(s32 i, s16 v) {
-    u8 *p = lbl_8030B7F4;
-    p += i * 0x5c;
-    *(s16 *)(p + 0x10) = v;
+    SaveChar *p = lbl_8030B7F4.chr;
+    p += i;
+    p->slot0 = v;
     fn_801EF7E0(p);
 }
 
@@ -162,4 +162,70 @@ s32 fn_801F464C(s16 id)
     default:
         return 0;
     }
+}
+
+typedef struct Rec_801F3E6C {
+    u8 pad0[0x12];
+    s16 a;
+    s16 b;
+    s16 c;
+    u8 pad18[0x98 - 0x18];
+} Rec_801F3E6C;
+extern u32 lbl_80310B3C[];
+extern Rec_801F3E6C lbl_802C4860[];
+extern void fn_801EFFFC(s16 id);
+extern void fn_801EFFB4(s16 id);
+extern void fn_801EFF6C(s16 id);
+extern void fn_801EFFD8(s16 id);
+extern void fn_801EFF90(s16 id);
+extern void fn_801EFF48(s16 id);
+extern s32 fn_801F3B90(s32 i);
+
+s32 fn_801F3E6C(s32 i) {
+    SaveChar *c;
+    Rec_801F3E6C *r;
+    u32 f1 = i + 0x408;
+    u32 f2 = i + 0x402;
+    lbl_80310B3C[f1 >> 5] |= 1 << (f1 & 31);
+    lbl_80310B3C[f2 >> 5] |= 1 << (f2 & 31);
+    c = &lbl_8030B7F4.chr[i];
+    r = &lbl_802C4860[i];
+    fn_801EFFFC(r->a);
+    c->slot0 = r->a;
+    fn_801EFFB4(r->b);
+    c->slot1 = r->b;
+    fn_801EFF6C(r->c);
+    c->slot2 = r->c;
+    if (fn_801F3B90(i) != 0) {
+        if (i == 2) {
+            lbl_8030B7F4.xb50 |= 4;
+        }
+        return 1;
+    }
+    fn_801EFFD8(r->a);
+    fn_801EFF90(r->b);
+    fn_801EFF48(r->c);
+    return 0;
+}
+
+s32 fn_801F4D14(void)
+{
+    s32 i;
+    s32 sb = 0;
+    s32 sa = 0;
+    for (i = 0; i < 5; i++) {
+        s8 k = lbl_8030B7F4.party[i];
+        if (k != -1) {
+            SaveChar* e = &lbl_8030B7F4.chr[k];
+            s32 a, b;
+            b = e->hpMax;
+            a = e->hp;
+            if ((f32)a / (f32)b < 0.25f) {
+                return 0;
+            }
+            sb += b;
+            sa += a;
+        }
+    }
+    return !((f32)sa / (f32)sb < 0.63);
 }

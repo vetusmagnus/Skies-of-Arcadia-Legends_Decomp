@@ -1,6 +1,9 @@
 #include "types.h"
+#include "game/stat_8030B4D4.h"
 #include "game/work_8030CEA0.h"
 #include "ninja.h"
+#include "game/camera_803119E0.h"
+#include "game/save_8030B7F4.h"
 #include "game/task.h"
 #include <math.h>
 
@@ -172,7 +175,6 @@ typedef struct { PadState* pad; u8 pad4[0x14]; } PadInfo;
 
 extern u32 lbl_80310B3C[];
 extern EvCam lbl_803136A8;
-extern NJS_POINT3 lbl_803119E0[2]; /* [1] is the camera look-at */
 extern NJS_POINT3 lbl_803139B4[30];
 extern NJS_POINT3 lbl_8031384C[];
 extern Angle lbl_803136E4[30][3];
@@ -435,7 +437,7 @@ void fn_801E8CA4(Task* task) {
         dist = fn_80290008(&a, &b);
         if (lbl_80347778 != 2) {
             VecCopy(&cam->b, &cam->c);
-            VecCopy(&cam->c, &lbl_803119E0[0]);
+            VecCopy(&cam->c, &lbl_803119E0.pos);
             if (busy == 0 && lbl_80347440 == 1 && cam->b.x == cam->c.x && cam->b.y == cam->c.y &&
                 cam->b.z == cam->c.z && (lbl_80310B3C[18] & 0x10)) {
                 lbl_80347790 = 1;
@@ -568,7 +570,7 @@ void fn_801E9AE0(Task* self) {
     b.z = t->x24c.z;
     dist = fn_80290008(&a, &b);
     m = self->work;
-    fn_801DD5E8(ang, &lbl_803119E0[1]);
+    fn_801DD5E8(ang, &lbl_803119E0.dir);
     m->ang[0] = ang[0] - 0x4000;
     m->ang[1] = ang[1];
     m->ang[2] = ang[2];
@@ -667,7 +669,7 @@ void fn_801E9EA8(Task* task) {
                 obj->state = 2;
             }
         }
-        fn_801DD5E8(out, &lbl_803119E0[1]);
+        fn_801DD5E8(out, &lbl_803119E0.dir);
         obj->ang[0] = out[0] - 0x4000;
         obj->ang[1] = out[1];
         obj->ang[2] = out[2];
@@ -1298,7 +1300,7 @@ void fn_801EA2DC(Task* task) {
     }
     obj = task->work;
     dist = CamDist(obj);
-    fn_801DD5E8(ang, &lbl_803119E0[1]);
+    fn_801DD5E8(ang, &lbl_803119E0.dir);
     switch (obj->x202) {
     case 0:
         if (lbl_80347778 == 2) {
@@ -1330,19 +1332,19 @@ void fn_801EA2DC(Task* task) {
         }
         break;
     case 1:
-        fn_801DD5E8(ang, &lbl_803119E0[1]);
+        fn_801DD5E8(ang, &lbl_803119E0.dir);
         r = -1.6 * sin(9.587378e-05f * ang[0]);
-        cam->e.x = 3.75f * lbl_803119E0[1].x + (lbl_803119E0[0].x + sin(9.587378e-05f * ang[1]) * r);
-        cam->e.y = 3.75f * lbl_803119E0[1].y + (lbl_803119E0[0].y + -1.6 * cos(9.587378e-05f * ang[0]));
+        cam->e.x = 3.75f * lbl_803119E0.dir.x + (lbl_803119E0.pos.x + sin(9.587378e-05f * ang[1]) * r);
+        cam->e.y = 3.75f * lbl_803119E0.dir.y + (lbl_803119E0.pos.y + -1.6 * cos(9.587378e-05f * ang[0]));
         r = -1.6 * sin(9.587378e-05f * ang[0]);
-        cam->e.z = 3.75f * lbl_803119E0[1].z + (lbl_803119E0[0].z + cos(9.587378e-05f * ang[1]) * r);
+        cam->e.z = 3.75f * lbl_803119E0.dir.z + (lbl_803119E0.pos.z + cos(9.587378e-05f * ang[1]) * r);
         VecCopy(&obj->pos, &cam->e);
         obj->ang[0] = -ang[0];
         obj->ang[1] = ang[1] - 0x8000;
         obj->ang[2] = ang[2];
-        cam->d.x = (lbl_803139B4[obj->point].x - lbl_803119E0[0].x) / 10.0f;
-        cam->d.z = (lbl_803139B4[obj->point].z - lbl_803119E0[0].z) / 10.0f;
-        cam->d.y = (2.5f + lbl_803139B4[obj->point].y - lbl_803119E0[0].y) / 10.0f;
+        cam->d.x = (lbl_803139B4[obj->point].x - lbl_803119E0.pos.x) / 10.0f;
+        cam->d.z = (lbl_803139B4[obj->point].z - lbl_803119E0.pos.z) / 10.0f;
+        cam->d.y = (2.5f + lbl_803139B4[obj->point].y - lbl_803119E0.pos.y) / 10.0f;
         obj->x206 = 0;
         obj->motionId = 0;
         obj->x202 = 2;
@@ -1431,10 +1433,10 @@ void fn_801EAA08(Task* task) {
     Angle ang[3];
 
     dist = CamDist(obj);
-    fn_801DD5E8(ang, &lbl_803119E0[1]);
-    obj->pos.x = lbl_803119E0[0].x;
-    obj->pos.y = lbl_803119E0[0].y - obj->pivotPos.y;
-    obj->pos.z = lbl_803119E0[0].z;
+    fn_801DD5E8(ang, &lbl_803119E0.dir);
+    obj->pos.x = lbl_803119E0.pos.x;
+    obj->pos.y = lbl_803119E0.pos.y - obj->pivotPos.y;
+    obj->pos.z = lbl_803119E0.pos.z;
     obj->ang[0] = -(ang[0] + (s32)(182.04445f * obj->state));
     obj->ang[1] = ang[1] - 0x8000;
     if (lbl_80347778 != 2) {
@@ -1446,14 +1448,14 @@ void fn_801EAA08(Task* task) {
     }
     if (obj->x202 == 1) {
         s = 0.5 * sin((f32)(3.14 * obj->x206 / 180.0));
-        obj->pos.x -= lbl_803119E0[1].x * s;
-        obj->pos.y -= lbl_803119E0[1].y * s;
-        obj->pos.z -= lbl_803119E0[1].z * s;
+        obj->pos.x -= lbl_803119E0.dir.x * s;
+        obj->pos.y -= lbl_803119E0.dir.y * s;
+        obj->pos.z -= lbl_803119E0.dir.z * s;
         obj->x206 += 0x12;
         if (obj->x206 >= 0xb4) {
             obj->x202 = 0;
             obj->x206 = 0x48;
-            VecCopy(&obj->pos, &lbl_803119E0[0]);
+            VecCopy(&obj->pos, &lbl_803119E0.pos);
             obj->x1ec = 1;
         }
     }
@@ -1465,14 +1467,14 @@ void fn_801EAA08(Task* task) {
     }
     if (obj->x1ec == 2) {
         s = 0.5 * sin((f32)(3.14 * obj->x206 / 180.0));
-        obj->pos.x -= lbl_803119E0[1].x * s;
-        obj->pos.y -= lbl_803119E0[1].y * s;
-        obj->pos.z -= lbl_803119E0[1].z * s;
+        obj->pos.x -= lbl_803119E0.dir.x * s;
+        obj->pos.y -= lbl_803119E0.dir.y * s;
+        obj->pos.z -= lbl_803119E0.dir.z * s;
         obj->x206 += 0x12;
         if (obj->x206 >= 0xb4) {
             obj->x202 = 0;
             obj->x206 = 0x48;
-            VecCopy(&obj->pos, &lbl_803119E0[0]);
+            VecCopy(&obj->pos, &lbl_803119E0.pos);
             obj->x1ec = 3;
         }
         lbl_80347794 = 9;
@@ -1581,7 +1583,7 @@ void fn_801EB01C(Task* task) {
 }
 
 s32 fn_801EB330(EvObj* obj, f32 dist) {
-    NJS_POINT3* look = lbl_803119E0;
+    NJS_POINT3* look = &lbl_803119E0.pos;
     f32 s[2];
     f32 v[2];
     s32 n;
@@ -2194,57 +2196,7 @@ typedef struct {
     s16 x58;
     s16 x5a;
 } Chr_801EF054;
-typedef struct Char {
-    s16 x0;
-    u8 pad2[0xb];
-    s8 mp;                  /* 0x0d */
-    s8 mpMax;
-    u8 pad0f;
-    s16 slot0;              /* 0x10 */
-    s16 slot1;
-    s16 slot2;
-    u8 pad16[2];
-    s16 hp;                 /* 0x18 */
-    s16 hpMax;
-    u8 pad1c[0xc];
-    f32 x28;
-    u8 pad2c[0xe];
-    s16 s3a;
-    s16 s3c;
-    s16 s3e;
-    s16 s40;
-    s16 s42;
-    u8 pad44[0x18];
-} Char;
-/* 0x5c */
-typedef struct { s16 id; s8 cnt; u8 pad; } InvEnt;
 typedef InvEnt Slot;
-typedef struct Game {
-    Char chr[8];                /* 0x000 */
-    u8 pad2e0[0x328 - 0x2e0];
-    s8 party[4];                /* 0x328 */
-    u8 pad32c[2];
-    s8 x32e;
-    s8 x32f;
-    s8 x330;
-    u8 pad331[0x354 - 0x331];
-    Slot s354[0x50];
-    Slot s494[0x50];
-    Slot s5d4[0x50];
-    Slot s714[0x50];
-    Slot s854[0x50];
-    Slot s994[0x1e];
-    Slot sa0c[0x28];
-    Slot saac[0x28];
-    u8 xb4c;
-    u8 padb4d[0x1569 - 0xb4d];
-    u8 x1569;
-    u8 pad156a[0x12];
-    s32 x157c;
-    s16 s1580[5];
-    s16 s158a[5];
-} Game;
-extern Game lbl_8030B7F4;
 extern s16 fn_801EE344(s16 item, s32 stat);
 extern void fn_801EFB74(s16 id, u32 kind);
 extern void fn_801EFDC0(s16 id, u32 kind);
@@ -2267,11 +2219,6 @@ typedef struct Item {
     s16 amount;
     u8 pad1e[6];
 } Item;
-typedef struct Cfg {
-    u8 pad[0x2dc];
-    int limit;
-} Cfg;
-extern Cfg lbl_8030B4D4;
 extern Item lbl_802D8A2C[];
 extern Item lbl_802C7C34[];
 extern void fn_801EFC88(s16 idx);
@@ -2683,8 +2630,8 @@ static inline void ItemChance(s16 idx)
 int fn_801F039C(int a, s16 kind)
 {
     Item *it = &lbl_802D8A2C[a - 0x1e0];
-    Game *g = &lbl_8030B7F4;
-    Cfg *cfg = &lbl_8030B4D4;
+    SaveData *g = &lbl_8030B7F4;
+    StatBlock *cfg = &lbl_8030B4D4;
 
     switch (kind) {
     case 0x64:
@@ -2718,7 +2665,7 @@ static inline void ItemChanceB(s16 idx)
     }
 }
 
-static inline void ApplyHp(Char *c, Item *it)
+static inline void ApplyHp(SaveChar *c, Item *it)
 {
     switch (it->kind) {
     case 0x1f:
@@ -2735,7 +2682,7 @@ static inline void ApplyHp(Char *c, Item *it)
     }
 }
 
-static inline void ApplyMp(Char *c, Item *it)
+static inline void ApplyMp(SaveChar *c, Item *it)
 {
     switch (it->kind) {
     case 0x30:
@@ -2755,8 +2702,8 @@ static inline void ApplyMp(Char *c, Item *it)
 int fn_801F0588(int who, int idx, s8 kind)
 {
     Item *it = &lbl_802C7C34[idx - 0xf0];
-    Game *g = &lbl_8030B7F4;
-    Char *c = &g->chr[who];
+    SaveData *g = &lbl_8030B7F4;
+    SaveChar *c = &g->chr[who];
     int flag = it->flag;
     int i;
 
@@ -2898,7 +2845,7 @@ void fn_801F11C8(int unused, int kind, int idx) {
     Ent_801F11C8* e = (Ent_801F11C8*)(lbl_802C4BF0 + idx * 0x30);
     if (kind == 6) {
         Big* big = (Big*)&lbl_8030B7F4;
-        Cfg* oth = &lbl_8030B4D4;
+        StatBlock* oth = &lbl_8030B4D4;
         if (e->b15 == 0x1F) {
             s32 t = big->c + e->s2a * 10;
             big->c = t;

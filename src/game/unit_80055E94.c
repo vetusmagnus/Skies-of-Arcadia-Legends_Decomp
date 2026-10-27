@@ -1,4 +1,5 @@
 #include "types.h"
+#include "game/stat_8030B4D4.h"
 #include "ninja.h"
 #include "game/drawstate.h"
 /* One declaration per global / prototype. Tk and Chr tables are read through raw offsets
@@ -1051,9 +1052,7 @@ extern void fn_801CBBAC(f32);
 extern void fn_801CBB9C(f32);
 extern void fn_801CBBF8(void);
 typedef struct Lim_8006EF48 { u8 pad[6]; s16 x6; s16 x8; s16 xa; } Lim_8006EF48;
-typedef struct Stat { u8 pad[6]; s16 x6; u8 pad8[0x78 - 8]; } Stat;
 extern s16 lbl_80309DCC[];
-extern Stat lbl_8030B4D4[];
 extern s32 fn_80078610(s8 i);
 typedef struct S62E94 {
     void *p0;
@@ -4059,7 +4058,7 @@ void fn_8006EF48(void) {
         if (fn_80078610(i)) {
             ChrRec *c = lbl_80309DE4[i];
             if (!(c->bits & 0x3100)) {
-                sum += lbl_8030B4D4[lbl_80309DCC[i]].x6;
+                sum += lbl_8030B4D4.chr[lbl_80309DCC[i]].x6;
                 sum += c->x10c;
             }
         }

@@ -1,5 +1,6 @@
 #include <dolphin/types.h>
 #include "types.h"
+#include "game/stat_8030B4D4.h"
 #include <string.h>
 typedef struct {
     s32 w[7];
@@ -372,11 +373,6 @@ typedef struct {
     s8 party[4];
 } PcWork;
 typedef struct {
-    u8 pad0[0x4a];
-    s16 x4a;
-    u8 pad4c[0x78 - 0x4c];
-} PcInfo;
-typedef struct {
     u8 name[0xb];
     s8 id;
     u8 c;
@@ -387,11 +383,6 @@ typedef struct {
     s16 s18;
     s16 s1a;
 } PcView;
-typedef struct {
-    PcInfo chr[6];
-    u8 pad2d0[0x320 - 0x2d0];
-} PcInfoWork;
-extern PcInfoWork lbl_8030B4D4;
 typedef struct {
     u8 pad0[0x58];
     u32 flags; /* 0x58 */
@@ -1516,7 +1507,7 @@ void fn_80135290(PcView *v, s32 slot, s32 add)
 {
     PcEnt *e = NULL;
     int id;
-    PcInfo *info;
+    StatRec *info;
 
     if (v == NULL) return;
     if (slot < 0 || slot >= 4) return;

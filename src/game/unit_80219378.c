@@ -1,4 +1,8 @@
 #include "types.h"
+#include "game/camera_803119E0.h"
+#include "game/save_8030B7F4.h"
+#include "game/drawstate.h"
+#include "game/stat_8030B4D4.h"
 extern void fn_802193BC(s32 a, s32 b);
 extern s32 fn_801D168C(void);
 extern void fn_801D150C(s32 v);
@@ -6,10 +10,23 @@ extern s32 fn_80219B7C(void);
 typedef struct Obj_UNIT0000 { u8 pad[4]; u32 count; } Obj_UNIT0000;
 extern void fn_80298FE4(s32 v);
 typedef void (*VoidFn)(void);
-typedef struct Node_UNIT0000 { u32 val; struct Node_UNIT0000 *next; } Node_UNIT0000;
+typedef struct Node_UNIT0000 {
+    void *w0;
+    struct Node_UNIT0000 *next;
+    void *w8;
+    u32 wc;
+    u32 w10;
+    s32 w14;
+    u8 b18;
+    u8 pad19[2];
+    u8 b1b;
+    u8 pad1c[4];
+    f32 f20;
+    u8 pad24[0x1c];
+} Node_UNIT0000;
 typedef struct Blk_UNIT0000 {
     Node_UNIT0000 *head;
-    u32 f4;
+    Node_UNIT0000 *cur;
     Node_UNIT0000 sentinel;
 } Blk_UNIT0000;
 extern Blk_UNIT0000 lbl_80311A78;
@@ -42,24 +59,24 @@ extern void fn_801E1D94(void);
 extern void fn_801D14F8(void);
 extern u8 lbl_802D9730[];
 extern void fn_801D0B38(s32 a);
-typedef struct Blk2_UNIT0000 { s32 f0; s32 f4; u8 pad[0x18]; } Blk2_UNIT0000;
+typedef struct Blk2_UNIT0000 { s32 f0; s32 f4; s32 f8; u8 padc[0x18 - 0xc]; s32 f18; s32 f1c; } Blk2_UNIT0000;
 extern Blk2_UNIT0000 lbl_803167F0;
 typedef struct P_UNIT0000 { u8 pad[0x1c]; s32 f1c; } P_UNIT0000;
-extern void fn_801CBBAC(void*p, f32 f);
-extern void fn_801CBB9C(void*p, f32 f);
+extern void fn_801CBBAC(f32 f);
+extern void fn_801CBB9C(f32 f);
 extern s32 lbl_80347EB0;
 extern s32 lbl_80347EA8;
 extern s32 lbl_80347EB4;
-extern void njUnitMatrix(void *m);
 extern void fn_8028BAEC(void *p);
 typedef struct Pos_UNIT0000 { u8 pad0[0x1c]; s32 f1c; s32 f20; u8 pad1[0x10]; s32 f34; } Pos_UNIT0000;
 extern Pos_UNIT0000 lbl_80311970;
 extern void njRotateZXY(void *m, s32 x, s32 y, s32 z);
-typedef struct Vec { f32 x; f32 y; f32 z; } Vec;
+typedef NJS_POINT3 Vec;
 extern double atan2(double y, double x);
 extern s32 lbl_80347520;
 typedef struct Node {
-    u8 pad0[0x10];
+    s32 (*cb)(struct Node *, struct Node *);
+    u8 pad4[0xc];
     u16 mask10;
     u16 id12;
     s16 flag14;
@@ -180,13 +197,18 @@ typedef struct Sub802281DC { s32 a; s32 b[8]; u8 pad[0x44 - 0x24]; s32 z44; } Su
 typedef struct Ctx802281DC { s32 a0; s32 a4; s32 a8; Sub802281DC *sub; s32 a10; s32 a14; } Ctx802281DC;
 typedef struct C2 { u8 pad[0x20]; void *p20; } C2;
 typedef struct C1 { u8 pad[4]; C2 *p4; } C1;
-typedef struct C0 { u8 pad[0x35c]; C1 *p35c; } C0;
+typedef struct Z { u8 pad[8]; u32 f8; } Z;
+typedef struct Y { u8 pad[4]; Z *p4; } Y;
+typedef struct EntA { u8 pad[0x14]; Y *y; u8 pad18[0x68 - 0x18]; } EntA;
+typedef struct TblRoot { u8 pad[4]; EntA *p4; } TblRoot;
+typedef struct C0 { u8 pad[0x358]; TblRoot *p358; C1 *p35c; } C0;
 extern C0 *lbl_8034784C;
 extern f32 lbl_8034C640;
 extern f32 lbl_8034C65C;
-extern void fn_801D5DD8(s32 a, s32 b, s32 c, void *p, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
+extern void fn_801D5DD8(void *a, s32 b, s32 c, void *p, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
 typedef struct TexInner { u8 pad[0x20]; void *list; } TexInner;
 typedef struct TexRoot { u8 pad[4]; TexInner *inner; } TexRoot;
+typedef struct Spr { u8 pad[0x14]; f32 f14; u8 pad18[0x50 - 0x18]; } Spr;
 typedef struct Obj8 { s32 pad0; s32 a4; s32 a8; } Obj8;
 extern TexRoot *lbl_80347854;
 extern void fn_802275A4(void *list, s32 a);
@@ -218,7 +240,6 @@ extern void fn_80227810(void *list);
 extern void fn_801DBA58(u32 a, u32 b, u32 c);
 extern void fn_801CBC30(void);
 extern void fn_801CBBBC(void);
-extern void njRotateXYZ(void *m, s32 x, s32 y, s32 z);
 typedef struct Pos { f32 x, y, z; } Pos;
 typedef struct Ang { s32 x, y, z; } Ang;
 typedef struct Anim {
@@ -238,8 +259,8 @@ extern s32 fn_801E7B2C(void* o, f32 frame, void* a, void* b);
 extern u32 strlen(const char *s);
 typedef struct NameEnt { char *name; u8 pad4[8]; } NameEnt;
 typedef struct NameList { NameEnt *ents; u32 count; } NameList;
-extern s32 fn_801E4BBC(s32 n);
-extern void fn_8021AF94(s32 a, s32 b, s8 *list);
+extern s32 fn_801E4BBC(s8 n);
+extern void fn_8021AF94(s32 *a, void *b, s8 *list);
 typedef struct Ent { u8 pad[0x20]; f32 key; } Ent;
 extern Ent *lbl_80315530[];
 extern s32 lbl_803477F0;
@@ -285,7 +306,7 @@ typedef struct Obj128 {
     u8 pad48[0x10];
     Vec vecs[3];
 } Obj128;
-extern Obj128* fn_801E1A74(s32 a, s32 b);
+extern void* fn_801E1A74(s32 a, s32 b);
 extern f32 njScalor(Vec *v);
 extern void njUnitVector(Vec *v);
 extern char lbl_802D98B8[];
@@ -354,7 +375,11 @@ typedef struct Sys_UNIT0000 { s32 f0; s16 f4; s16 f6; f32 f8; f32 fc; u8 p10[4];
 typedef struct Slot_80219998 { u8 pad_00[0x38]; u8 x38; u8 pad39[3]; } Slot_80219998;
 extern Slot_80219998 lbl_80315120[];
 typedef struct {
-    u8 pad0[0x18];
+    u8 pad0[0x12];
+    s8 kind;
+    u8 pad13;
+    s16 x14;
+    s16 x16;
     u8 a18;
     u8 a19;
     u8 pad1a[0x24 - 0x1a];
@@ -362,8 +387,8 @@ typedef struct {
 extern TblC lbl_802D7E4C[];
 typedef struct { s16 x0; s16 x2; s8 x4; s8 x5; } Out;
 typedef struct { u8 pad0[0x18]; s16 ids[5]; } Src;
-s16 fn_8021A6E8(Src* a, s32 b, TblC* c);
-s16 fn_8021A620(Src* a, s32 b, TblC* c);
+s32 fn_8021A6E8(Src* a, void* b, TblC* c);
+s32 fn_8021A620(Src* a, void* b, TblC* c);
 typedef struct {
     s32 type;
     u8 pad04[0x10];
@@ -638,13 +663,13 @@ void fn_8022B010(void) {
 
 void fn_8022B02C(P_UNIT0000 *p)
 {
-    fn_801CBBAC(p, 20.0f);
+    fn_801CBBAC(20.0f);
     p->f1c = 4;
 }
 
 void fn_8022B07C(P_UNIT0000 *p)
 {
-    fn_801CBB9C(p, 15.0f);
+    fn_801CBB9C(15.0f);
     p->f1c = 2;
 }
 
@@ -659,14 +684,13 @@ void fn_8022B960(void *p)
     fn_8028BAEC(p);
 }
 
-extern f32 lbl_803119E0[8];
 extern u8 lbl_80316810[0x20];
 void fn_8022B9A8(void) {
-    MemCopy(lbl_803119E0, lbl_80316810, 0x20);
+    MemCopy(&lbl_803119E0, lbl_80316810, 0x20);
 }
 
 void fn_8022B9DC(void) {
-    MemCopy(lbl_80316810, lbl_803119E0, 0x20);
+    MemCopy(lbl_80316810, &lbl_803119E0, 0x20);
 }
 
 void fn_8022BB5C(void *a, s32 b, s32 c, s32 d)
@@ -875,6 +899,15 @@ static inline s32 InRange(s32 v)
     return r;
 }
 
+static inline s32 InRange4(s32 v)
+{
+    s32 r = 0;
+    if (v >= 0 && v < 4) {
+        r = 1;
+    }
+    return r;
+}
+
 s32 fn_8021A83C(s8 *a, void *b)
 {
     s32 ret = 0;
@@ -1034,7 +1067,7 @@ void *fn_8022839C(s32 n) {
     return p;
 }
 
-f32 fn_8022975C(s32 a, s32 b, s32 c, f32 x, f32 y, f32 z, f32 w) {
+f32 fn_8022975C(void *a, s32 b, s32 c, f32 x, f32 y, f32 z, f32 w) {
     fn_801D5DD8(a, b, c, lbl_8034784C->p35c->p4->p20, lbl_8034C640, lbl_8034C640, x, y, z, w);
     return lbl_8034C65C + x;
 }
@@ -1194,8 +1227,11 @@ void fn_8022394C(Obj_8022394C *o)
     o->w48[2] = w[2];
 }
 
+typedef struct Sub_802239A4 { s32 f0; s16 f4; } Sub_802239A4;
 typedef struct Obj_802239A4 {
-    u8 pad0[0x1c];
+    u8 pad0[8];
+    Sub_802239A4 *sub;
+    u8 pad_c[0x1c - 0xc];
     Vec3 *p1c;
     Vec3 *p20;
     u32 *p24;
@@ -1304,7 +1340,7 @@ static inline void collect(s8 *out) {
     }
 }
 
-void fn_8021B1CC(s32 a, s32 b) {
+void fn_8021B1CC(s32 *a, void *b) {
     s8 list[0x16];
     collect(list);
     fn_8021AF94(a, b, list);
@@ -1571,7 +1607,7 @@ s32 fn_80219998(const u8 *path)
 static inline s32 valid_slot(s32 i) { return i >= 0 && i < 5; }
 static inline s32 valid_id(s32 i) { return i >= 0x190 && i <= 0x1b7; }
 
-void fn_8021AE68(Out* out, Src* src, s32 b, s32 slot)
+void fn_8021AE68(Out* out, Src* src, void* b, s32 slot)
 {
     s32 id;
     TblC* t;
@@ -1636,4 +1672,521 @@ void fn_80221EDC(f32* out, Shape* a, Shape* b)
         }
         break;
     }
+}
+
+extern s32 fn_8021A2B0(Src* a, void* b, s32 code);
+
+s32 fn_8021A620(Src* a, void* b, TblC* c)
+{
+    s32 ret = 0;
+    if (c != NULL) {
+        ret = c->x16;
+    }
+    if (c != NULL && a != NULL && b != NULL) {
+        s32 k = c->kind;
+        if (InRange4(k)) {
+            s32 code;
+            switch (k) {
+            case 0:
+                code = 0x31;
+                break;
+            case 1:
+                code = 0x41;
+                break;
+            case 2:
+                code = 0x51;
+                break;
+            case 3:
+                code = 0x61;
+                break;
+            default:
+                code = 0x62;
+                break;
+            }
+            ret += fn_8021A2B0(a, b, code);
+        }
+    }
+    return ret;
+}
+
+extern s32 fn_8021A2B0(Src* a, void* b, s32 code);
+
+s32 fn_8021A6E8(Src* a, void* b, TblC* c)
+{
+    s32 ret = 0;
+    if (c != NULL) {
+        ret = c->x14;
+    }
+    if (c != NULL && a != NULL && b != NULL) {
+        s32 k = c->kind;
+        if (InRange4(k)) {
+            s32 code;
+            switch (k) {
+            case 0:
+                code = 0x30;
+                break;
+            case 1:
+                code = 0x40;
+                break;
+            case 2:
+                code = 0x50;
+                break;
+            case 3:
+                code = 0x60;
+                break;
+            default:
+                code = 0x62;
+                break;
+            }
+            ret += fn_8021A2B0(a, b, code);
+        }
+    }
+    return ret;
+}
+
+void fn_80221D04(f32 *out, f32 *a, f32 *b) {
+    Vec d;
+    d.x = a[0] - b[0];
+    d.y = a[1] - b[1];
+    d.z = a[2] - b[2];
+    if (0.0f == d.x && 0.0f == d.y && 0.0f == d.z) {
+        out[2] = 0.0f;
+        out[1] = 0.0f;
+        out[0] = 0.0f;
+    } else {
+        f32 s;
+        njUnitVector(&d);
+        s = 0.1f + (a[3] + b[3]);
+        d.x = d.x * s;
+        d.y = d.y * s;
+        d.z = d.z * s;
+        out[0] = (b[0] + d.x) - a[0];
+        out[1] = (b[1] + d.y) - a[1];
+        out[2] = (b[2] + d.z) - a[2];
+    }
+}
+
+extern void fn_801D25DC(s32 v);
+
+void fn_802233EC(Obj_802239A4 *o) {
+    Sub_802239A4 *s = o->sub;
+    if (s != 0 && s->f4 == 2) {
+        njPushMatrixEx();
+        fn_80286EE8();
+        fn_8028B498();
+        njUnitMatrix(0);
+        njTranslate(0, o->p1c->x, o->p1c->y, o->p1c->z);
+        njRotateZXY(0, o->p24[0], o->p24[1], o->p24[2]);
+        njScale(0, o->p20->x, o->p20->y, o->p20->z);
+        njTranslate(0, o->p28->x, o->p28->y, o->p28->z);
+        njRotateZXY(0, o->p2c[0], o->p2c[1], o->p2c[2]);
+        fn_801D25DC(s->f0);
+        njPopMatrixEx();
+    }
+    fn_802239A4(o);
+}
+
+Node *fn_80222F14(Node *self, Node *head) {
+    Node *n;
+    for (n = head->next; n != NULL; n = n->next) {
+        if (n == self) {
+            continue;
+        }
+        if (n->flag14 >= 0 && fn_80222B30(self, n) == 1) {
+            if (self->cb != NULL) {
+                if (self->cb(self, n) != 0) {
+                    self->flag14 |= 0x4000;
+                }
+            } else {
+                self->flag14 |= 0x4000;
+            }
+            if (n->cb != NULL) {
+                if (n->cb(n, self) != 0) {
+                    n->flag14 |= 0x4000;
+                }
+            } else {
+                n->flag14 |= 0x4000;
+            }
+            return n;
+        }
+    }
+    return NULL;
+}
+
+Node *fn_8022300C(Node *self) {
+    Node *n;
+    for (n = lbl_80347524; n != NULL; n = n->next) {
+        if (n == self) {
+            continue;
+        }
+        if (n->flag14 >= 0 && fn_80222B30(self, n) == 1) {
+            if (self->cb != NULL) {
+                if (self->cb(self, n) != 0) {
+                    self->flag14 |= 0x4000;
+                }
+            } else {
+                self->flag14 |= 0x4000;
+            }
+            if (n->cb != NULL) {
+                if (n->cb(n, self) != 0) {
+                    n->flag14 |= 0x4000;
+                }
+            } else {
+                n->flag14 |= 0x4000;
+            }
+            return n;
+        }
+    }
+    return NULL;
+}
+
+typedef struct Screen8022BC64 {
+    u8 pad00[8];
+    f32 x08, x0c;
+    u8 pad10[8];
+    f32 z;
+    u8 pad1c[0xc];
+    f32 x28, x2c;
+} Screen8022BC64;
+extern Screen8022BC64 lbl_803118AC;
+extern f32 lbl_80347570;
+extern void njSetScreen(Screen8022BC64 *s);
+
+void fn_8022BC64(void)
+{
+    s32 v;
+    lbl_803118AC.z = 500.0f;
+    lbl_803118AC.x28 = 640.0f;
+    lbl_803118AC.x2c = 480.0f;
+    lbl_803118AC.x08 = 320.0f;
+    lbl_803118AC.x0c = 240.0f;
+    v = (s32)(10430.381f * (f32)atan2(320.0, 500.0));
+    lbl_80347570 = 0.005493164f * (f32)((v << 1) & 0xffff);
+    njSetScreen(&lbl_803118AC);
+    lbl_803119E0.x1a = (s16)(182.04445f * lbl_80347570);
+}
+
+extern void fn_801CBBD8(void);
+
+s32 fn_8022A728(u32_8022A36C *state, u32_8022A36C *cnt, s32 lim)
+{
+    s32 ret = 0;
+    switch (*state) {
+    case 0:
+        *state = *state + 1;
+        fn_801CBBD8();
+        fn_801CBB9C(15.0f);
+        break;
+    case 1:
+        if (lbl_80347508 != 1) {
+            *state = *state + 1;
+        }
+        break;
+    case 2:
+        *cnt = *cnt + 1;
+        if (*cnt > lim) {
+            *state = *state + 1;
+            fn_801CBBAC(15.0f);
+        }
+        break;
+    case 3:
+        if (lbl_80347508 != 1) {
+            ret = 1;
+        }
+        break;
+    }
+    fn_8022642C();
+    return ret;
+}
+
+typedef struct Sub_80222010 { f32 x, y, z; } Sub_80222010;
+typedef struct V3_80222010 { s32 a, b, c; } V3_80222010;
+typedef struct Rec_80222010 {
+    s32 f0;
+    u8 pad4[8];
+    s16 fc;
+    u16 fe;
+    u8 pad10[8];
+    Sub_80222010 *p18;
+    Sub_80222010 *p1c;
+    Sub_80222010 *p20;
+    s32 f24;
+    s32 f28;
+    s32 f2c;
+    s32 f30;
+    s32 f34;
+    V3_80222010 v38;
+    V3_80222010 v44;
+    f32 f50;
+    u8 pad54[0x94 - 0x54];
+} Rec_80222010;
+typedef struct In_80222010 { V3_80222010 v; V3_80222010 w; f32 g; } In_80222010;
+
+void fn_80222010(In_80222010 *in) {
+    Rec_80222010 *r = fn_801E1A74(1, 0x94);
+    if (r) {
+        r->p18 = (Sub_80222010 *)((u8 *)r + 0x70);
+        r->p1c = (Sub_80222010 *)((u8 *)r->p18 + 0xc);
+        r->p20 = (Sub_80222010 *)((u8 *)r->p1c + 0xc);
+        r->f24 = 0;
+        r->f28 = 0;
+        r->p18->z = 0.0f;
+        r->p18->y = 0.0f;
+        r->p18->x = 0.0f;
+        *(s32 *)&r->p20->z = 0;
+        *(s32 *)&r->p20->y = 0;
+        *(s32 *)&r->p20->x = 0;
+        r->p1c->z = 1.0f;
+        r->p1c->y = 1.0f;
+        r->p1c->x = 1.0f;
+        r->fc = 1;
+        r->fe = 0xFFFF;
+        r->f0 = 0;
+        r->f30 = 0;
+        r->f2c = 0;
+        r->v38 = in->v;
+        r->v44 = in->w;
+        r->f50 = in->g;
+        r->f34 = 2;
+    }
+}
+
+typedef struct { u8 pad[0x14]; s16 x14; s16 x16; u8 pad18[0xc]; } Arr;
+extern void fn_802241B0(Slot* s, Arr* a, s32 n);
+
+s32 fn_8022436C(u32 id, Arr* arr, s32 count)
+{
+    Slot* s;
+    Arr* q;
+    s32 n;
+    s32 ret;
+    s32 i;
+    u32 key;
+    if (count <= 0) {
+        return 0;
+    }
+    i = count;
+    q = arr;
+    do {
+        q->x16 = 0;
+        q->x14 = 0;
+        q++;
+    } while (--i > 0);
+    key = (u16)id;
+    s = lbl_8034752C;
+    n = lbl_80347528;
+    ret = 0;
+    if (key == 0xffff) {
+        do {
+            if (s->p0 != 0) {
+                fn_802241B0(s, arr, count);
+                ret = 1;
+                n--;
+            }
+            s++;
+        } while (n > 0);
+    } else {
+        do {
+            if (s->p0 != 0 && key == s->key8) {
+                fn_802241B0(s, arr, count);
+                return 1;
+            }
+            s++;
+        } while (n > 0);
+    }
+    return ret;
+}
+
+static inline void fill(s8 *out) {
+    if (out != 0) {
+        s32 i = 0;
+        s32 n = 0;
+        s8 *p = out;
+        while (i < 22 && n < 22) {
+            if (fn_801E4BBC(i) != 0) {
+                *p = i;
+                n++;
+                p++;
+            }
+            i++;
+        }
+        p = out + n;
+        for (; n < 22; n++) {
+            *p++ = -1;
+        }
+    }
+}
+
+void fn_8021B2B4(void) {
+    s8 buf[22];
+    fill(buf);
+    fn_8021AF94(&lbl_8030B4D4.limit, &lbl_8030B7F4.b1568, buf);
+}
+
+typedef struct { f32 x, y, z; u32 colour; } VertexCol;
+extern u32_8022A36C lbl_80347828;
+extern VertexCol lbl_802F911C[4];
+extern DrawState lbl_803165A0;
+extern Spr lbl_802F9038;
+extern void fn_80290ED4(VertexCol* v, s32 count, s32 flag);
+extern void fn_80296ED4(s32 v);
+extern s32 fn_8022A854(u32_8022A36C* p);
+
+void fn_8022A38C(void) {
+    s32 r;
+    fn_80290ED4(lbl_802F911C, 4, 0);
+    DrawStatePush(&lbl_803165A0);
+    fn_80296ED4(0x2000);
+    lbl_802F9038.f14 = 37.0f;
+    fn_801D5DD8(&lbl_802F9038, 0, 0, lbl_80347854->inner->list, 1.1f, 1.0f, -1000.0f, 0.0f, 1.0f, 1.0f);
+    DrawStatePop(&lbl_803165A0);
+    r = fn_8022A854(&lbl_80347828);
+    if (fn_8022A728(&lbl_80347820, &lbl_80347824, 0x96) != 0 && r != 0) {
+        lbl_80311AD4.state = 5;
+        lbl_80347820 = 0;
+        lbl_80347824 = 0;
+    }
+}
+
+extern Spr lbl_802F8FE8;
+extern s32 FontUpdate(void);
+
+void fn_8022A46C(void) {
+    s32 r;
+    fn_80290ED4(lbl_802F911C, 4, 0);
+    DrawStatePush(&lbl_803165A0);
+    fn_80296ED4(0x2000);
+    lbl_802F8FE8.f14 = 140.0f;
+    fn_801D5DD8(&lbl_802F8FE8, 0, 0, lbl_80347854->inner->list, 1.1f, 1.0f, -1000.0f, 0.0f, 1.0f, 1.0f);
+    DrawStatePop(&lbl_803165A0);
+    r = FontUpdate();
+    if (fn_8022A728(&lbl_80347820, &lbl_80347824, 0x96) != 0 && r != 0) {
+        lbl_80311AD4.state = 4;
+        lbl_80347820 = 0;
+        lbl_80347824 = 0;
+    }
+}
+
+void fn_80229D74(void) {
+    u16 i;
+    fn_8022642C();
+    fn_8022642C();
+    fn_8022642C();
+    if (lbl_8034784C->p35c != 0) {
+        fn_802275A4(lbl_8034784C->p35c->p4->p20, 1);
+        fn_801E17E0(lbl_8034784C->p35c);
+        lbl_8034784C->p35c = 0;
+    }
+    for (i = 0; i < 5; i++) {
+        fn_802275A4(&lbl_8034784C->p358->p4[i].y->p4->f8, 1);
+    }
+    fn_801E17E0(lbl_8034784C->p358);
+    lbl_8034784C->p358 = 0;
+    fn_801CBBF8();
+    fn_8022642C();
+    fn_8022642C();
+    fn_8022642C();
+    fn_8022642C();
+    fn_8022642C();
+    fn_8022642C();
+}
+
+typedef struct { f32 pad; f32 r; } Lim_8022C364;
+
+s32 fn_8022C364(NJS_POINT3 *out, NJS_POINT3 *a, NJS_POINT3 *b, Lim_8022C364 *lim) {
+    NJS_VECTOR d;
+    s32 ret = 0;
+    d.x = a->x - b->x;
+    d.y = a->y - b->y;
+    d.z = a->z - b->z;
+    if (njScalor(&d) > lim->r) {
+        njUnitVector(&d);
+        out->x = d.x * lim->r;
+        out->y = d.y * lim->r;
+        out->z = d.z * lim->r;
+        out->x = b->x + out->x;
+        out->y = b->y + out->y;
+        out->z = b->z + out->z;
+    } else {
+        ret = 1;
+        out->x = a->x;
+        out->y = a->y;
+        out->z = a->z;
+    }
+    return ret;
+}
+
+void fn_80226848(Node_UNIT0000 *a, void *b, u32 c)
+{
+    Node_UNIT0000 *n = fn_801E1A74(1, c + 0x40);
+    if (n != NULL) {
+        Node_UNIT0000 *t;
+        n->f20 = 0.0f;
+        t = lbl_80311A78.cur;
+        n->next = t->next;
+        t->next = n;
+        lbl_80311A78.cur = n;
+        n->w0 = b;
+        n->w8 = a;
+        n->w10 = c;
+        n->w14 = a->w14;
+        n->b18 = 0;
+        n->b1b = a->b1b + 1;
+    }
+}
+
+typedef struct {
+    u16 a;
+    u16 pad;
+    f32 b;
+    f32 c;
+    f32 d;
+    s32 e;
+    s32 f;
+    f32 g;
+    f32 h;
+    s32 i;
+    s32 j;
+    s32 k;
+    s32 l;
+    s32 m;
+    f32 n;
+    f32 o;
+    f32 p;
+    f32 q;
+    f32 r;
+    f32 s;
+} Obj7A28;
+extern f32 lbl_80345878[];
+extern void (*lbl_802F929C[])(Blk2_UNIT0000*);
+extern void (*lbl_802F92BC[])(Blk2_UNIT0000*);
+void fn_801D7A28(Obj7A28* obj, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6, f32 f7);
+void fn_801D7C44(void* list, Obj7A28* obj);
+void TextSetColor(u32 colour);
+f32 TextGetZ(void);
+void TextSetZ(f32 z);
+
+s32 fn_8022AE94(void) {
+    Blk2_UNIT0000* b = &lbl_803167F0;
+    Obj7A28 o;
+    f32 z;
+    if (b->f0 != 0 && b->f0 != 7) {
+        fn_801D7A28(&o, -10000.0f, 0.0f, 0.0f, lbl_80345878[10], lbl_80345878[11], 0.0f, 0.0f);
+        o.j = 0xff000000;
+        o.k = 0xff808080;
+        o.l = 0xff808080;
+        o.m = 0xff000000;
+        fn_801D7C44(lbl_80347854->inner->list, &o);
+    }
+    TextSetColor(-1);
+    z = TextGetZ();
+    TextSetZ(-100.0f);
+    lbl_802F929C[b->f0](b);
+    TextSetZ(z);
+    if (b->f18 != 0) {
+        lbl_802F92BC[b->f1c](b);
+        if (b->f1c != 5) return 2;
+        return b->f8;
+    }
+    return b->f8;
 }

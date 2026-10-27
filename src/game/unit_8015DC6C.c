@@ -1,8 +1,10 @@
 #include "types.h"
+#include "game/stat_8030B4D4.h"
 #include "game/work_8030CEA0.h"
 #include "game/task.h"
 #include "game/menu.h"
 #include "ninja.h"
+#include "game/camera_803119E0.h"
 #include "game/uiobj.h"
 #include "game/text.h"
 #include "game/sprite.h"
@@ -2243,7 +2245,6 @@ typedef struct W_80168BD4 {
 } W_80168BD4;
 extern void *fn_8015F1A0(u32 id);
 extern f32 njSin(s32 a);
-extern Vec3_80168BD4 lbl_803119E0[2];
 typedef struct {
     f32* pos;
     u8 pad4[4];
@@ -8548,13 +8549,13 @@ s8 fn_80168BD4(W_80168BD4 *w)
     p.y = w->p1c.y;
     p.z = w->p1c.z;
     fn_8009FDA0((void *)(h), 3, (void *)(&o), 0, (void *)(&p), 0, 1);
-    dy2 = (f32)pow(lbl_803119E0[0].y - o.y, 2.0);
-    dx2 = (f32)pow(lbl_803119E0[0].x - o.x, 2.0);
-    dz2 = (f32)pow(lbl_803119E0[0].z - o.z, 2.0);
+    dy2 = (f32)pow(lbl_803119E0.pos.y - o.y, 2.0);
+    dx2 = (f32)pow(lbl_803119E0.pos.x - o.x, 2.0);
+    dz2 = (f32)pow(lbl_803119E0.pos.z - o.z, 2.0);
     d2 = dz2 + (dx2 + dy2);
     if (w->f0e >= 0) {
-        a = (f32)atan2(o.x - lbl_803119E0[0].x, o.z - lbl_803119E0[0].z);
-        b = (f32)atan2(lbl_803119E0[1].x, lbl_803119E0[1].z);
+        a = (f32)atan2(o.x - lbl_803119E0.pos.x, o.z - lbl_803119E0.pos.z);
+        b = (f32)atan2(lbl_803119E0.dir.x, lbl_803119E0.dir.z);
         n = (s32)(10430.381f * b) - (s32)(10430.381f * a);
         n = (s32)(127.0f * (0.5f * (1.0f - njSin(n))));
         id = w->f0e;
@@ -8581,19 +8582,9 @@ typedef struct Chr_801838C8 {
     s16 x1a;
     u8 pad1c[0x5c - 0x1c];
 } Chr_801838C8;
-typedef struct Stat_801838C8 {
-    u8 pad0[0x48];
-    s16 x48;
-    s16 x4a;
-    s16 x4c;
-    s16 x4e;
-    s16 x50;
-    u8 pad52[0x78 - 0x52];
-} Stat_801838C8;
-extern Stat_801838C8 lbl_8030B4D4[];
 s16 fn_801838C8(s32 kind, s32 idx) {
     Chr_801838C8* c = &((Chr_801838C8*)lbl_8030B7F4)[idx];
-    Stat_801838C8* s = &lbl_8030B4D4[idx];
+    StatRec* s = &lbl_8030B4D4.chr[idx];
     s16 r = 0;
     switch (kind) {
     case 0x36: r = s->x48; break;
