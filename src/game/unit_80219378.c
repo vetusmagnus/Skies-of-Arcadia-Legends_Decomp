@@ -393,7 +393,7 @@ typedef struct {
 } TblC;
 extern TblC lbl_802D7E4C[];
 typedef struct { s16 x0; s16 x2; s8 x4; s8 x5; } Out;
-typedef struct { u8 pad0[0x18]; s16 ids[5]; } Src;
+typedef struct { s8 id; u8 pad1[0x17]; s16 ids[5]; } Src;
 s32 fn_8021A6E8(Src* a, void* b, TblC* c);
 s32 fn_8021A620(Src* a, void* b, TblC* c);
 typedef struct {
@@ -703,6 +703,33 @@ extern s32 lbl_80347EC4;
 extern struct { u8 pad[8]; s32 x8; } lbl_80311894;
 extern s32 fn_80298700(Ctx802281DC *e);
 extern void fn_802281DC(Ctx802281DC *e);
+void fn_802979B8(void);
+extern DrawState lbl_803165A0;
+extern f32 lbl_8034C6A0;
+extern f32 lbl_80346788;
+extern f32 lbl_8034678C;
+extern s32 lbl_80346E48;
+extern void fn_80226170(void);
+extern void fn_802281BC(s32 a);
+extern void fn_8022DCC4(void);
+extern void fn_801DA1C0(void);
+extern void fn_8028BB90(Camera803119E0 *cam);
+extern void njClipZ(f32 n, f32 f);
+extern void TextReset(void);
+typedef struct MenuEnt {
+    u8 pad0[0x18];
+    s16 a18;
+    s16 a1a;
+    u8 pad_1c[0x8];
+    s16 v[0x6];
+    u8 pad_30[0x10];
+    s32 f40;
+    u8 pad44[0x8];
+    s16 a4c;
+    s16 a4e;
+    u8 pad50[0x14];
+} MenuEnt;
+extern MenuEnt lbl_802D6740[5];
 
 void fn_80219378(s32 a)
 {
@@ -851,22 +878,14 @@ void *fn_80226354(void *target)
     return 0;
 }
 
-typedef struct Msg {
-    s16 x0;
-    s16 x2;
-    s16 x4;
-    s16 x6;
-    s32 x8;
-    s32 xc;
-} Msg;
-extern void fn_802979B8(Msg*, s16);
+void fn_802979B8(void);
 extern s32 lbl_803477F4;
 void fn_8022697C(s32 v) {
     lbl_803477F4 = v;
 }
 
-void fn_802281BC(Msg* a, s16 i) {
-    fn_802979B8(a, i);
+void fn_802281BC(s32 n) {
+    fn_802979B8();
 }
 
 void fn_80228264(void *p) {
@@ -3270,4 +3289,97 @@ void fn_80226DC4(void) {
             }
         }
     }
+}
+
+void fn_80228014(void)
+{
+    Blk *p;
+    fn_802979B8();
+    if ((p = lbl_80347804) != NULL) {
+        while (p != NULL) {
+            Blk *nx = p->next;
+            fn_80005AD8(heap_main, p);
+            p = nx;
+        }
+        lbl_80347804 = NULL;
+    }
+    lbl_80347800 = 0;
+    lbl_803477FC = 0x10000;
+}
+
+void fn_8022A68C(void) {
+    fn_801E1D94();
+    fn_80226170();
+    fn_802281BC(0x400);
+    fn_8022DCC4();
+    fn_801DA1C0();
+    fn_801DBA58(0xff000000, 0xff000000, 0xff000000);
+    fn_8028BB90(&lbl_803119E0);
+    lbl_80346788 = lbl_8034C688;
+    lbl_8034678C = lbl_8034C6A0;
+    njClipZ(lbl_8034C688, lbl_8034C6A0);
+    DrawStateDefault(1, &lbl_803165A0);
+    TextReset();
+    if (lbl_80346E48 == 1) {
+        lbl_80346E48 = 0;
+    }
+    lbl_80311AD4.state = 1;
+}
+
+static inline MenuEnt* GetEnt(s32 idx)
+{
+    MenuEnt* e = NULL;
+    if (InRange(idx)) {
+        e = &lbl_802D6740[idx];
+    }
+    return e;
+}
+s32 fn_8021A2B0(Src* a, void* b, s32 code);
+
+s32 fn_8021A7B0(Src* p, void* q)
+{
+    s32 r = 0;
+    if (p != NULL && q != NULL) {
+        MenuEnt* e = GetEnt(p->id);
+        if (e != NULL) {
+            r = e->f40;
+            r += fn_8021A2B0(p, q, 7);
+        }
+    }
+    return r;
+}
+
+static inline s32 InRange6(s32 v)
+{
+    s32 r = 0;
+    if (v >= 0 && v < 6) {
+        r = 1;
+    }
+    return r;
+}
+
+
+s32 fn_8021A2B0(Src* a, void* b, s32 code);
+
+s32 fn_8021AA48(Src* p, void* q, s32 k)
+{
+    s32 r = 0;
+    if (p != NULL && q != NULL) {
+        MenuEnt* e = GetEnt(p->id);
+        if (e != NULL && InRange6(k)) {
+            s32 code;
+            r = e->v[k];
+            switch (k) {
+            case 0: code = 0x20; break;
+            case 1: code = 0x21; break;
+            case 2: code = 0x22; break;
+            case 3: code = 0x23; break;
+            case 4: code = 0x24; break;
+            case 5: code = 0x25; break;
+            default: code = 0x20; break;
+            }
+            r += fn_8021A2B0(p, q, code);
+        }
+    }
+    return r;
 }
