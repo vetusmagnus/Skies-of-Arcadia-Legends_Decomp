@@ -9,32 +9,70 @@ typedef struct {
     u32 b;
 } Slot8;
 
+/* One entry of the loaded archive's directory: data offset (low two bits are flags) and name. */
 typedef struct {
-    void* x0;
-    void* x4;
+    u32 off;
+    char name[16];
+} ArcDir;
+
+/* An event slot (0x180 of them at x10). */
+typedef struct {
+    s32 kind;
+    s32 x4;
+    s32 x8;
+    struct { s32 x0; s32 x4; }* xc;
+    s32 x10;
+    s32 x14;
+    s32 x18;                    /* index into lbl_802F7940 */
+    u8 pad1c[4];
+    u32 x20;                    /* type */
+    u32 x24;                    /* id */
+    u32 x28;
+    u8 pad2c[4];
+    void* x30;
+} EvSlot;
+
+/* The 5-byte pattern record passed to fn_801D6CBC (rumble/pattern player). */
+typedef struct {
+    u8 a;
+    u8 b;
+    u8 c;
+    u8 d;
+    u8 e;
+} Pat;
+
+/* One step of the pattern table at x848 (replayed by fn_80211D90). */
+typedef struct {
+    u8 a;
+    s8 b;
+    u16 c;
+} PatStep;
+
+typedef struct {
+    u8* x0;
+    u8* x4;
     s16 x08;
     s16 x0a;
     s32 xc;
-    u8* x10;
+    EvSlot* x10;
     Slot8* x14;
     s32 ent[256][2];            /* 0x18 */
     s32 x818;
     u8 pad81c[4];
-    void* x820;
+    ArcDir* x820;
     u32 x824;
     s32 x828;
     s32 x82c;
     f32 x830;
     s32 x834;
-    s32 x838;
-    s32 x83c;
+    u32 x838;
+    u32 x83c;
     s16 x840;
-    s16 x842;
-    s32 x844;
-    u8 pad848[0xc4a - 0x848];
-    u8 xc4a;
-    u8 xc4b;
-    u8 padc4c[0xc5c - 0xc4c];
+    u16 x842;
+    u32 x844;
+    PatStep steps[0x100];       /* 0x848 */
+    Pat pat;                    /* 0xc48 */
+    u8 padc4d[0xc5c - 0xc4d];
     s32 xc5c;
     u32 xc60;
     f32 xc64;
@@ -45,7 +83,11 @@ typedef struct {
     s16 xc84;
     s16 xc86;
     s16 xc88;
-    u8 padc8a[0x1568 - 0xc8a];
+    u8 padc8a[0x14b8 - 0xc8a];
+    s32 x14b8[4];
+    u8 pad14c8[3];
+    u8 x14cb[0x1544 - 0x14cb];
+    s32 x1544[9];
     s32 x1568;
     u8 pad156c[0x1574 - 0x156c];
     s32 x1574;

@@ -1058,6 +1058,31 @@ typedef struct O_8001EBA4 {
 } O_8001EBA4;
 extern s32 fn_80076170(f32 a, f32 b, void *o, s32 id, s32 k, s32 j);
 extern void fn_80072770(void *o);
+/* lbl_80309EC8: the 0x244-byte battle/system block (Sys_80309EC8_80012078 in unit_80005B50.c). */
+typedef struct {
+    u8 pad0[0x48];
+    u32 x48;
+    u8 x4c[12];
+    u8 x58[12];
+    u8 x64[12];
+    f32 va[3];
+    f32 vb[3];
+    u8 pad88[0xC0 - 0x88];
+    f32 xc0[3];
+    u8 padcc[0x110 - 0xCC];
+    f32 x110;
+    u8 pad114[0x160 - 0x114];
+    f32 x160;
+    u8 pad164[0x19A - 0x164];
+    s16 x19a;
+    u8 pad19c[0x204 - 0x19C];
+    s8 a[10];
+    u8 pad20e[2];
+    u32 w[10];
+    s8 b[10];
+    u8 pad242[2];
+} Sys_80309EC8_80012078;
+typedef struct V5BF30 { f32 x, y, z; } V5BF30;
 
 void* fn_80005B50(void* heap, u32 size) {
     void* p = fn_80005B9C(heap);
@@ -3903,4 +3928,18 @@ s32 fn_8001EBA4(O_8001EBA4 *o, s16 idx) {
     }
     c->x64 = -1;
     return 1;
+}
+
+/* Copies each non-zero component of v into lbl_80309EC8.va (the float test is `if (x)`,
+ * which compares x against 0.0f in the order the original has; `x != 0.0f` swaps fcmpu). */
+void fn_80012078(V5BF30* v) {
+    if (v->x) {
+        lbl_80309EC8.va[0] = v->x;
+    }
+    if (v->y) {
+        lbl_80309EC8.va[1] = v->y;
+    }
+    if (v->z) {
+        lbl_80309EC8.va[2] = v->z;
+    }
 }

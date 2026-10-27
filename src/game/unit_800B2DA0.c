@@ -3064,6 +3064,43 @@ typedef struct Obj_800D6240 {
     u8 pad250[0x25c - 0x250];
     Seq_800D6240* seq;
 } Obj_800D6240;
+/* Same layouts as unit_800B2DA0.c (fn_800D5F94). */
+typedef struct {
+    s16 frames;       /* 0x00 */
+    s16 value;        /* 0x02 */
+    u8 pad4[4];
+} Key_800D5F94_800D62DC;
+typedef struct {
+    u16 mode;         /* 0x00 */
+    s16 count;        /* 0x02 */
+    Key_800D5F94_800D62DC keys[1];      /* 0x04 */
+} Script_800D5F94_800D62DC;
+typedef struct {
+    u8 pad0[0xC];
+    u32* data;        /* 0x0C */
+} Node_800D62DC;
+typedef struct {
+    u8 pad0[8];
+    Node_800D62DC* node;       /* 0x08 */
+} Rec_800D5F94_800D62DC;
+typedef struct {
+    Rec_800D5F94_800D62DC* recs;        /* 0x00 */
+} Table_800D5F94_800D62DC;
+typedef struct {
+    u8 pad0[0x34];
+    s32 x34;          /* 0x34 */
+    u8 pad38[0x100 - 0x38];
+    Table_800D5F94_800D62DC* x100;      /* 0x100 */
+    u8 pad104[0x188 - 0x104];
+    u32 x188;         /* 0x188 */
+    u8 pad18c[0x200 - 0x18c];
+    s16 x200;         /* 0x200 */
+    s16 x202;         /* 0x202 */
+    u8 pad204[0x23C - 0x204];
+    s32 x23c;         /* 0x23C */
+    u8 pad240[0x260 - 0x240];
+    Script_800D5F94_800D62DC* x260;     /* 0x260 */
+} Ent_800D62DC;
 
 void fn_800B2DA0(u8* p, u32 v) {
     u8* q = *(u8**)(p + 0x268);
@@ -8562,6 +8599,38 @@ s32 fn_800D6240(void* unused, Obj_800D6240* o, Seq_800D6240* seq, s16 words) {
         o->x24c = seq->h6 & 0xff;
         o->x1fe = seq->h4;
         o->x188 |= 2;
+    }
+    return ok;
+}
+
+/* Installs script s on e when its size in words matches, starts it at key 0. */
+s32 fn_800D62DC(void* unused, Ent_800D62DC* e, Script_800D5F94_800D62DC* s, s16 words)
+{
+    s32 ok = 0;
+    s32 size = ((s->count - 1) * 8 + 0xc) / 4;
+    s32 mode;
+    Key_800D5F94_800D62DC* k;
+    s16 v;
+
+    if (size == words) {
+        e->x260 = s;
+        mode = 6;
+        if (s->mode & 0x8000) {
+            mode = 10;
+        }
+        e->x34 = mode;
+        e->x200 = 0;
+        e->x202 = s->keys[0].frames;
+        k = e->x260->keys;
+        k += e->x200;
+        v = k->value;
+        if (v >= 0) {
+            e->x23c = *(*(Node_800D62DC**)((u8*)e->x100->recs + v * 12 + 8))->data;
+        } else {
+            e->x23c = -1;
+        }
+        e->x188 |= 1;
+        ok = 1;
     }
     return ok;
 }

@@ -10,7 +10,7 @@ typedef struct Cmd { u8 pad_00[0x1c]; float *cur; } Cmd;
 void fn_800B0900(void *p);
 void fn_800FF9FC(void *p);
 extern u8 lbl_8030B4D4[];
-extern u8 lbl_8030B7F4[];
+#include "game/save_8030B7F4.h"
 void fn_801003F4(void *p);
 void fn_800D2CA8(s32 a);
 void fn_80210CE4(void);
@@ -240,12 +240,6 @@ typedef struct { u8 pad_00[0x1c]; float *cur; } CmdB_801FD1D0;
 s32 fn_8011768C(u32 flags);
 typedef struct { u8 pad_00[0x1c]; u8 *cur; } CmdStream_8020A2C8;
 typedef struct {
-    s32 kind;
-    u8 pad04[0x14];
-    s32 idx;
-    u8 pad1c[0x34 - 0x1c];
-} CtlEnt;
-typedef struct {
     u8 pad0[4];
     u16 v;
     u8 pad6[6];
@@ -253,15 +247,6 @@ typedef struct {
 extern CtlPart lbl_802F7940[];
 extern void fn_80210B44(s32 i);
 typedef struct CmdStream_80205E48 { u8 pad_00[0x1c]; f32 *cur; } CmdStream_80205E48;
-typedef struct {
-    s32 kind;
-    u8 pad04[0x14];
-    s32 idx;
-    u8 pad1c[4];
-    u32 x20;
-    u32 x24;
-    u8 pad28[0x34 - 0x28];
-} CtlEnt_80210EA4;
 typedef struct Obj10A { void (*fn)(struct Obj10A *); u8 pad4[0x15]; u8 x19; u8 pad1a[0xa]; void *x24; } Obj10A;
 extern void *lbl_80347450;
 extern Obj10A *fn_8010A164(u32 id);
@@ -1213,6 +1198,66 @@ typedef struct {
     void *x2c;
 } Rec_80211058;
 void fn_80148228(s32 a, s32 b);
+extern s32 strlen(const char *s);
+extern s32 fn_8025EF88(const char *a, const char *b);
+/* Copy of include/game/work_8030CEA0.h with: x838/x83c/x844 u32, x842 u16, and the
+ * pad at 0x848 named: steps[0x100] of PatStep (0x848) and the Pat block at 0xc48 (its .c/.d are
+ * the header's xc4a/xc4b). */
+
+
+
+
+
+
+
+
+
+extern void fn_801D6CBC(s32 chan, Pat *p);
+extern void fn_801D6C3C(s32 chan);
+typedef struct { u8 pad_00[0x1c]; float *cur; } CmdB_801FFFA4;
+/* Event-script work area, only the part this function reads. */
+
+
+
+extern int fn_8025CB24(char* buf, const char* fmt, ...);
+/* copy of include/game/work_8030CEA0.h with x10 typed */
+/* lbl_8030CEA0: the 0x1920-byte work area shared by the event/script, shop and camera code. */
+
+
+
+
+
+
+
+extern s32 fn_800CCCA4(u32 a, u32 b, u32 c);
+typedef struct {
+    u8 pad[0x1c];
+    f32* script;
+} ScriptObj_801F5B14;
+typedef struct CurState_801FA1D0 {
+    u8 pad0[0x1c];
+    u8 *cur;
+} CurState_801FA1D0;
+extern char *lbl_80346848;
+extern char lbl_8034C198;
+extern char *fn_8025F120(void *dst, char *src);
+extern char *fn_8025F0B0(void *dst, char *src);
+extern void fn_80219378(void *p);
+typedef struct { u8 pad_00[0x1c]; f32 *cur; } CmdB_801F5A74;
+/* include/game/work_8030CEA0.h, with padc8a split: s32 x1544[9] at 0x1544 (x1568 follows). */
+
+
+
+
+
+
+typedef struct { u8 pad_00[0x1c]; float *cur; } CmdB_801F5D7C;
+/* lbl_8030B7F4: the save block; 0x348 = a 0..255 s16 value, 0x34c = gold (max 99,999,999). */
+void fn_801EF300(void);
+typedef struct CurState_801F7C18 {
+    u8 pad0[0x1c];
+    u8 *cur;
+} CurState_801F7C18;
 
 void fn_801F5334(s8 n) {
     s32 i;
@@ -1291,7 +1336,7 @@ s32 fn_801FDA70(u32 a, CmdStream *st) {
     u16 f = a;
     if (a & 1) {
         st->cur += 4;
-        *(u32 *)(lbl_8030B7F4 + 0x157c) = *(u32 *)(lbl_8030B4D4 + 0x2dc);
+        *(u32 *)&lbl_8030B7F4.x157c = *(u32 *)(lbl_8030B4D4 + 0x2dc);
     }
     if (f & 8) return 1;
     return 0;
@@ -1929,7 +1974,7 @@ void fn_80216EFC(s32 a) {
     fn_80217830(a);
 }
 
-void fn_80216CB4(s32 p) {
+void fn_80216CB4(char *p) {
     fn_802193BC(p, 0);
 }
 
@@ -3065,9 +3110,8 @@ void fn_80210CE4(void)
     s32 i;
 
     for (i = 0; i < 0x180; i++) {
-        u8 *base = lbl_8030CEA0.x10;
-        CtlEnt *e = (CtlEnt *)(base + i * 0x34);
-        if (e->kind == 1 && lbl_802F7940[e->idx].v == 0xfffe) {
+        EvSlot *e = &lbl_8030CEA0.x10[i];
+        if (e->kind == 1 && lbl_802F7940[e->x18].v == 0xfffe) {
             fn_80210B44(i);
         }
     }
@@ -3113,9 +3157,9 @@ void fn_80210EA4(u32 id, s32 v)
     }
     if (p != NULL) {
         for (i = 0; i < 0x180; i++) {
-            CtlEnt_80210EA4 *e = (CtlEnt_80210EA4 *)(lbl_8030CEA0.x10 + i * 0x34);
+            EvSlot *e = &lbl_8030CEA0.x10[i];
             if (e->x20 == 6 || e->x20 == 9) {
-                if ((u16)id == (u16)e->x24 && v == lbl_802F7940[e->idx].v) {
+                if ((u16)id == (u16)e->x24 && v == lbl_802F7940[e->x18].v) {
                     fn_80210B44(i);
                 }
             }
@@ -5789,7 +5833,7 @@ void fn_80211EB0(s16 mode, f32 v)
     }
     lbl_8030CEA0.x82c = mode;
     if (mode == 1) {
-        lbl_8030CEA0.xc4b = 30;
+        lbl_8030CEA0.pat.d = 30;
         if (v >= 7.0f) {
             lbl_8030CEA0.x830 = 7.0f;
         } else if (v >= 6.0f) {
@@ -5806,12 +5850,12 @@ void fn_80211EB0(s16 mode, f32 v)
             lbl_8030CEA0.x830 = 1.0f;
         } else if (v >= 0.5f) {
             lbl_8030CEA0.x830 = v;
-            lbl_8030CEA0.xc4a = 7;
-            lbl_8030CEA0.xc4b = 59;
+            lbl_8030CEA0.pat.c = 7;
+            lbl_8030CEA0.pat.d = 59;
         } else {
             lbl_8030CEA0.x830 = v;
-            lbl_8030CEA0.xc4a = 1;
-            lbl_8030CEA0.xc4b = 59;
+            lbl_8030CEA0.pat.c = 1;
+            lbl_8030CEA0.pat.d = 59;
         }
     } else if (mode == 2) {
         lbl_8030CEA0.x834 = (s32)v;
@@ -5952,4 +5996,271 @@ s32 fn_8021528C(u32 flags, Cmd *c) {
         return 0;
     }
     return 1;
+}
+
+/* A file directory entry of the loaded archive: data offset (low 2 bits are flags) and name. */
+
+
+/* lbl_8030CEA0 (include/game/work_8030CEA0.h) with x820 typed as the directory. */
+
+
+
+static inline u8 *find(const char *name) {
+    s32 len;
+    u32 i;
+    if (name == 0) {
+        return 0;
+    }
+    len = strlen(name);
+    for (i = 0; i < lbl_8030CEA0.x824; i++) {
+        if (fn_8025EF88(name, lbl_8030CEA0.x820[i].name) == 0) {
+            s32 n = strlen(lbl_8030CEA0.x820[i].name);
+            if (n == len) {
+                return lbl_8030CEA0.x0 + (lbl_8030CEA0.x820[i].off & ~3);
+            }
+        }
+    }
+    return 0;
+}
+
+/* Opens the archive entry called name once (x1874 guards it): its data becomes x4. */
+u8 *fn_80210450(const char *name) {
+    u8 *r;
+    if (lbl_8030CEA0.x1874 == 1) {
+        return 0;
+    }
+    lbl_8030CEA0.x1874 = 1;
+    r = find(name);
+    if (r == 0) {
+        return 0;
+    }
+    lbl_8030CEA0.x4 = r;
+    return r;
+}
+
+void fn_80211D90(void)
+{
+    lbl_8030CEA0.pat.c = lbl_8030CEA0.steps[lbl_8030CEA0.x842].a;
+    lbl_8030CEA0.pat.d = lbl_8030CEA0.steps[lbl_8030CEA0.x842].b;
+    if (++lbl_8030CEA0.x83c % (lbl_8030CEA0.steps[lbl_8030CEA0.x842].c + 1) != 0) {
+        fn_801D6CBC(lbl_8030CEA0.x828, &lbl_8030CEA0.pat);
+        return;
+    }
+    lbl_8030CEA0.x842 = lbl_8030CEA0.x842 + 1;
+    if (lbl_8030CEA0.steps[lbl_8030CEA0.x842].c == 0) {
+        if (lbl_8030CEA0.steps[lbl_8030CEA0.x842].b == 0) {
+            lbl_8030CEA0.x842 = 0;
+            fn_801D6CBC(lbl_8030CEA0.x828, &lbl_8030CEA0.pat);
+            lbl_8030CEA0.x83c = 0;
+            return;
+        }
+        lbl_8030CEA0.x844++;
+        if (lbl_8030CEA0.x844 >= lbl_8030CEA0.x838) {
+            fn_801D6C3C(lbl_8030CEA0.x828);
+            lbl_8030CEA0.x82c = 4;
+            return;
+        }
+        lbl_8030CEA0.x842 = 0;
+    }
+    fn_801D6CBC(lbl_8030CEA0.x828, &lbl_8030CEA0.pat);
+    lbl_8030CEA0.x83c = 0;
+}
+
+s32 fn_801FFFA4(u32 flags, CmdB_801FFFA4 *st) {
+    if (flags & 1) {
+        float *p = st->cur + 1;
+        s32 i = RDI(p);
+        s32 a = RDI(p);
+        f32 b = fn_801F6120(&p);
+        st->cur = p;
+        lbl_8030CEA0.x14b8[i] = a;
+        lbl_8030CEA0.x14cb[i] = b;
+    }
+    return 0;
+}
+
+static inline float* find_event(const char* name)
+{
+    s32 len;
+    u32 i;
+    if (name == 0) {
+        return 0;
+    }
+    len = strlen(name);
+    for (i = 0; i < lbl_8030CEA0.x824; i++) {
+        if (fn_8025EF88(name, lbl_8030CEA0.x820[i].name) == 0) {
+            s32 n = strlen(lbl_8030CEA0.x820[i].name);
+            if (n == len) {
+                return (float*)(lbl_8030CEA0.x0 + (lbl_8030CEA0.x820[i].off & ~3));
+            }
+        }
+    }
+    return 0;
+}
+
+s32 fn_8021067C(s32 id)
+{
+    char buf[20];
+    float* p;
+    s32 ret;
+    fn_8025CB24(buf, "M%05d", id);
+    p = find_event(buf);
+    if (p == 0) {
+        return 0;
+    }
+    p = p + 1;
+    ret = 0;
+    if (fn_801F6120(&p)) {
+        ret = 1;
+    }
+    return ret;
+}
+
+u8* fn_80210550(s32 id)
+{
+    char buf[24];
+    u8* r;
+    if (lbl_8030CEA0.x1874 == 1) return 0;
+    fn_8025CB24(buf, "M%05d", id);
+    lbl_8030CEA0.x1874 = 1;
+    r = find(buf);
+    if (r == 0) return 0;
+    lbl_8030CEA0.x4 = r;
+    return r;
+}
+
+static inline void ScptDestruct(u16 n)
+{
+    if (n < 0x100) {
+        EvSlot* s = &lbl_8030CEA0.x10[n];
+        if (s->x20 != 0 || s->x28 != 0) {
+            fn_800CCCA4(s->x20, s->x24, s->x28);
+            s->x28 = 0;
+            s->x20 = 0;
+        }
+        s->kind = 0;
+        if (s->x30 != NULL) {
+            fn_801E1784(s->x30);
+            s->x30 = NULL;
+        }
+        if (lbl_8030CEA0.x0a >= 1) {
+            lbl_8030CEA0.x0a--;
+        }
+    } else {
+        fn_801DBE1C("scptDestruct: wrong enter rable ! call programer %d", n);
+    }
+}
+
+void fn_80210D7C(s32 id)
+{
+    s32 i;
+    if (lbl_8030CEA0.x10 != NULL && fn_8015F1A0(id) != NULL) {
+        for (i = 0; i < 0x180; i++) {
+            EvSlot* e = &lbl_8030CEA0.x10[i];
+            if ((e->x20 == 6 || e->x20 == 9) && (u16)id == (u16)e->x24) {
+                ScptDestruct(i);
+            }
+        }
+    }
+}
+
+s32 fn_801F5B14(u16 flags, ScriptObj_801F5B14* obj)
+{
+    f32* p;
+    u32 bit;
+    p = obj->script;
+    p++;
+    bit = ReadInt(&p);
+    obj->script = p;
+    lbl_80310B3C[bit >> 5] |= 1 << (bit & 31);
+    return 0;
+}
+
+s16 fn_801FA1D0(u32 flags, CurState_801FA1D0 *s)
+{
+    u16 f = (u16)flags;
+    if (flags & 1) {
+        u8 *p4 = s->cur + 4;
+        char *name = (char *)p4 + *(u32 *)p4;
+        u8 *buf;
+        s->cur = p4 + 4;
+        buf = fn_801E1A2C(1, strlen(lbl_80346848) + strlen(name) + 5);
+        fn_8025F120(buf, lbl_80346848);
+        fn_8025F0B0(buf, name);
+        fn_8025F0B0(buf, &lbl_8034C198);
+        fn_80219378(buf);
+        if (buf != 0) {
+            fn_801E1784(buf);
+        }
+    }
+    return (s16)((f >> 3) & 1);
+}
+
+static inline void FlagClear(u32 b) {
+    lbl_80310B3C[b >> 5] &= ~(1 << (b & 31));
+}
+
+/* Script command: clear the story flag given by the next argument. */
+s32 fn_801F5A74(s32 unused, CmdB_801F5A74 *c) {
+    f32 *p;
+    p = c->cur;
+    p++;
+    {
+        s32 v = ReadInt(&p);
+        c->cur = p;
+        FlagClear(v);
+    }
+    return 0;
+}
+
+/* Script command: set script value idx (the argument's tag word minus 0x50000000) to the next
+ * argument; value 1 is clamped to 0..255 and copied to the save's x348, value 0 is gold
+ * (0..99,999,999). */
+s32 fn_801F5D7C(s32 unused, CmdB_801F5D7C *st) {
+    f32 *p = st->cur;
+    s16 idx;
+    p++;
+    idx = (s16)(*(u32 *)p - 0x50000000);
+    lbl_8030CEA0.x1544[idx] = ReadInt(&p);
+    switch (idx) {
+    case 1:
+        if (lbl_8030CEA0.x1544[idx] > 0xff) {
+            lbl_8030CEA0.x1544[idx] = 0xff;
+        } else if (lbl_8030CEA0.x1544[idx] < 0) {
+            lbl_8030CEA0.x1544[idx] = 0;
+        }
+        lbl_8030B7F4.x348 = lbl_8030CEA0.x1544[idx];
+        fn_801EF300();
+        break;
+    case 0:
+        if (lbl_8030CEA0.x1544[idx] > 99999999) {
+            lbl_8030CEA0.x1544[idx] = 99999999;
+        } else if (lbl_8030CEA0.x1544[idx] < 0) {
+            lbl_8030CEA0.x1544[idx] = 0;
+        }
+        lbl_8030B7F4.w34c = lbl_8030CEA0.x1544[idx];
+        break;
+    }
+    st->cur = p;
+    return 0;
+}
+
+s16 fn_801F7C18(u32 flags, CurState_801F7C18 *s)
+{
+    u16 f = (u16)flags;
+    if (flags & 1) {
+        u8 *p4 = s->cur + 4;
+        char *name = (char *)p4 + *(u32 *)p4;
+        char *buf;
+        s->cur = p4 + 4;
+        buf = fn_801E1A2C(1, strlen(lbl_80346848) + strlen(name) + 5);
+        fn_8025F120(buf, lbl_80346848);
+        fn_8025F0B0(buf, name);
+        fn_8025F0B0(buf, &lbl_8034C198);
+        fn_80216CB4(buf);
+        if (buf != 0) {
+            fn_801E1784(buf);
+        }
+    }
+    return (s16)((f >> 3) & 1);
 }

@@ -2478,6 +2478,16 @@ typedef struct Hit {
     u16 id1;        /* 0x22 */
 } Hit;
 extern s32 fn_8022436C(u32 id, Hit* arr, s32 count);
+/* camp_work and its element shape as in unit_8015DC6C.c (CampWorkS_801763B8, Elem_801763B8, Mid_801763B8, OBJ_801763B8). */
+typedef struct CampWorkS_801763B8 {
+    u8 pad0[0x10];
+    void *objs[0xd0];
+    u8 pad350[0x10];
+} CampWorkS_801763B8;
+typedef struct { u8 pad0[8]; s32 a8; u8 padc[4]; s32 a10; u8 pad14[0x5c - 0x14]; u32 f5c; } Leaf_801763B8;
+typedef struct { u8 pad[8]; UiObj obj; u8 pad2[0xBC - 8 - sizeof(UiObj)]; Leaf_801763B8* leaf; } Mid_801763B8;
+typedef struct { u8 pad[0x24]; Mid_801763B8* mid; } Elem_801763B8;
+#define OBJ_801763B8(i) (&((Elem_801763B8*)camp_work.objs[i])->mid->obj)
 
 s32 fn_8015DC6C(Obj_8015DC6C* self, Src* src)
 {
@@ -9112,4 +9122,25 @@ u32 fn_8015FAD4(NJS_POINT3* pos) {
         pos->y = y;
     }
     return id;
+}
+
+/* Slides four camp-menu panels to their places over 6 frames and starts their command 0xf. */
+void fn_801763B8(void)
+{
+    UiObj* obj;
+    s32 i;
+
+    obj = OBJ_801763B8(0x5d);
+    UiObjMoveTo(obj, 6, 4, 328.0f, 61.0f);
+    UiObjSetCommand(obj, 0xf, 0);
+    obj = OBJ_801763B8(0x41);
+    UiObjMoveTo(obj, 6, 4, 328.0f, 204.0f);
+    UiObjSetCommand(obj, 0xf, 1);
+    i = *(s32*)(lbl_80307638 + 0x3c4) + 0x43;
+    obj = OBJ_801763B8(i);
+    UiObjMoveTo(obj, 6, -1, 328.0f, 204.0f);
+    UiObjSetCommand(obj, 0xf, 1);
+    obj = OBJ_801763B8(0x60);
+    UiObjMoveTo(obj, 6, -1, 24.0f, 384.0f);
+    UiObjSetCommand(obj, 0xf, 0);
 }

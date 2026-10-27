@@ -2,7 +2,14 @@
 extern void fn_801DBE1C(const char *fmt, ...);
 extern u8 lbl_8030B7F4[];
 extern void fn_801F2860(s16 v);
-extern u8 lbl_80307638[];
+typedef union {
+    u8 b[0xA50];
+    struct {
+        u8 pad0[0x70c];
+        s32 st;         /* 0x70c */
+    };
+} Camp80307638;
+extern Camp80307638 lbl_80307638;
 extern u32 lbl_80347144;
 extern u8 lbl_802E98A0[];
 extern u32 lbl_802F7298[];
@@ -270,6 +277,7 @@ typedef struct Rec14 {
     u8 pad11[3];
 } Rec14;
 extern void fn_80195540(Rec14 *recs);
+typedef struct Blob { u8 pad[0x70c]; s32 st; } Blob;
 
 int fn_80193F28(void) {
     fn_801DBE1C("Nothing VM Tanken.");
@@ -325,7 +333,7 @@ s32 fn_80194104(void) {
 }
 
 void fn_8019410C(void) {
-    if (*(s32 *)(lbl_80307638 + 0x8b4) == 0) {
+    if (*(s32 *)(lbl_80307638.b + 0x8b4) == 0) {
         *(u32 *)(lbl_80310B3C + 0x88) |= 0x20;
     } else {
         *(u32 *)(lbl_80310B3C + 0x88) &= ~0x20;
@@ -333,7 +341,7 @@ void fn_8019410C(void) {
 }
 
 void fn_80194210(void) {
-    if (*(s32 *)(lbl_80307638 + 0x8b4) == 0) {
+    if (*(s32 *)(lbl_80307638.b + 0x8b4) == 0) {
         *(u32 *)(lbl_80310B3C + 0x88) &= ~0x8;
     } else {
         *(u32 *)(lbl_80310B3C + 0x88) |= 0x8;
@@ -341,7 +349,7 @@ void fn_80194210(void) {
 }
 
 void fn_80194254(void) {
-    lbl_80347144 = *(u32 *)(lbl_80307638 + 0x8b4);
+    lbl_80347144 = *(u32 *)(lbl_80307638.b + 0x8b4);
 }
 
 void fn_80194268(void) {
@@ -360,7 +368,7 @@ void fn_80194334(void) {
 }
 
 u32 fn_801944C4(void) {
-    return *(u32 *)(lbl_80307638 + 0x70c);
+    return *(u32 *)(lbl_80307638.b + 0x70c);
 }
 
 typedef struct Msg {
@@ -504,7 +512,7 @@ void fn_801954D0(u32 v) {
 }
 
 void fn_801959D4(s32 idx) {
-    *(u8 **)(*(u8 **)((u8 *)lbl_8034710C + 0x24)) = lbl_80307638 + idx * 0x78;
+    *(u8 **)(*(u8 **)((u8 *)lbl_8034710C + 0x24)) = lbl_80307638.b + idx * 0x78;
 }
 
 void fn_80195B34(void) {
@@ -524,7 +532,7 @@ void fn_80199B60(void) {
 
 s32 fn_801944D4(char* buf, s32 id)
 {
-    s32 mode = *(s32 *)(lbl_80307638 + 0x70c);
+    s32 mode = *(s32 *)(lbl_80307638.b + 0x70c);
     switch (mode) {
     case 0:
         return (s8)fn_8025CB24(buf, lbl_802B4870, id);
@@ -580,7 +588,7 @@ s32 fn_8019576C(s32 idx) {
 }
 
 void fn_801959F4(void) {
-    u8 *p = lbl_80307638;
+    u8 *p = lbl_80307638.b;
     s32 i;
 
     for (i = 0; i < 0x16; i++) {
@@ -1925,14 +1933,14 @@ s32 fn_801949AC(void)
 {
     u8 *p;
     s32 n;
-    switch (*(s32 *)(lbl_80307638 + 0x70c)) {
+    switch (*(s32 *)(lbl_80307638.b + 0x70c)) {
     case 0:
-        p = lbl_80307638 + 0x780;
+        p = lbl_80307638.b + 0x780;
         n = 6;
         break;
     case 1:
         n = 8;
-        p = lbl_80307638 + 0x780;
+        p = lbl_80307638.b + 0x780;
         break;
     }
     return *(s32 *)(p + 0x4) + *(s32 *)(p + 0x44) * n;
@@ -2005,4 +2013,81 @@ s32 fn_80194CC8(void) {
         }
     }
     return n;
+}
+
+s32 fn_8019438C(void) {
+    s32 r = 0;
+    switch (lbl_80307638.st) {
+    case 0:
+        r = 0;
+        break;
+    case 1:
+        r = 1;
+        break;
+    }
+    return r;
+}
+
+s32 fn_801943C0(void) {
+    s32 r = 0x10;
+    switch (lbl_80307638.st) {
+    case 0:
+        r = 0x10;
+        break;
+    case 1:
+        return 0x10;
+    }
+    return r;
+}
+
+s32 fn_801943F4(void) {
+    s32 r = 6;
+    switch (lbl_80307638.st) {
+    case 0:
+        r = 6;
+        break;
+    case 1:
+        r = 8;
+        break;
+    }
+    return r;
+}
+
+s32 fn_80194428(void) {
+    s32 r = 0x8e;
+    switch (lbl_80307638.st) {
+    case 0:
+        r = 0x8e;
+        break;
+    case 1:
+        r = 0x90;
+        break;
+    }
+    return r;
+}
+
+s32 fn_8019445C(void) {
+    s32 r = 0x8d;
+    switch (lbl_80307638.st) {
+    case 0:
+        r = 0x8d;
+        break;
+    case 1:
+        r = 0x8f;
+        break;
+    }
+    return r;
+}
+
+s32 fn_80194490(void) {
+    s32 r = 0x87;
+    switch (lbl_80307638.st) {
+    case 0:
+        r = 0x87;
+        break;
+    case 1:
+        r = 0x88;
+        break;
+    }
+    return r;
 }

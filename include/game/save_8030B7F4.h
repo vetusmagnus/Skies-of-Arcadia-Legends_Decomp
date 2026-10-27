@@ -38,7 +38,9 @@ typedef struct SaveData {
     s8 x32e;
     s8 x32f;
     s8 x330;
-    u8 pad331[0x34c - 0x331];
+    u8 pad331[0x348 - 0x331];
+    s16 x348;                   /* clamped to 0..255 */
+    u8 pad34a[2];
     s32 w34c;                   /* gold */
     u8 pad350[4];
     InvEnt s354[0x50];
