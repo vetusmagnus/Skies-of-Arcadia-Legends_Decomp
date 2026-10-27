@@ -250,7 +250,7 @@ typedef struct {
     u8 pad70[0x10];
     f32 c80, c84;
 } Anim_8011B6E0;
-extern void fn_8011B024(f32 t, f32* pts, s32 n, s32 deg, f32* out);
+void fn_8011B024(f32 *pts, int n, int deg, f32 *out, f32 t);
 typedef struct {
     u8 pad00[0x50];
     f32 f50, f54, f58;
@@ -1212,7 +1212,6 @@ typedef struct Rec_8011F274 {
 } Rec_8011F274;
 extern f32 lbl_802B3214[9];
 extern f32 lbl_802B3238[9];
-extern void fn_8011B024(f32 t, f32 *pts, s32 n, s32 deg, f32 *out);
 typedef struct Pt_8011FC10 {
     f32 x, y, z;
     u32 col;
@@ -2551,6 +2550,7 @@ typedef struct Eff_8012048C {
     s32 count;
 } Eff_8012048C;
 extern void fn_8011FFF0(f32 *pos, f32 *v, Elem *el, f32 t, void *w);
+extern f32 fn_8011A994(int i, int n, int k, s32 k2, f32 t);
 
 void fn_8010E164(u8 *obj) {
     if (obj[0x19] == 0xff) {
@@ -3322,7 +3322,7 @@ void fn_8011B6E0(Anim_8011B6E0* a) {
     f32 v;
     f32 dx, dy;
     if (a->flags & 0x200) {
-        fn_8011B024(t, a->curve, 4, 3, &v);
+        fn_8011B024(a->curve, 4, 3, &v, t);
         t = 0.01f * v;
     }
     dx = 640.0f * t;
@@ -3357,7 +3357,7 @@ void fn_8011F44C(Obj_8011F44C* o) {
     } else {
         t = (f32)o->frame / 15.0f;
         if (o->flags & 0x100) {
-            fn_8011B024(t, o->curve, 5, 3, &tmp);
+            fn_8011B024(o->curve, 5, 3, &tmp, t);
             v = 0.01f * (0.8f * tmp);
         } else {
             v = 0.0f;
@@ -4984,10 +4984,10 @@ void fn_8011F274(Rec_8011F274 *rec) {
     t = (f32)rec->x10 / total;
     fade = 1.0f - (f32)rec->x14 / 20.0f;
     obj = rec->x40;
-    fn_8011B024(t, lbl_802B3214, 9, 3, &v);
+    fn_8011B024(lbl_802B3214, 9, 3, &v, t);
     v = v * fade;
     a = 0.01f * (100.0f + v);
-    fn_8011B024(t, lbl_802B3238, 9, 3, &v);
+    fn_8011B024(lbl_802B3238, 9, 3, &v, t);
     v = v * fade;
     b = 0.01f * (100.0f + v);
     rec->x2c = obj->x50 = a;
@@ -7905,4 +7905,35 @@ s32 fn_80128E7C(FormTbl *t)
     t->f_c0 = 1.0f;
     t->f_c4 = 1.0f;
     return 2;
+}
+
+/* 1-D B-spline value: out = sum_i N(i)(t * (n - 2)) * p[i]; clamps to the end values. */
+void fn_8011B024(f32* p, int n, int k, f32* out, f32 t)
+{
+    f32 b;
+    f32 u;
+    f32 x;
+    int i;
+    f32* q;
+
+    if (n <= 3) {
+        return;
+    }
+    u = (f32)(n - 2) * t;
+    if (t <= 0.0f) {
+        *out = p[0];
+        return;
+    }
+    if (t >= 1.0f) {
+        s32 j = n - 1;
+        *out = p[j];
+        return;
+    }
+    x = 0.0f;
+    q = p;
+    for (i = 0; i <= n - 1; i++) {
+        b = fn_8011A994(i, n - 1, k, k, u);
+        x += *q++ * b;
+    }
+    *out = x;
 }
