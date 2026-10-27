@@ -6756,7 +6756,7 @@ void fn_8004CF14(Node_8004CF14* node)
     Work_8004CF14* w = node->work;
     Sub_8004CF14* s = w->sub;
     DrawState st;
-    s32 ints[3];
+    Angle rot[3];
     u32 i;
     P* p;
     s16 k;
@@ -6773,10 +6773,10 @@ void fn_8004CF14(Node_8004CF14* node)
         if (s->fade != 0) {
             s->step = (1.0f + s->alpha) / s->fade;
         }
-        ints[0] = (s32)(255.0f * w->a);
-        ints[1] = (s32)(255.0f * w->b);
-        ints[2] = (s32)(255.0f * w->c);
-        fn_800482E0((ModelParts_800482E0*)&s->n, (ModelNode_800482E0*)w->x0, (NJS_POINT3*)&w->v, ints, (NJS_POINT3*)&w->q, (f32*)s->buf);
+        rot[0] = (s32)(182.04445f * w->a);
+        rot[1] = (s32)(182.04445f * w->b);
+        rot[2] = (s32)(182.04445f * w->c);
+        fn_800482E0((ModelParts_800482E0*)&s->n, (ModelNode_800482E0*)w->x0, (NJS_POINT3*)&w->v, rot, (NJS_POINT3*)&w->q, (f32*)s->buf);
         fn_80047CF0((Parts*)&s->n, (NJS_POINT3*)&w->v, (f32*)(&s->count + 1), (f32*)s->buf);
         if (s->buf != NULL) {
             fn_801E17E0(s->buf);

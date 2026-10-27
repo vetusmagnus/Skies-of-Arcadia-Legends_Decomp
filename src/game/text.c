@@ -35,7 +35,7 @@ inline void TextResetInline(void) {
     text_state.clip_x1 = screen_width;
     text_state.clip_y0 = 0.0f;
     text_state.clip_y1 = screen_height;
-    text_state.z = -1.07f;
+    text_state.z = -1.0699999f;
     text_tail = NULL;
     text_head = NULL;
     text_count = 0;
@@ -154,7 +154,7 @@ void TextFlush(void) {
         } while (--n > 0);
         fn_80296F28();
         text_count = 0;
-        text_state.z = -1.07f;
+        text_state.z = -1.0699999f;
     }
 }
 
