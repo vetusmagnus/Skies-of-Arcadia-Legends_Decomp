@@ -1845,7 +1845,7 @@ typedef struct Self_801A0FD8 {
 } Self_801A0FD8;
 extern void UiObjMoveToY(UiObj *o, u16 frames, s16 se, f32 y);
 typedef struct { u8 pad[0x24]; struct { u8 pad[6]; u16 idx; } *p; } G;
-typedef struct { void* a; void* b; void* c; u8 pad_c[0x2];
+typedef struct { void* a; void* b; void* c; u16 xc;
  u8 lo;
  u8 hi;
  s32 f10;
@@ -7416,4 +7416,61 @@ s32 fn_801BDEF4(u16 id, u16 mode)
         }
     }
     return 0;
+}
+
+inline s32 Cat(s16 id) {
+    u8 v = lbl_803473BE;
+    s8 r;
+    if (id == -1) {
+        return -1;
+    }
+    if (v >= 0x18) {
+        return -1;
+    }
+    r = 0;
+    if (v >= lbl_802ED258[id].lo) {
+        r = 2;
+    } else if (v >= lbl_802ED258[id].hi) {
+        r = 1;
+    }
+    return r;
+}
+inline void FlagClear(u32 b) {
+    lbl_80310B3C[b >> 5] &= ~(1 << (b & 31));
+}
+inline void FlagSet(u32 b) {
+    lbl_80310B3C[b >> 5] |= 1 << (b & 31);
+}
+static inline void Pass1(void) {
+    s32 i;
+    s8 c;
+    for (i = 0; i < 0x58; i++) {
+        c = Cat(i);
+        if (c == 2) {
+            if (FlagTest(i + 0x8A2) != 0) {
+                FlagClear(i + 0xC08);
+                FlagClear(i + 0x8A2);
+            }
+        }
+    }
+}
+void fn_801BE468(void) {
+    s32 i;
+    s32 t;
+    u16 lim;
+    Pass1();
+    if (lbl_80310B3C[0x80 / 4] & 0x400000) {
+        return;
+    }
+    for (i = 0; i < 0x58; i++) {
+        lim = lbl_802ED258[i].xc;
+        t = FlagTest(i + 0xC62);
+        if (!t) {
+            if (lbl_803473BE >= lim) {
+                FlagSet(i + 0xBAE);
+            } else {
+                FlagClear(i + 0xBAE);
+            }
+        }
+    }
 }

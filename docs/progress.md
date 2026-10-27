@@ -1299,3 +1299,22 @@ still match (4,416 to 4,425 matched functions in the report).
   `-str reuse,readonly` (no matched function changes). fn_80073024 itself still waits: its file's `.rodata` starts at
   0x802B06F0 with a table and fn_80072DD4/fn_80072E8C's "E67%03d%02d.MLD", so it needs that file split out and those
   two functions matched first.
+
+### Held-back isolated matches, first hand pass (2026-10-27)
+
+4 of the 37 matched-in-isolation functions with type clashes are merged (4,425 to 4,429), by hand and without agents:
+
+- unit_80055E94.c: fn_80068E20, fn_80068F68, fn_800683D8. `lbl_802AD440` is declared non-`const` (fn_80068E20's load
+  only comes out right that way); fn_80069E4C keeps its `const T24 *` locals. `T24` gains `x15`, `WorkRec` gains `x4a`, and
+  `T30.x18` is `s8` (fn_8006EE54 matches either way). fn_800683D8's `(u32)(c - 1) <= 1 || c == 3` is plain `c == 1 || c == 2
+  || c == 3`.
+- unit_80199B9C.c: fn_801BE468, with the guild-rank result in an `s8` temp instead of a cast on the inline's return.
+
+Still held back (each needs a struct or prototype unified first): fn_80067E8C (its object is the unit's `Node`),
+fn_801942A4 (the agent's `FlagTest` normalises twice, `f = f != 0`; the unit's reads bytes), fn_80134E7C (a field the
+unit reaches through another global's base, `addis`/`lbzu`), and the rest of the list above, which fail to compile against
+their unit (redeclared views or prototypes).
+
+tasks.c's fn_8003DCF4, tried again: with the third TargetMatch in the roles the asm implies (`obj->type, c->x6, obj->id,
+c->x8`) and `s16` locals for `wid`/`id` it is 12 diff lines (type and id swap r0/r5). Locals in every order, an `int`
+`wid`, a cached `c->xec`, and TargetMatch with all-`s16` or reordered parameters (as fn_8003DE8C has them) do not get closer.
