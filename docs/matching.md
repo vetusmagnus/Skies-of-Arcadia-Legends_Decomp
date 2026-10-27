@@ -192,6 +192,12 @@ misses in `docs/near/`:
   again: the base register is set up in the prologue and colours the whole function.
 - **`i = n = 0`** (the counter's zero copied into the index) is what gives a strength-reduced
   pointer that starts with `mulli rN, r<counter>, stride`.
+- **A repeated block whose registers stay put across copies uses the function's variables.**
+  In fn_801CF248 the buffer flush appears eight times. Where a copy's pointer and length take the
+  same registers as the `0x4000` flag in other copies, they are function-level variables (written
+  as a macro over `tex`/`len`/`alt`); where they move around per copy, an inline with its own
+  locals matches. The two kinds sit side by side in that function. Within a copy, the order of
+  the two assignments (`tex` first or `len` first) swaps their registers too.
 
 Open
 ----

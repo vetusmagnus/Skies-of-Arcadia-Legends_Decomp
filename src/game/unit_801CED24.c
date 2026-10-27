@@ -1,5 +1,6 @@
 #include "types.h"
 #include <string.h>
+#include "game/drawstate.h"
 extern u32 lbl_80347228;
 extern u32 lbl_80347230;
 extern u32 lbl_8034723C;
@@ -428,6 +429,326 @@ void fn_801CF218(s32 a, s32 b) {
     lbl_80347228 = 0x1;
     lbl_80347248 = b;
     fn_801CF248();
+}
+
+void fn_801D0680(void);
+u32 fn_801D0AB4(u32 x);
+extern s16 lbl_80347256;
+extern s32 lbl_8034721C;
+extern s32 lbl_80346A50;
+extern void fn_801D075C(void);
+extern void fn_801D0BC0(s32 a, f32 b);
+extern void fn_802A8E50(void* p, u32 len, s32 mode);
+extern void fn_802A8D64(void* p, u32 len, s32 mode);
+extern void fn_8024DE74(void);
+extern void fn_8029CEA4(s32 a, s32 b);
+extern void fn_8029CE6C(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f);
+extern void fn_80296EEC(s32 a, s32 b, s32 c);
+extern void fn_802A8BA4(void);
+extern void njPushMatrixEx(void);
+extern void njPopMatrixEx(void);
+extern void njScale(NJS_MATRIX m, f32 x, f32 y, f32 z);
+
+/* The draw buffer: lbl_80347218 is its fill mark, lbl_80347258 the part already flushed and
+ * lbl_8034725C the flush pointer (see fn_801D0B50). Flushing applies only while it is enabled
+ * and holds something new. */
+#define DRAWBUF_PENDING()                                                                   \
+    ((s16)lbl_80347256 < 0x400 && (u32)lbl_80347218 > (u32)lbl_80347258 && lbl_80347208 != 0 \
+     && lbl_8034720C != 0)
+
+static inline void DrawBufFlush(void* p, u32 len, s32 mode)
+{
+    if (lbl_803475D8 != 0) {
+        p = 0;
+    }
+    if (p != 0) {
+        GXFlush();
+        if (lbl_8034721C == 0) {
+            fn_802A8E50(p, lbl_80347218, mode);
+            lbl_8034721C = 1;
+        } else {
+            fn_802A8D64(p, len, mode);
+        }
+        fn_8024DE74();
+    } else {
+        fn_802A8E50(p, len, mode);
+    }
+}
+
+/* Same body as DrawBufFlush; calling it from here gives other registers. */
+static inline void DrawBufFlushPending(s32 mode)
+{
+    u32 len = lbl_80347218 - lbl_80347258;
+    void* p = (void*)lbl_8034725C;
+    if (lbl_803475D8 != 0) {
+        p = 0;
+    }
+    if (p != 0) {
+        GXFlush();
+        if (lbl_8034721C == 0) {
+            fn_802A8E50(p, lbl_80347218, mode);
+            lbl_8034721C = 1;
+        } else {
+            fn_802A8D64(p, len, mode);
+        }
+        fn_8024DE74();
+    } else {
+        fn_802A8E50(p, len, mode);
+    }
+}
+static inline s32 RoomIs74a(void)
+{
+    s32 ok = 0;
+    if (lbl_803475CC == 6 && lbl_80311AC0.id == 0x74 && lbl_80311AC0.x8 == 0x61) {
+        ok = 1;
+    }
+    return ok;
+}
+
+static inline void DrawBufFlushRoom(void)
+{
+    if (DRAWBUF_PENDING()) {
+        if (RoomIs74a()) {
+            DrawBufFlushPending(6);
+        } else {
+            DrawBufFlushPending(4);
+        }
+        DrawStateApplyFog();
+    }
+}
+
+/* Clip distance for layer k: far (1410055424) or near (100) in modes 1 and 2, otherwise the
+ * squared view-space distance of the object's position (+8), capped at the far value. */
+static inline void SetLayerClip(s32 k, s32 obj)
+{
+    NJS_POINT3 v;
+    f32 d;
+    if (DRAWBUF_PENDING()) {
+        if (lbl_80347214 == 1) {
+            d = 1410055424.0f;
+        } else if (lbl_80347214 == 2) {
+            d = 100.0f;
+        } else {
+            njCalcPoint(0, (NJS_POINT3*)(obj + 8), &v);
+            d = v.x * v.x + v.y * v.y + v.z * v.z;
+            if (d > 1410055424.0f) {
+                d = 1410055424.0f;
+            }
+        }
+        fn_801D0BC0(k, 10000.0f + d);
+    }
+}
+
+static inline void SetLayerClipObj(s32 k)
+{
+    if (lbl_80347228 & 0xF) {
+        SetLayerClip(k, lbl_8034722C);
+    } else {
+        SetLayerClip(k, lbl_80347230);
+    }
+}
+
+static inline void DrawLayerMasked(void)
+{
+    fn_8029CEA4(0, 1);
+    fn_8029CE6C(6, lbl_80346820, 0, 6, lbl_80346820, 1);
+    fn_801D075C();
+    fn_8029CEA4(0, 1);
+    fn_8029CE6C(4, 0, 0, 7, 0, 1);
+}
+
+static inline void DrawLayerScaled(void)
+{
+    DrawBufFlush(0, 0, 2);
+    if (lbl_80347248 & 0x00100000) {
+        njPushMatrixEx();
+        fn_80286EE8();
+        fn_8028B498();
+        njScale(0, 1.01f, 1.01f, 1.01f);
+    }
+    fn_801D075C();
+    if (lbl_80347248 & 0x00100000) {
+        njPopMatrixEx();
+    }
+    fn_802A8BA4();
+    lbl_80346A50 = 1;
+}
+
+/* The same flush written out with the caller's own tex/len variables. fn_801CF248 needs it in
+ * this form where the inline version's fresh locals take different registers. */
+#define DRAWBUF_FLUSH(mode)                                     \
+    if (lbl_803475D8 != 0) {                                    \
+        tex = 0;                                                \
+    }                                                           \
+    if (tex != 0) {                                             \
+        GXFlush();                                              \
+        if (lbl_8034721C == 0) {                                \
+            fn_802A8E50(tex, lbl_80347218, mode);               \
+            lbl_8034721C = 1;                                   \
+        } else {                                                \
+            fn_802A8D64(tex, len, mode);                        \
+        }                                                       \
+        fn_8024DE74();                                          \
+    } else {                                                    \
+        fn_802A8E50(tex, len, mode);                            \
+    }
+
+/* Bit 0x4000: draw the layer with fn_80296EEC(1, 3, 0) set (restored after). Uses the caller's alt. */
+#define DRAW_LAYER(f)                                           \
+    alt = (f) & 0x4000;                                         \
+    if (alt) {                                                  \
+        fn_80296EEC(1, 3, 0);                                   \
+    }                                                           \
+    fn_801D075C();                                              \
+    if (alt) {                                                  \
+        fn_80296EEC(1, 3, 1);                                   \
+    }
+
+/* Draws the queued layer selected by lbl_80347228/lbl_80347248 (set by the fn_801CED24..
+ * fn_801CF218 wrappers above), flushing the draw buffer and setting clip distances around it,
+ * then clears the request. */
+void fn_801CF248(void)
+{
+    u32 f;
+    s32 k;
+    f32 d;
+    s32 alt;
+    void* tex;
+    u32 len;
+
+    f = fn_801D0AB4(lbl_80347248);
+    fn_801D0680();
+    if (f & 0xFF000000) {
+        if (!(f & 0x02000000)) {
+            if (f & 0x08000000) {
+                if (!(f & 0x00200000)) {
+                    DrawBufFlushRoom();
+                    DRAW_LAYER(f);
+                    SetLayerClipObj(5);
+                }
+                DrawLayerScaled();
+            } else if (f & 0x8000) {
+                DrawLayerMasked();
+            } else if ((k = f & 0xFE000000) != 0) {
+                if (!(f & 0x00200000)) {
+                    DrawBufFlushRoom();
+                    DRAW_LAYER(f);
+                    switch (k) {
+                    case 0x10000000:
+                    default:
+                        k = 3;
+                        break;
+                    case 0x20000000:
+                        k = 4;
+                        break;
+                    case 0x40000000:
+                        k = 6;
+                        break;
+                    case (s32)0x80000000:
+                        k = 7;
+                        break;
+                    case 0x04000000:
+                        k = 8;
+                        break;
+                    }
+                    SetLayerClipObj(k);
+                }
+                DrawLayerScaled();
+            } else if (f & 0x01000000) {
+                DRAW_LAYER(f);
+            } else {
+                fn_801D075C();
+            }
+        }
+    } else if (lbl_80347214 != 0) {
+        if (DRAWBUF_PENDING()) {
+            tex = (void*)lbl_8034725C;
+            len = lbl_80347218 - lbl_80347258;
+            DRAWBUF_FLUSH(1);
+            DrawStateApplyFog();
+        }
+        fn_801D075C();
+        if (DRAWBUF_PENDING()) {
+            d = 0.0f;
+            switch (lbl_80347214) {
+            case 1:
+                d = 1410055424.0f;
+                break;
+            case 2:
+                d = 10000.0f;
+                break;
+            }
+            fn_801D0BC0(2, 10000.0f + d);
+        }
+    } else if (f & 0x8000) {
+        DrawLayerMasked();
+    } else if (lbl_8034720C != 0 && (f & 0x1000)) {
+        if (!(f & 0x00200000)) {
+            DrawBufFlushRoom();
+            DRAW_LAYER(f);
+            if (f & 0x800) {
+                SetLayerClipObj(9);
+            } else if (f & 0x80) {
+                SetLayerClipObj(3);
+            } else {
+                SetLayerClipObj(2);
+            }
+        }
+        if (!(f & 0x200)) {
+            if (f & 0x100) {
+                if (DRAWBUF_PENDING()) {
+                    len = lbl_80347218 - lbl_80347258;
+                    tex = (void*)lbl_8034725C;
+                    DRAWBUF_FLUSH(2);
+                    DrawStateApplyFog();
+                }
+                fn_801D075C();
+                SetLayerClipObj(0);
+            } else {
+                len = 0;
+                tex = 0;
+                DRAWBUF_FLUSH(2);
+                fn_801D075C();
+                fn_802A8BA4();
+                lbl_80346A50 = 1;
+            }
+        }
+    } else {
+        if (lbl_80311AC0.id == 0x217 && (f & 0x4000)) {
+            fn_80296EEC(1, 3, 0);
+        }
+        fn_801D075C();
+        if (lbl_80311AC0.id == 0x217 && (f & 0x4000)) {
+            fn_80296EEC(1, 3, 1);
+        }
+    }
+    if (f & 0x2000) {
+        fn_8029CFF8(0);
+    }
+    lbl_80347228 = 0;
+    lbl_8034722C = 0;
+    lbl_80347230 = 0;
+    lbl_80347234 = 0;
+    lbl_80347238 = 0;
+    lbl_8034723C = 0;
+    lbl_80347240 = 0;
+    lbl_80347244 = 0.0f;
+    lbl_80347248 = 0;
+    switch (lbl_8034724C) {
+    case 2:
+        lbl_80345850[0] = 60000.0f;
+        break;
+    case 3:
+        njClipZ(-1.0f, -60000.0f);
+        break;
+    case 1:
+        njClipZ(-1.0f, -60000.0f);
+        break;
+    }
+    lbl_8034724C = 0;
+    if (lbl_80311AC0.id == 0x11 && lbl_80311AC0.x8 == 0x61) {
+        lbl_80346820 = 0x80;
+    }
 }
 
 void fn_801D0680(void) {

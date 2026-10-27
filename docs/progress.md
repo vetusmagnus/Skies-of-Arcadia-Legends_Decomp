@@ -1239,3 +1239,8 @@ More (2026-10-27)
   15 lines with registers masked. The original reaches its messages through a pooled base register
   (`addi r26, ...` in the prologue), which needs the file's `.rodata` defined in C; until then the
   register colouring is off throughout.
+- fn_801CF248 (5.2 KB, unit_801CED24.c, draws the layer queued by the fn_801CED24..fn_801CF218
+  wrappers, flushing the draw buffer and setting clip distances around it) matches. Its repeated
+  blocks are inlines where the copies take fresh registers (the buffer flush before a layer, the
+  clip distance) and macros on the function's own `tex`/`len`/`alt` where they don't (see
+  matching.md).
