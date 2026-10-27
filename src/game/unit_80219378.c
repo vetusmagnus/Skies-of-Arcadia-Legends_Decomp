@@ -77,7 +77,6 @@ extern Pos_UNIT0000 lbl_80311970;
 extern void njRotateZXY(void *m, s32 x, s32 y, s32 z);
 typedef NJS_POINT3 Vec;
 extern double atan2(double y, double x);
-extern s32 lbl_80347520;
 typedef struct Node {
     s32 (*cb)(struct Node *, struct Node *);
     u8 pad4[0xc];
@@ -89,8 +88,9 @@ typedef struct Node {
     struct Node *next;
 } Node;
 extern Node *lbl_80347524;
-extern u16 lbl_8034751C;
-void fn_80222964(void *p);
+extern Node *lbl_80347520;
+extern s16 lbl_8034751C;
+void fn_80222964(Node *n);
 void fn_801E17E0(void *p);
 typedef struct Rec_80225930 {
     u8 pad0[0x24];
@@ -1114,7 +1114,7 @@ void fn_8022291C(void) {
     lbl_8034751C = 0;
 }
 
-void fn_80222930(void *p) {
+void fn_80222930(Node *p) {
     fn_80222964(p);
     fn_801E17E0(p);
 }
@@ -3713,4 +3713,42 @@ void fn_80226170(void)
         n->b1b = owner->b1b + 1;
     }
     lbl_803475A4 = n;
+}
+
+void fn_80222964(Node *n)
+{
+    Node *it;
+    Node *next;
+    Node *prev;
+    if (n == NULL) {
+        return;
+    }
+    for (it = lbl_80347524; it != NULL; it = it->next) {
+        if (n == it) {
+            break;
+        }
+    }
+    if (it == NULL) {
+        return;
+    }
+    lbl_8034751C = lbl_8034751C - 1;
+    next = n->next;
+    prev = n->prev;
+    if (next == NULL) {
+        if (prev == NULL) {
+            lbl_80347520 = NULL;
+            lbl_80347524 = NULL;
+        } else {
+            lbl_80347520 = prev;
+            prev->next = NULL;
+        }
+    } else {
+        if (prev != NULL) {
+            prev->next = next;
+            next->prev = prev;
+        } else {
+            lbl_80347524 = next;
+            next->prev = NULL;
+        }
+    }
 }
