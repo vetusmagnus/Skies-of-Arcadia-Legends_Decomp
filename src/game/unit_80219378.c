@@ -4,6 +4,9 @@
 #include "game/drawstate.h"
 #include "game/stat_8030B4D4.h"
 #include "ninja.h"
+#include <dolphin/os.h>
+#include "game/text.h"
+#include "game/menu.h"
 extern void fn_802193BC(s32 a, s32 b);
 extern s32 fn_801D168C(void);
 extern void fn_801D150C(s32 v);
@@ -143,8 +146,7 @@ typedef struct Unk_80228418 {
     u8 pad[0x18];
     u8 *table;
 } Unk_80228418;
-extern u8 lbl_80316578[];
-extern void OSCancelAlarm(void *alarm);
+extern OSAlarm lbl_80316578;
 extern void fn_801D8B2C(void);
 extern void fn_8022642C(void);
 typedef struct SoalState { u8 pad[0xc]; s32 state; } SoalState;
@@ -219,8 +221,7 @@ extern void fn_801CBBF8(void);
 typedef struct Flags8 { u8 pad[8]; u32 f8; } Flags8;
 typedef struct Ref { Flags8 *p; u8 pad[0x18 - 4]; } Ref;
 extern Ref lbl_80311A60;
-extern u8 lbl_802F9238[];
-extern void *TextPrint(s16 x, s16 y, const char *str);
+extern const char *lbl_802F9238[];
 typedef struct Obj1E4 { u8 pad[8]; s32 a8; u8 pad2[0x10]; s32 a1c; } Obj1E4;
 s32 fn_80222B30(Node *a, Node *b);
 extern s32 lbl_80347848;
@@ -314,7 +315,6 @@ extern f32 njScalor(Vec *v);
 extern void njUnitVector(Vec *v);
 extern char lbl_802D98B8[];
 extern s8 lbl_8034C6C4[8];
-extern void *TextPrintf(s16 x, s16 y, const char *fmt, ...);
 extern s32 fn_801A28F4(s32 *p);
 typedef struct Obj {
     s32 x0;
@@ -752,6 +752,20 @@ typedef struct Seg {
     u16 key;
 } Seg;
 s32 fn_802250E4(Slot *o, NJS_POINT3 *p, Cmp *res);
+extern OSTime lbl_80347810;
+extern void fn_80228948(OSAlarm* alarm, OSContext* context);
+typedef struct Menu {
+    s32 mode;
+    u8 pad4[4];
+    s32 x8;
+    s32 xc;
+    s32 x10;
+    s32 x14;
+    u8 pad18[4];
+    s32 x1c;
+} Menu;
+extern s32 lbl_803475D0;
+extern void fn_801A289C(void);
 
 void fn_80219378(s32 a)
 {
@@ -948,7 +962,7 @@ void fn_8022893C(void) {
     lbl_80347808 = 1;
 }
 
-void fn_80228948(void)
+void fn_80228948(OSAlarm *alarm, OSContext *context)
 {
     lbl_803474A4 = lbl_803474A4 + 1;
     if (lbl_803475CC == 6 || lbl_803475CC == 7) {
@@ -1195,7 +1209,7 @@ f32 fn_80228418(Unk_80228418 *p, int i) {
 }
 
 void fn_80228984(void) {
-    OSCancelAlarm(lbl_80316578);
+    OSCancelAlarm(&lbl_80316578);
 }
 
 void fn_80228B40(void) {
@@ -1429,7 +1443,7 @@ void fn_8022B0B8(Obj8 *o) {
 }
 
 void fn_8022B1E4(Obj1E4 *o) {
-    TextPrint(0x18, 0xf8, *(const char **)(lbl_802F9238 + 0x5c));
+    TextPrint(0x18, 0xf8, lbl_802F9238[23]);
     if (o->a1c == 0) {
         if (lbl_80311A60.p->f8 & 0x100) {
             o->a1c = 3;
@@ -1782,7 +1796,7 @@ void fn_8022B6F4(Obj *o) {
         TextPrint(0x18, 0x158, b + 0x678);
         TextPrint(0x18, 0x188, b + 0x6a8);
     } else {
-        TextPrint(0x18, 0x140, *(const char **)(lbl_802F9238 + 0x48));
+        TextPrint(0x18, 0x140, lbl_802F9238[18]);
     }
     o->xc = fn_801A28F4(&o->x10);
     if (o->xc != 0 && o->xc != 7) {
@@ -3626,4 +3640,47 @@ void fn_802241B0(Slot *o, Arr *h, s32 n) {
         }
         p++;
     } while (--n > 0);
+}
+
+void fn_802289AC(void) {
+    OSCreateAlarm(&lbl_80316578);
+    lbl_80347810 = OSGetTime();
+    OSSetPeriodicAlarm(&lbl_80316578, lbl_80347810, OS_TIMER_CLOCK, fn_80228948);
+    lbl_803474A4 = 0;
+    lbl_803474A0 = 0;
+    lbl_80347808 = 0;
+}
+
+void fn_8022B318(Menu *m) {
+    TextPrint(0x18, 0xb0, lbl_802F9238[11 + m->x10]);
+    TextPrint(0x18, 0xf8, lbl_802F9238[15]);
+    TextPrint(0x18, 0x140, lbl_802F9238[19]);
+    TextSetColor(m->x14 == 0 ? -1 : 0xff808080);
+    TextPrint(0xe0, 0x188, lbl_802F9238[0]);
+    TextSetColor(m->x14 == 1 ? -1 : 0xff808080);
+    TextPrint(0x158, 0x188, lbl_802F9238[1]);
+    if (m->x1c == 0) {
+        m->xc = fn_801A28F4(&m->x10);
+        if (m->xc == 2) {
+            u32 btn = lbl_80311A60.p->f8;
+            if (((btn & 1) && m->x14 == 1) || ((btn & 2) && m->x14 == 0)) {
+                MenuPlaySe(0);
+                m->x14 = (m->x14 == 0);
+            } else if (btn & 0x100) {
+                MenuPlaySe(2);
+                if (m->x14 == 0) {
+                    lbl_803475D0 = 1;
+                    fn_801A289C();
+                    m->mode = 4;
+                } else {
+                    m->x1c = 3;
+                    m->x8 = 0;
+                }
+            }
+        } else if (m->xc == 0) {
+            m->mode = 1;
+        } else {
+            m->mode = 2;
+        }
+    }
 }
