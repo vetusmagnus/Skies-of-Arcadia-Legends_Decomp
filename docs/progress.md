@@ -1197,7 +1197,7 @@ result where callers use it:
   (fn_801C16D0 returns `s32`), unit_8014F970.c's fn_80155FF0 takes the callers' fourth word, unit_8022D34C.c's
   fn_8022E068 has its `f32` pointers.
 
-Still blocked in list C (72), by cause:
+Still blocked in list C (73), by cause:
 
 - Caller and callee disagree in one unit, which points at a TU boundary: fn_8022E068 (its caller fn_8022DFFC only matches
   seeing a `u16` index, the body compares an `int`), fn_80230FCC (passes a word to fn_8023114C's `u8 kind` with no
