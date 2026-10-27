@@ -71,7 +71,8 @@ typedef struct {
 } Sys_80309E5C;
 extern Sys_80309E5C lbl_80309E5C;
 extern Task* lbl_80347394;
-extern void* lbl_80309DE4[];
+typedef struct ChrRec { u8 pad0[0x1c]; u32 bits; } ChrRec;
+extern ChrRec* lbl_80309DE4[];
 extern s32 fn_8000F718(void* p, s32 a, s32 b);
 extern void fn_8000F6F8(void* obj, s32 a, s32 b, s32 c, s32 d);
 typedef struct Entry16 {
@@ -566,7 +567,7 @@ typedef struct Slot {
 #define FLD(p, off, T) (*(T*)((u8*)(p) + (off)))
 s8 fn_80020E10(void* p);
 s16 fn_80008274(s16 v);
-void fn_800615B4(void* p, f32* v, void* b);
+void fn_800615B4(void *p, void *v, void *b);
 s32 fn_8003DCF4(void* a, void* b);
 void fn_80061518(void* a, NJS_POINT3* b);
 typedef struct Ctx {
@@ -782,6 +783,74 @@ extern void fn_801DBE6C(s32);
 extern void fn_80228014(void);
 extern void fn_80217830(s32);
 extern void fn_80100178(char*);
+extern void *memcpy(void *d, const void *s, u32 n);
+typedef struct Ent_800095D0 { s32 a; s32 b; s32 size; s32 off; } Ent_800095D0;
+typedef struct EntD { s32 a; s32 b; s32 size; void *data; } EntD;
+extern void fn_80035918(void *p);
+extern s16 fn_800364F4(void *p);
+extern s32 fn_800364B8(void *e);
+typedef struct Node_80008800 {
+    s16 x0;
+    s16 x2;
+    s16 x4;
+    s16 x6;
+    struct Node_80008800* x8;
+    struct Node_80008800* xc;
+} Node_80008800;
+typedef struct { s16 x0; u8 pad2[2]; s16 x4; } Key;
+typedef struct { s16 x0; u8 pad2[0xa]; Key* xc; } Ent_80008800;
+extern s16 fn_800089F0(Ent_80008800* t, s16 a, s16 b, s16* lo, s16* hi, s16 start);
+typedef struct {
+    u32 keyframe;
+    f32 key[3];
+} NJS_MKEY_F_80006C00;
+typedef struct {
+    void** mdata;
+    void** keys;
+    void** counts;
+    f32 frame;
+    u32 nbFrame;
+    s32 unk14;
+    f32* matrix;
+    s32 unk1C;
+} MotionState_80006C00;
+typedef struct Vec3_8001E3D8 { f32 x, y, z; } Vec3_8001E3D8;
+typedef struct Joint { u8 pad[8]; u8 data[0x34 - 8]; } Joint;
+typedef struct Model { u8 pad[0x154]; Joint* joints; } Model;
+typedef struct Work_8001E3D8 {
+    u8 pad0[0x14];
+    s16 idx;
+    u8 pad16[6];
+    Vec3_8001E3D8 off;
+    Vec3_8001E3D8 pos;
+    u8 pad34[0x4c - 0x34];
+    Model* model;
+} Work_8001E3D8;
+typedef struct Task_8001E3D8 { u8 pad[0x24]; Work_8001E3D8* work; } Task_8001E3D8;
+typedef struct P3 { f32 x, y, z; } P3;
+typedef struct Dat1E { u8 pad00[0x154]; u8 *tbl; } Dat1E;
+typedef struct Wk1E {
+    u8 pad00[0x14];
+    s16 idx;
+    u8 pad16[6];
+    f32 x1c, x20, x24;
+    P3 x28;
+    u8 pad34[0x18];
+    Dat1E *d;
+} Wk1E;
+typedef struct Tk1E { u8 pad00[0x24]; Wk1E *work; } Tk1E;
+typedef struct Wk1E_8001E238 {
+    u8 pad00[0x14];
+    s16 idx;
+    u8 pad16[6];
+    f32 x1c, x20, x24;
+    NJS_POINT3 x28;
+    u8 pad34[0x18];
+    Dat1E *d;
+} Wk1E_8001E238;
+typedef struct Tk1E_8001E238 { u8 pad00[0x24]; Wk1E_8001E238 *work; } Tk1E_8001E238;
+typedef struct Wk_80014BA8 { u8 pad[0x4c]; u8* x4c; } Wk_80014BA8;
+extern void fn_8002923C(s8 id, u16 mask, s32 c);
 
 void* fn_80005B50(void* heap, u32 size) {
     void* p = fn_80005B9C(heap);
@@ -3011,6 +3080,154 @@ void fn_80009FD8(void) {
             lbl_80310A1C.f18 = 1;
             lbl_80347704 = 0;
             break;
+        }
+    }
+}
+
+EntD *fn_800095D0(void *old, u8 *src, void *extra) {
+    s16 n;
+    Ent_800095D0 *s;
+    EntD *d;
+    EntD *out;
+    s16 i;
+    if (old != 0) {
+        fn_80035918(old);
+        fn_801E17E0(old);
+    }
+    n = fn_800364F4(src);
+    out = fn_801E1C7C(n * 16);
+    s = (Ent_800095D0 *)src;
+    d = out;
+    for (i = 0; i < n; i++) {
+        *(Ent_800095D0 *)d = *s;
+        if (fn_800364B8(d)) {
+            memcpy(d->data, src + s->off, d->size);
+        }
+        s++;
+        d++;
+    }
+    if (extra != 0) fn_801E17E0(extra);
+    else fn_801E17E0(src);
+    return out;
+}
+
+Node_80008800* fn_80008800(Ent_80008800* t)
+{
+    Node_80008800* head = 0;
+    Node_80008800* cur = 0;
+    s16 n;
+    Key* k;
+    s16 lo;
+    s16 hi;
+    if (t != 0) {
+        if (t->x0 < 0) return 0;
+        k = t->xc;
+        n = fn_800089F0(t, k->x0, k->x4, &lo, &hi, 0);
+        while (n != 0) {
+            if (head == 0) {
+                fn_80061F58(&head, 0x10, 0);
+                cur = head;
+            } else {
+                Node_80008800* prev;
+                fn_80061F58(&cur->x8, 0x10, 0);
+                prev = cur;
+                cur = cur->x8;
+                cur->xc = prev;
+            }
+            cur->x0 = k->x0;
+            cur->x2 = k->x4;
+            cur->x4 = lo;
+            cur->x6 = hi;
+            if ((s16)t[n].x0 < 0) break;
+            k = t[n].xc;
+            n = fn_800089F0(t, k->x0, k->x4, &lo, &hi, n);
+        }
+        return head;
+    }
+    return 0;
+}
+
+void fn_80006C00(NJS_MKEY_F_80006C00* keys, u32 i, u32 nbKeys, f32* out) {
+    f32 div[2] = {1.0f, 1.0f};
+    NJS_MKEY_F_80006C00* k1 = &keys[i];
+    NJS_MKEY_F_80006C00* k2 = &keys[(i + 1) % nbKeys];
+    f32 t;
+    f32 u;
+
+    div[1] = (f32)(k2->keyframe - k1->keyframe);
+    t = (lbl_80316940.frame - (f32)k1->keyframe) / div[(s32)(k2->keyframe - k1->keyframe) > 0];
+    u = 1.0f - t;
+    out[0] = k1->key[0] * u + k2->key[0] * t;
+    out[1] = k1->key[1] * u + k2->key[1] * t;
+    out[2] = k1->key[2] * u + k2->key[2] * t;
+}
+
+void fn_8001E3D8(void* a, Vec3_8001E3D8* out, Task_8001E3D8* t) {
+    Vec3_8001E3D8 v;
+    Work_8001E3D8* w;
+    fn_800615B4(a, out, &t->work->pos);
+    w = t->work;
+    fn_800615B4(w->model->joints[w->idx - 1].data, &v, &w->pos);
+    v.x = v.x + w->off.x;
+    v.y = v.y + w->off.y;
+    v.z = v.z + w->off.z;
+    out->x = out->x + v.x;
+    out->y = out->y + v.y;
+    out->z = out->z + v.z;
+}
+
+void fn_8001E308(void *a, P3 *out, Tk1E *t)
+{
+    P3 v;
+    Wk1E *w2;
+    Wk1E *w = t->work;
+
+    fn_800615B4(a, out, &w->x28);
+    w2 = t->work;
+    fn_800615B4(w2->d->tbl + (w2->idx - 1) * 0x34 + 8, &v, &w2->x28);
+    v.x = v.x + w2->x1c;
+    v.y = v.y + w2->x20;
+    v.z = v.z + w2->x24;
+    out->x = out->x + v.x;
+    out->y = out->y + w->x20;
+    out->z = out->z + v.z;
+}
+
+void fn_8001E238(NJS_POINT3 *self, void *out, Tk1E_8001E238 *t)
+{
+    NJS_POINT3 v20;
+    NJS_POINT3 v14;
+    NJS_POINT3 v8;
+    Wk1E_8001E238 *w = t->work;
+
+    fn_800615B4(w->d->tbl + (w->idx - 1) * 0x34 + 8, &v20, &w->x28);
+    v20.x = v20.x + w->x1c;
+    v20.y = v20.y + w->x20;
+    v20.z = v20.z + w->x24;
+    v20.y = v20.y + self->y;
+    fn_80012130(&v14);
+    fn_80071F84(&v8, &v14, &v20);
+    fn_80071D0C(out, &v20, &v8, self->x);
+}
+
+void fn_80014BA8(void) {
+    s8 i;
+    for (i = 0; i < 12; i++) {
+        Task* t = fn_800215EC(i);
+        if (t != 0) {
+            Wk_80014BA8* w = t->work;
+            u8 id = *w->x4c;
+            u32 fl = lbl_80309DE4[(s8)*w->x4c]->bits;
+            u16 m = 0;
+            if (!(fl & 0x80)) m |= 0x1;
+            if (!(fl & 0x200)) m |= 0x20;
+            if (!(fl & 0x400)) m |= 0x8;
+            if (!(fl & 0x800)) m |= 0x10;
+            if (!(fl & 0x4000)) m |= 0x4;
+            if (!(fl & 0x40000)) m |= 0x100;
+            if (m != 0) {
+                fn_8002923C(id, m, 0);
+            }
         }
     }
 }

@@ -6,6 +6,7 @@
 void fn_80217B98();
 void fn_801EFC88(s16 v);
 typedef struct CmdStream { u8 pad_00[0x1c]; u8 *cur; } CmdStream;
+typedef struct Cmd { u8 pad_00[0x1c]; float *cur; } Cmd;
 void fn_800B0900(void *p);
 void fn_800FF9FC(void *p);
 extern u8 lbl_8030B4D4[];
@@ -261,7 +262,7 @@ typedef struct {
     u32 x24;
     u8 pad28[0x34 - 0x28];
 } CtlEnt_80210EA4;
-typedef struct Obj10A { u8 pad00[0x24]; void *x24; } Obj10A;
+typedef struct Obj10A { void (*fn)(struct Obj10A *); u8 pad4[0x15]; u8 x19; u8 pad1a[0xa]; void *x24; } Obj10A;
 extern void *lbl_80347450;
 extern Obj10A *fn_8010A164(u32 id);
 extern void fn_801559BC(void *p);
@@ -337,6 +338,29 @@ typedef struct { u8 pad_00[0x1c]; float *cur; } CmdB_801FA398;
 extern s32 fn_80218570(s32 a, s32 b, s32 c);
 void fn_80097204(f32 a, f32 b, f32 c);
 void fn_800972E0(s32 a);
+void fn_80225CAC(s32 a, u16 b, s16 c);
+void fn_80213478(f32 *a, f32 *b, s32 *c);
+void fn_801000F0(s32 a, s32 b);
+void fn_80118578(s32 a, f32 f1, f32 f2, f32 f3, f32 f4);
+typedef struct Cmd_8020170C { u8 pad_00[0x1c]; float *cur; u8 pad20[0x10]; u32 x30; } Cmd_8020170C;
+extern void fn_801CBBBC(void);
+extern s32 lbl_80347508;
+extern f32 lbl_80347510;
+extern f32 lbl_80347514;
+extern u32 lbl_80347518;
+extern void fn_8015F654(void* p);
+extern char lbl_802D4D7C[];
+typedef struct Sub { u8 pad[0x1a0]; s32 x1a0; } Sub;
+typedef struct Mid {
+    u8 pad[0x1d8];
+    Sub* sub;
+    u8 pad1dc[0x26c - 0x1dc];
+    u8 b26c;
+} Mid;
+extern s32 fn_8025ECC4(void);
+typedef struct { u8 pad_00[0x1c]; float *cur; } CmdB_801FE21C;
+typedef struct { u8 pad_00[0x1c]; float *cur; } CmdB_80200CE4;
+extern void fn_801D995C(s32 n, f32 a, f32 b, f32 c);
 
 void fn_801F5334(s8 n) {
     s32 i;
@@ -699,7 +723,6 @@ s32 fn_80214A60(u32 a, CmdStream *st) {
     return 1;
 }
 
-typedef struct Cmd { u8 pad_00[0x1c]; float *cur; } Cmd;
 float fn_801F6120(float **p);
 void fn_8014818C(u16 a, s32 b);
 s32 fn_80214B28(u32 flags, Cmd *c) {
@@ -2689,4 +2712,219 @@ s16 fn_802058F8(u32 a0, CmdStream *st) {
         }
     }
     return (a >> 3) & 1;
+}
+
+s32 fn_801FEF80(u32 flags, Cmd *c) {
+    float *p;
+    u16 a;
+    s32 t;
+    s32 b;
+    if (flags & 1) {
+        p = c->cur + 1;
+        if (*p == 3.4028235e38f) {
+            p++;
+            t = 0x7FFFFFFF;
+        } else {
+            t = (s32)fn_801F6120(&p);
+        }
+        a = t;
+        if (*p == 3.4028235e38f) {
+            p++;
+            b = 0x7FFFFFFF;
+        } else {
+            b = (s32)fn_801F6120(&p);
+        }
+        c->cur = p;
+        fn_80225CAC(0xffff, a, b);
+    }
+    return 0;
+}
+
+s32 fn_80204BE8(u16 flags, Cmd *c) {
+    float *p;
+    f32 a[3];
+    f32 b[3];
+    if (flags & 1) {
+        p = c->cur;
+        fn_801F7500();
+        p++;
+        a[0] = fn_801F6120(&p);
+        a[1] = fn_801F6120(&p);
+        a[2] = fn_801F6120(&p);
+        b[0] = fn_801F6120(&p);
+        b[1] = fn_801F6120(&p);
+        b[2] = fn_801F6120(&p);
+        c->cur = p;
+        lbl_8030CEA0.x18fc = a[0];
+        lbl_8030CEA0.x1900 = a[1];
+        lbl_8030CEA0.x1904 = a[2];
+        fn_80213478(b, a, &lbl_8030CEA0.x1908);
+    }
+    if (flags & 8) return 1;
+    return 0;
+}
+
+s32 fn_8020D1C0(u16 flags, Cmd *c) {
+    float *p;
+    s32 a, b;
+    if (flags & 1) {
+        p = c->cur + 1;
+        a = RDI(p);
+        b = RDI(p);
+        fn_801000F0(a, b);
+        c->cur = p;
+    }
+    if (flags & 8) return 1;
+    return 0;
+}
+
+s32 fn_8020A048(u32 flags, Cmd *c) {
+    float *p;
+    s32 a;
+    f32 x;
+    f32 y;
+    f32 z;
+    f32 w;
+    u16 fl = flags;
+    p = c->cur;
+    if (flags & 1) {
+        p++;
+        if (*p == 3.4028235e38f) {
+            p++;
+            a = 0x7FFFFFFF;
+        } else {
+            a = (s32)fn_801F6120(&p);
+        }
+        x = fn_801F6120(&p);
+        y = fn_801F6120(&p);
+        z = fn_801F6120(&p);
+        w = fn_801F6120(&p);
+        fn_80118578(a, x, y, z, w);
+        c->cur = p;
+    }
+    if (fl & 8) {
+        return 1;
+    }
+    return 0;
+}
+
+s32 fn_8020170C(u16 flags, Cmd_8020170C *c) {
+    float *p;
+    u32 t;
+    if (flags & 1) {
+        p = c->cur;
+        p++;
+        if (*p == 3.4028235e38f) {
+            p++;
+            t = 0x7FFFFFFF;
+        } else {
+            t = (s32)fn_801F6120(&p);
+        }
+        c->cur = p;
+        c->x30 = 0;
+        if (t == 0) {
+            fn_801CBBBC();
+            return 0;
+        }
+        if (t == 0x7FFFFFFF) {
+            lbl_80347514 = 30.0f;
+        } else {
+            lbl_80347514 = (f32)(t + 1);
+        }
+        lbl_80347510 = 1.0f;
+        lbl_80347518 = 0;
+    }
+    if (flags & 2) {
+        if (c->x30 != 0) {
+            if (lbl_80347508 == 0) {
+                c->x30 = 0;
+                return 0;
+            }
+        } else {
+            c->x30 = 1;
+        }
+    }
+    if (flags & 8) {
+        c->x30 = 0;
+        return 0;
+    }
+    return 1;
+}
+
+s32 fn_801FD584(u32 flags, Cmd* c) {
+    float* p;
+    s32 t;
+    Obj10A* o;
+    if (flags & 1) {
+        p = c->cur + 1;
+        RDI(p);
+        t = RDI(p);
+        c->cur = p;
+        o = fn_8010A164(t);
+        if (o == 0) {
+            fn_801DBE1C(lbl_802D4D7C, t);
+        }
+        fn_8015F654(o->x24);
+        return 0;
+    }
+    return 1;
+}
+
+s32 fn_801FF380(u32 flags, CmdB *cmd)
+{
+    if (flags & 1) {
+        float *p;
+        s32 a, b;
+        Obj10A* c;
+    Mid* m;
+        p = cmd->cur + 1;
+        a = RDI(p);
+        b = RDI(p);
+        cmd->cur = p;
+        c = fn_8010A164(b);
+        if (c != 0 && (m = c->x24) != 0 && m->b26c == 1) {
+            m->sub->x1a0 = a;
+        }
+    }
+    return 0;
+}
+
+s32 fn_801FE21C(u16 flags, CmdB_801FE21C *st) {
+    s32 i;
+    if (flags & 1) {
+        float *p = st->cur + 1;
+        i = (*p == 3.4028235e38f) ? (p++, 0x7FFFFFFF) : (s32)fn_801F6120(&p);
+        st->cur = p;
+        lbl_8030CEA0.x1584[i] = (s32)(9999.0f * (3.0517578e-05f * (f32)fn_8025ECC4()));
+    }
+    if (flags & 8) {
+        return 1;
+    }
+    return 0;
+}
+
+s16 fn_80200CE4(u32 flags, CmdB_80200CE4 *st) {
+    s32 n;
+    u16 f = flags;
+    if (flags & 1) {
+        float *p = st->cur + 1;
+        f32 a, b, c;
+        if (*p == 3.4028235e38f) {
+            p++;
+            n = 0x7FFFFFFF;
+        } else {
+            n = (s32)fn_801F6120(&p);
+        }
+        a = fn_801F6120(&p);
+        b = fn_801F6120(&p);
+        c = fn_801F6120(&p);
+        fn_801D995C(n, a, b, c);
+        st->cur = p;
+        lbl_8030CEA0.xc6c = 0;
+        lbl_8030CEA0.xc86 = 0;
+    }
+    if (f & 8) {
+        return 0;
+    }
+    return 0;
 }

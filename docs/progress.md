@@ -1,8 +1,8 @@
 Progress and handoff
 ====================
 
-State of the work as of 2026-10-27 (after the tier 3 batch): 32.9% of code matched (3,996 / 7,116
-functions), 3,120 functions unmatched: about 2,470 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
+State of the work as of 2026-10-27 (after the tier 3 batch): 33.1% of code matched (4,018 / 7,116
+functions), 3,098 functions unmatched: about 2,470 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
 (the size split of the game functions predates the duplicate-copy batch: 2,193 under 632 bytes, 466 at 632-1000,
 355 at 1-2 KB, 101 at 2-5 KB, 16 over 5 KB). Numbers live in the README status block and on
 [ByteMatch](https://bytematch.dev/vetusmagnus/SoAL-Decomp); this page covers what's in flight.
@@ -865,3 +865,28 @@ original reads uninitialised stack bytes), fn_8001DD00 matches only with `val` l
 needs one `goto` for the nested-search exit (a `break` gives 70 instead of 67 instructions); neither is in the tree.
 fn_80006C00 is a copy of fn_80006A70 (unit_80005B50.c). Strings pooled as offsets from an earlier blob
 (fn_8000ABCC, fn_80073024, fn_801D1C04) only line up in the full build.
+
+### Hand-merging the tier 3 type-clash leftovers (2026-10-27)
+
+22 of the 118 functions that clashed with their units are in now (3,996 to 4,018 matched, 920,708 bytes, 33.08%); touched
+units pass fdiff over every function and `floatcheck.py`, `main.dol` force-relinks to the `build.sha1` SHA-1, no agents, no
+call-site casts. What unlocked them: moving the unit's own `Cmd` typedef above its first user (unit_801F5334.c, five script
+handlers); `Obj10A` (the task header returned by `fn_8010A164`) widened with `fn`, `x19` and `x24` so functions read
+`t->x24` into a typed local instead of declaring their own task type; `Work8030CEA0` gets `xc6c`, `xc86` and `x1584[17]` out of
+padding; the unit's `ChrRec`, `ChrState`, `Row16` and `G800624FC` (unit_80055E94.c) gained the fields the agents needed and
+the agents' private copies of those structs were dropped; `fn_800615B4` is `(void *, void *, void *)` in unit_80005B50.c
+(its definition takes `NJS_POINT3 *`/`Angle *`); a clashing agent typedef (`Ent`, `Rec`, `Lim`, `Row`, `NJS_MKEY_F`,
+`MotionState`) was renamed with a per-function suffix when it described a different object than the unit's.
+
+What stays unmerged (about 94), by reason:
+
+- agent type name collides with a different unit type (17): fn_8000BF48, fn_8000C7C0, fn_80068640, fn_80072F10, fn_80136A28, fn_8017E174, fn_801D6998, fn_801DA0AC, fn_801E15FC, fn_801FD44C, fn_80207554, fn_8021026C, fn_802171F0, fn_8021A620, fn_8021A6E8, fn_80221D04, fn_802233EC
+- pointer type of a task, object or global differs per function (needs one struct per object) (41): fn_8000B5F4, fn_80016B20, fn_80017324, fn_80018084, fn_80019E44, fn_8001DD00, fn_80023FEC, fn_80029168, fn_80029364, fn_800695A0, fn_8006BDB4, fn_8006CF54, fn_80071A78, fn_80073C44, fn_80073DD0, fn_80128938, fn_80128B34, fn_8012BC48, fn_80142F88, fn_80154B6C, fn_8016EA60, fn_801C7904, fn_801CC2A0, fn_801D129C, fn_801D89D4, fn_801D8DBC, fn_801DF500, fn_802088D8, fn_8020FF44, fn_8021B2B4, fn_80222010, fn_80222F14, fn_8022300C, fn_8022436C, fn_8022A38C, fn_8022A46C, fn_8022A728, fn_8022AE94, fn_8022C364, fn_8022E068, fn_80230FCC
+- unit struct or global lacks the fields the function uses (24): fn_8000BE28, fn_8000FA30, fn_80015728, fn_800593AC, fn_8006097C, fn_800656A8, fn_8012FE2C, fn_80131734, fn_8014093C, fn_80146EF4, fn_8015432C, fn_8017EAEC, fn_801D1714, fn_801D1B28, fn_801D9728, fn_801D9864, fn_801D9B34, fn_801F3E6C, fn_801F4D14, fn_8021116C, fn_80229D74, fn_8022BC64, fn_8022D9C4, fn_8022DAE8
+- callee prototype differs between unit and function (5): fn_8006AC68, fn_8015D464, fn_801DD22C, fn_801DD5E8, fn_801F4AE4
+- changes the code once in the unit (needs a prototype or type decision) (7): fn_80064AC8, fn_801CBA98, fn_801D0DCC, fn_801D22CC, fn_80218570, fn_8021A1C4, fn_8021B3B4
+
+Not worth chasing as it stands: fn_801FD44C needs `fn_8010A164` to take a `u16` (the unit declares `u32`, and its other
+callers would change), fn_80016B20 changes once `lbl_80309DE4` is a typed array in unit_80005B50.c, and the per-function
+`Task`/`Tk` views (`work` typed differently in every function) need one struct per task object, which is multi-view work.
+

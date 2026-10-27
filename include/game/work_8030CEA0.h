@@ -24,12 +24,16 @@ typedef struct {
     s32 xc5c;
     u32 xc60;
     f32 xc64;
-    u8 padc68[0x1574 - 0xc68];
+    u8 padc68[4];
+    s32 xc6c;
+    u8 padc70[0xc86 - 0xc70];
+    s16 xc86;
+    u8 padc88[0x1574 - 0xc88];
     s32 x1574;
     u8 pad1578[4];
     void* x157c;
     s32 x1580;
-    u8 pad1584[0x15c8 - 0x1584];
+    s32 x1584[17];
     s32 x15c8;
     s32 x15cc;
     u8 pad15d0[8];
