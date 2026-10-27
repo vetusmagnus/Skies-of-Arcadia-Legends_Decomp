@@ -1167,6 +1167,85 @@ extern void njRotateZ(NJS_MATRIX m, Angle a);
  * added to <dolphin/os/OSFastCast.h>; the game code itself is the one-line function. */
 #include <dolphin/os/OSFastCast.h>
 typedef unsigned char u8;
+typedef struct Ent_8009884C {
+    s16 h0;
+    u8 pad2[0xc - 2];
+    s32 w0c;
+    f32 f10;
+    f32 f14;
+    s32 w18;
+    s32 w1c;
+    u8 pad20[4];
+    f32 f24;
+    s32 w28;
+    s32 w2c;
+    u8 pad30[4];
+    f32 f34;
+    s32 w38;
+    s32 w3c;
+    f32 f40;
+    f32 f44;
+    u8 pad48[4];
+    s32 w4c;
+    f32 f50;
+    f32 f54;
+    u8 pad58[0x8c - 0x58];
+    f32 f8c;
+    f32 f90;
+    u8 pad94[0xb4 - 0x94];
+} Ent_8009884C;
+typedef struct Ref_800AE300 {
+    u8 pad0[0x18];
+    u8 flags18;
+    u8 pad19[0x24 - 0x19];
+    void *p24;
+} Ref_800AE300;
+typedef struct Work_800AE300 {
+    Ref_800AE300 *ref;  /* 0x00 */
+    s32 w04;
+    s32 w08;
+    s32 list[0x94 / 4]; /* 0x0c */
+    s32 n;              /* 0xa0 */
+    s32 pada4;
+    s32 wa8;
+    s32 wac;
+} Work_800AE300;
+typedef struct Obj_800AE300 {
+    u8 pad0[8];
+    Ref_800AE300 *ref;
+    u8 pad0c[0x18 - 0xc];
+    u8 flags18;
+    u8 state;
+    u8 pad1a[0x24 - 0x1a];
+    Work_800AE300 *work;
+} Obj_800AE300;
+extern void fn_800AE4E0(s32 a, s32 *out);
+extern s32 fn_800B2DC0(void *c, s32 idx, s32 a, s32 b, f32 f);
+typedef struct Tab_8009CBBC {
+    f32 a3[3];
+    f32 b3[3];
+    f32 c3[3];
+    f32 d3[3];
+    f32 e3[3];
+    f32 f3[3];
+    f32 a[6];
+    f32 b[6];
+    f32 c[6];
+    f32 d[6];
+    f32 e[6];
+    f32 f[6];
+} Tab_8009CBBC;
+typedef struct Pos_8009CBBC {
+    u8 pad0[0x38];
+    f32 x;
+    u8 pad3c[4];
+    f32 z;
+} Pos_8009CBBC;
+extern Tab_8009CBBC lbl_802E0E18;
+extern struct { u8 pad[0x88]; u32 flags; } lbl_80310B3C;
+extern Pos_8009CBBC* lbl_80347450;
+extern u32 fn_80218DC4(void);
+extern void sndSeqSetMidiCtrl(u32 id, u8 ch, s32 ctrl, s32 val);
 
 void fn_800972AC(void)
 {
@@ -3520,4 +3599,174 @@ f32 fn_8009E4B8(u8 b) {
  * extern sdata2 labels the stwu is scheduled first. */
 u8 fn_8009E4D4(f32 x) {
     return __OSf32tou8((1.0f + x) * 255.0f);
+}
+
+void fn_8009884C(Ent_8009884C* e, s32 n, f32* v) {
+    NJS_POINT3 vec;
+    NJS_POINT3 out;
+    f32 y;
+    f32 zero;
+    f32 xy;
+    f32 x;
+    f32 sgn;
+    s32 i;
+    x = v[0];
+    y = v[1];
+    sgn = 1.0f;
+    zero = 0.0f;
+    if (y < zero) {
+        sgn = -1.0f;
+        y = -y;
+    }
+    if (x != zero) {
+        vec.x = 0.0f;
+        vec.y = 0.0f;
+        vec.z = y;
+    }
+    xy = y * x;
+    for (i = 0; i < n; i++, e++) {
+        Angle a2;
+        Angle a1;
+        f32 d;
+        e->h0 = 1;
+        a1 = (s32)(10430.381f * (f32)atan2(e->f90, e->f8c));
+        a2 = (s32)(10430.381f * (f32)atan2(e->f8c / njCos(a1), x));
+        d = x / njCos(a2);
+        njPushMatrixEx();
+        fn_80286EE8();
+        fn_8028B498();
+        njUnitMatrix(0);
+        vec.z = xy / d;
+        njRotateXYZ(0, 0, a2, a1);
+        njCalcPoint(0, &vec, &out);
+        njPopMatrixEx();
+        e->f14 = e->f14 + out.x;
+        e->f24 = e->f24 + out.y;
+        e->f34 = out.z * sgn + e->f34;
+        e->w0c = 1;
+        e->w1c = 1;
+        e->w2c = 1;
+        e->f54 = 100.0f * out.x * sgn + e->f54;
+        e->f50 = out.x * sgn + e->f50;
+        e->w4c = 1;
+        e->f44 = e->f44 - 100.0f * out.y * sgn;
+        e->f40 = e->f40 - out.y * sgn;
+        e->w3c = 1;
+    }
+}
+
+static inline s32 Has(Work_800AE300 *w, s32 v)
+{
+    s32 k = w->n;
+    for (;;) {
+        k--;
+        if (k < 0) {
+            return 0;
+        }
+        if (v == w->list[k]) {
+            return 1;
+        }
+    }
+}
+
+void fn_800AE300(Obj_800AE300 *o)
+{
+    Work_800AE300 *w;
+    w = o->work;
+    if ((o->ref->flags18 & 0x40) || (w->ref->flags18 & 0x40)) {
+        o->flags18 |= 0x40;
+        return;
+    }
+    switch (o->state) {
+    case 0:
+        fn_800B2DC0(w->ref->p24, w->w04, w->wa8, w->wac, 1.0f);
+        w->list[w->n++] = w->w04;
+        o->state++;
+        break;
+    case 1: {
+        s32 i, j, n;
+        s32 buf[6];
+        n = w->n;
+        for (i = 0; i < n; i++) {
+            fn_800AE4E0(w->list[i], buf);
+            for (j = 0; j < 6; j++) {
+                if (!Has(w, buf[j])) {
+                    fn_800B2DC0(w->ref->p24, buf[j], w->wa8, w->wac, 0.25f * (f32)w->w08);
+                    w->list[w->n++] = buf[j];
+                }
+            }
+        }
+        o->state++;
+        break;
+    }
+    case 2:
+        w->w08--;
+        if (w->w08 != 0) {
+            o->state = 1;
+        } else {
+            o->flags18 |= 0x40;
+        }
+        break;
+    }
+}
+
+/* |d| */
+static inline f32 Abs(f32 d) {
+    if (d < 0.0f) {
+        d = -d;
+    }
+    return d;
+}
+
+/* distance on a wrapping axis of length lim */
+static inline f32 Fold(f32 d, f32 lim) {
+    if (d < lim - d) {
+        return d;
+    }
+    return lim - d;
+}
+
+void fn_8009CBBC(void) {
+    Tab_8009CBBC* t = &lbl_802E0E18;
+    u32 id = fn_80218DC4();
+    s32 i;
+    f32* ta;
+    f32* tb;
+    f32* tc;
+    f32* td;
+    f32* te;
+    f32* tf;
+    f32 dx;
+    f32 dz;
+    f32 v;
+    if (id != 0xFFFFFFFF && !(lbl_80310B3C.flags & 0x40000)) {
+        ta = t->a;
+        tb = t->b;
+        tc = t->c;
+        td = t->d;
+        te = t->e;
+        tf = t->f;
+        for (i = 0; i < 6; i++) {
+            dx = Abs(lbl_80347450->x - ta[i]);
+            dz = Abs(lbl_80347450->z - tb[i]);
+            dx = Fold(dx, 16800.0f);
+            dz = Fold(dz, 14400.0f);
+            if (dx > tc[i] || dz > td[i]) {
+                v = 0.0f;
+            } else if (dx < te[i]) {
+                if (dz < tf[i]) {
+                    v = 1.0f;
+                } else {
+                    v = 1.0f - (dz - tf[i]) / tf[i];
+                }
+            } else if (dz < tf[i]) {
+                v = 1.0f - (dx - te[i]) / te[i];
+            } else {
+                f32 p = (dx - te[i]) / te[i];
+                f32 q = (dz - tf[i]) / tf[i];
+                v = 1.0f - ((p > q) ? p : q);
+            }
+            sndSeqSetMidiCtrl(id, i + 10, 7, (s32)(127.0f * v));
+        }
+    }
 }

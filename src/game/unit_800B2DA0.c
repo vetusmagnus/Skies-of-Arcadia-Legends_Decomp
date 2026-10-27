@@ -3101,6 +3101,23 @@ typedef struct {
     u8 pad240[0x260 - 0x240];
     Script_800D5F94_800D62DC* x260;     /* 0x260 */
 } Ent_800D62DC;
+typedef struct { s32 a; u32 ang; } Sub44;
+typedef struct {
+    u8 pad0[0x44];
+    Sub44 s44;
+    u8 pad4C[0xb4 - 0x4c];
+    NJS_POINT3 p_b4;
+    u8 padc0[0xe8 - 0xc0];
+    void* e8;
+    u8 pad_ec[0x18c - 0xec];
+    f32 f18c;
+    u8 pad190[0x210 - 0x190];
+    s32 i210;
+    u8 pad214[0x250 - 0x214];
+    f32 f250;
+    f32 f254;
+    f32 f258;
+} Obj_800D3668;
 
 void fn_800B2DA0(u8* p, u32 v) {
     u8* q = *(u8**)(p + 0x268);
@@ -8633,4 +8650,41 @@ s32 fn_800D62DC(void* unused, Ent_800D62DC* e, Script_800D5F94_800D62DC* s, s16 
         ok = 1;
     }
     return ok;
+}
+
+void fn_800D3668(Obj_800D3668* o) {
+    NJS_POINT3 v1, v2;
+    f32 c;
+    s32 q;
+    f32 p;
+    void *e;
+    f32 x;
+    x = o->f254;
+    p = o->f258;
+    q = (s32)(x / p);
+    if (q != 0) x = x - p * (f32)q;
+    o->f18c = x;
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    fn_801E7B2C(o->e8, &v1, 0, o->f18c);
+    njUnitMatrix(0);
+    njRotateY(0, -(q << 13));
+    njCalcPoint(0, &v1, &o->p_b4);
+    c = o->f254 + o->f250;
+    if (0.0f > o->f250 && 0.0f > c) c += (f32)o->i210;
+    p = o->f258;
+    e = o->e8;
+    q = (s32)(c / p);
+    if (q != 0) c = c - p * (f32)q;
+    fn_801E7B2C(e, &v1, 0, c);
+    njUnitMatrix(0);
+    njRotateY(0, -(q << 13));
+    njCalcPoint(0, &v1, &v2);
+    njPopMatrixEx();
+    v2.x = v2.x - o->p_b4.x;
+    v2.y = 0.0f;
+    v2.z = v2.z - o->p_b4.z;
+    fn_801DD5E8(&o->s44, &v2);
+    o->s44.ang = (u16)(-o->s44.ang);
 }

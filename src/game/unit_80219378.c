@@ -600,6 +600,80 @@ typedef struct { s32 x0, x4, x8, state; } State_80311AD4;
 extern u8 lbl_802D96CC[];
 extern s32 fn_8022AE94(void);
 extern void fn_80228914(void);
+typedef struct Link {
+    u32 flags;      /* 0x00 */
+    u8 pad4[0x2c - 4];
+    struct Link* next; /* 0x2c */
+    struct Link* sib;  /* 0x30 */
+} Link;
+typedef struct {
+    u8 pad0[8];
+    Link link;       /* 0x08 */
+} Node_80222C80;
+typedef struct {
+    s32 w0;
+    void* owner;     /* 0x04 */
+    s32 w8;
+    u8 padc[4];
+    u32 id;          /* 0x10 */
+    u8 pad14[4];
+    void* v18;       /* 0x18 */
+    void* v1c;       /* 0x1c */
+    void* v20;       /* 0x20 */
+} Inst;
+typedef struct {
+    u8 pad0[0x38];
+    u8 v38[0xc];     /* 0x38 */
+    u8 v44[0xc];     /* 0x44 */
+    u8 v50[0xc];     /* 0x50 */
+    u8 pad5c[0xe4 - 0x5c];
+    Node_80222C80* node;      /* 0xe4 */
+    u8 pade8[0x1bc - 0xe8];
+    Inst* inst;      /* 0x1bc */
+} Src_80222C80;
+typedef struct {
+    u32 on;
+    s32 key;
+} Res;
+typedef struct {
+    u8 pad0[4];
+    s32 w4;
+    u8 pad8[0x14 - 8];
+    Res* res;        /* 0x14 */
+    u8 pad18[0x24 - 0x18];
+    u8 id24[0x20];   /* 0x24 */
+    u8 v44[0x18];    /* 0x44 */
+    u8 v5c[0xc];     /* 0x5c */
+} Req;
+extern u32 fn_801C8A0C(void* p);
+extern Inst* fn_801C7D0C(Link* l);
+extern Node_80222C80* fn_801DA4D0(s32 key);
+extern void fn_80222838(void *p);
+extern void fn_802229F8(Inst* i);
+typedef struct List {
+    u32 count;
+    u32 items[1];
+} List;
+typedef struct Cnt {
+    u32 n;
+} Cnt;
+typedef struct Ent_80224040 {
+    u32 id;
+    u32 key;
+    List *list;
+    u8 padc[0xc];
+    Cnt *cnt;
+    u8 pad1c[0x4c];
+} Ent_80224040;
+typedef struct Tab_80224040 {
+    s32 count;
+    Ent_80224040 *ents;
+} Tab_80224040;
+extern s16 fn_80223B88(s32, Tab_80224040 *);
+extern s32 fn_80223A34(s32, u16 *);
+extern void fn_801DBE1C(const char *, ...);
+extern char lbl_802D9608[];
+extern char lbl_802D95D4[];
 
 void fn_80219378(s32 a)
 {
@@ -2909,4 +2983,127 @@ Node_UNIT0000 *fn_80226670(Node_UNIT0000 *a, void *b)
         n->b1b = a->b1b + 1;
     }
     return n;
+}
+
+static inline void LinkFlags(Link* l, u32 clr, u32 set)
+{
+    l->flags &= ~clr;
+    l->flags |= set;
+}
+
+Inst* fn_80222C80(Req* req, Src_80222C80* src)
+{
+    Inst* inst;
+    Node_80222C80* node;
+    u32 id;
+    s32 i;
+    Link* l;
+    if (src != 0) {
+        src->inst = 0;
+    }
+    id = fn_801C8A0C(req->id24);
+    if (id == 0xFFFFFFFF || (id >> 16) == 0) {
+        return 0;
+    }
+    inst = 0;
+    if (src != 0) {
+        if (src->node != 0) {
+            node = src->node;
+            inst = src->inst = fn_801C7D0C(&node->link);
+            if (src->inst != 0) {
+                inst->v18 = src->v38;
+                inst->v1c = src->v50;
+                inst->v20 = src->v44;
+            }
+        }
+    } else if (req->res->on != 0) {
+        node = fn_801DA4D0(req->res->key);
+        if (node != 0) {
+            inst = fn_801C7D0C(&node->link);
+            if (inst != 0) {
+                inst->v18 = req->v44;
+                inst->v1c = req->v5c;
+            }
+        }
+    }
+    if (inst != 0) {
+        if (src != 0) {
+            inst->owner = src;
+        } else {
+            inst->owner = 0;
+        }
+        inst->w8 = req->w4;
+        inst->id = id;
+        fn_80222838(inst);
+        fn_802229F8(inst);
+        l = &node->link;
+        for (i = 0; i != 1 && l != 0; i++) {
+            l = l->next;
+        }
+        while (l != 0) {
+            LinkFlags(l, 0, 8);
+            l = l->sib;
+        }
+    }
+    return inst;
+}
+
+static inline Ent_80224040 *ent_find(Tab_80224040 *t, u32 id) {
+    Ent_80224040 *p;
+    s32 n;
+    if (t->count > id) {
+        p = t->ents;
+        if (id != p[id].id) {
+            for (n = t->count; n > 0; p++, n--) {
+                if (id == p->id) return p;
+            }
+        } else {
+            p += id;
+            return p;
+        }
+    }
+    return 0;
+}
+
+s16 fn_80224040(s32 a, Tab_80224040 *b) {
+    Ent_80224040 *nd;
+    List *l;
+    s16 r;
+    s32 i;
+    s32 j;
+    u16 buf[0x12];
+    Ent_80224040 *e;
+    u32 id;
+    u32 *ip;
+
+    Ent_80224040 *ents;
+    r = fn_80223B88(a, b);
+    ents = b->ents;
+    if (r >= 0) {
+        for (nd = ents, i = 0; i < b->count; nd++, i++) {
+            l = nd->list;
+            if (l->count != 0 && nd->cnt->n != 0) {
+                buf[0] = nd->key;
+                buf[1] = l->count;
+                if ((s16)l->count > 0x10) fn_801DBE1C(lbl_802D9608, buf[0]);
+                j = 0;
+                ip = l->items;
+                do {
+                    id = *ip;
+                    e = ent_find(b, id);
+                    if (e) {
+                        buf[j + 2] = e->key;
+                    } else {
+                        fn_801DBE1C(lbl_802D95D4, buf[0], id & 0x7fffffff);
+                        buf[1] = j;
+                        break;
+                    }
+                    ip++;
+                    j++;
+                } while (j < (s32)l->count);
+                fn_80223A34(a, buf);
+            }
+        }
+    }
+    return r;
 }

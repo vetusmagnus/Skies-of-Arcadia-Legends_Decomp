@@ -638,6 +638,34 @@ typedef struct SpinObj {
     void *model;   /* 0x4c */
 } SpinObj;
 void fn_801DFC5C(void *a, void *b, s16 c, f32 d);
+typedef struct {
+    s16 w, h, hw, hh, x, y, x1, y1, z0, z1;
+} Rect14;
+typedef struct {
+    f32 x, y;      /* 0x00 */
+    f32 pad08;     /* 0x08 */
+    f32 sx, sy;    /* 0x0C */
+    u32 colour;    /* 0x14 */
+    NJS_TEXLIST* texlist; /* 0x18 */
+    Rect14* data;  /* 0x1C */
+} Obj20;
+typedef struct {
+    u16 enable;    /* 0x00 */
+    u8 pad02[6];
+    f32 z;         /* 0x08 */
+    f32 colour;    /* 0x0C */
+    u32 attr;      /* 0x10 */
+    u32 blend;     /* 0x14 */
+    f32 ca, cb;    /* 0x18 */
+    u8 pad20[4];
+    u32 col;       /* 0x24 */
+    u8 pad28[0x34 - 0x28];
+    f32 x, y;      /* 0x34 */
+    f32 w, h;      /* 0x3C */
+    f32 ox, oy;    /* 0x44 */
+} Desc;
+extern void fn_801D6528(u32 colour, NJS_ARGB* out, f32 a, f32 b);
+void fn_80005D98(Obj20* obj, s32 a, s32 b, f32 z);
 
 void fn_801D1AE8(void) {
     VISetNextFrameBuffer(lbl_803476AC);
@@ -2909,4 +2937,44 @@ void fn_801DFDB0(SpinObj *o) {
         o->angle -= (360.0f * (f32)t) / o->rate;
     }
     fn_801DFC5C((u8 *)o + 0x24, o->model, o->k02, o->angle);
+}
+
+void fn_801D7A90(NJS_TEXLIST* tex, Desc* d)
+{
+    DrawState st;
+    Obj20 obj;
+    Rect14 rect;
+    NJS_ARGB argb;
+
+    if (tex != 0 && d->enable != 0) {
+        DrawStateDefault2D(&st);
+        st.attr_or |= d->attr;
+        if (d->blend != 0) {
+            st.blend_src = 8;
+            st.blend_dst = 10;
+        }
+        DrawStatePush(&st);
+        rect.w = d->w;
+        rect.h = d->h;
+        rect.hw = d->w / 2.0f;
+        rect.hh = d->h / 2.0f;
+        rect.x = d->x;
+        rect.y = d->y;
+        rect.x1 = d->x + d->w;
+        rect.y1 = d->y + d->h;
+        rect.z0 = 0;
+        rect.z1 = 0;
+        obj.texlist = tex;
+        obj.colour = (s32)d->colour;
+        obj.sx = 1.0f;
+        obj.sy = 1.0f;
+        obj.x = d->w / 2.0f + d->ox;
+        obj.y = d->h / 2.0f + d->oy;
+        obj.data = &rect;
+        fn_801D6528(d->col, &argb, d->ca, d->cb);
+        njSetConstantMaterial(&argb);
+        fn_80005D98(&obj, 0, 0x23, fn_801DBD9C(d->z));
+        DrawStatePop(0);
+        DrawStateRestore();
+    }
 }

@@ -1,7 +1,7 @@
 Progress and handoff
 ====================
 
-State of the work as of 2026-10-27 (after the tier 3 second half): 34.6% of code matched (4,124 / 7,116
+State of the work as of 2026-10-27 (after the Opus near-miss pass): 35.8% of code matched (4,262 / 7,116
 functions), 3,072 functions unmatched: about 2,470 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
 (the size split of the game functions predates the duplicate-copy batch: 2,193 under 632 bytes, 466 at 632-1000,
 355 at 1-2 KB, 101 at 2-5 KB, 16 over 5 KB). Numbers live in the README status block and on
@@ -1014,3 +1014,45 @@ blocks; the agents' private `ReadInt` copies were dropped for the unit's.
 Notes: fn_8020A338 and fn_8020A734 differ only in string-pool offsets (they match inside the full unit); fn_801C2CF4 and
 fn_801C2E48 need one `goto` for the shared clear block; fn_801DB2C8 matches only with an integer-add cast. Per-function files
 are in `build/agents/t4_*/` (gitignored).
+
+### Opus pass over all near misses under 632 bytes (2026-10-27)
+
+32 Opus 5.5 agents (model set explicitly, two waves of 16, no retry or merge agents), about 10 tries per function, no call-site
+casts, `goto` only for real shared paths. The list was every function the docs log as a near miss, under 632 bytes, not defined in
+`src/`, deduped against duplicate groups and against functions that already matched in isolation: 649 functions (320 smallest in wave 1,
+the 329 of 320-631 bytes in wave 2). **351 files matched in isolation** (a few are siblings the agents solved on the way), every one
+re-checked with fdiff and `floatcheck.py`; **137 are merged into the unit files** (4,124 to 4,262 matched, 995,280 bytes, 35.76%),
+and `main.dol` force-relinks to the `build.sha1` SHA-1. About 300 stayed near misses.
+
+New shared types, instead of casts: `Work8030CEA0` now has `ArcDir` (the archive directory at x820), `EvSlot` (the 0x34-byte event
+slots at x10, index at x18), `PatStep`/`Pat` (pattern table at x848, record at xc48), `x14b8`, `x14cb`, `x1544[9]`, typed `x0`/`x4`
+(`u8*`) and u32 `x838`/`x83c`/`x844`; `SaveData.x348`; `lbl_80307638` is a union with `b[]` and `st` in unit_80193F28.c;
+`__OSu8tof32` moved into `OSFastCast.h`.
+
+`fn_80211058`/`fn_802110E8`: their `void *` script and work parameters do not reflect real types. The script argument is a record
+with the cursor at 0x1c and fields at 0x8/0xc/0x20-0x2c, the work argument is an `Ev` with `h8`/`x0c`/`x10`. The 35 callers each use
+their own per-handler view of the script (about 25 typedefs, `cur` as `f32*` or `u8*`), so a real prototype needs one shared script type
+first; left as is.
+
+What the agents found (new, on top of the earlier lists):
+
+- A register that looks unexplained or an extra `mr` before a call is usually a callee with a different arity or parameter type
+  (`fn_80068348` and `fn_80068994` pass a fourth argument, `fn_801502B8` reads r3, `fn_8007C7F8`/`fn_80022F1C`, `fn_80165EE4`). Check
+  the callee's own asm before touching the caller.
+- `int` versus `s32` (`long`) changes loop unrolling (a pre-loop guard disappears with `int`), result coalescing and copy
+  elimination; try `int` for counters and inline parameters.
+- `if (f)` gives `fcmpu value, 0`, `f != 0.0f` gives the swapped order; `x / 2.0f` versus `x * 0.5f` and `x /= k` versus
+  `x *= 1/k` swap fmuls operands; splitting a float expression into separate statements stops `fmadds` fusion.
+- Wrapping a repeated block in a `static inline` (with the locals declared inside, in order) fixes loop counter/pointer swaps and
+  shared-zero `mr` copies; an inline with an early `return` makes the `bne; b; b` pairs; `if (p != 0) { ... } else { return; }`
+  produces a dead `b`.
+- `.rodata` tables must be `const`; pooled `.bss`/`.data` blocks defined in a file are laid out in first-use order, not definition
+  order (this blocks `fn_8009D190`, `fn_80219834`, `fn_8009CFD8`, `fn_800D3464`, `fn_801D722C`).
+- `fn_801B0B9C`/`fn_801B02F4`: task functions in the shop unit take the task as an argument (`MenuDummy(t)`), which keeps r3 live and
+  moves the base to r4 (26 to 6/20 lines).
+
+**214 matched in isolation, not merged** (type or prototype views that still clash; files in `build/agents/o11_*/`, gitignored):
+fn_80005B9C fn_80007640 fn_800086BC fn_8000ABCC fn_8000F168 fn_8000F718 fn_800110C8 fn_800114AC fn_80011694 fn_80014A54 fn_80014AB8 fn_80015138 fn_80016E1C fn_800177C0 fn_80018398 fn_80018798 fn_80019B70 fn_8001C410 fn_8001D288 fn_8001E5C8 fn_8001E6DC fn_8001E7F8 fn_8001FD7C fn_800205B8 fn_800292F8 fn_8002B200 fn_800581B8 fn_8006228C fn_80064C00 fn_80065498 fn_80065F1C fn_800670E4 fn_80067DFC fn_80068348 fn_80068994 fn_80068BE0 fn_80068D7C fn_80069E4C fn_8006AB6C fn_8006AE20 fn_8006D080 fn_8006F424 fn_80071F84 fn_80074D9C fn_80075C70 fn_80075DAC fn_8007629C fn_800763D0 fn_80076478 fn_80077B88 fn_80077DA0 fn_800783A8 fn_80078A20 fn_8007C7F8 fn_8007C9CC fn_8007FD20 fn_800801A8 fn_8008100C fn_80082340 fn_80082AC0 fn_80084E38 fn_80088F64 fn_8008C7B0 fn_8008F084 fn_80090DBC fn_80095110 fn_800A25E0 fn_800A3680 fn_800A3744 fn_800A3C68 fn_800AD330 fn_800B0900 fn_800B0F54 fn_800B2800 fn_800B5064 fn_800C0368 fn_800C1A50 fn_800C35C4 fn_800C8FCC fn_800CF6A8 fn_800D0E78 fn_800D208C fn_800D2CC4 fn_800D5348 fn_800D6C04 fn_800D701C fn_800E1634 fn_800F0860 fn_800FF7A0 fn_801004C4 fn_80109DCC fn_80109EEC fn_8010B88C fn_8010C404 fn_8010C5BC fn_80112BB4 fn_80118948 fn_801189F0 fn_8011B024 fn_801228A0 fn_80123074 fn_80123CBC fn_80128670 fn_80128E7C fn_80129058 fn_8012F958 fn_80136848 fn_8013F8F8 fn_80142C78 fn_80146BF4 fn_80147600 fn_80147CC8 fn_80148464 fn_801486CC fn_80148BE8 fn_8014912C fn_801491CC fn_8014EE4C fn_80150014 fn_80152284 fn_80153790 fn_80156024 fn_801568F8 fn_80156CC4 fn_80158590 fn_801589BC fn_8016058C fn_80165DE8 fn_8016B1E4 fn_801719D0 fn_8017567C fn_80176B3C fn_80177EFC fn_8017A6A4 fn_8017D7C0 fn_8017DCB4 fn_8017F644 fn_80181D94 fn_80184A78 fn_801852F8 fn_80185864 fn_8018DD24 fn_8018E588 fn_8018E73C fn_80195540 fn_80195EA4 fn_801974B4 fn_801A1B98 fn_801AD00C fn_801B0B9C fn_801B5644 fn_801B571C fn_801B60E8 fn_801B6950 fn_801C0C14 fn_801C6180 fn_801C64DC fn_801C8CC0 fn_801CBC90 fn_801CBD48 fn_801D0AB4 fn_801D0BC0 fn_801D0D70 fn_801D184C fn_801D66D4 fn_801D9A0C fn_801DA51C fn_801DB1A4 fn_801DBE88 fn_801E1DF8 fn_801F0020 fn_801F28CC fn_801F2E44 fn_801F72F8 fn_801F9708 fn_801F9EA8 fn_801FE06C fn_802001F8 fn_8020623C fn_80207A40 fn_8020BDB0 fn_8020ED58 fn_8020F154 fn_8020F7F8 fn_80210F74 fn_802110E8 fn_80213178 fn_80213478 fn_802173F4 fn_80219B24 fn_8021A7B0 fn_8021AA48 fn_8021ADA0 fn_8021E75C fn_80222964 fn_802229F8 fn_80223228 fn_802241B0 fn_8022445C fn_80224674 fn_80224884 fn_80225958 fn_80225B74 fn_80226170 fn_802268E8 fn_80226DC4 fn_802275A4 fn_80228014 fn_802280D4 fn_802289AC fn_802295D0 fn_8022AE04 fn_80230634 fn_8023080C.
+
+Still near misses: the remaining names in the per-wave reports (register colouring, scheduling, string and `.bss` pool offsets);
+pool-layout blockers are listed above.

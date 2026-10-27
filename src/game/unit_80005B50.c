@@ -1083,6 +1083,30 @@ typedef struct {
     u8 pad242[2];
 } Sys_80309EC8_80012078;
 typedef struct V5BF30 { f32 x, y, z; } V5BF30;
+typedef struct ModelCache {
+    u8 pad0[4];
+    s16 x4;
+    u8 pad6[2];
+    void* x8;
+    char name[0x28];
+    struct ModelCache* x34;
+    struct ModelCache* x38;
+    u8 pad3c[8];
+} ModelCache;
+typedef struct ModelSrc {
+    s32 id;
+    void* data;
+    s32 size;
+} ModelSrc;
+typedef struct { u16 x0; u8 pad2[0x2a]; } Sys_80309E5C_8000C8AC;
+extern char lbl_802ACCE8[];
+extern ModelCache* lbl_803473A0;
+extern int sprintf(char* s, const char* fmt, ...);
+extern void* memset(void* dst, int c, u32 n);
+extern int fn_8025EF88(const char* a, const char* b);
+extern char* fn_8025F120(char* d, const char* s);
+extern void* fn_801DB124(void* data);
+extern void fn_8006CF54(ModelCache* c);
 
 void* fn_80005B50(void* heap, u32 size) {
     void* p = fn_80005B9C(heap);
@@ -3941,5 +3965,45 @@ void fn_80012078(V5BF30* v) {
     }
     if (v->z) {
         lbl_80309EC8.va[2] = v->z;
+    }
+}
+
+void fn_8000C8AC(ModelSrc* src) {
+    char name[0x20];
+    ModelCache* c;
+    ModelCache* n;
+
+    sprintf(name, lbl_802ACCE8, lbl_80309E5C.x0, (s16)src->id);
+    c = lbl_803473A0;
+    if (c->x8 == 0) {
+        {
+            void* buf = fn_801E1C7C(src->size);
+            memcpy(buf, src->data, src->size);
+            c->x8 = fn_801DB124(buf);
+            fn_8006CF54(c);
+            fn_8025F120(c->name, name);
+            c->x4 = 0;
+        }
+        return;
+    }
+    for (;;) {
+        if (c->x8 != 0) {
+            if (fn_8025EF88(name, c->name) == 0) return;
+        }
+        if (c->x38 == 0) break;
+        c = c->x38;
+    }
+    n = fn_801E1C7C(0x44);
+    c->x38 = n;
+    n = c->x38;
+    memset(n, 0, 0x44);
+    n->x34 = c;
+    {
+        void* buf = fn_801E1C7C(src->size);
+        memcpy(buf, src->data, src->size);
+        n->x8 = fn_801DB124(buf);
+        fn_8006CF54(n);
+        fn_8025F120(n->name, name);
+        n->x4 = 0;
     }
 }

@@ -592,6 +592,35 @@ typedef struct { TaskArg* arg; void* owner; } Work_8008F1F8;
 int fn_8003DCF4(void* objp, void* cp);
 Node* fn_8003DB34(void* fn);
 extern void fn_8008EC84(void);
+typedef struct Cam_80091040 {
+    f32 pos[3];
+    f32 min;
+    f32 max;
+    f32 last[3];
+} Cam_80091040;
+typedef struct {
+    f32 x, y, z, u, v;
+    u32 colour;
+} VertexTex;
+typedef struct {
+    f32 x, y, z;
+} Vec3;
+typedef struct {
+    NJS_TEXLIST* texlist; /* 0x00 */
+    u8 pad4[0x50];
+    Vec3* pos;            /* 0x54 */
+    u32* col;             /* 0x58 */
+    s16* uv;              /* 0x5C */
+    u8 pad60[4];
+    Vec3 trans;           /* 0x64 */
+    u8 pad70[4];
+    Angle rotx;           /* 0x74 */
+    Angle rotz;           /* 0x78 */
+    Vec3 scale;           /* 0x7C */
+} Quad3D;
+extern void fn_80298FE4(s32 i);
+extern void fn_8022BC24(s32 a, s32 b, s32 c, s32 d);
+extern void fn_8028A8C0(VertexTex* v, s32 count, s32 flag);
 
 u32 fn_8008B55C(void* a0, Ent_UNIT0000* e) {
     return (e->x1c >> 9) & 1;
@@ -2256,4 +2285,76 @@ s32 fn_80090378(s32 x, s32 n) {
     x /= Pow10(n - 1);
     x %= 10;
     return x;
+}
+
+/* Camera follow: moves c->pos toward tgt, by a tenth per call, or (min > 0) to within min of it,
+   faster the further past min it is (full speed at max). */
+void fn_80091040(f32* tgt, Cam_80091040* c) {
+    f32 min = c->min;
+    f32 max = c->max;
+    if (0.0f >= min) {
+        c->pos[0] = c->pos[0] + (tgt[0] - c->pos[0]) / 10.0f;
+        c->pos[1] = c->pos[1] + (tgt[1] - c->pos[1]) / 10.0f;
+        c->pos[2] = c->pos[2] + (tgt[2] - c->pos[2]) / 10.0f;
+    } else {
+        f32 dx = tgt[0] - c->pos[0];
+        f32 dy = tgt[1] - c->pos[1];
+        f32 dz = tgt[2] - c->pos[2];
+        f32 d2 = dx * dx + dy * dy + dz * dz;
+        if (min * min < d2) {
+            f32 dist = fn_80291A5C(d2);
+            f32 px, py, pz, a, b;
+            if (0.001f < dist) {
+                px = dx * ((dist - min) / dist) + c->pos[0];
+                py = dy * ((dist - min) / dist) + c->pos[1];
+                pz = dz * ((dist - min) / dist) + c->pos[2];
+            } else {
+                px = tgt[0];
+                py = tgt[1];
+                pz = tgt[2];
+            }
+            if ((a = max - min) < (b = dist - min) || 0.001f >= b) {
+                a = 1.0f;
+            } else {
+                a = a / b;
+            }
+            c->pos[0] = c->pos[0] + (px - c->pos[0]) / a;
+            c->pos[1] = c->pos[1] + (py - c->pos[1]) / a;
+            c->pos[2] = c->pos[2] + (pz - c->pos[2]) / a;
+        }
+    }
+    c->last[0] = tgt[0];
+    c->last[1] = tgt[1];
+    c->last[2] = tgt[2];
+}
+
+void fn_8009076C(s32 flag, Quad3D* q)
+{
+    VertexTex v[4];
+    s32 order[4] = { 0, 3, 1, 2 };
+    VertexTex* p;
+    s32 k;
+    for (k = 0, p = v; k < 4; k++, p++) {
+        s32 i = order[k];
+        p->x = q->pos[i].x;
+        p->y = q->pos[i].y;
+        p->z = q->pos[i].z;
+        p->u = 0.003921569f * q->uv[i * 2];
+        p->v = 0.003921569f * q->uv[i * 2 + 1];
+        p->colour = q->col[i];
+    }
+    fn_80299040(q->texlist);
+    fn_80298FE4(0);
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    njTranslate(0, q->trans.x, q->trans.y, q->trans.z);
+    if (flag == 0) {
+        fn_8022BC24(0, 0, 0, 0);
+    } else {
+        njRotateXYZ(0, q->rotx, q->rotx, q->rotz);
+    }
+    njScale(0, q->scale.x, q->scale.y, q->scale.z);
+    fn_8028A8C0(v, 4, 1);
+    njPopMatrixEx();
 }

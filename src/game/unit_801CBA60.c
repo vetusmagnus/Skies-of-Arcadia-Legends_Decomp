@@ -36,6 +36,9 @@ extern u32 lbl_80310B3C[0x356];
 extern u8 lbl_80310A1C[0x120];
 s32 fn_801CB460(s32 c);
 typedef union Vec3 { f32 f[3]; s32 i[3]; } Vec3;
+extern char* fn_8025ED74(const char*, const char*);
+extern char* strncpy(char*, const char*, u32);
+extern void fn_801E0D0C(char*);
 
 s32 fn_801CAE84(void) {
     return 1;
@@ -593,4 +596,44 @@ s32 fn_801CB244(Vec3* out, u16* p, s32 max) {
         cur += size * 2;
     } while (c != 0xff && n < max);
     return n;
+}
+
+void fn_801CC434(char* path, char* dir, char* name) {
+    s32 i;
+    s32 ok = 1;
+    char* p;
+    s32 n;
+    if (path == 0 || *path == 0) return;
+    do {
+        p = fn_8025ED74(path, "\\");
+        if (p == 0) {
+            ok = 0;
+        } else {
+            *p = '/';
+        }
+    } while (ok != 0);
+    if (name != 0) {
+        for (i = strlen(path) - 1; i >= 0; i--) {
+            if (path[i] == '/') break;
+        }
+        if (i < 0) {
+            fn_8025F120(name, path);
+        } else {
+            fn_8025F120(name, &path[i + 1]);
+            fn_801E0D0C(name);
+        }
+    }
+    if (dir != 0) {
+        *dir = 0;
+        if (i >= 0) {
+            strncpy(dir, path, i + 1);
+            dir[i + 1] = 0;
+        }
+        fn_801E0D0C(dir);
+        n = strlen(dir);
+        if (n > 1) {
+            p = &dir[n - 1];
+            if (*p == '/') *p = 0;
+        }
+    }
 }

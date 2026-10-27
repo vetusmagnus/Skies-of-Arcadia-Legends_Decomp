@@ -161,6 +161,42 @@ typedef struct Chr_80051FA0 { u8 id; } Chr_80051FA0;
 typedef struct Wk_80051FA0 { u8 pad0[0x4c]; Chr_80051FA0 *chr; } Wk_80051FA0;
 typedef struct Task_80051FA0 { u8 pad0[0x24]; Wk_80051FA0 *work; } Task_80051FA0;
 extern void fn_800171F0(u8 id, u8 part, f32 *a, f32 *b);
+typedef struct A50B88 {
+    u8 pad0[0x10];
+    s16 s10;
+    s16 s12;
+    s16 s14;
+    s16 s16;
+    f32 f18;
+} A50B88;
+typedef struct S50B88 {
+    u16 cnt;
+    u8 pad2[6];
+    f32 f8;
+    A50B88 *a;
+} S50B88;
+typedef struct O50B88 {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 state;
+    u8 pad1A[10];
+    S50B88 *s;
+} O50B88;
+typedef struct G50B88 {
+    u8 pad0[8];
+    u32 flags8;
+    u8 pad_c[0xc];
+    s32 i18;
+    f32 f1c;
+    u8 pad20[0xc];
+} G50B88;
+typedef struct H50B88 {
+    u8 pad[0x1c4];
+    s32 count;
+} H50B88;
+extern G50B88 lbl_80309E5C;
+extern H50B88 lbl_8030A10C;
+extern void fn_80037FD8(A50B88 *, u8 *);
 
 void fn_80052058(O52058 *o) {
     fn_8001E05C(o->child);
@@ -426,4 +462,49 @@ f32 fn_80051FA0(Task_80051FA0 *t, s8 *list, f32 *outA, f32 *outB) {
         }
     }
     return best;
+}
+
+void fn_80050B88(O50B88 *o) {
+    S50B88 *s = o->s;
+    switch (o->state) {
+    case 0:
+        {
+            A50B88 *a = s->a;
+            G50B88 *g;
+            if (s->cnt < a->s10) {
+                break;
+            }
+            g = &lbl_80309E5C;
+            s->f8 = (1.0f - a->f18) / a->s12;
+            g->flags8 |= 0x8000000;
+            g->i18 = 255;
+            g->f1c = 0.0f;
+        }
+        o->state = 1;
+    case 1:
+        if (s->cnt >= s->a->s10 && s->a->s12 != 0 && s->cnt < s->a->s10 + s->a->s12) {
+            lbl_80309E5C.f1c = lbl_80309E5C.f1c + s->f8;
+        }
+        if (s->cnt >= s->a->s14 && s->a->s16 != 0) {
+            if (s->cnt == s->a->s14) {
+                s->f8 = lbl_80309E5C.f1c / s->a->s16;
+            }
+            if (s->cnt < s->a->s14 + s->a->s16) {
+                lbl_80309E5C.f1c = lbl_80309E5C.f1c - s->f8;
+            }
+        }
+        if (s->cnt >= s->a->s10 + s->a->s12 && s->cnt >= s->a->s14 + s->a->s16) {
+            o->state = 0xfa;
+        }
+        break;
+    case 0xf9:
+    case 0xfa:
+        lbl_80309E5C.f1c = 0.0f;
+        lbl_80309E5C.flags8 &= ~0x8000000;
+        o->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    s->cnt = s->cnt + 1;
+    fn_80037FD8(s->a, &o->state);
 }

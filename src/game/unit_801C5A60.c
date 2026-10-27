@@ -145,6 +145,16 @@ typedef struct Obj_801C5D88 {
 } Obj_801C5D88;
 extern u32 lbl_802EE798[];
 extern f32 njScalor(NJS_VECTOR *v);
+typedef struct Wk {
+    u8 pad0[0x20];
+    s32 w[0x24];
+} Wk;
+typedef struct Tk {
+    u8 pad0[0x24];
+    Wk* work;
+} Tk;
+extern s32 lbl_802C3EA8[];
+extern s32 fn_801E4BF4(s8 i);
 
 void fn_801C5A60(NJS_MATRIX m, NJS_POINT3 *p, NJS_POINT3 *out)
 {
@@ -799,5 +809,24 @@ u8* fn_801C87C8(u8 code, u8* base) {
         return base + 0x1c;
     case 0x31: case 0x32:
         return base + 0x14;
+    }
+}
+
+void fn_801CA66C(Tk* t) {
+    int i;
+    s32 j;
+
+    for (i = 0; i < 0x21; i++) {
+        t->work->w[i] = i;
+    }
+    for (; i < 0x24; i++) {
+        t->work->w[i] = 0;
+    }
+    for (j = 0, i = 8; j < 0x16; i++, j++) {
+        if (fn_801E4BF4(j) != 0) {
+            t->work->w[i] = lbl_802C3EA8[j];
+        } else {
+            t->work->w[i] = 0;
+        }
     }
 }

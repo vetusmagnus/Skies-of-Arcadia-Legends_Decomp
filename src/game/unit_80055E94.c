@@ -1123,6 +1123,53 @@ typedef struct Ctr_8006D02C {
     s16 x4;
 } Ctr_8006D02C;
 extern void fn_8006D080(void *p, s32 free);
+typedef struct U5B094 {
+    u8 id;
+} U5B094;
+typedef struct X5B094 {
+    void *x0;
+    u8 pad4[0x44 - 4];
+    u8 f44;
+    u8 pad45[0x4c - 0x45];
+    U5B094 *u;
+} X5B094;
+typedef struct K5B094 {
+    u8 pad0[0x24];
+    X5B094 *work;
+} K5B094;
+typedef struct D5B094 {
+    u8 pad0[0x14];
+    s16 s14;
+    u8 pad16[2];
+    s16 s18;
+    u8 pad1a[2];
+    u8 u1c;
+} D5B094;
+typedef struct S5B094 {
+    u8 pad0[0x4c];
+    s16 cnt;
+    u8 v;
+    u8 pad4f;
+    K5B094 *p50;
+    D5B094 *p54;
+} S5B094;
+typedef struct O5B094 {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 state;
+    u8 pad1A[10];
+    S5B094 *s;
+} O5B094;
+typedef struct H5B094 {
+    u8 pad[0x1c4];
+    s32 count;
+} H5B094;
+typedef struct V60B98 { f32 x, y, z; } V60B98;
+typedef struct P60B98 { f32 x, z; } P60B98;
+typedef struct Seg60B98 {
+    P60B98 a, b;
+    f32 m, c;
+} Seg60B98;
 
 void fn_80055E94(u8 *p) {
     p[0x18] |= 0x40;
@@ -4378,4 +4425,114 @@ s32 fn_8006D02C(Ctr_8006D02C *p, s32 free)
         return 0;
     }
     return n;
+}
+
+void fn_8005B094(O5B094 *o) {
+    S5B094 *s = o->s;
+    U5B094 *u = s->p50->work->u;
+    switch (o->state) {
+    case 0:
+        if (s->cnt >= s->p54->s14) {
+            if (s->p54->s18 != 0) {
+                s32 q = s->p54->u1c / s->p54->s18;
+                if ((u16)(s->v + (u16)q) >= s->p54->u1c) {
+                    s->v = s->p54->u1c;
+                    o->state = 1;
+                } else {
+                    s->v = s->v + (u8)q;
+                }
+                if (s->v >= s->p54->u1c) {
+                    o->state = 1;
+                }
+            } else {
+                o->state = 1;
+                s->v = s->p54->u1c;
+            }
+        }
+        if (s->v > 0xfe) {
+            s->v = 0xfe;
+        }
+        fn_80032AD8(s->p50->work->x0, s->v | 0xffffff00, -1, 0);
+        s->p50->work->f44 = 4;
+        break;
+    case 1:
+        if (fn_80014C90(u->id, 0x10) == 0) {
+            fn_80032AD8(s->p50->work->x0, -0x100, -1, 0);
+            s->p50->work->f44 = 0;
+            o->state = 3;
+        }
+        break;
+    case 2:
+        if (s->v > 10) {
+            s->v = s->v - 10;
+        } else {
+            s->v = 0;
+        }
+        if (s->v == 0) {
+            s->v = 0;
+            s->p50->work->f44 = 0;
+            o->state = 3;
+        }
+        fn_80032AD8(s->p50->work->x0, s->v | 0xffffff00, -1, 0);
+        break;
+    case 3:
+        o->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    s->cnt = s->cnt + 1;
+}
+
+static inline void mkseg_60B98(Seg60B98 *s, V60B98 *p, V60B98 *q) {
+    s->a.x = p->x;
+    s->a.z = p->z;
+    s->b.x = q->x;
+    s->b.z = q->z;
+    if (s->a.x > s->b.x) {
+        P60B98 t = s->a;
+        s->a = s->b;
+        s->b = t;
+    }
+    s->m = (s->a.z - s->b.z) / (s->a.x - s->b.x);
+    s->c = s->a.z - s->m * s->a.x;
+}
+
+static inline f32 segy_60B98(Seg60B98 *s, s32 i, f32 x) {
+    return x * s[i].m + s[i].c;
+}
+
+s32 fn_80060B98(V60B98 *p0, V60B98 *p1, V60B98 *p2, V60B98 *pt) {
+    Seg60B98 seg[3];
+    s8 a = -1;
+    s8 b = -1;
+    s8 i;
+    mkseg_60B98(&seg[0], p0, p1);
+    mkseg_60B98(&seg[1], p1, p2);
+    mkseg_60B98(&seg[2], p2, p0);
+    for (i = 0; i < 3; i++) {
+        if (pt->x >= seg[i].a.x && pt->x < seg[i].b.x) {
+            if (a < 0) {
+                a = i;
+            } else {
+                b = i;
+                break;
+            }
+        }
+    }
+    if (b < 0) {
+        return 0;
+    } else {
+        f32 y1 = segy_60B98(seg, a, pt->x);
+        f32 y2 = segy_60B98(seg, b, pt->x);
+        if (y1 < y2) {
+            if (pt->z >= y1 && pt->z < y2) {
+                return 1;
+            }
+        } else {
+            if (pt->z < y1 && pt->z >= y2) {
+                return 1;
+            }
+        }
+        return 0;
+    }
 }

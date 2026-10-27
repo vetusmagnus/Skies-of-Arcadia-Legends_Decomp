@@ -408,6 +408,14 @@ typedef struct {
 extern char *lbl_802F7050[];
 void fn_8012F458(s8 flag);
 void fn_8012F468(char *str);
+typedef struct E24 { u8 pad0[0x17]; s8 x17; u8 pad18[0x24 - 0x18]; } E24;
+extern E24 lbl_802D8E64[];
+extern s32 fn_80136C14(s8 *src, s32 i, s32 a);
+extern void fn_8012E4FC(E24 **p);
+extern void fn_8012E498(s8 *p);
+extern void fn_8012E434(s8 *p);
+extern void fn_8012E424(s8 v);
+extern void fn_8012E570(s8 v);
 
 void fn_8012F6C4(s8 idx, u32 val) {
     u8* p = *(u8**)((u8*)lbl_80346F38 + 0x24);
@@ -1650,4 +1658,74 @@ void fn_80134668(s8 n) {
         fn_801D68C4(lbl_80346EFC, 0x15);
         break;
     }
+}
+
+static inline void Clear(E24 **p, s8 *a, s8 *b, s8 *c) {
+    s32 i;
+    if (p != NULL && a != NULL && b != NULL && c != NULL) {
+        for (i = 0; i < 6; i++) {
+            p[i] = NULL;
+            a[i] = -1;
+            b[i] = -1;
+            c[i] = 0;
+        }
+    }
+}
+
+static inline s32 InRange(s32 v, s32 n) {
+    s32 r = 0;
+    if (v >= 0 && v < n) {
+        r = 1;
+    }
+    return r;
+}
+
+static inline s32 Bits(s8 *c) {
+    s32 r = 0;
+    s32 i;
+    if (c != NULL) {
+        for (i = 5; i >= 0; i--) {
+            r <<= 1;
+            r |= c[i];
+        }
+    }
+    return r;
+}
+
+static inline void Set(E24 *tbl, E24 **p, s8 *a, s8 *b, s8 *c, s8 *src, s32 i, s32 a0) {
+    s32 id = 0x16;
+    if (InRange(i, 6)) {
+        id = src[i];
+    }
+    if (InRange(id, 0x16)) {
+        E24 *e = &tbl[id];
+        s32 v = 100;
+        p[i] = e;
+        if (e != NULL) {
+            v = e->x17;
+        }
+        a[i] = v;
+        b[i] = 12;
+        c[i] = fn_80136C14(src, i, a0) != 0;
+    }
+}
+
+void fn_801375A0(s32 a0, s32 a1, s8 *src) {
+    E24 *tbl = lbl_802D8E64;
+    E24 *ptrs[6];
+    s8 a[6];
+    s8 b[6];
+    s8 c[6];
+    s32 bits;
+    s32 i;
+    Clear(ptrs, a, b, c);
+    for (i = 0; i < 6; i++) {
+        Set(tbl, ptrs, a, b, c, src, i, a0);
+    }
+    bits = Bits(c);
+    fn_8012E4FC(ptrs);
+    fn_8012E498(a);
+    fn_8012E434(b);
+    fn_8012E424(bits);
+    fn_8012E570(a1);
 }

@@ -720,6 +720,31 @@ extern void fn_8012E590(s8 v);
 extern void fn_8012E414(s8 v);
 extern void fn_8012E404(s8 v);
 extern void fn_8013E0BC(s8 a, s8 b, void *p);
+typedef struct {
+    u8 pad0[0x11];
+    s8 x11;
+    u8 pad12[0x58 - 0x12];
+    u32 x58;
+    u8 pad5c[0xfc - 0x5c];
+    s8 xfc;
+} Sys_80141390;
+typedef struct {
+    u32 x0;
+    u8 pad4[4];
+    u32 x8;
+} Pad_80141390;
+typedef struct {
+    u8 pad0[3];
+    s8 b3;
+    u8 pad4[7];
+    u8 bb;
+} Obj_80141390;
+extern Pad_80141390 *lbl_80311A60[6];
+extern s32 fn_8012C5DC(void);
+extern s8 fn_80141314(s32 v);
+extern void fn_8012C5FC(s8 v);
+extern void fn_8012C614(s32 v);
+extern void fn_8012C390(s32 v);
 
 void fn_8013D400(s32 a, s32 b) {
     fn_80136A28(a, b, 3, -1, -1, -1);
@@ -2440,4 +2465,117 @@ void fn_8013ECF4(s8 a, s8 b, s32 c, void *p) {
     fn_8012E404(!(c < 0));
     fn_8013E0BC(a, b, p);
     fn_8012E5C0(0);
+}
+
+static inline s32 Mode_80141390(void) {
+    s32 k;
+    Sys_80141390 *b = (Sys_80141390 *)(fn_80135598() + 0x238);
+    s32 ok;
+    k = 4;
+    ok = 0;
+    if (b != 0 && b->xfc >= 0) {
+        ok = 1;
+    }
+    if (ok != 0) {
+        k = b->xfc;
+    }
+    return k;
+}
+
+static inline s32 Pick_80141390(void) {
+    Sys_80141390 *a;
+    s32 bit;
+    s32 count;
+    s32 sel;
+    s32 k;
+    s32 ok;
+    Sys_80141390 *b;
+    s32 i;
+    s32 flag2;
+    s32 flag;
+    s32 ok2;
+
+    flag = 0;
+    a = (Sys_80141390 *)(fn_80135598() + 0x238);
+    if (a != 0 && a->x11 >= 2) {
+        count = 0;
+        i = count;
+        do {
+            bit = 0;
+            a = (Sys_80141390 *)(fn_80135598() + 0x238);
+            if (a != 0) {
+                ok = 0;
+                if (i >= 0 && i < 0x16) {
+                    ok = 1;
+                }
+                if (ok != 0) {
+                    bit = (a->x58 & (1 << i)) != 0;
+                }
+            }
+            if (bit != 0) {
+                count++;
+            }
+            i++;
+        } while (i < 0x16);
+        if (count > 0) {
+            flag = 1;
+        }
+    }
+    if (flag != 0) {
+        sel = 7;
+    } else {
+        flag2 = 0;
+        b = (Sys_80141390 *)(fn_80135598() + 0x238);
+        ok2 = 0;
+        if (b != 0 && b->xfc >= 0) {
+            ok2 = 1;
+        }
+        if (ok2 != 0) {
+            if (Mode_80141390() == 3) {
+                flag2 = 1;
+            }
+        }
+        if (flag2 != 0) {
+            sel = 6;
+        } else {
+            sel = 5;
+        }
+    }
+    return sel;
+}
+
+s32 fn_80141390(Obj_80141390 *o) {
+    s32 res;
+    s32 sel;
+    s32 v;
+    s32 bb;
+    u32 f;
+
+    res = 9;
+    if (fn_8012C5DC() == 0) {
+        v = o->b3;
+        o->b3 = fn_80141314(v);
+        if (o->b3 != v) {
+            fn_8012C5FC(v - o->b3);
+            fn_8012C614(3);
+            o->bb = 1;
+            SePlay(0xf, 1, 0xf);
+        } else {
+            sel = Pick_80141390();
+            bb = o->bb;
+            if (bb == 1) {
+                if (o->b3 == 0 || sel == o->b3 || (lbl_80311A60[0]->x0 & 0xf) == 0) {
+                    fn_8012C390(1);
+                    o->bb = 0;
+                }
+            }
+            f = lbl_80311A60[0]->x8;
+            if (f & 0x200) {
+                res = 8;
+            } else if (f & 0x100) {
+                res = o->b3;
+            }
+        }
+    }
+    return res;
 }

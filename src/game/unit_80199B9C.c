@@ -2068,6 +2068,26 @@ typedef struct {
 extern void fn_8009076C(s32 a, Data* d);
 extern s32 strlen(const char* s);
 extern char* const lbl_802B9428[];
+typedef struct Flg_801A1958 { u8 pad[8]; u32 flags; } Flg_801A1958;
+typedef struct Sub_801A1958 { u8 pad[0x28]; UiObj *obj; } Sub_801A1958;
+typedef struct Item_801A1958 { u8 pad[0x18]; s32 kind; u8 rest[0x2c - 0x1c]; } Item_801A1958;
+typedef struct Ctx_801A1958 {
+    u8 pad00[1];
+    u8 x1;
+    u8 pad02[3];
+    u8 x5;
+    u8 x6;
+    u8 x7;
+    Item_801A1958 items[12]; /* 0x08, kind at 0x20 from the record's start - 8 */
+    u8 pad[0x228 - 8 - 12 * 0x2c];
+    Sub_801A1958 *objs[7];   /* 0x228 */
+} Ctx_801A1958;
+typedef struct Self_801A1958 {
+    u8 pad00[0x19];
+    u8 state;
+    u8 pad1a[0x24 - 0x1a];
+    Ctx_801A1958 *ctx;
+} Self_801A1958;
 
 void fn_80199B9C(void* p, f32 v) {
     *(f32*)((u8*)p + 0x34) = v;
@@ -7131,4 +7151,61 @@ void fn_801A2424(s32 n, s32 idx, char* buf, s32 len) {
         }
         *p = 0;
     }
+}
+
+static inline void ScrollUp(Self_801A1958 *o, s32 st) {
+    s32 i;
+    o->ctx->x6--;
+    for (i = 0; i < 7; i++) {
+        UiObjMoveToY(o->ctx->objs[i]->obj, 6, -1, 110.0f + o->ctx->objs[i]->obj->y);
+        UiObjSetCommand(o->ctx->objs[i]->obj, 0xf, 0);
+    }
+    MenuPlaySe(4);
+    o->state = st;
+}
+
+static inline void ScrollDown(Self_801A1958 *o, s32 st) {
+    s32 i;
+    o->ctx->x6++;
+    for (i = 0; i < 7; i++) {
+        UiObjMoveToY(o->ctx->objs[i]->obj, 6, -1, o->ctx->objs[i]->obj->y - 110.0f);
+        UiObjSetCommand(o->ctx->objs[i]->obj, 0xf, 0);
+    }
+    MenuPlaySe(4);
+    o->state = st;
+}
+
+void fn_801A1958(Self_801A1958 *o, s32 st) {
+    s32 v;
+    if (fn_801C09F8(0, 4) != 0) {
+        if (o->ctx->x5 == 0) {
+            if (o->ctx->x6 != 0) {
+                ScrollUp(o, st);
+            }
+        } else {
+            MenuPlaySe(4);
+            o->ctx->x5--;
+        }
+    } else if (fn_801C09F8(0, 5) != 0) {
+        if (o->ctx->x5 == 2) {
+            if (o->ctx->x6 != 4) {
+                ScrollDown(o, st);
+            }
+        } else {
+            MenuPlaySe(4);
+            o->ctx->x5++;
+        }
+    }
+    o->ctx->x7 = o->ctx->x5 + o->ctx->x6;
+    if (o->ctx->x1 == 1) {
+        switch (o->ctx->items[o->ctx->x7].kind) {
+        case 2:
+        case 4: v = 0xd; break;
+        case 3:
+        default: v = 0xc; break;
+        }
+    } else {
+        v = 5;
+    }
+    fn_801A64B4(o, v);
 }

@@ -2206,6 +2206,30 @@ extern void fn_8022DBC8(void);
 extern s32 lbl_80347508;
 extern s32 lbl_80346E04;
 extern s32 lbl_803473B4;
+typedef struct {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 pad19[0x24 - 0x19];
+    void* ctx;
+} Src_800DA564;
+typedef struct {
+    Src_800DA564* src;
+    s32 s4;
+    s32 s8;
+    s32 list[(0xA0 - 0xC) / 4];
+    s32 count;
+} Work_800DA564;
+typedef struct {
+    u8 pad0[8];
+    Src_800DA564* par;
+    u8 pad0c[0x18 - 0xC];
+    u8 flags;
+    u8 state;
+    u8 pad1a[0x24 - 0x1A];
+    Work_800DA564* work;
+} Obj_800DA564;
+extern s32 fn_800B2DC0(void* c, s32 idx, s32 a, s16 b, f32 f);
+extern void fn_800DA744(s32 id, s32* out);
 
 void fn_800D81E8(void) {
     fn_80226D14();
@@ -7461,5 +7485,61 @@ void fn_8010C384(Row *p, s32 a, s16 b)
             n--;
         }
         p = p->next;
+    }
+}
+
+static inline s32 Has_800DA564(Work_800DA564* w, s32 v) {
+    s32 n = w->count;
+    for (;;) {
+        n--;
+        if (n < 0) {
+            return 0;
+        }
+        if (v == w->list[n]) {
+            return 1;
+        }
+    }
+}
+
+void fn_800DA564(Obj_800DA564* o) {
+    Work_800DA564* w;
+    s32 j;
+    s32 k;
+    s32 n;
+    s32 buf[6];
+    w = o->work;
+    if ((o->par->flags & 0x40) || (w->src->flags & 0x40)) {
+        o->flags |= 0x40;
+        return;
+    }
+    switch (o->state) {
+    case 0:
+        fn_800B2DC0(w->src->ctx, w->s4, 2, 13, 1.0f);
+        w->list[w->count++] = w->s4;
+        o->state++;
+        break;
+    case 1: {
+        n = w->count;
+        for (j = 0; j < n; j++) {
+            fn_800DA744(w->list[j], buf);
+            for (k = 0; k < 6; k++) {
+                s32 found = Has_800DA564(w, buf[k]);
+                if (found == 0) {
+                    fn_800B2DC0(w->src->ctx, buf[k], 2, 13, 0.25f * (f32)w->s8);
+                    w->list[w->count++] = buf[k];
+                }
+            }
+        }
+        o->state++;
+        break;
+    }
+    case 2:
+        w->s8--;
+        if (w->s8 != 0) {
+            o->state = 1;
+        } else {
+            o->flags |= 0x40;
+        }
+        break;
     }
 }

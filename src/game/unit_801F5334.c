@@ -1258,6 +1258,10 @@ typedef struct CurState_801F7C18 {
     u8 pad0[0x1c];
     u8 *cur;
 } CurState_801F7C18;
+typedef struct { u8 pad_00[0x4]; s32 x4; u8 pad_08[0x14]; float *cur; } Cmd_801FF210;
+extern void fn_800C1A34(s32 a, s32 b, s32 c, s32 d);
+typedef struct { u8 pad_00[0x1c]; float *cur; } Cmd_802009C4;
+extern void fn_801D9728(s32 n, s32 mode, f32 a, f32 b, f32 c, f32 d, f32 e, f32 f, f32 g, f32 h);
 
 void fn_801F5334(s8 n) {
     s32 i;
@@ -6263,4 +6267,48 @@ s16 fn_801F7C18(u32 flags, CurState_801F7C18 *s)
         }
     }
     return (s16)((f >> 3) & 1);
+}
+
+s32 fn_801FF210(u16 flags, Cmd_801FF210 *st) {
+    if (flags & 1) {
+        float *p = st->cur + 1;
+        int a, b, c, d;
+        a = RDI(p);
+        b = RDI(p);
+        c = RDI(p);
+        d = RDI(p);
+        st->cur = p;
+        fn_800C1A34(a, b, c, d);
+        st->x4 = 0;
+    }
+    return 0;
+}
+
+static inline s32 rdi(float **pp) {
+    if (3.4028235e38f == **pp) {
+        (*pp)++;
+        return 0x7FFFFFFF;
+    }
+    return (s32)fn_801F6120(pp);
+}
+
+s32 fn_802009C4(u32 flags, Cmd_802009C4 *st) {
+    if (flags & 1) {
+        float *p = st->cur + 1;
+        int n, m;
+        f32 a, b, c, d, e, f, g, h;
+        n = rdi(&p);
+        m = rdi(&p);
+        a = fn_801F6120(&p);
+        b = fn_801F6120(&p);
+        c = fn_801F6120(&p);
+        d = fn_801F6120(&p);
+        e = fn_801F6120(&p);
+        f = fn_801F6120(&p);
+        g = fn_801F6120(&p);
+        h = fn_801F6120(&p);
+        fn_801D9728(n, m, a, b, c, d, e, f, g, h);
+        st->cur = p;
+    }
+    return 0;
 }

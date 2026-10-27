@@ -2585,6 +2585,31 @@ typedef struct Obj_80125B60_80125B60 {
     f32 f18c;
     f32 f190;
 } Obj_80125B60_80125B60;
+typedef struct { f32 x, y; } Pt2;
+/* B-spline basis N(i,k)(t) on a uniform clamped knot vector; k2 is the spline order (knots),
+   k the recursion degree. The mixed int/s32 is what makes the caller allocate like the original:
+   with k and k2 of the same type, out/q/k rotate registers. */
+extern f32 fn_8011A994(int i, int n, int k, s32 k2, f32 t);
+typedef struct Ent_8012048C {
+    f32 pos[3];
+    f32 acc[3];
+    f32 x18;
+    f32 vel[3];
+    u8 pad28[0x54 - 0x28];
+    u32 x54;
+} Ent_8012048C;
+typedef struct Elem {
+    u8 pad[0x40];
+} Elem;
+typedef struct Eff_8012048C {
+    u32 flags;
+    u8 pad4[0x18 - 4];
+    s32 x18;
+    Elem *elems;
+    Ent_8012048C *ents;
+    s32 count;
+} Eff_8012048C;
+extern void fn_8011FFF0(f32 *pos, f32 *v, Elem *el, f32 t, void *w);
 
 void fn_8010E164(u8 *obj) {
     if (obj[0x19] == 0xff) {
@@ -7757,4 +7782,90 @@ void fn_80125B60(Obj_80125B60_80125B60 *o, In_80125B60_80125B60 *in)
             return;
         }
     }
+}
+
+/* B-spline curve point: out = sum_i N(i)(t * (n - 2)) * p[i]; clamps to the end points. */
+void fn_8011AEE4(Pt2* p, int n, int k, Pt2* out, f32 t)
+{
+    f32 b;
+    f32 u;
+    f32 x;
+    f32 y;
+    int i;
+    Pt2* q;
+
+    out->x = 0.0f;
+    out->y = 0.0f;
+    if (n <= 3) {
+        return;
+    }
+    u = (f32)(n - 2) * t;
+    if (t <= 0.0f) {
+        *out = p[0];
+        return;
+    }
+    if (t >= 1.0f) {
+        s32 j = n - 1;
+        *out = p[j];
+        return;
+    }
+    x = 0.0f;
+    y = 0.0f;
+    q = p;
+    for (i = 0; i <= n - 1; i++) {
+        b = fn_8011A994(i, n - 1, k, k, u);
+        x += q->x * b;
+        y += q->y * b;
+        q++;
+    }
+    out->x = x;
+    out->y = y;
+}
+
+void fn_8012048C(void *o) {
+    Eff_8012048C *e = o;
+    s32 n = e->count;
+    Ent_8012048C *ent = e->ents;
+    Elem *el = e->elems;
+    do {
+        u32 flags = e->flags;
+        f32 t;
+        void *w;
+        f32 v[3];
+        s32 i;
+        f32 *p;
+        f32 *q;
+        if (flags & 0x100000) {
+            s32 d = e->x18 - 14;
+            if (d >= 0) {
+            } else {
+                d = -d;
+            }
+            if (d <= 10) {
+                t = (f32)d / 10.0f;
+            } else {
+                t = 1.0f;
+            }
+        } else {
+            t = 1.0f - ent->x18;
+        }
+        if (flags & 0x1000000) {
+            w = &ent->x54;
+        } else {
+            w = 0;
+        }
+        p = ent->pos; q = ent->vel;
+        if (flags & 2) {
+            f32 k = 5.0f;
+            for (i = 0; i < 3; i++) { v[i] = *p++ + *q++ * k; }
+        } else {
+            for (i = 0; i < 3; i++) { v[i] = *p++ + *q++; }
+        }
+        p -= 3;
+        q -= 3;
+        for (i = 0; i < 3; i++) { q[i] += ent->acc[i]; }
+        fn_8011FFF0(p, v, el, t, w);
+        el++;
+        ent++;
+    } while (--n != 0);
 }

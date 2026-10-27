@@ -1,5 +1,7 @@
 #include "types.h"
 #include <dolphin/gx.h>
+#include <dolphin/os/OSFastCast.h>
+#include "ninja.h"
 typedef struct {
     u8 pad[0x4c];
     s32 a;
@@ -51,6 +53,67 @@ extern void fn_80230BD4(u8 id, void *node, u32 **out, u16 idx);
     }
 #define STEP_8022E4CC(n)                              q = (p += (n));                          if (dir == 0) {                              if (*q != cmp) {                             *q = val;                            }                                    } else {                                     *q = val;                            }
 typedef struct Spring8022E18C { f32 a, b, c, d, e; } Spring8022E18C;
+typedef struct Ctx {
+    u8 pad0[0x54];
+    s32 f54;
+    u8 pad58[0x14];
+    f32 f6c;
+    f32 f70;
+    f32 f74;
+} Ctx;
+extern Ctx lbl_8030E830;
+typedef struct Nrm {
+    f32 x, y, z;
+} Nrm;
+typedef struct Vtx Vtx;
+typedef struct Hdr {
+    u16 len;
+    s16 flags;
+    s16 v;
+} Hdr;
+typedef union Cur {
+    s16 *s;
+    Hdr *h;
+} Cur;
+extern GXColor lbl_8034D480;
+extern Nrm lbl_802F93E8;
+extern void njPushMatrixEx(void);
+extern void njPopMatrixEx(void);
+extern void njInvertMatrix(NJS_MATRIX m);
+extern void fn_80286EE8(void);
+extern void fn_8028B498(void);
+extern void fn_802928F4(Nrm *src, Nrm *dst);
+extern void fn_8029D010(void);
+extern void fn_8029D0F4(s16 op, s16 v);
+extern void fn_8029D698(s16 op, s16 *p, GXColor *a, GXColor *b, s32 z);
+extern void fn_802A8F40(s32 a);
+extern void fn_8023152C(GXColor *mat, GXColor *amb);
+extern void fn_80231688(s32 mode);
+extern void fn_80231360(s16 *strip, Vtx *verts, u32 flags, Nrm *nrm);
+/* GX light helpers, not yet named in symbols.txt (signatures are the SDK's). */
+extern void fn_8024F82C(GXLightObj *l, GXColor c);
+/* GXInitLightColor */
+extern void fn_8024F74C(GXLightObj *l, f32 x, f32 y, f32 z);
+/* GXInitLightDir */
+extern void fn_8024F4EC(GXLightObj *l, f32 cutoff, s32 fn);
+/* GXInitLightSpot */
+extern void fn_8024F67C(GXLightObj *l, f32 d, f32 b, s32 fn);
+/* GXInitLightDistAttn */
+extern void fn_8024F4D0(GXLightObj *l, f32 *x, f32 *y, f32 *z);
+/* GXGetLightPos */
+extern void fn_8024F4C0(GXLightObj *l, f32 x, f32 y, f32 z);
+/* GXInitLightPos */
+extern void fn_8024F838(GXLightObj *l, s32 id);
+/* GXLoadLightObjImm */
+
+typedef struct LightParam {
+    f32 dir;    /* z of the light direction */
+    f32 dist;   /* GXInitLightDistAttn ref distance */
+    f32 bright; /* GXInitLightDistAttn ref brightness */
+    f32 div;    /* position divisor */
+} LightParam;
+extern GXLightObj lbl_803168B0[2];
+extern LightParam lbl_802F93C8[2];
 
 void fn_8022D34C(s32 a, f32 b) {
     if (a > 0) {
@@ -454,4 +517,133 @@ s32 fn_8022E18C(Spring8022E18C *p, s32 n, f32 *out)
         }
     }
     return ok;
+}
+
+void fn_8023152C(GXColor *mat, GXColor *amb) {
+    GXColor out;
+    f32 r, g, b;
+    GXSetChanMatColor(GX_COLOR0A0, *mat);
+    GXSetChanMatColor(GX_COLOR1A1, *mat);
+    if (lbl_8030E830.f54 == 1) {
+        r = __OSu8tof32(&amb->r);
+        g = __OSu8tof32(&amb->g);
+        b = __OSu8tof32(&amb->b);
+        r *= lbl_8030E830.f6c;
+        g *= lbl_8030E830.f70;
+        b *= lbl_8030E830.f74;
+        if (r > 255.0f) r = 255.0f;
+        if (g > 255.0f) g = 255.0f;
+        if (b > 255.0f) b = 255.0f;
+        out.r = __OSf32tou8(r);
+        out.g = __OSf32tou8(g);
+        out.b = __OSf32tou8(b);
+    } else {
+        out.b = 0;
+        out.g = 0;
+        out.r = 0;
+    }
+    out.a = 0;
+    GXSetChanAmbColor(GX_COLOR0A0, out);
+    GXSetChanAmbColor(GX_COLOR1A1, out);
+}
+
+void fn_8023114C(s16 *p, u8 kind, Vtx *verts, s32 mode) {
+    Cur h;
+    s32 k;
+    GXColor col_mat = {255, 255, 255, 255};
+    GXColor col_amb = lbl_8034D480;
+    Nrm nrm;
+    s16 op;
+    s16 code;
+    s16 cnt;
+    u16 len;
+    s16 flags;
+    s16 v;
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    njInvertMatrix(0);
+    fn_802928F4(&lbl_802F93E8, &nrm);
+    njPopMatrixEx();
+    k = kind;
+    while ((op = *p++) != 0xff) {
+        code = op & 0xff;
+        if (code < 8) {
+            switch (code) {
+            case 1:
+                fn_8029D010();
+                break;
+            case 4:
+                return;
+            case 5:
+                break;
+            }
+        } else if (code < 0x10) {
+            v = *p++;
+            fn_8029D0F4(op, v);
+            if (*p & 0x18) {
+                p += 8;
+            }
+        } else if (code < 0x40) {
+            cnt = *p++;
+            fn_8029D698(op, p, &col_mat, &col_amb, 0);
+            p += cnt;
+        } else {
+            h.s = p;
+            flags = h.h->flags;
+            len = h.h->len;
+            p += 2;
+            if (!(op & 0x800)) {
+                if (mode != 0) {
+                    p += len - 1;
+                    continue;
+                }
+            } else {
+                if (mode != 1) {
+                    p += len - 1;
+                    continue;
+                }
+            }
+            fn_802A8F40(1);
+            if (k == 0x2a && code == 0x41) {
+                GXSetNumChans(2);
+                GXSetChanCtrl(GX_COLOR0A0, GX_FALSE, GX_SRC_REG, GX_SRC_VTX, 0, GX_DF_CLAMP, GX_AF_NONE);
+                GXSetChanCtrl(GX_COLOR1, GX_TRUE, GX_SRC_REG, GX_SRC_REG, 0xc0, GX_DF_CLAMP, GX_AF_NONE);
+                GXSetChanCtrl(GX_ALPHA1, GX_TRUE, GX_SRC_REG, GX_SRC_REG, 0xc0, GX_DF_CLAMP, GX_AF_SPOT);
+                fn_8023152C(&col_mat, &col_amb);
+                fn_80231688(mode);
+                fn_80231360(p, verts, flags, &nrm);
+            }
+            p += len - 1;
+        }
+    }
+}
+
+void fn_8023182C(void) {
+    GXColor col = {255, 255, 255, 255};
+    f32 x, y, z;
+    GXLightObj *l;
+    LightParam *p;
+    fn_8024F82C(&lbl_803168B0[0], col);
+    fn_8024F74C(&lbl_803168B0[0], 0.0f, 0.0f, lbl_802F93C8[0].dir);
+    fn_8024F4EC(&lbl_803168B0[0], 0.0f, 0);
+    fn_8024F67C(&lbl_803168B0[0], lbl_802F93C8[0].dist, lbl_802F93C8[0].bright, 3);
+    fn_8024F4D0(&lbl_803168B0[0], &x, &y, &z);
+    x /= lbl_802F93C8[0].div;
+    y /= lbl_802F93C8[0].div;
+    z /= lbl_802F93C8[0].div;
+    fn_8024F4C0(&lbl_803168B0[0], x, y, z);
+    fn_8024F838(&lbl_803168B0[0], 0x80);
+    l = &lbl_803168B0[1];
+    p = &lbl_802F93C8[1];
+    fn_8024F82C(l, col);
+    fn_8024F74C(l, 0.0f, 0.0f, p->dir);
+    fn_8024F4EC(l, 0.0f, 0);
+    fn_8024F67C(l, p->dist, p->bright, 3);
+    fn_8024F4D0(l, &x, &y, &z);
+    x /= p->div;
+    y /= p->div;
+    z /= p->div;
+    fn_8024F4C0(l, x, y, z);
+    fn_8024F838(l, 0x40);
 }
