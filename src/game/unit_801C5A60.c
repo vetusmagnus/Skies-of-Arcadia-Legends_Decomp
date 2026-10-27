@@ -53,7 +53,9 @@ typedef struct Sub_801C610C {
     u8 pad194[0x1a8 - 0x194];
     f32 f1a8;
 } Sub_801C610C;
-typedef struct Node { s32 kind; u8 pad0[0x84 - 4]; struct Node* next; } Node;
+typedef struct Node { s32 kind; u8 pad_4[0x40];
+ s32 f44;
+ u8 pad_48[0x3c]; struct Node* next; } Node;
 extern Node* lbl_803471C8;
 extern void fn_801C6714(Node* n);
 typedef struct Obj_801C6384 {
@@ -829,4 +831,26 @@ void fn_801CA66C(Tk* t) {
             t->work->w[i] = 0;
         }
     }
+}
+
+s32 fn_801C6308(Node* n) {
+    n->f44 = 1;
+    fn_801C6714(n);
+    if (lbl_803471C8) {
+        if (lbl_803471C8 == n) {
+            lbl_803471C8 = lbl_803471C8->next;
+        } else {
+            Node* p = lbl_803471C8;
+            Node* q;
+            do {
+                q = p->next;
+                if (q == n) {
+                    p->next = n->next;
+                    break;
+                }
+                p = q;
+            } while (q);
+        }
+    }
+    return 1;
 }

@@ -156,6 +156,8 @@ typedef struct {
     s32 x44;
     s32 x48;
     s32 x4c;
+    u8 pad_50[0xb0];
+    s32 x100;
 } Actor8020C;
 typedef struct {
     u8 pad00[0x10];
@@ -1262,6 +1264,66 @@ typedef struct { u8 pad_00[0x4]; s32 x4; u8 pad_08[0x14]; float *cur; } Cmd_801F
 extern void fn_800C1A34(s32 a, s32 b, s32 c, s32 d);
 typedef struct { u8 pad_00[0x1c]; float *cur; } Cmd_802009C4;
 extern void fn_801D9728(s32 n, s32 mode, f32 a, f32 b, f32 c, f32 d, f32 e, f32 f, f32 g, f32 h);
+typedef struct Rec_80209B94 {
+    u32 kind;       /* 0x00 */
+    u8 pad04[0x14];
+    u16 n;          /* 0x18 */
+    u16 n2;         /* 0x1a */
+    f32 f1c, f20, f24;
+    s32 i28;
+    u8 pad2c[0x44 - 0x2c];
+} Rec_80209B94;
+typedef struct Cmd_80209B94 {
+    s32 kind;       /* 0x00 */
+    u8 pad04[4];
+    s32 handle;     /* 0x08 */
+    u8 pad0c[4];
+    s16 cnt;        /* 0x10 */
+    u8 pad12[6];
+    s32 owner;      /* 0x18 */
+    f32* cur;       /* 0x1c */
+    s32 a0, a1, a2, a3; /* 0x20 */
+    Rec_80209B94* work;      /* 0x30 */
+} Cmd_80209B94;
+typedef struct {
+    f32 x;
+    s16 u;
+    s16 v;
+    f32 a;
+    f32 b;
+} Pos;
+typedef struct {
+    u8 r, g, b, a;
+    f32 x, y, z;
+} TextHead;
+typedef struct {
+    char* name;
+    u8 pad04[0x24];
+} Name;
+typedef struct {
+    s32 x0, x4;
+    char* desc;
+} Desc;
+extern Pos lbl_80314698;
+extern Name lbl_802ED258[];
+extern Desc lbl_802EE040[];
+extern f32 fn_800C2D18(Pos* p);
+extern TextHead* TextPrint(s32 x, s32 y, const char* str);
+extern void fn_800DDE98(s32 a, s32 b, s32 c, s32 d, s32 e, f32 f1, f32 f2, s32 g);
+void fn_801694FC(s32 a, s8 b, s8 c, s32 d, f32 x, f32 y, f32 z);
+extern s32 fn_801F3F88(void* p, s8 i);
+typedef struct Info_801FE06C {
+    u8 pad0[0x38];
+    f32 x38;
+    f32 x3c;
+    f32 x40;
+    s32 x44;
+    s32 x48;
+    s32 x4c;
+    f32 x50;
+    f32 x54;
+    f32 x58;
+} Info_801FE06C;
 
 void fn_801F5334(s8 n) {
     s32 i;
@@ -6309,6 +6371,171 @@ s32 fn_802009C4(u32 flags, Cmd_802009C4 *st) {
         h = fn_801F6120(&p);
         fn_801D9728(n, m, a, b, c, d, e, f, g, h);
         st->cur = p;
+    }
+    return 0;
+}
+
+s32 fn_80209B94(u16 flags, Cmd_80209B94* c)
+{
+    Rec_80209B94* r;
+    f32* p;
+    if (flags & 1) {
+        p = c->cur + 1;
+        r = fn_801E1A2C(1, 0x44);
+        if (r == 0) {
+            fn_801DBE1C(lbl_802D54CC);
+        }
+        c->work = r;
+        r->n = RDI(p);
+        r->f1c = fn_801F6120(&p);
+        r->f20 = fn_801F6120(&p);
+        r->f24 = fn_801F6120(&p);
+        r->i28 = RDI(p);
+        c->cur = p;
+        if (r->i28 == 0x7FFFFFFF) {
+            r->i28 = 1;
+        }
+        r->kind = 0;
+        fn_80211058(c, 6, r->n, 0x23, lbl_8030CEA0.x08, r);
+    }
+    if (flags & 2) {
+        Rec_80209B94* w = c->work;
+        if (c->handle == 0) {
+            c->handle = fn_800CD0B8(c->a0, c->a1, c->a2, c->a3);
+            c->cnt++;
+            if (c->cnt == 5) {
+                fn_801DBE1C(lbl_802D54A8);
+            }
+        } else if (w->kind == 2) {
+            return 0;
+        }
+    }
+    if (flags & 8) {
+        return 1;
+    }
+    return 1;
+}
+
+void fn_8020DA2C(s32 idx, f32 x, f32 y)
+{
+    Actor8020C* a;
+    TextHead* t;
+    f32 z;
+    f32 x2;
+    a = fn_8015F1A0(0x752f);
+    if (a != NULL) {
+        lbl_80314698.x = -1.5f;
+        lbl_80314698.u = (s32)x;
+        lbl_80314698.v = 0x48;
+        lbl_80314698.a = 1.0f;
+        lbl_80314698.b = 1.0f;
+        z = fn_800C2D18(&lbl_80314698);
+        t = TextPrint((s32)(330.0f + x), 0x58, lbl_802ED258[idx].name);
+        t->z = z;
+        t->r = 0xff;
+        t->g = 0x20;
+        t->b = 0x10;
+        t->a = 8;
+        t = TextPrint((s32)(295.0f + x), 0x79, lbl_802EE040[idx].desc);
+        t->z = z;
+        t->r = 0xff;
+        t->g = 0x20;
+        t->b = 0x10;
+        t->a = 8;
+        x2 = 20.0f + x;
+        fn_800DDE98((s32)x2, 0x64, (s32)(256.0f + x2), 0x164, a->x100, y, z, 0);
+    }
+}
+
+s32 fn_801F9EA8(u16 flags, Cmd* c)
+{
+    if (flags & 1) {
+        f32* p = c->cur + 1;
+        s32 e;
+        int a;
+        s8 b;
+        s8 d;
+        f32 x;
+        f32 y;
+        f32 z;
+        a = ReadInt(&p);
+        b = ReadInt(&p);
+        d = ReadInt(&p);
+        e = ReadInt(&p);
+        x = fn_801F6120(&p);
+        y = fn_801F6120(&p);
+        z = fn_801F6120(&p);
+        c->cur = p;
+        fn_801694FC(a, b, d, e, x, y, z);
+    }
+    if (flags & 8) {
+        return 1;
+    }
+    return 0;
+}
+
+s32 fn_801FCFF0(u16 flags, ScrObj* o) {
+    if (flags & 1) {
+        f32* p;
+        s32 who, chr;
+        u32 bit;
+        p = o->script + 1;
+        who = ReadInt(&p);
+        chr = ReadInt(&p);
+        bit = ReadInt(&p);
+        o->script = p;
+        if (who == 6) {
+            s32 i;
+            lbl_80310B3C[bit >> 5] &= ~(1 << (bit & 31));
+            for (i = 0; i < 4; i++) {
+                if (fn_801F3F88(&lbl_8030B7F4.chr[lbl_8030B7F4.party[i]], chr)) {
+                    lbl_80310B3C[bit >> 5] |= 1 << (bit & 31);
+                }
+            }
+        } else if (fn_801F3F88(&lbl_8030B7F4.chr[who], chr)) {
+            lbl_80310B3C[bit >> 5] |= 1 << (bit & 31);
+        } else {
+            lbl_80310B3C[bit >> 5] &= ~(1 << (bit & 31));
+        }
+    }
+    return 0;
+}
+
+s32 fn_801FE06C(u16 flags, ScrObj* o) {
+    if (flags & 1) {
+        f32* p = o->script + 1;
+        void* q;
+        u16 id;
+        Info_801FE06C* n;
+        f32 f;
+        id = ReadInt(&p);
+        o->script = p;
+        q = fn_8015F1A0(id);
+        if (q == 0) {
+            return 0;
+        }
+        n = fn_8015F180(q);
+        f = n->x38;
+        lbl_8030CEA0.x1584[8] = *(s32*)&f;
+        f = n->x3c;
+        lbl_8030CEA0.x1584[9] = *(s32*)&f;
+        f = n->x40;
+        lbl_8030CEA0.x1584[10] = *(s32*)&f;
+        f = 0.005493164f * (f32)(n->x44 & 0xffff);
+        lbl_8030CEA0.x1584[11] = *(s32*)&f;
+        f = 0.005493164f * (f32)(n->x48 & 0xffff);
+        lbl_8030CEA0.x1584[12] = *(s32*)&f;
+        f = 0.005493164f * (f32)(n->x4c & 0xffff);
+        lbl_8030CEA0.x1584[13] = *(s32*)&f;
+        f = n->x50;
+        lbl_8030CEA0.x1584[14] = *(s32*)&f;
+        f = n->x54;
+        lbl_8030CEA0.x1584[15] = *(s32*)&f;
+        f = n->x58;
+        lbl_8030CEA0.x1584[16] = *(s32*)&f;
+    }
+    if (flags & 8) {
+        return 1;
     }
     return 0;
 }

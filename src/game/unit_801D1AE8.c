@@ -38,7 +38,17 @@ typedef struct Quad {
     f32 f2c;   /* 0x2C */
 } Quad;
 typedef struct Ctx {
-    u8 pad0[0x50];
+    u8 pad_0[0x4];
+    s32 f4;
+    f32 f8;
+    f32 fc;
+    f32 f10;
+    f32 f14;
+    f32 f18;
+    f32 f1c;
+    f32 f20;
+    f32 f24;
+    u8 f28[0x28];
     s32 f50;
     u8 pad1[0x18];
     f32 f6c;
@@ -85,7 +95,8 @@ extern u8 lbl_80311B00[];
 void fn_801E1718(void *p);
 extern u8 *lbl_80347608;
 void fn_801D843C(void *a, s32 b, s32 c, s32 d, s32 e, s32 f);
-typedef struct Holder801D { u8 pad00[0x19]; u8 b19; u8 pad1a[0x24 - 0x1a]; void *f24; } Holder801D;
+typedef struct Holder801D { u8 pad_0[0x18];
+ u8 b18; u8 b19; u8 pad1a[0x24 - 0x1a]; void *f24; } Holder801D;
 extern Holder801D *lbl_80347654;
 extern Holder801D *lbl_80347660;
 extern u32 lbl_80312D40[4];
@@ -148,7 +159,16 @@ extern void njInvertMatrix(void* m);
 extern s32 fn_801D48BC(f32* pt, f32* a, f32* b, f32* c);
 extern void fn_80290668(f32* a, f32* b, f32* c, f32* n);
 s32 fn_801D30DC(NJS_POINT3* p, Node_801D30DC* n, Hit* out);
-typedef struct Anim { s32 f00; f32 f04; u8 pad08[0xc]; f32 f14; u8 pad18[0xc]; f32 f24; f32 f28; f32 f2c; f32 f30; f32 f34; u8 pad38[0xc]; s32 f44; s32 f48; s32 f4c; } Anim;
+typedef struct Anim {
+    u32 flags;
+    f32 start[4];
+    f32 end[4];
+    f32 delta[4];
+    f32 cur[4];
+    s32 total;
+    s32 count;
+    s32 delay;
+} Anim;
 typedef struct {
     s8 st[9];     /* 0x00 */
     u8 pad09[3];
@@ -565,11 +585,11 @@ void fn_801D8840(Anim *a);
 f32 fn_8022975C(void *a, s32 b, s32 c, f32 x, f32 y, f32 z, f32 w);
 typedef struct Key {
     f32 a[3];
-    u8 pad0c[0xc];
+    f32 da[0x3];
     f32 b[3];
-    u8 pad24[0xc];
+    f32 db[0x3];
     f32 c[4];
-    u8 pad40[0x10];
+    f32 dc[0x4];
 } Key;
 /* 0x50 */
 typedef struct KeySet {
@@ -666,6 +686,9 @@ typedef struct {
 } Desc;
 extern void fn_801D6528(u32 colour, NJS_ARGB* out, f32 a, f32 b);
 void fn_80005D98(Obj20* obj, s32 a, s32 b, f32 z);
+void fn_801D8F18(void);
+s32 fn_801D91F4(void);
+void fn_801D9508(void);
 
 void fn_801D1AE8(void) {
     VISetNextFrameBuffer(lbl_803476AC);
@@ -2007,17 +2030,17 @@ void fn_801D9C64(f32 f1, f32 f2, f32 f3) {
 }
 
 void fn_801D8AB4(Anim *p, s32 a, s32 b, f32 f1, f32 f2) {
-    p->f48 = 0;
-    if ((u32)a == 0) p->f44 = 1; else p->f44 = a;
-    p->f4c = b;
-    p->f04 = f1;
-    p->f34 = f1;
-    p->f14 = f2;
-    p->f24 = (f1 - f2) / (f32)(u32)a;
-    p->f28 = 0.0f;
-    p->f2c = 0.0f;
-    p->f30 = 0.0f;
-    p->f00 = 1;
+    p->count = 0;
+    if ((u32)a == 0) p->total = 1; else p->total = a;
+    p->delay = b;
+    p->start[0] = f1;
+    p->cur[0] = f1;
+    p->end[0] = f2;
+    p->delta[0] = (f1 - f2) / (f32)(u32)a;
+    p->delta[1] = 0.0f;
+    p->delta[2] = 0.0f;
+    p->delta[3] = 0.0f;
+    p->flags = 1;
 }
 
 void fn_801E1718(void *p) {
@@ -2639,14 +2662,14 @@ void fn_801D9508(void)
         fn_801D8840(&lbl_8034765C->a[i]);
         fn_801D8840(&lbl_8034765C->b[i]);
     }
-    r = fn_8022975C(lbl_802F8CF0, 0, 0, -1.001f, 0.0f, lbl_8034765C->b[0].f34, lbl_8034765C->a[0].f34);
-    r = fn_8022975C(lbl_802F8E80, 0, 0, r, 0.0f, lbl_8034765C->b[1].f34, lbl_8034765C->a[1].f34);
+    r = fn_8022975C(lbl_802F8CF0, 0, 0, -1.001f, 0.0f, lbl_8034765C->b[0].cur[0], lbl_8034765C->a[0].cur[0]);
+    r = fn_8022975C(lbl_802F8E80, 0, 0, r, 0.0f, lbl_8034765C->b[1].cur[0], lbl_8034765C->a[1].cur[0]);
     switch (lbl_8034765C->st[1]) {
     case 0:
-        fn_8022975C(lbl_802F8D40, 0, 0, r, 0.0f, 1.0f, lbl_8034765C->a0.f34);
+        fn_8022975C(lbl_802F8D40, 0, 0, r, 0.0f, 1.0f, lbl_8034765C->a0.cur[0]);
         break;
     case 1:
-        fn_8022975C(lbl_802F8D90, 0, 0, r, 0.0f, 1.0f, lbl_8034765C->a0.f34);
+        fn_8022975C(lbl_802F8D90, 0, 0, r, 0.0f, 1.0f, lbl_8034765C->a0.cur[0]);
         break;
     }
 }
@@ -2976,5 +2999,172 @@ void fn_801D7A90(NJS_TEXLIST* tex, Desc* d)
         fn_80005D98(&obj, 0, 0x23, fn_801DBD9C(d->z));
         DrawStatePop(0);
         DrawStateRestore();
+    }
+}
+
+void fn_801D8DBC(void)
+{
+    Holder801D *p = lbl_80347660;
+    u16 go = 1;
+    switch (p->b19) {
+    case 0:
+    case 0xfe:
+        fn_801D8F18();
+        go = 0;
+        p->b19 = 1;
+        break;
+    case 1:
+    case 3:
+    case 4:
+        p->b19 = 5;
+    case 5:
+        if (fn_801D91F4() >= 0) {
+            p->b19 = 8;
+        }
+        break;
+    case 8:
+    case 9:
+        p->b19 = 10;
+        break;
+    case 10:
+        p->b19 = 11;
+        go = 0;
+        break;
+    case 11:
+    case 0xff:
+        p->b18 |= 0x40;
+        lbl_80347660 = 0;
+        go = 0;
+        break;
+    default:
+        go = 0;
+        break;
+    }
+    if (go == 1) {
+        fn_801D9508();
+    }
+    lbl_8034765C->w244++;
+}
+
+void fn_801D9A0C(s32 a, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6, f32 f7, f32 f8)
+{
+    Ctx *c = &lbl_8030E830;
+    s32 flag = 0;
+    if (a == 0x7fffffff || a == 1) {
+        flag = 1;
+    }
+    c->f4 = flag != 0;
+    c->f8 = (f1 != 3.4028235e38f) ? f1 : 0.0f;
+    c->fc = (f2 != 3.4028235e38f) ? f2 : 0.0f;
+    c->f10 = (f3 != 3.4028235e38f) ? f3 : 0.0f;
+    c->f14 = (f4 != 3.4028235e38f) ? f4 : 1.0f;
+    c->f18 = (f5 != 3.4028235e38f) ? f5 : 0.2f;
+    c->f1c = (f6 != 3.4028235e38f) ? f6 : 1.0f;
+    c->f20 = (f7 != 3.4028235e38f) ? f7 : 1.0f;
+    c->f24 = (f8 != 3.4028235e38f) ? f8 : 1.0f;
+    memcpy(lbl_8030E830.f28, c, 0x28);
+}
+
+void fn_801DE9BC(KeySet* ks, f32 s) {
+    Key* k = ks->keys;
+    s32 n = ks->count - 1;
+    if (n <= 0) return;
+    if (0.0f <= s) {
+        do {
+            k->da[0] = s * (k[1].a[0] - k->a[0]);
+            k->da[1] = s * (k[1].a[1] - k->a[1]);
+            k->da[2] = s * (k[1].a[2] - k->a[2]);
+            k->db[0] = s * (k[1].b[0] - k->b[0]);
+            k->db[1] = s * (k[1].b[1] - k->b[1]);
+            k->db[2] = s * (k[1].b[2] - k->b[2]);
+            k->dc[0] = s * (k[1].c[0] - k->c[0]);
+            k->dc[1] = s * (k[1].c[1] - k->c[1]);
+            k->dc[2] = s * (k[1].c[2] - k->c[2]);
+            k->dc[3] = s * (k[1].c[3] - k->c[3]);
+            k++;
+        } while (--n > 0);
+        k->da[2] = 0.0f;
+        k->da[1] = 0.0f;
+        k->da[0] = 0.0f;
+        k->db[2] = 0.0f;
+        k->db[1] = 0.0f;
+        k->db[0] = 0.0f;
+        k->dc[3] = 0.0f;
+        k->dc[2] = 0.0f;
+        k->dc[1] = 0.0f;
+        k->dc[0] = 0.0f;
+    } else {
+        f32 ns;
+        k->da[2] = 0.0f;
+        ns = -s;
+        k->da[1] = 0.0f;
+        k->da[0] = 0.0f;
+        k->db[2] = 0.0f;
+        k->db[1] = 0.0f;
+        k->db[0] = 0.0f;
+        k->dc[3] = 0.0f;
+        k->dc[2] = 0.0f;
+        k->dc[1] = 0.0f;
+        k->dc[0] = 0.0f;
+        do {
+            k[1].da[0] = ns * (k->a[0] - k[1].a[0]);
+            k[1].da[1] = ns * (k->a[1] - k[1].a[1]);
+            k[1].da[2] = ns * (k->a[2] - k[1].a[2]);
+            k[1].db[0] = ns * (k->b[0] - k[1].b[0]);
+            k[1].db[1] = ns * (k->b[1] - k[1].b[1]);
+            k[1].db[2] = ns * (k->b[2] - k[1].b[2]);
+            k[1].dc[0] = ns * (k->c[0] - k[1].c[0]);
+            k[1].dc[1] = ns * (k->c[1] - k[1].c[1]);
+            k[1].dc[2] = ns * (k->c[2] - k[1].c[2]);
+            k[1].dc[3] = ns * (k->c[3] - k[1].c[3]);
+            k++;
+        } while (--n > 0);
+    }
+}
+
+void fn_801D8840(Anim *a) {
+    u16 done = 0;
+    if (a->flags & 0x80) {
+        a->delay = 0;
+        done = 1;
+        a->flags &= ~0x81;
+    } else if (a->flags & 1) {
+        if (a->delay > 0) {
+            a->delay--;
+        } else if (a->count < a->total) {
+            if (a->flags & 8) {
+                a->cur[0] += a->delta[0];
+                a->cur[1] += a->delta[1];
+                a->cur[2] += a->delta[2];
+                a->cur[3] += a->delta[3];
+            } else {
+                a->cur[0] -= a->delta[0];
+                a->cur[1] -= a->delta[1];
+                a->cur[2] -= a->delta[2];
+                a->cur[3] -= a->delta[3];
+            }
+            a->count++;
+        } else if (a->flags & 2) {
+            if (!(a->flags & 4)) {
+                a->cur[0] = a->start[0];
+                a->cur[1] = a->start[1];
+                a->cur[2] = a->start[2];
+                a->cur[3] = a->start[3];
+            } else if (a->flags & 8) {
+                a->flags &= ~8;
+            } else {
+                a->flags |= 8;
+            }
+            a->count = 0;
+        } else {
+            a->flags &= ~1;
+            done = 1;
+        }
+    }
+    if (done == 1) {
+        a->cur[0] = a->end[0];
+        a->cur[1] = a->end[1];
+        a->cur[2] = a->end[2];
+        a->cur[3] = a->end[3];
     }
 }

@@ -1,6 +1,7 @@
 #include "types.h"
 #include "ninja.h"
 #include "game/task.h"
+#include <math.h>
 typedef struct Inner { u8 pad0[0x6]; s16 f6; s16 f8; u8 pad1[0xa]; s16 f14; s16 f16; u8 pad2[0x68-0x18]; float f68; u8 pad3[0xec-0x6c]; u32 fec; u32 ff0; } Inner;
 typedef struct Mid { u8 pad[0x4c]; Inner *inner; } Mid;
 typedef struct Top { u8 pad[0x24]; Mid *mid; } Top;
@@ -16,7 +17,12 @@ typedef struct Ob { u8 pad[0x19]; u8 mode; } Ob;
 extern Ob* lbl_8034731C;
 void fn_80027C04(void);
 void fn_8000A3A4(void *p);
-typedef struct Ent { u32 w0; u32 w4; u8 pad[0x3c-8]; u16 h3c; u16 h3e; u8 pad2[0x44-0x40]; u16 h44; u8 pad3[0x6e-0x46]; u16 h6e; } Ent;
+typedef struct Ent { u32 w0; u32 w4; u8 pad_8[0xa];
+ s16 x12;
+ s32 x14;
+ u8 pad_18[0x24]; u16 h3c; u16 h3e; u8 pad2[0x44-0x40]; u16 h44; u8 pad3[0x6e-0x46]; u16 h6e;
+    u8 pad_70[0x17e];
+    s16 x1ee; } Ent;
 extern Ent *lbl_80302AB0[];
 extern Ob* lbl_80346BAC;
 extern void fn_8000A38C(void);
@@ -631,4 +637,53 @@ void fn_80021CBC(Task* task) {
         task->flags |= 0x40;
         break;
     }
+}
+
+void fn_80029168(s16 idx, s32 v)
+{
+    Ent *e = lbl_80302AB0[idx];
+
+    if (e == NULL) {
+        return;
+    }
+    if (e->w0 & 0x40000000) {
+        return;
+    }
+    if (v == 0) {
+        e->x1ee = 0;
+    } else if (v < 0) {
+        e->x1ee = 1;
+    } else if (v > 0) {
+        e->x1ee = 2;
+    }
+    lbl_80302AB0[idx]->x14 = (s32)(f32)fabs((f32)v);
+    e = lbl_80302AB0[idx];
+    switch (e->x12) {
+    case 3:
+    case 4:
+    case 6:
+    case 8:
+    case 10:
+        e->w0 |= 0x800000;
+        break;
+    }
+}
+
+void fn_800292F8(s16 idx, u16 bits)
+{
+    Ent *e = lbl_80302AB0[idx];
+    if (e == 0) {
+        return;
+    }
+    if (e->w0 & 0x40000000) {
+        return;
+    }
+    switch (e->x12) {
+    case 4:
+    case 5:
+        e->w0 |= 0x20000000;
+        break;
+    }
+    lbl_80302AB0[idx]->h3e |= bits;
+    lbl_80302AB0[idx]->h3c |= bits;
 }

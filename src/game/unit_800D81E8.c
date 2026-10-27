@@ -801,8 +801,11 @@ extern void fn_801D4F0C(Item* it, s32 a, s32 b, s32 c, f32 f1, f32 f2, f32 f3, f
 extern void fn_801D4C54(Item* it, s32 a, s32 b, s32 c, f32 f1, f32 f2, f32 f3, f32 f4);
 extern void fn_801D52A8(Item* it, s32 a, s32 b, f32 f1, f32 f2, f32 f3, f32 f4);
 typedef struct {
-    u8 pad0[0x2a];
+    u8 pad_0[0x28];
+    u16 x28;
     u16 id;       /* 0x2A */
+    s16 x2c;
+    s16 x2e;
 } Sub_800FF908;
 typedef struct {
     u8 pad0[0x38];
@@ -7541,5 +7544,32 @@ void fn_800DA564(Obj_800DA564* o) {
             o->flags |= 0x40;
         }
         break;
+    }
+}
+
+void fn_800FF7A0(void) {
+    if (lbl_80347450 == 0) return;
+    if (lbl_80347464 != 1 && lbl_803474B0[0] == 1) {
+        lbl_80347450->pos[0] = lbl_8030A77C[0];
+        lbl_80347450->pos[1] = lbl_8030A77C[1];
+        lbl_80347450->pos[2] = lbl_8030A77C[2];
+        lbl_80347450->rot[0] = lbl_8030A764[0];
+        lbl_80347450->rot[1] = lbl_8030A764[1];
+        lbl_80347450->rot[2] = lbl_8030A764[2];
+        lbl_80347450->sub->id = lbl_803474AC[0];
+        lbl_80347450->sub->x28 = 0xFFFF;
+        lbl_80347450->sub->x2e = -1;
+        lbl_80347450->sub->x2c = -1;
+    } else if (lbl_803474B0[1] == 1) {
+        lbl_80347450->pos[0] = lbl_8030A77C[3];
+        lbl_80347450->pos[1] = lbl_8030A77C[4];
+        lbl_80347450->pos[2] = lbl_8030A77C[5];
+        lbl_80347450->rot[0] = lbl_8030A764[3];
+        lbl_80347450->rot[1] = lbl_8030A764[4];
+        lbl_80347450->rot[2] = lbl_8030A764[5];
+        lbl_80347450->sub->id = lbl_803474AC[1];
+        lbl_80347450->sub->x28 = 0xFFFF;
+        lbl_80347450->sub->x2e = -1;
+        lbl_80347450->sub->x2c = -1;
     }
 }

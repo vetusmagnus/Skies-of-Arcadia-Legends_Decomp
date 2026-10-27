@@ -27,7 +27,11 @@ typedef struct {
     u16 h3c;
     u16 h3e;
     u16 h40;
-    u8 pad42[0x2a];
+    u8 pad_42[0x2];
+    s16 h44;
+    s16 h46;
+    s16 h48;
+    u8 pad_4a[0x22];
     s16 h6c;
     s16 h6e;
     u8 pad70[0x1ee - 0x70];
@@ -4091,4 +4095,33 @@ void fn_801557A8(s32 i, s32 j)
     fn_80157E54(i, j);
     r = (Rec58 *)lbl_80308F98[i].p + j;
     fn_80157E04(i, j, r->x34, r->x38, r->x3c, r->x40);
+}
+
+void fn_80158590(s16 idx, s8 mode, s16 a, s16 b) {
+    Obj_8015854C* o = lbl_80306DB8[idx];
+    if (o == 0) return;
+    if (o->flags & 0x40000000) return;
+    switch (mode) {
+    case 1:
+        if (o->f4 == 0) {
+            o->f4 = 1;
+            o->h44 = 1;
+            o->h6e = 0;
+            o->h46 = a;
+            o->h48 = b;
+        }
+        break;
+    case 3:
+        if (o->f4 == 1 && idx >= 4) {
+            o->flags |= 0x40000000;
+        }
+    case 2:
+        if (o->f4 == 1) {
+            o->h44 = 2;
+            o->h6e = 0xff;
+            o->h46 = a;
+            o->h48 = b;
+        }
+        break;
+    }
 }

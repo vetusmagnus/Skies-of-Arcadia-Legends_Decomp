@@ -545,6 +545,11 @@ typedef struct {
     s32 kind;
     u8 pad04[4];
     f32 rect8[4];
+    u8 pad_18[0x14];
+    f32 x;
+    f32 y;
+    u8 pad_34[0x88];
+    struct Kind_8018E73C* k;
 } Sub_8018DFC4;
 typedef struct {
     u8 pad00[0x18];
@@ -554,7 +559,23 @@ typedef struct {
     Sub_8018DFC4* p24;
 } Obj_8018DFC4;
 void fn_80199F38(void* r);
-void fn_8018E73C(Sub_8018DFC4* s);
+/* The draw argument of fn_800C2650 and its siblings (Arg_800C2650 in
+   unit_800B2DA0.c). */
+typedef struct Arg_800C2650 {
+    f32 f0;
+    s16 h4;
+    s16 h6;
+    f32 f8;
+    f32 fc;
+} Arg_800C2650;
+typedef struct Kind_8018E73C {
+    s32 kind;
+} Kind_8018E73C;
+extern f32 fn_800C2A88(Arg_800C2650 *a);
+extern f32 fn_800C287C(Arg_800C2650 *a);
+extern f32 fn_800C285C(Arg_800C2650 *a);
+extern f32 fn_800C2650(Arg_800C2650 *a);
+f32 fn_8018E73C(Sub_8018DFC4 *s);
 void fn_8018E0A8(Sub_8018DFC4* s);
 extern void* lbl_803470EC;
 extern void* lbl_803470F8;
@@ -9143,4 +9164,34 @@ void fn_801763B8(void)
     obj = OBJ_801763B8(0x60);
     UiObjMoveTo(obj, 6, -1, 24.0f, 384.0f);
     UiObjSetCommand(obj, 0xf, 0);
+}
+
+f32 fn_8018E73C(Sub_8018DFC4 *s)
+{
+    f32 w;
+    s16 x = s->x;
+    s16 y = s->y;
+    Kind_8018E73C *k = s->k;
+    Arg_800C2650 a;
+
+    a.f0 = -4090.0f;
+    a.h4 = x;
+    a.h6 = y;
+    a.f8 = 1.0f;
+    a.fc = 1.0f;
+    switch (k->kind) {
+    case 0:
+        w = fn_800C2A88(&a);
+        break;
+    case 1:
+        w = fn_800C287C(&a);
+        break;
+    case 2:
+        w = fn_800C285C(&a);
+        break;
+    case 3:
+        w = fn_800C2650(&a);
+        break;
+    }
+    return w;
 }

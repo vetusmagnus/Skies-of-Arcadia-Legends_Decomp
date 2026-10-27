@@ -2091,3 +2091,26 @@ s32 fn_80194490(void) {
     }
     return r;
 }
+
+void fn_80195EA4(Req *o, s8 a, s32 b, u8 c, s8 mode) {
+    o->a = a;
+    o->b = b;
+    o->d = c;
+    switch (mode) {
+    case 1:
+        fn_801F224C(o);
+        break;
+    case 0:
+        fn_801F1774(o);
+        break;
+    case 3:
+        fn_801F1280(o);
+        break;
+    case 2:
+        fn_801F2518(o);
+        break;
+    case 4:
+        fn_801F1280(o);
+        break;
+    }
+}

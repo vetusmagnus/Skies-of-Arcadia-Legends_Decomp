@@ -335,8 +335,14 @@ typedef struct Obj_80224768 {
     V3i_80224768 *rot;
     V3f_80224768 *pos2;
     V3i_80224768 *rot2;
+    u8 pad_30[0x5e];
+    u16 x8e;
 } Obj_80224768;
-typedef struct B_80224768 { u8 pad[0x24]; u16 x24; } B_80224768;
+typedef struct B_80224768 { u8 pad[0x24]; u16 x24;
+    u8 pad_26[0x4];
+    u16 x2a;
+    u16 x2c;
+    u16 x2e; } B_80224768;
 extern void njPushMatrixEx(void);
 extern void njPopMatrixEx(void);
 extern void fn_80286EE8(void);
@@ -504,12 +510,28 @@ extern s32 fn_801D3360(s32, void *, Cmp *);
 extern s32 fn_801D30DC(s32, void *, Cmp *);
 typedef struct Item {
     s32 active;
-    u8 pad4[4];
+    s32 mode;
     f32 cur;
     f32 *target;
-    u8 pad10[0xc];
+    s32 delay;
+    f32 delta;
+    u8 pad_18[0x4];
     f32 init;
-    u8 pad20[0x3c];
+    u8 pad_20[0x4];
+    f32 prev;
+    f32 a;
+    f32 da;
+    f32 b;
+    f32 db;
+    f32 c;
+    f32 dc;
+    s32 wave;
+    f32 out;
+    f32 rate;
+    f32 damp;
+    f32 amp;
+    f32 ampcur;
+    f32 phase;
 } Item;
 typedef struct Anim_8022842C {
     u32 flags;
@@ -674,6 +696,13 @@ extern s32 fn_80223A34(s32, u16 *);
 extern void fn_801DBE1C(const char *, ...);
 extern char lbl_802D9608[];
 extern char lbl_802D95D4[];
+typedef struct List_80224674 { Obj_80224768 *head; u8 pad4[6]; s16 count; } List_80224674;
+extern Ctx802281DC *lbl_803475EC;
+extern s32 lbl_803477F8;
+extern s32 lbl_80347EC4;
+extern struct { u8 pad[8]; s32 x8; } lbl_80311894;
+extern s32 fn_80298700(Ctx802281DC *e);
+extern void fn_802281DC(Ctx802281DC *e);
 
 void fn_80219378(s32 a)
 {
@@ -3106,4 +3135,139 @@ s16 fn_80224040(s32 a, Tab_80224040 *b) {
         }
     }
     return r;
+}
+
+void fn_80219B24(s32 x, void *p)
+{
+    Obj_80219ACC *q;
+
+    fn_8023A8E0(p);
+    q = lbl_803477E8;
+    if (q != 0) {
+        q->flags |= (x > 0) ? 1 : 0x11;
+    }
+}
+
+void *fn_802268E8(void *parent, void *cb)
+{
+    Node_UNIT0000 *a = parent;
+    Node_UNIT0000 *n = fn_801E1A74(1, 0x40);
+    if (n != NULL) {
+        Node_UNIT0000 *t;
+        n->f20 = 0.0f;
+        t = lbl_80311A78.cur;
+        n->next = t->next;
+        t->next = n;
+        lbl_80311A78.cur = n;
+        n->w0 = cb;
+        n->w8 = a;
+        n->w10 = 0;
+        n->w14 = a->w14;
+        n->b18 = 0;
+        n->b1b = a->b1b + 1;
+    }
+    return n;
+}
+
+void fn_802285AC(Item *it, f32 u) {
+    f32 res;
+    f32 w = 1.0 - u;
+    f32 p;
+    f32 q;
+    f32 old;
+    f32 rate = it->rate;
+
+    if (rate) {
+        if (it->wave != 0) {
+            it->phase = it->phase + rate;
+            if (it->phase >= 65536.0) it->phase -= 65536.0;
+            if (it->phase <= 65536.0) it->phase += 65536.0;
+            if (1.0 != it->damp) {
+                it->ampcur = it->ampcur * it->damp;
+                if (it->ampcur < 0.03) it->wave = 0;
+            }
+            it->out = it->ampcur * (it->amp * njCos(it->phase));
+        }
+    }
+    if (it->active & 1) {
+        it->a = it->a + it->da;
+        switch (it->mode) {
+        case 2:
+            it->b = it->b + it->db;
+            it->c = it->c + it->dc;
+            p = w * (it->b - it->a) + it->a;
+            q = u * (it->c - it->a) + it->a;
+            res = u * (q - p) + p;
+            break;
+        case 1:
+            res = it->a;
+            break;
+        }
+        old = it->prev;
+        it->prev = res;
+        res = res - old;
+        if (it->delay != 0) it->delay--;
+    }
+    if (it->delay == 0) {
+        it->cur = it->prev + it->out;
+        it->delta = res;
+    }
+    if (it->active != 0 && it->target != 0) *it->target = it->cur;
+}
+
+s32 fn_80224674(NJS_POINT3 *out, B_80224768 *obj, NJS_POINT3 *pos, List_80224674 *list) {
+    Obj_80224768 *e;
+    s32 i;
+    s32 found;
+    f32 best;
+    s32 r;
+
+    e = list->head;
+    r = 0;
+    found = 0;
+    for (i = 0; i < list->count; e++, i++) {
+        NJS_POINT3 hit;
+        r = fn_80224768(&hit, obj, pos, e);
+        if (r == 1) {
+            f32 dx = pos->x - hit.x;
+            f32 dy = pos->y - hit.y;
+            f32 dz = pos->z - hit.z;
+            f32 d = dx * dx + dy * dy + dz * dz;
+            if (found == 0 || best > d) {
+                obj->x2e = i;
+                best = d;
+                obj->x2a = e->x8e;
+                out->x = hit.x;
+                out->y = hit.y;
+                out->z = hit.z;
+            }
+            found++;
+        }
+    }
+    return r;
+}
+
+static inline Ctx802281DC *FindEnt(void) {
+    Ctx802281DC *e = lbl_803475EC;
+    s32 i;
+    for (i = 0; i < 1024; e++, i++) {
+        if (e->sub != 0 && e->sub->a == 0x1869E) {
+            lbl_803477F8 = i;
+            return e;
+        }
+    }
+    return 0;
+}
+
+void fn_80226DC4(void) {
+    Ctx802281DC *e = FindEnt();
+    if (e != 0) {
+        if (fn_80298700(e) == 1) {
+            fn_802281DC(e);
+            lbl_80311894.x8 = 0;
+            if (lbl_80347EC4 == lbl_803477F8 + 1) {
+                lbl_80347EC4 = lbl_80347EC4 - 1;
+            }
+        }
+    }
 }

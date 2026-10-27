@@ -107,7 +107,9 @@ extern TaskFn lbl_802DAFA8[];
 extern u8 lbl_8030B7F4[];
 /* lbl_80309EC8: the 0x244-byte battle/system block (memset in battle.c). */
 typedef struct {
-    u8 pad0[0x48];
+    u8 pad_0[0x40];
+    u32 x40;
+    u32 x44;
     u32 x48;
     u8 x4c[12];
     u8 x58[12];
@@ -1107,6 +1109,16 @@ extern int fn_8025EF88(const char* a, const char* b);
 extern char* fn_8025F120(char* d, const char* s);
 extern void* fn_801DB124(void* data);
 extern void fn_8006CF54(ModelCache* c);
+typedef struct Inner_80007640 { s32 x0; u8 pad[0xc - 4]; s32 xc; } Inner_80007640;
+typedef struct Mid_80007640 { u8 pad[0xc]; Inner_80007640 *xc; } Mid_80007640;
+extern s32 fn_80298CAC(u32 v, s32 b, s32 c, s32 *out);
+extern s32 fn_80298210(Mid_80007640 **a, Inner_80007640 **b);
+extern void fn_80298C78(ArcSet *o, s32 idx, s32 v);
+extern s32 lbl_80347EC4;
+typedef struct Wrap8001FD7C {
+    u8 pad0[0x24];
+    Wk_8001FABC *ent;
+} Wrap8001FD7C;
 
 void* fn_80005B50(void* heap, u32 size) {
     void* p = fn_80005B9C(heap);
@@ -4005,5 +4017,70 @@ void fn_8000C8AC(ModelSrc* src) {
         fn_8006CF54(n);
         fn_8025F120(n->name, name);
         n->x4 = 0;
+    }
+}
+
+s32 fn_80007640(ArcSet *o, s32 idx) {
+    u32 a;
+    s32 b;
+    s32 c;
+    Mid_80007640 *m;
+    Inner_80007640 *d;
+    u32 v;
+    s32 r;
+    fn_80298E48();
+    r = fn_80297558(o, idx, &a, &b);
+    if (r != 0) {
+        return r;
+    }
+    v = o->slots[idx].x8;
+    if (a != -1) {
+        v = a;
+    }
+    switch (fn_80298CAC(v, b, 0, &c)) {
+    case -1:
+        return -1;
+    case 0:
+        c = fn_80298210(&m, &d);
+        if (c < 0) {
+            return -1;
+        }
+        m->xc = d;
+        if (v != -1) {
+            m->xc->x0 = v;
+        }
+        lbl_80347EC4++;
+        fn_80298C78(o, idx, c);
+        break;
+    }
+    return 1;
+}
+
+/* Clears pending word 1 (sel 1, 0x40) or 0 (sel 0, 0x44) if it equals val; 1 if cleared. */
+s32 fn_80014A54(u8 sel, u32 val) {
+    s32 r = 0;
+    switch (sel) {
+    case 0:
+        if (lbl_80309EC8.x44 == val) {
+            lbl_80309EC8.x44 = 0;
+            r = 1;
+        }
+        break;
+    case 1:
+        if (lbl_80309EC8.x40 == val) {
+            lbl_80309EC8.x40 = 0;
+            r = 1;
+        }
+        break;
+    }
+    return r;
+}
+
+void fn_8001FD7C(Wrap8001FD7C *w)
+{
+    Wk_8001FABC *e = w->ent;
+    Unit_8001FABC *in = e->w;
+    if (in->ents[in->xe4].flags & 0x10000) {
+        e->x2c = fn_80071C74(e, 0.0f, 0.0f);
     }
 }

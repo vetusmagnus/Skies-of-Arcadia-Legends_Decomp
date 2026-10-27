@@ -3,7 +3,13 @@
 #include <dolphin/os/OSFastCast.h>
 #include "ninja.h"
 typedef struct {
-    u8 pad[0x4c];
+    s32 f0;
+    s32 f4;
+    void* f8;
+    void* fc;
+    u8 pad_10[0x28];
+    f32 f38;
+    u8 pad_3c[0x10];
     s32 a;
     f32 b;
     f32 c;
@@ -114,6 +120,37 @@ typedef struct LightParam {
 } LightParam;
 extern GXLightObj lbl_803168B0[2];
 extern LightParam lbl_802F93C8[2];
+typedef struct {
+    s32 f0;
+    s32 f4;
+    void *f8;
+    void *fc;
+    f32 f38_src;
+} Src8031195C;
+extern Src8031195C lbl_8031195C;
+typedef struct { s32 w[16]; } Blk40;
+extern Blk40 lbl_803118DC;
+extern Blk40 lbl_8031191C;
+extern f32 lbl_803119D4[3];
+extern s32 lbl_803119C8[3];
+extern s32 lbl_80347574;
+extern s32 fn_8022D384(void);
+typedef struct Out_80230634 {
+    f32 x;
+    f32 y;
+    f32 z;
+    u8 pad_c[8];
+    f32 *dist;
+    u8 pad_18[0xc];
+    s8 sel;
+} Out_80230634;
+typedef union Cur_80230634 {
+    s16 *s;
+    f32 *f;
+} Cur_80230634;
+extern u8 lbl_802F9360[];
+extern void *fn_801E1C7C(u32 size);
+extern f32 fn_80291A5C(f32 v);
 
 void fn_8022D34C(s32 a, f32 b) {
     if (a > 0) {
@@ -646,4 +683,87 @@ void fn_8023182C(void) {
     z /= p->div;
     fn_8024F4C0(l, x, y, z);
     fn_8024F838(l, 0x40);
+}
+
+void fn_8022D9C4(void)
+{
+    lbl_80311970.f0 = lbl_8031195C.f4;
+    lbl_80311970.f4 = lbl_8031195C.f0;
+    lbl_80311970.f8 = lbl_8031195C.f8;
+    lbl_80311970.fc = lbl_8031195C.fc;
+    lbl_80311970.f38 = lbl_8031195C.f38_src;
+    lbl_80347574 = fn_8022D384();
+    lbl_8031195C.f4 = 2;
+    lbl_8031195C.f0 = 8;
+    lbl_8031195C.f8 = lbl_803119D4;
+    lbl_8031195C.fc = lbl_803119C8;
+    lbl_803118DC = lbl_8031191C;
+}
+
+s32 fn_80230634(Src *src, Out_80230634 *out) {
+    Cur_80230634 cur;
+    s16 cnt;
+    u8 *tbl;
+    u16 j;
+    u16 i;
+    s16 id;
+    f32 *q;
+    u8 kind;
+    f32 x, y, z;
+    f32 dx, dy, dz;
+    if (src->x4 == 0) {
+        return 0;
+    }
+    if (out->dist == 0) {
+        for (i = 0x20; i < 0x38; i++) {
+            if (fn_80230D10(i, src, &cur.s)) {
+                i = 0x39;
+            }
+        }
+        if (i == 0x38) {
+            return 0;
+        }
+        cur.s++;
+        id = *cur.s++;
+        cnt = *cur.s++;
+        cur.s++;
+        out->dist = fn_801E1C7C(cnt << 2);
+    }
+    if (out->dist == 0) {
+        return 0;
+    }
+    kind = id;
+    tbl = lbl_802F9360 + kind - 0x20;
+    q = cur.f;
+    for (j = 0; j < cnt; j++) {
+        x = q[0];
+        y = q[1];
+        z = q[2];
+        q += 3;
+        q += *tbl - 3;
+        switch (out->sel) {
+        case 1:
+            out->z = z;
+            out->y = y;
+            break;
+        case 2:
+            out->x = x;
+            out->y = y;
+            break;
+        case 3:
+            out->x = x;
+            out->z = z;
+            break;
+        case 4:
+            break;
+        default:
+            out->y = y;
+            break;
+        }
+        dx = x - out->x;
+        dy = y - out->y;
+        dz = z - out->z;
+        out->dist[j] = fn_80291A5C(dx * dx + dy * dy + dz * dz);
+    }
+    return 1;
 }
