@@ -102,23 +102,19 @@ typedef struct Rec_80225930 {
     s16 f2e;
     s16 f30;
 } Rec_80225930;
-typedef unsigned int u32_80226240;
-extern u32_80226240 lbl_80347580;
-typedef unsigned int u32_80226268;
-extern u32_80226268 lbl_80347588;
+/* The roots of the task layers (fn_80226240 and the setters after it). */
+extern Node_UNIT0000 *lbl_80347580;
+extern Node_UNIT0000 *lbl_80347584;
+extern Node_UNIT0000 *lbl_80347588;
+extern Node_UNIT0000 *lbl_8034758C;
+extern Node_UNIT0000 *lbl_8034759C;
+extern Node_UNIT0000 *lbl_803475A0;
+extern Node_UNIT0000 *lbl_803475A4;
+extern Node_UNIT0000 *lbl_80347590;
+extern Node_UNIT0000 *lbl_80347594;
+extern Node_UNIT0000 *lbl_80347598;
+extern Node_UNIT0000 *lbl_803475A8;
 extern void fn_80226984(void *p);
-typedef unsigned int u32_80226298;
-extern u32_80226298 lbl_8034758C;
-extern u32_80226298 lbl_803475A4;
-typedef unsigned int u32_80226318;
-extern u32_80226318 lbl_803475A4;
-extern u32_80226318 lbl_80347580;
-extern u32_80226318 lbl_8034758C;
-typedef unsigned int u32_80226334;
-extern u32_80226334 lbl_803475A8;
-extern u32_80226334 lbl_80347590;
-extern u32_80226334 lbl_80347594;
-extern u32_80226334 lbl_80347598;
 typedef int s32_80227E74;
 extern s32_80227E74 lbl_803477FC;
 typedef unsigned long u32_8022823C;
@@ -766,6 +762,10 @@ typedef struct Menu {
 } Menu;
 extern s32 lbl_803475D0;
 extern void fn_801A289C(void);
+extern s32 lbl_803477F4;
+extern void *lbl_802D9620[];
+extern void fn_8022638C(void **list);
+extern void fn_80226318(void *p);
 
 void fn_80219378(s32 a)
 {
@@ -856,50 +856,47 @@ void fn_802260E8(void *p)
     }
 }
 
-extern u32_80226240 lbl_80347584;
 void fn_80226254(void *p) {
     if (p == 0) {
         for (;;) {}
     }
-    lbl_80347584 = (u32_80226240)p;
+    lbl_80347584 = p;
 }
 
 void fn_802262B0(void *p) {
     if (p == 0) {
         for (;;) {}
     }
-    lbl_80347590 = (u32_80226298)p;
-    lbl_803475A8 = (u32_80226298)p;
+    lbl_80347590 = p;
+    lbl_803475A8 = p;
 }
 
 void fn_802262C8(void *p) {
     if (p == 0) {
         for (;;) {}
     }
-    lbl_80347594 = (u32_80226240)p;
+    lbl_80347594 = p;
 }
 
 void fn_802262DC(void *p) {
     if (p == 0) {
         for (;;) {}
     }
-    lbl_80347598 = (u32_80226240)p;
+    lbl_80347598 = p;
 }
 
-extern u32_80226240 lbl_8034759C;
 void fn_802262F0(void *p) {
     if (p == 0) {
         for (;;) {}
     }
-    lbl_8034759C = (u32_80226240)p;
+    lbl_8034759C = p;
 }
 
-extern u32_80226240 lbl_803475A0;
 void fn_80226304(void *p) {
     if (p == 0) {
         for (;;) {}
     }
-    lbl_803475A0 = (u32_80226240)p;
+    lbl_803475A0 = p;
 }
 
 void *fn_80226354(void *target)
@@ -1136,14 +1133,14 @@ void fn_80226240(void *p) {
     if (p == 0) {
         for (;;) {}
     }
-    lbl_80347580 = (u32_80226240)p;
+    lbl_80347580 = p;
 }
 
 void fn_80226268(void *p) {
     if (p == 0) {
         for (;;) {}
     }
-    lbl_80347588 = (u32_80226268)p;
+    lbl_80347588 = p;
     fn_80226984(p);
 }
 
@@ -1151,27 +1148,27 @@ void fn_80226298(void *p) {
     if (p == 0) {
         for (;;) {}
     }
-    lbl_8034758C = (u32_80226298)p;
-    lbl_803475A4 = (u32_80226298)p;
+    lbl_8034758C = p;
+    lbl_803475A4 = p;
 }
 
 void fn_80226318(void *p) {
     if (p == 0) {
         for (;;) {}
     }
-    lbl_803475A4 = (u32_80226318)p;
-    lbl_80347580 = (u32_80226318)p;
-    lbl_8034758C = (u32_80226318)p;
+    lbl_803475A4 = p;
+    lbl_80347580 = p;
+    lbl_8034758C = p;
 }
 
 void fn_80226334(void *p) {
     if (p == 0) {
         for (;;) {}
     }
-    lbl_803475A8 = (u32_80226334)p;
-    lbl_80347590 = (u32_80226334)p;
-    lbl_80347594 = (u32_80226334)p;
-    lbl_80347598 = (u32_80226334)p;
+    lbl_803475A8 = p;
+    lbl_80347590 = p;
+    lbl_80347594 = p;
+    lbl_80347598 = p;
 }
 
 void fn_80227E74(void) {
@@ -3683,4 +3680,37 @@ void fn_8022B318(Menu *m) {
             m->mode = 2;
         }
     }
+}
+
+void fn_80226170(void)
+{
+        Node_UNIT0000 *s = &lbl_80311A78.sentinel;
+
+    Node_UNIT0000 *owner;
+    Node_UNIT0000 *n;
+
+    
+    lbl_803477F4 = 0x7fffffff;
+    s->w0 = NULL;
+    s->next = NULL;
+    s->b1b = 0;
+    fn_8022638C(lbl_802D9620);
+    fn_8022642C();
+    owner = lbl_803475A8;
+    n = fn_801E1A74(1, 0x40);
+    if (n != NULL) {
+        n->f20 = 0.0f;
+        n->next = owner->next;
+        owner->next = n;
+        if (lbl_80311A78.cur == owner) {
+            lbl_80311A78.cur = n;
+        }
+        n->w0 = fn_80226318;
+        n->w8 = owner;
+        n->w10 = 0;
+        n->w14 = owner->w14;
+        n->b18 = 0;
+        n->b1b = owner->b1b + 1;
+    }
+    lbl_803475A4 = n;
 }
