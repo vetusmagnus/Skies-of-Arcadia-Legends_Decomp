@@ -395,10 +395,16 @@ typedef struct {
     u8 pad0[0x12];
     s16 id;
     s8 b14;
-    u8 pad15[0x22 - 0x15];
+    u8 pad15[0x1e - 0x15];
+    s8 b1e;
+    s8 b1f;
+    s8 b20;
+    u8 pad21;
 } Member;
 typedef struct {
-    u8 pad0[0x60];
+    u8 pad0[0x11];
+    s8 b11;
+    u8 pad12[0x60 - 0x12];
     Member mem[5];
 } Party;
 typedef struct {

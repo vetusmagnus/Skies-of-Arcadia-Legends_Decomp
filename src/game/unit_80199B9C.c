@@ -5501,7 +5501,8 @@ typedef struct ShopWork {
     s8 who[4];       /* 0x10 */
     s16 stat[4][4];  /* 0x14 */
     u8 b34;          /* 0x34 */
-    u8 pad35[2];
+    u8 pad35;
+    u8 b36;          /* 0x36 */
     u8 b37;          /* 0x37 */
     u8 pad38[0xe4];
     u32 cost;        /* 0x11C */

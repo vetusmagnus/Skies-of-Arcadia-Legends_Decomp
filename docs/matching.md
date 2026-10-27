@@ -138,7 +138,27 @@ From `fn_801B28D4` (6.7 KB, the shop's equip/compare window, same file; a near m
 - **Still open**: the arguments of the `UiLayoutDrawPart` call are scheduled differently (the
   original loads the index last; no parameter type or spelling moved it), the loop counters start
   differently (the original copies `i`'s zero and reloads `i` from its stack slot), and the
-  page-2 `fn_801B6BB4` calls compute the item id before the object and position.
+  page-2 `fn_801B6BB4` calls compute the item id before the object and position. (The
+  `UiLayoutDrawPart` one is solved: its index is the last parameter.)
+
+From `fn_801BA9CC` (6.8 KB, the discoveries window, same file; near miss in
+[near/fn_801BA9CC.c](near/fn_801BA9CC.c)):
+
+- **An `extsh` that the original has and we don't is an `s16` parameter boundary.** MWCC knows a
+  value loaded with `lha` is extended and drops conversions of it, including through `s32`
+  variables; it extends again where the value enters an `s16` parameter of an inline from a
+  wider one. So a helper doing `if (id == -1)` on a raw value and then `extsh` before the rest
+  is an `s32` helper calling an `s16` one.
+- **A load that comes too early (scheduled into an earlier test) is read earlier in the source.**
+  The guild level is loaded once inside the first flag test: the text getter reads it at its top
+  and passes it on, instead of each rank check reading it.
+- **A boolean kept as 0/1 before a branch** (`neg; or; srwi.`) is `f = (...) != 0; f = f != 0;`.
+- **`inline` (not `static`) functions are emitted out of line at the end of the file**, so a
+  small function sitting near the end of a unit with its body inlined into earlier callers is
+  one; callers before its definition call it, later ones inline it.
+- **Variable identity beats declaration order** again: after the structure was exact, the
+  remaining register swap (task and a part pointer, r29/r31) didn't move with declaration order,
+  scope, hoisting, helper shape or the permuter.
 
 Open
 ----
