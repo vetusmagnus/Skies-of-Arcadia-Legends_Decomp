@@ -8,7 +8,6 @@ extern Ent lbl_8030E7C0[4];
 extern s32 lbl_803474F8;
 extern s32 lbl_8034750C;
 void fn_801E1718(void *o);
-s32 fn_801C6BC8(void);
 extern u32 lbl_80347518;
 extern f32 lbl_80347510;
 extern u32 lbl_80347508;
@@ -17,16 +16,63 @@ extern s32 fn_8023A4B0(void);
 extern u32 lbl_803474F4;
 s32 fn_801CB0A4(s32 c);
 extern f32 lbl_80347514;
-void fn_801C6C7C(void* p);
 typedef struct { u16 size; u16 type; } Hdr;
 typedef struct { u16 cnt; u16 pad; } Cnt;
-typedef struct FioReq {
-    s32 w00, w04, w08, w0c, w10, w14, w18, w1c, w20;
+/* What a request's callback sees and may change. */
+typedef struct FioCb {
     char* name;
-    s32 w28, w2c;
+    s32 addr;
+    s32 size;
+} FioCb;
+/* akFIO.c's open file (unit_801C5A60.c). */
+typedef struct AkFio {
+    s32 state;
+    u8 pad04[0x48 - 0x04];
+    void* buf;      /* 0x48 */
+    void* x4c;
+    u8 pad50[0x54 - 0x50];
+    s32 size;       /* 0x54 */
+    u8 pad58[0x88 - 0x58];
+    s32 prio;       /* 0x88 */
+    s32 prio0;      /* 0x8c */
+} AkFio;
+typedef struct { char* str; s32 w4; } FioName;
+typedef struct FioOut {
+    s32 addr;
+    u32 own;        /* addr was allocated for the request */
+} FioOut;
+typedef struct FioReq {
+    s32 w00;
+    AkFio* fio;     /* 0x04 */
+    FioOut out;     /* 0x08: where the file reads into (the open file's x4c) */
+    s32 w10;
+    s32 state;      /* 0x14 */
+    s32 w18, w1c;
+    s32 cancel;     /* 0x20 */
+    FioName* name;  /* 0x24 */
+    void (*cb)(void* arg, struct FioCb* io);
+    void* cbArg;
     struct FioReq* next;
 } FioReq;
-typedef struct { char* str; s32 w4; } FioName;
+s32 fn_801C6BC8(AkFio* f);
+AkFio* fn_801C63EC(const char* name);
+void fn_801C6384(AkFio* f);
+AkFio* fn_801C64DC(const char* name);
+void fn_801C6C7C(AkFio* f);
+
+/* 1 once the open file is done (state 3), 2 on an error (state 4), else 0. */
+static inline s32 FioResult(AkFio* f) {
+    s32 r = fn_801C6BC8(f);
+    s32 v;
+    if (r == 3) {
+        v = 1;
+    } else if (r == 4) {
+        v = 2;
+    } else {
+        v = 0;
+    }
+    return v;
+}
 extern FioReq* lbl_80347200;
 extern u32 strlen(const char*);
 extern void* fn_801E1BDC(s32 size);
@@ -39,6 +85,24 @@ typedef union Vec3 { f32 f[3]; s32 i[3]; } Vec3;
 extern char* fn_8025ED74(const char*, const char*);
 extern char* strncpy(char*, const char*, u32);
 extern void fn_801E0D0C(char*);
+extern s32 lbl_803475CC;
+extern s32 lbl_803475A0;
+extern s32 lbl_80347500;
+extern f32 lbl_803471F0;
+extern f32 lbl_803471F4;
+void fn_801CBC90(void);
+void fn_801CB744(void);
+void fn_802267AC(s32 a, void* b);
+typedef struct FadeVtx {
+    f32 x, y, z;
+    u32 col;
+} FadeVtx;
+extern f32 fn_801DBD9C(f32 z);
+extern void fn_801CBA98(void);
+extern FadeVtx lbl_80308C78[4];
+extern u32 lbl_803471F8;
+void* fn_801E1C7C(s32 size);
+s32 fn_801CBD48(FioReq *s);
 
 s32 fn_801CAE84(void) {
     return 1;
@@ -77,8 +141,6 @@ typedef struct Msg {
     s32 x8;
     s32 xc;
 } Msg;
-extern void fn_801CBC90(Msg*, s16);
-extern u32 lbl_803471F8;
 void fn_801CBBF8(void) {
     lbl_803471F8 = 1;
 }
@@ -87,8 +149,8 @@ void fn_801CBC04(void) {
     lbl_803474F8 = 0;
 }
 
-void fn_801CBC10(Msg* a, s16 i) {
-    fn_801CBC90(a, i);
+void fn_801CBC10(void) {
+    fn_801CBC90();
 }
 
 u32 fn_801CC0A0(u32 *o)
@@ -102,9 +164,9 @@ u32 fn_801CC0A0(u32 *o)
     return v;
 }
 
-extern void fn_801CBE38(Msg*, s16);
-void fn_801CC3A4(Msg* a, s16 i) {
-    fn_801CBE38(a, i);
+s32 fn_801CBE38(void);
+void fn_801CC3A4(void) {
+    fn_801CBE38();
 }
 
 extern void fn_8023AB28();
@@ -118,18 +180,9 @@ void fn_801CC598(void) {
 
 }
 
-s32 fn_801CC5BC(void)
+s32 fn_801CC5BC(AkFio* f)
 {
-    s32 r = fn_801C6BC8();
-    s32 v;
-    if (r == 3) {
-        v = 1;
-    } else if (r == 4) {
-        v = 2;
-    } else {
-        v = 0;
-    }
-    return v;
+    return FioResult(f);
 }
 
 void fn_801CBBBC(void) {
@@ -154,19 +207,16 @@ u32 fn_801CC62C(void) {
     return fn_8023A4B0() != -1;
 }
 
-extern void fn_801C6384(Msg*, s16);
-void fn_801CC65C(Msg* a, s16 i) {
-    fn_801C6384(a, i);
+void fn_801CC65C(AkFio* f) {
+    fn_801C6384(f);
 }
 
-extern void fn_801C63EC(Msg*, s16);
-void fn_801CC67C(Msg* a, s16 i) {
-    fn_801C63EC(a, i);
+AkFio* fn_801CC67C(const char* name) {
+    return fn_801C63EC(name);
 }
 
-extern void fn_801C64DC(Msg*, s16);
-void fn_801CC69C(Msg* a, s16 i) {
-    fn_801C64DC(a, i);
+AkFio* fn_801CC69C(const char* name) {
+    return fn_801C64DC(name);
 }
 
 typedef struct DrawVtx {
@@ -370,9 +420,9 @@ void fn_801CBBAC(f32 f) {
     lbl_80347518 = 1;
 }
 
-void fn_801CC608(u8* p, s32 v) {
-    *(s32*)(p + 0x48) = v;
-    fn_801C6C7C(p);
+void fn_801CC608(AkFio* f, void* buf, u32 size) {
+    f->buf = buf;
+    fn_801C6C7C(f);
 }
 
 s32 fn_801CB380(f32* dst_, Hdr* src_, s32 max) {
@@ -437,17 +487,17 @@ FioName* fn_801CC1B4(const char* name)
         fn_801DBE1C("s_FioReadReq Error (memory allocate)");
     }
     req->w00 = 0;
-    req->w04 = 0;
-    req->w08 = 0;
+    req->fio = 0;
+    req->out.addr = 0;
     req->w18 = 0;
-    req->w0c = 0;
+    req->out.own = 0;
     req->w10 = 0;
     req->w1c = 0;
-    req->w14 = 0;
-    req->w20 = 0;
-    req->name = (char*)n;
-    req->w28 = 0;
-    req->w2c = 0;
+    req->state = 0;
+    req->cancel = 0;
+    req->name = n;
+    req->cb = 0;
+    req->cbArg = 0;
     req->next = 0;
     pp = &lbl_80347200;
     for (;;) {
@@ -636,4 +686,163 @@ void fn_801CC434(char* path, char* dir, char* name) {
             if (*p == '/') *p = 0;
         }
     }
+}
+
+void fn_801CBC30(void) {
+    if (lbl_803475CC == 6 || lbl_803475CC == 7) {
+        lbl_80347500 = 0;
+        lbl_803474F4 = 0;
+        lbl_803471F4 = 0.0f;
+        lbl_803471F0 = 30.0f;
+        fn_802267AC(lbl_803475A0, fn_801CB744);
+    }
+    fn_801CBC90();
+}
+
+void fn_801CBC90(void) {
+    f32 z = fn_801DBD9C(-1.0f);
+    lbl_80347514 = 30.0f;
+    lbl_80347518 = 1;
+    lbl_80347510 = 1.0f;
+    lbl_80347508 = 0;
+    lbl_803471F8 = 0;
+    lbl_8034750C = 0xff000000;
+    lbl_80308C78[0].x = 0.0f;
+    lbl_80308C78[0].y = 0.0f;
+    lbl_80308C78[0].z = z;
+    lbl_80308C78[0].col = lbl_8034750C;
+    lbl_80308C78[1].x = 0.0f;
+    lbl_80308C78[1].y = 480.0f;
+    lbl_80308C78[1].z = z;
+    lbl_80308C78[1].col = lbl_8034750C;
+    lbl_80308C78[2].x = 640.0f;
+    lbl_80308C78[2].y = 0.0f;
+    lbl_80308C78[2].z = z;
+    lbl_80308C78[2].col = lbl_8034750C;
+    lbl_80308C78[3].x = 640.0f;
+    lbl_80308C78[3].y = 480.0f;
+    lbl_80308C78[3].z = z;
+    lbl_80308C78[3].col = lbl_8034750C;
+    lbl_803474F8 = 0;
+    fn_802267AC(lbl_803475A0, fn_801CBA98);
+}
+
+void* fn_801CC3C4(const char* name) {
+    AkFio* o = fn_801C64DC(name);
+    void* r;
+    if (o == 0) {
+        return 0;
+    }
+    r = fn_801E1C7C(o->size);
+    if (r == 0) {
+        return 0;
+    }
+    o->buf = r;
+    fn_801C6C7C(o);
+    fn_801C6384(o);
+    return r;
+}
+
+/* Returns 2 once the task reaches state 4, else 1. */
+s32 fn_801CBD48(FioReq *s) {
+    s32 done = 0;
+    AkFio *p;
+    if (s->cancel == 1) {
+        s->state = 4;
+    }
+    p = s->fio;
+    if (p != 0) {
+        p->prio = 5;
+    }
+    switch (s->state) {
+    case 0:
+        p->x4c = &s->out;
+        s->state = 2;
+        break;
+    case 2:
+        if (FioResult(p) == 2) {
+            s->w10 = -1;
+            s->state = 4;
+        }
+        break;
+    case 4:
+        done = 1;
+        break;
+    }
+    if (done) {
+        return 2;
+    }
+    return 1;
+}
+
+s32 fn_801CBE38(void) {
+    while (lbl_80347200 != 0) {
+        FioReq **pp;
+        s32 r;
+        {
+            FioReq *h = lbl_80347200;
+            pp = 0;
+            if (h != 0) {
+                FioReq *c;
+                FioReq **link = &h->next;
+                pp = &lbl_80347200;
+                while ((c = *link) != 0) {
+                    s32 a = (*pp)->fio != 0 ? (*pp)->fio->prio : 1;
+                    s32 b = c->fio != 0 ? c->fio->prio : 1;
+                    if (a < b) {
+                        pp = link;
+                    }
+                    link = &c->next;
+                }
+            }
+        }
+        if ((*pp)->name != 0 && (*pp)->fio == 0 && (*pp)->w10 != -1) {
+            (*pp)->out.addr = 0;
+            (*pp)->fio = fn_801C63EC((*pp)->name->str);
+            (*pp)->fio->prio0 = 1;
+            (*pp)->fio->prio = 1;
+        }
+        r = fn_801CBD48(*pp);
+        if (r == 1) {
+            s32 v = (*pp)->fio->size;
+            (*pp)->w10 = v;
+            (*pp)->w1c = v;
+            v = (*pp)->out.addr;
+            (*pp)->name->w4 = v;
+            (*pp)->w18 = v;
+            return 4;
+        }
+        if ((*pp)->fio != 0) {
+            (*pp)->fio->prio = (*pp)->fio->prio0;
+        }
+        if ((*pp)->cb != 0 && (*pp)->cancel == 0 && r != -1) {
+            FioCb io;
+            io.name = (*pp)->name != 0 ? (*pp)->name->str : 0;
+            io.addr = (*pp)->w18;
+            io.size = (*pp)->w1c;
+            (*pp)->cb((*pp)->cbArg, &io);
+            {
+                s32 v = io.addr;
+                (*pp)->w18 = v;
+                (*pp)->name->w4 = v;
+            }
+            (*pp)->w1c = io.size;
+        }
+        if ((*pp)->name != 0) {
+            (*pp)->name->str = 0;
+            if ((*pp)->fio != (AkFio *)(*pp)->name && (*pp)->fio != 0) {
+                fn_801C6384((*pp)->fio);
+                (*pp)->fio = 0;
+            }
+        }
+        if ((*pp)->out.own != 0) {
+            fn_801E1718((void *)(*pp)->out.addr);
+        }
+        {
+            FioReq *dead = *pp;
+            fn_801E1718(dead);
+            *pp = dead->next;
+        }
+    }
+    return 3;
 }
