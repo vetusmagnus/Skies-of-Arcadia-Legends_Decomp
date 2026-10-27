@@ -7463,7 +7463,7 @@ void fn_800BF7AC(Obj_800BF7AC *obj)
     }
 }
 
-void fn_800D23F8(s32 n, s32 m, f32 a, f32 b)
+void fn_800D23F8(s32 n, f32 a, f32 b, s32 m)
 {
     lbl_80305B28.flag = 1;
     lbl_80305B28.f1c = a;
@@ -7476,7 +7476,7 @@ void fn_800D23F8(s32 n, s32 m, f32 a, f32 b)
     }
 }
 
-void fn_800D244C(s32 n, s32 m, f32 a, f32 b)
+void fn_800D244C(s32 n, f32 a, f32 b, s32 m)
 {
     lbl_80305B28.mode = 1;
     lbl_80305B28.f04 = a;

@@ -1,8 +1,8 @@
 Progress and handoff
 ====================
 
-State of the work as of 2026-10-27 (after the struct-unifier merge pass): 36.3% of code matched (4,308 / 7,116
-functions), 2,808 functions unmatched: about 2,470 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
+State of the work as of 2026-10-27 (after the script-command pass): 37.0% of code matched (4,363 / 7,116
+functions), 2,753 functions unmatched: about 2,470 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
 (the size split of the game functions predates the duplicate-copy batch: 2,193 under 632 bytes, 466 at 632-1000,
 355 at 1-2 KB, 101 at 2-5 KB, 16 over 5 KB). Numbers live in the README status block and on
 [ByteMatch](https://bytematch.dev/vetusmagnus/SoAL-Decomp); this page covers what's in flight.
@@ -1029,10 +1029,8 @@ slots at x10, index at x18), `PatStep`/`Pat` (pattern table at x848, record at x
 (`u8*`) and u32 `x838`/`x83c`/`x844`; `SaveData.x348`; `lbl_80307638` is a union with `b[]` and `st` in unit_80193F28.c;
 `__OSu8tof32` moved into `OSFastCast.h`.
 
-`fn_80211058`/`fn_802110E8`: their `void *` script and work parameters do not reflect real types. The script argument is a record
-with the cursor at 0x1c and fields at 0x8/0xc/0x20-0x2c, the work argument is an `Ev` with `h8`/`x0c`/`x10`. The 35 callers each use
-their own per-handler view of the script (about 25 typedefs, `cur` as `f32*` or `u8*`), so a real prototype needs one shared script type
-first; left as is.
+`fn_80211058`/`fn_802110E8`: they now take `Scpt *` and the work block's `Ev *`/`EvHead *` (see "One script-command
+type" below).
 
 What the agents found (new, on top of the earlier lists):
 
@@ -1083,7 +1081,48 @@ unit_80074D9C.c now reads `lbl_8030B7F4` as `SaveData` (party, characters, `x348
 - F (24): a helper or type of the same name with different content (`ReadInt` over a `ScrWord`/`Cell` union or `u8 **` cursor against the unit's `float **` one, `RD`, `SndSlot`, `Pool`, `Ctx`). fn_80014AB8 fn_80136848 fn_801974B4 fn_801B0B9C fn_801B6950 fn_801C64DC fn_801D66D4 fn_801D81C0 fn_801DA0AC fn_801DDAB0 fn_801F2E44 fn_801F9708 fn_8020FC7C fn_8020FDE0 fn_8020FF44 fn_802100C8 fn_8021026C fn_80210F74 fn_802150FC fn_802171F0 fn_802173F4 fn_8021B4B4 fn_8021B91C fn_8021BD7C
 - G (56): the agent's types do not survive being placed in the unit (a function-pointer field naming an agent type, a nested anonymous struct pointer, a type the unit defines later). fn_800086BC fn_8000BF48 fn_80011208 fn_80015EC8 fn_80016B20 fn_80016E1C fn_800177C0 fn_80018178 fn_80019B70 fn_80019E44 fn_8001C474 fn_8001D41C fn_8001E7F8 fn_8001F814 fn_8001FE44 fn_80020250 fn_80021FCC fn_80022850 fn_8002B200 fn_80064AC8 fn_8006AC68 fn_80075DAC fn_800AB834 fn_800B2800 fn_800B29AC fn_800C1A50 fn_800D0E78 fn_800D4690 fn_80100B74 fn_8012E6EC fn_80147CC8 fn_80148464 fn_8014912C fn_80167C34 fn_8016EA60 fn_801AFD34 fn_801B0014 fn_801B0838 fn_801B46EC fn_801B4CF0 fn_801D129C fn_801D4A2C fn_801D7ED4 fn_801FD44C fn_80201458 fn_8020F278 fn_8020F998 fn_8020FB10 fn_80211298 fn_8022377C fn_80225958 fn_8022642C fn_80226984 fn_80227268 fn_802275A4 fn_802295D0
 
-The biggest single lever is the script command record in unit_801F5334.c (64 waiting): the unit still has about 40 private
-`Cmd`/`CmdB_*`/`CmdStream_*` copies of the same `{ ...; cursor at 0x1c; ... work at 0x30 }` record, with the cursor typed `float *`,
-`u8 *` or a union depending on the handler. One shared type with a union cursor (and the `ReadInt` family over it) would let the
-handlers merge and give `fn_80211058`/`fn_802110E8` a real prototype; it means retyping every handler already in the unit.
+The script command record in unit_801F5334.c is done: see the next section.
+
+### One script-command type (2026-10-27)
+
+By hand, no agents. unit_801F5334.c had 104 private views of one record (`Cmd`, `CmdB_*`, `CmdStream_*`, `Script*`,
+`ScrObj`, `ScptArgs`, ...): every one is now `Scpt`, defined at the top of the unit. It is also the event slot of the
+header: `lbl_8030CEA0.x10` is `struct Scpt *` (the old `EvSlot` copy is gone), and `fn_80210F74` copies a `Scpt` into it.
+
+- `Scpt` (0x34): `kind`, `flags` (0x04; bit 0 runs the next command in the same frame, the dispatcher ORs in the
+  table's flags), `handle`, `ev` (0x0c), `cnt`, `x12`, `x14` (its slot), `owner` (0x18, the index into the command table
+  `lbl_802F7940`, now `{ flags, v, fn }`), `cur` (0x1c, `union ScptCur { f32 *f; u8 *b; u32 *u; s32 *i; }`), the retry copy
+  of the posted message `a20`-`a2c`, and `work` (0x30, a union of the commands' own work block types; `p` for the generic
+  free in `ScptDestruct`, `n` for the commands that keep a flag there).
+- Work blocks start with the message head they post: `EvHead { kind, x04 }` for `fn_802110E8`, `Ev { EvHead hd; h8; x0c;
+  x10 }` for `fn_80211058`. The two now read `fn_80211058(Scpt *, s32, s32, s32, s16, Ev *)` and
+  `fn_802110E8(Scpt *, s32, s32, s32, s16, EvHead *)`; their callers pass `&w->ev`/`&w->hd`. Identical work layouts were
+  folded into one type (13 copies). `fn_800CD0B8` keeps its real `s32` fourth word: the posted pointer has to go through an
+  integer (`(s32)w` in the two posting functions; a pointer-typed word changes the register allocation of both).
+- The `*(s16 *)((u8 *)&s + 0x10)` offset stores and the `void *` cursor handlers are gone: 151 pointer casts in the unit
+  before, 104 now with 55 more functions.
+- Also real now: `Actor` (fn_8015F1A0's result, `lbl_80347450`, and `Obj10A.x24`; it replaces `Actor8020C`/`Mid`),
+  `fn_8020EEE8(bank, arg1, id, unused)` (it passes SePlay's arguments through; the second name `fn_80217FF4` for SePlay
+  is gone), `fn_80218D80(name, tag, v)` (an empty stub), `fn_802172C8(u32 mode, s8)` and `fn_802173F4(u32 mode, s8, s16)`,
+  `SndSlot.vol`/`.slot`, `SeqReq` for `lbl_80315484`/`lbl_80315434`/`lbl_8031545C`, `u32 lbl_803477E0`.
+  Header: `x818` (a one-word script for `x4` to fall back on), the screen fade `xc50`-`xc64` (`xc60` is a colour union),
+  camera paths `xc74`/`xc8a`/`xca0`/`xcbc`/`path[4][8]`, `x156c`-`x1578`, `x157c` as `u32`, `x15d0`, `x17a0`/`x17a4`, `x191c`;
+  `SaveData` gained `x32d`, `x344`, `x346`, `x350`, `SaveChar.xc`. unit_800B2DA0.c's `fn_800D23F8`/`fn_800D244C` take
+  `(n, a, b, m)`, the order their callers evaluate the arguments in (the registers are the same either way).
+
+**55 of the 61 isolated matches waiting for this unit are merged** (4,308 to 4,363). Every function of
+unit_801F5334.c (283) and unit_800B2DA0.c passes fdiff and `floatcheck.py`, the other units that include the two
+headers are unchanged, `main.dol` force-relinks to the `build.sha1` SHA-1 and a fresh worktree builds to it. No casts
+were added at call sites and no `void *` parameters; `fn_8020F154` and `fn_8020F7F8` match without the agents' `goto`.
+
+Still blocked (6), all by prototypes that two callers or a caller and its callee see differently, which points at TU
+boundaries inside the guessed 0x801F5334-0x80219378 range:
+
+- fn_8021730C: passes its own `s16` straight to `fn_802173F4(u32, s8, s16)`, but its caller fn_801FA290 passes a plain
+  int (no `extsh`). The sound functions from about 0x80216000 look like a separate TU.
+- fn_8020E984: returns a full int, while its caller fn_801FDCDC truncates the result to `u8`.
+- fn_80207554 (to `fn_80210EA4`), fn_801FD44C (to `fn_8010A164`) and fn_802088D8 (to `fn_80210860`): one caller
+  zero-extends the id and the others do not; it fits a `(u16)` cast at those calls (fn_80210064 already has one), which
+  the no-call-site-cast rule leaves open.
+- fn_801F7958: its three strings are addressed from the pool base (`lbl_802D4720` + 0xa4/0xc8/0xe8), so it only
+  matches once the unit's string pool is laid out like the original's.

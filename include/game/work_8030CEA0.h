@@ -15,23 +15,6 @@ typedef struct {
     char name[16];
 } ArcDir;
 
-/* An event slot (0x180 of them at x10). */
-typedef struct {
-    s32 kind;
-    s32 x4;
-    s32 x8;
-    struct { s32 x0; s32 x4; }* xc;
-    s32 x10;
-    s32 x14;
-    s32 x18;                    /* index into lbl_802F7940 */
-    u8 pad1c[4];
-    u32 x20;                    /* type */
-    u32 x24;                    /* id */
-    u32 x28;
-    u8 pad2c[4];
-    void* x30;
-} EvSlot;
-
 /* The 5-byte pattern record passed to fn_801D6CBC (rumble/pattern player). */
 typedef struct {
     u8 a;
@@ -40,6 +23,14 @@ typedef struct {
     u8 d;
     u8 e;
 } Pat;
+
+/* One node of a camera path: position, look-at, frames to the next node, two more values. */
+typedef struct {
+    f32 a[3];
+    f32 b[3];
+    u32 w;
+    f32 c[2];
+} PathNode;
 
 /* One step of the pattern table at x848 (replayed by fn_80211D90). */
 typedef struct {
@@ -54,10 +45,13 @@ typedef struct {
     s16 x08;
     s16 x0a;
     s32 xc;
-    EvSlot* x10;
+    struct Scpt* x10;           /* the 0x180 running script commands (unit_801F5334.c) */
     Slot8* x14;
     s32 ent[256][2];            /* 0x18 */
-    s32 x818;
+    union {
+        s32 w;
+        u8 b[4];
+    } x818;                     /* a one-word script (the end code, 12) for x4 to fall back on */
     u8 pad81c[4];
     ArcDir* x820;
     u32 x824;
@@ -72,32 +66,47 @@ typedef struct {
     u32 x844;
     PatStep steps[0x100];       /* 0x848 */
     Pat pat;                    /* 0xc48 */
-    u8 padc4d[0xc5c - 0xc4d];
-    s32 xc5c;
-    u32 xc60;
+    u8 padc4d[0xc50 - 0xc4d];
+    s32 xc50;                   /* screen fade: length in frames */
+    s32 xc54;                   /* frames done */
+    f32 xc58;                   /* alpha, 0..255 */
+    s32 xc5c;                   /* drawn while set */
+    union {
+        u32 w;
+        u8 b[4];                /* b[0] is the alpha */
+    } xc60;                     /* colour */
     f32 xc64;
     s32 xc68;
     s32 xc6c;
     s32 xc70;
-    u8 padc74[0xc84 - 0xc74];
+    s32 xc74[4];                /* camera path n: running */
     s16 xc84;
     s16 xc86;
     s16 xc88;
-    u8 padc8a[0x14b8 - 0xc8a];
+    s16 xc8a[4];                /* camera path n: node count */
+    u8 padc92[0xca0 - 0xc92];
+    s32 xca0[4];
+    u8 padcb0[0xcbc - 0xcb0];
+    s32 xcbc[4];                /* camera path n: total frames */
+    u8 padccc[0x102c - 0xccc];
+    PathNode path[4][8];        /* 0x102c: camera paths (fn_802001F8) */
+    u8 pad14ac[0x14b8 - 0x14ac];
     s32 x14b8[4];
     u8 pad14c8[3];
     u8 x14cb[0x1544 - 0x14cb];
     s32 x1544[9];
     s32 x1568;
-    u8 pad156c[0x1574 - 0x156c];
+    s32 x156c;
+    s32 x1570;
     s32 x1574;
-    u8 pad1578[4];
-    void* x157c;
+    s32 x1578;
+    u32 x157c;                  /* the sound handle SePlay returned */
     s32 x1580;
     s32 x1584[17];
     s32 x15c8;
     s32 x15cc;
-    u8 pad15d0[8];
+    s32 x15d0;
+    u8 pad15d4[4];
     s32 x15d8, x15dc, x15e0, x15e4, x15e8, x15ec, x15f0, x15f4, x15f8, x15fc, x1600, x1604, x1608;
     s32 x160c;
     s32 x1610;
@@ -110,7 +119,10 @@ typedef struct {
         };
     };
     f32 x1774, x1778, x177c, x1780;
-    u8 pad1784[0x1874 - 0x1784];
+    u8 pad1784[0x17a0 - 0x1784];
+    u32 x17a0;
+    u32 x17a4;
+    u8 pad17a8[0x1874 - 0x17a8];
     s32 x1874;
     s16 x1878;
     s16 sp;                     /* 0x187A */
@@ -119,7 +131,7 @@ typedef struct {
     s32 x1908, x190c, x1910;
     void* x1914;
     s32 x1918;
-    u8 pad191c[4];
+    s32 x191c;
 } Work8030CEA0;
 
 extern Work8030CEA0 lbl_8030CEA0;

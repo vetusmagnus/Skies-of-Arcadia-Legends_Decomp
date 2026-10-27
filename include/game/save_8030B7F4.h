@@ -7,7 +7,8 @@
  * table, the inventory tables at 0x354..0xaac, the gold word and the option bytes. */
 typedef struct SaveChar {
     s16 x0;
-    u8 pad2[0xb];
+    u8 pad2[0xa];
+    u8 xc;
     s8 mp;                  /* 0x0d */
     s8 mpMax;
     u8 pad0f;
@@ -34,15 +35,17 @@ typedef struct SaveData {
     SaveChar chr[8];            /* 0x000 */
     u8 pad2e0[0x328 - 0x2e0];
     s8 party[5];                /* 0x328 */
-    u8 pad32d;
+    u8 x32d;
     s8 x32e;
     s8 x32f;
     s8 x330;
-    u8 pad331[0x348 - 0x331];
+    u8 pad331[0x344 - 0x331];
+    s16 x344;
+    s16 x346;
     s16 x348;                   /* clamped to 0..255 */
     u8 pad34a[2];
     s32 w34c;                   /* gold */
-    u8 pad350[4];
+    s32 x350;
     InvEnt s354[0x50];
     InvEnt s494[0x50];
     InvEnt s5d4[0x50];
