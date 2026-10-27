@@ -848,7 +848,8 @@ typedef struct {
     u8 pad34[4];
     BufD* d;     /* 0x38 */
 } Task3_801B2310;
-extern void fn_801B1B3C(void);
+struct Task_1B3C;
+extern void fn_801B1B3C(struct Task_1B3C* t);
 typedef struct {
     UiObj ui;
     u32 f4C;
@@ -1737,7 +1738,7 @@ void fn_801B277C(Task* t);
 typedef struct { u8 b0; u8 pad1[3]; s16 h4; u8 pad6[2]; s32 w8; s32 wc; s32 w10; } W_801B54D4;
 typedef struct { u8 pad[0x24]; W_801B54D4* w; MObj* obj; MObj* obj2; u8 pad30[0xC]; void* p3c; } T_801B54D4;
 typedef struct { f32 a, b; } FP;
-extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, u16 index, f32 z, f32 a, f32 b);
+extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, f32 z, f32 a, f32 b, u16 index);
 extern u8 fn_801F464C(s32 id);
 extern u16 fn_801B995C(s32 id);
 typedef struct { s16 id; s8 count; s8 pad; } Ent_801B9810;
@@ -2260,7 +2261,7 @@ void fn_801B6400(u32 v) {
     *(u32*)(*(u8**)(q + 0x28) + 0x4C) = v;
 }
 
-u32 fn_801B94F0(void)
+s32 fn_801B94F0(void)
 {
     u8 *p = *(u8 **)((u8 *)lbl_803471B8 + 0x30);
     u32 sum = *(u32 *)(p + 0x3cc);
@@ -2975,6 +2976,120 @@ Task_801B1A78* fn_801B1A78(void* a)
     o->p28->alpha = 1.0f;
     o->p28->z = -4400.0f;
     return o;
+}
+
+/* The shop's top menu panel (the task fn_801B2310 creates). */
+typedef struct Cur_1B3C {
+    f32 x, y;     /* 0x00 draw position */
+    f32 ox, oy;   /* 0x08 offset from the panel */
+    f32 scale;    /* 0x10 pulse */
+    u16 angle;    /* 0x14 */
+    u8 pad16[2];
+    s16 s18;
+    s16 s1A;
+    u16 sel;      /* 0x1C selected tab */
+    u8 part;      /* 0x1E layout part, 0xFF none */
+    u8 flags;     /* 0x1F 1 shown, 2 pulsing */
+} Cur_1B3C;
+typedef struct Arrow_1B3C {
+    f32 x, y;     /* 0x00 */
+    u16 idx;      /* 0x08 */
+    u16 state;    /* 0x0A */
+} Arrow_1B3C;
+typedef struct Task_1B3C {
+    u8 pad0[0x18];
+    u8 flags; /* 0x18 */
+    u8 state; /* 0x19 */
+    u8 pad1A[0xA];
+    u8* a;                /* 0x24 */
+    Panel_801B2310* pan;  /* 0x28 */
+    s32 f2C;
+    Cur_1B3C* c;          /* 0x30 */
+    u8 pad34[4];
+    Arrow_1B3C* d;        /* 0x38 */
+} Task_1B3C;
+
+extern f32 njCos(s32 a);
+extern void fn_801B1EA0(Task_1B3C* t);
+u16 fn_801B952C(u16 i);
+void fn_801B5D68(Task3_801B5D68* t);
+
+void fn_801B1B3C(Task_1B3C* t) {
+    NJS_TEXLIST** tl;
+    f32 z;
+    f32 s;
+
+    if (lbl_803475D8 != 0) {
+        t->state = 0xFF;
+    }
+    switch (t->state) {
+    case 0:
+    case 1:
+    case 0xFE:
+        if (t->a[0] == 1) {
+            return;
+        }
+        UiObjUpdate(&t->pan->ui);
+        tl = (NJS_TEXLIST**)&menu_sprites.texlist8;
+        UiLayoutDraw(tl, (LayoutPart*)lbl_802B71EC, 3, &t->pan->ui.x, t->pan->ui.z, 1.0f, 1.0f);
+        z = -42.75f + t->pan->ui.z;
+        if (fn_801B94F0()) {
+            s32 i;
+            const void* const* p;
+            UiLayoutDraw(tl, (LayoutPart*)lbl_802B7304[t->c->sel * 2], (u32)lbl_802B7304[t->c->sel * 2 + 1], &t->pan->ui.x, z, 1.0f, 1.0f);
+            z -= 0.25f;
+            for (i = 0, p = lbl_802B7304; i < 5; i++, p += 2) {
+                if (t->c->sel != i && fn_801B952C(i)) {
+                    UiLayoutDraw(tl, (LayoutPart*)p[0], 2, &t->pan->ui.x, z, 0.7f, 1.0f);
+                    z -= 0.25f;
+                }
+            }
+        } else {
+            UiLayoutDraw(tl, (LayoutPart*)lbl_802B72F0, 1, &t->pan->ui.x, z, 1.0f, 1.0f);
+        }
+        switch (t->state) {
+        case 0:
+            if (fn_801B94F0()) {
+                if (t->d->state == 0) {
+                    t->d->state = 1;
+                }
+                t->d->idx = 1;
+                t->d->x = t->pan->ui.x + t->pan->ui.rdx + (f32)(t->c->sel * 48);
+                t->d->y = t->pan->ui.y + t->pan->ui.rdy;
+            } else {
+                t->d->state = 0;
+            }
+            break;
+        case 1: {
+            UiObj* ui;
+            Cur_1B3C* c;
+            t->d->idx = 2;
+            t->d->x = t->pan->ui.x;
+            t->d->y = t->pan->ui.y;
+            c = t->c;
+            ui = &t->pan->ui;
+            if ((c->flags & 1) && c->part != 0xFF) {
+                s = 0.0f;
+                if (c->flags & 2) {
+                    c->x = ui->x + c->ox;
+                    c->y = ui->y + c->oy;
+                    c->scale = 0.3f * njCos(c->angle) + 1.0f;
+                    c->angle += 0x800;
+                    s = c->scale;
+                }
+                UiLayoutDrawPart(tl, (void*)lbl_802B6A64, 1, &c->x, ui->z, s, 1.0f, c->part);
+            }
+            break;
+        }
+        }
+        fn_801B5D68((Task3_801B5D68*)t);
+        fn_801B1EA0(t);
+        break;
+    case 0xFF:
+        MenuDummy(t);
+        t->flags |= 0x40;
+        break;
+    }
 }
 
 Task_801B6240* fn_801B6240(void* a, f32 x)
@@ -4206,7 +4321,7 @@ void fn_801AC16C(Task* task) {
     extern void MenuDummy(Task* t);
     extern TextNode* TextPrint(s32 x, s32 y, const char *str);
     extern s32 UiLayoutDraw(NJS_TEXLIST** texlists, void* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
-    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, u16 index, f32 z, f32 a, f32 b);
+    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, f32 z, f32 a, f32 b, u16 index);
     extern void* fn_802267AC(void* a, void (*b)(Task*));
     extern void* fn_801E1A74(s32 a, s32 b);
     MP* p = (MP*)task;
@@ -4244,7 +4359,7 @@ void fn_801ACE70(Task* task) {
     extern void MenuDummy(Task* t);
     extern TextNode* TextPrint(s32 x, s32 y, const char *str);
     extern s32 UiLayoutDraw(NJS_TEXLIST** texlists, void* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
-    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, u16 index, f32 z, f32 a, f32 b);
+    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, f32 z, f32 a, f32 b, u16 index);
     extern void* fn_802267AC(void* a, void (*b)(Task*));
     extern void* fn_801E1A74(s32 a, s32 b);
     extern void fn_801AD1D4(Task* t);
@@ -4292,7 +4407,7 @@ void fn_801B277C(Task* task) {
     extern void MenuDummy(Task* t);
     extern TextNode* TextPrint(s32 x, s32 y, const char *str);
     extern s32 UiLayoutDraw(NJS_TEXLIST** texlists, void* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
-    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, u16 index, f32 z, f32 a, f32 b);
+    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, f32 z, f32 a, f32 b, u16 index);
     extern void* fn_802267AC(void* a, void (*b)(Task*));
     extern void* fn_801E1A74(s32 a, s32 b);
     extern void fn_801B28D4(Task* t);
@@ -4339,7 +4454,7 @@ void* fn_801B54D4(void* a) {
     extern void MenuDummy(Task* t);
     extern TextNode* TextPrint(s32 x, s32 y, const char *str);
     extern s32 UiLayoutDraw(NJS_TEXLIST** texlists, void* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
-    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, u16 index, f32 z, f32 a, f32 b);
+    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, f32 z, f32 a, f32 b, u16 index);
     extern void* fn_802267AC(void* a, void (*b)(Task*));
     extern void* fn_801E1A74(s32 a, s32 b);
     T_801B54D4* t = fn_802267AC(a, fn_801B277C);
@@ -4380,7 +4495,7 @@ void fn_801B6420(Task* task) {
     extern void MenuDummy(Task* t);
     extern TextNode* TextPrint(s32 x, s32 y, const char *str);
     extern s32 UiLayoutDraw(NJS_TEXLIST** texlists, void* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
-    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, u16 index, f32 z, f32 a, f32 b);
+    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, f32 z, f32 a, f32 b, u16 index);
     extern void* fn_802267AC(void* a, void (*b)(Task*));
     extern void* fn_801E1A74(s32 a, s32 b);
     extern FP lbl_802EC01C[];
@@ -4420,7 +4535,7 @@ s32 fn_801B8F48(s32 mode, s16* sel, s16 id) {
     extern void MenuDummy(Task* t);
     extern TextNode* TextPrint(s32 x, s32 y, const char *str);
     extern s32 UiLayoutDraw(NJS_TEXLIST** texlists, void* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
-    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, u16 index, f32 z, f32 a, f32 b);
+    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, f32 z, f32 a, f32 b, u16 index);
     extern void* fn_802267AC(void* a, void (*b)(Task*));
     extern void* fn_801E1A74(s32 a, s32 b);
     extern u8 fn_801F464C(s32 id);

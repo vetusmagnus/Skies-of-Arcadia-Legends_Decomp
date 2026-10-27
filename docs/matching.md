@@ -56,7 +56,10 @@ What MWCC cares about
   in reverse order, they come out in the original `.bss` order (see compiler.md).
 - **Parameter order between ints and floats** doesn't change the PowerPC calling convention (they
   use separate registers), so it's free; it does change scheduling (`UiSpriteDrawEx` only matches
-  with its floats before `texlist` and `flags`).
+  with its floats before `texlist` and `flags`). Callers show it too: an argument the original
+  loads last is often a later parameter than guessed. `UiLayoutDrawPart` takes its `u16 index`
+  after the three floats, and `UiDrawNumberText` its value after the position; each fix matched or
+  nearly matched several shop functions at once.
 - **volatile** was needed for a byte-by-byte colour copy that the original does load/store
   alternating (`text.c`).
 - **The game's types:** Ninja's matrix is the Dreamcast `Float[16]` (`include/ninja.h`); small

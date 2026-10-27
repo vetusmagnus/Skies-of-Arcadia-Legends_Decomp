@@ -1,8 +1,8 @@
 /* Near miss: fn_801B28D4 of game/unit_80199B9C.c (6.7 KB, the shop's equip/compare window). The
- * instruction stream is 1673 of 1673 long; 31 lines are scheduled differently (the arguments of
- * the UiLayoutDrawPart call, the member loop's counters, one colour block, the page-2
- * fn_801B6BB4 calls) and 119 lines differ in register numbers. Not in the unit, which keeps only
- * matching functions; in the unit it goes right after fn_801B277C.
+ * instruction stream is 1673 of 1673 long; with registers masked 22 lines are scheduled
+ * differently (the member loop's counters, one colour block, the page-2 fn_801B6BB4 calls), and
+ * fdiff shows 220 lines in all. Not in the unit, which keeps only matching functions; in the unit
+ * it goes right after fn_801B277C.
  *
  * To diff (this file includes the unit and appends the function):
  *
@@ -136,8 +136,6 @@ static inline s32 fn_801B28D4_locked(void) {
 
 void fn_801B28D4(Task* task) {
     extern TextNode* TextPrint(s16 x, s16 y, const char* str);
-    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, u16 index, f32 z, f32 a,
-                                f32 b);
     MObj* obj = ((MP*)task)->obj;
     f32 z;
     NJS_TEXLIST** tl;
@@ -158,7 +156,7 @@ void fn_801B28D4(Task* task) {
     TextSetColor(EQ_TEXT);
     tl = (NJS_TEXLIST**)&menu_sprites.texlist8;
     UiLayoutDraw(tl, lbl_802B717C[obj->h52].parts, lbl_802B717C[obj->h52].count, obj->o.rect, obj->o.z, 1.0f, 1.0f);
-    UiLayoutDrawPart(tl, (LayoutPart*)lbl_802B719C, 1, &obj->o.rect[2], obj->h52, obj->o.z, obj->o.alpha, 1.0f);
+    UiLayoutDrawPart(tl, (LayoutPart*)lbl_802B719C, 1, &obj->o.rect[2], obj->o.z, obj->o.alpha, 1.0f, obj->h52);
     TextSetZ(-27.5f + obj->o.z);
     TextPrint(44.0f + obj->o.rect[0], 4.0f + obj->o.rect[1], fn_801C2CBC(obj->h56));
     TextPrint(86.0f + obj->o.rect[0], 31.0f + obj->o.rect[1], (const char*)lbl_802EC04C[6]);

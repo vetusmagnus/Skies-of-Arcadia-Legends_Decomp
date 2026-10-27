@@ -111,7 +111,7 @@ void fn_801C3F5C(f32 x, f32 y, f32 z);
 void UiTexlistLoad(void);
 void UiTexlistRelease(void);
 void SpriteObjDraw(SpriteObj* obj);
-s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, LayoutPart* parts, s32 count, f32* pos, u16 index, f32 z, f32 a, f32 b);
+s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, LayoutPart* parts, s32 count, f32* pos, f32 z, f32 a, f32 b, u16 index);
 s32 UiLayoutDraw(NJS_TEXLIST** texlists, LayoutPart* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
 s32 UiSpriteDraw(Sprite* sprite, f32 x, f32 y, f32 z, NJS_TEXLIST* texlist, u16 flags, f32 a, f32 b);
 s32 UiSpriteDrawEx(Sprite* sprite, f32 x, f32 y, f32 z, NJS_TEXLIST* texlist, u16 flags, f32 a, f32 b);
@@ -696,7 +696,7 @@ void SpriteObjDraw(SpriteObj* obj) {
     }
 }
 
-s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, LayoutPart* parts, s32 count, f32* pos, u16 index, f32 z, f32 a, f32 b) {
+s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, LayoutPart* parts, s32 count, f32* pos, f32 z, f32 a, f32 b, u16 index) {
     LayoutPart* p = &parts[index];
     return UiSpriteDrawEx(fn_801D68C4(menu_sprites.banks[p->bank], p->sprite),
                        pos[0] + p->x, pos[1] + p->y, p->z + z, texlists[p->texlist], p->flags, a, b);
