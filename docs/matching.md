@@ -115,6 +115,28 @@ From `fn_801AD1D4` (10.4 KB, the shop's stat-comparison windows, same file; a ne
   where we use r6. One register for every copy of a value looks like a single variable whose live
   range spans the whole function, but hoisting `v` alone makes it worse (996).
 
+From `fn_801B28D4` (6.7 KB, the shop's equip/compare window, same file; a near miss kept in
+[near/fn_801B28D4.c](near/fn_801B28D4.c), which includes the unit, so plain fdiff works on it):
+
+- **Case bodies come out in source order**, so the order of the case code in the asm is the order
+  of the `case`s in the source: here 0, 2, 1, 3. Writing them 0-3 cost 20 lines.
+- **Stack slots tell the order of conversions.** Each float-to-int temporary gets its own slot,
+  later ones at lower offsets. The slots showed `iy` (with its row offset) converted before `ix`;
+  swapping them took the diff from 120 to 51 lines.
+- **Two equally typed stack buffers** take their offsets from declaration order (`CmpEq eq;
+  CmpEq eq2;` puts `eq2` at the lower address).
+- **Float temporaries can be shared across blocks with swapped roles.** The colour rows put the
+  row in f31 and the column in f29, the opposite of the window's own `x`/`y`. Reusing `x`/`y` the
+  other way round there, plus block-local temporaries in the macros, took the register diff from
+  207 to 119. The comment at the macro says so.
+- **The permuter scores differently from fdiff**: its best candidate here (3570 → 2680 by its
+  measure) was worse by ours (74 lines instead of 31), using a `volatile` and dead code. Read its
+  output as a hint only.
+- **Still open**: the arguments of the `UiLayoutDrawPart` call are scheduled differently (the
+  original loads the index last; no parameter type or spelling moved it), the loop counters start
+  differently (the original copies `i`'s zero and reloads `i` from its stack slot), and the
+  page-2 `fn_801B6BB4` calls compute the item id before the object and position.
+
 Open
 ----
 

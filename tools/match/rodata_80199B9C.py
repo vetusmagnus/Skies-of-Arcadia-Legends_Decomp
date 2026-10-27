@@ -12,6 +12,8 @@ def ff(v):
         t = "%.*g" % (n, v)
         if struct.pack(">f", float(t)) == struct.pack(">f", v):
             break
+    if "e" in t and v == int(v) and abs(v) < 1e9:
+        t = "%d" % v
     if "." not in t and "e" not in t:
         t += ".0"
     return t + "f"
@@ -86,4 +88,8 @@ OVERRIDES.update({
     0x802B7B94: defs("LT", "lbl_802B7B94", 0x802B7B94, 6, [_ptr("void*"), _hex]),
     0x802B6DA0: defs("LT", "lbl_802B6DA0", 0x802B6DA0, 6, [_ptr("void*"), _hex]),
     0x802B73A4: defs("AnimDef", "lbl_802B73A4", 0x802B73A4, 5, [_ptr("LayoutPart*"), _hi, _hex, _hex]),
+})
+OVERRIDES.update({
+    0x802B717C: defs("LT", "lbl_802B717C", 0x802B717C, 4, [_ptr("void*"), _hex]),
+    0x802B719C: layout("lbl_802B719C", 0x802B719C, 4),
 })
