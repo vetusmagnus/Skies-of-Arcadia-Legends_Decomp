@@ -8,6 +8,7 @@
 #include "game/sprite.h"
 #include <math.h>
 #include <string.h>
+#include <dolphin/types.h>
 typedef struct {
     u32 flags;
     u8 pad[0x19C - 4];
@@ -2421,6 +2422,31 @@ extern s32 fn_80194A8C(s32 a);
 extern s32 fn_80194A18(s32 a);
 extern s32 fn_80194C38(s8 a);
 #define LA(n) (((Pnl_801729D0*)camp_work.objs[n])->in->la)
+typedef struct Ent_80166138 { u8 pad[0x2c]; u32 f2c; } Ent_80166138;
+typedef struct Tab_80166138 {
+    u8 pad[0x1c];
+    u32 count;
+    Ent_80166138 *ents;
+} Tab_80166138;
+typedef struct Mod {
+    u8 pad[0x170];
+    u16 f170;
+    u16 f172;
+    u8 pad174[0x198 - 0x174];
+    s32 f198;
+} Mod;
+typedef struct Hd {
+    u8 pad0[8];
+    Mod *mod;
+    u8 pad_c[0x1a - 0xc];
+    s16 idx;
+} Hd;
+typedef struct Obj_80166138 {
+    u8 pad[0x1d8];
+    Hd *x1d8;
+} Obj_80166138;
+extern s32 fn_801664A4(Obj_80166138 *o);
+extern void fn_801E735C(u32 index, f32 speed, Mod *obj);
 
 s32 fn_8015DC6C(Obj_8015DC6C* self, Src* src)
 {
@@ -8969,4 +8995,23 @@ void fn_801729D0(void) {
         t->f8 = fn_80194A18(c2->f44);
     }
     fn_801954D0((void *)fn_80194C38(LA(0x85 + (s8)c->f4)->f10));
+}
+
+static inline s32 inRange(Hd *h, Tab_80166138 *t) {
+    if (h != 0 && t != 0 && t->ents != 0 && t->count != 0 && t->count > h->idx) return 1;
+    return 0;
+}
+
+s32 fn_80166138(Obj_80166138 *o, Tab_80166138 *t) {
+    Hd *h = o->x1d8;
+    Mod *m = h->mod;
+    s32 r = fn_801664A4(o);
+    if (inRange(o->x1d8, t)) {
+        Ent_80166138 *e = &t->ents[h->idx];
+        u16 i = m->f172;
+        if (m->f170 != i && e->f2c != 1 && m->f198 != 0) {
+            fn_801E735C(i, 1.0f, m);
+        }
+    }
+    return r;
 }

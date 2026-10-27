@@ -1,8 +1,8 @@
 Progress and handoff
 ====================
 
-State of the work as of 2026-10-27 (after the hand-merge of the tier 2 type-clash leftovers): 32.0% of code matched (3,899 / 7,116
-functions), 3,217 functions unmatched: about 2,470 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
+State of the work as of 2026-10-27 (after the tier 3 batch): 32.9% of code matched (3,996 / 7,116
+functions), 3,120 functions unmatched: about 2,470 game, 515 in the unsplit SDK/MSL/TRK range (121 KB), 452 Ninja (154 KB)
 (the size split of the game functions predates the duplicate-copy batch: 2,193 under 632 bytes, 466 at 632-1000,
 355 at 1-2 KB, 101 at 2-5 KB, 16 over 5 KB). Numbers live in the README status block and on
 [ByteMatch](https://bytematch.dev/vetusmagnus/SoAL-Decomp); this page covers what's in flight.
@@ -834,3 +834,34 @@ unit_80219378.c (fn_80223104, 80223194, 8022394C, 802239A4, 80226848). Unmerged 
 The per-function files are in `build/agents/t2_*/` (gitignored).
 
 Near misses from this batch (111; mostly register allocation or scheduling): fn_800096BC, fn_8000DEC8, fn_8000F168, fn_800102C8, fn_800110C8, fn_80011394, fn_80012078, fn_80014A54, fn_80015460, fn_80017A7C, fn_8001C410, fn_8001FD7C, fn_8001FDD8, fn_800292F8, fn_80061080, fn_8006116C, fn_8006228C, fn_80064C00, fn_80067DFC, fn_80068348, fn_80068D7C, fn_80068F68, fn_8006AB6C, fn_8006D02C, fn_80071EEC, fn_80071F84, fn_80072E8C, fn_8008F1F8, fn_80090378, fn_8009E4D4, fn_800D208C, fn_800D6580, fn_80109EEC, fn_80142C78, fn_8014912C, fn_801532F0, fn_801568F8, fn_801570BC, fn_80167604, fn_80191E94, fn_8019438C, fn_801943C0, fn_801943F4, fn_80194428, fn_8019445C, fn_80194490, fn_80194ECC, fn_80195EA4, fn_801C08B4, fn_801C0C14, fn_801C0CA0, fn_801C16D0, fn_801C58FC, fn_801C599C, fn_801C5BF4, fn_801C5D88, fn_801C6180, fn_801C83B4, fn_801C8450, fn_801C84EC, fn_801C8590, fn_801C8634, fn_801C87C8, fn_801C8930, fn_801CAE98, fn_801CB0A4, fn_801CB1AC, fn_801CB6A0, fn_801D0AB4, fn_801D0D70, fn_801D289C, fn_801D2934, fn_801D29CC, fn_801D48BC, fn_801D616C, fn_801D66D4, fn_801D722C, fn_801D80A0, fn_801DA6A8, fn_801DB124, fn_801DB1A4, fn_801DB244, fn_801DCDC0, fn_801DDC48, fn_801DFDB0, fn_801E1BDC, fn_801F2E44, fn_801F52AC, fn_801F5A74, fn_801F5B14, fn_801F5BD0, fn_801F5C30, fn_801FF05C, fn_80211058, fn_802110E8, fn_80215F94, fn_80216D98, fn_80219ACC, fn_80219B24, fn_8021A7B0, fn_8021A940, fn_8021A9C4, fn_80222964, fn_80225E58, fn_80225FDC, fn_8022638C, fn_80228014, fn_8022807C, fn_802289AC, fn_80228B74, fn_8022AE04.
+
+Tier 3: never-tried functions of 200-328 bytes (2026-10-27)
+-----------------------------------------------------------
+
+16 Sonnet 5.5 agents (set explicitly, no Opus, no retries, no merge agents), 20 functions each: the 320 smallest game
+functions of 200-631 bytes (588 candidates; this batch reached 0xC8-0x148) that were not defined in `src/`, not mentioned
+in this page and not a duplicate copy. About 10 tries per function. 215 matched in isolation (re-checked with fdiff by the
+coordinating session); 105 stayed near misses. `build/agents/merge8.py` (no call-site cast fallback) merged
+**96 functions into the unit files** (3,900 to 3,996 matched, 915,312 bytes, 32.89%). Every function of every touched unit
+passes fdiff and `floatcheck.py`, and `main.dol` force-relinks to the SHA-1 in `build.sha1`. The agents' files are in
+`build/agents/t3_*/` (gitignored). The remaining 428 candidates (329-631 bytes) are untouched.
+
+**119 matched in isolation but not merged** (a prototype or struct differs from the unit's; the fix is a struct or
+prototype unification, not a cast). Agents flagged these clusters: `Work8030CEA0` lacks fields (`x0a`, `x0/x4`, `x820/x824`,
+`xc6c`, `xc86`, `x1584[17]`, `x14b8`) used by fn_80210F74, fn_80210450, fn_8021067C, fn_80210D7C, fn_80200CE4, fn_8021B2B4;
+`Sys_8030A10C` lacks `x74-x84`/`xa4` (fn_80072F10) and splits at 0x16c-0x170 (fn_8006097C); `Ent_BB28.xc` is `int` but
+read as `u8` (fn_8000BF48, fn_8000BE28); `Row16`/`ChrState` lack byte fields (fn_8006A114, fn_8000BE28); the unit_80219378.c
+`Node` has `pad0[0x10]` where fn_80222F14/8022300C use a callback at 0 and `prev`/`next` at 0x2c/0x30; `Unk8022D34C`
+(lbl_80311970) lacks `f0-fc`/`f38`; `lbl_8030E7F0` `Tbl` needs `x18` (fn_802224D4, fn_802223E4); `lbl_802F6748` is `Node*[4]` in
+fn_801E1DF8 and `u32[4]` in the unit; `lbl_80347518` is `u32` in unit_801CBA60.c and `s32` in fn_801CBA98;
+`fn_801CBB9C`/`BBAC` are `(void*, f32)` in unit_80219378.c and `(f32)` in the originals' callers; `fn_8006AFD0`'s last
+parameter is `s32` in unit_80055E94.c and `s8` in fn_8006AC68; `fn_801D5DD8`'s first parameter is `s32` vs `void*`.
+Unmerged list: fn_80006C00, fn_80008800, fn_800095D0, fn_8000B5F4, fn_8000BE28, fn_8000BF48, fn_8000C7C0, fn_8000FA30, fn_80014BA8, fn_80015728, fn_80016B20, fn_80017324, fn_80018084, fn_80019E44, fn_8001C1F0, fn_8001DD00, fn_8001E238, fn_8001E308, fn_8001E3D8, fn_80020470, fn_80023FEC, fn_80029168, fn_80029364, fn_800593AC, fn_8005CCB0, fn_8006097C, fn_80062318, fn_80062E94, fn_80064AC8, fn_800656A8, fn_80068640, fn_800695A0, fn_8006AC68, fn_8006BDB4, fn_8006CF54, fn_8006EF48, fn_80071990, fn_80071A78, fn_80072F10, fn_80073C44, fn_80073DD0, fn_80128938, fn_80128B34, fn_8012BC48, fn_8012FE2C, fn_80131734, fn_80136A28, fn_8014093C, fn_80142F88, fn_80146EF4, fn_8015432C, fn_80154B6C, fn_8015D464, fn_8016EA60, fn_8017E174, fn_8017EAEC, fn_801C0AB4, fn_801C7904, fn_801CBA98, fn_801CC2A0, fn_801D0DCC, fn_801D129C, fn_801D1714, fn_801D1B28, fn_801D22CC, fn_801D6998, fn_801D89D4, fn_801D8DBC, fn_801D9728, fn_801D9864, fn_801D9B34, fn_801DA0AC, fn_801DD22C, fn_801DD5E8, fn_801DF500, fn_801E15FC, fn_801F3E6C, fn_801F4AE4, fn_801F4D14, fn_801FD44C, fn_801FD584, fn_801FE21C, fn_801FEF80, fn_801FF380, fn_80200CE4, fn_8020170C, fn_80204BE8, fn_80207554, fn_802088D8, fn_8020A048, fn_8020D1C0, fn_8020FF44, fn_8021026C, fn_8021116C, fn_802171F0, fn_80218570, fn_8021A1C4, fn_8021A620, fn_8021A6E8, fn_8021B2B4, fn_8021B3B4, fn_80221D04, fn_80222010, fn_80222F14, fn_8022300C, fn_802233EC, fn_8022436C, fn_80229D74, fn_8022A38C, fn_8022A46C, fn_8022A728, fn_8022AE94, fn_8022BC64, fn_8022C364, fn_8022D9C4, fn_8022DAE8, fn_8022E068, fn_80230FCC.
+
+Near misses from this batch (105; mostly register allocation or scheduling): fn_80007640, fn_8000775C, fn_80008000, fn_800086BC, fn_80008DF4, fn_800093C0, fn_8000ABCC, fn_8000CB44, fn_8000F8F8, fn_80010A40, fn_80010E68, fn_80015640, fn_80015A58, fn_800171F0, fn_80018398, fn_80018798, fn_8001C6CC, fn_8001DB44, fn_8001DF44, fn_8001E5C8, fn_8001E6DC, fn_8001E7F8, fn_8001EBA4, fn_800205B8, fn_80021658, fn_80061340, fn_80065F1C, fn_800670E4, fn_8006801C, fn_80068BE0, fn_80068E20, fn_80069B58, fn_8006B774, fn_8006D080, fn_80073024, fn_800EDAA4, fn_80126F70, fn_80128F80, fn_80147CC8, fn_8014EE4C, fn_80156024, fn_80166D40, fn_8016748C, fn_8017BBC8, fn_801A2424, fn_801A53D4, fn_801C81DC, fn_801C82C8, fn_801C86D8, fn_801C8828, fn_801C8CC0, fn_801CB244, fn_801CBD48, fn_801CC434, fn_801D1C04, fn_801D6CBC, fn_801D73F0, fn_801D9A0C, fn_801DBCD4, fn_801DBE88, fn_801DCFA0, fn_801DD078, fn_801E1AC8, fn_801E1DF8, fn_801F3024, fn_801F3B90, fn_801F48AC, fn_801F5D7C, fn_801F7B14, fn_801F9708, fn_801FF604, fn_801FFFA4, fn_802056A8, fn_8020BDB0, fn_8020F154, fn_8020F7F8, fn_80210450, fn_80210550, fn_8021067C, fn_80210D7C, fn_80210F74, fn_80211D90, fn_80213478, fn_8021528C, fn_8021768C, fn_8021AA48, fn_8021ADA0, fn_8021BF80, fn_802223E4, fn_802224D4, fn_802225C0, fn_802229F8, fn_80223228, fn_8022445C, fn_80224674, fn_80224884, fn_80225B74, fn_80226170, fn_80226BD0, fn_80226DC4, fn_802280D4, fn_8022DBC8, fn_8022E18C, fn_8023080C, fn_80230BD4.
+
+Notes from the agents worth keeping: fn_80128938 matches only with 3-byte local arrays copied by a 7-iteration loop (the
+original reads uninitialised stack bytes), fn_8001DD00 matches only with `val` left uninitialised on one path, fn_80017324
+needs one `goto` for the nested-search exit (a `break` gives 70 instead of 67 instructions); neither is in the tree.
+fn_80006C00 is a copy of fn_80006A70 (unit_80005B50.c). Strings pooled as offsets from an earlier blob
+(fn_8000ABCC, fn_80073024, fn_801D1C04) only line up in the full build.

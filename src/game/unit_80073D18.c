@@ -14,6 +14,7 @@ typedef struct Node {
 extern void fn_80061F58(void *p, u32 n, s32 c);
 extern void fn_80073DD0(void *a, void *b, s32 c, s32 e, s16 *m);
 extern s16 fn_80060F6C(s32 i, void *c, s32 k);
+typedef struct E34 { u32 flags; u8 pad[0x30]; } E34;
 
 void fn_80073D18(u8* a, u8* b, s16 idx) {
     s32 off = idx * 0x34;
@@ -122,5 +123,22 @@ void fn_80073F14(u8 *a, u8 *b, s16 max, void *c, s16 n) {
         }
         pa += 0x34;
         pb += 0x34;
+    }
+}
+
+void fn_80073FB8(E34 *src, E34 *dst, s16 n, s16 keep) {
+    s16 i;
+    if (keep < 0) {
+        for (i = 0; i < n; i++) {
+            dst[i].flags = src[i].flags;
+        }
+    } else {
+        for (i = 0; i < n; i++) {
+            if (keep == i) {
+                dst[i].flags = src[i].flags;
+            } else {
+                dst[i].flags |= 8;
+            }
+        }
     }
 }

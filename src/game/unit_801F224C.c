@@ -10,6 +10,22 @@ extern u8 lbl_802C8E54[];
 s8 fn_801EF300(void);
 u32 fn_801F4C24(void);
 s8 fn_801EFCC4(s16 id, s32 n);
+typedef struct { u8 pad[0x12]; u8 f; u8 pad2[0xd]; } T0;
+extern T0 lbl_802C5790[];
+typedef struct { u8 pad[0x12]; u8 f; u8 pad2[0x15]; } T1;
+extern T1 lbl_802C6190[];
+typedef struct { u8 pad[0x12]; u8 f; u8 pad2[0x15]; } T2;
+extern T2 lbl_802C6E10[];
+typedef struct { u8 pad[0x15]; u8 f; u8 pad2[0xe]; } T3;
+extern T3 lbl_802C7C34[];
+typedef struct { u8 pad[0x11]; u8 f; u8 pad2[0x4]; } T4;
+extern T4 lbl_802C8774[];
+typedef struct { u8 pad[0x20]; u8 f; u8 pad2[0x3]; } T5;
+extern T5 lbl_802D7E4C[];
+typedef struct { u8 pad[0x24]; u8 f; u8 pad2[0x3]; } T6;
+extern T6 lbl_802D83EC[];
+typedef struct { u8 pad[0x18]; u8 f; u8 pad2[0xb]; } T7;
+extern T7 lbl_802D8A2C[];
 
 s32 fn_801F2508(void *a, void *b)
 {
@@ -122,4 +138,28 @@ s8 fn_801F4CA0(void) {
         }
     }
     return mask;
+}
+
+s32 fn_801F464C(s16 id)
+{
+    switch (fn_801F4C24()) {
+    case 0:
+        return lbl_802C5790[id].f;
+    case 1:
+        return lbl_802C6190[id - 80].f;
+    case 2:
+        return lbl_802C6E10[id - 160].f;
+    case 3:
+        return lbl_802C7C34[id - 240].f;
+    case 4:
+        return lbl_802C8774[id - 320].f;
+    case 5:
+        return lbl_802D7E4C[id - 400].f;
+    case 6:
+        return lbl_802D83EC[id - 440].f;
+    case 7:
+        return lbl_802D8A2C[id - 480].f;
+    default:
+        return 0;
+    }
 }

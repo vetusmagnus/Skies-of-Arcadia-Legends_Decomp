@@ -18,6 +18,20 @@ extern u32 lbl_803474F4;
 s32 fn_801CB0A4(s32 c);
 extern f32 lbl_80347514;
 void fn_801C6C7C(void* p);
+typedef struct { u16 size; u16 type; } Hdr;
+typedef struct { u16 cnt; u16 pad; } Cnt;
+typedef struct FioReq {
+    s32 w00, w04, w08, w0c, w10, w14, w18, w1c, w20;
+    char* name;
+    s32 w28, w2c;
+    struct FioReq* next;
+} FioReq;
+typedef struct { char* str; s32 w4; } FioName;
+extern FioReq* lbl_80347200;
+extern u32 strlen(const char*);
+extern void* fn_801E1BDC(s32 size);
+extern void fn_801DBE1C(const char*, ...);
+extern void fn_8025F120(char*, const char*);
 
 s32 fn_801CAE84(void) {
     return 1;
@@ -352,4 +366,88 @@ void fn_801CBBAC(f32 f) {
 void fn_801CC608(u8* p, s32 v) {
     *(s32*)(p + 0x48) = v;
     fn_801C6C7C(p);
+}
+
+s32 fn_801CB380(f32* dst_, Hdr* src_, s32 max) {
+    s32 type;
+    s32 size;
+    s32 cnt;
+    Hdr* src;
+    f32* dst;
+    f32* in;
+    s32 i;
+    s32 n;
+    f32* q;
+    if (src_ == NULL || max == 0) {
+        return 0;
+    }
+    dst = dst_;
+    src = src_;
+    i = 0;
+    do {
+        size = src->size;
+        type = src->type & 0xff;
+        in = (f32*)(src + 1);
+        src = (Hdr*)in;
+        n = fn_801CB0A4(type);
+        if (n >= 0) {
+            cnt = ((Cnt*)in)->cnt;
+            in += 1;
+        } else {
+            size = n & 0xffff;
+        }
+        if (n > 0) {
+            q = in;
+            do {
+                dst[0] = q[0];
+                dst[1] = q[1];
+                dst[2] = q[2];
+                q += n;
+                dst += 3;
+                if (--cnt <= 0) break;
+                i++;
+            } while (i < max);
+        }
+        src += size;
+        if (type == 0xff) break;
+    } while (i < max);
+    return i;
+}
+
+FioName* fn_801CC1B4(const char* name)
+{
+    FioName* n = fn_801E1BDC(strlen(name) + 9);
+    FioReq* req;
+    FioReq** pp;
+    if (n == 0) {
+        fn_801DBE1C("Fio Auto Error (memory allocate): %s", name);
+    }
+    n->str = (char*)n + 8;
+    fn_8025F120(n->str, name);
+    n->w4 = 0;
+    req = fn_801E1BDC(0x34);
+    if (req == 0) {
+        fn_801DBE1C("s_FioReadReq Error (memory allocate)");
+    }
+    req->w00 = 0;
+    req->w04 = 0;
+    req->w08 = 0;
+    req->w18 = 0;
+    req->w0c = 0;
+    req->w10 = 0;
+    req->w1c = 0;
+    req->w14 = 0;
+    req->w20 = 0;
+    req->name = (char*)n;
+    req->w28 = 0;
+    req->w2c = 0;
+    req->next = 0;
+    pp = &lbl_80347200;
+    for (;;) {
+        FioReq* t = *pp;
+        if (t == 0) break;
+        pp = &t->next;
+    }
+    *pp = req;
+    return n;
 }

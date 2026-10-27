@@ -38,6 +38,12 @@ extern void fn_801DBCD4(void);
 extern void GXFlush(void);
 extern void fn_802A8AE4(void* tex);
 extern s32 lbl_8034722C;
+extern s32 lbl_8034724C;
+extern void njClipZ(f32 near, f32 far);
+extern f32 lbl_80345850[10];
+typedef struct { s32 id; u8 pad4[4]; s8 x8; } Cur;
+extern Cur lbl_80311AC0;
+extern u32 lbl_80310B3C[];
 
 void fn_801CED24(u32 a, u32 b, u32 c, f32 d, u32 e)
 {
@@ -416,4 +422,26 @@ void fn_801CF218(s32 a, s32 b) {
     lbl_80347228 = 0x1;
     lbl_80347248 = b;
     fn_801CF248();
+}
+
+void fn_801D0680(void) {
+    lbl_8034724C = 0;
+    if (lbl_80311AC0.id == 0x74 && lbl_803475CC != 7) {
+        s8 c = lbl_80311AC0.x8;
+        if (c == 0x66) {
+            lbl_8034724C = 1;
+            njClipZ(-1.0f, -1000000.0f);
+        } else if (c == 0x61) {
+            lbl_8034724C = 2;
+            lbl_80345850[0] = 1900.0f;
+        } else if (c == 0x63) {
+            if (lbl_80310B3C[89] & 0x200) {
+                lbl_8034724C = 3;
+                njClipZ(-1.0f, -400.0f);
+            }
+        }
+    }
+    if (lbl_80311AC0.id == 0x11 && lbl_80311AC0.x8 == 0x61) {
+        lbl_80346820 = 0xc0;
+    }
 }

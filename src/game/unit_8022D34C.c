@@ -17,6 +17,25 @@ extern void fn_8023182C(void);
 extern void fn_80230FCC(void);
 extern void fn_80288DE4(void *p, void (*f)(void));
 extern void fn_80296F28(void);
+extern s32 fn_8022E734(u8 kind, void *p, void *a, void *b, s32 f1, s32 f2, s32 f3);
+typedef struct Pt { f32 x; f32 y; f32 z; } Pt;
+typedef struct Rng {
+    f32 x0;
+    u8 pad4[4];
+    f32 x8;
+    u8 padc[0xc];
+    f32 lo;
+    f32 hi;
+    Pt *pts;
+    u8 pad24[0xc];
+    f32 ylo;
+    f32 yhi;
+    f32 dx;
+    f32 dz;
+} Rng;
+typedef struct { u8 pad[4]; void* x4; } Src;
+typedef struct { s16 x0; s16 x2; s16 x4; u8 pad6[2]; s16* x8; } Out;
+extern s32 fn_80230D10(u8 id, Src* s, s16** out);
 
 void fn_8022D34C(s32 a, f32 b) {
     if (a > 0) {
@@ -159,4 +178,83 @@ void fn_80230F6C(void *p) {
     lbl_80347884 = 1;
     fn_80288DE4(p, fn_80230FCC);
     fn_80296F28();
+}
+
+void fn_8022F580(void *node, s32 mask, u8 op)
+{
+    s16 *cur = NULL;
+    s16 *next;
+    s32 first = 1;
+
+    while (fn_8022E734(0x40, node, &cur, &next, first, 0x40, 0x49)) {
+        switch (op) {
+        default:
+            *cur |= mask;
+            break;
+        case 2:
+            *cur &= mask;
+            break;
+        case 3:
+            *cur ^= mask;
+            break;
+        }
+        first = 0;
+        cur = next;
+    }
+}
+
+s32 fn_80230E48(Rng *r, f32 t, u16 i) {
+    Pt *p;
+    s32 ok = 1;
+    f32 d;
+    if (t < r->lo || t > r->hi) {
+        ok = 0;
+    }
+    p = r->pts;
+    if (p != 0) {
+        if (r->ylo != r->yhi) {
+            if (r->ylo > p[i].y || r->yhi < p[i].y) {
+                ok = 0;
+            }
+        }
+        if (r->dx != r->dz) {
+            d = r->x0 - p[i].x;
+            if (d < 0.0f) {
+                d = -1.0f * d;
+            }
+            if (d > r->dx) {
+                ok = 0;
+            }
+            d = r->x8 - p[i].z;
+            if (d < 0.0f) {
+                d = -1.0f * d;
+            }
+            if (d > r->dz) {
+                ok = 0;
+            }
+        }
+    }
+    return ok;
+}
+
+s32 fn_802301A0(Src* src, Out* out) {
+    s16* p;
+    u16 i;
+    if (src->x4 == NULL) {
+        return 0;
+    }
+    for (i = 0x20; i < 0x38; i++) {
+        if (fn_80230D10(i, src, &p) != 0) {
+            i = 0x39;
+        }
+    }
+    if (i == 0x38) {
+        return 0;
+    }
+    out->x4 = *p++;
+    out->x0 = *p++;
+    out->x2 = *p++;
+    p++;
+    out->x8 = p;
+    return 1;
 }

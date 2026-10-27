@@ -81,6 +81,31 @@ typedef struct Ent80025518 {
     s32 *out_ptr;
 } Ent80025518;
 extern s32 lbl_8034732C;
+typedef struct Dat {
+    u8 pad_00[4];
+    u8 x4;
+    u8 pad_05;
+    s16 x6;
+    s16 x8;
+    u8 pad_0a[8];
+    s16 x12;
+    u8 pad_14[4];
+    s16 x18;
+    s16 x1a;
+    s16 x1c;
+    u8 pad_1e[0xe4 - 0x1e];
+    s16 xe4;
+    s16 xe6_pad;
+    s16 xe8;
+    u8 pad_ea[2];
+    u32 xec;
+    u8 pad_f0[0x134 - 0xf0];
+    s32 x134;
+} Dat;
+typedef struct Wk { u8 pad_00[0x4c]; Dat *x4c; } Wk;
+typedef struct Tsk { u8 pad_00[0x24]; Wk *work; } Tsk;
+extern s32 fn_80020470(Tsk *t, s16 st);
+extern s16 fn_80020094(Wk *w, s16 a, s16 b, s16 c);
 
 void fn_80020B50(Top *t, s16 *out1, s16 *out2) {
   Inner *i = t->mid->inner;
@@ -365,4 +390,55 @@ void fn_80025518(Ent80025518 *self)
         break;
     }
     *(s32 *)((u8 *)self->out_ptr + 0x14) = v;
+}
+
+void fn_800294E8(void) {
+    s32 i;
+    for (i = 0; i < 12; i++) {
+        if (lbl_80302AB0[i] != NULL && !(lbl_80302AB0[i]->w0 & 0x40000000)) {
+            lbl_80302AB0[i]->w4 = 0;
+            lbl_80302AB0[i]->h3e = 0;
+            lbl_80302AB0[i]->h44 = 0;
+            lbl_80302AB0[i]->h6e = 0;
+        }
+    }
+}
+
+s32 fn_80021EB8(Tsk *t) {
+    Wk *w = t->work;
+    Dat *d = w->x4c;
+    s16 st = 2;
+    s16 b = -1;
+    s16 k;
+    if (d->xec & 0x40000000) {
+        st = d->x18;
+        switch (st) {
+        case 0x18:
+        case 0x19:
+        case 0x1d:
+        case 0x1e:
+            b = d->x1a;
+            break;
+        default:
+            b = -1;
+            break;
+        }
+    }
+    if (fn_80020470(t, st) == 0) {
+        return 0;
+    }
+    k = fn_80020094(w, st, b, 0);
+    if (k >= 0 && d->x6 != st) {
+        d->x4 = 0;
+        d->x1c = d->x6;
+        d->x6 = st;
+        d->x8 = b;
+        d->x12 = 0;
+        d->xe8 = d->xe4;
+        d->xe4 = k;
+        d->x134 = 0;
+        d->xec &= ~0x20000;
+        return 1;
+    }
+    return 0;
 }

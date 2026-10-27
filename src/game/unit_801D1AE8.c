@@ -3,6 +3,9 @@
 #include "game/drawstate.h"
 #include <dolphin/os.h>
 #include "game/menu.h"
+#include <dolphin/vi.h>
+#include <dolphin/gx.h>
+#include <dolphin/types.h>
 void VISetNextFrameBuffer(void *fb);
 void VIFlush(void);
 void VIWaitForRetrace(void);
@@ -60,7 +63,12 @@ void *memcpy(void *dst, const void *src, u32 n);
 extern s32 lbl_8034754C;
 extern u8 lbl_8030EA1C[];
 typedef struct Ob { u8 pad0[2]; s16 s2; u8 pad1[0x48]; void *p4c; } Ob;
-void fn_801DFA9C(void *p, s32 v);
+typedef struct { u16 size; u16 type; } Hdr;
+typedef struct { u16 cnt; u16 pad; } Cnt;
+typedef struct { u8 pad[4]; f32 x, y, z; u8 pad2[0x1c - 0x10]; } Ent_801DFA9C;
+typedef struct { Hdr* stream; Ent_801DFA9C* ent; u8 pad[4]; } Item_801DFA9C;
+extern s32 fn_801CB0A4(s32 type);
+s32 fn_801DFA9C(Item_801DFA9C* items, s32 count);
 typedef struct Mo { u8 pad0[4]; u8 m4[0x28]; u8 m2c[0x1C]; s32 x48; void *x4c; } Mo;
 void njPushMatrixEx(void);
 void njPopMatrixEx(void);
@@ -351,6 +359,210 @@ void fn_8028B784(void *p, f32 a, f32 b, f32 c);
 extern const char lbl_802C46EC[];
 extern s32 lbl_80347700;
 void fn_801E15FC(void *a, void *p);
+typedef struct Ent_801DDCA8 {
+    s32 x0;
+    void* x4;
+    u8 pad8[8];
+    void* x10;
+    u8 pad14[4];
+    void* x18;
+    u8 pad1c[0x24 - 0x1c];
+} Ent_801DDCA8;
+typedef struct Pool_801DDCA8 {
+    Ent_801DDCA8* ents;
+    s16 count;
+    s16 x6;
+} Pool_801DDCA8;
+typedef struct W1DB { u8 pad00[8]; void *x8; u8 pad0c[8]; s32 x14; } W1DB;
+typedef struct T1DB { u8 pad00[0x24]; W1DB *work; } T1DB;
+extern u8 lbl_80302A00[];
+extern u8 lbl_8031693C[];
+extern u8 lbl_80346A80[];
+extern u8 lbl_80347888[];
+extern u8 lbl_8034D460[];
+extern u8 lbl_8034D484[];
+extern u8* lbl_8034767C;
+extern u32 lbl_80347678;
+extern void* lbl_803476B0;
+extern void* lbl_803476B4;
+extern u32 lbl_803475B8;
+extern u32 lbl_803475BC;
+extern u32 lbl_803475C0;
+extern u32 lbl_803475C4;
+extern u32 lbl_803475C8;
+extern u32 lbl_8034768C;
+extern u8 lbl_80347690;
+extern void fn_801D22CC(void);
+extern void fn_801C62D8(void);
+extern void fn_801C6248(s32 a);
+extern void fn_80296F48(void);
+extern void fn_801DD5E8(void);
+extern void njRotateX(NJS_MATRIX m, s32 a);
+extern void njRotateY(NJS_MATRIX m, s32 a);
+typedef struct { u8 pad[4]; f32 x, y, z; u8 pad2[0x1c - 0x10]; } Ent_801DFB7C;
+typedef struct { Hdr* stream; Ent_801DFB7C* ent; u8 pad[4]; } Item_801DFB7C;
+typedef struct Slot { s32 key; u8 pad[0x20]; } Slot;
+typedef struct SlotTab {
+    Slot *slots;
+    s16 count;
+    s16 used;
+} SlotTab;
+extern s32 lbl_80347600;
+extern u32 lbl_803475FC;
+extern u32 lbl_803475F8;
+extern s32 lbl_803475AC;
+extern const char lbl_802C428C[];
+extern void OSReport(const char *msg, ...);
+extern void GXGetGPStatus(u8*, u8*, u8*, u8*, u8*);
+extern u32 GXGetOverflowCount(void);
+extern void fn_801D20D8(void);
+typedef struct { s16 a; s16 b; s32 off; } Ent_801DE504;
+typedef struct {
+    void* list;
+    void* model;
+    NJS_TEXLIST* texlist;
+    u32 xc;
+    NJS_TEXNAME** base;
+    Ent_801DE504* ents;
+    s16 count;
+    s16 cur;
+} Obj_801DE504;
+extern void fn_801E85BC(void* list, s16 dx, s16 dy);
+void fn_801E7194(s32 id, void* model, void* motion, void* shape, f32 frame);
+void fn_801E4CB0(s32 id, void* model);
+typedef struct { f32 a, r, g, b; } Argb4;
+typedef struct {
+    NJS_POINT3 p0, p1;      /* 0x00, 0x0C */
+    NJS_POINT3 s0, s1;      /* 0x18, 0x24 */
+    Argb4 c0, c1;           /* 0x30, 0x40 */
+} Key_801DE8C0;
+typedef struct { Key_801DE8C0* keys; s32 count; } Keys_801DE8C0;
+typedef struct {
+    u8 pad0[0x1C];
+    Argb4 colour;
+    u8 pad2C[0x50 - 0x2C];
+    NJS_POINT3 scl;
+    u8 pad5C[0xB4 - 0x5C];
+    NJS_POINT3 pos;
+} Obj_801DE8C0;
+extern void fn_801E66E0(Obj_801DE8C0* o);
+typedef struct Payload {
+    void *x0;
+    u8 pad4[8];
+    void *xc;
+    u8 pad10[4];
+    void *x14;
+    u8 pad18[8];
+} Payload;
+typedef struct Entry {
+    s32 ref;
+    Payload data;
+} Entry;
+typedef struct Pool {
+    Entry *base;
+    s16 count;
+    s16 live;
+} Pool;
+typedef struct Node_801D24D0 {
+    Obj* obj;
+    u8 pad4[2];
+    s16 id;
+    f32 pos[3];
+    f32 rot[3];
+    f32 scl[3];
+    struct Node_801D24D0* child;
+    struct Node_801D24D0* next;
+} Node_801D24D0;
+typedef struct Ctx_801D24D0 { u8 pad[0x32]; s16 id; } Ctx_801D24D0;
+extern void njPushMatrix(void* m);
+typedef struct Frm { s16 val; s16 dur; } Frm;
+typedef struct Anim_801DD7D8 {
+    s16 val;     /* 0x00 */
+    s16 count;   /* 0x02 */
+    Frm *frames; /* 0x04 */
+    s32 flag;    /* 0x08 */
+    s16 idx;     /* 0x0c */
+    s16 timer;   /* 0x0e */
+    u8 pad10[2];
+    s16 step;    /* 0x12 */
+} Anim_801DD7D8;
+typedef struct E12 { f32 a, b, c; } E12;
+typedef struct Res {
+    s16 x0;
+    s16 x2;
+    f32 x4, x8, xc, x10, x14, x18, x1c, x20, x24, x28, x2c, x30, x34, x38, x3c, x40, x44;
+    Node801DF6 *x48;
+    E12 *x4c;
+} Res;
+extern void fn_801DF500(Node801DF6 *n, E12 **p, E12 *end);
+typedef struct Anim_801D78EC {
+    u32 f00;
+    f32 f04;
+    s32 f08;
+    u32 f0c;
+    f32 f10;
+    f32 f14;
+    f32 f18;
+    f32 f1c;
+    f32 f20;
+    f32 f24;
+    f32 f28;
+    f32 f2c;
+} Anim_801D78EC;
+typedef struct Vtx_801D78EC { f32 x, y, z; u32 c; } Vtx_801D78EC;
+extern f32 fn_801DBD9C(f32 z);
+extern void fn_8028A26C(s32 a);
+extern void fn_8028A0F4(Vtx_801D78EC *v, s32 n);
+extern void fn_8028A268(void);
+typedef struct { s32 map; s32 unk4; char room; } MapInfo;
+extern MapInfo lbl_80311AC0;
+extern s32 lbl_803474E0;
+extern s32 lbl_803475D4;
+extern s32 lbl_803475B0;
+extern char lbl_802C4590[];
+extern char lbl_802C45A0[];
+extern void sndOutputMode(s32 mode);
+extern u32 OSGetSoundMode(void);
+extern void fn_80219378(char*);
+extern void fn_801DBE88(void);
+extern void fn_801D77B8(void);
+extern void fn_80228A20(void);
+extern void fn_80101828(void);
+extern void fn_8000A118(void);
+extern void fn_801F7B04(s32 v);
+extern void fn_801C8DF0(void);
+extern void fn_801CC3A4(void);
+extern void fn_80218678(void);
+extern void* heap_main;
+extern void* heap_font;
+extern void* lbl_80346720;
+extern void* lbl_8034769C;
+extern void* lbl_803476A0;
+extern void* lbl_803476A4;
+extern void* lbl_803475E4;
+extern void* lbl_803475E8;
+extern void* lbl_803475EC;
+extern void* lbl_803475F0;
+extern void* lbl_803475F4;
+extern s32 lbl_803476DC;
+extern void fn_80005AD8(void* heap, void* p);
+extern void fn_80005954(void* heap);
+extern void fn_801DC420(void);
+extern void fn_800976F8(void);
+extern void fn_80230F28(void);
+extern void fn_801CAE90(void);
+extern void fn_8022807C(void);
+extern void fn_801D13D8(void);
+extern void fn_801E1EE4(void);
+extern void FontFree(void);
+extern void fn_80299058(void);
+extern void fn_80228984(void);
+extern void fn_801A473C(void);
+extern void fn_801D71C4(void);
+extern void fn_80219C84(void);
+extern u8 lbl_802F8CF0[], lbl_802F8E80[], lbl_802F8D40[], lbl_802F8D90[];
+void fn_801D8840(Anim *a);
+f32 fn_8022975C(void *a, s32 b, s32 c, f32 x, f32 y, f32 z, f32 w);
 
 void fn_801D1AE8(void) {
     VISetNextFrameBuffer(lbl_803476AC);
@@ -1712,5 +1924,626 @@ void fn_801E1718(void *p) {
         }
         fn_801E15FC(lbl_802F6748 + 8, p);
         lbl_80347700--;
+    }
+}
+
+void fn_801DDCA8(Pool_801DDCA8* p) {
+    if (p->x6 != 0) {
+        Ent_801DDCA8* e = p->ents;
+        s32 n = p->count;
+        for (; n > 0; e++, n--) {
+            if (e->x0 > 0) {
+                if (e->x4 != NULL) {
+                    fn_801E8580(e->x4);
+                    e->x4 = NULL;
+                }
+                if (e->x10 != NULL) {
+                    fn_801E17E0(e->x10);
+                    e->x10 = NULL;
+                }
+                if (e->x18 != NULL) {
+                    fn_801E17E0(e->x18);
+                    e->x18 = NULL;
+                }
+            }
+        }
+    }
+    fn_801E17E0(p->ents);
+    p->ents = NULL;
+    p->count = 0;
+    p->x6 = 0;
+}
+
+void *fn_801DB528(u32 a)
+{
+    s32 i;
+    u32 *p = lbl_80312D00;
+    W1DB *w;
+    T1DB *t = (T1DB *)a;
+    void *r;
+
+    for (i = 0; i < 16; p++, i++) {
+        if (*p == a) {
+            break;
+        }
+    }
+    if (i >= 16) {
+        return NULL;
+    }
+    w = t->work;
+    r = NULL;
+    if (w->x14 == 1) {
+        r = w->x8;
+        w->x8 = NULL;
+    }
+    return r;
+}
+
+void fn_801DBBF0(void) {
+    lbl_8034767C = lbl_80302A00;
+    lbl_80347678 = lbl_8031693C - lbl_80302A00;
+    while (lbl_80347678-- != 0) {
+        *lbl_8034767C++ = 0;
+    }
+    lbl_8034767C = lbl_80346A80;
+    lbl_80347678 = lbl_80347888 - lbl_80346A80;
+    while (lbl_80347678-- != 0) {
+        *lbl_8034767C++ = 0;
+    }
+    lbl_8034767C = lbl_8034D460;
+    lbl_80347678 = lbl_8034D484 - lbl_8034D460;
+    while (lbl_80347678-- != 0) {
+        *lbl_8034767C++ = 0;
+    }
+}
+
+void fn_801DC420(void) {
+    u32 now;
+    lbl_803475C8 = OSGetTick();
+    now = lbl_803475C8 / OS_TIMER_CLOCK;
+    lbl_803475C8 = now;
+    if (now - lbl_803475C4 >= 500000) {
+        lbl_803475C4 = now;
+        lbl_803475B8 = (lbl_803475C0 - lbl_803475BC) * 2;
+        lbl_803475BC = lbl_803475C0;
+    }
+    GXCopyDisp(lbl_803476AC, 1);
+    fn_801D22CC();
+    fn_801C62D8();
+    do {
+        fn_801C6248(0);
+    } while (VIGetRetraceCount() - lbl_8034768C < 1);
+    if (lbl_80347690 != 0) {
+        VISetBlack(0);
+        lbl_80347690 = 0;
+    }
+    VISetNextFrameBuffer(lbl_803476AC);
+    VIFlush();
+    fn_80296F48();
+    VIWaitForRetrace();
+    lbl_803476AC = (lbl_803476AC == lbl_803476B4) ? lbl_803476B0 : lbl_803476B4;
+}
+
+void fn_801DD14C(s32* rot, s32 unused, NJS_VECTOR* in) {
+    NJS_MATRIX m;
+    NJS_VECTOR v;
+    s32 r;
+    fn_801DD5E8();
+    njUnitMatrix(m);
+    njRotateX(m, -rot[0]);
+    njRotateY(m, -rot[1]);
+    njCalcVector(m, in, &v);
+    if (v.x != 0.0f || v.y != 0.0f) {
+        f32 a = atan2(v.x, v.y);
+        lbl_8030EA10[2] = 0;
+        r = -(s32)(10430.381f * a);
+        r &= 0xffff;
+    } else {
+        lbl_8030EA10[2] = 1;
+        r = 0;
+    }
+    rot[2] = r;
+}
+
+s32 fn_801DFA9C(Item_801DFA9C* items, s32 count) {
+    s32 type;
+    s32 size;
+    s32 cnt;
+    s32 total;
+    Ent_801DFA9C* e;
+    Hdr* src;
+    f32* in;
+    f32* q;
+    s32 n;
+    if (count == 0) {
+        return 0;
+    }
+    total = 0;
+    do {
+        if (items->stream != NULL) {
+            src = items->stream;
+            e = items->ent;
+            do {
+                size = src->size;
+                type = src->type & 0xff;
+                in = (f32*)(src + 1);
+                src = (Hdr*)in;
+                n = fn_801CB0A4(type);
+                if (n >= 0) {
+                    cnt = ((Cnt*)in)->cnt;
+                    in += 1;
+                } else {
+                    size = n & 0xffff;
+                }
+                if (n > 0) {
+                    total += cnt;
+                    q = in;
+                    do {
+                        q[0] = e->x;
+                        q[1] = e->y;
+                        q[2] = e->z;
+                        e++;
+                        q += n;
+                    } while (--cnt > 0);
+                }
+                src += size;
+            } while (type != 0xff);
+        }
+        items++;
+    } while (--count > 0);
+    return total;
+}
+
+s32 fn_801DFB7C(Item_801DFB7C* items, s32 count) {
+    s32 type;
+    s32 size;
+    s32 cnt;
+    s32 total;
+    Ent_801DFB7C* e;
+    Hdr* src;
+    f32* in;
+    f32* q;
+    s32 n;
+    if (count == 0) {
+        return 0;
+    }
+    total = 0;
+    do {
+        if (items->stream != NULL) {
+            src = items->stream;
+            e = items->ent;
+            do {
+                size = src->size;
+                type = src->type & 0xff;
+                in = (f32*)(src + 1);
+                src = (Hdr*)in;
+                n = fn_801CB0A4(type);
+                if (n >= 0) {
+                    cnt = ((Cnt*)in)->cnt;
+                    in += 1;
+                } else {
+                    size = n & 0xffff;
+                }
+                if (n > 0) {
+                    total += cnt;
+                    q = in;
+                    do {
+                        e->x = q[0];
+                        e->y = q[1];
+                        e->z = q[2];
+                        e++;
+                        q += n;
+                    } while (--cnt > 0);
+                }
+                src += size;
+            } while (type != 0xff);
+        }
+        items++;
+    } while (--count > 0);
+    return total;
+}
+
+s32 fn_801DDD74(SlotTab *t, s16 n) {
+    s32 i;
+    Slot *s;
+    s = fn_801E1C7C(n * (s32)sizeof(Slot));
+    t->slots = s;
+    if (s == 0) return 0;
+    for (i = 0; i < n; i++) {
+        s->key = -1;
+        s++;
+    }
+    t->count = n;
+    t->used = 0;
+    return 1;
+}
+
+void fn_801D1DE0(void) {
+    char name[] = "Hang AT High Watermark";
+    u8 hi, lo;
+    u32 cnt;
+    lbl_80347600++;
+    GXGetGPStatus(&hi, &lo, &lo, &lo, &lo);
+    cnt = GXGetOverflowCount();
+    if (hi != 0 && cnt == lbl_803475FC) {
+        lbl_803475F8++;
+        if (lbl_803475F8 >= 2) {
+            if (lbl_803475AC != 0) {
+                OSReport(lbl_802C428C, name);
+            }
+            fn_801D20D8();
+            for (;;) {}
+        }
+    } else {
+        lbl_803475FC = cnt;
+        lbl_803475F8 = 0;
+    }
+}
+
+void fn_801D9634(NJS_POINT3* v, s32* out) {
+    f32 xz = v->x * v->x + v->z * v->z;
+    if (0.0f == xz + v->y * v->y) {
+        out[0] = 0;
+        out[1] = 0;
+    } else {
+        f32 a = (f32)atan2(-v->y, fn_80291A5C(xz));
+        out[0] = (s32)(10430.381f * a);
+        if (0.0f == v->x && 0.0f == v->z) {
+            out[1] = 0;
+        } else {
+            a = (f32)atan2(v->x, v->z);
+            out[1] = (s32)(10430.381f * a);
+        }
+    }
+    out[2] = 0;
+}
+
+void fn_801DE504(s32 id, Obj_801DE504* o, s16 idx, void* motion, f32 frame) {
+    NJS_TEXLIST tl;
+    void* model;
+    NJS_TEXLIST* t = o->texlist;
+    NJS_TEXNAME** base = o->base;
+    s32 off;
+    tl.nbTexture = t->nbTexture;
+    if (idx >= o->count) {
+        idx = 0;
+    }
+    if (o->list != NULL) {
+        Ent_801DE504* e = &o->ents[idx];
+        model = o->model;
+        off = e->off;
+        if (idx != o->cur) {
+            o->cur = idx;
+            fn_801E85BC(o->list, e->a, e->b);
+        }
+    } else if (o->xc == 0) {
+        model = o->model;
+        off = t->nbTexture * idx;
+    }
+    GXInvalidateVtxCache();
+    tl.textures = *base + off;
+    fn_80299040(&tl);
+    fn_801E7194(id, model, motion, NULL, frame);
+}
+
+void fn_801DE5F8(s32 id, Obj_801DE504* o, s16 idx) {
+    NJS_TEXLIST tl;
+    void* model;
+    NJS_TEXLIST* t;
+    NJS_TEXNAME** base;
+    s32 off;
+    if (idx < 0) {
+        return;
+    }
+    t = o->texlist;
+    base = o->base;
+    tl.nbTexture = t->nbTexture;
+    if (idx >= o->count) {
+        idx = 0;
+    }
+    if (o->list != NULL) {
+        Ent_801DE504* e = &o->ents[idx];
+        model = o->model;
+        off = e->off;
+        if (idx != o->cur) {
+            o->cur = idx;
+            fn_801E85BC(o->list, e->a, e->b);
+        }
+    } else if (o->xc == 0) {
+        model = o->model;
+        off = t->nbTexture * idx;
+    }
+    GXInvalidateVtxCache();
+    tl.textures = *base + off;
+    fn_80299040(&tl);
+    fn_801E4CB0(id, model);
+}
+
+void fn_801DE8C0(Obj_801DE8C0* o, Keys_801DE8C0* k) {
+    Key_801DE8C0* e = k->keys;
+    s32 n = k->count;
+    if (n > 0) {
+        do {
+            o->pos.x = e->p0.x + e->p1.x;
+            o->pos.y = e->p0.y + e->p1.y;
+            o->pos.z = e->p0.z + e->p1.z;
+            o->scl.x = e->s0.x + e->s1.x;
+            o->scl.y = e->s0.y + e->s1.y;
+            o->scl.z = e->s0.z + e->s1.z;
+            o->colour.a = e->c0.a + e->c1.a;
+            o->colour.r = e->c0.r + e->c1.r;
+            o->colour.g = e->c0.g + e->c1.g;
+            o->colour.b = e->c0.b + e->c1.b;
+            fn_801E66E0(o);
+            e++;
+        } while (--n > 0);
+    }
+}
+
+s32 fn_801DD9AC(Pool *pool, Payload *p) {
+    s32 r = -1;
+    Entry *e = (Entry *)((u8 *)p - 4);
+    if ((u32)e >= (u32)pool->base && (u32)e < (u32)(pool->base + pool->count)
+        && ((u32)e - (u32)pool->base) % sizeof(Entry) == 0) {
+        if (e->ref > 0) {
+            e->ref--;
+            r = e->ref;
+            if (r == 0) {
+                e->ref = -1;
+                if (p->x0 != 0) {
+                    fn_801E8580(p->x0);
+                    p->x0 = 0;
+                }
+                if (p->xc != 0) {
+                    fn_801E17E0(p->xc);
+                    p->xc = 0;
+                }
+                if (p->x14 != 0) {
+                    fn_801E17E0(p->x14);
+                    p->x14 = 0;
+                }
+                pool->live--;
+            }
+        }
+    }
+    return r;
+}
+
+s32 fn_801D24D0(NJS_POINT3* out, NJS_POINT3* in, Node_801D24D0* n, Ctx_801D24D0* c) {
+    s32 hit = 0;
+    NJS_POINT3 q;
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    njTranslateEx(n->pos);
+    njRotateEx(n->rot, 0);
+    njScaleEx(n->scl);
+    if (c->id == n->id && n->obj != 0) {
+        njPushMatrix(n->obj->mtx);
+        njInvertMatrix(0);
+        njCalcPoint(0, in, &q);
+        njPopMatrixEx();
+        njCalcPoint(0, &q, out);
+        hit = 1;
+    }
+    if (hit == 0 && n->child != 0) {
+        hit = fn_801D24D0(out, in, n->child, c);
+    }
+    njPopMatrixEx();
+    if (hit == 0 && n->next != 0) {
+        hit = fn_801D24D0(out, in, n->next, c);
+    }
+    return hit;
+}
+
+void fn_801DD7D8(Anim_801DD7D8 *a) {
+    Frm *f = a->frames;
+    if (f == 0) {
+        return;
+    }
+    a->timer--;
+    if (a->timer > 0) {
+        return;
+    }
+    a->idx += a->step;
+    if (a->idx < 0) {
+        a->idx = a->count - 1;
+        a->flag = 1;
+    } else if (a->count <= a->idx) {
+        a->idx = 0;
+        a->flag = 1;
+    }
+    f += a->idx;
+    a->val = f->val;
+    if ((a->timer = f->dur) >= 0) {
+        return;
+    }
+    if (f->dur == -2) {
+        a->step = 0;
+        if (a->idx > 0) {
+            a->idx--;
+        }
+    } else if (a->step < 0) {
+        a->idx = a->count - 1;
+    } else {
+        a->idx = 0;
+    }
+    f = &a->frames[a->idx];
+    a->val = f->val;
+    a->timer = f->dur;
+    a->flag = 1;
+}
+
+Res *fn_801DF988(Node801DF6 *n) {
+    s32 tot;
+    s32 cnt;
+    Res *r;
+    E12 *p;
+    E12 *base;
+    s32 t;
+    cnt = 0;
+    tot = 0;
+    fn_801DF600(n, &tot, &cnt);
+    if (cnt == 0) {
+        return 0;
+    }
+    r = fn_801E1C7C(0x50 + tot * 0xc + cnt * 0x1c);
+    if (r != 0) {
+        base = (E12 *)((u8 *)r + 0x50);
+        p = base;
+        t = tot;
+        r->x2 = t;
+        r->x48 = n;
+        r->x4c = p;
+        fn_801DF500(n, &p, base + t);
+        r->x0 = 0;
+        r->xc = 0.0f;
+        r->x4 = 0.0f;
+        r->x8 = -32768.0f;
+        r->x18 = 0.0f;
+        r->x10 = 0.0f;
+        r->x14 = 1.0f;
+        r->x1c = 0.0f;
+        r->x20 = 0.25f;
+        r->x24 = 45.0f;
+        r->x28 = 1.0f;
+        r->x34 = -32768.0f;
+        r->x30 = -32768.0f;
+        r->x2c = -32768.0f;
+        r->x40 = 32768.0f;
+        r->x3c = 32768.0f;
+        r->x38 = 32768.0f;
+        r->x44 = 0.0f;
+    }
+    return r;
+}
+
+f32 fn_801D78EC(Anim_801D78EC *a) {
+    Vtx_801D78EC v[4];
+    s32 n;
+    f32 z = fn_801DBD9C(a->f04);
+    if (a->f00 == 3) {
+        n = 3;
+        v[0].x = a->f10; v[0].y = a->f20; v[0].z = z; v[0].c = a->f0c;
+        v[1].x = a->f14; v[1].y = a->f24; v[1].z = z; v[1].c = a->f0c;
+        v[2].x = a->f18; v[2].y = a->f28; v[2].z = z; v[2].c = a->f0c;
+    } else {
+        n = 4;
+        v[0].x = a->f10; v[0].y = a->f20; v[0].z = z; v[0].c = a->f0c;
+        v[1].x = a->f1c; v[1].y = a->f2c; v[1].z = z; v[1].c = a->f0c;
+        v[2].x = a->f14; v[2].y = a->f24; v[2].z = z; v[2].c = a->f0c;
+        v[3].x = a->f18; v[3].y = a->f28; v[3].z = z; v[3].c = a->f0c;
+    }
+    fn_8028A26C(a->f08);
+    fn_8028A0F4(v, n);
+    fn_8028A268();
+    return a->f04;
+}
+
+void fn_801DC288(void)
+{
+    switch (lbl_803475CC) {
+    case 0:
+        fn_801DBE88();
+        lbl_803475CC = 2;
+        lbl_80311AD4[2] = 0;
+        break;
+    case 2:
+        lbl_803474E0 = 1;
+        fn_80219378(lbl_802C4590);
+        sndOutputMode(OSGetSoundMode() == 1);
+        fn_80219378(lbl_802C45A0);
+        if (lbl_803475D4 == 0) {
+            lbl_80311AC0.map = 2;
+            lbl_80311AC0.unk4 = 2;
+            lbl_80311AC0.room = 0x61;
+        }
+        lbl_803475CC = 3;
+        lbl_80311AD4[3] = 0;
+        break;
+    case 3:
+        fn_801D77B8();
+        fn_80228A20();
+        break;
+    case 6:
+        fn_80101828();
+        break;
+    case 7:
+        fn_8000A118();
+        fn_801F7B04(10000);
+        lbl_803475B0 = 1;
+        break;
+    case 9:
+        fn_801C8DF0();
+        break;
+    }
+    fn_801CC3A4();
+    if (lbl_803474E0 == 1) {
+        fn_80218678();
+    }
+    lbl_803475C0 = lbl_803475C0 + 1;
+}
+
+void fn_801DC504(void)
+{
+    fn_801DC420();
+    VISetBlack(1);
+    VIFlush();
+    VIWaitForRetrace();
+    fn_800976F8();
+    fn_80230F28();
+    fn_801CAE90();
+    fn_8022807C();
+    fn_801D13D8();
+    fn_801E1EE4();
+    FontFree();
+    fn_80299058();
+    fn_80228984();
+    fn_801A473C();
+    fn_801D71C4();
+    fn_80219C84();
+    if (lbl_803475E4 != 0) {
+        fn_80005AD8(lbl_80346720, lbl_803475E4);
+    }
+    if (lbl_803475EC != 0) {
+        fn_80005AD8(lbl_80346720, lbl_803475EC);
+    }
+    if (lbl_803475E8 != 0) {
+        fn_80005AD8(lbl_80346720, lbl_803475E8);
+    }
+    if (lbl_803475F0 != 0) {
+        fn_80005AD8(lbl_80346720, lbl_803475F0);
+    }
+    if (lbl_803475F4 != 0) {
+        fn_80005AD8(lbl_80346720, lbl_803475F4);
+    }
+    fn_80005954(heap_font);
+    fn_80005954(heap_main);
+    fn_80005954(lbl_8034769C);
+    fn_80005954(lbl_803476A0);
+    fn_80005954(lbl_803476A4);
+    if (lbl_803475AC != 0) {
+        OSReport("[System] Exit Mode ... %s. (%s:%d)\n", lbl_803476DC != 0 ? "Restart" : "Shutdown", "main.c", 0x4ba);
+    }
+}
+
+void fn_801D9508(void)
+{
+    s16 i;
+    f32 r;
+    fn_801D8840(&lbl_8034765C->a0);
+    for (i = 0; i < 3; i++) {
+        fn_801D8840(&lbl_8034765C->a[i]);
+        fn_801D8840(&lbl_8034765C->b[i]);
+    }
+    r = fn_8022975C(lbl_802F8CF0, 0, 0, -1.001f, 0.0f, lbl_8034765C->b[0].f34, lbl_8034765C->a[0].f34);
+    r = fn_8022975C(lbl_802F8E80, 0, 0, r, 0.0f, lbl_8034765C->b[1].f34, lbl_8034765C->a[1].f34);
+    switch (lbl_8034765C->st[1]) {
+    case 0:
+        fn_8022975C(lbl_802F8D40, 0, 0, r, 0.0f, 1.0f, lbl_8034765C->a0.f34);
+        break;
+    case 1:
+        fn_8022975C(lbl_802F8D90, 0, 0, r, 0.0f, 1.0f, lbl_8034765C->a0.f34);
+        break;
     }
 }

@@ -219,6 +219,164 @@ extern void fn_801DBA58(u32 a, u32 b, u32 c);
 extern void fn_801CBC30(void);
 extern void fn_801CBBBC(void);
 extern void njRotateXYZ(void *m, s32 x, s32 y, s32 z);
+typedef struct Pos { f32 x, y, z; } Pos;
+typedef struct Ang { s32 x, y, z; } Ang;
+typedef struct Anim {
+    u8 pad0[6];
+    u16 flags;
+    u8 pad8[4];
+    void* motion;
+    f32 frame;
+    u8 pad14[0x28 - 0x14];
+    Pos* pos;
+    Ang* ang;
+    u8 pad30[0x54 - 0x30];
+    Pos lastPos;
+    Ang lastAng;
+} Anim;
+extern s32 fn_801E7B2C(void* o, f32 frame, void* a, void* b);
+extern u32 strlen(const char *s);
+typedef struct NameEnt { char *name; u8 pad4[8]; } NameEnt;
+typedef struct NameList { NameEnt *ents; u32 count; } NameList;
+extern s32 fn_801E4BBC(s32 n);
+extern void fn_8021AF94(s32 a, s32 b, s8 *list);
+typedef struct Ent { u8 pad[0x20]; f32 key; } Ent;
+extern Ent *lbl_80315530[];
+extern s32 lbl_803477F0;
+typedef struct { u8 pad0[0x54]; u32 stream; u8 pad58[8]; void *buf; u8 pad64[0x80 - 0x64]; } Stream_803148C0;
+typedef struct { void *buf; u8 pad4[0xc]; s32 group; u8 pad14[0x3c - 0x14]; } Group_803148C0;
+typedef struct {
+    u8 pad0[0x2c0];
+    Stream_803148C0 streams[4];   /* 0x2c0 */
+    u8 pad4c0[0x4f4 - 0x4c0];
+    u8 chorus[0x590 - 0x4f4];     /* 0x4f4 */
+    u8 reverb[0x860 - 0x590];     /* 0x590 */
+    Group_803148C0 groups[11];    /* 0x860 */
+} Snd_803148C0;
+extern Snd_803148C0 lbl_803148C0;
+extern s32 lbl_803474E0;
+extern void *lbl_80346720;
+extern void *lbl_8034769C;
+extern void sndAuxCallbackShutdownReverbHI(void *rev);
+extern void sndAuxCallbackShutdownChorus(void *ch);
+extern void sndSetAuxProcessingCallbacks(u8 studio, void (*auxA)(u8, void *, void *), void *userA, u8 midiA, u16 seqIDA, void (*auxB)(u8, void *, void *), void *userB, u8 midiB, u16 seqIDB);
+extern void fn_80217CB0(void);
+extern void sndStreamFree(u32 id);
+extern void fn_80005AD8(void *heap, void *p);
+extern s32 sndPopGroup(void);
+extern void sndQuit(void);
+typedef struct IVec { s32 x; s32 y; s32 z; } IVec;
+typedef struct Obj128 {
+    s32 f0;
+    u8 pad4[0x8];
+    s16 sc;
+    u16 sd;
+    u8 pad10[8];
+    Vec *p18;
+    Vec *p1c;
+    IVec *p20;
+    s32 f24;
+    s32 f28;
+    s32 f2c;
+    s32 f30;
+    s32 f34;
+    Vec f38;
+    f32 f44;
+    u8 pad48[0x10];
+    Vec vecs[3];
+} Obj128;
+extern Obj128* fn_801E1A74(s32 a, s32 b);
+extern f32 njScalor(Vec *v);
+extern void njUnitVector(Vec *v);
+extern char lbl_802D98B8[];
+extern s8 lbl_8034C6C4[8];
+extern void *TextPrintf(s16 x, s16 y, const char *fmt, ...);
+extern s32 fn_801A28F4(s32 *p);
+typedef struct Obj {
+    s32 x0;
+    u8 pad4[4];
+    s32 x8;
+    s32 xc;
+    s32 x10;
+    u8 pad14[8];
+    s32 x1c;
+} Obj;
+typedef struct V3f_80224768 { f32 x, y, z; } V3f_80224768;
+typedef struct V3i_80224768 { s32 x, y, z; } V3i_80224768;
+typedef struct Mdl_80224768 { s32 x0; s16 x4; } Mdl_80224768;
+typedef struct Obj_80224768 {
+    u8 pad0[8];
+    Mdl_80224768 *mdl;
+    u8 padc[0x1c - 0xc];
+    V3f_80224768 *pos;
+    V3f_80224768 *scl;
+    V3i_80224768 *rot;
+    V3f_80224768 *pos2;
+    V3i_80224768 *rot2;
+} Obj_80224768;
+typedef struct B_80224768 { u8 pad[0x24]; u16 x24; } B_80224768;
+extern void njPushMatrixEx(void);
+extern void njPopMatrixEx(void);
+extern void fn_80286EE8(void);
+extern void fn_8028B498(void);
+extern void njTranslate(void *m, f32 x, f32 y, f32 z);
+extern void njScale(void *m, f32 x, f32 y, f32 z);
+extern s32 fn_801D2A64(void *a, void *c, s32 d, void *b);
+extern s16 fn_80223228(u16 v);
+extern void fn_80297DB4(void *a, void *b, s32 c, s32 d, s32 e);
+extern void fn_80297DA4(void *a, void *b, void *c, s32 d);
+extern void fn_80297B5C(void *p);
+typedef struct Hdr_80227D5C { u8 *base; } Hdr_80227D5C;
+typedef struct Src_80227D5C {
+    Hdr_80227D5C *hdr;
+} Src_80227D5C;
+typedef struct Arg_80227D5C { Src_80227D5C *src; s32 n; } Arg_80227D5C;
+extern s32 fn_80007528(Arg_80227D5C *p);
+typedef struct Cfg_80227D5C {
+    u8 pad0[8];
+    void *p8;
+    u16 wc;
+    u16 we;
+    u8 pad10[1];
+} Cfg_80227D5C;
+typedef struct Obj_80227D5C {
+    Hdr_80227D5C *hdr;
+    u8 pad[4];
+    void *p8;
+} Obj_80227D5C;
+typedef struct Sub_UNIT0000 { s32 f0; f32 f4; f32 f8; f32 fc; f32 f10; f32 f14; f32 f18; } Sub_UNIT0000;
+typedef struct Ent_UNIT0000 {
+    s32 active; u8 p4[4]; f32 f8; u8 pc[8];
+    f32 f14; f32 f18; f32 f1c; f32 f20; f32 f24; f32 f28; f32 f2c;
+    f32 f30; f32 f34; f32 f38; f32 f3c; f32 f40; f32 f44; f32 f48; u8 p4c[0x5c-0x4c];
+} Ent_UNIT0000;
+typedef struct Sys_UNIT0000 { s32 f0; s16 f4; s16 f6; f32 f8; f32 fc; u8 p10[4]; s16 f14; u8 p16[2]; Ent_UNIT0000 *ents; } Sys_UNIT0000;
+typedef struct Slot_80219998 { u8 pad_00[0x38]; u8 x38; u8 pad39[3]; } Slot_80219998;
+extern Slot_80219998 lbl_80315120[];
+typedef struct {
+    u8 pad0[0x18];
+    u8 a18;
+    u8 a19;
+    u8 pad1a[0x24 - 0x1a];
+} TblC;
+extern TblC lbl_802D7E4C[];
+typedef struct { s16 x0; s16 x2; s8 x4; s8 x5; } Out;
+typedef struct { u8 pad0[0x18]; s16 ids[5]; } Src;
+s16 fn_8021A6E8(Src* a, s32 b, TblC* c);
+s16 fn_8021A620(Src* a, s32 b, TblC* c);
+typedef struct {
+    s32 type;
+    u8 pad04[0x10];
+    f32 x14[3];
+    f32 x20[0x44 / 4];
+    f32 x64[3];
+} Shape;
+void fn_80221E24(f32* out, f32* a);
+void fn_80220B14(f32* out, f32* a, f32* b);
+void fn_80221D04(f32* out, f32* a, f32* b);
+void fn_80221AAC(f32* out, f32* a, f32* b);
+void fn_802205E0(f32* out, f32* a, f32* b);
+void fn_80221328(f32* out, f32* a, f32* b);
 
 void fn_80219378(s32 a)
 {
@@ -1088,4 +1246,394 @@ void fn_80228A20(void) {
     }
     lbl_80347858 = st;
     lbl_802F91AC[st]();
+}
+
+void fn_80223324(Anim* a) {
+    if (a->motion != NULL) {
+        fn_801E7B2C(a->motion, a->frame, a->pos, a->ang);
+        if (a->pos->x != a->lastPos.x || a->pos->y != a->lastPos.y || a->pos->z != a->lastPos.z) {
+            a->flags |= 2;
+        } else if (a->ang->x != a->lastAng.x || a->ang->y != a->lastAng.y || a->ang->z != a->lastAng.z) {
+            a->flags |= 2;
+        }
+    }
+}
+
+s32 fn_8021EE1C(NameList *l, char *s) {
+    s32 i;
+    s16 j;
+    s16 len;
+    if (l == 0 || l->ents == 0 || l->count == 0) {
+        return -1;
+    }
+    len = strlen(s);
+    for (i = 0; i < l->count; i++) {
+        char *n = l->ents[i].name;
+        j = 0;
+        while (j < len) {
+            if (n[j] != s[j]) break;
+            j++;
+        }
+        if (j == len) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static inline void collect(s8 *out) {
+    s32 i;
+    s32 n;
+    s8 *p;
+    s8 *q;
+    if (out != 0) {
+        i = 0;
+        n = 0;
+        p = out;
+        for (; i < 0x16 && n < 0x16; i++) {
+            if (fn_801E4BBC((s8)i)) {
+                *p = i;
+                n++;
+                p++;
+            }
+        }
+        q = out + n;
+        for (; n < 0x16; n++) {
+            *q++ = -1;
+        }
+    }
+}
+
+void fn_8021B1CC(s32 a, s32 b) {
+    s8 list[0x16];
+    collect(list);
+    fn_8021AF94(a, b, list);
+}
+
+void fn_80226AE8(Ent *e) {
+    s32 i;
+    s32 j;
+    s32 n = lbl_803477F0;
+    for (i = 0; i < n && e->key >= lbl_80315530[i]->key; i++) {
+    }
+    for (j = n; j > i; j--) {
+        lbl_80315530[j] = lbl_80315530[j - 1];
+    }
+    lbl_80315530[i] = e;
+    lbl_803477F0++;
+}
+
+void fn_80219C84(void) {
+    Snd_803148C0 *b = &lbl_803148C0;
+    s32 i;
+    Stream_803148C0 *st;
+    Group_803148C0 *g;
+    if (lbl_803474E0 != 0) {
+        sndAuxCallbackShutdownReverbHI(b->reverb);
+        sndAuxCallbackShutdownChorus(b->chorus);
+        sndSetAuxProcessingCallbacks(0, NULL, NULL, 0xff, 0, NULL, NULL, 0xff, 0);
+        fn_80217CB0();
+        for (i = 0, st = b->streams; (u32)i < 4; i++, st++) {
+            sndStreamFree(st->stream);
+            fn_80005AD8(lbl_80346720, st->buf);
+        }
+        for (i = 0, g = b->groups; i < 11; i++, g++) {
+            if (g->group >= 0) {
+                sndPopGroup();
+                fn_80005AD8(lbl_8034769C, g->buf);
+            }
+        }
+        sndQuit();
+        lbl_803474E0 = 0;
+    }
+}
+
+void fn_80222128(Vec *src) {
+    Obj128 *o = fn_801E1A74(1, 0x7c);
+    if (o != 0) {
+        o->p18 = o->vecs;
+        o->p1c = o->p18 + 1;
+        o->p20 = (IVec*)(o->p1c + 1);
+        o->f24 = 0;
+        o->f28 = 0;
+        o->p18->z = 0.0f;
+        o->p18->y = 0.0f;
+        o->p18->x = 0.0f;
+        o->p20->z = 0;
+        o->p20->y = 0;
+        o->p20->x = 0;
+        o->p1c->z = 1.0f;
+        o->p1c->y = 1.0f;
+        o->p1c->x = 1.0f;
+        o->sc = 1;
+        o->sd = 0xFFFF;
+        o->f0 = 0;
+        o->f30 = 0;
+        o->f2c = 0;
+        o->f38 = *src;
+        o->f44 = ((f32*)src)[3];
+        o->f34 = 1;
+    }
+}
+
+void fn_8022C46C(Vec *p, Vec *base, f32 r) {
+    Vec d;
+    f32 dy;
+    d.x = p->x - base->x;
+    dy = p->y - base->y;
+    d.y = dy;
+    d.z = p->z - base->z;
+    d.y = 0.0f;
+    if (njScalor(&d) < r) {
+        njUnitVector(&d);
+        p->x = d.x * r;
+        p->y = d.y * r;
+        p->z = d.z * r;
+        p->y = dy;
+        p->x += base->x;
+        p->y += base->y;
+        p->z += base->z;
+    }
+}
+
+void fn_8022B6F4(Obj *o) {
+    char *b = lbl_802D98B8;
+    if (o->xc == 7) {
+        TextPrintf(0x18, 0xc8, b + 0x5d4, lbl_8034C6C4[o->x10]);
+        TextPrint(0x18, 0x110, b + 0x624);
+        TextPrint(0x18, 0x158, b + 0x678);
+        TextPrint(0x18, 0x188, b + 0x6a8);
+    } else {
+        TextPrint(0x18, 0x140, *(const char **)(lbl_802F9238 + 0x48));
+    }
+    o->xc = fn_801A28F4(&o->x10);
+    if (o->xc != 0 && o->xc != 7) {
+        o->x0 = 2;
+    } else if (o->x1c == 0) {
+        if (lbl_80311A60.p->f8 & 0x100) {
+            o->x1c = 3;
+            o->x8 = 0;
+        }
+    }
+}
+
+s32 fn_80224768(void *a, B_80224768 *b, void *c, Obj_80224768 *o) {
+    Mdl_80224768 *m = o->mdl;
+    s32 r;
+    if (m == 0) {
+        return 0;
+    }
+    if (m->x4 == 2) {
+        njPushMatrixEx();
+        fn_80286EE8();
+        fn_8028B498();
+        njUnitMatrix(0);
+        njTranslate(0, o->pos->x, o->pos->y, o->pos->z);
+        njRotateZXY(0, o->rot->x, o->rot->y, o->rot->z);
+        njScale(0, o->scl->x, o->scl->y, o->scl->z);
+        njTranslate(0, o->pos2->x, o->pos2->y, o->pos2->z);
+        njRotateZXY(0, o->rot2->x, o->rot2->y, o->rot2->z);
+        r = fn_801D2A64(a, c, m->x0, b);
+        njPopMatrixEx();
+        if (r != 0) {
+            b->x24 = fn_80223228(b->x24);
+        }
+    } else {
+        r = 0;
+    }
+    return r;
+}
+
+s32 fn_80227D5C(Obj_80227D5C *obj, void *dst, Cfg_80227D5C *cfg) {
+    u8 tmp[0x50];
+    Arg_80227D5C arg;
+    Hdr_80227D5C *h;
+    s8 *p;
+    s32 i;
+    s32 found;
+    s32 ret;
+    fn_80297DB4(tmp, (u8 *)cfg + 0x10, (s32)cfg->p8, cfg->wc, cfg->we);
+    fn_80297DA4((void *)obj, tmp, dst, 0x40800000);
+    h = obj->hdr;
+    i = 0;
+    found = 0;
+    do {
+        p = (s8 *)h->base - i;
+        if (p[0] == 'G' && p[1] == 'V' && p[2] == 'R' && p[3] == 'T') {
+            found = 1;
+        } else {
+            i += 0x10;
+        }
+    } while (!found && (u32)i <= 0x20);
+    if (found) {
+        h->base -= i + 0x10;
+    }
+    arg.src = (Src_80227D5C *)obj;
+    arg.n = 1;
+    ret = fn_80007528(&arg);
+    if (ret == -1) {
+        fn_80297B5C(dst);
+        obj->p8 = 0;
+    }
+    return ret;
+}
+
+void fn_802287F4(Sys_UNIT0000 *o, s32 n, f32 g)
+{
+    Ent_UNIT0000 *e = o->ents;
+    Sub_UNIT0000 *s = (Sub_UNIT0000 *)&e->f40;
+    s32 i;
+    s32 cnt = o->f14;
+    o->f0 = 1;
+    o->f6 = n;
+    o->f8 = 0.0f;
+    o->fc = g;
+    for (i = 0; i < cnt; i++, e++) {
+        if (e->active != 0) {
+            f32 d;
+            e->f2c = g * ((e->f1c - e->f8) / (f32)n);
+            e->f24 = e->f8;
+            e->f28 = e->f8;
+            d = e->f18 - e->f14;
+            if (d) {
+                e->f14 = e->f18;
+                if (s->f8) {
+                    s->f4 = 0.0f;
+                    s->f14 = 1.0f;
+                    s->f10 = -d;
+                    s->f18 = 0.0f;
+                    s->f0 = 1;
+                }
+            }
+            e->f34 = e->f14;
+            e->f30 = e->f8;
+            e->f3c = e->f20;
+            e->f38 = e->f1c - e->f3c * (f32)n;
+        }
+    }
+}
+
+s32 fn_80219998(const u8 *path)
+{
+    s32 id = 0;
+    const u8 *name = path;
+    s32 val = 0x7f;
+    while ((s8)*path != 0) {
+        if ((s32)*path++ == '/') name = path;
+    }
+    switch ((s8)*name) {
+    case 't':
+        id = 0;
+        break;
+    case 'S':
+    case 's':
+        if ((s32)name[1] == '1') {
+            id = 1;
+            val = 0x78;
+        } else {
+            id = 9;
+        }
+        break;
+    case 'M':
+    case 'm':
+        if ((s32)name[1] == '5') {
+            id = 5;
+        } else if ((s8)name[2] >= '2' && (s8)name[2] <= '4') {
+            id = (s8)name[2] - '0';
+            val = 100;
+        }
+        break;
+    case 'E':
+    case 'e':
+        id = 6;
+        break;
+    case 'C':
+    case 'c':
+        id = ((s8)name[2] == '0') ? 11 : 10;
+        break;
+    case 'B':
+    case 'b':
+        id = 7;
+        break;
+    case 'F':
+    case 'f':
+        id = ((s32)name[1] == '3') ? 3 : 7;
+        break;
+    case 'K':
+    case 'k':
+        if ((s32)name[1] == '8') id = 8;
+        break;
+    }
+    lbl_80315120[id].x38 = val;
+    return id;
+}
+
+static inline s32 valid_slot(s32 i) { return i >= 0 && i < 5; }
+static inline s32 valid_id(s32 i) { return i >= 0x190 && i <= 0x1b7; }
+
+void fn_8021AE68(Out* out, Src* src, s32 b, s32 slot)
+{
+    s32 id;
+    TblC* t;
+    if (out == 0) return;
+    if (src == 0 || !valid_slot(slot) || !valid_id(id = src->ids[slot])) {
+        if (out != 0) {
+            out->x0 = 0;
+            out->x2 = 0;
+            out->x4 = 0;
+            out->x5 = 0;
+        }
+        return;
+    }
+    t = &lbl_802D7E4C[id - 0x190];
+    out->x0 = fn_8021A6E8(src, b, t);
+    out->x2 = fn_8021A620(src, b, t);
+    {
+        s8 v = 0;
+        if (t) v = t->a18;
+        out->x4 = v;
+    }
+    {
+        s8 v = 0;
+        if (t) v = t->a19;
+        out->x5 = v;
+    }
+}
+
+void fn_80221EDC(f32* out, Shape* a, Shape* b)
+{
+    switch (a->type) {
+    case 0:
+        fn_80221E24(out, a->x64);
+        break;
+    case 1:
+        switch (b->type) {
+        case 0:
+            fn_80220B14(out, a->x14, b->x64);
+            break;
+        case 1:
+            fn_80221D04(out, a->x14, b->x14);
+            break;
+        case 2:
+            fn_80221AAC(out, a->x14, b->x20);
+            break;
+        }
+        break;
+    case 2:
+        switch (b->type) {
+        case 0:
+            fn_802205E0(out, a->x20, b->x64);
+            break;
+        case 1:
+            fn_80221AAC(out, b->x14, a->x20);
+            out[0] *= -1.0f;
+            out[1] *= -1.0f;
+            out[2] *= -1.0f;
+            break;
+        case 2:
+            fn_80221328(out, a->x20, b->x20);
+            break;
+        }
+        break;
+    }
 }

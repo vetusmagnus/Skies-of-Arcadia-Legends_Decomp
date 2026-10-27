@@ -963,6 +963,78 @@ typedef struct Gl80060AB4 {
 } Gl80060AB4;
 extern void fn_801D6CBC(void *p, void *q);
 extern char lbl_802B06C0[];
+typedef struct WorkRec_8006A114 {
+    u8 pad0[4];
+    u32 x04;
+    u8 pad8[0x3c - 8];
+    s32 x3c;
+    s32 x40;
+    s16 x44;
+    s16 x46;
+    s16 x48;
+    s16 x4a;
+} WorkRec_8006A114;
+typedef struct TkRec_8006A114 {
+    u8 pad0[0x24];
+    WorkRec_8006A114 *work;
+} TkRec_8006A114;
+typedef struct { s8 pad[0x18]; u8 x18; u8 pad19[0x30 - 0x19]; } T30;
+extern T30 lbl_802C4BF0[];
+extern s16 fn_80078354(s16);
+extern void fn_8021A1C4(s8 *buf);
+typedef struct { u8 pad[0x14]; s16 x14; s16 x16; } D_8005CBA4;
+typedef struct { u8 pad0[4]; s16 cnt; u8 pad6[2]; D_8005CBA4 *d; } S_8005CBA4;
+typedef struct { u8 pad0[0x18]; u8 flags; u8 state; u8 pad1A[10]; S_8005CBA4 *s; } O_8005CBA4;
+typedef struct {
+    u8 pad0[0x6c];
+    u32 f6c;
+    u8 pad70[0x1c4 - 0x70];
+    s32 count;
+} Sys_8030A10C_8005CBA4;
+typedef struct Vec3f { f32 x, y, z; } Vec3f;
+typedef struct { u8 pad[0x1c4]; s32 count; } Sys_8030A10C_8005A694;
+typedef struct { u8 pad0[0x4c]; u8 pad4c[0x154 - 0x4c]; } Dummy_8005A694;
+typedef struct W_8005A694 { u8 f0; u8 pad1[0x153]; u8 *f154; } W_8005A694;
+typedef struct { u8 pad0[0x4c]; W_8005A694 *w; } Q_8005A694;
+typedef struct { u8 pad0[0x24]; Q_8005A694 *q; } P4_8005A694;
+typedef struct { u8 pad0[0x18]; s16 f18; s16 f1a; s16 f1c; } C_8005A694;
+typedef struct S_8005A694 {
+    s8 f0;
+    u8 pad1[3];
+    P4_8005A694 *f4;
+    u8 *f8;
+    C_8005A694 *fc;
+} S_8005A694;
+typedef struct O_8005A694 {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 state;
+    u8 pad1A[10];
+    S_8005A694 *s;
+} O_8005A694;
+extern void fn_8022EF58(void *p, s32 v);
+extern s32 fn_800179E4(s32 id);
+extern void fn_8023080C(void *p, s16 *v, s32 n);
+typedef struct { u8 pad[0x1c4]; s32 count; } Sys_8030A10C_8005BAA0;
+typedef struct { u8 pad0[0x3c]; u32 f3c; } T_8005BAA0;
+typedef struct S_8005BAA0 {
+    s16 f0;
+    u8 pad2[0x16];
+    T_8005BAA0 *f18;
+    u8 pad1c[0x54 - 0x1c];
+    u8 f54[8];
+    s32 f5c;
+    u8 pad60[8];
+    s16 f68;
+    s16 f6a;
+} S_8005BAA0;
+typedef struct O_8005BAA0 {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 state;
+    u8 pad1A[10];
+    S_8005BAA0 *s;
+} O_8005BAA0;
 
 void fn_80055E94(u8 *p) {
     p[0x18] |= 0x40;
@@ -3600,4 +3672,280 @@ s32 fn_8006EAB4(Node *target)
             return 0;
         }
     }
+}
+
+void fn_8006A1F4(s32 a, s16 i, s32 b, s8 v)
+{
+    ChrRec *c = lbl_80309DE4[i];
+    s16 fl;
+
+    if ((c->bits & 0x6100) == 0) {
+        fl = c->flags;
+        if (((fl & (1 << (v - 0x12))) ? 1 : 0) == 0) {
+            switch (v) {
+            case 0x14:
+            case 0x15:
+                if ((fl & 0x100) == 0) {
+                    lbl_80309700[i]->work->x44 = v;
+                    lbl_80309700[i]->work->x3c = -1;
+                    return;
+                }
+                break;
+            default:
+                fn_800696A8(a, i, b, v);
+                return;
+            }
+        }
+    }
+    lbl_80309700[i]->work->x44 = -1;
+    lbl_80309700[i]->work->x3c = -1;
+}
+
+void fn_8006C8DC(char *buf, char *name)
+{
+    s32 v;
+    switch (fn_80046BB0(name, &v)) {
+    case 0:
+    default:
+        fn_8025CB24(buf, lbl_802B069C);
+        break;
+    case 1:
+        switch (v / 100000) {
+        case 99:
+            fn_8025CB24(buf, lbl_802B069C);
+            break;
+        default:
+            fn_8025CB24(buf, "/BEFF/");
+            break;
+        }
+        break;
+    case 2:
+    case 3:
+        fn_8025CB24(buf, "/BEFF/");
+        break;
+    }
+}
+
+void fn_8006A114(s32 a, s16 i, s32 b, s8 v) {
+    lbl_80309700[i]->work->x3c = -1;
+    if (!(lbl_80309DE4[i]->bits & 0x2100)) {
+        lbl_80309700[i]->work->x44 = -1;
+    } else {
+        fn_800696A8(a, i, b, v);
+        if (lbl_80309700[i]->work->x44 != -1) {
+            lbl_80309700[i]->work->x3c = lbl_80309DE4[i]->x18 / 2;
+            lbl_80309174[i].x8 = 1;
+            lbl_80309730[i].x8 = 1;
+        }
+    }
+}
+
+s32 fn_8006DA04(s32 x)
+{
+    s32 q = x / 100;
+    s32 p;
+    switch (q) {
+    case 0:
+    case 1:
+    case 5:
+    case 1002:
+        return 1;
+    }
+    p = x / 100000;
+    switch (p) {
+    case 2: case 3: case 4: case 5: case 6: case 7: case 8: case 9: case 10:
+    case 13: case 14:
+    case 17: case 18:
+    case 21: case 22:
+    case 50: case 51:
+    case 99:
+        return 1;
+    }
+    switch (q) {
+    case 23034:
+        return 1;
+    }
+    return 0;
+}
+
+int fn_8006EE54(int idx) {
+    switch (lbl_80309174[idx].x0) {
+    case 4:
+        return 1;
+    case 6:
+        if (idx <= 3) return 2;
+        break;
+    case 2:
+        if ((s32)lbl_802C4BF0[(u8)lbl_80309174[idx].x6].x18 == 2) return 2;
+        break;
+    case 12: {
+        switch ((u8)fn_80078354(lbl_80309174[idx].x6)) {
+        case 0x25: case 0x26: case 0x27: case 0x28: case 0x2a: case 0x43:
+            return 2;
+        }
+        break;
+    }
+    case 8:
+        if (lbl_80309174[idx].x6 == 0x3d) return 2;
+        break;
+    }
+    return 0;
+}
+
+void fn_80073B48(s8 *out) {
+    s8 pat[] = { 0, 4, 5, 6, 10, 11, 14, 16, 18, 17, 21, 1, 2, 3, 7, 8, 9, 12, 13, 15, 19, 20, -1 };
+    s8 buf[0x20];
+    s32 i = 0;
+    s8 *b;
+    s8 *p;
+    s8 j;
+    s8 n = 0;
+    fn_8021A1C4(buf);
+    for (p = pat; *p >= 0; p++, i++) {
+        b = buf;
+        for (j = 0; j < 0x16; b++, j++) {
+            if (*b < 0) break;
+            if (*b == *p) {
+                out[n++] = i;
+            }
+        }
+    }
+    out[n] = -1;
+}
+
+void fn_8005CBA4(O_8005CBA4 *o) {
+    S_8005CBA4 *s = o->s;
+    switch (o->state) {
+    case 0:
+        if (s->cnt >= s->d->x14) {
+            lbl_8030A10C.f6c |= 0x100;
+            o->state = 1;
+        }
+        break;
+    case 1:
+        if (s->cnt >= s->d->x16) {
+            lbl_8030A10C.f6c &= ~0x100;
+            o->state = 0xfa;
+        }
+        break;
+    case 0xf9:
+        lbl_8030A10C.f6c &= ~0x100;
+    case 0xfa:
+        o->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    s->cnt = s->cnt + 1;
+    fn_80037FD8(s->d, &o->state);
+}
+
+void fn_80061E34(NJS_POINT3 *out, s32 *rot, f32 angle, f32 z, f32 y) {
+    NJS_POINT3 p;
+    NJS_POINT3 q;
+    p.x = 0.0f;
+    p.y = y;
+    p.z = z;
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    njUnitMatrix(0);
+    njRotateY(0, (s32)(182.04445f * angle));
+    njCalcPoint(0, &p, &q);
+    njPopMatrixEx();
+    p.x = q.x;
+    p.y = q.y;
+    p.z = q.z;
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    njUnitMatrix(0);
+    njRotateXYZ(0, rot[0], rot[1], rot[2]);
+    njCalcPoint(0, &p, &q);
+    njPopMatrixEx();
+    out->x = q.x;
+    out->y = q.y;
+    out->z = q.z;
+}
+
+inline s32 AngWrap(s32 a) {
+    if (a > 0x7fff) {
+        a -= 0x10000;
+    } else if (a < -0x8000) {
+        a += 0x10000;
+    }
+    return a;
+}
+
+void fn_8007201C(s32 *out, Vec3f *v) {
+    out[0] = AngWrap((s32)(lbl_80348A1C * (f32)atan2(v->y, fn_80291A5C(v->x * v->x + v->z * v->z))));
+    if (v->x == 0.0f) {
+        out[1] = 0;
+        if (v->z > 0.0f) {
+            out[1] = 0x8000;
+        }
+    } else {
+        out[1] = AngWrap(-(s32)(lbl_80348A1C * (f32)atan2(v->x, -v->z)));
+    }
+    out[2] = 0;
+}
+
+void fn_8005A694(O_8005A694 *o)
+{
+    S_8005A694 *s = o->s;
+    switch (o->state) {
+    case 0: {
+        W_8005A694 *w = s->f4->q->w;
+        s->f8 = w->f154 + s->fc->f18 * 0x34;
+        fn_8022EF58(s->f8, 0);
+        s->f0 = w->f0;
+        o->state = 1;
+    }
+    case 1:
+        if (fn_800179E4(s->f0) == 0) {
+            o->state = 0xfa;
+        } else {
+            s16 v[2];
+            v[0] = s->fc->f1a;
+            v[1] = s->fc->f1c;
+            fn_8023080C(s->f8, v, 0);
+        }
+        break;
+    case 0xf9:
+    case 0xfa:
+        o->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    fn_80037FD8(s->fc, &o->state);
+}
+
+void fn_8005BAA0(O_8005BAA0 *o)
+{
+    S_8005BAA0 *s = o->s;
+    switch (o->state) {
+    case 0:
+        fn_8006D954(s->f5c);
+        o->state = 1;
+    case 1:
+        if (s->f0 < s->f68) {
+            break;
+        }
+        s->f18->f3c |= 0x40000000;
+        o->state = 2;
+    case 2:
+        if (s->f0 >= s->f6a) {
+            s->f18->f3c &= ~0x40000000;
+            o->state = 0xfa;
+        }
+        break;
+    case 0xf9:
+        s->f18->f3c &= ~0x40000000;
+    case 0xfa:
+        fn_8006D8DC(s->f5c);
+        o->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    s->f0 = s->f0 + 1;
+    fn_80037FD8(s->f54, &o->state);
 }

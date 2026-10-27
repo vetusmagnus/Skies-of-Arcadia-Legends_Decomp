@@ -1622,3 +1622,41 @@ void fn_8013A818(Req *r)
     fn_8012F458(flag);
     fn_8012F468(str);
 }
+
+void fn_80134668(s8 n) {
+    switch (n) {
+    case 0:
+        fn_801D68C4(lbl_80346EFC, 0x15);
+        break;
+    case 1:
+        fn_801D68C4(lbl_80346EFC, 0x16);
+        break;
+    case 2:
+        fn_801D68C4(lbl_80346EFC, 0x17);
+        break;
+    case 3:
+        fn_801D68C4(lbl_80346EFC, 0x18);
+        break;
+    case 4:
+        fn_801D68C4(lbl_80346EFC, 0x19);
+        break;
+    case 5:
+        fn_801D68C4(lbl_80346EFC, 0x1a);
+        break;
+    case 6:
+        fn_801D68C4(lbl_80346EFC, 0x1b);
+        break;
+    case 7:
+        fn_801D68C4(lbl_80346EFC, 0x1c);
+        break;
+    case 8:
+        fn_801D68C4(lbl_80346EFC, 0x1d);
+        break;
+    case 9:
+        fn_801D68C4(lbl_80346EFC, 0x1e);
+        break;
+    default:
+        fn_801D68C4(lbl_80346EFC, 0x15);
+        break;
+    }
+}

@@ -64,6 +64,69 @@ typedef struct Obj_801C6384 {
 } Obj_801C6384;
 extern void fn_8023A8E0(void* p);
 extern void fn_801E17E0(void* p);
+typedef struct AkFio {
+    s32 state;
+    u8 info[0x34];
+    s32 w38;
+    u8 pad3c[8];
+    s32 w44;
+    s32 w48;
+    s32 w4c;
+    s32 w50;
+    s32 w54;
+    u8 pad58[4];
+    u8 b5c;
+    u8 pad5d[3];
+    s32 w60;
+    u8 pad64[0xc];
+    s32 w70;
+    u8 pad74[4];
+    void* buf;
+    u8 pad7c[8];
+    s32 w84;
+    u8 pad88[0x18];
+} AkFio;
+extern void* fn_801E1C7C(s32 size);
+extern void fn_801DBA70(const char* file, s32 line, const char* msg, ...);
+extern s32 fn_8023A4B0(s32 h);
+extern s32 fn_8023A7A4(s32 h, void* out);
+typedef struct Rect8 {
+    s32 tex;
+    f32 f4, f8, fc, f10;
+    f32 f14, f18, f1c, f20;
+} Rect8;
+extern void fn_80299040(void);
+extern void fn_80291428(s32 a);
+extern void fn_802913E8(s32 a, s32 b);
+extern void fn_802911CC(f32 *v, f32 s);
+extern void fn_80291424(void);
+typedef struct DVDFileInfo DVDFileInfo;
+typedef struct Stream {
+    u8 pad0[4];
+    u8 info[0x54];
+    s32 off;         /* 0x58 */
+    u8 pad5c[4];
+    s32 size;        /* 0x60 */
+    s32 pos;         /* 0x64 */
+    u8 pad68[4];
+    u32 bpos;        /* 0x6c */
+    u8 *buf;         /* 0x70 */
+} Stream;
+extern s32 fn_8023AB88(void *info, void *addr, s32 len, s32 offset, void (*cb)(void), s32 prio);
+extern s32 fn_8023CD10(void *info);
+extern void fn_801DBF94(s32);
+extern s32 fn_801D168C(void);
+extern void fn_801D150C(s32 v);
+typedef struct Ent_802EE7C0 {
+    char name[0x10];
+    s16 len;
+    s16 flag;
+    char pat[4];
+    s32 val;
+} Ent_802EE7C0;
+extern Ent_802EE7C0 lbl_802EE7C0[];
+extern int strncmp(const char *a, const char *b, u32 n);
+extern int fn_8025EF88(const char *a, const char *b);
 
 void fn_801C5A60(NJS_MATRIX m, NJS_POINT3 *p, NJS_POINT3 *out)
 {
@@ -455,4 +518,114 @@ void fn_801C6384(Obj_801C6384* o) {
         o->p78 = 0;
     }
     fn_801E17E0(o);
+}
+
+AkFio* fn_801C63EC(s32 h)
+{
+    AkFio* f = fn_801E1C7C(0xa0);
+    s32 id;
+    if (f == 0) {
+        fn_801DBA70("akFIO.c", 0x425, 0);
+    }
+    id = fn_8023A4B0(h);
+    if (id == -1) {
+        return 0;
+    }
+    if (fn_8023A7A4(id, f->info) != 1) {
+        return 0;
+    }
+    f->w60 = f->w38;
+    f->w70 = 0;
+    f->buf = fn_801E1C7C(0x1000);
+    if (f->buf == 0) {
+        fn_801DBA70("akFIO.c", 0x447, 0);
+    }
+    f->w54 = 0;
+    f->b5c = 1;
+    f->w44 = 0;
+    f->w84 = 0;
+    f->state = 2;
+    f->w48 = 0;
+    f->w4c = 0;
+    f->w50 = 0;
+    return f;
+}
+
+void fn_801C8BC0(f32 a, f32 b, f32 s, s32 unused, Rect8 *r, s32 n) {
+    f32 v[8];
+    if (!(b < -512.0f || b > 512.0f)) {
+        fn_80299040();
+        v[0] = r->f4 + a;
+        v[1] = r->f8 + b;
+        v[2] = r->fc + a;
+        v[3] = r->f10 + b;
+        v[4] = r->f14;
+        v[5] = r->f18;
+        v[6] = r->f1c;
+        v[7] = r->f20;
+        fn_80291428(1);
+        fn_802913E8(r->tex, n);
+        fn_802911CC(v, s);
+        fn_80291424();
+    }
+}
+
+s32 fn_801C6E14(Stream *s, u8 *out) {
+    s32 len;
+    s32 r;
+    if (s->pos >= s->size) {
+        return 0;
+    }
+    s->bpos &= 0x1ffff;
+    if (s->bpos == 0) {
+        len = (s->off + 0x20000 < s->size) ? 0x20000 : s->size - s->off;
+        len = (len + 31) & ~31;
+        fn_8023AB88(s->info, s->buf, len, s->off, 0, 2);
+        while (fn_8023CD10(s->info) != 0) {
+            fn_801DBF94(0);
+            r = fn_801D168C();
+            if (r != -1) {
+                fn_801D150C(r);
+            }
+        }
+        s->off += len;
+    }
+    *out = s->buf[s->bpos++];
+    s->pos++;
+    return 1;
+}
+
+s32 fn_801C8A0C(char *s) {
+    Ent_802EE7C0 *e = lbl_802EE7C0;
+    char *p = s;
+    s32 n = 55;
+    s32 len;
+    char c;
+    do {
+        if (e->name[0] == p[0]) {
+            len = e->len;
+            if (len > 0 && strncmp(p, e->name, len) == 0) {
+                c = p[len];
+                if (c == 0 && e->flag == 0) {
+                    return e->val;
+                }
+                if (c != 0 && e->flag > 0) {
+                    p += len;
+                    do {
+                        if (fn_8025EF88(p, e->pat) == 0) {
+                            return e->val;
+                        }
+                        n--;
+                        e++;
+                    } while (e->len == 0 && n > 0);
+                    p = s;
+                    n++;
+                    e--;
+                }
+            }
+        } else if (e->name[0] > p[0]) {
+            break;
+        }
+    } while (n--, e++, n > 0);
+    return -1;
 }

@@ -1545,6 +1545,22 @@ extern void SpriteObjDrawAt(SpriteObj* obj, f32* pos);
 void SpriteObjDrawAtEx(SpriteObj* obj, f32* pos);
 typedef struct Sub { u8 pad[0x18]; u8 flags; } Sub;
 typedef struct Ent_801ABA30 { u8 pad[8]; Sub* sub; u8 pad2[0x18-0xc]; u8 flags; u8 mode; } Ent_801ABA30;
+typedef struct { u8 pad[0x18]; u8 flags; } Parent;
+typedef struct {
+    u8 pad[0x7c];
+    f32 x7c, x80, x84;
+    s32 x88;
+} Data;
+typedef struct {
+    u8 pad[8];
+    Parent* parent;
+    u8 pad0c[0xc];
+    u8 flags;
+    u8 state;
+    u8 pad1a[0xa];
+    Data* data;
+} Self;
+extern void fn_8009076C(s32 a, Data* d);
 
 void fn_80199B9C(void* p, f32 v) {
     *(f32*)((u8*)p + 0x34) = v;
@@ -6275,5 +6291,29 @@ void fn_801ABA30(void* a)
     case 0xFF:
         t->flags |= 0x40;
         break;
+    }
+}
+
+void fn_8019D598(Self* o) {
+    Parent* p = o->parent;
+    Data* d = o->data;
+    if (p->flags & 0x40) {
+        o->flags |= 0x40;
+    } else {
+        switch (o->state) {
+        case 0:
+            d->x7c += 0.05;
+            d->x80 += 0.05;
+            d->x84 += 0.05;
+            fn_8009076C(1, d);
+            d->x88--;
+            if (d->x88 <= 0) {
+                o->state = 0xff;
+            }
+            break;
+        case 0xff:
+            o->flags |= 0x40;
+            break;
+        }
     }
 }
