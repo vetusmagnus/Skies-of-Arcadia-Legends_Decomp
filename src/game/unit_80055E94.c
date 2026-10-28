@@ -310,6 +310,46 @@ typedef struct T5C188 {
     u8 pad0[0x24];
     W5C188 *work;
 } T5C188;
+/* The battle character task as fn_800631B0 and fn_800565B0 see it (position as an array). */
+typedef struct {
+    s8 b0;               /* 0x00 */
+    u8 pad1[3];
+    u8 b4;               /* 0x04 */
+    u8 pad5;
+    s16 h6;              /* 0x06 */
+    s16 h8;              /* 0x08 */
+    u8 padA[0x5a - 0xa];
+    u8 b5a;              /* 0x5A */
+    u8 pad5b;
+    struct { u8 pad[4]; u32 w4; }* p5c; /* 0x5C */
+    u8 pad60[0x8c];
+    u32 fec;             /* 0xEC */
+    u32 ff0;             /* 0xF0 */
+    u8 padF4[0x154 - 0xf4];
+    void* p154;          /* 0x154 */
+    u8 pad158[0x164 - 0x158];
+    f32 f164;            /* 0x164 */
+    u8 pad168[0x94];
+    void* p1fc;          /* 0x1FC */
+    u8 pad200[8];
+    f32 f208;            /* 0x208 */
+} CamChr;
+
+typedef struct {
+    u8 pad0[0x1c];
+    f32 pos[3];          /* 0x1C */
+    s32 rot[3];          /* 0x28 */
+    f32 scale[3];        /* 0x34 */
+    u8 pad40[0xc];
+    CamChr* chr;         /* 0x4C */
+} CamBody;
+
+typedef struct {
+    u8 pad0[0x24];
+    CamBody* body;       /* 0x24 */
+} CamObj;
+extern void fn_80020B8C(CamObj* o, s16 a, s16 b, s32 c);
+extern void fn_8001D14C(CamChr* c);
 typedef struct R5C188 {
     u8 pad0[0x10];
     u32 f10;
@@ -1468,6 +1508,209 @@ static inline s32 FadeStep(W_80056B6C* w)
         return 0;
     }
     return 1;
+}
+
+/* Command of the sweep-hit effect task fn_800565B0. */
+typedef struct {
+    u8 pad0[6];
+    s16 flags6;            /* 0x06 */
+    u8 pad8[8];
+    u32 flags10;           /* 0x10 */
+    s16 s14;
+    s16 s16;
+    s16 s18;
+    u8 pad1A[2];
+    V3 p1c;        /* 0x1C */
+    f32 f28;               /* 0x28 */
+    u32 flags2c;           /* 0x2C */
+    f32 f30;               /* 0x30 */
+} Cfg_800565B0;
+
+typedef struct {
+    u16 frame;             /* 0x00 */
+    u8 pad2[2];
+    CamObj *a;          /* 0x04 */
+    NJS_MATRIX *m;         /* 0x08 */
+    s8 seen[14];           /* 0x0C */
+    s16 s1a, s1c;          /* 0x1A */
+    u8 pad1E[2];
+    V3 p20[2];     /* 0x20 */
+    Vec3 dir;        /* 0x38 */
+    Cfg_800565B0 *cfg;              /* 0x44 */
+} W_800565B0;
+
+typedef struct {
+    u8 pad0[0x18];
+    u8 flags;              /* 0x18 */
+    u8 state;              /* 0x19 */
+    u8 pad1A[0x24 - 0x1A];
+    W_800565B0 *work;               /* 0x24 */
+} O800565B0;
+
+typedef struct { u8 r, g, b, a; } Col_800565B0;
+extern u32 lbl_803472F4;
+void fn_80017778(void);
+void fn_80060B20(Vec3 *v, f32 x);
+void fn_80020B50(CamObj *t, s16 *a, s16 *b);
+void fn_80076478(void *p, void *q, u16 a, s32 b);
+void fn_8007638C(void *p, void *q, u16 a);
+s32 fn_80018498(V3 *p);
+s8 fn_80018178(V3 *a, V3 *b, V3 *c, s8 *ids);
+s32 fn_8001DC7C(u8 id, CamObj *t);
+s32 fn_8001D944(u8 id, CamObj *t);
+void fn_8004BFD8(CamObj *t);
+void fn_80032FC4(V3 *a, V3 *b, Col_800565B0 *c, Col_800565B0 *d);
+
+static inline void Hit(O800565B0 *t, W_800565B0 *w, CamChr *self, s32 flag)
+{
+    if (w->cfg->flags2c & 0x400) {
+        fn_8004BFD8(w->a);
+    } else {
+        self->fec |= 0x80;
+        fn_80020B8C(w->a, w->s1a, w->s1c, flag);
+        self->fec &= ~0x80;
+    }
+}
+
+void fn_800565B0(O800565B0 *t)
+{
+    s16 k;
+    s16 m;
+    s8 cnt;
+    W_800565B0 *w;
+    CamChr *self;
+    s16 n;
+    s32 flag;
+    V3 loc44[2];
+    V3 loc38;
+    s8 ids[16];
+    V3 loc1c;
+    V3 loc10;
+    Col_800565B0 ca;
+    Col_800565B0 cb;
+
+    w = t->work;
+    flag = 0;
+    self = w->a->body->chr;
+    if (w->cfg->flags10 & 0x400)
+        flag = 1;
+
+    switch (t->state) {
+    case 0:
+        self->fec |= 0x80000;
+        self->fec |= 0x40000;
+        fn_80017778();
+        fn_80020B50(w->a, &w->s1a, &w->s1c);
+        t->state = 1;
+    case 1:
+        if (w->frame < w->cfg->s14)
+            break;
+        t->state = 2;
+        switch (w->cfg->flags10 & 0xF) {
+        case 2:
+            w->m = fn_801E1C7C(0x40);
+            fn_80076478(w->m, self->p154, w->cfg->s18, 0);
+        }
+        fn_80071CF0(&w->cfg->p1c, &w->p20[0]);
+        fn_80071CF0(&w->cfg->p1c, &w->p20[1]);
+        fn_80060B20(&w->dir, w->cfg->f30);
+        break;
+    case 2:
+        n = 3;
+        for (k = 0; k < 2; k++) {
+            if (w->m != NULL) {
+                fn_80061518(&w->p20[k], &loc44[k], w->m);
+                fn_80061518(&w->cfg->p1c, &loc38, w->m);
+            } else {
+                fn_8001E4A0(&w->p20[k], &loc44[k], w->a);
+                fn_8001E4A0(&w->cfg->p1c, &loc38, w->a);
+            }
+            if (fn_80018498(&loc44[k]) == 0)
+                n--;
+        }
+        fn_80071CF0(&w->p20[0], &loc1c);
+        loc1c.x = 0.0f;
+        if (w->m != NULL)
+            fn_80061518(&loc1c, &loc10, w->m);
+        else
+            fn_8001E4A0(&loc1c, &loc10, w->a);
+        if (fn_80018498(&loc10) == 0)
+            n--;
+        cnt = fn_80018178(&loc38, &loc44[0], &loc44[1], ids);
+        for (m = 0; m < cnt; m++) {
+            if (ids[m] < 0)
+                break;
+            if (ids[m] == self->b0)
+                continue;
+            if (w->seen[ids[m]] != 0)
+                continue;
+            w->seen[ids[m]] = 1;
+            self->b5a = ids[m];
+            if (fn_8001DC7C(ids[m], w->a) != 0) {
+                if (!(w->cfg->flags2c & 0x4000))
+                    t->state = 0xfa;
+                Hit(t, w, self, flag);
+            } else if (w->cfg->flags2c & 0x2000) {
+                if (fn_8001D944(ids[m], w->a) != 0)
+                    Hit(t, w, self, flag);
+            }
+            if (w->cfg->flags2c & 0x8000)
+                t->state = 0xfa;
+        }
+        if ((lbl_80347394 != NULL && (lbl_80347394->work->f3c & 0x40)) || (lbl_803472F4 & 0x20000000)) {
+            ca.r = 255;
+            ca.g = 255;
+            ca.b = 0;
+            ca.a = 0;
+            cb.r = 255;
+            cb.g = 255;
+            cb.b = 0;
+            cb.a = 0;
+            fn_80032FC4(&loc38, &loc44[0], &ca, &cb);
+            fn_80032FC4(&loc38, &loc44[1], &ca, &cb);
+            fn_80032FC4(&loc44[0], &loc44[1], &ca, &cb);
+        }
+        if (w->frame >= w->cfg->s16 && w->cfg->s16 != 0) {
+        } else {
+            w->p20[0].x = w->dir.x * w->cfg->f28 + w->p20[0].x;
+            w->p20[0].z = w->dir.z * w->cfg->f28 + w->p20[0].z;
+            w->p20[1].x = w->p20[1].x - w->dir.x * w->cfg->f28;
+            w->p20[1].z = w->dir.z * w->cfg->f28 + w->p20[1].z;
+        }
+        if (n <= 0)
+            t->state = 0xfa;
+        break;
+    case 4:
+        if (lbl_8030A10C.f1cc & 0x20) {
+            t->state = 1;
+            w->frame = w->cfg->s14;
+        }
+        break;
+    case 0xfa:
+        fn_8001D14C(self);
+        if (w->m != NULL) {
+            fn_8007638C(w->m, self->p154, w->cfg->s18);
+            fn_801E17E0(w->m);
+        }
+        t->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    w->frame++;
+    if (w->cfg->flags6 & 0x2000) {
+        switch (t->state) {
+        case 1:
+            break;
+        default:
+            lbl_8030A10C.f1cc |= 0x10;
+        }
+        if ((lbl_8030A10C.f1cc & 0x80) && !(lbl_8030A10C.f1cc & 0x20)) {
+            switch (t->state) {
+            case 1:
+                t->state = 4;
+            }
+        }
+    }
 }
 
 void fn_80056B6C(Task* o)
@@ -5846,39 +6089,6 @@ void fn_80064C00(Task *o)
 
 /* fn_800631B0: a battle action that moves its actor (work->p0) to a target and back: the move, an
  * attack by kind (work->kind), the return and the fade. */
-typedef struct {
-    u8 b0;               /* 0x00 */
-    u8 pad1[3];
-    u8 b4;               /* 0x04 */
-    u8 pad5;
-    s16 h6;              /* 0x06 */
-    s16 h8;              /* 0x08 */
-    u8 padA[0x52];
-    struct { u8 pad[4]; u32 w4; }* p5c; /* 0x5C */
-    u8 pad60[0x8c];
-    u32 fec;             /* 0xEC */
-    u32 ff0;             /* 0xF0 */
-    u8 padF4[0x70];
-    f32 f164;            /* 0x164 */
-    u8 pad168[0x94];
-    void* p1fc;          /* 0x1FC */
-    u8 pad200[8];
-    f32 f208;            /* 0x208 */
-} CamChr;
-
-typedef struct {
-    u8 pad0[0x1c];
-    f32 pos[3];          /* 0x1C */
-    s32 rot[3];          /* 0x28 */
-    f32 scale[3];        /* 0x34 */
-    u8 pad40[0xc];
-    CamChr* chr;         /* 0x4C */
-} CamBody;
-
-typedef struct {
-    u8 pad0[0x24];
-    CamBody* body;       /* 0x24 */
-} CamObj;
 
 typedef struct {
     CamObj* p0;          /* 0x00 */
@@ -5912,12 +6122,10 @@ typedef struct {
 extern f32 fn_80071E9C(NJS_POINT3 *, NJS_POINT3 *);
 extern void fn_80061450(NJS_POINT3 *, NJS_POINT3 *, NJS_POINT3 *);
 extern s32 fn_80012F24(s32 idx);
-extern void fn_8001F814(u8 id, u8 b);
+extern void fn_8001F814(u8 id, s8 b);
 extern void fn_8001D200(CamObj* o, f32* out);
 extern f32 fn_800177C0(s32 id, f32* out);
 extern void fn_80048DF0(void* mtx, f32* pos, s32* rot, s32 a);
-extern void fn_80020B8C(CamObj* o, s16 a, s16 b, s32 c);
-extern void fn_8001D14C(CamChr* c);
 
 #define CAM_ABS_SMALL(v) ((f32)fabs(v) <= 0.01f)
 
