@@ -128,6 +128,10 @@
   "dolphin/os/OSFont.c",
   "dolphin/os/OSFatal.c",
   "dolphin/os/OSError.c",
-  "runtime/mathf.c"
+  "runtime/mathf.c",
+  "dolphin/mtx/mtx.c",
+  "dolphin/mtx/mtxvec.c",
+  "dolphin/mtx/vec.c",
+  "dolphin/mtx/mtx44.c"
  ]
 }

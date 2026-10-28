@@ -1,5 +1,20 @@
 #include "dolphin/mtx.h"
 
+asm void PSVECSubtract(const register Vec *a, const register Vec *b, register Vec *a_b) {
+  // clang-format off
+  nofralloc;
+  psq_l f2, 0(a), 0, 0;
+  psq_l f4, 0(b), 0, 0;
+  ps_sub f6, f2, f4;
+  psq_st f6, 0(a_b), 0, 0;
+  psq_l f3, 8(a), 1, 0;
+  psq_l f5, 8(b), 1, 0;
+  ps_sub f7, f3, f5;
+  psq_st f7, 8(a_b), 1, 0;
+  blr;
+  // clang-format on
+}
+
 void PSVECNormalize(const register Vec *vec1, register Vec *ret) {
   register f32 half = 0.5f;
   register f32 three = 3.0f;
@@ -25,6 +40,66 @@ void PSVECNormalize(const register Vec *vec1, register Vec *ret) {
     ps_muls0    f3, f3, ret_sqrt;
     psq_st      f3, 8(ret), 1, 0;
   }
+  // clang-format on
+}
+
+asm f32 PSVECSquareMag(const register Vec *v) {
+  // clang-format off
+  nofralloc;
+  psq_l f0, 0(v), 0, 0;
+  ps_mul f0, f0, f0;
+  lfs f1, 8(v);
+  ps_madd f1, f1, f1, f0;
+  ps_sum0 f1, f1, f0, f0;
+  blr;
+  // clang-format on
+}
+
+f32 PSVECMag(const register Vec *v) {
+  register f32 v_xy, v_z, sq, zero, rsq, t, three, half = 0.5f;
+
+  // clang-format off
+  asm {
+    psq_l v_xy, 0(v), 0, 0;
+    ps_mul v_xy, v_xy, v_xy;
+    lfs v_z, 8(v);
+    fsubs zero, half, half;
+    ps_madd sq, v_z, v_z, v_xy;
+    ps_sum0 sq, sq, v_xy, v_xy;
+  }
+  // clang-format on
+
+  if (sq != zero) {
+    // clang-format off
+    asm {
+      frsqrte rsq, sq;
+    }
+    // clang-format on
+    three = 3.0f;
+    // clang-format off
+    asm {
+      fmuls t, rsq, rsq;
+      fmuls rsq, rsq, half;
+      fnmsubs t, t, sq, three;
+      fmuls rsq, t, rsq;
+      fmuls sq, sq, rsq;
+    }
+    // clang-format on
+  }
+  return sq;
+}
+
+asm f32 PSVECDotProduct(const register Vec *a, const register Vec *b) {
+  // clang-format off
+  nofralloc;
+  psq_l f2, 4(a), 0, 0;
+  psq_l f3, 4(b), 0, 0;
+  ps_mul f2, f2, f3;
+  psq_l f5, 0(a), 0, 0;
+  psq_l f4, 0(b), 0, 0;
+  ps_madd f3, f5, f4, f2;
+  ps_sum0 f1, f3, f2, f2;
+  blr;
   // clang-format on
 }
 

@@ -266,7 +266,7 @@ dolphin/os/OSSync.c:
 dolphin/os/OSThread.c:
 	.text       start:0x80237600 end:0x80238504
 	.bss        start:0x803175D8 end:0x80317FD0
-	.sdata      start:0x80346890 end:0x80346894
+	.sdata      start:0x80346890 end:0x80346898
 	.sbss       start:0x80347980 end:0x80347990
 
 dolphin/os/OSTime.c:
@@ -281,6 +281,22 @@ dolphin/db.c:
 	.text       start:0x80238A14 end:0x80238B00
 	.data       start:0x802FA958 end:0x802FA970
 	.sbss       start:0x80347990 end:0x80347998
+
+dolphin/mtx/mtx.c:
+	.text       start:0x80238B00 end:0x802390B4
+	.sdata      start:0x80346898 end:0x803468A0
+	.sdata2     start:0x8034C7C0 end:0x8034C7D0
+
+dolphin/mtx/mtxvec.c:
+	.text       start:0x802390B4 end:0x80239270
+
+dolphin/mtx/mtx44.c:
+	.text       start:0x80239270 end:0x802393A4
+	.sdata2     start:0x8034C7D0 end:0x8034C7E0
+
+dolphin/mtx/vec.c:
+	.text       start:0x802393A4 end:0x802394C4
+	.sdata2     start:0x8034C7E0 end:0x8034C7E8
 
 dolphin/dvd/dvdlow.c:
 	.text       start:0x80239638 end:0x8023A478

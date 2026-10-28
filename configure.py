@@ -439,6 +439,10 @@ config.libs += [
         "progress_category": "sdk",
         "src_dir": "extern/sdk",
         "objects": [
+            Object(Matching, "dolphin/mtx/mtx44.c", extra_cflags=["-DSKIES_FLOAT_MATH_EXTERN"]),
+            Object(Matching, "dolphin/mtx/vec.c", extra_cflags=["-DSKIES_FLOAT_MATH_EXTERN"]),
+            Object(Matching, "dolphin/mtx/mtxvec.c", extra_cflags=["-DSKIES_FLOAT_MATH_EXTERN"]),
+            Object(Matching, "dolphin/mtx/mtx.c", extra_cflags=["-DSKIES_FLOAT_MATH_EXTERN"]),
             Object(Matching, "dolphin/os/OSError.c"),
             Object(Matching, "dolphin/os/OSFatal.c"),
             Object(Matching, "dolphin/os/OSFont.c"),
