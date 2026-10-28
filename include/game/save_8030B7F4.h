@@ -38,7 +38,7 @@ typedef struct { s16 id; s8 cnt; u8 pad; } InvEnt;
 typedef struct Save1568 {
     s8 b1568;                   /* 0x00 */
     u8 x1569;                   /* 0x01 */
-    u8 pad156a[0x12];
+    char name[0x12];            /* 0x02: the ship's name */
     s32 x157c;                  /* 0x14 */
     s16 s1580[5];               /* 0x18 */
     s16 s158a[5];               /* 0x22 */

@@ -3713,6 +3713,147 @@ done:
     return 0;
 }
 
+void fn_80181F58(void) {
+    s32 i;
+    UiObj* ui;
+    f32 y;
+
+    switch (CampKind()) {
+    case 0:
+        for (i = 0; i < camp_work.count; i++) {
+            ui = &camp_work.pnl[i]->win->obj;
+            y = i * 64 + 61;
+            UiObjSetLowered(ui);
+            fn_80199BB8(ui, -348.0f, y);
+            fn_80199BAC(ui, -348.0f, y);
+        }
+        if (fn_801953B8()) {
+            ui = &camp_work.pnl[4]->win->obj;
+            UiObjSetLowered(ui);
+            fn_80199BB8(ui, -348.0f, 317.0f);
+            fn_80199BAC(ui, -348.0f, 317.0f);
+        }
+        break;
+    case 1:
+        for (i = 0; i < camp_work.count; i++) {
+            ui = &camp_work.pnl[i]->win->obj;
+            y = i * 64 + 61;
+            UiObjSetLowered(ui);
+            fn_80199BB8(ui, -348.0f, y);
+            fn_80199BAC(ui, -348.0f, y);
+        }
+        break;
+    case 2:
+        if (fn_801953B8()) {
+            ui = &camp_work.pnl[4]->win->obj;
+            UiObjSetLowered(ui);
+            fn_80199BB8(ui, -348.0f, 317.0f);
+            fn_80199BAC(ui, -348.0f, 317.0f);
+        }
+        break;
+    case 3:
+        ui = &camp_work.pnl[0x95]->win->obj;
+        UiObjSetLowered(ui);
+        fn_80199BB8(ui, -348.0f, 61.0f);
+        fn_80199BAC(ui, -348.0f, 61.0f);
+        ui = &camp_work.pnl[0x96]->win->obj;
+        UiObjSetLowered(ui);
+        fn_80199BB8(ui, 668.0f, 61.0f);
+        fn_80199BAC(ui, 668.0f, 61.0f);
+        break;
+    }
+}
+
+void fn_801822A0(void) {
+    s32 i;
+    UiObj* ui;
+
+    switch (CampKind()) {
+    case 0:
+        for (i = 0; i < camp_work.count; i++) {
+            ui = &camp_work.pnl[i]->win->obj;
+            UiObjMoveTo(ui, 6, -1, -348.0f, i * 64 + 61);
+            UiObjSetCommand(ui, 15, 0);
+        }
+        if (fn_801953B8()) {
+            ui = &camp_work.pnl[4]->win->obj;
+            UiObjMoveTo(ui, 6, -1, -348.0f, 317.0f);
+            UiObjSetCommand(ui, 15, 0);
+        }
+        break;
+    case 1:
+        for (i = 0; i < camp_work.count; i++) {
+            ui = &camp_work.pnl[i]->win->obj;
+            UiObjMoveTo(ui, 6, -1, -348.0f, i * 64 + 61);
+            UiObjSetCommand(ui, 15, 0);
+        }
+        break;
+    case 2:
+        if (fn_801953B8()) {
+            ui = &camp_work.pnl[4]->win->obj;
+            UiObjMoveTo(ui, 6, -1, -348.0f, 317.0f);
+            UiObjSetCommand(ui, 15, 0);
+        }
+        break;
+    case 3:
+        ui = &camp_work.pnl[0x95]->win->obj;
+        UiObjMoveTo(ui, 6, -1, -348.0f, 61.0f);
+        UiObjSetCommand(ui, 15, 0);
+        ui = &camp_work.pnl[0x96]->win->obj;
+        UiObjMoveTo(ui, 6, 5, 668.0f, 61.0f);
+        UiObjSetCommand(ui, 15, 0);
+        break;
+    }
+    fn_801929B8(5);
+}
+
+extern const char* lbl_802F7208[];
+
+void fn_80182A3C(void) {
+    CampReq req;
+    CampCtrl* slots = lbl_80307638;
+    u32 m;
+    CampCtrl* slot;
+    s32 i;
+    CampCtrl* ctrl;
+    s32 who;
+
+    slot = fn_80195540(&req);
+    ctrl = lbl_8034710C->holder->ctrl;
+
+    switch (CampKind()) {
+    case 0:
+        m = 0;
+        for (i = 0; i < camp_work.count; i++) m |= 1 << i;
+        if (fn_801953B8() != 0) m |= 0x10;
+        ctrl->cur[0].mask = m;
+        ctrl->cur[0].sel = 0;
+        who = lbl_8030B7F4.party[slots[1].cur[0].sel];
+        fn_80195EA4(&req, who, ctrl->cur[1].sel, ctrl->cur[4].sel, 1);
+        if (ctrl->cur[0].sel == 4) {
+            fn_801954D0(lbl_802F7208[req.e[slot->cur[0].sel].x6]);
+        } else {
+            fn_801954D0(req.e[slot->cur[0].sel].x10);
+        }
+        break;
+    case 1:
+        m = 0;
+        for (i = 0; i < camp_work.count; i++) m |= 1 << i;
+        ctrl->cur[0].mask = m;
+        ctrl->cur[0].sel = 0;
+        break;
+    case 2:
+        ctrl->cur[0].mask = 0x10;
+        ctrl->cur[0].sel = 4;
+        break;
+    case 3:
+        ctrl->cur[0].mask = 1;
+        ctrl->cur[0].sel = 0;
+        break;
+    }
+    fn_80195A68(ctrl, 1, 0, 0, 0, 0);
+}
+
 void fn_801825D8(void) {
     CampCtrl* ctrl = lbl_8034710C->holder->ctrl;
     s32 i;

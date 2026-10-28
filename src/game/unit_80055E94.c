@@ -78,9 +78,15 @@ typedef struct ChrRec {
     s32 x14;
     s32 x18;
     u32 bits;
-    u8 pad20[0x82 - 0x20];
-    s16 x82;
-    u8 pad_84[0x32];
+    u8 pad20[0x20];
+    s16 x40;
+    u8 pad42[4];
+    s16 x46;
+    s16 x48;
+    u8 pad4a[0x74 - 0x4a];
+    s16 stat[0x12];         /* 0x74 */
+    s16 x98;
+    u8 pad9a[0xb6 - 0x9a];
     s16 xb6;
     u8 pad_b8[0x46];
     s8 xfe;
@@ -2637,6 +2643,93 @@ void fn_80069CD8(void* a, s16 i, void* b, s8 v) {
     }
 }
 
+extern s32 fn_80010E68(s16, s16, s8, s8);
+
+void fn_8006A3E4(s16 a, s16 b, s32 kind, s8 c) {
+    ChrRec *B;
+    s16 r28;
+    s16 r27;
+    s8 r26;
+    ChrRec *A;
+    WorkRec *hw;
+    EnemySkill *row;
+    UseItemData *rc;
+    A = lbl_80309DE4[a];
+    B = lbl_80309DE4[b];
+    switch (kind) {
+    case 2:
+    case 6:
+        break;
+    case 1:
+        if (a < 4) {
+            SkillData *sk = &lbl_802C4BF0[lbl_80309174[a].x6];
+            r28 = A->stat[7];
+            r27 = B->x98;
+            r26 = sk->status_rate;
+        } else {
+            row = &lbl_802AD440[lbl_80309174[a].x6];
+            if (row->inflict < 0x10) {
+                r28 = A->stat[row->inflict + 6];
+            } else {
+                r28 = A->stat[row->inflict];
+            }
+            if (row->resist < 0x10) {
+                r27 = B->stat[row->resist + 6];
+            } else {
+                r27 = B->stat[row->resist];
+            }
+            r26 = row->status_rate;
+        }
+        break;
+    case 4:
+        r28 = 1;
+        r27 = 1;
+        rc = &lbl_802C7C34[lbl_80309174[a].x6 - 0xf0];
+        r26 = rc->status_rate;
+        break;
+    case 5:
+        row = &lbl_802AD440[(s16)(lbl_80309174[a].x6 + 0x24)];
+        if (row->inflict < 0x10) {
+            r28 = A->stat[row->inflict + 6];
+        } else {
+            r28 = A->stat[row->inflict];
+        }
+        if (row->resist < 0x10) {
+            r27 = B->stat[row->resist + 6];
+        } else {
+            r27 = B->stat[row->resist];
+        }
+        r26 = row->status_rate;
+        break;
+    }
+    hw = lbl_80309700[b]->work;
+    hw->x44 = -1;
+    if (lbl_80309DE4[b]->bits & 0x61d0) {
+        hw->x46 = -1;
+    } else if (fn_80010E68(r28, r27, B->x40, r26) == 1) {
+        hw->x44 = c;
+        hw->x46 = 3;
+    } else {
+        hw->x46 = -1;
+    }
+    if (lbl_80309DE4[b]->bits & 0x6950) {
+        hw->x48 = -1;
+    } else if (fn_80010E68(r28, r27, B->x46, r26) == 1) {
+        hw->x44 = c;
+        hw->x48 = 9;
+    } else {
+        hw->x48 = -1;
+    }
+    if (lbl_80309DE4[b]->bits & 0x6950) {
+        hw->x4a = -1;
+    } else if (fn_80010E68(r28, r27, B->x48, r26) == 1) {
+        hw->x44 = c;
+        hw->x4a = 0xb;
+    } else {
+        hw->x4a = -1;
+    }
+}
+
 void fn_8006A7DC(s32 a, s16 i, s32 b, s8 v) {
     ChrRec *c = lbl_80309DE4[i];
     if (c->bits & 0x6950) {
@@ -2646,7 +2739,7 @@ void fn_8006A7DC(s32 a, s16 i, s32 b, s8 v) {
         fn_800696A8(a, i, b, v);
     }
     if (v == lbl_80309700[i]->work->x44) {
-        c->x0c = lbl_80309DE4[(s16)a]->x82;
+        c->x0c = lbl_80309DE4[(s16)a]->stat[7];
     }
 }
 
@@ -2659,7 +2752,7 @@ void fn_8006A8A8(s32 a, s16 i, s32 b, s8 v) {
         fn_800696A8(a, i, b, v);
     }
     if (v == lbl_80309700[i]->work->x44) {
-        c->x0c = lbl_80309DE4[(s16)a]->x82;
+        c->x0c = lbl_80309DE4[(s16)a]->stat[7];
     }
 }
 
@@ -2672,7 +2765,7 @@ void fn_8006A974(s32 a, s16 i, s32 b, s8 v) {
         fn_800696A8(a, i, b, v);
     }
     if (v == lbl_80309700[i]->work->x44) {
-        c->x0c = lbl_80309DE4[(s16)a]->x82;
+        c->x0c = lbl_80309DE4[(s16)a]->stat[7];
     }
 }
 

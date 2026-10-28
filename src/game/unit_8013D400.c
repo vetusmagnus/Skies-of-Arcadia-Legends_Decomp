@@ -1,6 +1,7 @@
 #include "types.h"
 #include "game/work_8030CEA0.h"
 #include "game/gamedata.h"
+#include "game/save_8030B7F4.h"
 #include <dolphin/types.h>
 extern void fn_80136A28(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f);
 extern void fn_8013DA50(s32 a, s32 b);
@@ -166,7 +167,10 @@ typedef struct Owner {
 } Owner;
 extern void fn_8014EE4C(void *,  s32 a,  s32 b,  s32 c,  s32 d);
 typedef struct {
-    u8 x0, x1, x2, x3;
+    u8 x0;
+    s8 x1;
+    u8 x2;
+    s8 x3;
     u8 x4, x5, x6, x7;
     s16 x8;
     s16 xa;
@@ -200,7 +204,7 @@ typedef struct {
 } Cfg;
 extern Cfg* lbl_803472A4;
 extern s32 fn_80145E0C(Slot_8014359C* s, s32 a);
-extern void fn_80145F50(Slot_8014359C* s, s32 a);
+extern s32 fn_80145F50(Slot_8014359C* s, s32 a);
 typedef struct {
     u8 pad[0x24];
     struct { u8 pad[0x23C]; void* x23c; } * x24;
@@ -909,6 +913,22 @@ s32 fn_80143374(void) {
 }
 
 void fn_80144E5C(void) {
+}
+
+s32 fn_80145F50(Slot_8014359C *o, s32 a) {
+    s32 roll = rand() % 100;
+    s32 thr;
+
+    if (o->x1 == 0) {
+        thr = lbl_8030B7F4.chr[o->x3].s40;
+    } else {
+        thr = lbl_802D6934[o->x3].agile;
+    }
+    if (roll <= thr) {
+        o->x7 = 2;
+        return 1;
+    }
+    return 0;
 }
 
 void fn_801463E4(IdxArg* a) {

@@ -255,6 +255,8 @@ typedef struct NameEnt { char *name; u8 pad4[8]; } NameEnt;
 typedef struct NameList { NameEnt *ents; u32 count; } NameList;
 extern s32 fn_801E4BBC(s8 n);
 extern void fn_8021AF94(s32 *a, void *b, s8 *list);
+extern void fn_8021B3B4(void);
+extern void fn_801EFF0C(s16 id);
 typedef struct Ent { u8 pad[0x20]; f32 key; } Ent;
 extern Ent *lbl_80315530[];
 extern s32 lbl_803477F0;
@@ -374,7 +376,7 @@ typedef struct Sys_UNIT0000 { s32 f0; s16 f4; s16 f6; f32 f8; f32 fc; u8 p10[4];
 typedef struct Slot_80219998 { u8 pad_00[0x38]; u8 x38; u8 pad39[3]; } Slot_80219998;
 extern Slot_80219998 lbl_80315120[];
 typedef struct { s16 x0; s16 x2; s8 x4; s8 x5; } Out;
-typedef struct { s8 id; u8 pad1[0x17]; s16 ids[5]; } Src;
+typedef struct { s8 id; s8 level; u8 pad2[0x16]; s16 ids[5]; s16 acc[3]; } Src;
 s32 fn_8021A6E8(Src* a, void* b, CannonData* c);
 s32 fn_8021A620(Src* a, void* b, CannonData* c);
 typedef struct { Vec pos; f32 r; } Sphere_80221AAC;
@@ -833,6 +835,141 @@ s32 fn_8021A094(void) {
     return 0;
 }
 
+static inline s32 CrewValid(s32 v)
+{
+    s32 r = 0;
+    if (v >= 0 && v < 0x16) {
+        r = 1;
+    }
+    return r;
+}
+
+static inline s32 StatValid(s32 v)
+{
+    s32 r = 0;
+    if (v >= 0 && v < 0x62) {
+        r = 1;
+    }
+    return r;
+}
+
+static inline s32 ModValue(StatMod* m, s32 stat)
+{
+    s32 r = 0;
+    if (m != NULL && StatValid(stat) && m->stat == stat) {
+        r = m->val;
+    }
+    return r;
+}
+
+static inline s32 CrewMod(s32 crew, s32 stat)
+{
+    s32 r = 0;
+    if (CrewValid(crew) && StatValid(stat)) {
+        r = ModValue(&lbl_802D8E64[crew].mod, stat);
+    }
+    return r;
+}
+
+s32 fn_8021A11C(s32 crew, s32 stat)
+{
+    s32 r = 0;
+    if (CrewValid(crew) && StatValid(stat)) {
+        r = ModValue(&lbl_802D8E64[crew].mod, stat);
+    }
+    return r;
+}
+
+static inline s32 CannonValid(s32 id)
+{
+    s32 r = 0;
+    if (id >= 0x190 && id <= 0x1b7) {
+        r = 1;
+    }
+    return r;
+}
+
+static inline s32 GearValid(s32 id)
+{
+    s32 r = 0;
+    if (id >= 0x1b8 && id <= 0x1df) {
+        r = 1;
+    }
+    return r;
+}
+
+static inline s32 CannonMod(s32 id, s32 stat)
+{
+    s32 r = 0;
+    StatMod* m;
+    if (CannonValid(id) && StatValid(stat)) {
+        m = lbl_802D7E4C[id - 0x190].mod;
+        r = ModValue(m, stat);
+    }
+    return r;
+}
+
+static inline s32 GearMod(s32 id, s32 stat)
+{
+    s32 r = 0;
+    s32 j;
+    StatMod* m;
+    if (GearValid(id) && StatValid(stat)) {
+        m = lbl_802D83EC[id - 0x1b8].mods;
+        for (j = 0; j < 4; j++) {
+            r += ModValue(&m[j], stat);
+        }
+    }
+    return r;
+}
+
+static inline s32 CannonSum(s16* ids, s32 stat)
+{
+    s32 sum = 0;
+    s32 i;
+    if (ids != NULL && StatValid(stat)) {
+        for (i = 0; i < 5; i++) {
+            sum += CannonMod(ids[i], stat);
+        }
+    }
+    return sum;
+}
+
+static inline s32 GearSum(s16* ids, s32 stat)
+{
+    s32 sum = 0;
+    s32 i;
+    if (ids != NULL && StatValid(stat)) {
+        for (i = 0; i < 3; i++) {
+            sum += GearMod(ids[i], stat);
+        }
+    }
+    return sum;
+}
+
+static inline s32 CrewSum(s8* crew, s32 stat)
+{
+    s32 sum = 0;
+    s32 i;
+    if (crew != NULL && StatValid(stat)) {
+        for (i = 0; i < 0x16; i++) {
+            sum += CrewMod(*crew, stat);
+            crew++;
+        }
+    }
+    return sum;
+}
+
+s32 fn_8021A2B0(Src* a, void* crew, s32 stat)
+{
+    s32 r = 0;
+    if (a != NULL && crew != NULL && StatValid(stat)) {
+        r = CannonSum(a->ids, stat) + GearSum(a->acc, stat);
+        r += CrewSum(crew, stat);
+    }
+    return r;
+}
+
 void fn_8021EDE0(Obj_UNIT0000 *p, s32 n)
 {
     if (p->count <= (u16)n) {
@@ -1132,18 +1269,18 @@ s32 fn_8021A0FC(s32 v) {
     return r;
 }
 
-s32 fn_8021A5F0(s32 a, s32 b, u8 *p) {
+s32 fn_8021A5F0(s32 a, s32 b, CannonData *p) {
     s32 r = 0;
     if (p != 0) {
-        r = *(s8 *)(p + 0x19);
+        r = p->cost;
     }
     return r;
 }
 
-s32 fn_8021A608(s32 a, s32 b, u8 *p) {
+s32 fn_8021A608(s32 a, s32 b, CannonData *p) {
     s32 r = 0;
     if (p != 0) {
-        r = *(s8 *)(p + 0x18);
+        r = p->limit;
     }
     return r;
 }
@@ -2024,12 +2161,12 @@ void fn_8021AE68(Out* out, Src* src, void* b, s32 slot)
     out->x0 = fn_8021A6E8(src, b, t);
     out->x2 = fn_8021A620(src, b, t);
     {
-        s8 v = 0;
+        s32 v = 0;
         if (t) v = t->limit;
         out->x4 = v;
     }
     {
-        s8 v = 0;
+        s32 v = 0;
         if (t) v = t->cost;
         out->x5 = v;
     }
@@ -3439,6 +3576,45 @@ s32 fn_8021A7B0(Src* p, void* q)
         }
     }
     return r;
+}
+
+void fn_8021B4B4(s32 ship) {
+    s8 buf[22];
+    if (InRange(ship)) {
+        ShipData* e = GetEnt(ship);
+        Save1568* s = &lbl_8030B7F4.x1568;
+        s->b1568 = ship;
+        if (s != NULL && e != NULL) {
+            MemCopy(s->name, e->name, 0x11);
+            lbl_8030B7F4.x1568.name[0x10] = 0;
+        }
+        fn_8021B3B4();
+        fill(buf);
+        fn_8021AF94(&lbl_8030B4D4.limit, s, buf);
+    }
+}
+
+void fn_8021B91C(s32 ship) {
+    s8 buf[22];
+    if (InRange(ship)) {
+        ShipData* e = GetEnt(ship);
+        Save1568* s = &lbl_8030B7F4.x1568;
+        s->b1568 = ship;
+        if (s != NULL && e != NULL) {
+            MemCopy(s->name, e->name, 0x11);
+            lbl_8030B7F4.x1568.name[0x10] = 0;
+        }
+        {
+            s16 id = e->cannon[4];
+            if (s != NULL && CannonValid(id)) {
+                lbl_8030B7F4.x1568.s1580[4] = id;
+                fn_801EFF0C(id);
+            }
+        }
+        fn_8021B3B4();
+        fill(buf);
+        fn_8021AF94(&lbl_8030B4D4.limit, s, buf);
+    }
 }
 
 static inline s32 InRange6(s32 v)

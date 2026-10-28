@@ -73,7 +73,7 @@ typedef struct SkillData {
     s16 power;              /* 0x1C */
     s8 type;                /* 0x1E */
     s8 status;              /* 0x1F */
-    s8 status_rate;         /* 0x20 */
+    u8 status_rate;         /* 0x20 */
     u8 pad21[3];
     s8 ship_use;            /* 0x24 */
     u8 pad25;
@@ -181,7 +181,7 @@ typedef struct EnemySkill {
     s8 inflict;             /* 0x1E */
     s8 resist;              /* 0x1F */
     s8 status;              /* 0x20 */
-    s8 status_rate;         /* 0x21 */
+    u8 status_rate;         /* 0x21 */
     u8 pad22[2];
 } EnemySkill;
 
@@ -260,8 +260,8 @@ typedef struct CannonData {
     s8 element;             /* 0x13 */
     s16 attack;             /* 0x14 */
     s16 accuracy;           /* 0x16 */
-    u8 limit;               /* 0x18 */
-    u8 cost;                /* 0x19 */
+    s8 limit;               /* 0x18 */
+    s8 cost;                /* 0x19 */
     StatMod mod[1];         /* 0x1A */
     u16 price;              /* 0x1E */
     u8 can_sell;            /* 0x20 */
