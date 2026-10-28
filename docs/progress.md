@@ -1920,13 +1920,24 @@ Merged by hand (5,243 to 5,247; fdiff and `floatcheck.py` clean on both units, `
   `Game6E14_800EEDD4` and their casts are gone; fn_800F04C8's tile bank is `b2` (0xDF8), not a second `bank`.
 
 Not done, with what a trial showed:
-- The `MapObj` to `EvObj` fold (unit_800B2DA0.c; 15 held functions: fn_800B8028, fn_800B847C, fn_800BA820, fn_800BB574, fn_800C5EE8,
-  fn_800D7190, fn_800D8924, fn_800D8E1C, fn_800D934C, fn_800DCF18, fn_800DD5B4, fn_80106EE0, fn_801073B4, fn_80113084, fn_80117BE4).
-  Renaming `MapObj` to `EvObj` and deleting the struct (trial in a scratch file) gives 500+ compile errors: `pos[3]` to `pos.x/y/z`
-  (about 40 uses), `save[3]` to `home`, `p1b8`(24 uses)/`p1bc`(10)/`p1c8`(30)/`p25c`/`p260` to `hit`/`coll`/`ext`/`mapMode`,
-  `pe4/pe8/pec` to `model/motion/shape`, `w44/s48/w4c` to `ang[3]`, `f1c` to `colour`, `x16e`, `b1ec`, `h1fc/h200`, and the
-  `Entry`/`Script`/`Cmd`/`MapSub`/`MapLst` views of `ext->info`/`items`. `MapSub.p10` (Cfg_800CDEF4: w0 >= 9, w4, w24) and
-  `EvInfo` (count at 0, flags 0x14, nearDist 0x24) are the same count-prefixed table with different views. Needs a sed-style
-  rewrite script plus per-function fdiff; `build/agents/cc.py FILE` lists the compile errors (Write-tool script, forward slashes).
+- The `MapObj` to `EvObj` fold (branch evfold in build/wt-evfold, from types-merge): done for the unit's own code. `MapObj` is gone;
+  every old view is EvObj's (`pos`/`home`/`ang[3]`/`hit`/`coll`/`ext`/`model`/`motion`/`shape`/`colour`, `x16e`, `x1ac`/`x1b0`/`x1b4`/`x1c4`,
+  `x248`, `x1ec`, `x1fc`/`x200`), `Sub_800C5530`, `HitNode`, `Cfg_800CDEF4`, `MapSub`/`MapLst`, `Script`/`Entry`, `Cmd` are now EvHit, EvColl,
+  EvInfo, EvExt/ItemList, EvScript/EvScriptEntry, EvMode in evobj.h, and `NJS_MOTION` is one struct in ninja.h (five private copies removed).
+  `EvObj.x25c` is a `void *` (the script of a map object, the node list of a trail, a task list elsewhere; code reads it into a typed local),
+  `fn_800CDEF4` reads `nearDist` into an `s32` local (evobj.c reads it as u32). 197 functions of the unit still fdiff/floatcheck clean, SHA OK.
+  The 15 held functions (fn_800B8028, fn_800B847C, fn_800BA820, fn_800BB574, fn_800C5EE8, fn_800D7190, fn_800D8924, fn_800D8E1C,
+  fn_800D934C, fn_800DCF18, fn_800DD5B4, fn_80106EE0, fn_801073B4, fn_80113084, fn_80117BE4) are still not merged. What blocks them is
+  not the object but `EvObj.ext->info` (EvInfo): each object kind lays out the record differently past 0x24 (0x28/0x2C/0x30 are u32 in
+  evobj.c, s32 in the trail code, f32 in the sparkle code; 0x38/0x3C mode/flag vs `spin[3]`/`pts`/`w38`; 0x68 `offA`/`offB` trail fields vs
+  the 112-byte emitter `sub` at 0x78 vs the 0x2F0-0x314 tail). A single struct needs the 0x23C treatment: `EvExt.info` becomes `void *`, EvInfo keeps
+  the common head, and each kind gets its own record (`TrailInfo`, `EmitInfo`, `SparkInfo`) read into a typed local, with evobj.c's ten
+  `obj->ext->info->nearDist` reads changed to a local (check evobj.c with fdiff afterwards). Other recurring clashes in the 15: `coll` is
+  `EvColl *` in the header but `HitRes *` in fn_800D8924/8E1C/934C/DCF18/DD5B4 (`void *` plus typed locals), `x260` is `EvMode *` in the header
+  but `EffPart *` in fn_800BA820, `x1ac`/`x1b0` are pointers in fn_800C5EE8/80106EE0/801073B4 (the unit stores s32 there in fn_800D0CC8),
+  fn_80113084 wants `EvXform` (pos/ang/scl as one struct) and fn_800D7190 `hnd` for `x1b4`. Tools (local, build/agents): `cmp15.py` lists the
+  per-field clashes of agent files against evobj.h (offset-exact; cst.py now aligns NJS_POINT3/NJS_ARGB at 4), `ev15.py AGENT OUT [--apply]`
+  strips an agent's private copy of the EvObj types and renames its fields to the header's, `evfix.py FILE` rewrites old member names from
+  the compiler's 'not a member' errors.
 - unit_80005B50.c character views, `lbl_8034727C` `BtlWork`, unit_801F5334.c script commands, the unit_80055E94.c effect views: unchanged
   from the lists above.
