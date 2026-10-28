@@ -118,7 +118,7 @@ typedef struct ChrState { s32 x0; s8 x4; u8 pad5; s16 x6; s8 x8; u8 pad9[4]; u8 
 extern ChrState lbl_80309174[12];
 typedef struct Row16 { u8 pad[4]; u8 x4; u8 pad5[3]; s8 x8; u8 pad9[7]; } Row16;
 extern Row16 lbl_80309730[12];
-typedef struct Vec3 { f32 x; f32 y; f32 z; } Vec3;
+typedef NJS_POINT3 Vec3;
 typedef struct Ent { s32 x0; u32 x4; s32 x8; s32 xc; } Ent;
 typedef struct Hdr { u8 pad0[4]; s16 count; u8 pad6[2]; Ent e[1]; } Hdr;
 void fn_800D208C(void *obj, f32 f);
@@ -238,7 +238,7 @@ extern u32 fn_80035C38(void *);
 extern s32 fn_8003DBAC(s32, char *);
 int fn_8025EF88(char* a, const char* b);
 void fn_80015554(void);
-typedef struct { f32 x, y, z; } V3;
+typedef NJS_POINT3 V3;
 /* Model table entry of a battle character record. */
 typedef struct Rec18 {
     u32 flags;          /* 0x00 */
@@ -554,7 +554,7 @@ typedef struct Wk_8006B46C {
 typedef struct TblEnt_8006B46C { void* f0; void* f4; u32 f8; u8 fc; u8 pad[3]; } TblEnt_8006B46C;
 extern void* memset(void*, int, u32);
 extern void fn_8006B8A8(Eff*);
-typedef struct V5BF30 { f32 x, y, z; } V5BF30;
+typedef NJS_POINT3 V5BF30;
 typedef struct D5BF30 {
     u8 pad0[0x14];
     u32 flags;
@@ -1059,7 +1059,7 @@ typedef struct {
     u8 pad70[0x1c4 - 0x70];
     s32 count;
 } Sys_8030A10C_8005CBA4;
-typedef struct Vec3f { f32 x, y, z; } Vec3f;
+typedef NJS_POINT3 Vec3f;
 typedef struct { u8 pad[0x1c4]; s32 count; } Sys_8030A10C_8005A694;
 typedef struct { u8 pad0[0x4c]; u8 pad4c[0x154 - 0x4c]; } Dummy_8005A694;
 typedef struct W_8005A694 { u8 f0; u8 pad1[0x153]; u8 *f154; } W_8005A694;
@@ -1234,7 +1234,7 @@ extern void fn_800692D8(void);
 extern void fn_8008066C(s32);
 typedef void (*Fn683D8)(s16, s16, s32, s8);
 extern Fn683D8 lbl_802DF570[0x4f];
-typedef struct { f32 x, y, z; } Vec3_80057DFC;
+typedef NJS_POINT3 Vec3_80057DFC;
 typedef struct Info { u8 pad[0xec]; u32 flags; } Info;
 typedef struct Par_80057DFC { u8 pad[0x34]; Vec3_80057DFC v; u8 pad40[0x4c - 0x40]; Info* x4c; } Par_80057DFC;
 typedef struct Obj_80057DFC { u8 pad[0x24]; Par_80057DFC* p24; } Obj_80057DFC;
@@ -1267,7 +1267,7 @@ typedef struct Work_80057DFC {
     Data_80057DFC* d;
 } Work_80057DFC;
 typedef struct { u8 pad[0x1c4]; s32 count; } Game;
-typedef struct { f32 x, y, z; } Vec3_8005D108;
+typedef NJS_POINT3 Vec3_8005D108;
 typedef struct Info_8005D108 { s8 id; } Info_8005D108;
 typedef struct Par_8005D108 { u8 pad[0x4c]; Info_8005D108* x4c; } Par_8005D108;
 typedef struct Data_8005D108 {
