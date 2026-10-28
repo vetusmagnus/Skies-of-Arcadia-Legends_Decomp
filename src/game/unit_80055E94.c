@@ -1845,6 +1845,198 @@ extern void fn_800402FC(void*, u32, void**);
 extern void fn_80032E44(void*);
 extern void fn_80034AF0(void*, s16, void*, void*, void*, s32, f32);
 
+typedef struct {
+    u8 pad0[0x6];
+    s16 flags;          /* 0x06 */
+    s32 src;            /* 0x08 */
+    u8 pad0c[0x4];
+} CmdHead;
+
+/* Particle (the layout of Part in effect.c). */
+typedef struct {
+    s16 timer;          /* 0x000 */
+    s16 start;          /* 0x002 */
+    s16 life;           /* 0x004 */
+    u8 pad6[2];
+    V3 pos;            /* 0x008 */
+    V3 vel0;           /* 0x014 */
+    V3 vel;            /* 0x020 */
+    f32 gravity;        /* 0x02C */
+    f32 drag;           /* 0x030 */
+    f32 scale;          /* 0x034 */
+    u8 pad38[0x40 - 0x38];
+    u32 flags;          /* 0x040 */
+    u32 type;           /* 0x044 */
+    u8 alpha;           /* 0x048 */
+    u8 alphaStep;       /* 0x049 */
+    s16 bounces;        /* 0x04A */
+    s16 maxBounces;     /* 0x04C */
+    u8 pad4e[2];
+    f32 bounce;         /* 0x050 */
+    u8 pad54[0x98 - 0x54];
+    f32 x98;            /* 0x098 */
+    f32 x9c;            /* 0x09C */
+    f32 xa0;            /* 0x0A0 */
+    u8 pada4[0x1DC - 0xA4];
+    s32 src;            /* 0x1DC */
+    CmdHead hdr;        /* 0x1E0 */
+} Part;
+
+/* Work of a particle task. */
+typedef struct {
+    u8 pad0[0x8];
+    void* model;        /* 0x08 */
+    u8 pad0c[0x1C - 0xC];
+    V3 pos;            /* 0x1C */
+    s32 ang[3];         /* 0x28 */
+    f32 sc[3];          /* 0x34 */
+    u8 pad40[4];
+    u8 col;             /* 0x44 */
+    u8 pad45[0x4C - 0x45];
+    Part* part;         /* 0x4C */
+    s32 x50;
+    s32 x54;
+} PartWork;
+
+/* A task whose work is a PartWork. */
+typedef struct {
+    u8 pad0[0x18];
+    u8 flags;           /* 0x18 */
+    u8 state;           /* 0x19 */
+    u8 pad1A[0x24 - 0x1A];
+    PartWork* work;     /* 0x24 */
+} PartTask;
+
+extern s32 lbl_80346BD0;
+extern int fn_8007E264(f32* out, f32 x, f32 z);
+extern void fn_80040044(DrawState* s, f32 alpha, u32 mask, u8* flag);
+extern s32 fn_80035908(void);
+extern void fn_80035910(s32);
+
+void fn_8005A7B8(PartTask* node)
+{
+    PartWork* w = node->work;
+    Part* d = w->part;
+    DrawState st;
+    u8 col;
+    f32 save = 0.0f;
+
+    switch (node->state) {
+    case 0:
+        fn_8006D954(d->src);
+        w->sc[0] = d->scale;
+        w->sc[1] = d->scale;
+        w->sc[2] = d->scale;
+        w->ang[0] += (s32)(182.04445f * d->x98);
+        w->ang[1] += (s32)(182.04445f * d->x9c);
+        w->ang[2] += (s32)(182.04445f * d->xa0);
+        node->state = 1;
+        node->work->x50 = d->src;
+        node->work->x54 = -1;
+    case 1:
+        if (d->timer < d->start) {
+            break;
+        }
+        node->state = 2;
+        fn_80071CF0(&d->vel0, &d->vel);
+    case 2:
+        w->ang[0] += (s32)(182.04445f * d->x98);
+        w->ang[1] += (s32)(182.04445f * d->x9c);
+        w->ang[2] += (s32)(182.04445f * d->xa0);
+        d->pos.x += d->vel.x;
+        d->pos.y += d->vel.y;
+        d->pos.z += d->vel.z;
+        d->vel.x *= d->drag;
+        d->vel.y += d->gravity;
+        d->vel.z *= d->drag;
+        if (d->timer >= d->life) {
+            if (d->alpha <= d->alphaStep) {
+                d->alpha = 0;
+                node->state = 0xFA;
+            } else {
+                d->alpha -= d->alphaStep;
+            }
+        }
+        if (d->flags & 0x80000000) {
+            fn_8007E264(&w->pos.y, d->pos.x, d->pos.z);
+            if (w->pos.y >= d->pos.y) {
+                d->pos.y = w->pos.y;
+                if (d->vel0.y < 0.0f) {
+                    if (d->bounce) {
+                        d->vel.y = d->vel.y * d->bounce;
+                    } else {
+                        d->vel.y = d->vel.y * d->drag;
+                    }
+                } else {
+                    if (d->bounce) {
+                        d->vel.y = d->vel0.y * d->bounce;
+                    } else {
+                        d->vel.y = d->vel0.y * d->drag;
+                    }
+                }
+                if (d->vel.y < 0.0f) {
+                    d->vel.y *= -1.0f;
+                }
+                d->pos.y = 0.0f;
+                d->bounces++;
+            }
+            if (d->flags & 0x400000) {
+                if (d->x98) {
+                    save = d->x98;
+                    d->x98 = 0.0f;
+                } else if (d->x9c) {
+                    save = d->x9c;
+                    d->x9c = 0.0f;
+                } else if (d->xa0) {
+                    save = d->xa0;
+                    d->xa0 = 0.0f;
+                }
+                switch (rand() % 3) {
+                case 0:
+                    d->x98 = save;
+                    break;
+                case 1:
+                    d->x9c = save;
+                    break;
+                case 2:
+                    d->xa0 = save;
+                    break;
+                }
+            }
+        }
+        fn_80071CF0(&d->pos, &w->pos);
+        if (node->work->x50 == 0x1D3C61) {
+            lbl_80346BD0 = fn_80035908();
+            fn_80035910(0x1004000);
+        }
+        DrawStateDefault2D(&st);
+        col = w->col;
+        fn_80040044(&st, -1.0f + d->alpha / 255.0f, d->type, &w->col);
+        if (DrawStatePush(&st) != 0) {
+            fn_80032E44(w->model);
+            fn_80034AF0(w, -1, NULL, NULL, NULL, 0, 0.0f);
+            DrawStatePop(NULL);
+        }
+        w->col = col;
+        if (node->work->x50 == 0x1D3C61) {
+            fn_80035910(lbl_80346BD0);
+        }
+        break;
+    case 0xF9:
+    case 0xFA:
+        fn_8006D8DC(d->src);
+        fn_801E17E0(d);
+        node->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    d->timer++;
+    if ((d->flags & 0x20000000) && d->bounces >= d->maxBounces) {
+        d->timer = d->life;
+    }
+    fn_80037FD8(&d->hdr, &node->state);
+}
+
 void fn_8005ACD4(EvMotTask* o)
 {
     EvMotWork* w;
