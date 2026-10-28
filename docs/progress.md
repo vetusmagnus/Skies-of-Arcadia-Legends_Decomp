@@ -1565,3 +1565,35 @@ Lessons: `s32` is `long` in this tree and `int` locals change loop-entry checks 
 reproduces `cmpwi; beq; b`; `if (f)` on a float gives `fcmpu f, 0.0`; a recursive `inline` is expanded three or four
 levels deep (fn_8007578C, fn_8006C9E4, fn_8009DEF0); `SaveData.party` is loaded with `lbz` + `extsb`, so it is probably
 `u8 party[5]` (fn_801825D8, fn_801818EC, fn_80175EE8, fn_80177348 are 2-4 lines from matching with that change).
+
+## Struct unification of the batch 13 held-back matches, pass 1 (2026-10-28)
+
+By hand, no agents. 9 of the 66 merged (5,133 of 7,117):
+- unit_800506B0.c: one type set for the whole unit. `Pawn` is the 0x17C battle-camera work (fn_80051264's task work,
+  allocated by fn_80053F38; copied into `lbl_80309EC8.o`), `Move` its command (`CmdHead` + flags/start/end/kind),
+  `Actor`/`ActTask`/`BtlUnit` the character task, its work and the 0x4C record, plus `SwapCmd`/`HitCmd`/`FadeCmd` and
+  their works for the other effect tasks, and one `Game` for lbl_8030A10C. The old per-function views (O52058,
+  O_80053964, Ob, Cw53F38, `(u8 *)o + 0x88`) are gone. Merged fn_800506B0, fn_80050DB0, fn_80051264, fn_800519F4,
+  fn_8005259C, fn_800534B0. Callers fix two prototypes: fn_80011370 is `(u8, s8)` (an `s8` argument from an `s8` field
+  gets no extsb) and fn_80071BCC is `(NJS_POINT3 *, f32, Angle)` (argument order changes the lfs/lwz schedule).
+- unit_80219378.c: `Block` (0x60 result-screen block work, `BlockSpr` at 0x0C is the fn_80005D98 sprite, `Host` owner),
+  `BlockTask` = `Task` + second work block at 0x28 (like `MenuPart`). fn_8021EEF4 sets a `DrawState`'s colour (was a
+  pad view `Fx`) and takes `(DrawState *, f32, s16)`. lbl_80311AD4 is `s32[11]` as in every other unit (was a
+  struct with `state` at 0xC). Merged fn_8021F330 (the agent's isolated version had a floatcheck mismatch: the alpha
+  clamps at 1.0f, not 0.0f) and fn_80220074.
+- unit_801CBA60.c: fn_801CDC68 takes a `LineArgs` (points pointer at 0), not the unit's 16-byte `DrawVtx`.
+
+Not merged yet, with what each needs:
+- unit_801825D8/801818EC (SaveData.party u8 lever): both live in unit_8015DC6C.c, so they wait on the camp menu
+  types (`lbl_8034710C->holder->ctrl`, CampWork, Req/Ent) like the other 8 camp functions.
+- unit_80055E94.c (8): ~150 per-function views of the same character task/work/record (CamObj, ChrTask, T5C188,
+  K6065C, ...) and of lbl_8030A10C; needs the same treatment as unit_800506B0 (the types there are the template), but
+  the unit is 6,500 lines.
+- fn_802297C4, fn_80229E54 (unit_80219378.c): lbl_8034784C is a model/texlist holder seen as u32 words (`Z`, `ZQ`);
+  needs NJS_OBJECT/NJS_TEXLIST typing and camera_803119E0.h's word at 0x1C named.
+- fn_801DC62C (unit_801D24D0.c, game init): heap handles (heap_main, lbl_803476A0...) are `void *` game-wide but
+  OSCreateHeap returns an int handle; fn_801DC3AC is a VI retrace callback and should take `u32`; arena globals want
+  `void *` with OSRoundUp32B. lbl_803476C0 is the `GXRenderModeObj *` (xfbHeight/viHeight/field_rendering/aa).
+- fn_8009ED04, fn_800A2D2C (unit_800972AC.c): agents used ninja_lib.h and a private NJS_OBJECT copy.
+- unit_801F5334.c handlers: the unit already reads the script stream through `union ScptCur` and keeps per-command
+  work in a union at Scpt 0x30; the batch 13 rejections were for the same pattern, so that needs one decision first.
