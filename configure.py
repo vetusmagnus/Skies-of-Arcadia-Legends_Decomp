@@ -439,6 +439,9 @@ config.libs += [
         "progress_category": "sdk",
         "src_dir": "extern/sdk",
         "objects": [
+            Object(Matching, "dolphin/ar/arq.c"),
+            Object(Matching, "dolphin/ar/ar.c"),
+            Object(Matching, "dolphin/ai.c"),
             Object(Matching, "dolphin/vi.c"),
             Object(Matching, "dolphin/mtx/mtx44.c", extra_cflags=["-DSKIES_FLOAT_MATH_EXTERN"]),
             Object(Matching, "dolphin/mtx/vec.c", extra_cflags=["-DSKIES_FLOAT_MATH_EXTERN"]),

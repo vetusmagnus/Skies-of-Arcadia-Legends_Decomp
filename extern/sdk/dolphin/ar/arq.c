@@ -14,14 +14,14 @@ static u32 __ARQChunkSize;
 
 static volatile BOOL __ARQ_init_flag = FALSE;
 
-void __ARQPopTaskQueueHi(void);
+static inline void __ARQPopTaskQueueHi(void);
 void __ARQServiceQueueLo(void);
 void __ARQCallbackHack(void);
 void __ARQInterruptServiceRoutine(void);
 void __ARQInitTempQueue(void);
 void __ARQPushTempQueue(ARQRequest* task);
 
-void __ARQPopTaskQueueHi(void) {
+static inline void __ARQPopTaskQueueHi(void) {
 
   if (__ARQRequestQueueHi) {
     if (__ARQRequestQueueHi->type == ARQ_TYPE_MRAM_TO_ARAM) {
@@ -165,6 +165,14 @@ void ARQPostRequest(ARQRequest* request, u32 owner, u32 type, u32 priority, u32 
   }
 
   OSRestoreInterrupts(enabled);
+}
+
+void ARQSetChunkSize(u32 size) {
+  if (size % 32) {
+    __ARQChunkSize = size + (32 - (size % 32));
+  } else {
+    __ARQChunkSize = size;
+  }
 }
 
 u32 ARQGetChunkSize(void) { return __ARQChunkSize; }

@@ -54,43 +54,6 @@ void ARStartDMA(u32 type, u32 mainmem_addr, u32 aram_addr, u32 length) {
   OSRestoreInterrupts(enabled);
 }
 
-u32 ARAlloc(u32 length) {
-  u32 tmp;
-  BOOL enabled;
-
-  enabled = OSDisableInterrupts();
-  tmp = __AR_StackPointer;
-  __AR_StackPointer += length;
-  *__AR_BlockLength = length;
-  __AR_BlockLength++;
-  __AR_FreeBlocks--;
-  OSRestoreInterrupts(enabled);
-
-  return tmp;
-}
-
-u32 ARFree(u32* length) {
-  BOOL old;
-
-  old = OSDisableInterrupts();
-
-  __AR_BlockLength--;
-
-  if (length) {
-    *length = *__AR_BlockLength;
-  }
-
-  __AR_StackPointer -= *__AR_BlockLength;
-
-  __AR_FreeBlocks++;
-
-  OSRestoreInterrupts(old);
-
-  return __AR_StackPointer;
-}
-
-BOOL ARCheckInit() { return __AR_init_flag; }
-
 u32 ARInit(u32* stack_index_addr, u32 num_entries) {
 
   BOOL old;
@@ -152,22 +115,22 @@ static void __ARHandler(__OSInterrupt interrupt, OSContext* context) {
 
 #define RoundUP32(x) (((u32)(x) + 32 - 1) & ~(32 - 1))
 
-void __ARClearInterrupt(void) {
+static inline void __ARClearInterrupt(void) {
 
   u16 tmp;
   tmp = __DSPRegs[5];
   tmp = (u16)((tmp & ~(0x00000080 | 0x00000008)) | 0x00000020);
   __DSPRegs[5] = tmp;
 }
-u16 __ARGetInterruptStatus(void) { return ((u16)(__DSPRegs[5] & 0x0200)); }
+static inline u16 __ARGetInterruptStatus(void) { return ((u16)(__DSPRegs[5] & 0x0200)); }
 
-static void __ARWaitForDMA(void) {
+static inline void __ARWaitForDMA(void) {
 
   while (__DSPRegs[5] & 0x0200) {
   }
 }
 
-static void __ARWriteDMA(u32 mmem_addr, u32 aram_addr, u32 length) {
+static inline void __ARWriteDMA(u32 mmem_addr, u32 aram_addr, u32 length) {
 
   __DSPRegs[16] = (u16)((__DSPRegs[16] & ~0x03ff) | (u16)(mmem_addr >> 16));
   __DSPRegs[16 + 1] = (u16)((__DSPRegs[16 + 1] & ~0xffe0) | (u16)(mmem_addr & 0xffff));
@@ -185,7 +148,7 @@ static void __ARWriteDMA(u32 mmem_addr, u32 aram_addr, u32 length) {
   __ARClearInterrupt();
 }
 
-static void __ARReadDMA(u32 mmem_addr, u32 aram_addr, u32 length) {
+static inline void __ARReadDMA(u32 mmem_addr, u32 aram_addr, u32 length) {
 
   __DSPRegs[16] = (u16)((__DSPRegs[16] & ~0x03ff) | (u16)(mmem_addr >> 16));
   __DSPRegs[16 + 1] = (u16)((__DSPRegs[16 + 1] & ~0xffe0) | (u16)(mmem_addr & 0xffff));

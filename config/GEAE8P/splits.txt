@@ -336,6 +336,24 @@ src/dolphin/pad/Pad.c:
 	.sdata      start:0x803468E8 end:0x80346908
 	.sbss       start:0x80347AB8 end:0x80347AE0
 
+dolphin/ai.c:
+	.text       start:0x802416A0 end:0x80241F84
+	.data       start:0x802FB108 end:0x802FB150
+	.sdata      start:0x80346908 end:0x80346910
+	.sbss       start:0x80347AE0 end:0x80347B20
+
+dolphin/ar/ar.c:
+	.text       start:0x80241F84 end:0x80243A34
+	.data       start:0x802FB150 end:0x802FB198
+	.sdata      start:0x80346910 end:0x80346918
+	.sbss       start:0x80347B20 end:0x80347B40
+
+dolphin/ar/arq.c:
+	.text       start:0x80243A34 end:0x80243DF8
+	.data       start:0x802FB198 end:0x802FB1E0
+	.sdata      start:0x80346918 end:0x80346920
+	.sbss       start:0x80347B40 end:0x80347B68
+
 src/dsp/dsp.c:
 	.text       start:0x80243DF8 end:0x80244010
 	.data       start:0x802FB1E0 end:0x802FB260

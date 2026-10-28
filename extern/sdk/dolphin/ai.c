@@ -46,24 +46,9 @@ void AIStartDMA() { __DSPRegs[27] |= 0x8000; }
 
 void AIStopDMA(void) { __DSPRegs[27] &= ~0x8000; }
 
-u32 AIGetDMAStartAddr(void) {
-  return (u32)((__DSPRegs[24] & 0x03ff) << 16) | (__DSPRegs[25] & 0xffe0);
-}
+static inline void AIResetStreamSampleCount(void) { __AIRegs[0] = (__AIRegs[0] & ~0x20) | 0x20; }
 
-AISCallback AIRegisterStreamCallback(AISCallback callback) {
-  AISCallback ret;
-  s32 oldInts;
-
-  ret = __AIS_Callback;
-  oldInts = OSDisableInterrupts();
-  __AIS_Callback = callback;
-  OSRestoreInterrupts(oldInts);
-  return ret;
-}
-
-void AIResetStreamSampleCount(void) { __AIRegs[0] = (__AIRegs[0] & ~0x20) | 0x20; }
-
-void AISetStreamTrigger(u32 trigger) { __AIRegs[3] = trigger; }
+static inline void AISetStreamTrigger(u32 trigger) { __AIRegs[3] = trigger; }
 
 void AISetStreamPlayState(u32 state) {
   s32 oldInts;

@@ -133,6 +133,9 @@
   "dolphin/mtx/mtxvec.c",
   "dolphin/mtx/vec.c",
   "dolphin/mtx/mtx44.c",
-  "dolphin/vi.c"
+  "dolphin/vi.c",
+  "dolphin/ai.c",
+  "dolphin/ar/ar.c",
+  "dolphin/ar/arq.c"
  ]
 }
