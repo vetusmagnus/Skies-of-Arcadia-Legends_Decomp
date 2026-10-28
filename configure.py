@@ -439,6 +439,7 @@ config.libs += [
         "progress_category": "sdk",
         "src_dir": "extern/sdk",
         "objects": [
+            Object(Matching, "dolphin/os/OSError.c"),
             Object(Matching, "dolphin/os/OSFatal.c"),
             Object(Matching, "dolphin/os/OSFont.c"),
             Object(Matching, "dolphin/os/OSReboot.c"),
@@ -625,6 +626,7 @@ config.libs += [
         "progress_category": "sdk",
         "src_dir": "extern/sdk",
         "objects": [
+            Object(Matching, "runtime/mathf.c"),
             Object(Matching, "runtime/__va_arg.c"),
             Object(Matching, "runtime/buffer_io.c"),
             Object(Matching, "runtime/FILE_POS.c"),

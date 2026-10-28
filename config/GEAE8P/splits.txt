@@ -540,6 +540,9 @@ runtime/w_fmod.c:
 runtime/w_pow.c:
 	.text       start:0x802629F0 end:0x80262A10
 
+runtime/mathf.c:
+	.text       start:0x80262A10 end:0x80262A7C
+
 dolphin/exi/EXIUart.c:
 	.text       start:0x80264E10 end:0x80265080
 	.sbss       start:0x80347C38 end:0x80347C48

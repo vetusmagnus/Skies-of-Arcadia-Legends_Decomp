@@ -73,14 +73,22 @@ double tan(double x);
 double ceil(double x);
 
 _MATH_INLINE float fabsf(float x) { return (float)fabs((double)x); }
+#ifdef SKIES_FLOAT_MATH_EXTERN
+float sinf(float x);
+float cosf(float x);
+float acosf(float x);
+#else
 _MATH_INLINE float sinf(float x) { return (float)sin((double)x); }
 _MATH_INLINE float cosf(float x) { return (float)cos((double)x); }
+#endif
 _MATH_INLINE float atan2f(float y, float x) { return (float)atan2((double)y, (double)x); }
 _MATH_INLINE float fmodf(float x, float m) { return (float)fmod((double)x, (double)m); }
 float tanf(float x);
 double asin(double x);
 double acos(double x);
+#ifndef SKIES_FLOAT_MATH_EXTERN
 _MATH_INLINE float acosf(float x) { return (float)acos((double)x); }
+#endif
 double log(double x);
 double exp(double x);
 

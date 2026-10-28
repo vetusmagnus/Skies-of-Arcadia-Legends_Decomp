@@ -127,6 +127,7 @@
   "dolphin/os/OSReboot.c",
   "dolphin/os/OSFont.c",
   "dolphin/os/OSFatal.c",
-  "dolphin/os/OSError.c"
+  "dolphin/os/OSError.c",
+  "runtime/mathf.c"
  ]
 }
