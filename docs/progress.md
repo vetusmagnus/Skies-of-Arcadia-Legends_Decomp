@@ -1896,3 +1896,42 @@ fn_800CE67C, fn_800CEDDC** (unit_800B2DA0.c), **fn_8013A8FC** (unit_8012F6C4.c),
   `Work_800EB58C` view of the same lbl_80346DF4 and a raw `u8 *lbl_80346DF0`); the agents' `Desc`/`Board`/`Obj50`/`Mark`
   records and `Cur_800ED360`'s x14/count/piece fields have to be folded into it first.
 - unit_801CBA60.c still calls `strstr` as `fn_8025ED74` with its own prototype; it can use string.h now.
+
+## Batch 16: never-tried functions of 200 bytes and up (2026-10-28)
+
+16 agents (w01-w16) on the 100 game functions of 200 bytes and up that no earlier batch had touched or logged (39 of 976 bytes
+and up): 8 Opus agents (w01-w08, the 39 big ones, 3-7 functions each) and 8 Sonnet agents (w09-w16, the other 61), about 10
+variants per function, no retries and no merge agents. 48 matched in isolation (fdiff and `floatcheck.py` re-run by the
+coordinating session; fn_80006DA0's miss value is 1.0f, not 0.0f, which the float check caught). **18 are in the unit files**
+(5,243 to 5,261 of 7,117, every function of every touched unit clean, `main.dol` force-relinks to the `build.sha1` SHA-1, a fresh
+worktree builds to the same hash): fn_8000743C, fn_80011984, fn_80020FF0, fn_80028B90, fn_800BE6EC, fn_800F1780, fn_8015BB58,
+fn_8017DF14, fn_801952D0, fn_801CB51C, fn_801F477C, fn_80222E00, fn_80224588, fn_802254A0, fn_802256A0, fn_80227E84,
+ReverbSTDFree and MemEqual (all through `u1_fix.py`; its runner now takes names that are not `fn_XXXXXXXX`).
+
+Matched in isolation, not merged (30; agent files in `build/agents/w*/` of the machine that ran the batch, `build/wt-b16`):
+fn_80006DA0, fn_80007080, fn_80007528, fn_80011E50, fn_800168D8, fn_80016A18, fn_80018B80, fn_8001BCC8, fn_8001D944,
+fn_80020700, fn_80020E10 (needs the three `.MLK` strings earlier in unit_80020B50.c), fn_8009F22C, fn_800A0028 (defines the
+`.rodata` 0x802B0E30-0x802B0F88 in C; `njCalcPoint` needs a `const NJS_POINT3 *` parameter), fn_800BF9A0, FogOn,
+fn_800DF74C, fn_800F9D58, fn_800FA9EC, fn_8010250C (`fn_800D23A8` is `(f32, f32, s32, s32)`), fn_800DE664, fn_80114138,
+fn_8012C174, fn_8012C7E8, fn_80153BBC, fn_8016AEBC, fn_801A2670, fn_801B995C, fn_801D075C, fn_80207830, fn_80209028,
+fn_80209330. Reject reasons: the unit's thin or wrong struct views (`Ent_800DF5C0`, `Obj_800F0D5C`, `Cmp` in unit_80219378.c
+lacks `group`/`slot`, `Scpt` redefined, `Work8030CEA0` header lacks the light-path fields), prototypes that need the real types
+(`fn_801D075C` wants `lbl_80347228` as `s32` and `(u32, u32, f32)` callees, `fn_801A2670` an `s32 idx`, `fn_8015ED90`,
+`fn_8015F218`, `fn_800DE2E4` s8 pointers, `njUnitVector` returning `f32`, `fn_8016AEBC` placeholder `fn_8016AEBC()`), and units where
+the merge breaks another function (fn_801BE608 in unit_80199B9C.c, the stale near miss). The agents' reports list the layouts.
+
+Near misses (diff lines): fn_800207C8 (3), fn_8001E910 (2), fn_800E126C (4), fn_80006F1C (28), fn_80010340 (7), fn_80009500 (8),
+fn_80009030 (27), fn_80008F08 (40), fn_80008AB4 (66), fn_800214FC (38), fn_8006E4CC (72), fn_800A38E4 (29), fn_8007FFE8 (16),
+fn_80083558 (138), fn_80117088 (22), fn_8013E730 (126), fn_80116B84 (192), fn_80149870 (14), fn_80170DCC (102), fn_80227068 (52),
+fn_80230D10 (20), fn_800FC8EC (2), fn_800FB6F4 (15), fn_800FD63C (10), fn_801305E4 (16), fn_8011BD5C (384), fn_800DE9BC (174),
+fn_800F2464 (138), fn_800BC960 (88), fn_800B304C (282), fn_800C926C (6), fn_800CFDF0 (14), fn_800C0ACC (2 with registers masked),
+fn_801621D4 (4), fn_8016B9C8 (2), fn_8014E0E4 (50), fn_800F642C (44), fn_800F374C (415), fn_800F34B0 (54), fn_800F8A50 (305),
+fn_80073164 (10, string pool offsets only: it matches once the strings sit in the unit in pool order), fn_8001EE24 (78),
+fn_80076584 (~390), fn_80082D8C (~352), fn_80070C18 (~521).
+
+Not attempted (out of budget): fn_800662BC, fn_8009A700 (needs byte-offset carving of one allocation), fn_800A619C, fn_800E36F8,
+fn_800E7D0C, fn_8010FA70, fn_8014BD90.
+
+Lessons: pass-through of a `u16`/`s8` parameter fixes extension at callers; a `static inline` chain per recursion level
+reproduces inlined tree walkers (ReverbSTDFree); the original's `a / 256.0f` and `/ 2.0f` are divisions, not multiplications;
+a pointer-to-record `s32` local copy of a table word gives signed conversion where the unit's `u32 *` view cannot.
