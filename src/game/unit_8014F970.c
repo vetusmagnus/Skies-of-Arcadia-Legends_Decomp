@@ -1150,6 +1150,36 @@ typedef struct {
 } Rec58;
 extern void fn_80157E54(s32 i, s32 j);
 extern void fn_80157E04(s32 i, s32 j, u8 a0, u8 a1, u8 b0, u8 b1);
+typedef struct KeyEnt {
+    u8 pad00[0x14];
+    s32 x, y, z; /* 0x14: angle units */
+    u8 pad20[0x0c];
+} KeyEnt;
+typedef struct KeyAnim {
+    u8 pad00[0x168];
+    s16 state;
+} KeyAnim;
+typedef struct KeyHolder {
+    u8 pad00[8];
+    KeyAnim* anim;
+    u8 pad0c[0x60 - 0x0c];
+    s32 out[3]; /* 0x60 */
+} KeyHolder;
+typedef struct KeyObj {
+    u8 pad00[0x1d8];
+    KeyHolder* holder;
+} KeyObj;
+typedef struct KeyStep {
+    u8 pad00[0x1c];
+    u32 idx;      /* 0x1c */
+    f32 to[3];    /* 0x20 */
+    f32 from[3];  /* 0x2c */
+    s32 ease;     /* 0x38 */
+    u32 duration; /* 0x3c */
+    u32 count;    /* 0x40 */
+} KeyStep;
+extern KeyEnt* fn_8009FDA0(KeyAnim* a, u32 idx, s32 b, s32 c, s32 d, s32 e, s32 f);
+extern f32 fn_80212A78(s32 type, f32 x, f32 t);
 
 void fn_8014F970(u8 *self) {
     fn_80153270(self + 0x95c);
@@ -4199,4 +4229,66 @@ void fn_80158590(s16 idx, s8 mode, s16 a, s16 b) {
         }
         break;
     }
+}
+
+s32 fn_8015CC20(KeyObj* obj, KeyStep* k) {
+    KeyHolder* hold = obj->holder;
+    KeyAnim* anim = hold->anim;
+    KeyEnt* e = fn_8009FDA0(anim, k->idx, 0, 0, 0, 0, 0);
+
+    if (e == 0) return 0;
+    if (k->idx < 1000) e = *(KeyEnt**)((u8*)e + 0x2c);
+
+    switch (anim->state) {
+    case 0:
+        if (k->duration <= 1) {
+            e->x = 182.04445f * k->to[0];
+            e->y = 182.04445f * k->to[1];
+            e->z = 182.04445f * k->to[2];
+            if (k->idx == 0) {
+                hold->out[0] = 182.04445f * k->to[0];
+                hold->out[1] = 182.04445f * k->to[1];
+                hold->out[2] = 182.04445f * k->to[2];
+            }
+            return 0;
+        }
+        k->from[0] = 0.005493164f * (f32)e->x;
+        k->from[1] = 0.005493164f * (f32)e->y;
+        k->from[2] = 0.005493164f * (f32)e->z;
+        {
+            f32 dx = k->to[0] - k->from[0];
+            f32 dy = k->to[1] - k->from[1];
+            f32 dz = k->to[2] - k->from[2];
+            k->to[0] = dx;
+            k->to[1] = dy;
+            k->to[2] = dz;
+        }
+        k->count = 0;
+        anim->state = 1;
+        /* fallthrough */
+    case 1:
+        if (++k->count == k->duration) {
+            e->x = 182.04445f * (k->from[0] + k->to[0]);
+            e->y = 182.04445f * (k->from[1] + k->to[1]);
+            e->z = 182.04445f * (k->from[2] + k->to[2]);
+            if (k->idx == 0) {
+                hold->out[0] = e->x;
+                hold->out[1] = e->y;
+                hold->out[2] = e->z;
+            }
+            return 0;
+        } else {
+            f32 t = fn_80212A78(k->ease, (f32)k->count, (f32)k->duration);
+            e->x = 182.04445f * (k->to[0] * t + k->from[0]);
+            e->y = 182.04445f * (k->to[1] * t + k->from[1]);
+            e->z = 182.04445f * (k->to[2] * t + k->from[2]);
+            if (k->idx == 0) {
+                hold->out[0] = e->x;
+                hold->out[1] = e->y;
+                hold->out[2] = e->z;
+            }
+        }
+        break;
+    }
+    return 1;
 }

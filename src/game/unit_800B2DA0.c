@@ -3123,6 +3123,57 @@ extern void* lbl_803470F0;
 extern void* lbl_803470F4;
 extern void fn_801D4F0C(Sprite* s, s32 a, s32 b, s32 c, f32 f1, f32 f2, f32 f3, f32 f4);
 extern void fn_801D52A8(Sprite* s, s32 a, s32 b, f32 f1, f32 f2, f32 f3, f32 f4);
+typedef struct V3_800D3F00 { f32 x, y, z; } V3_800D3F00;
+typedef struct Hnd_800D3F00 {
+    u8 pad_00[6];
+    u16 flags;
+    u8 pad_08[0x1c - 8];
+    void *p1c;
+    u8 pad_20[4];
+    void *p24, *p28, *p2c;
+    u8 pad_30[0x48 - 0x30];
+    u8 v48[0xc];
+    u8 v54[0xc];
+    u8 v60[0xc];
+} Hnd_800D3F00;
+typedef struct Scr_800D3F00 { u8 pad_00[4]; s32 i4; } Scr_800D3F00;
+typedef struct Rec { f32 a; s32 b; f32 c; } Rec;
+typedef struct Obj_800D3F00 {
+    u8 pad_00[0x38];
+    u8 pos38[0xc];
+    u8 v44[0xc];
+    u8 pad_50[0xb4 - 0x50];
+    V3_800D3F00 vb4;
+    u8 vc0[0xc];
+    u8 pad_cc[0xe8 - 0xcc];
+    u32 ie8;
+    u8 pad_ec[0x15c - 0xec];
+    f32 f15c;
+    u8 pad_160[0x180 - 0x160];
+    s32 timer;
+    u8 pad_184[0x1b4 - 0x184];
+    Hnd_800D3F00 *p1b4;
+    u8 pad_1b8[0x1c8 - 0x1b8];
+    Scr_800D3F00 *p1c8;
+    u8 pad_1cc[0x210 - 0x1cc];
+    s32 i210, i214;
+    u8 pad_218[0x24c - 0x218];
+    f32 f24c;
+    u8 pad_250[4];
+    f32 f254;
+} Obj_800D3F00;
+typedef struct Task_800D3F00 {
+    u8 pad_00[0x19];
+    u8 state;
+    u8 pad_1a[0xa];
+    Obj_800D3F00 *obj;
+} Task_800D3F00;
+typedef struct Hd_800D3F00 { u8 pad_00[0x19]; u8 state; } Hd_800D3F00;
+typedef struct MapInfo {
+    s32 unk0;
+    s32 map;
+    char room;
+} MapInfo;
 
 void fn_800B2DA0(u8* p, u32 v) {
     u8* q = *(u8**)(p + 0x268);
@@ -8734,4 +8785,115 @@ f32 fn_800C2A88(Arg_800C2650* a) {
     fn_801D4F0C(s, 0, 0, 1, x, 0.0f, a->fc, a->f8);
     x += 20.0f;
     return x;
+}
+
+void fn_800D3F00(Task_800D3F00 *self)
+{
+    Obj_800D3F00 *e = self->obj;
+    Hnd_800D3F00 *h;
+    Rec *p;
+    s32 ok;
+
+    fn_800D2924((void *)(e));
+    switch (self->state) {
+    case 0:
+    case 0xfe:
+        fn_800D3A20((void *)(e));
+        if (e->ie8 != 0) {
+            ok = 0;
+            if ((*(MapInfo*)&lbl_80311AC0).map == 0x6b) {
+                if ((*(MapInfo*)&lbl_80311AC0).room == 0x64) ok = 1;
+            } else if ((*(MapInfo*)&lbl_80311AC0).map == 0xd1) {
+                if ((*(MapInfo*)&lbl_80311AC0).room == 0x61) ok = 1;
+            }
+            if (ok != 0) {
+                self->state = 1;
+                break;
+            }
+        }
+        self->state = 3;
+        break;
+    case 1:
+        if ((*(Hd_800D3F00 **)&lbl_8034749C)->state == 4) {
+            fn_800D3824((void *)(e));
+            if (e->p1c8 != NULL) {
+                h = ((Hnd_800D3F00 *)fn_80225B74(0xffff, (u16)e->p1c8->i4));
+                e->p1b4 = h;
+                if (h != NULL) {
+                    h->p1c = e->pos38;
+                    h->p24 = e->v44;
+                    h->p28 = &e->vb4;
+                    h->p2c = e->vc0;
+                    fn_802233EC((void *)(h));
+                }
+            }
+            self->state = 2;
+        }
+        break;
+    case 2:
+        if (e->p1b4 != NULL) {
+            fn_802234D4((void *)(e->p1b4));
+        }
+        fn_800D3824((void *)(e));
+        if (((u32*)lbl_80310B3C)[0xe8 / 4] & 1) {
+            e->f254 = e->f254 + e->f24c;
+            if (0.0f <= e->f24c) {
+                if (e->f254 > (f32)e->i210) {
+                    e->f254 = e->f254 - (f32)e->i210;
+                }
+            } else {
+                if (e->f254 < 0.0f) {
+                    e->f254 = e->f254 + (f32)e->i210;
+                }
+            }
+        }
+        if ((((u32*)lbl_80310B3C)[0xe8 / 4] & 1) == 0) {
+            e->vb4.y = e->vb4.y + e->f15c;
+        } else {
+            if (e->timer <= 0) {
+                if (e->i214 == 0) {
+                    e->i214 = e->i214 + 1;
+                    e->f15c = 0.25f;
+                    e->timer = 5;
+                } else {
+                    e->i214 = 0;
+                    e->f15c = 0.2f;
+                    e->timer = 30;
+                }
+            } else {
+                e->timer = e->timer - 1;
+            }
+            e->vb4.y = e->vb4.y + e->f15c;
+            if (0.2f < e->f15c) {
+                e->f15c = -0.25f;
+            } else if (-0.2f > e->f15c) {
+                e->f15c = 0.0f;
+            } else if (0.0f < e->f15c) {
+                e->f15c = -0.2f;
+            } else if (0.0f > e->f15c) {
+                e->f15c = 0.0f;
+            }
+        }
+        h = e->p1b4;
+        if (h != NULL) {
+            if (MemEqual(h->p24, h->v48, 12) == 0) {
+                h->flags |= 1;
+            }
+            if (MemEqual(h->p28, h->v54, 12) == 0 || MemEqual(h->p2c, h->v60, 12) == 0) {
+                h->flags |= 2;
+            }
+        }
+        fn_801E66E0((void *)(e));
+        break;
+    case 3:
+        fn_801E66E0((void *)(e));
+        break;
+    default:
+        p = ((Rec *)fn_80100684((u16)e->p1c8->i4, 12));
+        p->a = e->f254;
+        p->b = e->timer;
+        p->c = e->f15c;
+        fn_800C3428((void *)(self));
+        break;
+    }
 }

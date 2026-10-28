@@ -743,6 +743,21 @@ typedef struct KeySet_801DEDC0 {
     Key_801DEDC0* keys;
     s32 count;
 } KeySet_801DEDC0;
+typedef struct HitOut {
+    f32 dist;
+    NJS_POINT3 pos; /* 4: input point */
+    NJS_POINT3 dir; /* 0x10: result direction */
+} HitOut;
+typedef struct Ellipsoid {
+    NJS_POINT3 center;
+    NJS_POINT3 scale;
+} Ellipsoid;
+typedef struct Box {
+    NJS_POINT3 min;
+    NJS_POINT3 max;
+    f32 extra; /* 0x18 */
+} Box;
+extern void fn_8028FEA4(NJS_POINT3* p, Ellipsoid* e, NJS_POINT3* out);
 
 void fn_801D49E4(s32 a, s32 b, s32 c, s32 d, f32 p1, f32 p2, f32 p3, f32 p4) {
     fn_801D4A2C(a, b, c, lbl_80347568, d, 1.0f, 1.0f, p1, p2, p3, p4);
@@ -3496,6 +3511,73 @@ void fn_801DEDC0(KeySet_801DEDC0* ks, f32* tv, s32 n) {
         for (cnt = ks->count - i; cnt > 0; cnt--) {
             k->c[0] = f;
             k++;
+        }
+    }
+}
+
+void fn_801E0734(HitOut* o, Ellipsoid* e, NJS_MATRIX m, Box* b) {
+    NJS_POINT3 p;
+    NJS_POINT3 c;
+    NJS_POINT3 d;
+    f32 k;
+    njCalcPoint(0, &o->pos, &p);
+    if (p.x > b->min.x && p.y > b->min.y && p.z > b->min.z && p.x < b->max.x && p.y < b->max.y &&
+        p.z < b->max.z) {
+        fn_8028FEA4(&p, e, &c);
+        d.x = c.x - e->center.x;
+        d.y = c.y - e->center.y;
+        d.z = c.z - e->center.z;
+        o->dist = fn_80291A5C(d.x * d.x + d.y * d.y + d.z * d.z);
+        if (0.0f >= d.x * e->scale.x && 0.0f >= d.y * e->scale.y && 0.0f >= d.z * e->scale.z) {
+            o->dist *= -1.0f;
+        }
+        d.x = p.x - c.x;
+        d.y = p.y - c.y;
+        d.z = p.z - c.z;
+        if (d.x == 0.0f && d.y == 0.0f && d.z == 0.0f) {
+            o->dir.z = 0.0f;
+            o->dir.y = 0.0f;
+            o->dir.x = 0.0f;
+        } else {
+            njUnitVector((void *)(&d));
+            njCalcVector(m, (void *)(&d), (void *)(&o->dir));
+        }
+    } else {
+        if (b->extra == 0.0f) {
+            o->dir.z = 0.0f;
+            o->dir.y = 0.0f;
+            o->dir.x = 0.0f;
+        } else {
+            k = fn_801DFE48((void *)(&p), (void *)(b));
+            if (0.0f == k) {
+                o->dir.z = 0.0f;
+                o->dir.y = 0.0f;
+                o->dir.x = 0.0f;
+            } else {
+                fn_8028FEA4(&p, e, &c);
+                d.x = c.x - e->center.x;
+                d.y = c.y - e->center.y;
+                d.z = c.z - e->center.z;
+                o->dist = fn_80291A5C(d.x * d.x + d.y * d.y + d.z * d.z);
+                if (0.0f >= d.x * e->scale.x && 0.0f >= d.y * e->scale.y &&
+                    0.0f >= d.z * e->scale.z) {
+                    o->dist *= -1.0f;
+                }
+                d.x = p.x - c.x;
+                d.y = p.y - c.y;
+                d.z = p.z - c.z;
+                if (d.x == 0.0f && d.y == 0.0f && d.z == 0.0f) {
+                    o->dir.z = 0.0f;
+                    o->dir.y = 0.0f;
+                    o->dir.x = 0.0f;
+                } else {
+                    njUnitVector((void *)(&d));
+                    d.x = d.x * k;
+                    d.y = d.y * k;
+                    d.z = d.z * k;
+                    njCalcVector(m, (void *)(&d), (void *)(&o->dir));
+                }
+            }
         }
     }
 }

@@ -400,7 +400,6 @@ typedef struct ShopList {
     u8 part;     /* 0x1E layout part, 0xFF none */
     u8 flags;    /* 0x1F 1 shown, 2 pulsing */
 } ShopList;
-
 /* A part's arrow (at the part task's 0x38). */
 typedef struct ShopSub38 {
     f32 x, y;    /* 0x00 */
@@ -411,7 +410,6 @@ typedef struct ShopSub38 {
     s32 f10;
     f32 scale;   /* 0x14 */
 } ShopSub38;
-
 /* A menu part task. */
 typedef struct ShopPart {
     u8 pad0[0x18];
@@ -425,7 +423,6 @@ typedef struct ShopPart {
     u8 pad34[4];
     ShopSub38* x38;  /* 0x38 */
 } ShopPart;
-
 /* A party member's record in the shop work (0x24 bytes). */
 typedef struct ShopMember {
     const char* name; /* 0x00 */
@@ -474,21 +471,18 @@ typedef struct ShopWork {
     u8 pad128[0xd0];
     ShopPart* parts[19]; /* 0x1F8 */
 } ShopWork;
-
 typedef struct ShopEntry {
     s8 flag;
     s8 type;
     s16 id;
     u8 pad4[2];
 } ShopEntry;
-
 typedef struct ShopBuf {
     u8 pad0[4];
     u16 pages;
     u16 count;
     ShopEntry out[0x30];
 } ShopBuf;
-
 typedef struct ShopTask {
     u8 pad0[0x19];
     u8 state;        /* 0x19 */
@@ -498,7 +492,6 @@ typedef struct ShopTask {
     ShopBuf* buf;    /* 0x2C */
     SellList* sell;  /* 0x30: the five sell tabs' lists */
 } ShopTask;
-
 extern ShopTask* lbl_803471B8;
 extern s32 fn_801B93E8(ShopTask* t);
 struct Task_801B11EC;
@@ -1972,6 +1965,30 @@ extern void fn_801DCE18(f32* a, f32* b, s32 c);
 typedef struct MP_801B60E8 { u8 pad[0x28]; MenuPanel* obj; } MP_801B60E8;
 typedef struct Tri { VertexCol v[3]; } Tri;
 extern Tri lbl_802B8EF0;
+typedef struct ShopEntry_801BD748 {
+    s8 flag;
+    s8 type;
+    s16 id;
+    s16 val;
+} ShopEntry_801BD748;
+typedef struct ShopBuf_801BD748 {
+    u8 pad0[4];
+    u16 pages;
+    u16 count;
+    ShopEntry_801BD748 out[0x30];
+} ShopBuf_801BD748;
+typedef struct ShopTask_801BD748 {
+    u8 pad0[0x2c];
+    ShopBuf_801BD748* buf;
+} ShopTask_801BD748;
+typedef struct Ent_801BE608 {
+    void *a, *b, *c;
+    u16 xc;
+    u8 lo;
+    u8 hi;
+    s32 f10, f14, f18, f1c, f20;
+    s32 f24;
+} Ent_801BE608;
 
 void fn_80199B9C(void* p, f32 v) {
     *(f32*)((u8*)p + 0x34) = v;
@@ -7768,3 +7785,66 @@ void fn_8019F898(SaveTask *t) {
     }
 }
 
+inline s8 fn_801BE608(s16 x) {
+    u8 lvl = lbl_803473BE;
+    int r;
+    if (x == -1) {
+        return -1;
+    }
+    if (lvl >= 0x18) {
+        return -1;
+    }
+    r = 0;
+    if (lvl >= ((Ent_801BE608*)lbl_802ED258)[x].lo) {
+        r = 2;
+    } else if (lvl >= ((Ent_801BE608*)lbl_802ED258)[x].hi) {
+        r = 1;
+    }
+    return r;
+}
+
+inline s32 Test_801BD748(u32 b) {
+    return ((*(u32(*)[])&lbl_80310B3C)[b >> 5] & (1 << (b & 31))) != 0;
+}
+
+s32 fn_801BD748(ShopTask_801BD748* t, ShopEntry_801BD748* tmp, s32 start) {
+    int i;
+    int j;
+    int n;
+    for (i = 0; i < 0x58; i++) {
+        tmp[i].id = -1;
+        tmp[i].flag = -1;
+        tmp[i].type = 0;
+        tmp[i].val = 0;
+    }
+    n = i = 0;
+    for (; i < 0x58; i++) {
+        if ((Test_801BD748(i + 0xc62) & 1) == 0 && Test_801BD748(i + 0xb54) == 1) {
+            tmp[n].id = i;
+            tmp[n].flag = fn_801BE608(i);
+            tmp[n].val = ((Ent_801BE608*)lbl_802ED258)[i].f24;
+            n++;
+        }
+    }
+    for (i = 0; i < n; i++) {
+        for (j = i + 1; j < n; j++) {
+            if (tmp[j].val < tmp[i].val) {
+                s16 id = tmp[j].id;
+                int f = tmp[j].flag;
+                s16 v = tmp[j].val;
+                tmp[j].val = tmp[i].val;
+                tmp[j].flag = tmp[i].flag;
+                tmp[j].id = tmp[i].id;
+                tmp[i].val = v;
+                tmp[i].flag = f;
+                tmp[i].id = id;
+            }
+        }
+    }
+    for (i = 0; i < n; i++, start++) {
+        t->buf->out[start].id = tmp[i].id;
+        t->buf->out[start].flag = tmp[i].flag;
+        t->buf->out[start].val = tmp[i].val;
+    }
+    return start;
+}

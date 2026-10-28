@@ -7,6 +7,7 @@
 #include <math.h>
 #include "game/menu.h"
 #include <dolphin/os/OSFastCast.h>
+#include "game/task.h"
 extern void fn_80226D14(void);
 extern void fn_80226BD0(f32 a, f32 b);
 typedef struct {
@@ -2310,6 +2311,41 @@ extern s32 fn_801CC62C(char *name);
 extern void *fn_801DB244(char *path);
 extern void fn_80224040(u16 id, void *p);
 extern void fn_8010A278(void *p);
+typedef struct { u8 pad0[0x28]; s32 w28; s32 w2c; } Info_80101E64;
+typedef struct { u8 pad0[0x10]; Info_80101E64* info; } Sub_80101E64;
+typedef struct {
+    u8 pad0[0x38];
+    f32 x38, y3c, z40;   /* 0x38 */
+    s32 a44, a48, a4c;   /* 0x44 */
+    u8 pad50[0x100 - 0x50];
+    void* tex;           /* 0x100 */
+    u8 pad104[0xEC - 0x104 + 0x18 + 0x0];
+} Dummy_80101E64;
+typedef struct {
+    u8 pad0[0x38];
+    f32 x38, y3c, z40;   /* 0x38 */
+    s32 a44, a48, a4c;   /* 0x44 */
+    u8 pad50[0xEC - 0x50];
+    s32 wec;             /* 0xEC */
+    u8 pad_f0[0x100 - 0xF0];
+    void* tex;           /* 0x100 */
+    u8 pad104[0x180 - 0x104];
+    s32 count;           /* 0x180 */
+    u8 pad184[0x18C - 0x184];
+    f32 f18c;            /* 0x18C */
+    f32 f190;            /* 0x190 */
+    u8 pad194[4];
+    s32 flag;            /* 0x198 */
+    u8 pad19c[0x1C8 - 0x19C];
+    Sub_80101E64* sub;   /* 0x1C8 */
+    u8 pad1cc[0x20C - 0x1CC];
+    s32 w20c;            /* 0x20C */
+    s32 w210;            /* 0x210 */
+} Work_80101E64;
+extern s32 fn_801C5D88(void* w, s32 a);
+extern void fn_801C5B44(void* w, void* p);
+extern void fn_801C5AB4(void* w, void* p);
+extern void fn_801E66E0(void* w);
 
 void fn_800D81E8(void) {
     fn_80226D14();
@@ -7684,4 +7720,99 @@ void *fn_80109F90(char *name, u16 id) {
     p = fn_80109F90_load(path, id);
     fn_80109F90_find(name)->ptr = (u32)p;
     return p;
+}
+
+void fn_80101E64(Task* t) {
+    Work_80101E64* w;
+    f32 f;
+    s32 n;
+
+    if (t == NULL) return;
+    w = t->work;
+    if (w == NULL) return;
+    switch (t->state) {
+    case 0:
+        if (fn_801C5FFC(w)) {
+            fn_80227810(w->tex);
+        }
+        fn_8015ED90(t);
+        fn_8015C8B8(w, 2);
+        w->wec = fn_801C5D88(w, 1);
+        n = 0;
+        if (fn_801C6068(w, 0x11)) {
+            n = w->sub->info->w2c;
+        }
+        w->w210 = n;
+        n = 0;
+        if (fn_801C6068(w, 0x11)) {
+            n = w->sub->info->w28;
+        }
+        w->w20c = n;
+        n = 1;
+        if (w->w20c <= 0) n = 6;
+        t->state = n;
+        if (t->state == 6) return;
+    case 1:
+        fn_801C5B44(w, &w->x38);
+        fn_801C5AB4(w, &w->a44);
+        f = 0.0f;
+        w->f18c = f;
+        if (fn_801C6068(w, 0x11)) {
+            f = fn_801C5D04(w, 8);
+        }
+        w->f190 = f;
+        w->count = w->w20c;
+        t->state = 2;
+    case 2:
+        if (fn_8015E600(w) != 0) return;
+        fn_801E5DF0(w);
+        if (w->flag != 1) return;
+        w->flag = 0;
+        if (w != NULL) {
+            w->x38 += fn_801C5C80(w, 0xB);
+            w->y3c += fn_801C5C80(w, 0xC);
+            w->z40 += fn_801C5C80(w, 0xD);
+        }
+        if (w != NULL) {
+            w->a44 += (s32)(182.04445f * fn_801C5C80(w, 0xE));
+            w->a48 += (s32)(182.04445f * fn_801C5C80(w, 0xF));
+            w->a4c += (s32)(182.04445f * fn_801C5C80(w, 0x10));
+        }
+        n = w->count;
+        if (n > 0) n--;
+        w->count = n;
+        if (w->count > 0) break;
+        if (w->w210 <= 0) {
+            t->state = 1;
+        } else {
+            t->state = 3;
+        }
+        break;
+    case 3:
+        w->f190 = 0.0f;
+        w->count = w->w210;
+        t->state = 4;
+    case 4:
+        fn_801E5DF0(w);
+        n = w->count;
+        if (n > 0) n--;
+        w->count = n;
+        if (n <= 0) {
+            t->state = 1;
+        }
+        break;
+    case 5:
+    case 0xFF:
+        fn_8015EBF4(w);
+        if (fn_801C5FFC(w)) {
+            fn_802275A4(w->tex, 0);
+        }
+        fn_80100B74(t);
+        break;
+    case 6:
+        fn_801E66E0(w);
+        break;
+    case 0xFE:
+        break;
+    }
 }

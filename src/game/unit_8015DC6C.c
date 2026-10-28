@@ -2542,6 +2542,55 @@ typedef struct Table_80167604 { s32 n; s32* e[1]; } Table_80167604;
 typedef struct Hold_80167604 { u8 pad[0x14]; Table_80167604* t; } Hold_80167604;
 typedef struct Node_80167604 Node_80167604;
 struct Node_80167604 { u8 pad0[0x1c8]; Hold_80167604* h; u8 pad1[4]; Node_80167604* parent; };
+typedef struct Vec2f { f32 x, y; } Vec2f;
+typedef struct Vec4f { f32 a, b, c, d; } Vec4f;
+typedef struct IconObj {
+    f32 x;       /* 0x00 */
+    f32 y;       /* 0x04 */
+    s32 f08;
+    s32 f0c;
+    f32 f10;
+    f32 scale;   /* 0x14 */
+    f32 f18;
+    f32 f1c;
+    void** spr20;
+    Vec4f* pos24;
+    void** spr28;
+    void** spr2c;
+    Vec2f* pos30;
+    void* f34;
+    void** spr38;
+    Vec2f* pos3c;
+    void* f40;
+    void* spr44;
+} IconObj;
+typedef struct IconObj_80189214 {
+    f32 x;       /* 0x00 */
+    f32 y;       /* 0x04 */
+    s32 f08;
+    s32 f0c;
+    f32 f10;
+    f32 scale;   /* 0x14 */
+    f32 f18;
+    f32 f1c;
+    void** spr20;
+    Vec4f* pos24;
+    u8 pad28[0x1c];
+    s32 f44;
+} IconObj_80189214;
+typedef struct { void* spr; } Sp_80191A04;
+typedef struct Pos_80191A04 {
+    f32 f0, f4;
+    s32 i8, ic;
+    f32 f10, f14, f18, f1c;
+    Sp_80191A04* sp20;
+    f32* fp24;
+    u8 pad28[4];
+    Sp_80191A04* sp;
+    f32* fp;
+    u8 pad34[0x44 - 0x34];
+    void* spr44;
+} Pos_80191A04;
 
 s32 fn_8015DC6C(Obj_8015DC6C* self, Src* src)
 {
@@ -9306,4 +9355,220 @@ s32 fn_80167604(Node_80167604* self, int idx)
         if (e != NULL) return *e;
     }
     return 0;
+}
+
+void fn_8016F21C(IconObj* o, s8 kind, f32 scale) {
+    void* sp;
+    o->x = -7090.0f + 150.0f * (f32)kind;
+    o->y = 0.0f;
+    o->f10 = 0.7f;
+    o->scale = scale;
+    o->f18 = 1.0f;
+    o->f1c = 0.0f;
+    o->f08 = 0;
+    o->f0c = 0;
+    fn_8019A15C(o, 2, 1, 1);
+    if (kind == 10 || kind == 11) {
+        *o->spr20 = fn_801D68C4(lbl_803470F0, 9);
+    } else if (kind == 12 || kind == 13) {
+        *o->spr20 = fn_801D68C4(lbl_803470F0, 0x65);
+    } else if (kind == 14 || kind == 15) {
+        *o->spr20 = fn_801D68C4(lbl_803470F0, 0x65);
+    } else if (kind == 16 || kind == 17) {
+        *o->spr20 = fn_801D68C4(lbl_803470F0, 0x65);
+    } else if (kind == 18 || kind == 19) {
+        *o->spr20 = fn_801D68C4(lbl_803470F0, 9);
+    } else {
+        *o->spr20 = fn_801D68C4(lbl_803470F0, 6);
+    }
+    o->pos24->a = 0.0f;
+    o->pos24->b = 0.0f;
+    switch (kind) {
+    case 0: sp = fn_801D68C4(lbl_803470F0, 0x15); break;
+    case 1: sp = fn_801D68C4(lbl_803470F0, 0x18); break;
+    case 2: sp = fn_801D68C4(lbl_803470F0, 0x17); break;
+    case 3: sp = fn_801D68C4(lbl_803470F0, 0x14); break;
+    case 4: sp = fn_801D68C4(lbl_803470F0, 0x14); break;
+    case 5: sp = fn_801D68C4(lbl_803470F0, 0x1d); break;
+    case 10: sp = fn_801D68C4(lbl_803470F0, 0x11); break;
+    case 11: sp = fn_801D68C4(lbl_803470F0, 0x12); break;
+    case 6: sp = fn_801D68C4(lbl_803470F0, 0x16); break;
+    case 7: sp = fn_801D68C4(lbl_803470F0, 0x1a); break;
+    case 8: sp = fn_801D68C4(lbl_803470F0, 0x19); break;
+    case 9: sp = fn_801D68C4(lbl_803470F0, 0x13); break;
+    case 12: sp = fn_801D68C4(lbl_803470F0, 0x1b); break;
+    case 13: sp = fn_801D68C4(lbl_803470F0, 0x1c); break;
+    case 14: sp = fn_801D68C4(lbl_803470F0, 0x6e); break;
+    case 15: sp = fn_801D68C4(lbl_803470F0, 0x6f); break;
+    case 16: sp = fn_801D68C4(lbl_803470F0, 0x66); break;
+    case 17: sp = fn_801D68C4(lbl_803470F0, 0x67); break;
+    case 18:
+    case 19: sp = fn_801D68C4(lbl_803470F0, 0x48); break;
+    default: sp = fn_801D68C4(lbl_803470F0, 0x15); break;
+    }
+    o->spr20[1] = sp;
+    o->pos24->c = 24.0f;
+    o->pos24->d = -2.0f;
+    *o->spr2c = fn_801D68C4(lbl_803470E8, 1);
+    o->pos30->x = 0.0f;
+    o->pos30->y = 0.0f;
+    *o->spr38 = fn_801D68C4(lbl_803470F4, 1);
+    o->pos3c->x = 100.0f;
+    o->pos3c->y = 13.0f;
+    o->spr44 = fn_801D68C4(lbl_803470F0, 1);
+}
+
+void fn_80189214(s8* kind, IconObj_80189214* o, s8 idx, f32 scale) {
+    void* a;
+    void* b;
+
+    o->x = -4000.0f;
+    o->y = 0.0f;
+    o->f10 = 1.0f;
+    o->scale = scale;
+    o->f18 = 1.0f;
+    o->f1c = 0.0f;
+    o->f08 = 0;
+    o->f0c = 0;
+    switch (*kind) {
+    case 1:
+        switch (idx) {
+        case 0:
+            a = fn_801D68C4(lbl_803470F0, 0x21);
+            b = fn_801D68C4(lbl_803470F0, 0x34);
+            break;
+        case 1:
+            a = fn_801D68C4(lbl_803470F0, 0x22);
+            b = fn_801D68C4(lbl_803470F0, 0x35);
+            break;
+        case 2:
+            a = fn_801D68C4(lbl_803470F0, 0x23);
+            b = fn_801D68C4(lbl_803470F0, 0x37);
+            break;
+        case 3:
+            a = fn_801D68C4(lbl_803470F0, 0x24);
+            b = fn_801D68C4(lbl_803470F0, 0x36);
+            break;
+        case 4:
+            a = fn_801D68C4(lbl_803470F0, 0x25);
+            b = fn_801D68C4(lbl_803470F0, 0x38);
+            break;
+        case 5:
+            a = fn_801D68C4(lbl_803470F0, 0x26);
+            b = fn_801D68C4(lbl_803470F0, 0x39);
+            break;
+        default:
+            a = fn_801D68C4(lbl_803470F0, 0x21);
+            b = fn_801D68C4(lbl_803470F0, 0x34);
+            break;
+        }
+        break;
+    case 0:
+        switch (idx) {
+        case 0:
+            a = fn_801D68C4(lbl_803470F0, 0x21);
+            b = fn_801D68C4(lbl_803470F0, 0x32);
+            break;
+        case 1:
+            a = fn_801D68C4(lbl_803470F0, 0x22);
+            b = fn_801D68C4(lbl_803470F0, 0x5d);
+            break;
+        case 2:
+            a = fn_801D68C4(lbl_803470F0, 0x23);
+            b = fn_801D68C4(lbl_803470F0, 0x31);
+            break;
+        case 3:
+            a = fn_801D68C4(lbl_803470F0, 0x24);
+            b = fn_801D68C4(lbl_803470F0, 0x33);
+            break;
+        case 4:
+            a = fn_801D68C4(lbl_803470F0, 0x25);
+            b = fn_801D68C4(lbl_803470F0, 0x41);
+            break;
+        case 5:
+            a = fn_801D68C4(lbl_803470F0, 0x26);
+            b = fn_801D68C4(lbl_803470F0, 0x3c);
+            break;
+        default:
+            a = fn_801D68C4(lbl_803470F0, 0x21);
+            b = fn_801D68C4(lbl_803470F0, 0x32);
+            break;
+        }
+        break;
+    }
+    fn_8019A15C(o, 2, 0, 0);
+    o->spr20[0] = a;
+    o->pos24->a = 0.0f;
+    o->pos24->b = -26.0f;
+    o->spr20[1] = b;
+    o->pos24->c = (f32)(idx * 0x30 + 0x14);
+    o->pos24->d = -26.0f;
+    o->f44 = 0;
+}
+
+void fn_80191A04(Pos_80191A04* p, s32 kind) {
+    p->f0 = -6190.0f;
+    p->f4 = 0.0f;
+    p->f10 = 1.0f;
+    p->f14 = 0.0f;
+    p->f18 = 1.0f;
+    p->f1c = 0.0f;
+    p->i8 = 0;
+    p->ic = 0;
+    fn_8019A15C(p, 1, 1, 1);
+    switch (kind) {
+    case 1:
+        fn_80199FFC(p, 0, fn_801D68C4(lbl_803470F4, 0x58), 6, 0x1e, 2);
+        p->spr44 = fn_801D68C4(lbl_803470F0, 4);
+        break;
+    case 2:
+        fn_80199FFC(p, 0, fn_801D68C4(lbl_803470F4, 4), 8, 6, 2);
+        p->spr44 = fn_801D68C4(lbl_803470F0, 4);
+        break;
+    case 3:
+        fn_80199FFC(p, 0, fn_801D68C4(lbl_803470F4, 0x58), 6, 0x1e, 2);
+        p->spr44 = fn_801D68C4(lbl_803470F0, 1);
+        break;
+    case 4:
+        fn_80199FFC(p, 0, fn_801D68C4(lbl_803470F4, 4), 8, 6, 2);
+        p->spr44 = fn_801D68C4(lbl_803470F0, 1);
+        break;
+    case 15:
+    case 16:
+        fn_80199FFC(p, 0, fn_801D68C4(lbl_803470F4, 4), 8, 6, 2);
+        p->spr44 = fn_801D68C4(lbl_803470F0, 4);
+        break;
+    case 5:
+        fn_80199FFC(p, 0, fn_801D68C4(lbl_803470F4, 0x3b), 6, 6, 2);
+        p->spr44 = fn_801D68C4(lbl_803470F0, 4);
+        break;
+    case 6:
+        fn_80199FFC(p, 0, fn_801D68C4(lbl_803470F4, 0x3b), 6, 6, 2);
+        p->spr44 = fn_801D68C4(lbl_803470F0, 1);
+        break;
+    case 7:
+        fn_80199FFC(p, 0, fn_801D68C4(lbl_803470F4, 0x3b), 0x12, 6, 2);
+        p->spr44 = fn_801D68C4(lbl_803470F0, 1);
+        break;
+    case 8:
+    case 13:
+    case 14:
+        fn_80199FFC(p, 0, fn_801D68C4(lbl_803470F4, 4), 6, 6, 2);
+        p->spr44 = fn_801D68C4(lbl_803470F0, 1);
+        break;
+    case 9:
+        fn_80199FFC(p, 0, fn_801D68C4(lbl_803470F4, 0x3b), 6, 6, 2);
+        p->spr44 = fn_801D68C4(lbl_803470F0, 4);
+        break;
+    case 10:
+        fn_80199FFC(p, 0, fn_801D68C4(lbl_803470F4, 0x3b), 6, 6, 2);
+        p->spr44 = fn_801D68C4(lbl_803470F0, 4);
+        break;
+    }
+    p->sp->spr = fn_801D68C4(lbl_803470E8, 2);
+    p->fp[0] = 0.0f;
+    p->fp[1] = 0.0f;
+    p->sp20->spr = fn_801D68C4(lbl_803470F0, 10);
+    p->fp24[0] = 0.0f;
+    p->fp24[1] = 0.0f;
 }
