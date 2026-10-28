@@ -4,13 +4,11 @@
 #include "game/task.h"
 #include "game/util.h"
 #include <math.h>
-
 /* The head of a message a script command posts through fn_800CD0B8; the receiver sets kind (2 = done). */
 typedef struct EvHead {
     u32 kind;       /* 0x00 */
     s32 x04;        /* 0x04 */
 } EvHead;
-
 /* The event message fn_80211058 posts: the head plus the fields it clears. */
 typedef struct Ev {
     EvHead hd;      /* 0x00 */
@@ -19,7 +17,6 @@ typedef struct Ev {
     s32 x0c;        /* 0x0c */
     s32 x10;        /* 0x10 */
 } Ev;
-
 /* A script command's argument stream: words that are floats, ints or bytes depending on the command. */
 typedef union ScptCur {
     f32 *f;
@@ -27,7 +24,6 @@ typedef union ScptCur {
     u32 *u;
     s32 *i;
 } ScptCur;
-
 /* One running script command, as every command handler and fn_80211058/fn_802110E8 see it. */
 typedef struct Scpt {
     s32 kind;       /* 0x00 */
@@ -75,7 +71,6 @@ typedef struct Scpt {
 s32 fn_800CD0B8(s32 a, s32 b, s32 c, s32 d);
 void fn_80211058(Scpt *s, s32 a, s32 b, s32 c, s16 d, Ev *w);
 void fn_802110E8(Scpt *s, s32 a, s32 b, s32 c, s16 d, EvHead *w);
-
 void fn_80217B98();
 void fn_801EFC88(s16 v);
 void fn_800B0900(void *p);
@@ -628,7 +623,6 @@ s32 fn_8010038C(void *p);
 void fn_80148228(s32 a, s32 b);
 extern s32 strlen(const char *s);
 extern s32 fn_8025EF88(const char *a, const char *b);
-
 extern void fn_801D6CBC(s32 chan, Pat *p);
 extern void fn_801D6C3C(s32 chan);
 
@@ -682,6 +676,12 @@ typedef struct Info_801FE06C {
     f32 x54;
     f32 x58;
 } Info_801FE06C;
+typedef struct Scpt_802139F8 {
+    u8 pad0[0x1c];
+    float* cur;
+} Scpt_802139F8;
+typedef struct Args14 { s32 i[14]; } Args14;
+void fn_8015596C(void* p);
 
 void fn_801F5334(s8 n) {
     s32 i;
@@ -7934,3 +7934,29 @@ s32 fn_80211298(u32 **pc, s32 flag)
     return 1;
 }
 
+s32 fn_802139F8(u32 flags, Scpt_802139F8* c) {
+    float* p;
+    Args14 b;
+    if (flags & 1) {
+        p = c->cur;
+        p++;
+        b.i[0] = RDI(p);
+        b.i[1] = RDI(p);
+        b.i[2] = RDI(p);
+        b.i[3] = RDI(p);
+        b.i[4] = RDI(p);
+        b.i[5] = RDI(p);
+        b.i[6] = RDI(p);
+        b.i[7] = RDI(p);
+        b.i[8] = RDI(p);
+        b.i[9] = RDI(p);
+        b.i[10] = RDI(p);
+        b.i[11] = RDI(p);
+        b.i[12] = RDI(p);
+        b.i[13] = RDI(p);
+        c->cur = p;
+        fn_8015596C(&b);
+        return 0;
+    }
+    return 1;
+}

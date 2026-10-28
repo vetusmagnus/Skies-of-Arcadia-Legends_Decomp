@@ -1398,3 +1398,53 @@ The six left over then are merged too (4,458 to 4,466, with UiLayoutDraw and UiL
 
 Other save-menu functions still reach the work through `Task`'s `void *` and byte offsets, and several shop builders
 (fn_801B6320, fn_801B5C4C, fn_801B54D4, fn_801B2678, fn_801B1104, fn_801B0470) still return their own task views.
+
+Sonnet batch 12 (632 bytes and up, second tier; 2026-10-28)
+-----------------------------------------------------------
+
+16 Sonnet 5.5 agents in two waves of eight (no Opus, no Haiku, no retry or merge agents), eight functions each, the 128
+smallest never-attempted game functions above 0x358 bytes (0x35C-0x3D0; 501 candidates, 373 left), about 10 tries per
+function, one agent per address run. Worktree `build/wt-t632`. 45 of 128 matched in isolation (fdiff and `floatcheck.py`
+re-run by the coordinating session over every one); **20 are in the unit files now** (4,466 to 4,486), every function of
+every touched unit passes fdiff over the whole file and the float check, and `main.dol` rebuilds byte-identical
+(force-relinked, SHA-1 equals `config/GEAE8P/build.sha1`). Merging was `merge6.py` plus `o11_prep.py` (tag renames) in
+the coordinating session.
+
+Merged: fn_80057DFC, fn_8005D108, fn_8005DB1C, fn_800D3F00, fn_80101E64, fn_8015CC20, fn_8016F21C, fn_80189214, fn_80191A04,
+fn_801BD748 (needs an `inline fn_801BE608`; the out-of-line fn_801BE608 stays a near miss), fn_801E0734, fn_801732C8,
+fn_80176D70, fn_800EDB70, fn_800F1E5C, fn_8012D0F4, fn_800B63A4, fn_800B88F8, fn_80013FD0, fn_802139F8.
+
+Matched in isolation, not merged (25; prototype or global declared with another type in the unit, or a tag clash):
+fn_8005BBC4, fn_8007B5B0, fn_800C6B04, fn_800C7398, fn_800D6618, fn_800DCB78, fn_800F04C8 (the unit's map struct has no
+`tile`), fn_80152B58 (the unit declares 12 parameters, the real callee takes 11; `lbl_80346FC8` needs `[2]` for sda21),
+fn_80171124, fn_801786C0 (`lbl_8030B7F4` is `SaveData` in the unit), fn_801AC87C (the shop `buf->out[].flag` byte is `u8`,
+the unit says `s8`), fn_801780C8, fn_801BE670, fn_801C74D0, fn_800121D8, fn_80017CB8, fn_80056B6C, fn_8005ACD4,
+fn_8007F6E4, fn_80086C68, fn_8008DEEC, fn_8008EC84, fn_800AF8F8, fn_800D42B8, fn_800F7D6C. The agents' files are in
+`build/agents/w1_*/` and `w2_*/` on the machine that ran the batch.
+
+Near misses (diff lines; mostly register allocation): fn_8014D658 (19), fn_80182A3C (85, `Ctl*` and base pointer swap),
+fn_800A2264 (3, `subi r0; extsh r30` for `idx = nbTexture-1`), fn_800A322C (5), fn_800786C0 (14), fn_80085064 (26),
+fn_80097CEC (154), fn_800A1EB0 (298), fn_800AD6D8 (4, prologue scheduling), fn_800D8584 (3, `bge; b; fmr` on the second
+wrap-min), fn_800CAC04 (150, float colouring), fn_80110FBC (2, `fadd` operand order), fn_8011622C (2, `cmplw` operand
+order), fn_801052A8 (7), fn_800EAAAC (24, rodata base), fn_800ED530 (63), fn_800E88FC (82), fn_8021F8A8 (3, `fmuls;fadds`
+fused to `fmadds`), fn_801D9D2C (8), fn_8020AAA8 (42, rodata base), fn_8021D8D8 (93), fn_802126C8 (133), fn_80230280
+(196), fn_801DAA5C (266), fn_8012E970 (21), fn_8013E0BC (72), fn_8012D760 (60), fn_8011F8A8 (100), fn_80119AF4 (100),
+fn_801253E8 (156), fn_801370B0 (237), fn_80138ADC (225), fn_8018EB3C (70), fn_801B58E0 (28), fn_801B6E5C (105, the
+original reaches `lbl_802EBF60` through a pooled base), fn_801C8DF0 (225, pooled `.rodata`/`.bss` bases), fn_801D3574
+(229), fn_8005B2C8 (12), fn_80052B24 (14), fn_80027484 (4, switch tree), fn_8005C73C (43), fn_80010584 (72), fn_801759F0
+(40), fn_801493EC (98, the original's 47-entry copy loop is an unrolled 2x21 plus remainder), fn_8015A36C (260),
+fn_8014D9FC (254, rodata base and a larger frame), fn_80136C14 (400), fn_800521C4 (7), fn_80072770 (18), fn_800277F4
+(256), fn_8006F020 (254, a dead `if (chr[i] && ...) {}` the compiler removes), fn_800DBB4C (33), fn_800E6E58 (75),
+fn_800E7934 (135), fn_800E8C6C (205), fn_800E9044 (74), fn_800EB90C (88), fn_80103C10 (3), fn_8010D4F4 (4), fn_80112498
+(12), fn_8012CA4C (40, `and; neg; or; srwi.` bool), fn_800EF734 (137), fn_8001977C (8), fn_80022B04 (8), fn_8002111C
+(19), fn_800193B8 (27), fn_8000E258 (79), fn_801DFE48 (6), fn_801F2A34 (76), fn_801D44B0 (112), fn_8021FC5C (109),
+fn_801D843C (147), fn_8022CE28 (240, the original keeps a 12-byte local in memory), fn_800D1630 (40), fn_800C79C4 (93),
+fn_80094410 (134, the original's frame is 0x20 larger), fn_8018796C (30), fn_80192B04 (35, an empty `case 0` the
+compiler drops), fn_8019DBA8 (63), fn_8019B59C (105), fn_801B42F8 (114), fn_80180EA0 (184). Not attempted: fn_80146828.
+
+Lessons: a one-case `switch` gives `cmpwi` where `if (u8 == 0)` gives `cmplwi`; an `s8` (not `u8`) work field gives
+`lbz; cmpwi`; empty no-op `case`s (`case 5: break;`) reproduce the original's compare tree; chained
+`a = b = c = v;` stores right-to-left; wrapping a repeated loop in an `inline` helper with a bool parameter reproduced the
+original's allocation (fn_800121D8); the unroll count of a copy loop follows `for (...; i++, start++)` (fn_801BD748); an
+`int` counter drops the loop's guard `cmpwi`; `if (p->f)` on a float gives `fcmpu f1,f0`, `!= 0.0f` swaps the operands.
+The agents again rarely folded their structs into the unit's: most merge failures are type clashes, not codegen.

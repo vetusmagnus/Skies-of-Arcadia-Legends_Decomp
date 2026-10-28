@@ -2591,6 +2591,47 @@ typedef struct Pos_80191A04 {
     u8 pad34[0x44 - 0x34];
     void* spr44;
 } Pos_80191A04;
+typedef struct Inner801732C8 {
+    s32 kind;
+    u32 pad04;
+    UiObj obj;
+    u8 pad_[0x74 - 8 - sizeof(UiObj)];
+    f32 y74;
+} Inner801732C8;
+typedef struct Elem801732C8 {
+    u8 pad0[0x24];
+    Inner801732C8 *in;
+} Elem801732C8;
+extern void fn_8017379C(void);
+extern s32 fn_80173688(void);
+#define IN(i) (((Elem801732C8 *)camp_work.objs[i])->in)
+#define CW_801732C8(off, T) (*(T *)((u8 *)&camp_work + (off)))
+typedef struct Inner_80176D70 {
+    s32 kind;
+    u32 pad04;
+    UiObj obj;
+} Inner_80176D70;
+typedef struct Elem_80176D70 {
+    u8 pad0[0x24];
+    Inner_80176D70 *in;
+} Elem_80176D70;
+typedef struct Ctrl_80176D70 {
+    u8 pad0[0x6c];
+    s32 f6c;
+} Ctrl_80176D70;
+typedef struct Holder_80176D70 { Ctrl_80176D70 *ctrl; } Holder_80176D70;
+typedef struct Outer_80176D70 { u8 pad[0x24]; Holder_80176D70 *holder; } Outer_80176D70;
+extern void fn_80177EFC(void);
+extern void fn_80177D7C(void);
+extern void fn_80177C98(void);
+extern void fn_80177AC8(void);
+extern void fn_80177BD4(void);
+extern s32 fn_80177348(void);
+extern void fn_80177134(void);
+extern void fn_8017796C(void);
+#define CW_80176D70(off, T) (*(T *)((u8 *)w + (off)))
+#define CG(off, T) (*(T *)((u8 *)&camp_work + (off)))
+#define IN_80176D70(i) (((Elem_80176D70 *)camp_work.objs[i])->in)
 
 s32 fn_8015DC6C(Obj_8015DC6C* self, Src* src)
 {
@@ -9571,4 +9612,180 @@ void fn_80191A04(Pos_80191A04* p, s32 kind) {
     p->sp20->spr = fn_801D68C4(lbl_803470F0, 10);
     p->fp24[0] = 0.0f;
     p->fp24[1] = 0.0f;
+}
+
+s32 fn_801732C8(void) {
+    UiObj *o;
+    UiObj *p;
+
+    switch (CW_801732C8(0x328, u32)) {
+    case 0:
+        CampMenuHideAllPanels();
+        IN(0x1b)->kind = 1;
+        IN(0x1b)->y74 = -7990.0f;
+        IN(0x82)->kind = 1;
+        IN(0x66)->kind = 0;
+        o = &IN(0x82)->obj;
+        fn_80199BB8(o, -496.0f, 124.0f);
+        fn_80199BAC(o, -496.0f, 124.0f);
+        o = &IN(0x66)->obj;
+        fn_80199BB8(o, 0.0f, 124.0f);
+        fn_80199BAC(o, 0.0f, 124.0f);
+        p = &IN(0x82)->obj;
+        UiObjMoveTo(p, 6, 4, 0.0f, 124.0f);
+        UiObjSetCommand(p, 0xf, 0);
+        fn_8017379C();
+        CW_801732C8(0x328, s32) = 2;
+        break;
+    case 2:
+        if (CampMenuAnyPanelBusy() == 0) {
+            CW_801732C8(0x328, s32) = 3;
+        } else if (fn_801C09F8(lbl_80347154, 2) != 0 || fn_801C09F8(lbl_80347154, 1) != 0) {
+            CampMenuFinishAllPanels();
+            CW_801732C8(0x328, s32) = 3;
+        }
+        break;
+    case 3:
+        switch (fn_80173688()) {
+        case -1:
+            CW_801732C8(0x328, s32) = 0x18;
+            IN(0x66)->kind = 0;
+            break;
+        case 1:
+            CW_801732C8(0x328, s32) = 0xc;
+            IN(0x66)->kind = 0;
+            break;
+        }
+        break;
+    case 12:
+        p = &IN(0x82)->obj;
+        UiObjMoveTo(p, 6, 4, -496.0f, 124.0f);
+        UiObjSetCommand(p, 0xf, 0);
+        CW_801732C8(0x328, s32) = 0x12;
+        break;
+    case 18:
+        if (CampMenuAnyPanelBusy() == 0) {
+            CW_801732C8(0x32c, s32) = 0;
+            camp_screen = 0xe;
+            fn_801959D4(0xe);
+        } else if (fn_801C09F8(lbl_80347154, 2) != 0 || fn_801C09F8(lbl_80347154, 1) != 0) {
+            CampMenuFinishAllPanels();
+            CW_801732C8(0x32c, s32) = 0;
+            camp_screen = 0xe;
+            fn_801959D4(0xe);
+        }
+        break;
+    case 24:
+        p = &IN(0x1b)->obj;
+        UiObjMoveTo(p, 6, 4, -348.0f, 61.0f);
+        UiObjSetCommand(p, 0xf, 1);
+        p = &IN(0x82)->obj;
+        UiObjMoveTo(p, 6, 4, -496.0f, 124.0f);
+        UiObjSetCommand(p, 0xf, 0);
+        CW_801732C8(0x328, s32) = 0x13;
+        break;
+    case 19:
+        if (CampMenuAnyPanelBusy() == 0) {
+            CW_801732C8(0x2fc, s32) = 0;
+            camp_screen = 2;
+            fn_801959D4(2);
+        } else if (fn_801C09F8(lbl_80347154, 2) != 0 || fn_801C09F8(lbl_80347154, 1) != 0) {
+            CampMenuFinishAllPanels();
+            CW_801732C8(0x2fc, s32) = 0;
+            camp_screen = 2;
+            fn_801959D4(2);
+        }
+        break;
+    }
+    return 0;
+}
+
+s32 fn_80176D70(void) {
+    Ctrl_80176D70 *c = ((Outer_80176D70 *)lbl_8034710C)->holder->ctrl;
+    CampWorkS *w = &camp_work;
+    UiObj *o;
+    UiObj *p;
+    s32 r;
+
+    switch (CW_80176D70(0x310, u32)) {
+    case 0:
+        fn_80177EFC();
+        fn_80177D7C();
+        fn_80177C98();
+        fn_80177AC8();
+        CW_80176D70(0x310, s32) = 2;
+        break;
+    case 1:
+        fn_80177D7C();
+        IN_80176D70(0x61)->kind = 1;
+        fn_80177BD4();
+        o = &IN_80176D70(*(s32 *)(lbl_80307638 + 0x7c))->obj;
+        UiObjMoveTo(o, 6, 4, -8.0f, 61.0f);
+        UiObjSetCommand(o, 0xf, 0);
+        o = &IN_80176D70(*(s32 *)(lbl_80307638 + 0x16c) + 0x1f)->obj;
+        UiObjMoveTo(o, 6, 4, -8.0f, 125.0f);
+        UiObjSetCommand(o, 0xf, 1);
+        c->f6c = 1;
+        fn_80195A68(c, 1, 0, 0, 0, 1);
+        CW_80176D70(0x310, s32) = 2;
+        break;
+    case 2:
+        if (CampMenuAnyPanelBusy() == 0) {
+            CW_80176D70(0x310, s32) = 3;
+        } else if (fn_801C09F8(lbl_80347154, 2) != 0 || fn_801C09F8(lbl_80347154, 1) != 0) {
+            CampMenuFinishAllPanels();
+            CW_80176D70(0x310, s32) = 3;
+        }
+        break;
+    case 3:
+        r = fn_80177348();
+        fn_80177134();
+        switch (r) {
+        case -1:
+            CW_80176D70(0x310, s32) = 0x18;
+            break;
+        case 1:
+            CW_80176D70(0x310, s32) = 0xc;
+            break;
+        }
+        break;
+    case 12:
+        o = &IN_80176D70(*(s32 *)(lbl_80307638 + 0x7c))->obj;
+        UiObjMoveTo(o, 6, 5, -348.0f, 61.0f);
+        UiObjSetCommand(o, 0xf, 0);
+        p = &IN_80176D70(*(s32 *)(lbl_80307638 + 0x16c) + 0x1f)->obj;
+        UiObjMoveTo(p, 6, 5, -348.0f, 125.0f);
+        UiObjSetCommand(p, 0xf, 1);
+        CW_80176D70(0x310, s32) = 0x12;
+        break;
+    case 18:
+        if (CampMenuAnyPanelBusy() == 0) {
+            CG(0x30c, s32) = 0;
+            camp_screen = 6;
+            fn_801959D4(6);
+        } else if (fn_801C09F8(lbl_80347154, 2) != 0 || fn_801C09F8(lbl_80347154, 1) != 0) {
+            CampMenuFinishAllPanels();
+            CG(0x30c, s32) = 0;
+            camp_screen = 6;
+            fn_801959D4(6);
+        }
+        break;
+    case 24:
+        fn_8017796C();
+        CW_80176D70(0x310, s32) = 0x13;
+        break;
+    case 19:
+        if (CampMenuAnyPanelBusy() == 0) {
+            CG(0x300, s32) = 0;
+            camp_screen = 3;
+            fn_801959D4(3);
+        } else if (fn_801C09F8(lbl_80347154, 2) != 0 || fn_801C09F8(lbl_80347154, 1) != 0) {
+            CampMenuFinishAllPanels();
+            CG(0x300, s32) = 0;
+            camp_screen = 3;
+            fn_801959D4(3);
+        }
+        break;
+    }
+    return 0;
 }
