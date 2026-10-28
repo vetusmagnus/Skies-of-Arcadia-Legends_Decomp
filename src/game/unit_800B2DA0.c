@@ -1649,14 +1649,6 @@ typedef struct Row {
     u32 w10;
     u8 pad14[0xc];
 } Row;
-typedef struct A_800CE4E8 {
-    u8 pad0[4];
-    f32 f4;
-} A_800CE4E8;
-typedef struct B_800CE4E8 {
-    u8 pad0[0x24];
-    u16 h24;
-} B_800CE4E8;
 extern Row lbl_802E1154[];
 typedef struct Pos {
     f32 x;
@@ -1664,8 +1656,9 @@ typedef struct Pos {
     f32 z;
 } Pos;
 typedef struct Q {
-    u8 pad0[4];
+    f32 x;          /* 0x00 position x */
     f32 f4;
+    f32 z;          /* 0x08 position z */
 } Q;
 typedef struct Mover {
     u8 pad0[0x5c];
@@ -1673,9 +1666,25 @@ typedef struct Mover {
     u8 pad60[4];
     f32 f64;
 } Mover;
+/* a wall segment: two end points */
+typedef struct Seg {
+    NJS_POINT3 a;
+    NJS_POINT3 b;
+} Seg;
+/* a line: point and direction (fn_8028FEA4) */
+typedef struct Line {
+    NJS_POINT3 p;
+    NJS_POINT3 d;
+} Line;
 typedef struct Flags {
-    u8 pad0[0x24];
+    Seg seg;        /* 0x00 hit wall segment (written by fn_801150DC/fn_8011510C) */
+    u8 pad18[0x24 - 0x18];
     u16 h24;
+    u8 pad26[0x28 - 0x26];
+    s32 w28;
+    s16 h2c;
+    s16 h2e;
+    u16 h30;
 } Flags;
 extern f32 lbl_80346D90;
 extern s32 fn_800CEDDC(Q* q, Mover* m, Flags* f);
@@ -2685,7 +2694,6 @@ typedef struct Dst {
     s16 hfa, hfc, hfe, h100, h102;
     f32 f104, f108;
 } Dst;
-typedef struct V3_800C6474 { f32 x, y, z; } V3_800C6474;
 typedef struct Target { u8 pad0[0x38]; f32 x38, y38, z38; } Target;
 typedef struct Work_800C6474 {
     u8 pad0[0x1b8];
@@ -2701,7 +2709,7 @@ typedef struct Obj_800C6474 {
 } Obj_800C6474;
 extern s32 fn_8015F218(Work_800C6474*);
 extern s32 fn_800C63A4(void *);
-extern s32 fn_802254A0(V3_800C6474* p, void* q);
+extern s32 fn_802254A0(NJS_POINT3* p, void* q);
 typedef struct Cell { s32 a, b4, b; } Cell;
 typedef struct Cmd { s32 w0; } Cmd;
 typedef struct Work_800C7744 {
@@ -3829,6 +3837,396 @@ void fn_800CD11C(void) {
     lbl_80305B08.h0c = 0;
     lbl_80305B08.h0a = 0;
     lbl_80305B08.h08 = 0;
+}
+
+extern f32 fn_800CE4E8(Q* a, Flags* b);
+
+extern NJS_POINT3 lbl_80305B18;
+extern void njUnitVector(NJS_POINT3* v);
+extern s32 fn_801150DC(NJS_POINT3* out, NJS_POINT3* a, NJS_POINT3* b, Flags* info);
+extern f32 fn_8028FEA4(Q* p, Line* l, NJS_POINT3* out);
+extern void fn_801DCE18(NJS_POINT3* out, NJS_POINT3* in, s32 ang);
+extern s32 fn_80114A44(s32 id, NJS_POINT3* p, f32 y, Flags* info);
+
+s32 fn_800CE67C(Q* q, Mover* m, Flags* f) {
+    Flags info;
+    NJS_POINT3 pos[3];
+    Seg segs[2];
+    NJS_POINT3 hits[2];
+    Seg seg0;
+    Line line;
+    Line bestLine;
+    NJS_POINT3 b;
+    NJS_POINT3 a;
+    NJS_POINT3 out;
+    s32 res[2];
+    s32 cur;
+    s32 next;
+    s32 prev;
+    NJS_POINT3* np;
+    s32 found;
+    s32 ang;
+    s32 n;
+    f32 best;
+    f32 nx;
+    f32 nz;
+    f32 ox;
+    f32 oz;
+    f32 d;
+    f32 lim;
+    f32 len;
+
+    info.seg.a = f->seg.a;
+    info.seg.b = f->seg.b;
+    info.w28 = f->w28;
+    info.h2c = f->h2c;
+    info.h2e = f->h2e;
+    info.h30 = f->h30;
+    found = 0;
+    a.x = b.x = q->x;
+    a.y = b.y = q->f4;
+    a.z = q->z - 1.0f;
+    b.z = 30.0f + q->z;
+    if ((res[0] = fn_801150DC(&hits[0], &a, &b, &info)) != 0) {
+        seg0 = info.seg;
+        pos[1].x = hits[0].x;
+        pos[1].z = hits[0].z;
+    }
+    cur = res[0];
+    b.x = njSin(0x2000);
+    a.x = q->x - b.x;
+    b.x = q->x + 30.0f * b.x;
+    b.z = njCos(0x2000);
+    a.z = q->z - b.z;
+    b.z = q->z + 30.0f * b.z;
+    if ((res[1] = fn_801150DC(&hits[1], &a, &b, &info)) != 0) {
+        segs[1] = info.seg;
+        pos[2].x = hits[1].x;
+        pos[2].z = hits[1].z;
+    }
+    ang = 0x2000;
+    next = res[1];
+    np = &pos[2];
+    for (n = 8; n > 0; n--) {
+        prev = cur;
+        if (cur != 0) {
+            pos[0].x = pos[1].x;
+            pos[0].z = pos[1].z;
+        }
+        cur = next;
+        if (next != 0) {
+            pos[1].x = np->x;
+            pos[1].z = np->z;
+            segs[0] = segs[1];
+        }
+        if (n >= 2) {
+            ang += 0x2000;
+            b.x = njSin(ang);
+            a.x = q->x - b.x;
+            b.x = q->x + 30.0f * b.x;
+            b.z = njCos(ang);
+            a.z = q->z - b.z;
+            b.z = q->z + 30.0f * b.z;
+            if ((next = fn_801150DC(np, &a, &b, &info)) != 0) {
+                segs[1] = info.seg;
+            }
+        } else {
+            next = res[2 - n];
+            if (next != 0) {
+                np->x = hits[2 - n].x;
+                np->z = hits[2 - n].z;
+                segs[1].a = seg0.a;
+                segs[1].b = seg0.b;
+            }
+        }
+        if (cur != 0) {
+            if (next != 0) {
+                line.p.x = pos[1].x;
+                line.p.z = pos[1].z;
+                line.p.y = q->f4;
+                line.d.x = np->x - pos[1].x;
+                line.d.y = 0.0f;
+                line.d.z = np->z - pos[1].z;
+                d = line.d.x * line.d.x + line.d.z * line.d.z;
+                if (0.010000001f > d) {
+                    line.p.x = segs[0].a.x;
+                    line.p.z = segs[0].a.z;
+                    line.p.y = q->f4;
+                    line.d.x = segs[0].b.x - segs[0].a.x;
+                    line.d.y = 0.0f;
+                    line.d.z = segs[0].b.z - segs[0].a.z;
+                }
+                d = fn_8028FEA4(q, &line, &out);
+                if (found == 0) {
+                    best = d;
+                    found = 1;
+                    bestLine = line;
+                    nx = out.x;
+                    nz = out.z;
+                } else if (best > d) {
+                    best = d;
+                    bestLine = line;
+                    nx = out.x;
+                    nz = out.z;
+                }
+            } else if (prev == 0) {
+                line.p.x = segs[0].a.x;
+                line.p.z = segs[0].a.z;
+                line.p.y = q->f4;
+                line.d.x = segs[0].b.x - segs[0].a.x;
+                line.d.y = 0.0f;
+                line.d.z = segs[0].b.z - segs[0].a.z;
+                d = fn_8028FEA4(q, &line, &out);
+                if (found == 0) {
+                    best = d;
+                    found = 1;
+                    bestLine = line;
+                    nx = out.x;
+                    nz = out.z;
+                } else if (best > d) {
+                    best = d;
+                    bestLine = line;
+                    nx = out.x;
+                    nz = out.z;
+                }
+            }
+        }
+    }
+    if (found != 0) {
+        if (0.0f < best) {
+            nx = (nx - q->x) / best;
+            nz = (nz - q->z) / best;
+        } else {
+            njUnitVector(&bestLine.d);
+            fn_801DCE18(&a, &bestLine.d, 0x4000);
+            nx = a.x;
+            nz = a.z;
+        }
+        a.x = q->x + (ox = 20.0f * nx);
+        oz = 20.0f * nz;
+        a.z = q->z + oz;
+        res[0] = fn_802254A0(&a, &info);
+        if (fn_80114A44(res[0], &a, q->f4, &info) == 0) {
+            a.x = q->x - ox;
+            a.y = q->f4;
+            a.z = q->z - oz;
+            res[0] = fn_802254A0(&a, &info);
+            if (fn_80114A44(res[0], &a, q->f4, &info) != 0) {
+                nx = -nx;
+                nz = -nz;
+            } else {
+                nx = 0.0f;
+                nz = nx;
+            }
+        }
+        m->f5c += 0.2f * nx;
+        m->f64 += 0.2f * nz;
+        lim = fn_800CE4E8(q, f);
+        if (0.0f < lim) {
+            len = fn_80291A5C(m->f5c * m->f5c + m->f64 * m->f64);
+            if (lim < len) {
+                m->f5c = m->f5c * lim / len;
+                m->f64 = m->f64 * lim / len;
+            }
+        }
+        lbl_80305B18.x = nx;
+        lbl_80346D90 = best;
+        lbl_80305B18.z = nz;
+    }
+    return found;
+}
+extern s32 fn_8011510C(NJS_POINT3* out, NJS_POINT3* a, NJS_POINT3* b, Flags* info);
+
+s32 fn_800CEDDC(Q* q, Mover* m, Flags* f) {
+    Flags info;
+    NJS_POINT3 pos[3];
+    Seg segs[2];
+    NJS_POINT3 hits[2];
+    Seg seg0;
+    Line line;
+    Line bestLine;
+    NJS_POINT3 b;
+    NJS_POINT3 a;
+    NJS_POINT3 out;
+    s32 res[2];
+    s32 cur;
+    s32 next;
+    s32 prev;
+    NJS_POINT3* np;
+    s32 found;
+    s32 ang;
+    s32 n;
+    f32 best;
+    f32 nx;
+    f32 nz;
+    f32 ox;
+    f32 oz;
+    f32 d;
+    f32 lim;
+    f32 len;
+
+    info.seg.a = f->seg.a;
+    info.seg.b = f->seg.b;
+    info.w28 = f->w28;
+    info.h2c = f->h2c;
+    info.h2e = f->h2e;
+    info.h30 = f->h30;
+    found = 0;
+    a.x = b.x = q->x;
+    a.y = b.y = q->f4;
+    a.z = q->z - 1.0f;
+    b.z = 30.0f + q->z;
+    if ((res[0] = fn_8011510C(&hits[0], &a, &b, &info)) != 0) {
+        seg0 = info.seg;
+        pos[1].x = hits[0].x;
+        pos[1].z = hits[0].z;
+    }
+    cur = res[0];
+    b.x = njSin(0x2000);
+    a.x = q->x - b.x;
+    b.x = q->x + 30.0f * b.x;
+    b.z = njCos(0x2000);
+    a.z = q->z - b.z;
+    b.z = q->z + 30.0f * b.z;
+    if ((res[1] = fn_8011510C(&hits[1], &a, &b, &info)) != 0) {
+        segs[1] = info.seg;
+        pos[2].x = hits[1].x;
+        pos[2].z = hits[1].z;
+    }
+    ang = 0x2000;
+    next = res[1];
+    np = &pos[2];
+    for (n = 8; n > 0; n--) {
+        prev = cur;
+        if (cur != 0) {
+            pos[0].x = pos[1].x;
+            pos[0].z = pos[1].z;
+        }
+        cur = next;
+        if (next != 0) {
+            pos[1].x = np->x;
+            pos[1].z = np->z;
+            segs[0] = segs[1];
+        }
+        if (n >= 2) {
+            ang += 0x2000;
+            b.x = njSin(ang);
+            a.x = q->x - b.x;
+            b.x = q->x + 30.0f * b.x;
+            b.z = njCos(ang);
+            a.z = q->z - b.z;
+            b.z = q->z + 30.0f * b.z;
+            if ((next = fn_8011510C(np, &a, &b, &info)) != 0) {
+                segs[1] = info.seg;
+            }
+        } else {
+            next = res[2 - n];
+            if (next != 0) {
+                np->x = hits[2 - n].x;
+                np->z = hits[2 - n].z;
+                segs[1].a = seg0.a;
+                segs[1].b = seg0.b;
+            }
+        }
+        if (cur != 0) {
+            if (next != 0) {
+                line.p.x = pos[1].x;
+                line.p.z = pos[1].z;
+                line.p.y = q->f4;
+                line.d.x = np->x - pos[1].x;
+                line.d.y = 0.0f;
+                line.d.z = np->z - pos[1].z;
+                d = line.d.x * line.d.x + line.d.z * line.d.z;
+                if (0.010000001f > d) {
+                    line.p.x = segs[0].a.x;
+                    line.p.z = segs[0].a.z;
+                    line.p.y = q->f4;
+                    line.d.x = segs[0].b.x - segs[0].a.x;
+                    line.d.y = 0.0f;
+                    line.d.z = segs[0].b.z - segs[0].a.z;
+                }
+                d = fn_8028FEA4(q, &line, &out);
+                if (20.0f > d) {
+                    if (found == 0) {
+                        best = d;
+                        found = 1;
+                        bestLine = line;
+                        nx = out.x;
+                        nz = out.z;
+                    } else if (best > d) {
+                        best = d;
+                        bestLine = line;
+                        nx = out.x;
+                        nz = out.z;
+                    }
+                }
+            } else if (prev == 0) {
+                line.p.x = segs[0].a.x;
+                line.p.z = segs[0].a.z;
+                line.p.y = q->f4;
+                line.d.x = segs[0].b.x - segs[0].a.x;
+                line.d.y = 0.0f;
+                line.d.z = segs[0].b.z - segs[0].a.z;
+                d = fn_8028FEA4(q, &line, &out);
+                if (20.0f > d) {
+                    if (found == 0) {
+                        best = d;
+                        found = 1;
+                        bestLine = line;
+                        nx = out.x;
+                        nz = out.z;
+                    } else if (best > d) {
+                        best = d;
+                        bestLine = line;
+                        nx = out.x;
+                        nz = out.z;
+                    }
+                }
+            }
+        }
+    }
+    if (found != 0) {
+        if (0.0f < best) {
+            nx = (q->x - nx) / best;
+            nz = (q->z - nz) / best;
+        } else {
+            njUnitVector(&bestLine.d);
+            fn_801DCE18(&a, &bestLine.d, 0x4000);
+            nx = a.x;
+            nz = a.z;
+        }
+        a.x = q->x + (ox = 20.0f * nx);
+        oz = 20.0f * nz;
+        a.z = q->z + oz;
+        res[0] = fn_802254A0(&a, &info);
+        if (fn_80114A44(res[0], &a, q->f4, &info) == 0) {
+            a.x = q->x - ox;
+            a.y = q->f4;
+            a.z = q->z - oz;
+            res[0] = fn_802254A0(&a, &info);
+            if (fn_80114A44(res[0], &a, q->f4, &info) != 0) {
+                nx = -nx;
+                nz = -nz;
+            } else {
+                nx = 0.0f;
+                nz = nx;
+            }
+        }
+        m->f5c += 0.2f * nx;
+        m->f64 += 0.2f * nz;
+        lim = fn_800CE4E8(q, f);
+        if (0.0f < lim) {
+            len = fn_80291A5C(m->f5c * m->f5c + m->f64 * m->f64);
+            if (lim < len) {
+                m->f5c = m->f5c * lim / len;
+                m->f64 = m->f64 * lim / len;
+            }
+        }
+        lbl_80305B18.x = nx;
+        lbl_80346D90 = best;
+        lbl_80305B18.z = nz;
+    }
+    return found;
 }
 
 void fn_800CF8C4(void* p, f32 max) {
@@ -6257,7 +6655,7 @@ void fn_800CDEF4(Task_800CDEF4* t) {
     }
 }
 
-f32 fn_800CE4E8(A_800CE4E8* a, B_800CE4E8* b) {
+f32 fn_800CE4E8(Q* a, Flags* b) {
     u16 h = b->h24;
     Row* row = &lbl_802E1154[(*(s8(*)[0x120])&lbl_80310A1C)[6]];
     f32 r = 0.0f;
@@ -8478,7 +8876,7 @@ void fn_800C6474(Obj_800C6474* o) {
         if (r == 2) {
             o->state = 5;
         } else {
-            V3_800C6474 p;
+            NJS_POINT3 p;
             r = 0;
             p.x = lbl_80347450->pos[0];
             p.y = lbl_80347450->pos[1];
@@ -8494,7 +8892,7 @@ void fn_800C6474(Obj_800C6474* o) {
         if (r == 2) {
             o->state = 5;
         } else {
-            V3_800C6474 p;
+            NJS_POINT3 p;
             r = 0;
             p.x = lbl_80347450->pos[0];
             p.y = lbl_80347450->pos[1];
@@ -8505,7 +8903,7 @@ void fn_800C6474(Obj_800C6474* o) {
         break;
     case 5:
         if (!FlagTest(w->w23c) && r == 1) {
-            V3_800C6474 p;
+            NJS_POINT3 p;
             r = 0;
             p.x = lbl_80347450->pos[0];
             p.y = lbl_80347450->pos[1];
