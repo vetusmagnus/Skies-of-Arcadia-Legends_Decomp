@@ -1811,3 +1811,33 @@ Lessons: a loop counter or local declared `int` instead of `s32` (`long`) remove
 and keeps `mr` copies (fn_8015ED90, fn_80087074); a `const` table lets copy-loop loads move ahead of stores; `x *= -1` on an
 `s8` is `mulli`, `x = x * -1` is `neg`; `if (f)` on a float gives the `fcmpu f, 0` operand order; nested `static inline`
 walkers reproduce recursive tree walks; `do {} while` stops constant init loops unrolling.
+
+## Batch 15 merge pass (2026-10-28)
+
+Combined small200, dupcopy and batch15 onto main and pushed (15fa5c6, 5,217 of 7,117; fdiff and `floatcheck.py` clean on every
+touched unit, `main.dol` force-relinks to the `build.sha1` SHA-1, a fresh worktree builds to the same hash). fn_801BE608
+(unit_80199B9C.c) is still the 12-line near miss: nine more declaration shapes (pointer local before/after the early returns,
+offset local, `s8` result, ternary, load order) all gave 10 to 31 lines; `merge9.py` now takes `IGN=fn_801BE608` so the unit
+can still take merges. fn_801E3DE0 and fn_801E41E0 in the unlinked motion.c fail fdiff and did before these merges.
+
+Then the 47 isolated Batch 15 matches (fn_8000F718 lives in fn_8000FC14's file) went through `u1_fix.py` per unit:
+**10 are in the unit files** (5,217 to 5,227): fn_8000AE08, fn_80012F58, fn_80062674, fn_8006721C, fn_800B45D4,
+fn_800EAE2C, fn_801CD118, fn_801CE6D0 (automatic), fn_8020C390 (`fn_801F452C` is `s8 (s16)`, `ScptCur` has a `const u32 *rom`
+view) and fn_8019C424 (`St` in unit_80199B9C.c has a `TexMdl` pair at 0x04 and the scale at 0x24). EvObj's `x23c`/`x240` are
+`s32` sound handles, which removed the `(void*)SePlay(...)` casts in evobj.c and unit_800D81E8.c.
+
+37 still wait for hand unification (reject reasons from the merge run):
+- `void` placeholders for functions the agents use as values: `TextCopyN` (text.h `void`, unit_800D81E8.c `u8 *`; fn_800E96C0,
+  fn_800E9B04) and `fn_80109D74` (void in unit_800D81E8.c, `void *` in unit_800B2DA0.c, `void *(s32)` in unit_8014F970.c;
+  fn_80101828).
+- Two struct views of one record: `Work_800ED360`/`Game6E14` (fn_800EC488, fn_800ECC5C, fn_800EE51C), `Key`/`Hold_8015EB8C`
+  (fn_8015ED90, fn_80160A4C, fn_801614E0), `Eff` (fn_8005F8D8), `Sub` (fn_8011E72C), `ChrWork` (fn_80019F0C, fn_8001A4F0,
+  fn_8001AB60), `Ent18`/`Ent_80020060` (fn_8001B1B0), `Slot24` and `ChrMot` (fn_800136DC, fn_80018CBC), `V3_800C6474`
+  (fn_800CE67C, fn_800CEDDC), `SaveStamp` (fn_801A2D60), `Task_8007BEB4` (fn_8007A890), `Clear` (fn_8013A8FC).
+- Raw byte pointers in the unit where the agent has a real type: `lbl_8034727C` in unit_8014F970.c (fn_8015B358; the agent's
+  `BtlWork` needs every `lbl_8034727C + off` access rewritten, and unit_8013D400.c allocates it), `lbl_80347450->pos`
+  (fn_800CA3C0), `lbl_802AD440[i]` (fn_80087074).
+- Prototype clashes: fn_80075060 (`TNode *`, `u32`, `u8`), fn_800A9708/fn_800AB280 (`fn_800A1B50`, `fn_8009D760`),
+  fn_80022F74 (`StTask *`), fn_800240EC (`fn_801D68C4`), fn_8014B6F8 (`fn_8015ED90` takes a different Task), fn_8000FC14
+  (`fn_8000F718` is `u32 (s8, s8, u8 *)`; needs `-str reuse,readonly` in unit_80005B50.c), fn_8006FD6C (`TkRec` proc),
+  fn_8015184C, fn_8008CDA8 and fn_80009874 fail fdiff once merged.
