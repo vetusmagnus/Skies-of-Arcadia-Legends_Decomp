@@ -47,7 +47,9 @@ typedef struct {
     u8 pad18[4];
     ItemList* items;       /* 0x1C */
     NJS_TEXLIST* texlist;  /* 0x20 */
-    u8 pad24[0x44 - 0x24];
+    u8 pad24[0x34 - 0x24];
+    s32 x34;               /* 0x34 */
+    u8 pad38[0x44 - 0x38];
     NJS_POINT3 target;     /* 0x44 */
     NJS_POINT3 rot;        /* 0x50 */
 } EvExt;

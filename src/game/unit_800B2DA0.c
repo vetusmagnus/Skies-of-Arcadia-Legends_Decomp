@@ -574,17 +574,7 @@ typedef struct {
     List_UNIT0000 *list;
 } Self_800D1268_UNIT0000;
 void fn_801DD9AC(void *a, void *b);
-typedef struct {
-    u8 pad0[0x34];
-    s32 v34;
-} Sub_800D2924;
-typedef struct {
-    u8 pad0[0x184];
-    s32 f184;
-    u8 pad188[0x1c8 - 0x188];
-    Sub_800D2924 *p1c8;
-} Self_800D2924;
-s32 fn_800D2924(Self_800D2924 *self);
+s32 fn_800D2924(EvObj *self);
 typedef struct {
     u8 pad0[0x34];
     s32 v34;
@@ -5117,25 +5107,25 @@ void fn_800D25C4(u32 rgb, s32 n) {
     }
 }
 
-s32 fn_800D2924(Self_800D2924 *self) {
+s32 fn_800D2924(EvObj *self) {
     s32 ret;
 
     if (lbl_80305BE8.a6 == 0) {
-        self->f184 = 0;
+        self->hidden = 0;
         ret = 1;
     } else if (lbl_80305BE8.u2a == 0xFFFF) {
-        self->f184 = 1;
+        self->hidden = 1;
         ret = 0;
-    } else if (self->p1c8 != 0) {
-        if (lbl_80305BE8.w3c == self->p1c8->v34) {
-            self->f184 = 0;
+    } else if (self->ext != 0) {
+        if (lbl_80305BE8.w3c == self->ext->x34) {
+            self->hidden = 0;
             ret = 1;
         } else {
-            self->f184 = 1;
+            self->hidden = 1;
             ret = 0;
         }
     } else {
-        self->f184 = 0;
+        self->hidden = 0;
         ret = 1;
     }
     return ret;
