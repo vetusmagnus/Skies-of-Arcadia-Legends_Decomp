@@ -192,12 +192,33 @@ typedef struct {
     u8 pad18[0x5c - 0x18];
 } Ent;
 typedef struct {
-    u8 pad0[0x1c6];
+    u8 pad0[0x12];
+    s16 id;
+    s8 b14;
+    u8 pad15[0x1e - 0x15];
+    s8 b1e;
+    s8 b1f;
+    s8 b20;
+    u8 pad21;
+} Member;
+typedef struct {
+    s32 x0;
+    u8 pad4[0x11 - 0x4];
+    s8 b11;
+    u8 pad12[0x18 - 0x12];
+    s32 x18;
+    u8 pad1c[0x58 - 0x1c];
+    u32 flags; /* 0x58 */
+    u8 pad5c[0x60 - 0x5c];
+    Member mem[5];
+} Party;
+/* lbl_803063F0: the battle menu's system record (fn_80135598). */
+typedef struct {
+    s8 order[4];
+    u8 pad4[0x1c6 - 0x4];
     Item items[4];
     u8 pad236[2];
-    s32 x238;
-    u8 pad23c[0x250 - 0x23c];
-    s32 x250;
+    Party party; /* 0x238 */
 } Big;
 extern Big lbl_803063F0;
 extern Ent lbl_8030B7F4[];
@@ -223,7 +244,7 @@ typedef struct {
     s16 v6;
     s16 v8;
 } Src;
-extern s8 *fn_80135598(void);
+extern Big *fn_80135598(void);
 typedef struct {
     s8 x;
     s8 y;
@@ -384,30 +405,6 @@ typedef struct {
     s16 s1a;
 } PcView;
 typedef struct {
-    u8 pad0[0x58];
-    u32 flags; /* 0x58 */
-} Sub;
-typedef struct {
-    u8 pad0[0x238];
-    Sub sub; /* 0x238 */
-} Sys_80137414;
-typedef struct {
-    u8 pad0[0x12];
-    s16 id;
-    s8 b14;
-    u8 pad15[0x1e - 0x15];
-    s8 b1e;
-    s8 b1f;
-    s8 b20;
-    u8 pad21;
-} Member;
-typedef struct {
-    u8 pad0[0x11];
-    s8 b11;
-    u8 pad12[0x60 - 0x12];
-    Member mem[5];
-} Party;
-typedef struct {
     u8 pad0[4];
     s8 idx;
 } Req;
@@ -417,7 +414,7 @@ void fn_8012F468(char *str);
 typedef struct E24 { u8 pad0[0x17]; s8 x17; u8 pad18[0x24 - 0x18]; } E24;
 extern E24 lbl_802D8E64[];
 extern s32 fn_80136C14(s8 *src, s32 i, s32 a);
-extern void fn_8012E4FC(E24 **p);
+extern void fn_8012E4FC(void **p);
 extern void fn_8012E498(s8 *p);
 extern void fn_8012E434(s8 *p);
 extern void fn_8012E424(s8 v);
@@ -879,13 +876,13 @@ void fn_80134900(void)
             Sync(it);
         }
     }
-    if (&b->x238 != NULL) {
+    if (&b->party != NULL) {
         q = (Ent *)((u8 *)lbl_8030B7F4 + 0x1568);
         if (((s8 *)q)[0] < 0) {
             q = NULL;
         }
         if (q != NULL) {
-            q->x14 = b->x250;
+            q->x14 = b->party.x18;
         }
     }
 }
@@ -930,7 +927,7 @@ void fn_80134C24(Dst *p, Src *src, const char *name)
 
 int fn_80136B10(s8 *dst) {
     int n = 0;
-    s8 *src = fn_80135598();
+    s8 *src = fn_80135598()->order;
     if (dst != NULL && src != NULL) {
         int i;
         for (i = 0; i < 4; i++) {
@@ -1112,21 +1109,21 @@ void fn_8013A35C(s32 a, s32 lo, s32 v, s32 hi) {
     Cell_8013A35C c2b;
     Cell_8013A35C c1a;
     Cell_8013A35C c2a;
-    s8 *arr;
+    Party *arr;
     s32 kind;
     s32 ok;
     s32 code;
     s32 i;
 
     fn_80136A28(a, lo, 4, v, -1, hi);
-    arr = fn_80135598() + 0x238;
+    arr = &fn_80135598()->party;
     kind = 4;
     ok = 0;
-    if (arr != 0 && v >= 0 && v < 5 && arr[v * 0x22 + 0x74] >= 0) {
+    if (arr != 0 && v >= 0 && v < 5 && arr->mem[v].b14 >= 0) {
         ok = 1;
     }
     if (ok != 0) {
-        kind = arr[v * 0x22 + 0x74];
+        kind = arr->mem[v].b14;
     }
     switch (kind) {
     case 1:
@@ -1268,8 +1265,8 @@ s32 fn_8013D3F0(u8* p) {
     return 2;
 }
 
-s8* fn_80135598(void) {
-    return (s8*)&lbl_803063F0;
+Big* fn_80135598(void) {
+    return &lbl_803063F0;
 }
 
 void fn_8013A320(s32 i)
@@ -1402,7 +1399,7 @@ void fn_801355A4(T *t) {
         if (fn_80130318() == 0 && fn_8012FF08() == 0) v = 1;
         if (v == 0) break;
         v = 0;
-        p = fn_80135598();
+        p = fn_80135598()->order;
         if (p != NULL) {
             v = 0;
             if (p[0] >= 0) {
@@ -1447,7 +1444,7 @@ void fn_801355A4(T *t) {
         if (fn_80130318() == 0 && fn_8012FF08() == 0) v = 1;
         if (v == 0) break;
         v = 0;
-        p = fn_80135598();
+        p = fn_80135598()->order;
         if (p != NULL) {
             v = 0;
             if (p[0] >= 0) {
@@ -1553,9 +1550,9 @@ inline s32 ValidIdx(s32 i)
 
 inline s32 HasFlag(s32 i)
 {
-    Sub* p;
+    Party* p;
     s32 r = 0;
-    p = &((Sys_80137414*)fn_80135598())->sub;
+    p = &fn_80135598()->party;
     if (p != 0) {
         if (ValidIdx(i)) {
             r = (p->flags & (1 << i)) != 0;
@@ -1598,7 +1595,7 @@ static inline char *ItemName(int id)
 
 static inline int MemberValid(int idx)
 {
-    Party *p = (Party *)(fn_80135598() + 0x238);
+    Party *p = &fn_80135598()->party;
     int ok = 0;
 
     if (p != NULL && idx >= 0 && idx < 5 && p->mem[idx].b14 >= 0) {
@@ -1611,7 +1608,7 @@ void fn_8013A818(Req *r)
 {
     int idx;
     char *str = NULL;
-    Member *m = (Member *)(fn_80135598() + 0x298);
+    Member *m = fn_80135598()->party.mem;
     int flag;
 
     if (r == NULL) return;
@@ -1666,7 +1663,7 @@ void fn_80134668(s8 n) {
     }
 }
 
-static inline void Clear(E24 **p, s8 *a, s8 *b, s8 *c) {
+static inline void Clear(void **p, s8 *a, s8 *b, s8 *c) {
     s32 i;
     if (p != NULL && a != NULL && b != NULL && c != NULL) {
         for (i = 0; i < 6; i++) {
@@ -1698,7 +1695,7 @@ static inline s32 Bits(s8 *c) {
     return r;
 }
 
-static inline void Set(E24 *tbl, E24 **p, s8 *a, s8 *b, s8 *c, s8 *src, s32 i, s32 a0) {
+static inline void Set(E24 *tbl, void **p, s8 *a, s8 *b, s8 *c, s8 *src, s32 i, s32 a0) {
     s32 id = 0x16;
     if (InRange(i, 6)) {
         id = src[i];
@@ -1718,7 +1715,7 @@ static inline void Set(E24 *tbl, E24 **p, s8 *a, s8 *b, s8 *c, s8 *src, s32 i, s
 
 void fn_801375A0(s32 a0, s32 a1, s8 *src) {
     E24 *tbl = lbl_802D8E64;
-    E24 *ptrs[6];
+    void *ptrs[6];
     s8 a[6];
     s8 b[6];
     s8 c[6];
@@ -1735,3 +1732,183 @@ void fn_801375A0(s32 a0, s32 a1, s8 *src) {
     fn_8012E424(bits);
     fn_8012E570(a1);
 }
+/* fn_801298CC's records (4 bytes each). */
+typedef struct {
+    s16 kind;
+    s16 x2;
+} Cmd_8013A8FC;
+
+extern Cmd_8013A8FC* fn_801298CC(void);
+
+inline s32 PartyCount_8013A8FC(void) {
+    s32 i = 0;
+    s8* p = fn_80135598()->order;
+    if (p != NULL) {
+        for (i = 0; i < 4; i++) {
+            if (p[i] < 0) {
+                break;
+            }
+        }
+    }
+    return i;
+}
+
+inline s32 Valid_8013A8FC(Party* p, s32 m) {
+    s32 ok = 0;
+    if (p != NULL && m >= 0 && m < 5 && p->mem[m].b14 >= 0) {
+        ok = 1;
+    }
+    return ok;
+}
+
+inline s32 Status_8013A8FC(Party* p, s32 m) {
+    s32 st = 4;
+    if (Valid_8013A8FC(p, m)) {
+        st = p->mem[m].b14;
+    }
+    return st;
+}
+
+inline s32 Flag_8013A8FC(void) {
+    s32 r = 0;
+    Party* p = &fn_80135598()->party;
+    if (p != NULL) {
+        if (p->b11 >= 2) {
+            r = 1;
+        }
+    }
+    return r;
+}
+
+inline s32 Find_8013A8FC(s32 m, s32 n) {
+    s32 r = -1;
+    if (n > 0 && n <= 4) {
+        s32 last = n - 1;
+        if (last < 4) {
+            for (r = 0; r <= last; r++) {
+                if (lbl_80308E90[r + 4].a[0] == 4 && m == lbl_80308E90[r + 4].a[2]) {
+                    break;
+                }
+            }
+        }
+    }
+    return r;
+}
+
+/* Whether party member i has a pending command of kind 2. */
+inline s32 IsReady_8013A8FC(s32 i) {
+    s32 ok = 0;
+    s32 cnt = PartyCount_8013A8FC();
+    if (i >= 0 && i < cnt && fn_801298CC()[i].kind == 2) {
+        ok = 1;
+    }
+    return ok;
+}
+
+inline s32 Ready_8013A8FC(void) {
+    s32 n = PartyCount_8013A8FC();
+    s32 r = 0;
+    s32 i;
+    for (i = 0; i < n; i++) {
+        if (IsReady_8013A8FC(i)) {
+            r = 1;
+            break;
+        }
+    }
+    return r;
+}
+
+static inline s32 Bits4(s8 *c) {
+    s32 r = 0;
+    s32 i;
+    if (c != NULL) {
+        for (i = 3; i >= 0; i--) {
+            r <<= 1;
+            r |= c[i];
+        }
+    }
+    return r;
+}
+
+inline void Set_8013A8FC(Party* party, Member* m, void** ptrs, s8* a, s8* b, s8* c, s32 i, s32 lim, s32 found) {
+    if (Valid_8013A8FC(party, i)) {
+        Member* e = &m[i];
+        s32 v = 100;
+        s32 code;
+        ptrs[i] = e;
+        if (e != NULL) {
+            v = e->b1f + e->b20;
+        }
+        a[i] = v;
+        code = -1;
+        switch (e->b14) {
+        case 0:
+            code = 8;
+            break;
+        case 1:
+            code = 9;
+            break;
+        case 2:
+            code = 10;
+            break;
+        case 3:
+            if (Flag_8013A8FC()) {
+                code = 0xd;
+            } else {
+                code = 0xb;
+            }
+            break;
+        }
+        b[i] = code;
+        c[i] = 0;
+        if (a[i] <= lim) {
+            s32 avail = 1;
+            s32 cnt = PartyCount_8013A8FC();
+            s32 idx = Find_8013A8FC(i, cnt);
+            if (idx >= 0 && idx == cnt) {
+                avail = 0;
+            }
+            if (!avail) {
+                switch (Status_8013A8FC(party, i)) {
+                case 3:
+                    if (found) {
+                        c[i] = 1;
+                    }
+                    break;
+                default:
+                    c[i] = 1;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void fn_8013A8FC(s32 lim) {
+    s32 found;
+    s32 i;
+    Party* party;
+    Member* m;
+    Big* base;
+    void* ptrs[6];
+    s8 a[6];
+    s8 b[6];
+    s8 c[6];
+    s32 bits;
+
+    base = fn_80135598();
+    party = &base->party;
+    m = base->party.mem;
+    found = Ready_8013A8FC();
+
+    Clear(ptrs, a, b, c);
+    for (i = 0; i < 4; i++) {
+        Set_8013A8FC(party, m, ptrs, a, b, c, i, lim, found);
+    }
+    bits = Bits4(c);
+    fn_8012E4FC(ptrs);
+    fn_8012E498(a);
+    fn_8012E434(b);
+    fn_8012E424(bits);
+}
+
