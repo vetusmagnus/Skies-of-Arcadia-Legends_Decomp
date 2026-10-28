@@ -1221,6 +1221,14 @@ static inline void walk_a1(NjObj* obj) {
     MOTION_WALK(fn_802947D4, walk_a2)
 }
 
+void fn_802949A4(NJS_MOTION_LINK* link, f32 rate) {
+    fn_80293B34(1);
+    fn_8029557C(link->motion[1], link->frame[1]);
+    fn_80293B34(0);
+    fn_8029557C(link->motion[0], link->frame[0]);
+    lbl_80347E70 = rate;
+}
+
 void fn_80294A0C(NjObj* obj) {
     MOTION_WALK(fn_802947D4, walk_a1)
 }
@@ -1390,6 +1398,12 @@ void fn_80295738(NjObj* obj) {
     MOTION_WALK(fn_802954EC, walk_b1)
 }
 
+void fn_80295E6C(NjObj* obj, NJS_MOTION* mot, NjModelCb cb, f32 frame) {
+    fn_802956F0(mot, frame);
+    lbl_80346A18->drawModel = cb;
+    fn_80295738(obj);
+}
+
 void fn_80295EB8(NjModel* m) {
     s32 i = 0;
     u32* cur = m->vlist;
@@ -1479,6 +1493,18 @@ void fn_80296130(NjObj* obj) {
 }
 
 void fn_802968B8(void) {
+}
+
+void fn_802968BC(u32 argb) {
+    GXColor c;
+    c.b = argb;
+    c.a = argb >> 24;
+    c.r = argb >> 16;
+    c.g = argb >> 8;
+
+    fn_8029CB1C();
+    fn_8029B248(5, 1);
+    GXSetChanMatColor(GX_COLOR0A0, c);
 }
 
 void fn_80296B34(void) {
@@ -2838,6 +2864,10 @@ s32 fn_802AB2C4(NjModel* m) {
 }
 
 void fn_802AC2EC(s32 v) { lbl_80346A5C = v; }
+
+void fn_802AC2F4(NjObj* obj) {
+    fn_80288DE4(obj, fn_802AC31C);
+}
 
 void njMemCopy(void* dst, const void* src, s32 count) {
     memmove(dst, src, count << 2);

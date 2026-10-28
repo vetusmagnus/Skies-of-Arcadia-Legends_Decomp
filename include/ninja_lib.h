@@ -194,11 +194,13 @@ typedef struct {
 extern NjMotState* lbl_80347E64;
 extern NjMotState lbl_803456D0[2];
 
+/* Camera key: position, target (or direction from pos), roll, fov, target mode. */
 typedef struct {
     f32 p0[3];
     f32 p1[3];
-    s16 a;
-    s16 b;
+    s16 a;    /* 0x18 roll */
+    s16 b;    /* 0x1a */
+    u32 mode; /* 0x1c 2 = p1 is the target itself */
 } NJ_KEY;
 typedef struct {
     f32* p0;
@@ -208,6 +210,13 @@ typedef struct {
 } NJ_KEYDST;
 
 void fn_80293B34(s32 x);
+void fn_802936E4(NJ_KEY* src, NJS_MOTION* mot, NJ_KEYDST* dst, f32 f);
+void fn_8028B880(NJ_KEY* c, NJS_POINT3* target, NJS_POINT3* up);
+void fn_802992F8(s32 fov);
+void fn_8028BA48(Angle a);
+extern NJS_POINT3 lbl_802DAB18;
+extern f32 lbl_80347E70;
+void fn_802956F0(NJS_MOTION* mot, f32 frame);
 void fn_80293B4C(NJS_MOTION* mot, f32 frame);
 s32 fn_80293EA8(f32* p);
 s32 fn_80293E38(s16* p);
@@ -475,6 +484,7 @@ void fn_802A8FC0(const NJS_MOTION* s, f32 v);
 extern s32 lbl_80347FC8;
 extern s32 lbl_80347FCC;
 s32 fn_802AB2C4(NjModel* m);
+s32 fn_802AC31C(NjModel* m);
 s32 fn_802AB340(u32* list);
 extern s32 lbl_80346A5C;
 
