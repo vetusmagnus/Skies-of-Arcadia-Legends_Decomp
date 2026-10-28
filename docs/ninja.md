@@ -106,7 +106,7 @@ Where things are
 Matching status
 ---------------
 
-192 of 452 functions match byte for byte (`src/ninja/ninja.c`, objdiff and `tools/match/fdiff.py`
+211 of 452 functions match byte for byte (`src/ninja/ninja.c`, objdiff and `tools/match/fdiff.py`
 plus `floatcheck.py` agree; main.dol still hashes OK). The unit covers the whole region
 (`0x80286EE8`-`0x802AC7DC`) because no real file boundary has turned up: the `.sdata2` pool is
 contiguous in text order, so the data gives no edge, and no edge has been checked against
@@ -198,6 +198,25 @@ Logged, not integrated as matches. Functions marked * are in the unit as NonMatc
 - Not attempted: paired-single code (`fn_802A5B48`, `fn_802A5D20`, `fn_802A21C4`), the 2.9 KB
   `fn_802AA2F0`, `fn_8029B248` (5.7 KB), `fn_8028BE90`, `fn_8028DD5C`, `fn_80287F00`, `fn_802A6398`,
   `fn_8028CF20` and the other functions over 3,000 bytes.
+
+### Recurring blockers in the rest of the unit
+
+- **Result copied through r0.** A call's result (or an inline helper's return value) goes
+  `mr r0, r3` then into its saved register or `mr r3, r0` at the end: `fn_80298700`, `fn_80299500`,
+  `fn_80297864`, `fn_802954EC`, `fn_80297804` (`mr. r0, r3`). int/s32/u32/s16 result variables,
+  `register`, inner scopes and inline helpers don't reproduce it.
+- **Scheduling of one early instruction** (a constant load, a `li`, a `cmpw`): `fn_802907D0`,
+  `fn_802915C8`, `fn_80296DC8`, `fn_80296E4C`, `fn_80298FE4`, `fn_80293690`, `fn_80296B60`,
+  and the r3/r4 swap around a table-index `mulli` (`fn_80293B34`, `fn_80296090`, `fn_80298BCC`).
+- **Generic key tables.** `fn_802938C8` / `fn_802939C4` search byte-strided key tables and hand back
+  `s16*` / `s32*` key pointers, but some callers read the keys as `u16` (`fn_80294100`, `lhz`) or
+  `f32` (`fn_802946D0`, `fn_80294770`); without one key type per caller these need casts, as does
+  the search itself (`fn_80293AF4`).
+- **Flat matrices vs `Mtx`.** `ninja_lib.h` declares the PSMTX routines with `f32*`; code that also
+  hands a matrix to `GXLoadPosMtxImm` / `GXLoadTexMtxImm` (`fn_8029CB1C`, `fn_8029CA58`,
+  `fn_8029C9B0`) can't satisfy both without a cast.
+- **Constant copies per unrolled store** (`fn_80295FEC` zero-fill), the same shape as the FIFO
+  address copies.
 
 ### Matched in isolation, not merged
 
