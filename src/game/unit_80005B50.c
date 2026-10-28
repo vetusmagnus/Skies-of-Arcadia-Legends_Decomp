@@ -4360,7 +4360,7 @@ void fn_80013FD0(Tk_80013FD0* t)
     case 0:
         switch ((*(Sys*)&lbl_80309E5C).x0) {
         default:
-            if (fn_8025ECC4() % 2 != 0) {
+            if (rand() % 2 != 0) {
                 u->state = 1;
             } else {
                 u->state = 3;
@@ -4388,7 +4388,7 @@ void fn_80013FD0(Tk_80013FD0* t)
         w->x38[2] = 0.0f;
         u->state = 2;
         u->x34 = 0;
-        if (fn_8025ECC4() % 2 != 0) {
+        if (rand() % 2 != 0) {
             u->x34 |= 1;
         }
         break;
@@ -4412,7 +4412,7 @@ void fn_80013FD0(Tk_80013FD0* t)
         memset(w->x38, 0, 12);
         u->state = 4;
         u->x34 = 0;
-        if (fn_8025ECC4() % 2 != 0) {
+        if (rand() % 2 != 0) {
             u->x34 |= 1;
         }
         break;
