@@ -204,7 +204,9 @@ typedef struct {
 } EvInfoPath;
 
 typedef struct {
-    u8 pad0[0x10];
+    u8 pad0[4];
+    u32 x04;               /* 0x04 */
+    u8 pad8[8];
     void* info;            /* 0x10 per-kind record (EvInfo head, EvInfoMap, ...) */
     ModelFiles* files;     /* 0x14 */
     u8 pad18[4];
@@ -240,7 +242,8 @@ typedef struct {
 typedef struct EvColl {
     s32 (*cb)(struct EvColl *, struct EvColl *); /* 0x00 */
     struct EvColl *p4;       /* 0x04 */
-    u8 pad8[0x10 - 8];
+    u32 w8;                  /* 0x08 */
+    u8 padC[4];
     u16 mask10;              /* 0x10 */
     u16 id12;                /* 0x12 */
     s16 h14;                 /* 0x14 */
@@ -303,7 +306,7 @@ typedef struct {
     void* x1b4;              /* 0x1B4 */
     EvHit* hit;              /* 0x1B8 */
     EvColl* coll;            /* 0x1BC */
-    u8 pad1C0[4];
+    EvColl* res;             /* 0x1C0 */
     void* x1c4;              /* 0x1C4 */
     EvExt* ext;              /* 0x1C8 */
     u8 pad1CC[0x1D8 - 0x1CC];
@@ -345,8 +348,32 @@ typedef struct {
     EvMode* mapMode;         /* 0x260 */
 } EvObj;
 
-/* The info record of story events and map objects. */
+/* The info record of an object, by kind. */
 static inline EvInfoMap* EvMapInfo(EvObj* e) {
+    return e->ext->info;
+}
+
+static inline EvInfoTrail* TrailInfo(EvObj* e) {
+    return e->ext->info;
+}
+
+static inline EvInfoChunk* ChunkInfo(EvObj* e) {
+    return e->ext->info;
+}
+
+static inline EvInfoEmit* EmitInfo(EvObj* e) {
+    return e->ext->info;
+}
+
+static inline EvInfoFade* FadeInfo(EvObj* e) {
+    return e->ext->info;
+}
+
+static inline EvInfoBox* BoxInfo(EvObj* e) {
+    return e->ext->info;
+}
+
+static inline EvInfoPath* PathInfo(EvObj* e) {
     return e->ext->info;
 }
 
