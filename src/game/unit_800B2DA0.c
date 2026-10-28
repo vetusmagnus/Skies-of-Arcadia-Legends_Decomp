@@ -7956,6 +7956,14 @@ void fn_800D2048(void)
     fn_80296F28();
 }
 
+void FogOff(void)
+{
+    GXColor color = { 0, 0, 0, 0 };
+
+    GXSetFog(0, 0.0f, 0.0f, 0.0f, 0.0f, color);
+    fn_80296F28();
+}
+
 static inline void FreeIf(void *p)
 {
     if (p != NULL) {

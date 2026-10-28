@@ -8546,6 +8546,28 @@ void fn_8016AA64(Mover6 *m, f32 x, f32 y)
     m->steps = 6;
 }
 
+extern void fn_801D5DD8(Item_8016CAB4 *a, f32 e, f32 f, f32 g, f32 h, s32 b, s32 c, f32 i, f32 j, void *d);
+
+void fn_8016AA9C(Arg_8016CAB4 *p)
+{
+    fn_801D5DD8(p->item, 1.0f, 1.0f, p->a, p->b, p->c, p->d, p->e, p->f, lbl_8034709C->inner->texlist);
+}
+
+void fn_8016AAF0(Arg_8016CAB4 *p)
+{
+    fn_801D5DD8(p->item, 1.0f, 1.0f, p->a, p->b, p->c, p->d, p->e, p->f, lbl_80347098->inner->texlist);
+}
+
+void fn_8016AB44(Arg_8016CAB4 *p)
+{
+    fn_801D5DD8(p->item, 1.0f, 1.0f, p->a, p->b, p->c, p->d, p->e, p->f, lbl_80347094->inner->texlist);
+}
+
+void fn_8016AB98(Arg_8016CAB4 *p)
+{
+    fn_801D5DD8(p->item, 1.0f, 1.0f, p->a, p->b, p->c, p->d, p->e, p->f, lbl_80347090->inner->texlist);
+}
+
 void fn_8015F7A8(f32 *mtx, s32 *out)
 {
     NJS_VECTOR ax = lbl_802B4334;

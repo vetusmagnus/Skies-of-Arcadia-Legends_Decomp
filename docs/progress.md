@@ -1768,3 +1768,17 @@ fn_8021A880, fn_8021AB60, fn_8021AC20, fn_8021ACE0 (4 each, the zero return stay
 `stb`), fn_80221E24 (25), fn_80226D14 (9), fn_8022ABEC (3), fn_8022BAA0 (6), fn_802300F0 (16).
 
 Hit rate was 59% (89 of 151); the near misses are register allocation and block layout, as in the earlier small batches.
+
+## Duplicate copies of the near-miss groups (2026-10-28)
+
+`dupes.py` regenerated with a script that keys functions by address (the dtk asm lists some functions under two names, which
+made sound.c's functions look like unmatched twins) and the current report: 13 game-code functions in 8 groups have a matched
+twin and no C of their own, all of them members of groups logged earlier as near misses. 4 Haiku 5.5 agents (one per group
+cluster) cloned the twin's body with the copy's own labels; every one passed fdiff and `floatcheck.py` in isolation and
+all 13 are now in their units (5,155 to 5,168 of 7,117): fn_80206424 (calls `fn_80097228` where fn_8020623C calls
+`fn_80097204`), fn_800FF5D0 (`fn_801F39EC` for `fn_801F3844`), fn_801E461C (reads `lbl_80313678`, motion.c's `MotionState`),
+fn_80083FF8, fn_8022BA58 (`fn_801DD078` for `fn_801DCFA0`), FogOff, fn_8013F6A4 (unit_8013D400.c types `lbl_80308E90` as
+`Rec5[8]` now; the byte-array form gave a register swap), fn_8012A954/fn_8012A9A8 and fn_8016AA9C/AAF0/AB44/AB98 (each reads
+its own `lbl_` pointer). Not done: 17 stubs of 4 and 8 bytes in the unlinked SDK/TRK range that have a matched twin
+(AMC_IsStub 0x80262AA4, EXI2_*, DBOpen/DBClose, TRKUARTInterruptHandler, TRK mutex stubs, fn_802543F4, fn_80257A08-18,
+OSSetCurrentHeap 0x80005A44, fn_80005A44's twin fn_8023CE08): they belong to real library files that the SDK pass links.

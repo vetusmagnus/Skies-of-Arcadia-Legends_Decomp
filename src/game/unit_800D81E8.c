@@ -2130,6 +2130,7 @@ typedef struct {
 extern u8 lbl_802E4460[12][14];
 extern char lbl_802B2308[];
 extern char lbl_802B2328[];
+extern s32 fn_801F39EC(s32 n);
 extern s32 fn_801F3844(s32 n);
 extern void fn_801F3E6C(s32 n);
 extern void fn_801F3CB0(s32 n);
@@ -7221,6 +7222,24 @@ void fn_800FF4EC(s32 n) {
     set = (lbl_80310B3C[b >> 5] & (1 << (b & 31))) != 0;
     if (set != 0) {
         if (fn_801F3844(n) == 0) {
+            fn_801DBE1C(lbl_802B2328);
+        }
+        lbl_80310B3C[b >> 5] &= ~(1 << (b & 31));
+        b = n + 0x402;
+        lbl_80310B3C[b >> 5] |= 1 << (b & 31);
+    }
+}
+
+void fn_800FF5D0(s32 n) {
+    u32 b;
+    s32 set;
+    if (n < 0 || n >= 6) {
+        fn_801DBE1C(lbl_802B2308);
+    }
+    b = n + 0x408;
+    set = (lbl_80310B3C[b >> 5] & (1 << (b & 31))) != 0;
+    if (set != 0) {
+        if (fn_801F39EC(n) == 0) {
             fn_801DBE1C(lbl_802B2328);
         }
         lbl_80310B3C[b >> 5] &= ~(1 << (b & 31));
