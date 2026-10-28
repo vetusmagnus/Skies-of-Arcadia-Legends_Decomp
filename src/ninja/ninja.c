@@ -2130,6 +2130,233 @@ void fn_8029B1E0(GXAttrType p, GXAttrType n, GXAttrType t) {
     GXSetVtxDesc(GX_VA_TEX0, t);
 }
 
+static inline void alpha_test(s32 hasAlpha) {
+    if (hasAlpha != 0) {
+        GXSetTevAlphaIn(0, 7, 4, 5, 7);
+        GXSetZCompLoc(lbl_80347F50);
+        GXSetAlphaCompare(lbl_80346A38, lbl_80347F54, lbl_80347F58, lbl_80346A3C, lbl_80347F5C);
+    } else {
+        GXSetTevAlphaIn(0, 6, 7, 7, 7);
+        GXSetZCompLoc(lbl_80346A40);
+        GXSetAlphaCompare(lbl_80346A44, lbl_80347F5D, lbl_80347F60, lbl_80346A48, lbl_80347F64);
+    }
+}
+
+static inline void tev_tex(s32 hasAlpha) {
+    if (lbl_803457A8.mode == 1) {
+        hasAlpha = 0;
+    }
+    GXSetNumTevStages(1);
+    GXSetTevOrder(0, 0, 0, 4);
+    GXSetTevColorIn(0, 15, 8, 10, 15);
+    GXSetTevColorOp(0, 0, 0, 0, 1, 0);
+    alpha_test(hasAlpha);
+    GXSetTevAlphaOp(0, 0, 0, 0, 1, 0);
+}
+
+static inline void tev_tex_spec(s32 hasAlpha) {
+    if (lbl_803457A8.mode == 1) {
+        hasAlpha = 0;
+    }
+    GXSetNumTevStages(2);
+    GXSetTevOrder(0, 0, 0, 4);
+    GXSetTevOrder(1, 0xFF, 0xFF, 5);
+    GXSetTevColorIn(0, 15, 8, 10, 15);
+    GXSetTevColorOp(0, 0, 0, 0, 1, 0);
+    GXSetTevColorIn(1, 10, 15, 15, 0);
+    GXSetTevColorOp(1, 0, 0, 0, 1, 0);
+    alpha_test(hasAlpha);
+    GXSetTevAlphaOp(0, 0, 0, 0, 1, 0);
+    GXSetTevAlphaIn(1, 7, 7, 7, 0);
+    GXSetTevAlphaOp(1, 0, 0, 0, 1, 0);
+}
+
+static inline void tev_color(s32 hasAlpha) {
+    GXSetTevOrder(0, 0xFF, 0xFF, 4);
+    GXSetNumTevStages(1);
+    GXSetTevColorIn(0, 10, 15, 15, 15);
+    GXSetTevColorOp(0, 0, 0, 0, 1, 0);
+    if (hasAlpha != 0) {
+        GXSetTevAlphaIn(0, 5, 7, 7, 7);
+    } else {
+        GXSetTevAlphaIn(0, 6, 7, 7, 7);
+    }
+    GXSetTevAlphaOp(0, 0, 0, 0, 1, 0);
+}
+
+void fn_8029B248(s32 kind, s32 flag) {
+    if (lbl_80347F74 != kind) {
+        switch (kind) {
+        case 0:
+            GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);
+            GXClearVtxDesc();
+            GXSetVtxDesc(GX_VA_POS, 1);
+            GXSetVtxDesc(GX_VA_CLR0, 1);
+            GXSetVtxDesc(GX_VA_TEX0, 1);
+            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
+            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
+            GXSetVtxAttrFmt(0, 13, 1, 4, 0);
+            GXSetNumChans(1);
+            GXSetChanCtrl(4, 0, 1, 1, 0, 0, 2);
+            GXSetNumTexGens(1);
+            tev_tex(flag);
+            break;
+        case 1:
+            GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);
+            GXClearVtxDesc();
+            GXSetVtxDesc(GX_VA_POS, 1);
+            GXSetVtxDesc(GX_VA_CLR0, 1);
+            GXSetVtxDesc(GX_VA_CLR1, 1);
+            GXSetVtxDesc(GX_VA_TEX0, 1);
+            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
+            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
+            GXSetVtxAttrFmt(0, 12, 1, 5, 0);
+            GXSetVtxAttrFmt(0, 13, 1, 4, 0);
+            GXSetNumChans(2);
+            GXSetChanCtrl(4, 0, 1, 1, 0, 0, 2);
+            GXSetChanCtrl(5, 0, 1, 1, 0, 0, 2);
+            GXSetNumTexGens(1);
+            tev_tex_spec(flag);
+            break;
+        case 2:
+            GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);
+            GXClearVtxDesc();
+            GXSetVtxDesc(GX_VA_POS, 1);
+            GXSetVtxDesc(GX_VA_TEX0, 1);
+            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
+            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
+            GXSetVtxAttrFmt(0, 13, 1, 4, 0);
+            GXSetNumChans(1);
+            GXSetChanCtrl(4, 0, 1, 0, 0, 0, 2);
+            GXSetNumTexGens(1);
+            tev_tex(flag);
+            break;
+        case 3:
+            GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);
+            GXClearVtxDesc();
+            GXSetVtxDesc(GX_VA_POS, 1);
+            GXSetVtxDesc(GX_VA_TEX0, 1);
+            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
+            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
+            GXSetVtxAttrFmt(0, 12, 1, 5, 0);
+            GXSetVtxAttrFmt(0, 13, 1, 4, 0);
+            GXSetNumChans(2);
+            GXSetChanCtrl(4, 0, 1, 0, 0, 0, 2);
+            GXSetChanCtrl(5, 0, 0, 1, 0, 0, 2);
+            GXSetNumTexGens(1);
+            tev_tex_spec(flag);
+            break;
+        case 4:
+            GXClearVtxDesc();
+            GXSetVtxDesc(GX_VA_POS, 1);
+            GXSetVtxDesc(GX_VA_CLR0, 1);
+            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
+            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
+            GXSetNumChans(1);
+            GXSetChanCtrl(4, 0, 1, 1, 0, 0, 2);
+            GXSetNumTexGens(0);
+            tev_color(flag);
+            break;
+        case 5:
+            GXClearVtxDesc();
+            GXSetVtxDesc(GX_VA_POS, 1);
+            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
+            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
+            GXSetNumChans(1);
+            GXSetChanCtrl(4, 0, 1, 0, 0, 0, 2);
+            GXSetNumTexGens(0);
+            tev_color(flag);
+            break;
+        }
+        lbl_80347F74 = kind;
+        lbl_80347F68 = flag;
+    } else {
+        switch (kind) {
+        case 0:
+            GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);
+            GXClearVtxDesc();
+            GXSetVtxDesc(GX_VA_POS, 1);
+            GXSetVtxDesc(GX_VA_CLR0, 1);
+            GXSetVtxDesc(GX_VA_TEX0, 1);
+            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
+            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
+            GXSetVtxAttrFmt(0, 13, 1, 4, 0);
+            GXSetNumChans(1);
+            GXSetChanCtrl(4, 0, 1, 1, 0, 0, 2);
+            GXSetNumTexGens(1);
+            tev_tex(flag);
+            break;
+        case 1:
+            GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);
+            GXClearVtxDesc();
+            GXSetVtxDesc(GX_VA_POS, 1);
+            GXSetVtxDesc(GX_VA_CLR0, 1);
+            GXSetVtxDesc(GX_VA_CLR1, 1);
+            GXSetVtxDesc(GX_VA_TEX0, 1);
+            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
+            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
+            GXSetVtxAttrFmt(0, 12, 1, 5, 0);
+            GXSetVtxAttrFmt(0, 13, 1, 4, 0);
+            GXSetNumChans(2);
+            GXSetChanCtrl(4, 0, 1, 1, 0, 0, 2);
+            GXSetChanCtrl(5, 0, 1, 1, 0, 0, 2);
+            GXSetNumTexGens(1);
+            tev_tex_spec(flag);
+            break;
+        case 2:
+            GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);
+            GXClearVtxDesc();
+            GXSetVtxDesc(GX_VA_POS, 1);
+            GXSetVtxDesc(GX_VA_TEX0, 1);
+            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
+            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
+            GXSetVtxAttrFmt(0, 13, 1, 4, 0);
+            GXSetNumChans(1);
+            GXSetChanCtrl(4, 0, 1, 0, 0, 0, 2);
+            GXSetNumTexGens(1);
+            tev_tex(flag);
+            break;
+        case 3:
+            GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);
+            GXClearVtxDesc();
+            GXSetVtxDesc(GX_VA_POS, 1);
+            GXSetVtxDesc(GX_VA_TEX0, 1);
+            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
+            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
+            GXSetVtxAttrFmt(0, 12, 1, 5, 0);
+            GXSetVtxAttrFmt(0, 13, 1, 4, 0);
+            GXSetNumChans(2);
+            GXSetChanCtrl(4, 0, 1, 0, 0, 0, 2);
+            GXSetChanCtrl(5, 0, 0, 1, 0, 0, 2);
+            GXSetNumTexGens(1);
+            tev_tex_spec(flag);
+            break;
+        case 4:
+            GXClearVtxDesc();
+            GXSetVtxDesc(GX_VA_POS, 1);
+            GXSetVtxDesc(GX_VA_CLR0, 1);
+            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
+            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
+            GXSetNumChans(1);
+            GXSetChanCtrl(4, 0, 1, 1, 0, 0, 2);
+            GXSetNumTexGens(0);
+            tev_color(flag);
+            break;
+        case 5:
+            GXClearVtxDesc();
+            GXSetVtxDesc(GX_VA_POS, 1);
+            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
+            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
+            GXSetNumChans(1);
+            GXSetChanCtrl(4, 0, 1, 0, 0, 0, 2);
+            GXSetNumTexGens(0);
+            tev_color(flag);
+            break;
+        }
+        lbl_80347F68 = flag;
+    }
+}
+
 void fn_8029C8A0(void) {
     fn_8029B248(7, 1);
     if (lbl_80347F6C != 1) {
