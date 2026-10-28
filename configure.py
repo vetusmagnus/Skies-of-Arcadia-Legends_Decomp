@@ -439,6 +439,9 @@ config.libs += [
         "progress_category": "sdk",
         "src_dir": "extern/sdk",
         "objects": [
+            Object(Matching, "dolphin/os/OSFont.c"),
+            Object(Matching, "dolphin/os/OSReboot.c"),
+            Object(Matching, "dolphin/os/OSThread.c"),
             Object(Matching, "dolphin/os/__ppc_eabi_init.cpp"),
             Object(Matching, "dolphin/PPCArch.c"),
             Object(Matching, "dolphin/os/OS.c"),

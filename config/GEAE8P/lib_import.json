@@ -122,6 +122,9 @@
   "musyx/runtime/StdReverb/reverb.c",
   "musyx/runtime/Chorus/chorus_fx.c",
   "musyx/runtime/synth_dbtab.c",
-  "runtime/errno.c"
+  "runtime/errno.c",
+  "dolphin/os/OSThread.c",
+  "dolphin/os/OSReboot.c",
+  "dolphin/os/OSFont.c"
  ]
 }
