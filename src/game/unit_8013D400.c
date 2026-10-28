@@ -671,14 +671,60 @@ typedef struct {
     s32 w0;
     u8 pad4[0x3c - 4];
     void *x3c;
+    s32 x40;
+    s32 x44;
+    s32 x48;
+    s32 x4c;
+    s32 x50;
+    s32 x54;
 } Info;
 typedef struct {
     u8 pad0[0x10];
     Info *x10;
 } Sub;
+/* The leader ship's task and its work (the task's 0x23c) */
+typedef struct {
+    u8 pad0[0x10];
+    void *x10;
+    u8 pad14[0x68 - 0x14];
+    u8 x68[1];
+} LeaderSub;
+typedef struct {
+    u8 pad0[0x70];
+    s32 x70;
+    u8 pad74[0x7c - 0x74];
+    s32 x7c;
+    u8 pad80[4];
+    s32 x84;
+    u8 pad88[0xa4 - 0x88];
+    s32 xa4;
+    u8 pada8[0xc0 - 0xa8];
+    s32 xc0;
+    u8 padc4[0xd0 - 0xc4];
+} LeaderRec;
+typedef struct {
+    char name[8];       /* 0x000 */
+    s32 x8;             /* 0x008 */
+    u8 padc[0x1d4 - 0xc];
+    u8 x1d4[0x214 - 0x1d4];
+    u8 x214[8];         /* 0x214 */
+    LeaderSub *x21c;    /* 0x21c */
+    u8 pad220[0x3a0 - 0x220];
+    s16 x3a0;
+    s16 x3a2;
+    s16 x3a4;
+    u8 pad3a6[0x448 - 0x3a6];
+    s16 x448;
+    s16 x44a;
+    u8 pad44c[0x4f0 - 0x44c];
+    LeaderRec rec[1];   /* 0x4f0 */
+    u8 pad5c0[0xc04 - 0x5c0];
+    s32 xc04;
+    u8 xc08[1];
+} Leader;
 typedef struct Ctx_8014D398 {
     u8 pad0[0xe8];
-    struct Ctx_8014D398 *xe8;
+    void *xe8;
     u8 pade8[0x100 - 0xec];
     void *x100;
     u8 pad104[0x17a - 0x104];
@@ -688,10 +734,11 @@ typedef struct Ctx_8014D398 {
     f32 f190;
     u8 pad194[0x1c8 - 0x194];
     Sub *x1c8;
-    u8 pad1cc[0x1e8 - 0x1cc];
+    u8 pad1cc[0x1e4 - 0x1cc];
+    s32 x1e4;
     struct Task_8014D398 *x1e8;
     u8 pad1ec[0x23c - 0x1ec];
-    Node_8014D398 *x23c;
+    void *x23c;     /* the per-type record: Node_8014D398, CamNode, Leader */
 } Ctx_8014D398;
 typedef struct Task_8014D398 {
     u8 pad0[0x19];
@@ -2409,13 +2456,64 @@ void fn_8014F834(Range_8014F834* r, u16 ang, s32 a0, s32 a1, s32 lo, s32 hi, s32
     r->lo = (r->lo < lo) ? r->lo : lo;
 }
 
-void fn_8014D398(Task_8014D398 *t)
+typedef struct { u8 pad[0x1ef]; s8 f1ef; } In_8014B6F8;
+typedef struct { u8 pad[0x24]; In_8014B6F8 *p24; } Mid_8014B6F8;
+typedef struct {
+    u8 pad0[0x28];
+    Mid_8014B6F8 *p28;
+    u8 pad2c[4];
+    s32 x30;
+    u8 pad34[4];
+    s32 x38;
+    u8 pad3c[0x44 - 0x3c];
+    s32 x44;
+    u8 pad48[0x5c - 0x48];
+    s32 x5c;
+    u8 pad60[0x70 - 0x60];
+} CamPart;
+typedef struct CamNode {
+    s32 active;                 /* 0x000 */
+    Leader *x4;                 /* 0x004 */
+    s32 x8;                     /* 0x008 */
+    Ctx_8014D398 *ctx;          /* 0x00c */
+    s32 x10;
+    s32 x14;
+    s32 x18;
+    s32 x1c;
+    f32 f20;
+    s32 x24;
+    CamPart a;                  /* 0x028 */
+    CamPart b;                  /* 0x098 */
+    void *x108;
+    s32 x10c;
+} CamNode;
+extern s32 strcmp(const char *a, const char *b);
+extern void fn_8014FCD8(void *p, s32 a, s32 b);
+extern void fn_80152EF0(CamPart *p);
+extern void fn_80152B58(CamPart *p, s32 id, s32 c, s32 d, s32 e, s32 f, s32 g, s32 h, s32 i, s32 j, s32 k, s32 l);
+extern void fn_80153958(void *p);
+extern void fn_80152AFC(CamPart *p);
+extern void *fn_80153790(s32 a, s32 b, s16 c);
+extern void fn_801528AC(CamPart *p, void *loc, void *c, s32 d);
+extern s32 fn_8014FC9C(void *a, void *b);
+extern void fn_8015275C(CamPart *p, void *loc, s32 c);
+extern void fn_8015271C(CamPart *p);
+
+void fn_8014B6F8(Task_8014D398 *t)
 {
+    CamNode *p;
+    CamPart *a;
+    CamPart *b;
     Ctx_8014D398 *ctx;
-    Node_8014D398 *p;
-    s32 loc[16];
-    void *r;
+    s32 v1;
+    s32 v2;
+    s32 v3;
+    s32 v0;
+    LeaderRec *rec;
     Info *info;
+    void *r;
+    W4 *w4;
+    s32 loc[16];
 
     ctx = t->x24;
     switch (t->b19) {
@@ -2428,7 +2526,155 @@ void fn_8014D398(Task_8014D398 *t)
     case 1:
         info = ctx->x1c8->x10;
         r = fn_8010A164(info->w0 > 0xe ? info->x3c : NULL);
-        ctx->x1e8 = (Task_8014D398 *)r;
+        ctx->x1e8 = r;
+        if (r == NULL) {
+            fn_801DBE1C("Leader Ship Is Nothing %d", ctx->h17a);
+        }
+        t->b19 = 2;
+        p = fn_801E1A74(1, 0x110);
+        ctx->x23c = p;
+        a = &p->a;
+        b = &p->b;
+        memset(p, 0, 0x110);
+        p->x4 = ctx->x1e8->x24->x23c;
+        if (p->x4 == NULL || (p->x4 != NULL && strcmp(p->x4->name, "shp") != 0)) {
+            fn_801DBE1C("Leader Ship Miss {%d} opt=%d", ctx->h17a, ctx->x1e8->x24->h17a);
+        }
+        fn_8014FCD8(p->x4->x214, 2, 0x46);
+        p->active = 1;
+        memset(&p->ctx, 0, 0x1c);
+        p->ctx = ctx;
+        p->x1c = -1;
+        p->x14 = -1;
+        p->x14 = 0;
+        fn_8014EE4C(&p->ctx, 0, 1, 0, 0xa);
+        v1 = ctx->x1c8->x10->w0 > 0x12 ? ctx->x1c8->x10->x4c : 0;
+        v2 = ctx->x1c8->x10->w0 > 0x13 ? ctx->x1c8->x10->x50 : 0;
+        v3 = ctx->x1c8->x10->w0 > 0x14 ? ctx->x1c8->x10->x54 : 0;
+        if (v1 == 0) {
+            v1 = 0x87f0;
+        }
+        if (v2 == 0) {
+            v2 = 0x75f8;
+        }
+        if (v3 == 0) {
+            v3 = 0x7724;
+        }
+        fn_80152EF0(a);
+        info = ctx->x1c8->x10;
+        fn_80152B58(a, ctx->h17a, p->x4->x8 ^ 1, ctx->x1e8->x24->x1e4, 2,
+                    info->w0 > 0xf ? info->x40 : 0, info->w0 > 0x10 ? info->x44 : 0, 0, 0, 0, 0, 0);
+        fn_80152EF0(b);
+        v0 = ctx->x1c8->x10->w0 > 0x11 ? ctx->x1c8->x10->x48 : 0;
+        fn_80152B58(b, ctx->h17a, p->x4->x8 ^ 1, ctx->x1e8->x24->x1e4, 3,
+                    v0, 0, v1, v2, v3, 0, 0);
+        p->x4->x3a4++;
+    case 2:
+        p = ctx->x23c;
+        a = &p->a;
+        b = &p->b;
+        if (p->x4->xc04 != 0) {
+            p->x8 = (ctx->h17a & 3) * 2 + (s32)(2.0 * (0.99 * (3.0517578e-5f * rand())));
+            if (p->x108 != NULL) {
+                fn_80153958(p->x108);
+                p->x108 = NULL;
+            }
+            fn_80152AFC(a);
+            fn_80152AFC(b);
+        }
+        fn_80156B04(p->x4->x1d4, ctx, 0, 0, loc);
+        if (p->active != 0) {
+            rec = &p->x4->rec[p->x8];
+            if (p->x4->x21c->x10 != NULL) {
+                if (rec->x70 != 0) {
+                    p->x10c = 1;
+                    fn_8014EE4C(&p->ctx, 0x14, 1, 0, 0xa);
+                    p->x4->x3a0++;
+                }
+                if (rec->x84 != 0) {
+                    fn_8014EE4C(&p->ctx, 0x1e, 1, 0, 0xa);
+                    p->x10c = 0;
+                }
+                if (rec->x7c != 0) {
+                    p->x10c = 0;
+                    fn_80153790(a->x38, a->x44, p->x4->x8);
+                    fn_801528AC(a, loc, p->x4->xc08, 0);
+                    p->x4->x3a2++;
+                }
+                if (rec->xa4 != 0) {
+                    p->x4->x448++;
+                }
+                if (rec->xc0 != 0) {
+                    fn_801528AC(b, loc, p->x4->xc08, fn_8014FC9C(p->x4->x214, p->x4->x21c->x68));
+                    p->x108 = fn_80153790(b->x30, b->x5c, p->x4->x8);
+                    p->x4->x44a++;
+                }
+            }
+        }
+        fn_8015275C(a, loc, p->x10c);
+        fn_8015275C(b, loc, 0);
+        if (p->x108 != NULL && b->p28 != NULL && b->p28->p24->f1ef != 0) {
+            b->p28->p24->f1ef = 0;
+            fn_80153958(p->x108);
+            p->x108 = NULL;
+        }
+        if (fn_8015E600(t->x24) == 0) {
+            if (ctx->xe8 != NULL) {
+                if (p->x24 != 0) {
+                    if (p->x14 == p->x1c) {
+                        p->ctx->f190 = 1.0f;
+                    } else {
+                        p->ctx->f190 = p->f20;
+                    }
+                }
+                if (p->x24 == 0) {
+                    w4 = p->ctx->xe8;
+                    if (p->ctx->f18c >= (f32)w4->w4 - 1.0f) {
+                        p->ctx->f190 = 0.0f;
+                        p->x10 = 0;
+                    }
+                }
+                fn_80156E54(ctx, loc);
+            } else {
+                fn_80156DA0(ctx, loc);
+            }
+        }
+        break;
+    case 0xff:
+        p = ctx->x23c;
+        fn_8015271C(&p->a);
+        fn_8015271C(&p->b);
+        fn_801E17E0(p);
+        fn_8015EBF4(t->x24);
+        if (ctx->x100 != NULL) {
+            fn_802275A4(ctx->x100, 0);
+        }
+        fn_80100B74(t);
+        break;
+    }
+}
+
+void fn_8014D398(Task_8014D398 *t)
+{
+    Ctx_8014D398 *ctx;
+    Node_8014D398 *p;
+    s32 loc[16];
+    void *r;
+    Info *info;
+    W4 *w4;
+
+    ctx = t->x24;
+    switch (t->b19) {
+    case 0:
+    case 0xfe:
+        fn_80227810(ctx->x100);
+        fn_8015ED90(t);
+        t->b19 = 1;
+        break;
+    case 1:
+        info = ctx->x1c8->x10;
+        r = fn_8010A164(info->w0 > 0xe ? info->x3c : NULL);
+        ctx->x1e8 = r;
         if (r == NULL) {
             fn_801DBE1C("Leader Ship Is Nothing %d", ctx->h17a);
         }
@@ -2462,7 +2708,8 @@ void fn_8014D398(Task_8014D398 *t)
                     }
                 }
                 if (p->x20 == 0) {
-                    if (p->x8->f18c >= (f32)((W4 *)p->x8->xe8)->w4 - 1.0f) {
+                    w4 = p->x8->xe8;
+                    if (p->x8->f18c >= (f32)w4->w4 - 1.0f) {
                         p->x8->f190 = 0.0f;
                         p->xc = 0;
                     }
