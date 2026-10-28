@@ -197,7 +197,7 @@ dolphin/os/OSAlarm.c:
 
 dolphin/os/OSArena.c:
 	.text       start:0x80232B44 end:0x80232B90
-	.sdata      start:0x80346870 end:0x80346874
+	.sdata      start:0x80346870 end:0x80346878
 	.sbss       start:0x80347918 end:0x80347920
 
 dolphin/os/OSAudioSystem.c:
@@ -211,6 +211,12 @@ dolphin/os/OSCache.c:
 dolphin/os/OSContext.c:
 	.text       start:0x80233288 end:0x80233A6C
 	.data       start:0x802F98B0 end:0x802F9A88
+
+dolphin/os/OSError.c:
+	.text       start:0x80233A6C end:0x80233F6C
+	.data       start:0x802F9A88 end:0x802F9DA8
+	.bss        start:0x80317230 end:0x80317278
+	.sdata      start:0x80346878 end:0x80346880
 
 dolphin/os/OSFatal.c:
 	.text       start:0x80233F6C end:0x80234B48

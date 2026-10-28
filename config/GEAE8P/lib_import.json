@@ -126,6 +126,7 @@
   "dolphin/os/OSThread.c",
   "dolphin/os/OSReboot.c",
   "dolphin/os/OSFont.c",
-  "dolphin/os/OSFatal.c"
+  "dolphin/os/OSFatal.c",
+  "dolphin/os/OSError.c"
  ]
 }
