@@ -20,7 +20,7 @@ typedef s32 Angle;          /* 0x10000 per turn */
 typedef struct {
     void* filename;
     u32 attr;
-    void* texaddr;
+    struct NjTexRef* texaddr; /* see ninja_lib.h */
 } NJS_TEXNAME;
 
 typedef struct {

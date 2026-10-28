@@ -106,7 +106,7 @@ Where things are
 Matching status
 ---------------
 
-133 of 452 functions match byte for byte (`src/ninja/ninja.c`, objdiff and `tools/match/fdiff.py`
+192 of 452 functions match byte for byte (`src/ninja/ninja.c`, objdiff and `tools/match/fdiff.py`
 plus `floatcheck.py` agree; main.dol still hashes OK). The unit covers the whole region
 (`0x80286EE8`-`0x802AC7DC`) because no real file boundary has turned up: the `.sdata2` pool is
 contiguous in text order, so the data gives no edge, and no edge has been checked against
@@ -124,13 +124,34 @@ a coincidence of one conversion pattern, not the library's setting.
   in `ninja_lib.h` with flat `f32*` pointers.
 - Rotation helpers read `Angle` as `a * 9.58737801e-05f` (the pool constant is `0x38C90FD8`, not
   the nearest decimal of 2*pi/65536: `floatcheck.py` caught the first guess).
-- Self-recursive `inline` functions unroll four levels (the node-tree walkers).
+- Self-recursive `inline` functions unroll four levels (the node-tree walkers). They are emitted
+  out of line only because a caller calls them (`fn_802A9338` / `fn_802A9B94` call `fn_802A907C` /
+  `fn_802A98D8`). The motion walkers `fn_80294A0C` / `fn_80295738` match as four `static inline`
+  levels plus the outer function (`MOTION_WALK` in `ninja.c`); one self-recursive `inline` doesn't.
+- A function that is both inlined in this unit and called from game code (`fn_8029D010`) is a
+  `static inline` helper plus an out-of-line wrapper.
+- The two light setters index the table directly after `n--`; a `NjLight*` local keeps the
+  table's +8 as a separate `addi`.
+- `fn_8029D010` keeps the blend factors in `u16` locals: that is where the `clrlwi` before
+  `GXSetBlendMode` comes from.
 - The 16-byte-stride vertex loops copy the strip's index list with `do { } while (--n)`.
 
-**Types.** `NjObj` (evalflags, model, pos, rot, scl, child, sibling, qw/radius) is the node the
-motion walkers and the model drawers share; `rot` is `Angle[3]` or the quaternion xyz.
-`lbl_80344DE0` / `lbl_80345350` are two light tables (8 entries of 0x60 bytes, accumulators at
-+0x30C and +0x318).
+**Types** (`include/ninja_lib.h`, one definition each, derived from every matched user):
+- `NjObj` (evalflags, model, pos, rot, scl, child, sibling, qw/radius) is the node the motion
+  walkers and the model drawers share; `rot` is `Angle[3]` or the quaternion xyz. `NjModel` is the
+  chunk model it points to (vlist, plist, center, r); model callbacks are `s32 (*)(NjModel*)`.
+  `fn_802AB23C(obj)` takes the node (its callers leave it in r3).
+- `NJS_MOTION` (mdata, nbFrame, type, inp_fn) and `NJS_MOTION_LINK` (two motions, two frames):
+  `fn_80295140` / `fn_802A9B94` take a link and a blend rate, `fn_80295E6C` / `fn_802A9338` a motion
+  and a frame. `NjMotState` (`lbl_80347E64`) holds the key count/flags and the five key getters.
+- `NjLightTbl` (`lbl_80344DE0`, `lbl_80345350`): a dirty flag, a word, 8 `NjLight` entries of 0x60
+  from +0x8, then the `GXSetChanCtrl` mask/diffuse/attenuation for COLOR0 and ALPHA0 at +0x30C.
+- Textures: `NJS_TEXNAME.texaddr` points at an `NjTexRef` (`lbl_80347ED4`, 0x18 bytes) whose `mem`
+  is an `NjTexMem` slot (`lbl_80347ECC`, 0x48: id, a 0x20-byte `NjTexBody` handed to the loaders,
+  the `GXTexObj`, a refcount). `lbl_803457F8` is `NjTexErr` (texlist index, global index, error
+  code) and `lbl_80346500` is a lone `NjTexBody`.
+- `NjGxState` (`lbl_803457A8`, 0x50 bytes): state words, the blend mode at +0x22, a mode at
+  +0x2A and the current texlist at +0x44.
 
 ### Near misses (same instructions, different order or registers)
 
@@ -165,18 +186,10 @@ Logged, not integrated as matches. Functions marked * are in the unit as NonMatc
 
 ### Matched in isolation, not merged
 
-About 60 functions matched on their own but declare shared globals or types differently from the merged
-unit, so they are waiting for one type per structure: the GX/texture state at `0x803457A8` (11:
-`fn_80296C58`, `fn_8029A4EC`, `fn_8029A698`, `fn_8029AA14`, `fn_8029AB44`, `fn_8029AE38`,
-`fn_8029CBD0`, `fn_8029CF04`, `fn_8029D010`, `fn_8029D698`, `fn_8029D8B0`, `fn_8029DA24`,
-`fn_80296ED4`, `fn_80296FA0`, `fn_802979B8`, `fn_80298ED0`), the texture slot tables at
-`0x80347ECC`/`0x80347ED4` (`fn_802981B8`, `fn_80298210`, `fn_80298C78`, `fn_80297BD8`,
-`fn_80297CC0`), the light tables (`fn_802872C4`, `fn_802872D4`, `fn_8028B870`, `fn_80292D88`,
-`fn_80292FBC`, `fn_802931F0`, `fn_80293424`, `fn_80293544`), the model-callback prototypes
-(`fn_80287C14`, `fn_802890A4`, `fn_80292C74`, `fn_80292EA8`, `fn_802930DC`, `fn_80293310`,
-`fn_8028AA60`, `fn_802AB23C`), the motion state (`fn_802951D4`, `fn_8029557C`, `fn_80295738`,
-`fn_80296130`, `fn_802947CC`, `fn_802956F0`, `fn_802960FC`, `fn_802A907C`, `fn_802A98D8`,
-`fn_802AA110`) and a few single prototype clashes (`fn_80291428`, `fn_8028BA48`, `fn_802974B4`,
-`fn_80299744`, `fn_8029B248` callers, `fn_8029CB1C`, `fn_802AC710`, `fn_8029EFD0`, `fn_8029F400`,
-`fn_8029873C`, `fn_8029959C`). The two 4-level inline walkers (`fn_802A907C`, `fn_802A98D8`) carry
-a stub caller to force the out-of-line copy and need the real callers matched first.
+Every agent match that verified on its own is merged except three:
+- `fn_8029CB1C` loads the current matrix with `GXLoadPosMtxImm(lbl_80347EB4, 3)`. The SDK takes
+  `const f32 (*)[4]` and `lbl_80347EB4` is `f32*`, so it needs a cast; the clean fix is a 3x4
+  `NJS_MATRIX`, which changes the size of the game's `NJS_MATRIX` locals.
+- `fn_8029EFD0`, `fn_8029F400` (position-only strip drawers) step the strip pointer by
+  `nuv * 2` bytes. `strips += nuv` allocates registers differently; only a byte cast or
+  `nuv * 2 ... / 2` matches.
