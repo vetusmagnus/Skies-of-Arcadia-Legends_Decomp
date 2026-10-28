@@ -768,19 +768,61 @@ extern f32 lbl_802E72FC[7];
 extern f32 lbl_802E734C[7];
 extern f32 lbl_802E739C[7];
 typedef struct {
+    u32 flags;
+    u8 pad04[0x34 - 4];
+    f32 x, y;      /* 0x34 */
+    u8 pad3c[0x50 - 0x3c];
+} Obj50;
+typedef struct {
+    u8 cell[24][28];
+} Grid;
+typedef struct {
+    f32 x, y;
+} Pt8;
+/* lbl_802E3E68 entry, one per story level */
+typedef struct {
+    s16 kind;
+    s16 sub;
+    char* file;
+} MapFile;
+/* lbl_80346E14: the world map's work. */
+typedef struct {
     s32 area;            /* 0x00 */
     u8 pad4[8];
     s32 f0c;
     s32 f10;
-    u8 pad14[0x38 - 0x14];
+    s32 f14;             /* height level, 0..10 */
+    s32 f18;
+    s32 f1c;             /* cell under the cursor (fn_800EEDD4) */
+    s32 edge;            /* 1/2/4/8 cursor clamped at left/right/top/bottom */
+    s32 cx;              /* clamped cursor x */
+    s32 cy;
+    s16 h2c;
+    s16 h2e;
+    u8 pad30[0x36 - 0x30];
+    s16 h36;
     s16 level;           /* 0x38 */
-    u8 pad3a[0x4c - 0x3a];
+    s16 h3a;
+    s32 px;              /* player's map position */
+    s32 py;
+    MapFile map;         /* 0x44 */
     f32 v4c, v50, v54, v58, v5c;
     f32 v60, v64, v68, v6c, v70;
     u8 tile[12][14][4];  /* 0x74 */
     u8 active[29];       /* 0x314 */
-    u8 pad331[0xDF8 - 0x331];
-    void* bank;          /* 0xDF8 */
+    u8 pad331[3];
+    Pt8 pts[29];         /* 0x334 */
+    u8 pad41c[0x47c - 0x41c];
+    Grid grid[3];        /* 0x47C */
+    Obj50 o0;            /* 0xC5C */
+    Obj50 o1;
+    Obj50 o2;
+    Obj50 o3;
+    Obj50 o4;
+    void* bank;          /* 0xDEC */
+    void* b0;
+    void* b1;
+    void* b2;            /* 0xDF8 */
 } Game6E14;
 typedef Game6E14 K06B;
 typedef Game6E14 Cfg;
@@ -1630,12 +1672,6 @@ typedef struct {
     u8 pad1a[0x24 - 0x1A];
     Work_800DE00C* work;
 } Obj_800DE00C;
-typedef struct {
-    u32 flags;
-    u8 pad04[0x34 - 4];
-    f32 x, y;      /* 0x34 */
-    u8 pad3c[0x50 - 0x3c];
-} Obj50;
 /* A 2D sprite descriptor (fn_801D7A90; as in unit_801D24D0.c). */
 typedef struct {
     u16 enable;    /* 0x00 */
@@ -2190,15 +2226,6 @@ extern void fn_800DE9BC(Obj_800DF5C0* o);
 extern void fn_80225F58(u16 n);
 extern void fn_80109118(s32 a, u32 b);
 extern void fn_802273E0(void* p, s32 n);
-typedef struct {
-    u8 cell[24][28];
-} Grid;
-typedef struct {
-    u8 pad0[0x38];
-    s16 s38;
-    u8 pad3a[0x47c - 0x3a];
-    Grid grid[1];
-} Game6E14_800EEDD4;
 extern u8 lbl_802E4460[12][14];
 extern char lbl_802B2308[];
 extern char lbl_802B2328[];
@@ -2345,20 +2372,6 @@ extern s32 fn_801C5D88(void* w, s32 a);
 extern void fn_801C5B44(void* w, void* p);
 extern void fn_801C5AB4(void* w, void* p);
 extern void fn_801E66E0(void* w);
-typedef struct {
-    u8 pad00[0x48];
-    void* p48;
-    u8 pad4c[0xC5C - 0x4C];
-    Obj50 o0;
-    Obj50 o1;
-    Obj50 o2;
-    Obj50 o3;
-    Obj50 o4;
-    void* bank;
-    void* b0;
-    void* b1;
-    void* b2;
-} Work_800EDB70;
 extern u32 lbl_80346E0C;
 extern u8 lbl_802B2188[];
 extern void fn_800EE51C(void);
@@ -7523,8 +7536,8 @@ s32 fn_800EEDD4(s32 n, f32 fx, f32 fy) {
     if (x >= 28) x = 27;
     if (y >= 24) y = 23;
     if (lbl_802E4460[y / 2][x / 2] != 0) {
-        v = (*(Game6E14_800EEDD4**)&lbl_80346E14)->grid[i].cell[y][x];
-        if ((*(Game6E14_800EEDD4**)&lbl_80346E14)->s38 < 14) {
+        v = lbl_80346E14->grid[i].cell[y][x];
+        if (lbl_80346E14->level < 14) {
             if (v == 7) v = 0;
         } else {
             if (v == 11) v = 7;
@@ -8146,24 +8159,24 @@ void fn_800EDB70(void) {
     case 0:
     case 0xFE:
         fn_800EE51C();
-        fn_801D8AB4(&(*(Work_800EDB70**)&lbl_80346E14)->o0, 0x2D, 0, 1.0f, 0.5f);
-        (*(Work_800EDB70**)&lbl_80346E14)->o0.flags |= 2;
-        (*(Work_800EDB70**)&lbl_80346E14)->o0.flags |= 4;
-        fn_801D89D4((void *)(&(*(Work_800EDB70**)&lbl_80346E14)->o1), 0x1E, 0, 1.0f, -2.0f, -2.0f, -2.0f, 0.75f, 2.0f, 2.0f, 2.0f);
-        (*(Work_800EDB70**)&lbl_80346E14)->o1.flags |= 2;
-        (*(Work_800EDB70**)&lbl_80346E14)->o1.flags |= 4;
-        fn_801D8AB4(&(*(Work_800EDB70**)&lbl_80346E14)->o2, 1, 0, 0.0f, 0.0f);
-        fn_801D8AB4(&(*(Work_800EDB70**)&lbl_80346E14)->o3, 1, 0, 0.0f, 0.0f);
-        fn_801D8AB4(&(*(Work_800EDB70**)&lbl_80346E14)->o4, 1, 0, 0.0f, 0.0f);
-        lbl_80346E10 = ((MapRes*)fn_801DB244((void *)((*(Work_800EDB70**)&lbl_80346E14)->p48)));
+        fn_801D8AB4(&lbl_80346E14->o0, 0x2D, 0, 1.0f, 0.5f);
+        lbl_80346E14->o0.flags |= 2;
+        lbl_80346E14->o0.flags |= 4;
+        fn_801D89D4((void *)(&lbl_80346E14->o1), 0x1E, 0, 1.0f, -2.0f, -2.0f, -2.0f, 0.75f, 2.0f, 2.0f, 2.0f);
+        lbl_80346E14->o1.flags |= 2;
+        lbl_80346E14->o1.flags |= 4;
+        fn_801D8AB4(&lbl_80346E14->o2, 1, 0, 0.0f, 0.0f);
+        fn_801D8AB4(&lbl_80346E14->o3, 1, 0, 0.0f, 0.0f);
+        fn_801D8AB4(&lbl_80346E14->o4, 1, 0, 0.0f, 0.0f);
+        lbl_80346E10 = ((MapRes*)fn_801DB244((void *)(lbl_80346E14->map.file)));
         fn_80227810((void *)(lbl_80346E10->inner->texlist));
-        (*(Work_800EDB70**)&lbl_80346E14)->bank = fn_801E49D8(lbl_802B2188);
-        (*(Work_800EDB70**)&lbl_80346E14)->b0 = fn_801E1C7C(0x14);
-        fn_801D6998((*(Work_800EDB70**)&lbl_80346E14)->b0, fn_801E4984((*(Work_800EDB70**)&lbl_80346E14)->bank, 0));
-        (*(Work_800EDB70**)&lbl_80346E14)->b1 = fn_801E1C7C(0x14);
-        fn_801D6998((*(Work_800EDB70**)&lbl_80346E14)->b1, fn_801E4984((*(Work_800EDB70**)&lbl_80346E14)->bank, 1));
-        (*(Work_800EDB70**)&lbl_80346E14)->b2 = fn_801E1C7C(0x14);
-        fn_801D6998((*(Work_800EDB70**)&lbl_80346E14)->b2, fn_801E4984((*(Work_800EDB70**)&lbl_80346E14)->bank, 2));
+        lbl_80346E14->bank = fn_801E49D8(lbl_802B2188);
+        lbl_80346E14->b0 = fn_801E1C7C(0x14);
+        fn_801D6998(lbl_80346E14->b0, fn_801E4984(lbl_80346E14->bank, 0));
+        lbl_80346E14->b1 = fn_801E1C7C(0x14);
+        fn_801D6998(lbl_80346E14->b1, fn_801E4984(lbl_80346E14->bank, 1));
+        lbl_80346E14->b2 = fn_801E1C7C(0x14);
+        fn_801D6998(lbl_80346E14->b2, fn_801E4984(lbl_80346E14->bank, 2));
         fn_801D66D4();
         fn_801CBBD8();
         fn_801CBB9C(20.0f);
@@ -8195,21 +8208,21 @@ void fn_800EDB70(void) {
         break;
     case 5:
     case 0xFF:
-        if ((*(Work_800EDB70**)&lbl_80346E14)->b0 != 0) {
-            fn_801E17E0((*(Work_800EDB70**)&lbl_80346E14)->b0);
-            (*(Work_800EDB70**)&lbl_80346E14)->b0 = 0;
+        if (lbl_80346E14->b0 != 0) {
+            fn_801E17E0(lbl_80346E14->b0);
+            lbl_80346E14->b0 = 0;
         }
-        if ((*(Work_800EDB70**)&lbl_80346E14)->b1 != 0) {
-            fn_801E17E0((*(Work_800EDB70**)&lbl_80346E14)->b1);
-            (*(Work_800EDB70**)&lbl_80346E14)->b1 = 0;
+        if (lbl_80346E14->b1 != 0) {
+            fn_801E17E0(lbl_80346E14->b1);
+            lbl_80346E14->b1 = 0;
         }
-        if ((*(Work_800EDB70**)&lbl_80346E14)->b2 != 0) {
-            fn_801E17E0((*(Work_800EDB70**)&lbl_80346E14)->b2);
-            (*(Work_800EDB70**)&lbl_80346E14)->b2 = 0;
+        if (lbl_80346E14->b2 != 0) {
+            fn_801E17E0(lbl_80346E14->b2);
+            lbl_80346E14->b2 = 0;
         }
-        if ((*(Work_800EDB70**)&lbl_80346E14)->bank != 0) {
-            fn_801E17E0((*(Work_800EDB70**)&lbl_80346E14)->bank);
-            (*(Work_800EDB70**)&lbl_80346E14)->bank = 0;
+        if (lbl_80346E14->bank != 0) {
+            fn_801E17E0(lbl_80346E14->bank);
+            lbl_80346E14->bank = 0;
         }
         if (lbl_80346E10 != 0) {
             fn_802275A4((void *)(lbl_80346E10->inner->texlist), 1);
@@ -8507,7 +8520,7 @@ extern s32 fn_801D80A0(void* t, s32 a);
 extern void fn_801D8080(void);
 extern s16 lbl_802B1E2C[];
 
-#define TILE_800F04C8(k, ox, oy)                                                      if (lbl_80346E14->tile[row][col][k] != 0) {                                            s = fn_801D68C4(lbl_80346E14->bank, tbl[lbl_80346E14->tile[row][col][k]]);         s->x = col * 32 + (ox);                                                            s->y = row * 32 + (oy);                                                            fn_801D7ED4(s, z, 1.0f, 1.0f);                                                     z += 0.05f * s->count;                                                         }
+#define TILE_800F04C8(k, ox, oy)                                                      if (lbl_80346E14->tile[row][col][k] != 0) {                                            s = fn_801D68C4(lbl_80346E14->b2, tbl[lbl_80346E14->tile[row][col][k]]);         s->x = col * 32 + (ox);                                                            s->y = row * 32 + (oy);                                                            fn_801D7ED4(s, z, 1.0f, 1.0f);                                                     z += 0.05f * s->count;                                                         }
 
 s32 fn_800F04C8(void) {
     DrawState ds;
