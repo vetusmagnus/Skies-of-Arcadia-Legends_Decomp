@@ -51,6 +51,16 @@ AxioDL/musyx).
 - `ffcc/src/MSL_C/PPCEABI/bare/H/file_io.c`: `#pragma auto_inline off` around `fflush`. Skies'
   `fclose` calls it rather than inlining it.
 
+- Files reworked from the original asm so they match Skies' SDK build (older or newer revisions than the vendored
+  copies; unused functions the linker drops are mostly kept): `sdk/dolphin/ai.c`, `ar/ar.c`, `ar/arq.c`, `vi.c`,
+  `dvd/dvd.c`, `dvd/dvdfs.c`, `card/CARDMount.c`, `exi/EXIBios.c`, `gx/GXMisc.c`, `GXFrameBuf.c`, `GXLight.c`,
+  `GXTexture.c`, `GXBump.c`, `mtx/vec.c` (subtract, magnitude and dot product, in asm like the SDK's), `mtx/mtxvec.c`
+  (the array transforms), and under `sdk/runtime/`: `sys_alloc.c`, `s_ceil.c`, `strtoul.c`, `string.c` (strerror from ffcc),
+  `printf.c`, `uart_console_io.c`, `mathf.c` (ours: out-of-line `sinf`, `cosf`, `acosf`; `libc/math.h` keeps them inline
+  unless `SKIES_FLOAT_MATH_EXTERN` is defined, which the mtx files need). `libc/errno.h` has the full errno list.
+  `trk/MetroTRK/mainloop.c`, `nubevent.c`, `msghndlr.c`, `notify.c`, `targimpl.c`, `dolphin_trk.c`, `main_TRK.c` are
+  rewritten for Skies' older MetroTRK (v0.10); `dolphin_trk.c` exports `lc_base` because `__TRK_reset` reads it.
+
 Build settings that differ from tw2004's (in `tools/import_libs.py`, not in the sources):
 - The SDK is compiled with `-DCARD_PATCH_2003=0`. Skies' memory card library predates that patch.
 - `sdk/`'s copies of `CARDBios.c`, `CARDOpen.c`, `CARDStat.c` and `CARDWrite.c` are used where tw2004

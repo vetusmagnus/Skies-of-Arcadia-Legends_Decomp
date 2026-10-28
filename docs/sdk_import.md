@@ -126,3 +126,29 @@ These are taken from tw2004's and Metroid Prime's per-library settings, which ma
 
 MusyX code calls `_savegpr_NN` / `_restgpr_NN` where the rest of the game uses `stmw` / `lmw`. That's
 how GC/1.3.2 compiles it without `-use_lmw_stmw on`, not a sign of size optimization.
+
+Second pass (SDK 47% to 93% linked)
+-----------------------------------
+
+What the first import couldn't place was mostly Skies' own SDK revision (Sep 2002), not missing source. Per-file recipe:
+compile the vendored file with its library flags, diff each function against the original asm (the object's functions
+map to original ones by name, else by order and similarity), rewrite the differing functions from the asm, drop what
+the original linker stripped, then place the file with `tools/tusplit.py` (or by hand where it can't anchor data) and
+check the DOL SHA-1. Things that bit:
+
+- **Stripped code hides its data.** Statics used only by dropped functions are gone from `.bss`/`.sdata2` but stay in
+  `.data`/`.rodata` (version strings, `strerror`'s messages). A split's data range has to cover everything the object
+  emits, or the linker pads and the whole section shifts.
+- **`tusplit` doesn't verify pooled floats.** C_QUATSlerp compiles to the right code but its `.sdata2` pool comes out in
+  another order (1.0f before 0.0f), which only the DOL hash shows; it stays unlinked (`extern/sdk/dolphin/mtx/quat.c`).
+- **Local symbols referenced from asm units must be global** (`lc_base`), or dtk's mangled name is undefined at link.
+- **Renamed symbols**: linking a file names the functions its calls resolve to, so game C that declared
+  `fn_8025CB24` etc. now calls `sprintf`, `rand`, `strcat`, `strcpy`, `OSPanic`, `VIConfigure`, `GXSetDrawSync` ...
+- **Weak functions** (`OSReport`) sit at the end of `.text`; OSError.c is linked without them.
+- Skies' libm has real `sinf`/`cosf`/`acosf`; its MetroTRK is the old v0.10 protocol build.
+
+Still unlinked, with the reason: `CARDStatEx.c` (CARDSetAttributes: 2 instructions), `DebuggerDriver.c` (7 of 13), the
+TRK files with near misses (msgbuf: the original calls `TRKAppendBuffer` where the compiler inlines it; nubinit, msg,
+dispatch, serpoll, support: 1-10 lines each, in `build/agents` style notes were kept locally), `dolphin_trk_glue.c`,
+`mem_TRK.c` (`TRK_fill_mem`), mutex_TRK (three identical 8-byte functions), `quat.c`, the 0x80262A7C-0x80262ABC AMC/EXI2
+stubs and a few 12-48 byte fragments (OSModule, a DVD callback at 0x8023D7E8, PAD code at 0x8023F91C-0x8023FBD0).
