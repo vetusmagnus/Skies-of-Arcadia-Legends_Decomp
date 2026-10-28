@@ -625,9 +625,7 @@ extern s32 strlen(const char *s);
 extern s32 fn_8025EF88(const char *a, const char *b);
 extern void fn_801D6CBC(s32 chan, Pat *p);
 extern void fn_801D6C3C(s32 chan);
-
 extern int sprintf(char* buf, const char* fmt, ...);
-
 extern s32 fn_800CCCA4(u32 a, u32 b, u32 c);
 extern char *lbl_80346848;
 extern char lbl_8034C198;
@@ -682,6 +680,7 @@ typedef struct Scpt_802139F8 {
 } Scpt_802139F8;
 typedef struct Args14 { s32 i[14]; } Args14;
 void fn_8015596C(void* p);
+void fn_80155944(s32 *a);
 
 void fn_801F5334(s8 n) {
     s32 i;
@@ -7956,6 +7955,45 @@ s32 fn_802139F8(u32 flags, Scpt_802139F8* c) {
         b.i[13] = RDI(p);
         c->cur = p;
         fn_8015596C(&b);
+        return 0;
+    }
+    return 1;
+}
+
+s32 fn_80214270(u32 flags, Scpt *c)
+{
+    float *p;
+    s32 a[25];
+    if (flags & 1) {
+        p = c->cur.f;
+        p++;
+        a[0] = RDI(p);
+        a[1] = RDI(p);
+        a[2] = RDI(p);
+        a[3] = RDI(p);
+        a[4] = RDI(p);
+        a[5] = RDI(p);
+        a[6] = RDI(p);
+        a[7] = RDI(p);
+        a[8] = RDI(p);
+        a[9] = RDI(p);
+        a[10] = RDI(p);
+        a[11] = RDI(p);
+        a[12] = RDI(p);
+        a[13] = RDI(p);
+        a[14] = RDI(p);
+        a[15] = RDI(p);
+        a[16] = RDI(p);
+        a[17] = RDI(p);
+        a[18] = RDI(p);
+        a[19] = RDI(p);
+        a[20] = RDI(p);
+        a[21] = RDI(p);
+        a[22] = RDI(p);
+        a[23] = RDI(p);
+        a[24] = RDI(p);
+        c->cur.f = p;
+        fn_80155944(a);
         return 0;
     }
     return 1;

@@ -12,7 +12,6 @@
 #include <math.h>
 #include <string.h>
 #include <dolphin/types.h>
-
 /* A cursor of a camp menu screen: the selected row and the mask of the rows that can be
    selected (fn_8019A21C). */
 typedef struct CampCur {
@@ -2408,6 +2407,11 @@ extern void fn_8017796C(void);
 #define CW_80176D70(off, T) (*(T *)((u8 *)w + (off)))
 #define CG(off, T) (*(T *)((u8 *)&camp_work + (off)))
 #define IN_80176D70(i) (((Elem_80176D70 *)camp_work.pnl[i])->in)
+typedef struct Self_8018C00C {
+    u8 pad0[0x74];
+    Obj48 panel;      /* 0x74 */
+    s8 *data;         /* 0xBC */
+} Self_8018C00C;
 
 s32 fn_8015DC6C(Obj_8015DC6C* self, Src* src)
 {
@@ -10236,4 +10240,266 @@ s32 fn_80176D70(void) {
         break;
     }
     return 0;
+}
+
+void fn_8018B278(Self_8018C00C *self, f32 a, s8 kind, s8 mode)
+{
+    Obj48 *o = &self->panel;
+    s8 *d = self->data;
+    void *spr2;
+    void *spA;
+    void *spB;
+
+    o->f00 = -6940.0f + 150.0f * (f32)d[1];
+    o->f04 = 0.0f;
+    o->f10 = 1.0f;
+    o->f14 = a;
+    o->f18 = 1.0f;
+    o->f1c = 0.0f;
+    o->i08 = 0;
+    o->i0c = 0;
+    switch (kind) {
+    case 0:
+        switch (mode) {
+        case 0:
+            fn_8019A15C(o, 1, 8, 1);
+            fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F0, 0xa), 0x0, 0x0, 0);
+            fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F4, 0x1b), 0x1c, 0x6, 2);
+            fn_80199FFC(o, 1, fn_801D68C4(lbl_803470F4, 0x28), 0x34, 0xa, 2);
+            fn_80199FFC(o, 2, fn_801D68C4(lbl_803470F4, 0x1c), 0xa0, 0x6, 2);
+            fn_80199FFC(o, 3, fn_801D68C4(lbl_803470F4, 0x29), 0xb8, 0xa, 2);
+            fn_80199FFC(o, 4, fn_801D68C4(lbl_803470F4, 0x19), 0x1c, 0x1e, 2);
+            fn_80199FFC(o, 5, fn_801D68C4(lbl_803470F4, 0x26), 0x34, 0x22, 2);
+            fn_80199FFC(o, 6, fn_801D68C4(lbl_803470F4, 0x55), 0xa0, 0x1e, 2);
+            fn_80199FFC(o, 7, fn_801D68C4(lbl_803470F4, 0x4), 0x8, 0x6, 2);
+            break;
+        case 1:
+            fn_8019A15C(o, 1, 7, 1);
+            fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F0, 0xa), 0x0, 0x0, 0);
+            fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F4, 0x17), 0x1c, 0x6, 2);
+            fn_80199FFC(o, 1, fn_801D68C4(lbl_803470F4, 0x24), 0x34, 0xa, 2);
+            fn_80199FFC(o, 2, fn_801D68C4(lbl_803470F4, 0x18), 0xa0, 0x6, 2);
+            fn_80199FFC(o, 3, fn_801D68C4(lbl_803470F4, 0x25), 0xb8, 0xa, 2);
+            fn_80199FFC(o, 4, fn_801D68C4(lbl_803470F4, 0x12), 0x1c, 0x1e, 2);
+            fn_80199FFC(o, 5, fn_801D68C4(lbl_803470F4, 0x1f), 0x34, 0x22, 2);
+            fn_80199FFC(o, 6, fn_801D68C4(lbl_803470F4, 0x4), 0x8, 0x6, 2);
+            break;
+        case 2:
+            fn_8019A15C(o, 1, 5, 1);
+            fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F0, 0xa), 0x0, 0x0, 0);
+            fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F4, 0x1a), 0x1c, 0x6, 2);
+            fn_80199FFC(o, 1, fn_801D68C4(lbl_803470F4, 0x27), 0x34, 0xa, 2);
+            fn_80199FFC(o, 2, fn_801D68C4(lbl_803470F4, 0x16), 0x1c, 0x1e, 2);
+            fn_80199FFC(o, 3, fn_801D68C4(lbl_803470F4, 0x23), 0x34, 0x22, 2);
+            fn_80199FFC(o, 4, fn_801D68C4(lbl_803470F4, 0x4), 0x8, 0x6, 2);
+            break;
+        case 3:
+            fn_8019A15C(o, 1, 1, 1);
+            fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F0, 0xa), 0x0, 0x0, 0);
+            fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F4, 0x36), 0xc, 0x1f, 2);
+            break;
+        }
+        break;
+    case 1:
+        switch (mode) {
+        case 0:
+            fn_8019A15C(o, 3, 1, 1);
+            fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F0, 0xa), 0x0, 0x0, 0);
+            switch (d[3]) {
+            case 0:
+                spr2 = fn_801D68C4(lbl_803470F0, 0x2b);
+                break;
+            case 1:
+                spr2 = fn_801D68C4(lbl_803470F0, 0x2c);
+                break;
+            case 2:
+                spr2 = fn_801D68C4(lbl_803470F0, 0x2d);
+                break;
+            case 3:
+                spr2 = fn_801D68C4(lbl_803470F0, 0x2e);
+                break;
+            case 4:
+                spr2 = fn_801D68C4(lbl_803470F0, 0x2f);
+                break;
+            case 5:
+                spr2 = fn_801D68C4(lbl_803470F0, 0x30);
+                break;
+            }
+            fn_8019520C(d[3], spr2);
+            fn_80199FFC(o, 1, spr2, 0x1c, 6, 0);
+            fn_80199FFC(o, 2, fn_801D68C4(lbl_803470F0, 0x31), 0x1c, 0x1e, 0);
+            fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F4, 0x38), 0x12, 0x6, 2);
+            break;
+        case 1:
+            fn_8019A15C(o, 2, 1, 1);
+            fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F0, 0xa), 0x0, 0x0, 0);
+            fn_80199FFC(o, 1, fn_801D68C4(lbl_803470F0, 0x33), 0x1c, 0x6, 0);
+            fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F4, 0x38), 0x12, 0x6, 2);
+            break;
+        case 2:
+            fn_8019A15C(o, 1, 9, 1);
+            fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F0, 0xa), 0x0, 0x0, 0);
+            fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F4, 0x10), 0x1c, 0x6, 2);
+            fn_80199FFC(o, 1, fn_801D68C4(lbl_803470F4, 0x1d), 0x34, 0xa, 2);
+            fn_80199FFC(o, 2, fn_801D68C4(lbl_803470F4, 0x11), 0xa0, 0x6, 2);
+            fn_80199FFC(o, 3, fn_801D68C4(lbl_803470F4, 0x1e), 0xb8, 0xa, 2);
+            fn_80199FFC(o, 4, fn_801D68C4(lbl_803470F4, 0x12), 0x1c, 0x1e, 2);
+            fn_80199FFC(o, 5, fn_801D68C4(lbl_803470F4, 0x1f), 0x34, 0x22, 2);
+            fn_80199FFC(o, 6, fn_801D68C4(lbl_803470F4, 0x13), 0xa0, 0x1e, 2);
+            fn_80199FFC(o, 7, fn_801D68C4(lbl_803470F4, 0x20), 0xb8, 0x22, 2);
+            fn_80199FFC(o, 8, fn_801D68C4(lbl_803470F4, 0x4), 0x8, 0x6, 2);
+            break;
+        case 3:
+            fn_8019A15C(o, 1, 7, 1);
+            fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F0, 0xa), 0x0, 0x0, 0);
+            fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F4, 0x14), 0x1c, 0x6, 2);
+            fn_80199FFC(o, 1, fn_801D68C4(lbl_803470F4, 0x21), 0x34, 0xa, 2);
+            fn_80199FFC(o, 2, fn_801D68C4(lbl_803470F4, 0x15), 0xa0, 0x6, 2);
+            fn_80199FFC(o, 3, fn_801D68C4(lbl_803470F4, 0x22), 0xb8, 0xa, 2);
+            fn_80199FFC(o, 4, fn_801D68C4(lbl_803470F4, 0x16), 0x1c, 0x1e, 2);
+            fn_80199FFC(o, 5, fn_801D68C4(lbl_803470F4, 0x23), 0x34, 0x22, 2);
+            fn_80199FFC(o, 6, fn_801D68C4(lbl_803470F4, 0x4), 0x8, 0x6, 2);
+            break;
+        case 4:
+            fn_8019A15C(o, 1, 1, 1);
+            fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F0, 0xa), 0x0, 0x0, 0);
+            fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F4, 0x36), 0xc, 0x1f, 2);
+            break;
+        }
+        break;
+    case 2:
+        switch (mode) {
+        case 0:
+            spA = fn_801D68C4(lbl_803470F0, 0x34);
+            spB = fn_801D68C4(lbl_803470F4, 0x2b);
+            break;
+        case 1:
+            spA = fn_801D68C4(lbl_803470F0, 0x35);
+            spB = fn_801D68C4(lbl_803470F4, 0x2c);
+            break;
+        case 2:
+            spA = fn_801D68C4(lbl_803470F0, 0x37);
+            spB = fn_801D68C4(lbl_803470F4, 0x2e);
+            break;
+        case 3:
+            spA = fn_801D68C4(lbl_803470F0, 0x36);
+            spB = fn_801D68C4(lbl_803470F4, 0x2d);
+            break;
+        case 4:
+            spA = fn_801D68C4(lbl_803470F0, 0x38);
+            spB = fn_801D68C4(lbl_803470F4, 0x2f);
+            break;
+        case 5:
+            spA = fn_801D68C4(lbl_803470F0, 0x39);
+            spB = fn_801D68C4(lbl_803470F4, 0x30);
+            break;
+        }
+        fn_8019A15C(o, 2, 5, 1);
+        fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F0, 0xa), 0x0, 0x0, 0);
+        fn_80199FFC(o, 1, spA, 0xc, 6, 0);
+        fn_80199FFC(o, 0, spB, 0x24, 0xa, 2);
+        fn_80199FFC(o, 1, fn_801D68C4(lbl_803470F4, 0x31), 0x38, 0xa, 2);
+        fn_80199FFC(o, 2, fn_801D68C4(lbl_803470F4, 0x32), 0x71, 0xa, 2);
+        fn_80199FFC(o, 3, fn_801D68C4(lbl_803470F4, 0x33), 0x71, 0x22, 2);
+        fn_80199FFC(o, 4, fn_801D68C4(lbl_803470F4, 0x2a), 0x7, 0x6, 2);
+        break;
+    default:
+        fn_8019A15C(o, 1, 1, 1);
+        fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F0, 0xa), 0x0, 0x0, 0);
+        fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F4, 0x10), 0x1c, 0x6, 2);
+        break;
+    }
+    o->p2c->p0 = fn_801D68C4(lbl_803470E8, 2);
+    o->p30->f0 = 0.0f;
+    o->p30->f4 = 0.0f;
+    d[2] = kind;
+    o->p44 = fn_801D68C4(lbl_803470F0, 4);
+}
+
+void fn_8018C00C(Self_8018C00C *self, f32 a, s8 unused, s8 mode)
+{
+    Obj48 *o = &self->panel;
+    s8 *d = self->data;
+    void *spr2;
+
+    o->f00 = -6940.0f + 150.0f * (f32)d[1];
+    o->f04 = 0.0f;
+    o->f10 = 1.0f;
+    o->f14 = a;
+    o->f18 = 1.0f;
+    o->f1c = 0.0f;
+    o->i08 = 0;
+    o->i0c = 0;
+    switch (mode) {
+    case 0:
+        fn_8019A15C(o, 1, 9, 1);
+        fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F0, 0xa), 0x0, 0x0, 0);
+        fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F4, 0x10), 0x1c, 0x6, 2);
+        fn_80199FFC(o, 1, fn_801D68C4(lbl_803470F4, 0x1d), 0x34, 0xa, 2);
+        fn_80199FFC(o, 2, fn_801D68C4(lbl_803470F4, 0x11), 0xa0, 0x6, 2);
+        fn_80199FFC(o, 3, fn_801D68C4(lbl_803470F4, 0x1e), 0xb8, 0xa, 2);
+        fn_80199FFC(o, 4, fn_801D68C4(lbl_803470F4, 0x12), 0x1c, 0x1e, 2);
+        fn_80199FFC(o, 5, fn_801D68C4(lbl_803470F4, 0x1f), 0x34, 0x22, 2);
+        fn_80199FFC(o, 6, fn_801D68C4(lbl_803470F4, 0x13), 0xa0, 0x1e, 2);
+        fn_80199FFC(o, 7, fn_801D68C4(lbl_803470F4, 0x20), 0xb8, 0x22, 2);
+        fn_80199FFC(o, 8, fn_801D68C4(lbl_803470F4, 0x4), 0x8, 0x6, 2);
+        break;
+    case 1:
+        fn_8019A15C(o, 1, 7, 1);
+        fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F0, 0xa), 0x0, 0x0, 0);
+        fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F4, 0x14), 0x1c, 0x6, 2);
+        fn_80199FFC(o, 1, fn_801D68C4(lbl_803470F4, 0x21), 0x34, 0xa, 2);
+        fn_80199FFC(o, 2, fn_801D68C4(lbl_803470F4, 0x15), 0xa0, 0x6, 2);
+        fn_80199FFC(o, 3, fn_801D68C4(lbl_803470F4, 0x22), 0xb8, 0xa, 2);
+        fn_80199FFC(o, 4, fn_801D68C4(lbl_803470F4, 0x16), 0x1c, 0x1e, 2);
+        fn_80199FFC(o, 5, fn_801D68C4(lbl_803470F4, 0x23), 0x34, 0x22, 2);
+        fn_80199FFC(o, 6, fn_801D68C4(lbl_803470F4, 0x4), 0x8, 0x6, 2);
+        break;
+    case 2:
+        fn_8019A15C(o, 3, 1, 1);
+        fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F0, 0xa), 0x0, 0x0, 0);
+        switch (d[3]) {
+        case 0:
+            spr2 = fn_801D68C4(lbl_803470F0, 0x2b);
+            break;
+        case 1:
+            spr2 = fn_801D68C4(lbl_803470F0, 0x2c);
+            break;
+        case 2:
+            spr2 = fn_801D68C4(lbl_803470F0, 0x2d);
+            break;
+        case 3:
+            spr2 = fn_801D68C4(lbl_803470F0, 0x2e);
+            break;
+        case 4:
+            spr2 = fn_801D68C4(lbl_803470F0, 0x2f);
+            break;
+        case 5:
+            spr2 = fn_801D68C4(lbl_803470F0, 0x30);
+            break;
+        }
+        fn_8019520C(d[3], spr2);
+        fn_80199FFC(o, 1, spr2, 0x1c, 6, 0);
+        fn_80199FFC(o, 2, fn_801D68C4(lbl_803470F0, 0x31), 0x1c, 0x1e, 0);
+        fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F4, 0x38), 0x12, 0x6, 2);
+        break;
+    case 3:
+        fn_8019A15C(o, 2, 1, 1);
+        fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F0, 0xa), 0x0, 0x0, 0);
+        fn_80199FFC(o, 1, fn_801D68C4(lbl_803470F0, 0x33), 0x1c, 0x6, 0);
+        fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F4, 0x38), 0x12, 0x6, 2);
+        break;
+    case 4:
+        fn_8019A15C(o, 1, 1, 1);
+        fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F0, 0xa), 0x0, 0x0, 0);
+        fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F4, 0x36), 0xc, 0x1f, 2);
+        break;
+    default:
+        fn_8019A15C(o, 1, 0, 1);
+        fn_80199FFC(o, 0, fn_801D68C4(lbl_803470F0, 0xa), 0x0, 0x0, 0);
+    }
+    o->p2c->p0 = fn_801D68C4(lbl_803470E8, 2);
+    o->p30->f0 = 0.0f;
+    o->p30->f4 = 0.0f;
+    o->p44 = fn_801D68C4(lbl_803470F0, 4);
 }

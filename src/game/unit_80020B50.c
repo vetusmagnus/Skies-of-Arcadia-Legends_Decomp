@@ -204,6 +204,10 @@ typedef struct D21 { s8 kind; } D21;
 typedef struct W21 { u8 pad00[0x4c]; D21 *d; } W21;
 typedef struct T21 { u8 pad00[0x24]; W21 *work; } T21;
 extern T21 *lbl_80309E24[14];
+extern void* lbl_80347628;
+extern s32 lbl_80346B4C;
+extern s32 lbl_80346B98;
+extern void* fn_801D68C4(void* a, s32 b);
 
 void fn_80020B50(Top *t, s16 *out1, s16 *out2) {
   Inner *i = t->mid->inner;
@@ -1241,6 +1245,144 @@ void fn_80025624(RingTask* o)
         break;
     case 0xff:
         o->flags |= 0x40;
+        break;
+    }
+}
+
+void fn_80026B20(RingTask* o, RingMdl** a, RingMdl** b, RingMdl** c, s32 dir)
+{
+    RingMenu* menu = o->holder->menu;
+
+    switch (menu->cursor) {
+    case 3:
+        *a = fn_801D68C4(lbl_80347628, 0x15);
+        break;
+    case 4:
+        *a = fn_801D68C4(lbl_80347628, 0x16);
+        break;
+    case 0:
+        *a = fn_801D68C4(lbl_80347628, 0x17);
+        break;
+    case 1:
+        *a = fn_801D68C4(lbl_80347628, 0x19);
+        break;
+    case 6:
+        if (lbl_80346B98 == 1 && menu->side == 0) {
+            *a = fn_801D68C4(lbl_80347628, 0x1c);
+        } else {
+            *a = fn_801D68C4(lbl_80347628, 0x1a);
+        }
+        break;
+    case 5:
+        *a = fn_801D68C4(lbl_80347628, 0x18);
+        break;
+    case 2:
+        *a = fn_801D68C4(lbl_80347628, 0x1b);
+        break;
+    case -1:
+    case 7:
+    case 8:
+    case 9:
+    case 10:
+    case 11:
+    case 12:
+    default:
+        switch (lbl_80346B4C) {
+        case 3:
+            *a = fn_801D68C4(lbl_80347628, 0x15);
+            *c = fn_801D68C4(lbl_80347628, 0x32);
+            if (dir == 1) {
+                *b = fn_801D68C4(lbl_80347628, 0x16);
+            } else if (dir == -1) {
+                *b = fn_801D68C4(lbl_80347628, 0x1b);
+            }
+            break;
+        case 4:
+            *a = fn_801D68C4(lbl_80347628, 0x16);
+            *c = fn_801D68C4(lbl_80347628, 0x33);
+            if (dir == 1) {
+                *b = fn_801D68C4(lbl_80347628, 0x18);
+            } else if (dir == -1) {
+                *b = fn_801D68C4(lbl_80347628, 0x15);
+            }
+            break;
+        case 0:
+            *a = fn_801D68C4(lbl_80347628, 0x17);
+            *c = fn_801D68C4(lbl_80347628, 0x34);
+            if (dir == 1) {
+                *b = fn_801D68C4(lbl_80347628, 0x19);
+            } else if (dir == -1) {
+                if (lbl_80346B98 == 1 && o->holder->menu->side == 0) {
+                    *b = fn_801D68C4(lbl_80347628, 0x1c);
+                } else {
+                    *b = fn_801D68C4(lbl_80347628, 0x1a);
+                }
+            }
+            break;
+        case 1:
+            *a = fn_801D68C4(lbl_80347628, 0x19);
+            *c = fn_801D68C4(lbl_80347628, 0x36);
+            if (dir == 1) {
+                *b = fn_801D68C4(lbl_80347628, 0x1b);
+            } else if (dir == -1) {
+                *b = fn_801D68C4(lbl_80347628, 0x17);
+            }
+            break;
+        case 6:
+            if (lbl_80346B98 == 1 && menu->side == 0) {
+                *a = fn_801D68C4(lbl_80347628, 0x1c);
+            } else {
+                *a = fn_801D68C4(lbl_80347628, 0x1a);
+            }
+            if (lbl_80346B98 == 1 && o->holder->menu->side == 0) {
+                *c = fn_801D68C4(lbl_80347628, 0x39);
+            } else {
+                *c = fn_801D68C4(lbl_80347628, 0x37);
+            }
+            if (dir == 1) {
+                *b = fn_801D68C4(lbl_80347628, 0x17);
+            } else if (dir == -1) {
+                *b = fn_801D68C4(lbl_80347628, 0x18);
+            }
+            break;
+        case 5:
+            *a = fn_801D68C4(lbl_80347628, 0x18);
+            *c = fn_801D68C4(lbl_80347628, 0x35);
+            if (dir == 1) {
+                if (lbl_80346B98 == 1 && o->holder->menu->side == 0) {
+                    *b = fn_801D68C4(lbl_80347628, 0x1a);
+                } else {
+                    *b = fn_801D68C4(lbl_80347628, 0x1c);
+                }
+            } else if (dir == -1) {
+                *b = fn_801D68C4(lbl_80347628, 0x16);
+            }
+            break;
+        case 2:
+            *a = fn_801D68C4(lbl_80347628, 0x1b);
+            *c = fn_801D68C4(lbl_80347628, 0x38);
+            if (dir == 1) {
+                *b = fn_801D68C4(lbl_80347628, 0x15);
+            } else if (dir == -1) {
+                *b = fn_801D68C4(lbl_80347628, 0x19);
+            }
+            break;
+        case 7:
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+        default:
+            *a = fn_801D68C4(lbl_80347628, 0x15);
+            *c = fn_801D68C4(lbl_80347628, 0x32);
+            if (dir == 1) {
+                *b = fn_801D68C4(lbl_80347628, 0x19);
+            } else if (dir == -1) {
+                *b = fn_801D68C4(lbl_80347628, 0x16);
+            }
+            break;
+        }
         break;
     }
 }

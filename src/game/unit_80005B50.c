@@ -970,8 +970,9 @@ typedef struct ChrInfo {
     s16 x6;             /* 0x06 */
     s16 x8;             /* 0x08 */
     u8 padA[8];
-    s16 state;          /* 0x12 */
-    u8 pad14[0x5c - 0x14];
+    s16 state;          u8 pad_14[0x34];
+          s8 x48;
+          u8 pad_49[0x13];
     ChrMot* x5c;        /* 0x5c */
     void* x60;          /* 0x60 */
     u8 pad64[4];
@@ -1216,6 +1217,9 @@ typedef struct {
     u8 pad0[0x190];
     u32 x190;
 } Gs;
+typedef struct Slot24 { u32 flags; u8 pad[0x20]; } Slot24;
+/* ADD: lbl_8030A6D4 entries (0x24 bytes) */
+extern Slot24 lbl_8030A6D4[];
 
 void* fn_80005B50(void* heap, u32 size) {
     void* p = fn_80005B9C(heap);
@@ -4709,4 +4713,78 @@ void fn_80013FD0(Tk_80013FD0* t)
     }
     fn_80071F84(w->x2c, w->x38, w->x20);
     fn_80032B4C();
+}
+
+s32 fn_8001F3F0(Task* t, NJS_POINT3* out)
+{
+    ChrWork* w = t->work;
+    ChrInfo* st = w->st;
+    Task* o;
+    ChrWork* ow;
+    ChrWork* w2;
+    NJS_POINT3 tmp;
+    Angle zero[3];
+
+    switch (st->x6) {
+    default:
+        return 0;
+    case 6:
+    case 19:
+        if (st->pos.x == w->pos.x && st->pos.z == w->pos.z) {
+            if (lbl_8030A6D4[2].flags & 0x40) {
+                fn_80061C80(&tmp, 0.1f, 90.0f, 30.0f, 0);
+            } else {
+                fn_80061C80(&tmp, 0.1f, 45.0f, 40.0f, 0);
+            }
+            tmp.y += 10.0f;
+            zero[0] = 0;
+            zero[1] = 0;
+            zero[2] = 0;
+            fn_800615B4(&tmp, out, zero);
+            out->x += w->pos.x;
+            out->y += w->pos.y;
+            out->z += w->pos.z;
+        } else {
+            out->x = st->pos.x;
+            out->y = w->pos.y;
+            out->z = st->pos.z;
+        }
+        break;
+    case 2:
+        if (lbl_8030A6D4[2].flags & 0x40) {
+            o = Find(st->target);
+            o = o ? o : Find(0);
+            ow = o->work;
+            fn_80071CF0(&ow->pos, out);
+            break;
+        }
+        return 0;
+    case 4:
+    case 5:
+    case 8:
+    case 16:
+    case 21:
+    case 22:
+    case 23:
+    case 24:
+    case 29:
+        w2 = t->work;
+        o = Find(w2->st->target);
+        o = o ? o : Find(0);
+        ow = o->work;
+            fn_80071CF0(&ow->pos, out);
+        break;
+    case 9:
+    case 10:
+    case 11:
+    case 13:
+    case 32:
+        w2 = t->work;
+        o = Find(w2->st->x48);
+        o = o ? o : Find(0);
+        ow = o->work;
+            fn_80071CF0(&ow->pos, out);
+        break;
+    }
+    return 1;
 }

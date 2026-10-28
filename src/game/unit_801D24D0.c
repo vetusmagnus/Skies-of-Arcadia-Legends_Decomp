@@ -742,6 +742,20 @@ typedef struct Box {
     f32 extra; /* 0x18 */
 } Box;
 extern void fn_8028FEA4(NJS_POINT3* p, Ellipsoid* e, NJS_POINT3* out);
+typedef struct Tri {
+    NJS_POINT3 a;
+    NJS_POINT3 b;
+    NJS_POINT3 c;
+} Tri;
+typedef struct Ray {
+    NJS_POINT3 o;
+    NJS_POINT3 d;
+} Ray;
+typedef struct Plane {
+    NJS_POINT3 p;
+    NJS_POINT3 n;
+} Plane;
+extern f32 fn_8028FD98(Ray *r, Plane *pl, NJS_POINT3 *out);
 
 void fn_801D49E4(s32 a, s32 b, s32 c, s32 d, f32 p1, f32 p2, f32 p3, f32 p4) {
     fn_801D4A2C(a, b, c, &lbl_80347568, d, 1.0f, 1.0f, p1, p2, p3, p4);
@@ -3553,4 +3567,163 @@ void fn_801E0734(HitOut* o, Ellipsoid* e, NJS_MATRIX m, Box* b) {
             }
         }
     }
+}
+
+s32 fn_801D3EB4(NJS_POINT3 *out, NJS_POINT3 *p1, NJS_POINT3 *p2, Tri *t)
+{
+    s32 res;
+    s32 bi;
+    f32 minx, minz, maxx, maxz;
+    f32 bd;
+    f32 d0, d1;
+    NJS_MATRIX m;
+    Ray ray;
+    Plane pl;
+    NJS_POINT3 ip;
+    NJS_POINT3 best;
+    NJS_POINT3 e;
+
+    res = -1;
+    bi = -1;
+    ray.d.x = p2->x - p1->x;
+    ray.d.y = p2->y - p1->y;
+    ray.d.z = p2->z - p1->z;
+    ray.o.x = p1->x;
+    ray.o.y = p1->y;
+    ray.o.z = p1->z;
+    if (p1->x < p2->x) {
+        minx = p1->x;
+        maxx = p2->x;
+    } else {
+        minx = p2->x;
+        maxx = p1->x;
+    }
+    if (p1->z < p2->z) {
+        minz = p1->z;
+        maxz = p2->z;
+    } else {
+        minz = p2->z;
+        maxz = p1->z;
+    }
+    njUnitMatrix(m);
+    njRotateY(m, 0x4000);
+
+    e.x = t->a.x - t->b.x;
+    e.y = 0.0f;
+    e.z = t->a.z - t->b.z;
+    njCalcVector(m, &e, &pl.n);
+    pl.p.x = t->b.x;
+    pl.p.y = t->b.y;
+    pl.p.z = t->b.z;
+    if (fn_8028FD98(&ray, &pl, &ip) == 0.0f && minx <= ip.x && maxx >= ip.x && minz <= ip.z && maxz >= ip.z) {
+        f32 ax = t->a.x - ip.x, az = t->a.z - ip.z;
+        f32 bx = t->b.x - ip.x, bz = t->b.z - ip.z;
+        if (0.0f >= ax * bx + az * bz) {
+            out->x = ip.x;
+            res = 0;
+            out->y = ip.y;
+            out->z = ip.z;
+        } else {
+            bd = ax * ax + az * az;
+            d1 = bx * bx + bz * bz;
+            best = ip;
+            if (bd > d1) bd = d1;
+            bi = 0;
+        }
+    }
+
+    e.x = t->b.x - t->c.x;
+    e.z = t->b.z - t->c.z;
+    njCalcVector(m, &e, &pl.n);
+    pl.p.x = t->c.x;
+    pl.p.y = t->c.y;
+    pl.p.z = t->c.z;
+    if (fn_8028FD98(&ray, &pl, &ip) == 0.0f && minx <= ip.x && maxx >= ip.x && minz <= ip.z && maxz >= ip.z) {
+        f32 ax = t->b.x - ip.x, az = t->b.z - ip.z;
+        f32 bx = t->c.x - ip.x, bz = t->c.z - ip.z;
+        if (0.0f >= ax * bx + az * bz) {
+            if (res < 0) {
+                out->x = ip.x;
+                res = 1;
+                out->y = ip.y;
+                out->z = ip.z;
+            } else {
+                f32 px = out->x - p1->x;
+                f32 pz = out->z - p1->z;
+                f32 ox = ip.x - p1->x;
+                f32 oz = ip.z - p1->z;
+                if (px * px + pz * pz > ox * ox + oz * oz) {
+                    out->x = ip.x;
+                    res = 1;
+                    out->y = ip.y;
+                    out->z = ip.z;
+                }
+                return res;
+            }
+        } else if (bi < 0) {
+            bd = ax * ax + az * az;
+            d1 = bx * bx + bz * bz;
+            best = ip;
+            if (bd > d1) bd = d1;
+            bi = 1;
+        } else {
+            d0 = ax * ax + az * az;
+            d1 = bx * bx + bz * bz;
+            if (d0 > d1) d0 = d1;
+            if (bd > d0) {
+                bd = d0;
+                bi = 1;
+                best = ip;
+            }
+        }
+    }
+
+    e.x = t->c.x - t->a.x;
+    e.z = t->c.z - t->a.z;
+    njCalcVector(m, &e, &pl.n);
+    pl.p.x = t->a.x;
+    pl.p.y = t->a.y;
+    pl.p.z = t->a.z;
+    if (fn_8028FD98(&ray, &pl, &ip) == 0.0f && minx <= ip.x && maxx >= ip.x && minz <= ip.z && maxz >= ip.z) {
+        f32 ax = t->c.x - ip.x, az = t->c.z - ip.z;
+        f32 bx = t->a.x - ip.x, bz = t->a.z - ip.z;
+        if (0.0f >= ax * bx + az * bz) {
+            if (res < 0) {
+                out->x = ip.x;
+                res = 2;
+                out->y = ip.y;
+                out->z = ip.z;
+            } else {
+                f32 px = out->x - p1->x;
+                f32 pz = out->z - p1->z;
+                f32 ox = ip.x - p1->x;
+                f32 oz = ip.z - p1->z;
+                if (px * px + pz * pz > ox * ox + oz * oz) {
+                    out->x = ip.x;
+                    res = 2;
+                    out->y = ip.y;
+                    out->z = ip.z;
+                }
+            }
+        } else if (bi < 0) {
+            best = ip;
+            bi = 2;
+        } else {
+            d0 = ax * ax + az * az;
+            d1 = bx * bx + bz * bz;
+            if (d0 > d1) d0 = d1;
+            if (bd > d0) {
+                bi = 2;
+                best = ip;
+            }
+        }
+    }
+
+    if (res < 0 && bi >= 0) {
+        out->x = best.x;
+        res = bi;
+        out->y = best.y;
+        out->z = best.z;
+    }
+    return res;
 }

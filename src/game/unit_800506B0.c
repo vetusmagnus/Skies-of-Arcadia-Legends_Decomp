@@ -1,15 +1,15 @@
 #include "types.h"
 #include "ninja.h"
 #include "game/task.h"
-
 /* Battle character record (character task work +0x4C). */
 typedef struct BtlUnit {
     s8 id;              /* 0x000 */
     u8 pad1[3];
     s8 target;          /* 0x004 */
     u8 pad5;
-    s16 type;           /* 0x006 */
-    u8 pad8[0x50 - 0x8];
+    s16 type;           u8 pad_8[0x14];
+           s16 x1c;
+           u8 pad_1e[0x32];
     u32 x50;            /* 0x050 */
     u8 pad54[0xEC - 0x54];
     u32 shape;          /* 0x0EC */
@@ -23,12 +23,10 @@ typedef struct BtlUnit {
     u8 pad160[0x298 - 0x160];
     s32 x298;           /* 0x298 */
 } BtlUnit;
-
 typedef struct ActRes {
     u8 pad0[0x30];
     void *p30;          /* 0x30 */
 } ActRes;
-
 /* Work of a battle character task. */
 typedef struct Actor {
     u8 pad0[0x10];
@@ -40,13 +38,11 @@ typedef struct Actor {
     u8 pad30[0x4C - 0x30];
     BtlUnit *unit;      /* 0x4C */
 } Actor;
-
 /* A task (game/task.h) whose work is an Actor. */
 typedef struct ActTask {
     u8 pad0[0x24];
     Actor *work;        /* 0x24 */
 } ActTask;
-
 /* Command header shared by every effect command (fn_80037FD8). */
 typedef struct CmdHead {
     u8 pad0[0x6];
@@ -54,7 +50,6 @@ typedef struct CmdHead {
     s32 src;            /* 0x08 */
     u8 pad0c[0x4];
 } CmdHead;
-
 /* Camera move command (Pawn.mv). */
 typedef struct Move {
     CmdHead c;
@@ -67,7 +62,6 @@ typedef struct Move {
     s16 s20;            /* 0x20 */
     s16 kind;           /* 0x22 */
 } Move;
-
 /* Battle camera (0x17C bytes, work of fn_80051264). */
 typedef struct Pawn {
     u8 pad0[0x20];
@@ -100,17 +94,17 @@ typedef struct Pawn {
     s16 count;          /* 0x10C */
     s16 step;           /* 0x10E */
     s16 kind;           /* 0x110 */
-    s16 kind2;          /* 0x112 */
-    u8 pad114[0x178 - 0x114];
+    s16 kind2;          u8 pad_12c[0x60];
+          s8 idA;
+          s8 idB;
+          u8 pad_18e[0x2];
     Move *mv;           /* 0x178 */
 } Pawn;
-
 typedef struct CamHold {
     u8 pad[0x88];
     Pawn o;             /* 0x88 */
 } CamHold;
 extern CamHold lbl_80309EC8;
-
 typedef struct Game {
     u8 pad0[0xC];
     void *p0c;          /* 0x00C */
@@ -124,7 +118,6 @@ typedef struct Game {
     u32 flags;          /* 0x1CC */
 } Game;
 extern Game lbl_8030A10C;
-
 /* Character swap command (fn_800506B0). */
 typedef struct SwapCmd {
     CmdHead c;
@@ -154,7 +147,6 @@ typedef struct SwapTask {
     u8 pad1A[0x24 - 0x1A];
     SwapWork *work;     /* 0x24 */
 } SwapTask;
-
 /* Hit command (fn_80050DB0). */
 typedef struct HitCmd {
     CmdHead c;
@@ -180,7 +172,6 @@ typedef struct HitTask {
     u8 pad1A[0x24 - 0x1A];
     HitWork *work;      /* 0x24 */
 } HitTask;
-
 /* Screen fade command (fn_80050B88). */
 typedef struct FadeCmd {
     CmdHead c;
@@ -205,7 +196,6 @@ typedef struct Fade {
     u8 pad20[0xc];
 } Fade;
 extern Fade lbl_80309E5C;
-
 typedef struct Stage {
     u8 pad0[0x3C];
     u32 flags;          /* 0x3C */
@@ -218,7 +208,6 @@ extern StageTask *lbl_80347394;
 extern u32 lbl_803472F4;
 extern ActTask *lbl_80309E24[12];
 extern u8 lbl_80302B38[12];
-
 extern ActTask *fn_8001E05C(ActTask *t);
 extern ActTask *fn_80021658(u8 id);
 extern Task *fn_8003DB34(void *fn);
@@ -267,7 +256,6 @@ extern void fn_80008694(ActTask *t, s16 a, s16 b, void *p);
 extern void fn_800085EC(ActTask *t, s16 a, s16 b, void *p, void *q);
 extern f32 njSin(s32 a);
 extern s32 rand(void);
-
 void fn_80051264(Task *t);
 void fn_8005174C(Pawn *p);
 void fn_800519F4(Pawn *p);
@@ -280,6 +268,9 @@ void fn_80052ECC(Pawn *p);
 void fn_800534B0(Pawn *p);
 void fn_80053964(Pawn *o);
 void fn_80053C48(Pawn *p);
+extern s32 fn_800179E4(s32 id);
+extern void fn_80012130(NJS_POINT3 *p);
+extern void fn_80012100(NJS_POINT3 *p);
 
 void fn_800506B0(SwapTask *t)
 {
@@ -1287,5 +1278,107 @@ void fn_80053F38(u8 id, s8 b) {
             w->child = t;
             w->f6c |= 0x80000000;
         }
+    }
+}
+
+void fn_80052ECC(Pawn *p)
+{
+    ActTask *t;
+    BtlUnit *u = p->child->work->unit;
+    f32 d;
+
+    fn_8001E05C(p->child);
+    if (p->step != 0) {
+        if (fn_800179E4(p->idA) == 0 || fn_800179E4(p->idB) == 0) {
+            p->step = 3;
+        }
+    }
+    switch (p->step) {
+    case 0:
+        if (p->frame < p->mv->start)
+            break;
+        p->idA = u->id;
+        p->idB = u->target;
+        fn_80014AB8(1, p);
+        d = fn_80071E9C(&p->v8c, &p->v98);
+        fn_800618FC(&p->vF4, &p->v8c, &p->v98, 0.0f, p->fd8, 0.5f * (p->f88 - d));
+        p->fd8 += p->fdc;
+        p->vF4.y = p->vF4.y + (p->f88 * njSin((s32)(182.04445f * p->fd4)) + 30.0f);
+        if (p->vF4.y < 3.75f) {
+            p->vF4.y = 3.75f;
+        }
+        fn_80071F84(p->rot, &p->at, &p->vF4);
+        fn_80071CF0(&p->at, &p->v100);
+        if (u->x1c == 6) {
+            fn_80012130(&p->pos);
+            fn_80012100(&p->at);
+            if (p->mv->s20 != 0) {
+                fn_80061014(&p->pos, &p->vF4, &p->vA4);
+                p->vA4.x /= p->mv->s20;
+                p->vA4.y /= p->mv->s20;
+                p->vA4.z /= p->mv->s20;
+                fn_80061014(&p->at, &p->v100, &p->vB0);
+                p->vB0.x /= p->mv->s20;
+                p->vB0.y /= p->mv->s20;
+                p->vB0.z /= p->mv->s20;
+            } else {
+                fn_80071CF0(&p->vF4, &p->pos);
+                fn_80071CF0(&p->v100, &p->at);
+            }
+            fn_80071F84(p->rot, &p->at, &p->pos);
+            p->count = p->mv->s1e;
+        } else {
+            t = p->child;
+            fn_8001D288(&p->pos, t->work->unit->id, 0.0f, 0.0f);
+            fn_8001D200(t, &p->at);
+            if (p->mv->s20 != 0) {
+                fn_80061014(&p->pos, &p->vF4, &p->vA4);
+                p->vA4.x /= p->mv->s20;
+                p->vA4.y /= p->mv->s20;
+                p->vA4.z /= p->mv->s20;
+                fn_80061014(&p->at, &p->v100, &p->vB0);
+                p->vB0.x /= p->mv->s20;
+                p->vB0.y /= p->mv->s20;
+                p->vB0.z /= p->mv->s20;
+            } else {
+                fn_80071CF0(&p->vF4, &p->pos);
+                fn_80071CF0(&p->v100, &p->at);
+            }
+            fn_80071F84(p->rot, &p->at, &p->pos);
+            p->count = p->mv->s1e;
+        }
+        fn_80011370(u->id, -1);
+        p->step = 1;
+    case 1:
+        if (p->count != 0) {
+            p->count--;
+            fn_80011370(u->id, -1);
+            fn_80011400(u->id, 0);
+            fn_80032BBC(u->id, 0);
+        } else {
+            p->count = p->mv->s20;
+            fn_80011370(u->id, u->target);
+            fn_80011400(u->id, 0);
+            fn_80011400(u->target, 0);
+            p->step = 2;
+            fn_80032BBC(u->id, 1);
+            fn_80032B6C(u->id, 1);
+        }
+        break;
+    case 2:
+        if (p->count != 0) {
+            fn_80011370(u->id, u->target);
+            fn_80071CBC(&p->vA4, &p->pos);
+            fn_80071CBC(&p->vB0, &p->at);
+            fn_80071F84(p->rot, &p->at, &p->pos);
+            p->count--;
+        } else {
+            fn_80011370(u->id, u->target);
+            fn_80032BBC(u->target, 1);
+        }
+    case 3:
+        fn_80011400(u->id, 0);
+        fn_80011400(u->target, 0);
+        break;
     }
 }
