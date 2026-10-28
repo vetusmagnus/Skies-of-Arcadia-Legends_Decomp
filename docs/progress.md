@@ -1782,3 +1782,32 @@ fn_80083FF8, fn_8022BA58 (`fn_801DD078` for `fn_801DCFA0`), FogOff, fn_8013F6A4 
 its own `lbl_` pointer). Not done: 17 stubs of 4 and 8 bytes in the unlinked SDK/TRK range that have a matched twin
 (AMC_IsStub 0x80262AA4, EXI2_*, DBOpen/DBClose, TRKUARTInterruptHandler, TRK mutex stubs, fn_802543F4, fn_80257A08-18,
 OSSetCurrentHeap 0x80005A44, fn_80005A44's twin fn_8023CE08): they belong to real library files that the SDK pass links.
+
+## Batch 15: 96 never-tried functions of 976-2,464 bytes (2026-10-28)
+
+16 Opus agents (z01-z16, 6 functions each, the 96 smallest functions at or above 0x3D0 bytes with no earlier try or near-miss note,
+in address order), about 10 variants per function, no retries and no merge agents. 48 matched in isolation (fdiff and
+`floatcheck.py` clean; z01's list also produced fn_8000F718), 46 near misses, 2 skipped on the plain-C rule (fn_800998F4 and
+fn_80099F28 read a vertex word as both `s32` and `f32`). None is in a unit file yet: the agents' files are in `build/agents/z*/`
+of the machine that ran the batch, and each needs the unit's types unified with the agent's.
+
+Matched in isolation: fn_80009874, fn_8000AE08, fn_8000FC14 (needs `-str reuse,readonly` for unit_80005B50.c), fn_8000F718,
+fn_80012F58, fn_800136DC, fn_80018CBC, fn_80019F0C, fn_8001A4F0, fn_8001AB60, fn_8001B1B0, fn_80022F74, fn_800240EC,
+fn_8005F8D8, fn_80062674, fn_8006721C, fn_8006FD6C, fn_80075060, fn_8007A890, fn_80087074, fn_8008CDA8, fn_800A9708,
+fn_800AB280, fn_800B45D4, fn_800CA3C0, fn_800CE67C, fn_800CEDDC, fn_800D7190, fn_800E96C0, fn_800E9B04, fn_800EAE2C,
+fn_800EC488, fn_800ECC5C, fn_800EE51C, fn_80101828, fn_8011E72C, fn_8013A8FC, fn_8014B6F8, fn_8015184C, fn_8015B358,
+fn_8015ED90, fn_80160A4C, fn_801614E0, fn_8019C424, fn_801A2D60, fn_801CD118, fn_801CE6D0, fn_8020C390.
+
+Near misses (diff lines): fn_8000A3FC (16), fn_8000C19C (112), fn_800125A8 (24), fn_8000F8F8 (4), fn_800221FC (229), fn_8002356C (6),
+fn_8006782C (18), fn_8006AFD0 (186), fn_8006F4B0 (411), fn_8007CAB0 (41), fn_80077428 (72), fn_80080710 (96), fn_80086308 (37),
+fn_800939A4 (24), fn_80098084 (170), fn_800A8FE0 (1), fn_800A7860 (18), fn_800A432C (14), fn_800A816C (27), fn_800A6F30 (62),
+fn_8009C518 (91), fn_800B522C (33), fn_800B5A04 (430), fn_800B676C (40), fn_800BAC88 (30), fn_800B96D8 (38), fn_800C1C24 (107),
+fn_800B6F00 (160), fn_800BC0B8 (170), fn_800E23B0 (18), fn_800E7240 (341), fn_800EF0D8 (376), fn_800EFAF4 (10), fn_800F5C6C (132),
+fn_801377C0 (286), fn_8014A7EC (8), fn_801502B8 (32), fn_80143928 (34), fn_8013ED9C (574), fn_80162F24 (90), fn_80163680 (278),
+fn_80163D8C (72), fn_80182DF4 (171), fn_80188A18 (151, `psq_st` fast cast), fn_80195F9C (14), fn_801A038C (60), fn_801CC6BC (36),
+fn_80218678 (372).
+
+Lessons: a loop counter or local declared `int` instead of `s32` (`long`) removes MWCC's zero-trip guard before an unrolled loop
+and keeps `mr` copies (fn_8015ED90, fn_80087074); a `const` table lets copy-loop loads move ahead of stores; `x *= -1` on an
+`s8` is `mulli`, `x = x * -1` is `neg`; `if (f)` on a float gives the `fcmpu f, 0` operand order; nested `static inline`
+walkers reproduce recursive tree walks; `do {} while` stops constant init loops unrolling.
