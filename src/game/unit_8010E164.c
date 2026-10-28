@@ -235,6 +235,7 @@ typedef struct {
 } Src_80119744;
 extern void njScale(f32* m, f32 x, f32 y, f32 z);
 extern void njCalcVector(f32* m, NJS_VECTOR* v, NJS_VECTOR* out);
+extern void njGetTranslation(NJS_MATRIX m, NJS_POINT3* out);
 extern void fn_800071D8(Inner** h);
 extern void fn_80007080(NJS_VECTOR* v, s32 a);
 extern void fn_80006F1C(s32* w, s32 a);
@@ -2095,10 +2096,42 @@ typedef struct {
 extern void fn_801D5DD8(s32 a, f32 e, f32 f, f32 g, f32 h, s32 b, s32 c, f32 i, f32 j, s32 d);
 typedef struct Hdr { u32 n; u8 pad4[0x20]; s32 w24; } Hdr;
 typedef struct Cfg_8011DD9C { u8 pad0[0x10]; Hdr *hdr; } Cfg_8011DD9C;
-typedef struct Sub { u32 flags; u8 pad4[0x84]; void *p88; u8 pad8c[0xd8 - 0x8c]; } Sub;
-typedef struct C1d8 { u8 pad0[0x1a0]; s32 w1a0; } C1d8;
+typedef struct { f32 x, y; } Pt2;
+typedef struct Sub {
+    u32 flags;       /* 0x00 */
+    Pt2 x4;          /* 0x04 screen point the quads lean towards */
+    s32 xc;          /* 0x0C size at the start of the first run */
+    s32 x10;         /* 0x10 size between the runs */
+    s32 x14;         /* 0x14 size at the end of the second run */
+    u8 pad18[0x24 - 0x18];
+    s32 x24;         /* 0x24 quads in the first run */
+    s32 x28;         /* 0x28 quads in the second run */
+    s32 x2c;         /* 0x2C quads to draw */
+    f32 x30;         /* 0x30 */
+    f32 x34;         /* 0x34 */
+    f32 x38;         /* 0x38 */
+    f32 x3c;         /* 0x3C size scale (doubled) */
+    u8 pad40[0x4c - 0x40];
+    Angle x4c;       /* 0x4C rotation */
+    f32 x50;         /* 0x50 */
+    s16 x54;         /* 0x54 blend source */
+    s16 x56;         /* 0x56 blend destination */
+    Pt2 x58[4];      /* 0x58 spline control points */
+    Pt2 x78;         /* 0x78 spline output */
+    u32 x80;         /* 0x80 quads use the big vertex format */
+    u8 pad84[4];
+    Big *p88;        /* 0x88 quads */
+    Small x8c;       /* 0x8C */
+    u8 padcc[0xd8 - 0xcc];
+} Sub;
+typedef struct T1d8 { u8 pad0[0x19]; u8 state; } T1d8;
+typedef struct C1d8 { u8 pad0[4]; T1d8 *x4; u8 pad8[0x1a0 - 8]; s32 w1a0; } C1d8;
 typedef struct Ctx_8011DD9C {
-    u8 pad0[0x17a];
+    u8 pad0[0x38];
+    NJS_POINT3 pos;  /* 0x38 */
+    u8 pad44[0xb4 - 0x44];
+    NJS_POINT3 xb4;  /* 0xB4 offset added to pos */
+    u8 padc0[0x17a - 0xc0];
     u16 u17a;
     u8 pad17c[0x1c8 - 0x17c];
     Cfg_8011DD9C *cfg;
@@ -2126,7 +2159,7 @@ extern void *lbl_80346720;
 extern f32 lbl_80349FF8;
 extern void *fn_80005B50(void *a, s32 n);
 extern void fn_80005AD8(void *a, void *b);
-extern void fn_8011E72C(void);
+extern s32 fn_8011E72C(Ctx_8011DD9C *c);
 extern void fn_8020F154(s32 a, s32 b);
 extern s32 fn_8011D958(Ctx_8011DD9C *c, Sub *s, s32 a);
 extern f32 fn_8011A8B0(Vec3 *a, Vec3 *b);
@@ -2528,7 +2561,6 @@ typedef struct Obj_80125B60_80125B60 {
     f32 f18c;
     f32 f190;
 } Obj_80125B60_80125B60;
-typedef struct { f32 x, y; } Pt2;
 /* B-spline basis N(i,k)(t) on a uniform clamped knot vector; k2 is the spline order (knots),
    k the recursion degree. The mixed int/s32 is what makes the caller allocate like the original:
    with k and k2 of the same type, out/q/k rotate registers. */
@@ -7986,3 +8018,180 @@ f32 fn_8011A8B0(Vec3 *a, Vec3 *b) {
     }
     return sqrtf(d2);
 }
+extern Ctx_8011DD9C* fn_8015F180(Ctx_8011DD9C* c);
+extern void fn_802974E0(void* v);
+extern void njProjectScreen(void* m, NJS_POINT3* p, f32* out);
+extern s32 fn_8011E250(Sub* s, f32 depth, f32 x, f32 y);
+
+inline void Rot_8011E72C(G6* g, f32 x, f32 y, f32 cx, f32 cy, Angle a) {
+    f32 sn = njSin(a);
+    f32 cs = njCos(a);
+    f32 dy = y - cy;
+    f32 dx = x - cx;
+    g->a[0] = cx + (dx * cs - dy * sn);
+    g->a[1] = cy + (dx * sn + dy * cs);
+}
+
+s32 fn_8011E72C(Ctx_8011DD9C* c) {
+    s32 i;
+    Sub* s;
+    Pt2* pt;
+    Big* v;
+    Big* b;
+    Ctx_8011DD9C* o;
+    f32 x0, y0;
+    f32 depth;
+    f32 x, y;
+    f32 scale;
+    f32 cx, cy;
+    f32 w;
+    f32 x1, y1;
+    f32 scr[2];
+    NJS_POINT3 p;
+    NJS_POINT3 t;
+    NJS_POINT3 q;
+    NJS_MATRIX m;
+    DrawState ds;
+
+    s = c->sub;
+    pt = &s->x4;
+    v = s->p88;
+    scale = 0.5f * s->x3c;
+    o = fn_8015F180(c);
+    if (o->p1d8->x4->state != 2) {
+        return 0;
+    }
+    if (!(s->flags & 0x10000)) {
+        s->flags |= 0x10000;
+        return 0;
+    }
+    p.x = o->pos.x + o->xb4.x;
+    p.y = o->pos.y + o->xb4.y;
+    p.z = o->pos.z + o->xb4.z;
+    fn_80291C44(m);
+    njCalcVector(m, &p, &q);
+    njGetTranslation(m, &t);
+    depth = (q.z + t.z) - 1.0f;
+    if (!(depth <= 0.0f)) {
+        return 0;
+    }
+    njProjectScreen(NULL, &p, scr);
+    x = scr[0];
+    y = scr[1];
+    if (s->flags & 0x10) {
+        if (x < 0.0f || x > 640.0f || y < 0.0f || y > 480.0f) {
+            return 0;
+        }
+    }
+    fn_802974E0(pt);
+    if (s->flags & 2) {
+        pt->x = 640.0f - x;
+        pt->y = 480.0f - y;
+    } else if (s->flags & 4) {
+        pt->x = ((320 - (s32)x) >> 1) + 320;
+        pt->y = ((240 - (s32)y) >> 1) + 240;
+    } else if (s->flags & 8) {
+        pt->x = ((320 - (s32)x) >> 2) + 320;
+        pt->y = ((240 - (s32)y) >> 2) + 240;
+    }
+    if (fn_8011E250(s, depth, x, y) == 0) {
+        return 0;
+    }
+    if (s->flags & 0x40) {
+        s->x4c = 10430.381f * (f32)atan2(y - pt->y, x - pt->x);
+        if (s->flags & 0x80) {
+            s->x4c = 0x10000 - s->x4c;
+        }
+    }
+    for (i = 0; i < s->x24 + s->x28; i++) {
+        f32 k;
+        s32 spline;
+        s32 n0 = s->x24;
+        s32 n1 = s->x28;
+        b = v;
+        v++;
+        if (i < n0) {
+            if (n0 == 1) {
+                k = s->x50;
+            } else {
+                k = (f32)i / (f32)(n0 - 1);
+            }
+            spline = s->flags & 0x400;
+            if (!spline || !(s->flags & 0x800)) {
+                w = scale * (k * ((f32)s->x10 - (f32)s->xc) + (f32)s->xc);
+            }
+            if (spline) {
+                fn_8011AEE4(s->x58, 4, 3, &s->x78, k);
+                k = 0.01f * s->x78.y;
+            }
+            if (s->flags & 0x800) {
+                w = scale * (k * ((f32)s->x10 - (f32)s->xc) + (f32)s->xc);
+            }
+            cx = (pt->x - x) * (k * s->x30) + x;
+            cy = (pt->y - y) * (k * s->x30) + y;
+        } else {
+            s32 j = i - n0;
+            if (n1 == 1) {
+                k = 1.0f - s->x50;
+            } else {
+                k = (f32)j / (f32)(n1 - 1);
+            }
+            spline = s->flags & 0x400;
+            if (!spline || !(s->flags & 0x800)) {
+                w = scale * (k * ((f32)s->x14 - (f32)s->x10) + (f32)s->x10);
+            }
+            if (spline) {
+                fn_8011AEE4(s->x58, 4, 3, &s->x78, 1.0f - k);
+                k = 1.0f - 0.01f * s->x78.y;
+                if (s->flags & 0x800) {
+                    w = scale * (k * ((f32)s->x14 - (f32)s->x10) + (f32)s->x10);
+                }
+                cx = (pt->x - x) * (s->x34 + k) + x;
+                cy = (pt->y - y) * (s->x34 + k) + y;
+            } else {
+                cx = (pt->x - x) * ((1.0f + s->x38) * j + s->x34) + x;
+                cy = (pt->y - y) * ((1.0f + s->x38) * j + s->x34) + y;
+            }
+        }
+        x0 = cx - w;
+        y0 = cy - w;
+        y1 = cy + w;
+        x1 = cx + w;
+        if (s->flags & 0x40) {
+            fn_802974E0(&b->g[0]);
+            Rot_8011E72C(&b->g[0], x0, y0, cx, cy, s->x4c);
+            Rot_8011E72C(&b->g[1], x0, y1, cx, cy, s->x4c);
+            fn_802974E0(&b->g[2]);
+            Rot_8011E72C(&b->g[2], x1, y0, cx, cy, s->x4c);
+            Rot_8011E72C(&b->g[3], x1, y1, cx, cy, s->x4c);
+        } else {
+            b->g[0].a[0] = b->g[1].a[0] = x0;
+            b->g[2].a[0] = b->g[3].a[0] = x1;
+            b->g[0].a[1] = b->g[2].a[1] = y0;
+            b->g[1].a[1] = b->g[3].a[1] = y1;
+        }
+    }
+    if (c->p1d8->w1a0 == 0) {
+        u32 big;
+        if ((s->flags & 0x20100) == 0x20100) {
+            fn_8011D7BC(&s->x8c, 0);
+        }
+        if (s->flags & 1) {
+            DrawStateDefault2D(&ds);
+            ds.blend_src = s->x54;
+            ds.blend_dst = s->x56;
+            DrawStatePush(&ds);
+        }
+        big = s->x80;
+        v = s->p88;
+        for (i = 0; i < s->x2c; i++) {
+            fn_8011D7BC(v++, big);
+        }
+        if (s->flags & 1) {
+            DrawStatePop(NULL);
+        }
+    }
+    s->flags &= ~0x20000;
+    return 1;
+}
+
