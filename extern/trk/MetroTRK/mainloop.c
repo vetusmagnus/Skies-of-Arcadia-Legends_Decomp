@@ -5,33 +5,6 @@ extern TRKEventQueue gTRKEventQueue;
 extern TRKState gTRKState;
 
 /**
- * @note Address: N/A
- * @note Size: 0x28
- */
-void TRKHandleRequestEvent(void)
-{
-	// UNUSED FUNCTION
-}
-
-/**
- * @note Address: N/A
- * @note Size: 0x20
- */
-void TRKHandleSupportEvent(void)
-{
-	// UNUSED FUNCTION
-}
-
-/**
- * @note Address: N/A
- * @note Size: 0x2C
- */
-void TRKIdle(void)
-{
-	// UNUSED FUNCTION
-}
-
-/**
  * @note Address: 0x800BB390
  * @note Size: 0xF8
  */
@@ -48,7 +21,7 @@ void TRKNubMainLoop(void)
 		if (TRKGetNextEvent(&event) != FALSE) {
 			isNewInput = FALSE;
 
-			switch (event.eventType) {
+			switch (*(u8*)&event.eventType) {
 			case NUBEVENT_Null:
 				break;
 

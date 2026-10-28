@@ -498,14 +498,43 @@ dolphin/gx/GXPerf.c:
 	.text       start:0x80252530 end:0x80252D88
 	.data       start:0x802FBC00 end:0x802FBCEC
 
+MetroTRK/mainloop.c:
+	.text       start:0x8025334C end:0x80253444
+
+MetroTRK/nubevent.c:
+	.text       start:0x80253444 end:0x8025366C
+	.bss        start:0x80319048 end:0x80319070
+
 MetroTRK/usr_put.c:
 	.text       start:0x802547C0 end:0x8025484C
+
+MetroTRK/msghndlr.c:
+	.text       start:0x802548E8 end:0x80257148
+	.data       start:0x802FBD78 end:0x802FBDB0
+	.bss        start:0x8031AA48 end:0x8031AA50
+
+MetroTRK/notify.c:
+	.text       start:0x80257A20 end:0x80257AF8
 
 MetroTRK/flush_cache.c:
 	.text       start:0x80257AF8 end:0x80257B30
 
+MetroTRK/targimpl.c:
+	.text       start:0x80257BEC end:0x8025947C
+	.rodata     start:0x802DA000 end:0x802DA088
+	.data       start:0x802FBDB0 end:0x802FBDE0
+	.bss        start:0x8031AA50 end:0x8031AFD0
+
+MetroTRK/dolphin_trk.c:
+	.text       start:0x802594A0 end:0x802595E0
+	.bss        start:0x8031AFD0 end:0x8031AFD8
+
 MetroTRK/mpc_7xx_603e.c:
 	.text       start:0x802595E0 end:0x80259950
+
+MetroTRK/main_TRK.c:
+	.text       start:0x80259950 end:0x8025999C
+	.bss        start:0x8031AFD8 end:0x8031AFDC
 
 MetroTRK/targcont.c:
 	.text       start:0x80259E48 end:0x80259E7C

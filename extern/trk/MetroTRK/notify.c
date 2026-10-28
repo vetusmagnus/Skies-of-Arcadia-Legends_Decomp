@@ -1,29 +1,17 @@
-#include "types.h"
 #include "PowerPC_EABI_Support/MetroTRK/trk.h"
 
-/**
- * @note Address: N/A
- * @note Size: 0x80
- */
-void TRKWaitForACK(void)
-{
-	// UNUSED FUNCTION
-}
+extern void TRKTargetAddExceptionInfo(MessageBuffer*);
 
-/**
- * @note Address: 0x800BDD20
- * @note Size: 0x98
- */
-DSError TRKDoNotifyStopped(MessageCommandID cmd)
+DSError TRKDoNotifyStopped(u8 cmd)
 {
 	int reqIdx;
 	int bufIdx;
 	MessageBuffer* msg;
 	DSError err;
-	DSError bufError;
 
-	bufError = TRKGetFreeBuffer(&bufIdx, &msg);
-	if ((err = bufError) == FALSE) {
+	err = TRKGetFreeBuffer(&bufIdx, &msg);
+	if (err == DS_NoError) {
+		err = TRKAppendBuffer1_ui8(msg, cmd);
 		if (err == DS_NoError) {
 			if (cmd == DSMSG_NotifyStopped) {
 				TRKTargetAddStopInfo(msg);
@@ -31,8 +19,7 @@ DSError TRKDoNotifyStopped(MessageCommandID cmd)
 				TRKTargetAddExceptionInfo(msg);
 			}
 		}
-		bufError = TRKRequestSend(msg, &reqIdx, 2, 3, 1);
-		err      = bufError;
+		err = TRKRequestSend(msg, &reqIdx, 2, 3, 1);
 		if (err == DS_NoError) {
 			TRKReleaseBuffer(reqIdx);
 		}

@@ -165,6 +165,13 @@
   "runtime/uart_console_io.c",
   "runtime/e_pow.c",
   "runtime/s_atan.c",
-  "runtime/s_ceil.c"
+  "runtime/s_ceil.c",
+  "MetroTRK/mainloop.c",
+  "MetroTRK/nubevent.c",
+  "MetroTRK/msghndlr.c",
+  "MetroTRK/notify.c",
+  "MetroTRK/targimpl.c",
+  "MetroTRK/dolphin_trk.c",
+  "MetroTRK/main_TRK.c"
  ]
 }

@@ -627,6 +627,13 @@ config.libs += [
         "progress_category": "sdk",
         "src_dir": "extern/trk",
         "objects": [
+            Object(Matching, "MetroTRK/main_TRK.c"),
+            Object(Matching, "MetroTRK/dolphin_trk.c"),
+            Object(Matching, "MetroTRK/targimpl.c"),
+            Object(Matching, "MetroTRK/notify.c"),
+            Object(Matching, "MetroTRK/msghndlr.c"),
+            Object(Matching, "MetroTRK/nubevent.c"),
+            Object(Matching, "MetroTRK/mainloop.c"),
             Object(Matching, "MetroTRK/usr_put.c"),
             Object(Matching, "MetroTRK/flush_cache.c"),
             Object(Matching, "MetroTRK/mpc_7xx_603e.c"),

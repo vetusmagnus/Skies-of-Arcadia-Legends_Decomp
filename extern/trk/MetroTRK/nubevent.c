@@ -18,15 +18,6 @@ DSError TRKInitializeEventQueue()
 }
 
 /**
- * @note Address: N/A
- * @note Size: 0x24
- */
-void TRKCopyEvent(void)
-{
-	// UNUSED FUNCTION
-}
-
-/**
  * @note Address: 0x800BB5A4
  * @note Size: 0xB4
  */
@@ -87,7 +78,7 @@ DSError TRKPostEvent(TRKEvent* event)
  */
 void TRKConstructEvent(TRKEvent* event, int eventType)
 {
-	event->eventType = eventType;
+	*(u8*)&event->eventType = eventType;
 	event->eventID   = 0;
 	event->msgBufID  = -1;
 }
