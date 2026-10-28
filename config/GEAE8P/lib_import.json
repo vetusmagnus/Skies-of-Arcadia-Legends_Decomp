@@ -136,6 +136,8 @@
   "dolphin/vi.c",
   "dolphin/ai.c",
   "dolphin/ar/ar.c",
-  "dolphin/ar/arq.c"
+  "dolphin/ar/arq.c",
+  "dolphin/dvd/dvdfs.c",
+  "dolphin/dvd/dvd.c"
  ]
 }

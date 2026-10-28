@@ -304,6 +304,19 @@ dolphin/dvd/dvdlow.c:
 	.sdata      start:0x803468A0 end:0x803468A8
 	.sbss       start:0x80347998 end:0x803479E0
 
+dolphin/dvd/dvdfs.c:
+	.text       start:0x8023A478 end:0x8023ACE4
+	.data       start:0x802FA970 end:0x802FAAA8
+	.sdata      start:0x803468A8 end:0x803468B0
+	.sbss       start:0x803479E0 end:0x80347A00
+
+dolphin/dvd/dvd.c:
+	.text       start:0x8023ACE4 end:0x8023D360
+	.data       start:0x802FAAA8 end:0x802FAC28
+	.bss        start:0x803180A0 end:0x80318138
+	.sdata      start:0x803468B0 end:0x803468C8
+	.sbss       start:0x80347A00 end:0x80347A48
+
 dolphin/dvd/dvdqueue.c:
 	.text       start:0x8023D360 end:0x8023D558
 	.bss        start:0x80318138 end:0x80318158
