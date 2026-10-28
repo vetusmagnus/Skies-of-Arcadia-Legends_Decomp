@@ -688,7 +688,7 @@ void fn_80005D98(Obj20* obj, s32 a, s32 b, f32 z);
 void fn_801D8F18(void);
 s32 fn_801D91F4(void);
 void fn_801D9508(void);
-extern s32 MemEqual(const void *a, const void *b, s32 size);
+s32 MemEqual(const void *a, const void *b, u32 size);
 extern char *strncpy(char *dst, const char *src, u32 n);
 extern s32 lbl_803476E0;
 extern void *lbl_803476F0;
@@ -3814,4 +3814,40 @@ void *fn_801DF450(Src *a, void *b)
         h = 0;
     }
     return h;
+}
+
+s32 MemEqual(const void *a, const void *b, u32 size)
+{
+    const s32 *wa;
+    const s32 *wb;
+    const s16 *ha;
+    const s16 *hb;
+    const s8 *ba;
+    const s8 *bb;
+    u32 i;
+    if (((u32)a & 3) == 0 && ((u32)b & 3) == 0) {
+        wa = a; wb = b;
+        for (i = size; i >= 4; i -= 4) {
+            if (*wa++ != *wb++) {
+                return 0;
+            }
+        }
+        a = wa; b = wb; size = i;
+    }
+    if (((u32)a & 1) == 0 && ((u32)b & 1) == 0) {
+        ha = a; hb = b;
+        for (i = size; i >= 2; i -= 2) {
+            if (*ha++ != *hb++) {
+                return 0;
+            }
+        }
+        a = ha; b = hb; size = i;
+    }
+    ba = a; bb = b;
+    for (i = size; i >= 1; i--) {
+        if (*ba++ != *bb++) {
+            return 0;
+        }
+    }
+    return 1;
 }
