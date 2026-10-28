@@ -1844,14 +1844,12 @@ fn_800240EC** (unit_80020B50.c). What changed:
   name, `GS` (lbl_8030A10C) gains xc, the 9x9 party grid at 0x14, the f32 speed scale at 0xEC, x180 and x184.
   `fn_8001EBA4` and `fn_8001DE78` take `Task *` and read `ChrW(t)->st` (no register change).
 
-Fourth round, by hand (5,235 to 5,244): **fn_80087074, fn_80075060, fn_8007A890** (unit_80074D9C.c), **fn_800CA3C0,
+Fourth round, by hand (5,235 to 5,243): **fn_80075060, fn_8007A890** (unit_80074D9C.c), **fn_800CA3C0,
 fn_800CE67C, fn_800CEDDC** (unit_800B2DA0.c), **fn_8013A8FC** (unit_8012F6C4.c), **fn_801A2D60** (unit_80199B9C.c) and
 **fn_8011E72C** (unit_8010E164.c). What changed:
 - unit_80074D9C.c: the move table entry `T24` has `x15`/`x16` (s8) and `x17`, so `lbl_802AD440[i + 0x24].x16` replaces the
   `pad[0x526]` reads; `Data` is folded into `Wk` (`xc..xf`), `Slot` has `flags18`, the character record `x24`, `x102`/`x104`,
-  `R16.xd` is s8. `fn_8008210C` returns `fn_80081FEC`'s value (s32); its callers in fn_80087074 compare `(s8)fn_8008210C()`,
-  the same value cast fn_80081EF4 already uses on fn_80081FEC (a `s8` return would add an `extsb` to fn_8008210C).
-  `fn_8006D1C4` takes no arguments (as in every other unit). `fn_80075060` walks a `TNode` tree (its wrapper fn_80075040 passes
+  `R16.xd` is s8. `fn_8008210C` returns `fn_80081FEC`'s value (s32). `fn_8006D1C4` takes no arguments (as in every other unit). `fn_80075060` walks a `TNode` tree (its wrapper fn_80075040 passes
   `TNode *, u32, u8`), the page list's `x4`/`x5` are s8.
 - unit_800B2DA0.c: the pickup task reads the player `MapObj`'s `pos[]`; `V3_800C6474` is `NJS_POINT3`; the wall probe's `Q`
   has x/z, `Flags` the hit `Seg` and the record fields (the `A_800CE4E8`/`B_800CE4E8` views are gone); `fn_800D2924` takes
@@ -1867,8 +1865,13 @@ fn_800CE67C, fn_800CEDDC** (unit_800B2DA0.c), **fn_8013A8FC** (unit_8012F6C4.c),
   offset; `njGetTranslation` is declared (it was implicit), `fn_8011E72C` is `s32 (Ctx_8011DD9C *)`.
 - extern/sdk/libc/string.h gains MSL's `strcat` and `strstr`; unit_800D81E8.c drops its own `strcat` and its `u8` buffer.
 
-20 still wait (merge input: build/wt-normal/build/agents/z*; tools in build/wt-b15m/build/agents: `pre.py`, `u1_fix.py`,
+21 still wait (merge input: build/wt-normal/build/agents/z*; tools in build/wt-b15m/build/agents: `pre.py`, `u1_fix.py`,
 `ins.py` with `U=unit`, `hm/unins.py` to take a snippet out again, `try.py` with `U=unit` for variants):
+- fn_80087074 (unit_80074D9C.c): all its types are in the unit now and it matches with `(s8)fn_8008210C() == 0x2b`, but
+  that call-site cast was left out (Nick: no shortcuts). fn_8008210C's body has no `extsb` after `bl fn_80081FEC`, so it
+  returns the same 32-bit type, and fn_80081EF4 keeps fn_80081FEC's result unextended (`mr` then `extsb` at each use),
+  while fn_80087074 extends after each call. A real form is still missing: maybe fn_80087074 sits in another TU that sees an
+  `s8` prototype (0x80087074 is 20 KB after fn_8008210C), or the callers go through a macro or inline.
 - fn_8014B6F8 (unit_8013D400.c): **decided by Nick (2026-10-28)**: evobj.h keeps 0x23C as the `s32` sound handle; in
   unit_8013D400.c the leader ship's own record (`Ctx_8014D398`) types 0x23C as `void *`, `Task_8014B6F8`/`Ctx_8014B6F8` fold
   into `Task_8014D398`/`Ctx_8014D398`, and fn_8014B6F8, fn_8014D1F4, fn_8014D398 read 0x23C into typed locals (`CamNode *` in
