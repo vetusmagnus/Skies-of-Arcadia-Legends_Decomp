@@ -1624,3 +1624,35 @@ Left in the camp unit: fn_801920AC (the menu's controlling task: `Task` needs it
 `lbl_803470FC`'s 4-byte work typed as `{ CampWork *cw; }`), fn_801649BC (a model object of the 0x1D8 family; the
 agent used ninja_lib.h), the near misses fn_80175EE8 and fn_80177348 (no agent source kept), and the remaining raw
 camp_work offsets in older functions.
+
+## Struct unification of the batch 13 held-back matches, pass 3: unit_80055E94 (2026-10-28)
+
+By hand, no agents. 6 of the unit's 8 held-back functions merged (5,145 of 7,117): fn_8006C9E4, fn_8006B8A8,
+fn_8005B648, fn_80065AB0, fn_800565B0, fn_8005A7B8.
+- The battle character task: `T5C188` (task), `W5C188` (its 0x50 work: `mdl` 0x0, `tex` 0x8, `pos` 0x1C, `u32 rot[3]`
+  0x28, `scl` 0x34, `b44`, `u` 0x4C) and `U5C188` (the record: `kind` 0x6, `p5c`/`p60`, `f68`/`f6c`, `x70`, `a74`,
+  `a84`, `Rec18 *tbl` 0xDC, `xe4`/`xe8`/`xea`, `xec`, `ff0`, `p154`, `f164`, `x1f4`, `x1fc`). fn_80061FCC's, fn_8005D8F8's
+  and fn_80065F1C's views (Nd/Wk/Un_80061FCC, T5D8F8/W5D8F8/U5D8F8/M5D8F8 and the `*(M5D8F8 **)t->work` cast) are folded
+  into it, and `fn_80021658` returns a `T5C188 *` and takes an `s8` as unit_80020B50.c defines it (the caller's `extsb`).
+  `G_80061FCC` (a second view of lbl_80346BD8) is gone: `G800624FC` gained `x92`.
+- fn_800631B0's `CamObj`/`CamBody`/`CamChr` is still a second view of the same task, because fn_800631B0 indexes the
+  position as `f32 pos[3]` in loops while the other users pass `&w->pos` as an `NJS_POINT3 *`. `CamChr` moved up with the
+  other character types and gained `b5a` and `p154`; `b0` is `s8` (with fn_8001F814 taking `(u8, s8)`, fn_800631B0 still
+  matches). fn_800565B0 uses this view.
+- `Disp` is fn_8003484C's draw request (draw2d.c's `Disp`); W_80056B6C embeds one at 0x60. fn_8005A7B8's particle task
+  is `PartTask`/`PartWork`/`Part`; it re-reads `node->work` for every access, so the task view has a typed work.
+- The draw calls fn_80035228/800353F4/80035380/8003529C/80035468 take `(..., f32, u8 mode)` as draw2d.c defines them
+  (the unit had `(..., s32, f32)`); fn_8005D8F8 still matches with the arguments in the real order.
+- The unit's six float-triple types (`V3`, `Vec3`, `Vec3f`, `V5BF30`, `Vec3_80057DFC`, `Vec3_8005D108`) are `NJS_POINT3`.
+- floatcheck caught two wrong constants in the agents' "isolated matches": fn_8005B648 and fn_8005A7B8 convert degrees
+  with 182.04445f (the agents had 255.0f), and fn_80065AB0 tests the fade value against -1.0f (the agent had 0.0f).
+
+Not merged:
+- fn_800601C0: it reads `lbl_80309E24[i]->work->u` directly, so lbl_80309E24 has to be `T5C188 *[14]`. Its writer
+  fn_80067CA4 sets up the task with `w->base = *src->base`, a struct copy of the work's first 0x4C bytes, so W5C188 would
+  need those bytes as one nested struct (and U80067CA4, the 0x29C record, folded into U5C188). Reading through a `Task *`
+  with an inline accessor shifts the register allocation (r25-r27).
+- fn_800576B0: the agent file does not match in isolation either (29 lines, it was logged as a near miss too); it hits the
+  same lbl_80309E24 typing.
+- The unit still has ~20 work views and ~20 record views of the character task (ChrWork, W6065C, Wk, Wk_8005C480,
+  X5B094, Par_*, W80067CA4, ...); folding them is the remaining step and would let both functions in.
