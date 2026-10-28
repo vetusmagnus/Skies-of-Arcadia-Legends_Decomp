@@ -405,6 +405,10 @@ dolphin/card/CARDDir.c:
 dolphin/card/CARDCheck.c:
 	.text       start:0x80247728 end:0x8024863C
 
+dolphin/card/CARDMount.c:
+	.text       start:0x8024863C end:0x802490B4
+	.data       start:0x802FB560 end:0x802FB5A0
+
 dolphin/card/CARDFormat.c:
 	.text       start:0x802490B4 end:0x80249898
 
@@ -619,6 +623,12 @@ runtime/w_pow.c:
 
 runtime/mathf.c:
 	.text       start:0x80262A10 end:0x80262A7C
+
+dolphin/exi/EXIBios.c:
+	.text       start:0x80263534 end:0x80264E10
+	.data       start:0x802FC620 end:0x802FC6F0
+	.bss        start:0x8031D648 end:0x8031D708
+	.sdata      start:0x803469C8 end:0x803469D0
 
 dolphin/exi/EXIUart.c:
 	.text       start:0x80264E10 end:0x80265080

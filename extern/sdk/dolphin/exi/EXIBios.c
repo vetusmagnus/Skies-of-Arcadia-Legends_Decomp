@@ -7,10 +7,10 @@
 
 #if VERSION < VERSION_GM8P_00
 static const char* __EXIVersion =
-    "<< Dolphin SDK - EXI\trelease build: Sep  5 2002 05:33:04 (0x2301) >>";
+    "<< Dolphin SDK - EXI	release build: Sep  5 2002 05:33:04 (0x2301) >>";
 #else
 static const char* __EXIVersion =
-    "<< Dolphin SDK - EXI\trelease build: Nov 11 2002 05:21:45 (0x2301) >>";
+    "<< Dolphin SDK - EXI	release build: Nov 11 2002 05:21:45 (0x2301) >>";
 #endif
 
 #define MAX_DEV 3
@@ -51,7 +51,9 @@ typedef struct EXIControl {
 } EXIControl;
 
 static EXIControl Ecb[MAX_CHAN];
+#if VERSION >= VERSION_GM8P_00
 static u32 IDSerialPort1 = 0;
+#endif
 
 s32 __EXIProbeStartTime[2] : (OS_BASE_CACHED | 0x30C0);
 
@@ -254,13 +256,6 @@ EXICallback EXISetExiCallback(s32 chan, EXICallback exiCallback) {
 
   OSRestoreInterrupts(enabled);
   return prev;
-}
-
-void EXIProbeReset(void) {
-  __EXIProbeStartTime[0] = __EXIProbeStartTime[1] = 0;
-  Ecb[0].idTime = Ecb[1].idTime = 0;
-  __EXIProbe(0);
-  __EXIProbe(1);
 }
 
 static BOOL __EXIProbe(s32 chan) {

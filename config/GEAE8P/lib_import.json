@@ -143,6 +143,8 @@
   "dolphin/gx/GXFrameBuf.c",
   "dolphin/gx/GXLight.c",
   "dolphin/gx/GXTexture.c",
-  "dolphin/gx/GXBump.c"
+  "dolphin/gx/GXBump.c",
+  "dolphin/card/CARDMount.c",
+  "dolphin/exi/EXIBios.c"
  ]
 }

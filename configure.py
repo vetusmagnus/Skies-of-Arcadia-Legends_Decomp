@@ -583,6 +583,7 @@ config.libs += [
         "progress_category": "sdk",
         "src_dir": "extern/sdk",
         "objects": [
+            Object(Matching, "dolphin/card/CARDMount.c"),
             Object(Matching, "dolphin/card/CARDBios.c"),
             Object(Matching, "dolphin/card/CARDUnlock.c"),
             Object(Matching, "dolphin/card/CARDBlock.c"),
@@ -689,6 +690,7 @@ config.libs += [
         "progress_category": "sdk",
         "src_dir": "extern/sdk",
         "objects": [
+            Object(Matching, "dolphin/exi/EXIBios.c"),
             Object(Matching, "dolphin/exi/EXIUart.c"),
         ],
     },
