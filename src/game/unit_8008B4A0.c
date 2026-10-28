@@ -8,11 +8,13 @@ typedef struct Ent_UNIT0000 {
     u32 x1c;
 } Ent_UNIT0000;
 extern s8 lbl_80347340;
-typedef struct {
+typedef struct Unit {
     u8 pad0[0x10];
     u32 x10;
     u8 pad14[8];
     u32 flags;
+    u8 pad20[0xae - 0x20];
+    s16 xae;
 } Unit;
 extern Unit* lbl_80309DE4[12];
 typedef struct {
@@ -28,10 +30,12 @@ typedef struct {
 extern Ent80309730 lbl_80309730[12];
 typedef struct {
     s16 idx;
-    u8 pad2[2];
+    s16 x2;
     u32 x4;
-    void* chr;
-    u8 padc[4];
+    struct Unit* chr;
+    s8 xc;
+    s8 xd;
+    u8 pade[2];
     void* fn;
     u8 pad14[0x4c - 0x14];
     s32 x4c;
@@ -88,7 +92,7 @@ extern s16 lbl_80302F18[408];
 extern SeFlagBlock lbl_802E0084;
 s32 fn_80078610(s8 idx);
 void fn_800804B8(void);
-void fn_8008DEEC(void);
+void fn_8008DEEC(Slot* o);
 extern s16 lbl_80347374;
 typedef struct {
     NJS_TEXLIST* texlist; /* 0x00 */
@@ -126,74 +130,20 @@ typedef struct { u8 pad[0x24]; Sub_8008B600 *x24; } Ent_8008B600;
 extern Ent_8008B600 *fn_80021658(s8 idx);
 extern s32 fn_80078610(s8 idx);
 extern f32 fn_80071E9C(void*a, void*b);
-typedef struct { s16 x0; } SubD;
-typedef struct { u8 pad[0x19]; u8 x19; u8 pad1[0x24 - 0x1a]; SubD *x24; } ObjD;
 extern s16 *lbl_80302D48[12];
 extern void fn_801E17E0(void *p);
 typedef struct Vec3_8009009C { f32 x; f32 y; f32 z; } Vec3_8009009C;
 extern f32 lbl_80348B38;
-typedef struct {
-    s16 idx;
-    s16 s2;
-    u32 flags;
-    u8 pad8[0x50 - 8];
-    u8 x50;
-} Sub_8008BE94;
-typedef struct {
-    u8 pad0[0x19];
-    u8 state;
-    u8 pad1a[0x24 - 0x1a];
-    Sub_8008BE94* sub;
-} Obj_8008BE94;
 extern s16 lbl_80309DCC[12];
 extern s32 lbl_8034733C;
 extern void fn_80081168(s32 i, s32 k);
 extern s32 fn_8006D1C4(void);
 extern void fn_80080438(void* o);
-typedef struct {
-    s16 idx;
-    u8 pad2[0x4c - 2];
-    u32 w4c;
-    u8 x50;
-} Sub_8008C124;
-typedef struct {
-    u8 pad0[0x19];
-    u8 state;
-    u8 pad1a[0x24 - 0x1a];
-    Sub_8008C124* sub;
-} Obj_8008C124;
-typedef struct {
-    s16 idx;
-    u8 pad2[0x4c - 2];
-    u32 w4c;
-    u8 x50;
-} Sub_8008C6BC;
-typedef struct {
-    u8 pad0[0x19];
-    u8 state;
-    u8 pad1a[0x24 - 0x1a];
-    Sub_8008C6BC* sub;
-} Obj_8008C6BC;
-void fn_8008C6BC(Obj_8008C6BC* o);
-typedef struct {
-    s16 idx;
-    u8 pad2[2];
-    u32 flags;
-    u8 pad8[0x4c - 8];
-    u32 w4c;
-    s8 x50;
-} Sub_8008CAB4;
-typedef struct {
-    u8 pad0[0x19];
-    u8 state;
-    u8 pad1a[0x24 - 0x1a];
-    Sub_8008CAB4* sub;
-} Obj_8008CAB4;
+void fn_8008C6BC(Slot* o);
 typedef struct {
     u8 pad0[0xae];
     s16 sae;
 } Chr_8008D3B0;
-typedef Slot Obj_8008D3B0;
 typedef Sub80309700 Sub_8008D3B0;
 extern s8 lbl_80347334;
 extern void fn_8008CDA8(void* o);
@@ -260,18 +210,6 @@ typedef struct {
     u8 padE6[0x108 - 0xE6];
     Sub8009564C* sub;  /* 0x108 */
 } Obj8009564C;
-typedef struct Data {
-    s16 id;
-    u8 pad2[0xA];
-    s8 xc;
-    s8 xd;
-} Data;
-typedef struct Obj {
-    u8 pad0[0x19];
-    u8 state;
-    u8 pad1a[0xA];
-    Data* d;
-} Obj;
 typedef struct Sub {
     u8 pad0[4];
     void* x4;
@@ -354,13 +292,9 @@ typedef struct Obj_800912FC {
     u8 pad0[0x18];
     f32* p18;
 } Obj_800912FC;
-typedef struct Chr_8008CBB8 {
-    u8 pad0[0xae];
-    s16 flags;
-} Chr_8008CBB8;
 extern s32 fn_80083BAC(s32 i, s32 k);
 extern void fn_80010474(s32 i);
-extern void fn_8008CAB4(Obj_8008CAB4*);
+extern void fn_8008CAB4(Slot*);
 /* Stores a 2D point and a value: lbl_80346C44 = *pos; lbl_80346C38 = n.
  * lbl_80346C44 must be 8 bytes (an x,y pair; symbols.txt guesses 0xC) so it stays
  * small-data and is addressed with `li r5,sym@sda21` instead of lis/stfsu. */
@@ -463,25 +397,6 @@ extern char lbl_802B0D00[];
 extern char lbl_802B0D20[];
 extern s32 fn_8009014C(u8* arr, u8* key, s32 n, s32 size);
 extern int sprintf(char* buf, const char* fmt, ...);
-typedef struct Chr_8008C98C {
-    u8 pad[0xae];
-    s16 xae;
-} Chr_8008C98C;
-typedef struct Sub_8008C98C {
-    s16 idx;
-    u8 pad2[6];
-    Chr_8008C98C* chr;
-    u8 padc[0x4c - 0xc];
-    s32 x4c;
-    u8 x50;
-} Sub_8008C98C;
-typedef struct Slot_8008C98C {
-    void *fn_8008C98C;
-    u8 pad4[0x19 - 4];
-    u8 state;
-    u8 pad1a[0x24 - 0x1a];
-    Sub_8008C98C* sub;
-} Slot_8008C98C;
 typedef struct Pt {
     f32 x;       /* 0x00 */
     f32 y;       /* 0x04 */
@@ -587,11 +502,10 @@ typedef struct { u8 pad[0xC]; u8 xc[1]; } TaskSub;
 typedef struct { u8 pad0[0x10]; TaskSub* x10; u8 pad1[0x4C - 0x14]; void* x4c; } TaskRes;
 typedef struct { u8 pad[0x24]; TaskRes* res; } TaskArg;
 typedef struct { u8 pad[0xC]; void* obj; } Handler;
-typedef struct { u8 pad[0x18]; u8 flags; u8 state; u8 pad1a[0x24 - 0x1A]; void* work; } Node;
 typedef struct { TaskArg* arg; void* owner; } Work_8008F1F8;
 int fn_8003DCF4(void* objp, void* cp);
-Node* fn_8003DB34(void* fn);
-extern void fn_8008EC84(void);
+Task* fn_8003DB34(void* fn);
+void fn_8008EC84(Task* t);
 typedef struct Cam_80091040 {
     f32 pos[3];
     f32 min;
@@ -716,6 +630,193 @@ s32 fn_8008B9C8(void* a0, Tm* t) {
     return t->x18 == t->x14;
 }
 
+
+typedef struct {
+    u8 pad0[0xEC];
+    u32 xec;
+    u32 xf0;
+    u8 padf4[0x164 - 0xF4];
+    f32 x164;
+    u8 pad168[0x1FC - 0x168];
+    void* x1fc;
+} Rend;
+typedef struct {
+    u8 pad0[0x1C];
+    NJS_POINT3 pos;
+    u8 pad28[4];
+    Angle ang;
+    u8 pad30[0x4C - 0x30];
+    Rend* rend;
+} Own;
+typedef struct {
+    Task* owner;
+    s16* t;
+    NJS_POINT3 a;
+    NJS_POINT3 b;
+    s16 timer;
+    u8 pad22[2];
+    void* mtx;
+} Fx;
+
+extern void* fn_8001E05C(Task*);
+extern void fn_8001D200(void*, NJS_POINT3*);
+extern void* fn_801E1C7C(s32);
+extern void njRotateY(void*, s32);
+
+extern s32 lbl_80347344;
+extern s32 fn_8008DC1C(s32 i);
+extern void fn_8008D960(Slot*);
+extern void fn_8008C7B0(Slot*);
+extern void fn_8008C21C(Slot*);
+void fn_8008D3B0(Slot* o);
+void fn_8008CBB8(Slot* self);
+void fn_8008D4A4(Slot* o);
+void fn_8008D610(Slot *o);
+void fn_8008C98C(Slot* self);
+
+#define GO(f) do { lbl_80309700[i]->fn = (f); lbl_80309700[i]->state = 0; } while (0)
+
+void fn_8008DEEC(Slot* o) {
+    Sub80309700* s;
+    Unit* c;
+    s32 i;
+    s32 m;
+    u32 b;
+    s16 f;
+    s32 r;
+    s = o->sub;
+    c = s->chr;
+    i = s->idx;
+    switch (o->state) {
+    case 0:
+        if (fn_8007FFE8(i, 0x16)) {
+            r = fn_8008DC1C(i);
+            if (r != 0) {
+                switch (r) {
+                case 1: GO(fn_8008D3B0); break;
+                case 2: GO(fn_8008CBB8); break;
+                case 3: GO(fn_8008C6BC); break;
+                case 4: GO(fn_8008D4A4); break;
+                case 5: GO(fn_8008D610); break;
+                }
+            } else {
+                b = c->flags;
+                if (b & 0x800) { GO(fn_8008D960); break; }
+                if (b & 0x6500) { GO(fn_8008D610); break; }
+                m = lbl_80347344;
+                if (m == 0 && i < 4) { GO(fn_8008C98C); break; }
+                if (m == 2 && i >= 4) { GO(fn_8008C98C); break; }
+                f = lbl_80309DE4[i]->xae;
+                if (!(f & 1)) { GO(fn_8008C98C); break; }
+                if ((b & 1) && (f & 2)) {
+                    if (i <= 3) GO(fn_8008C7B0); else GO(fn_8008C98C);
+                    break;
+                }
+                if ((f & 0x10) && (f & 2)) {
+                    if (i <= 3) GO(fn_8008C7B0); else GO(fn_8008C98C);
+                    break;
+                }
+                if (f & 0x20) { GO(fn_8008C98C); break; }
+                GO(fn_8008C21C);
+            }
+        }
+        break;
+    }
+}
+
+void fn_8008EC84(Task* t) {
+    Own* ow;
+    Fx* fx;
+    s16* tb;
+    Rend* r;
+    void* tk;
+    fx = t->work;
+    tb = fx->t;
+    ow = fx->owner->work;
+    r = ow->rend;
+    tk = fn_8001E05C(fx->owner);
+    fx->timer++;
+    switch (t->state) {
+    case 0:
+        fn_80071CF0(&ow->pos, &fx->a);
+        fn_8001D200(tk, &fx->b);
+        fx->timer = 0;
+        r->xf0 |= 0x80000000;
+        r->xec |= 0x200;
+        if (tb[8] == 0) t->state = 4;
+        else t->state = 1;
+        fx->mtx = fn_801E1C7C(0x40);
+    case 1:
+        if (fx->timer >= tb[8]) t->state = 2;
+        break;
+    case 2:
+        r->x164 = r->x164 - 1.0f / (f32)(tb[9] - tb[8]);
+        if (r->x164 <= -1.0f) {
+            r->x164 = -1.0f;
+            njUnitMatrix(fx->mtx);
+            r->xf0 |= 0x40000000;
+            njTranslate(fx->mtx, fx->b.x, fx->b.y, fx->b.z);
+            njRotateY(fx->mtx, ow->ang);
+            r->x1fc = fx->mtx;
+            if (fx->timer < tb[10]) t->state = 3;
+            else t->state = 4;
+        }
+        break;
+    case 3:
+        if (fx->timer >= tb[10]) t->state = 4;
+        break;
+    case 4:
+        r->x164 = r->x164 + 1.0f / (f32)(tb[11] - tb[9]);
+        if (r->x164 >= 0.0f) {
+            r->x164 = 0.0f;
+            if (fx->timer < tb[12]) t->state = 5;
+            else t->state = 7;
+        }
+        break;
+    case 5:
+        if (fx->timer >= tb[12]) {
+            if (fx->timer >= tb[13] - 1) t->state = 7;
+            else t->state = 6;
+        }
+        break;
+    case 6:
+        if (fx->timer >= tb[13] - 1) t->state = 7;
+        break;
+    case 7:
+        r->x164 = r->x164 - 1.0f / (f32)(tb[14] - tb[13]);
+        if (r->x164 <= -1.0f) {
+            r->x164 = -1.0f;
+            r->x1fc = 0;
+            r->xf0 &= ~0x40000000;
+            if (fx->timer >= tb[15] - 1) t->state = 9;
+            else t->state = 8;
+        }
+        break;
+    case 8:
+        if (fx->timer >= tb[15] - 1) t->state = 9;
+        break;
+    case 9:
+        r->x164 = r->x164 + 1.0f / (f32)(tb[16] - tb[15]);
+        if (r->x164 >= 0.0f) {
+            r->x164 = 0.0f;
+            t->state = 10;
+        }
+        break;
+    case 10:
+        r->x164 = 0.0f;
+        r->xf0 &= 0x7FFFFFFF;
+        r->xec &= ~0x200;
+        if (fx->mtx) {
+            fn_801E17E0(fx->mtx);
+            fx->mtx = 0;
+        }
+        t->state = 11;
+        break;
+    case 11:
+        t->flags |= 0x40;
+        break;
+    }
+}
 
 void fn_8008F75C(void) {
 }
@@ -849,7 +950,7 @@ void fn_8008E338(s32 n) {
     s32 i;
     for (i = 0; i < 12; i++) {
         if (i != n && fn_80078610((s8)i)) {
-            lbl_80309700[i]->sub->fn = (void*)fn_8008DEEC;
+            lbl_80309700[i]->sub->fn = fn_8008DEEC;
             lbl_80347374 |= 1 << i;
         }
     }
@@ -956,13 +1057,13 @@ s32 fn_8008B788(s32 a) {
     return 1;
 }
 
-void fn_8008D610(ObjD *o) {
+void fn_8008D610(Slot *o) {
     s32 idx;
-    idx = o->x24->x0;
-    switch (o->x19) {
+    idx = o->sub->idx;
+    switch (o->state) {
     case 0:
         fn_800811E4(idx, 0);
-        o->x19 = 1;
+        o->state = 1;
     case 1:
         if (fn_8007FFE8(idx, 0)) {
             lbl_80309700[idx]->fn = (void*)fn_8008C6BC;
@@ -1046,8 +1147,8 @@ end:
     return r;
 }
 
-void fn_8008BE94(Obj_8008BE94* o) {
-    Sub_8008BE94* s = o->sub;
+void fn_8008BE94(Slot* o) {
+    Sub80309700* s = o->sub;
     s32 i = s->idx;
     switch (o->state) {
     case 0:
@@ -1062,8 +1163,8 @@ void fn_8008BE94(Obj_8008BE94* o) {
         break;
     case 1:
         if (lbl_8034733C != 4 && fn_8006D1C4() == 1) {
-            lbl_80309DCC[i] = s->s2;
-            s->flags &= ~0x20;
+            lbl_80309DCC[i] = s->x2;
+            s->x4 &= ~0x20;
             fn_800811E4(i, 0);
             o->state = 10;
         }
@@ -1076,13 +1177,13 @@ void fn_8008BE94(Obj_8008BE94* o) {
     }
 }
 
-void fn_8008C124(Obj_8008C124* o) {
-    Sub_8008C124* s = o->sub;
+void fn_8008C124(Slot* o) {
+    Sub80309700* s = o->sub;
     s32 i = s->idx;
     switch (o->state) {
     case 0:
         fn_800811E4(i, 2);
-        s->w4c = lbl_80309730[i].w0;
+        s->x4c = lbl_80309730[i].w0;
         s->x50 = 0;
         o->state = 1;
         break;
@@ -1097,20 +1198,20 @@ void fn_8008C124(Obj_8008C124* o) {
         break;
     case 20:
         if (fn_8007FFE8(i, 0x12) != 0) {
-            fn_800811E4(i, s->w4c);
+            fn_800811E4(i, s->x4c);
             o->state = 1;
         }
         break;
     }
 }
 
-void fn_8008C6BC(Obj_8008C6BC* o) {
-    Sub_8008C6BC* s = o->sub;
+void fn_8008C6BC(Slot* o) {
+    Sub80309700* s = o->sub;
     s32 i = s->idx;
     switch (o->state) {
     case 0:
-        s->w4c = lbl_80309730[i].w0;
-        fn_800811E4(i, s->w4c);
+        s->x4c = lbl_80309730[i].w0;
+        fn_800811E4(i, s->x4c);
         s->x50 = 0;
         o->state = 1;
     case 1:
@@ -1124,15 +1225,15 @@ void fn_8008C6BC(Obj_8008C6BC* o) {
         break;
     case 20:
         if (fn_8007FFE8(i, 0x12) != 0) {
-            fn_800811E4(i, s->w4c);
+            fn_800811E4(i, s->x4c);
             o->state = 1;
         }
         break;
     }
 }
 
-void fn_8008CAB4(Obj_8008CAB4* o) {
-    Sub_8008CAB4* s = o->sub;
+void fn_8008CAB4(Slot* o) {
+    Sub80309700* s = o->sub;
     s32 i = s->idx;
     switch (o->state) {
     case 0:
@@ -1146,8 +1247,8 @@ void fn_8008CAB4(Obj_8008CAB4* o) {
         break;
     case 1:
         if (lbl_8034733C != 4 && fn_8006D1C4() == 1) {
-            s->flags &= ~0x20;
-            fn_800811E4(i, s->w4c);
+            s->x4 &= ~0x20;
+            fn_800811E4(i, s->x4c);
             o->state = 10;
         }
         break;
@@ -1159,7 +1260,7 @@ void fn_8008CAB4(Obj_8008CAB4* o) {
     }
 }
 
-void fn_8008D3B0(Obj_8008D3B0* o) {
+void fn_8008D3B0(Slot* o) {
     s32 i;
     s32 v;
     Sub_8008D3B0* s = o->sub;
@@ -1384,18 +1485,18 @@ void fn_8009564C(Obj8009564C* o, Obj8009564C* src) {
     o->e4 = 0x78;
 }
 
-void fn_8008D4A4(Obj* o)
+void fn_8008D4A4(Slot* o)
 {
     extern s32 fn_8007FFE8(s32 id, s32 a);
     extern void fn_800811E4(s32 id, s32 a);
-    extern void fn_8008178C(Data* d, s8 a, s8 b, s32 id);
+    extern void fn_8008178C(Sub80309700* d, s8 a, s8 b, s32 id);
     extern void fn_800810FC(s32 id);
-    extern void fn_80081648(Data* d, s32 id);
-    extern void fn_80080438(Obj* o);
+    extern void fn_80081648(Sub80309700* d, s32 id);
+    extern void fn_80080438(Slot* o);
     s32 id;
-    Data* d = o->d;
+    Sub80309700* d = o->sub;
     s32 a, b;
-    id = d->id;
+    id = d->idx;
     switch (o->state) {
     case 0:
         if (fn_8007FFE8(id, 0)) {
@@ -1596,7 +1697,7 @@ s32 fn_800912FC(f32* pos, Obj_800912FC* o) {
 void fn_8008CBB8(Slot* self) {
     s32 i;
     Sub80309700* sub;
-    Chr_8008CBB8* chr;
+    Unit* chr;
     sub = self->sub;
     chr = sub->chr;
     i = sub->idx;
@@ -1606,7 +1707,7 @@ void fn_8008CBB8(Slot* self) {
         self->state = 1;
     case 1:
         if (fn_8007FFE8(i, 0x16) != 0) {
-            if ((chr->flags & 0x400) == 0) {
+            if ((chr->xae & 0x400) == 0) {
                 fn_800811E4(i, 0);
                 self->state = 2;
             } else {
@@ -1790,10 +1891,10 @@ void fn_80095360(void *p, void *q)
     }
 }
 
-void fn_8008C98C(Slot_8008C98C* self) {
+void fn_8008C98C(Slot* self) {
     s32 i;
-    Sub_8008C98C* sub;
-    Chr_8008C98C* chr;
+    Sub80309700* sub;
+    Unit* chr;
     sub = self->sub;
     chr = sub->chr;
     i = sub->idx;
@@ -1814,8 +1915,8 @@ void fn_8008C98C(Slot_8008C98C* self) {
         break;
     case 1:
         if (fn_8007FFE8(i, 0) != 0) {
-            ((Slot_8008C98C**)lbl_80309700)[i]->fn_8008C98C = (void *)fn_8008C6BC;
-            ((Slot_8008C98C**)lbl_80309700)[i]->state = 0;
+            ((Slot**)lbl_80309700)[i]->fn = (void *)fn_8008C6BC;
+            ((Slot**)lbl_80309700)[i]->state = 0;
         }
         break;
     }
@@ -2239,7 +2340,7 @@ void fn_80095220(CamObj *obj, NJS_POINT3 *pos, Angle *ang)
 int fn_8008F1F8(Handler* h, TaskArg* arg)
 {
     void* obj = h->obj;
-    Node* node;
+    Task* node;
     Work_8008F1F8* w;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         node = fn_8003DB34(fn_8008EC84);

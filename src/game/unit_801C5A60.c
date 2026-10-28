@@ -103,17 +103,6 @@ extern void fn_802913E8(s32 a, s32 b);
 extern void fn_802911CC(f32 *v, f32 s);
 extern void fn_80291424(void);
 typedef struct DVDFileInfo DVDFileInfo;
-typedef struct Stream {
-    u8 pad0[4];
-    u8 info[0x54];
-    s32 off;         /* 0x58 */
-    u8 pad5c[4];
-    s32 size;        /* 0x60 */
-    s32 pos;         /* 0x64 */
-    u8 pad68[4];
-    u32 bpos;        /* 0x6c */
-    u8 *buf;         /* 0x70 */
-} Stream;
 extern s32 fn_8023AB88(void *info, void *addr, s32 len, s32 offset, void (*cb)(void), s32 prio);
 extern s32 fn_8023CD10(void *info);
 extern void fn_801DBF94(s32);
@@ -173,18 +162,19 @@ typedef struct AkRd {
     void* dst;
     u8 pad4c[8];
     s32 size;
-    u8 pad58[4];
+    s32 off;         /* 0x58: file offset of the next block */
     u8 b5c;
     u8 b5d;
-    u8 pad5e[6];
-    s32 w64;
+    u8 pad5e[2];
+    s32 end;         /* 0x60: file size */
+    s32 w64;         /* 0x64: bytes read */
     s32 w68;
-    s32 w6c;
-    u8 pad70[4];
+    u32 w6c;         /* 0x6c: position in the block buffer */
+    u8 *blk;         /* 0x70: block buffer */
     s32 w74;
     u8* buf;
     u8 pad7c[4];
-    s32 w80;
+    u32 w80;
 } AkRd;
 extern void fn_801C74D0(AkRd* f);
 typedef struct { f32 x, y, z; } Vtx;
@@ -362,6 +352,43 @@ extern void fn_8023AB28(const char*);
 extern char lbl_8034BC10;
 void fn_801C62E4(void) {
     fn_8023AB28(&lbl_8034BC10);
+}
+
+s32 fn_801C6E14(AkRd *s, u8 *out);
+
+void fn_801C74D0(AkRd* f) {
+    u8* dst = f->dst;
+    u8 b;
+    u8 b1;
+    u8 b2;
+    s32 i;
+    s32 off;
+    s32 len;
+    while (1) {
+        u32 v = f->w80 >> 1;
+        f->w80 = v;
+        if ((v & 0x100) == 0) {
+            if (!fn_801C6E14(f, &b)) return;
+            f->w80 = b | 0xff00;
+        }
+        if (f->w80 & 1) {
+            if (!fn_801C6E14(f, &b)) return;
+            dst[f->w68++] = b;
+            f->buf[f->w74++] = b;
+            f->w74 &= 0xfff;
+        } else {
+            if (!fn_801C6E14(f, &b1)) return;
+            if (!fn_801C6E14(f, &b2)) return;
+            off = b1 | ((b2 & 0xf0) << 4);
+            len = (b2 & 0xf) + 2;
+            for (i = 0; i <= len; i++) {
+                b = f->buf[(off + i) & 0xfff];
+                dst[f->w68++] = b;
+                f->buf[f->w74++] = b;
+                f->w74 &= 0xfff;
+            }
+        }
+    }
 }
 
 void fn_801C78B4(void) {
@@ -632,17 +659,17 @@ void fn_801C8BC0(f32 a, f32 b, f32 s, s32 unused, Rect8 *r, s32 n) {
     }
 }
 
-s32 fn_801C6E14(Stream *s, u8 *out) {
+s32 fn_801C6E14(AkRd *s, u8 *out) {
     s32 len;
     s32 r;
-    if (s->pos >= s->size) {
+    if (s->w64 >= s->end) {
         return 0;
     }
-    s->bpos &= 0x1ffff;
-    if (s->bpos == 0) {
-        len = (s->off + 0x20000 < s->size) ? 0x20000 : s->size - s->off;
+    s->w6c &= 0x1ffff;
+    if (s->w6c == 0) {
+        len = (s->off + 0x20000 < s->end) ? 0x20000 : s->end - s->off;
         len = (len + 31) & ~31;
-        fn_8023AB88(s->info, s->buf, len, s->off, 0, 2);
+        fn_8023AB88(s->info, s->blk, len, s->off, 0, 2);
         while (fn_8023CD10(s->info) != 0) {
             fn_801DBF94(0);
             r = fn_801D168C();
@@ -652,8 +679,8 @@ s32 fn_801C6E14(Stream *s, u8 *out) {
         }
         s->off += len;
     }
-    *out = s->buf[s->bpos++];
-    s->pos++;
+    *out = s->blk[s->w6c++];
+    s->w64++;
     return 1;
 }
 

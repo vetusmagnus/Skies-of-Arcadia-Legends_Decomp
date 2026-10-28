@@ -1448,3 +1448,59 @@ Lessons: a one-case `switch` gives `cmpwi` where `if (u8 == 0)` gives `cmplwi`; 
 original's allocation (fn_800121D8); the unroll count of a copy loop follows `for (...; i++, start++)` (fn_801BD748); an
 `int` counter drops the loop's guard `cmpwi`; `if (p->f)` on a float gives `fcmpu f1,f0`, `!= 0.0f` swaps the operands.
 The agents again rarely folded their structs into the unit's: most merge failures are type clashes, not codegen.
+
+Type merge of the batch 12 held-back matches (2026-10-28)
+---------------------------------------------------------
+
+By hand, no agents. **14 of the 25 are in their units now** (5,023 to 5,037; 5,096 with the Ninja pass): fn_800121D8, fn_80017CB8, fn_80056B6C,
+fn_8005ACD4, fn_8005BBC4, fn_8007B5B0, fn_8007F6E4, fn_80086C68, fn_8008DEEC, fn_8008EC84, fn_800C6B04, fn_800C7398,
+fn_800D6618, fn_801C74D0. Every function of every touched unit passes fdiff and `floatcheck.py`, and `main.dol`
+rebuilds byte-identical (force-relinked). The type work that made room for them:
+
+- unit_80005B50.c: the character task table `lbl_80309E24` is `Task*[]` (task.h); the character work is one
+  `ChrWork`/`ChrInfo` pair that replaced eight per-function views (Tk/Wk/Unit_8001DB44, Task/In/Wk_80015640,
+  Tk/Wk/Unit_8001E05C, Node/Holder/Mid_80011394, Tsk/Wk/Dat_8001DF44, Work/State_80017A7C) and the `PTR` offsets in
+  fn_80017778. The table loops read the element into a `Task*` and the work into a `ChrWork*` local; that matched
+  everywhere.
+- fn_8003529C takes `(model, motion, f32 frame, u8 mode)` like fn_80035380/fn_800353F4 (the 632 match loads the frame
+  first; draw2d.c, effect.c, unit_80055E94.c and unit_80005B50.c updated; draw2d.c is linked and still matches).
+- unit_80055E94.c: the local `Task` (with `u8* work` and a `(Eff*)(t->work + 0x28)` cast) is gone; task.h's `Task`
+  replaces 15 per-function task views. Views kept where the original reloads `t->work` for every access
+  (`t->work->x = ...` twice; a local changes the code): Task6C124, O_8006801C, Obj_80057DFC, and the new EvMotTask.
+  P57BD0/W57BD0/U57BD0 and the new functions' character views are one `ChrTask`/`ChrWork`/`ChrInfo` (rotation
+  `u32 rot[3]` copied by fn_800614FC, so fn_80057BD0 lost its `(void *)` casts). fn_8006CEEC hands out a `Motion *`.
+- unit_80074D9C.c: one battle-slot `Slot` (update takes `Slot *`, `state` at 0x19, `un.req`/`un.work`); the
+  Node_80080278, Node_800804B8, Ctx_80080438, Ctx_80085C88 views and the function-pointer casts are gone. `List.x1/x2`
+  are `s8`; `Wk` has `chr` (0x08) and `x40`.
+- unit_8008B4A0.c: the slot views Obj_8008C6BC, ObjD, Obj, Slot_8008C98C, Obj_8008D3B0, Obj_8008C124, Obj_8008BE94,
+  Obj_8008CAB4 are `Slot`, their records `Sub80309700` (`x50` is `s8`: fn_8008CAB4 compares it), and the battle unit
+  `Unit` (flags 0x1C, `xae`) is also the record's `chr`. `Node` is task.h's `Task`.
+- unit_800B2DA0.c: `lbl_80347450` is `MapObj *` (the field-map object; also the work of the map tasks): its 39 uses
+  had ten cast views (Obj_800CF8F8, Ent_800C69CC, Ent_800C7230, Player_800C5530, P_800C7058, Cam_800CE2B4,
+  Work_800D1E58, Unk80347450, Target, and the `(Work_800D1E58 **)&` store); Actor and Actor_800CDEF4 are `MapObj` too
+  (script entries carry `NJS_TEXLIST *`, model and shape pointers, so `(s32)e->w10` is gone). `HitNode` is
+  unit_80219378.c's collision `Node` (fn_80222B30 takes two). `MapObj` is evobj.c's `EvObj`; one shared header is the
+  next step (the units disagree on a few field types, e.g. `EvInfo.actDist` is switched on as `s32` by fn_800F7D6C).
+- unit_801C5A60.c: `Stream` was a second view of the archive reader `AkRd` (off 0x58, end 0x60, block 0x70).
+
+Still held back (11), with what blocks them:
+
+- fn_800AF8F8: chains `lbl_80303650.x48->t->t->w` through `NJS_TEXNAME.texaddr` (a `void *` in ninja.h); needs the
+  texture-memory type behind texaddr, and the unit's `(*(Fx*)&lbl_80303650)`/`(*(Blk*)&lbl_80303618)` views folded.
+- fn_800D42B8: needs one map-task type in unit_800B2DA0.c (fn_800C3428 is called with four task views and casts;
+  `lbl_8034749C` is `Hd_800D3824 *` and two cast views) and `lbl_80310B3C` word access.
+- fn_800DCB78, fn_800F04C8, fn_800F7D6C (unit_800D81E8.c): the same field-map object under other per-function views
+  (`Cam_800FF908`, `Ent_*`, `P1c8`); fold it like unit_800B2DA0's `MapObj`, ideally from a shared `EvObj` header.
+  fn_800F04C8 also needs `lbl_80346E10`/`lbl_80346E14` typed (map tiles).
+- fn_80152B58 (unit_8014F970.c): `lbl_80346FC8` is read as raw bytes (`AT()`, `+ 0x604`) all over the unit; type the two
+  battle sides first. The prototype has 11 parameters, the unit declared 12.
+- fn_80171124, fn_801780C8, fn_801786C0 (unit_8015DC6C.c): `lbl_8034710C` is `void *` with ~30 `Outer_*`/`Ctrl_*` cast
+  views and raw offsets; the agent code itself casts (`OBJ()` macro, `*(s32*)(lbl_80307638 + 0x7c)`). Needs the
+  camp-menu task/control type.
+- fn_801AC87C (unit_80199B9C.c): reads `w->x8` as a `u32` where `ShopWork` has bytes 0x08-0x0B, and the agent casts the
+  entry flag; fn_801BE670 frees parts through menu.h's `MenuTask` (`(MenuTask*)t` like the rest of the unit) and sets
+  `p1f4[0x18]`; needs `ShopTask` and `MenuTask` reconciled in menu.h.
+
+Lessons: an `(int, f32)` parameter pair can be written in either order and still match the callee, but the caller loads
+arguments left to right, so a load order fixes the prototype. When the original re-reads `t->work` for every access, a
+typed-work task view is the only cast-free form; where it reads the work once, task.h's `Task` and a typed local match.

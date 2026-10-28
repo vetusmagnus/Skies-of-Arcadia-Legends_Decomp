@@ -290,7 +290,7 @@ extern void njTranslate(void*, f32, f32, f32);
 extern void njScale(void*, f32, f32, f32);
 extern void fn_8007E678(void*, void*);
 extern void fn_80060950(void*);
-extern void fn_8003529C(void*, void*, u8, f32);
+extern void fn_8003529C(void*, void*, f32, u8);
 extern void fn_80035380(void*, void*, f32, u8);
 extern void fn_80033050(void*);
 void fn_80040DC4(Node* node);
@@ -3835,7 +3835,7 @@ void fn_80046DE4(Node* node, void* tex, void* p5, Vec* scl, u8* col, Vec* pos, s
         if (DrawStatePush(&st) != 0) {
             u8* t = s->tbl + 8;
             if ((*(u32*)(t + s->xea * 0x18) & 0x200000) || (*(u32*)(t + s->xe8 * 0x18) & 0x200000)) {
-                fn_8003529C(s->x158, s->x5c, w->x44, f29);
+                fn_8003529C(s->x158, s->x5c, f29, w->x44);
             } else {
                 fn_80035380(s->x158, s->x5c, f29, w->x44);
             }

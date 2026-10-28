@@ -1034,7 +1034,7 @@ static inline void DrawModelMotion(void* model, void* a, f32 f, u8 mode) {
     }
 }
 
-void fn_8003529C(void* model, void* a, u8 mode, f32 f) {
+void fn_8003529C(void* model, void* a, f32 f, u8 mode) {
     fn_802947CC(0);
     DrawModelMotion(model, a, f, mode);
     fn_802947CC(1);
