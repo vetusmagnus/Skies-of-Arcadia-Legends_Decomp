@@ -328,6 +328,78 @@ void fn_801CD73C(DrawVtx *v, s32 n, s32 a, u32 flags) {
     }
 }
 
+typedef struct DrawPt {
+    f32 x, y, z;
+} DrawPt;
+typedef struct LineArgs {
+    DrawPt* pts;
+} LineArgs;
+void fn_802AA2F0(LineArgs *v, s32 n, s32 a);
+
+void fn_801CDC68(LineArgs *v, s32 n, s32 a, u32 flags) {
+    f32 avg;
+    s32 i;
+
+    if (n <= 0) {
+        return;
+    }
+    if (!(flags & 0x800000)) {
+        avg = 0.0f;
+        for (i = 0; i < n; i++) {
+            avg += v->pts[i].z;
+        }
+        avg /= (f32)n;
+    } else {
+        avg = v->pts[0].z;
+    }
+    if (lbl_8034720C != 0 && (flags & 0x1000)) {
+        if (!(a & 0x40)) {
+            if (flags & 0x100) {
+                FogBuf(2);
+                DrawStateReapply();
+                fn_802AA2F0(v, n, a);
+                fn_802A8F40(1);
+                if (lbl_80347256 < 0x400 && lbl_80347218 > lbl_80347258 && lbl_80347208 != 0 && lbl_8034720C != 0) {
+                    fn_801D0BC0(0, 10000.0f + avg);
+                }
+                fn_802A8F40(0);
+            } else {
+                DrawStateReapply();
+                fn_802AA2F0(v, n, a);
+            }
+        } else if (flags & 0x8000) {
+            FogBuf(3);
+            fn_8029CEA4(0, 1);
+            fn_8029CE6C(6, lbl_80346820, 0, 6, lbl_80346820, 1);
+            DrawStateReapply();
+            fn_802AA2F0(v, n, a);
+            fn_8029CEA4(0, 1);
+            fn_8029CE6C(4, 0, 0, 7, 0, 1);
+            fn_802A8F40(1);
+            if (lbl_80347256 < 0x400 && lbl_80347218 > lbl_80347258 && lbl_80347208 != 0 && lbl_8034720C != 0) {
+                fn_801D0BC0(1, 10000.0f + avg);
+            }
+            fn_802A8F40(0);
+        } else {
+            FogBuf(3);
+            if (flags & 0x4000) {
+                fn_80296EEC(1, 3, 0);
+            }
+            DrawStateReapply();
+            fn_802AA2F0(v, n, a);
+            fn_80296EEC(1, 3, 1);
+            fn_802A8F40(1);
+            if (lbl_80347256 < 0x400 && lbl_80347218 > lbl_80347258 && lbl_80347208 != 0 && lbl_8034720C != 0) {
+                fn_801D0BC0(8, 10000.0f + avg);
+            }
+            fn_802A8F40(0);
+        }
+    } else {
+        DrawStateReapply();
+        fn_802AA2F0(v, n, a);
+    }
+}
+
 void fn_8028A418(DrawVtx *v, s32 n, s32 a);
 void fn_801CE1A4(DrawVtx *v, s32 n, s32 a, u32 flags) {
     f32 avg;
