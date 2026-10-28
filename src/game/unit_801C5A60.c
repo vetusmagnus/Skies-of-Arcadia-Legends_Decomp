@@ -179,6 +179,27 @@ typedef struct AkRd {
 extern void fn_801C74D0(AkRd* f);
 typedef struct { f32 x, y, z; } Vtx;
 typedef struct { s16 i[4]; } Quad;
+/* akFIO.c LZSS ("AKLZ") expander: input stream in work, output to data, 0x1000-byte window in ring. */
+typedef struct AkLz {
+    s32 state;
+    u8 pad04[0x44];
+    u8* data;       /* 0x48 */
+    u8 pad4c[0x10];
+    u8 step;        /* 0x5C */
+    u8 sub;         /* 0x5D */
+    u8 pad5e[2];
+    s32 length;     /* 0x60 */
+    s32 got;        /* 0x64 */
+    s32 outPos;     /* 0x68 */
+    u32 inPos;      /* 0x6C */
+    u8* work;       /* 0x70 */
+    s32 ringPos;    /* 0x74 */
+    u8* ring;       /* 0x78 */
+    u8 lo;          /* 0x7C */
+    u8 hi;          /* 0x7D */
+    u8 pad7e[2];
+    u32 flags;      /* 0x80 */
+} AkLz;
 
 void fn_801C5A60(NJS_MATRIX m, NJS_POINT3 *p, NJS_POINT3 *out)
 {
@@ -1054,4 +1075,99 @@ s32 fn_801C82C8(Quad* q, Vtx* v, f32 px, f32 pz)
     t1 = (v[q->i[3]].y - pz) * (v[q->i[0]].x - px);
     t0 = (v[q->i[0]].y - pz) * (v[q->i[3]].x - px);
     return !(zero > t0 - t1);
+}
+
+static inline s32 GetByte(AkLz* f, u8* out)
+{
+    if (f->got >= f->length) return 0;
+    f->inPos &= 0x1FFFF;
+    *out = f->work[f->inPos++];
+    f->got++;
+    return 1;
+}
+
+void fn_801C6F1C(AkLz* f)
+{
+    u8 b;
+    s32 i;
+    s32 src;
+    s32 n;
+    u32 fl;
+    u8* out;
+    out = f->data;
+    for (;;) {
+        switch (f->sub) {
+        case 1:
+            fl = f->flags >> 1;
+            f->flags = fl;
+            if (!(fl & 0x100)) {
+                if (!GetByte(f, &b)) {
+                    f->state = 4;
+                    f->sub = 0;
+                    return;
+                }
+                f->flags = b | 0xFF00;
+                if (f->flags & 1) f->sub = 2;
+                else f->sub = 3;
+                if (f->inPos >= 0x20000) {
+                    f->step = 6;
+                    return;
+                }
+            } else {
+                if (f->flags & 1) f->sub = 2;
+                else f->sub = 3;
+            }
+            break;
+        case 2:
+            if (!GetByte(f, &b)) {
+                f->state = 4;
+                f->sub = 0;
+                return;
+            }
+            out[f->outPos++] = b;
+            f->ring[f->ringPos++] = b;
+            f->ringPos &= 0xFFF;
+            f->sub = 1;
+            if (f->inPos >= 0x20000) {
+                f->step = 6;
+                return;
+            }
+            break;
+        case 3:
+            if (!GetByte(f, &f->lo)) {
+                f->state = 4;
+                f->sub = 0;
+                return;
+            }
+            f->sub = 4;
+            if (f->inPos >= 0x20000) {
+                f->step = 6;
+                return;
+            }
+        case 4:
+            if (!GetByte(f, &f->hi)) {
+                f->state = 4;
+                f->sub = 0;
+                return;
+            }
+            src = f->lo | ((f->hi & 0xF0) << 4);
+            n = (f->hi & 0xF) + 2;
+            for (i = 0; i <= n; i++) {
+                b = f->ring[(src + i) & 0xFFF];
+                out[f->outPos++] = b;
+                f->ring[f->ringPos++] = b;
+                f->ringPos &= 0xFFF;
+            }
+            f->sub = 1;
+            if (f->inPos >= 0x20000) {
+                f->step = 6;
+                return;
+            }
+            break;
+        default:
+            break;
+        case 0:
+            return;
+        }
+    }
 }

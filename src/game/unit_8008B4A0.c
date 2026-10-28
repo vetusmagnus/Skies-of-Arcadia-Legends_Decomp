@@ -3,6 +3,7 @@
 #include "game/sprite.h"
 #include <math.h>
 #include "game/drawstate.h"
+#include "game/evobj.h"
 typedef struct Ent_UNIT0000 {
     u8 pad[0x1C];
     u32 x1c;
@@ -535,6 +536,51 @@ typedef struct {
 extern void fn_80298FE4(s32 i);
 extern void fn_8022BC24(s32 a, s32 b, s32 c, s32 d);
 extern void fn_8028A8C0(VertexTex* v, s32 count, s32 flag);
+typedef struct CamSub {
+    u8 pad0[0x14];
+    s16 flags; /* 0x14 */
+} CamSub;
+typedef struct CamReq {
+    u8 pad0[2];
+    s16 flags;      /* 0x02 */
+    u8 pad4[0x5a - 4];
+    u16 limit;      /* 0x5A */
+    f32 dist;       /* 0x5C */
+} CamReq;
+typedef struct CamCtl {
+    u8 pad0[2];
+    s16 flags;          /* 0x02: 0x01 odd mode, 0x04 hold, 0x08 aim, 0x10 start aim, 0x20 free */
+    s16 mode;           /* 0x04 */
+    s16 mode2;          /* 0x06 */
+    u8 pad8[0x30 - 8];
+    NJS_POINT3 lift;    /* 0x30: only y (0x34) is used as the eye height */
+    u8 pad3c[4];
+    Angle w40[3];       /* 0x40 */
+    NJS_POINT3 v4c;     /* 0x4C */
+    NJS_POINT3 v58;     /* 0x58 */
+    NJS_POINT3 v64;     /* 0x64 */
+    Angle ang70[3];     /* 0x70 */
+    u8 pad7c[0xac - 0x7c];
+    NJS_POINT3 pos;     /* 0xAC */
+    f32 xb8;            /* 0xB8 */
+    f32 xbc;            /* 0xBC */
+    u8 padc0[0xcc - 0xc0];
+    f32 xcc;            /* 0xCC */
+    f32 xd0;            /* 0xD0 */
+    f32 xd4;            /* 0xD4 */
+    u8 padd8[4];
+    f32 xdc;            /* 0xDC */
+    u32 xe0;            /* 0xE0 */
+    s16 xe4;            /* 0xE4 */
+    u8 pade6[0xf0 - 0xe6];
+    NJS_POINT3 prev;    /* 0xF0 */
+    f32 xfc;            /* 0xFC */
+    u32 x100;           /* 0x100 */
+    u32 x104;           /* 0x104 */
+    CamSub* sub;        /* 0x108 */
+    u32 x10c;           /* 0x10C */
+} CamCtl;
+extern void fn_801DCEB0(NJS_POINT3* out, Angle* ang, f32 dist);
 
 u32 fn_8008B55C(void* a0, Ent_UNIT0000* e) {
     return (e->x1c >> 9) & 1;
@@ -2458,4 +2504,113 @@ void fn_8009076C(s32 flag, Quad3D* q)
     njScale(0, q->scale.x, q->scale.y, q->scale.z);
     fn_8028A8C0(v, 4, 1);
     njPopMatrixEx();
+}
+
+/* Angles of the vector a - b. */
+static inline void AngleTo(Angle* out, f32 ax, f32 ay, f32 az, NJS_POINT3* b) {
+    NJS_POINT3 d;
+    d.x = ax - b->x;
+    d.y = ay - b->y;
+    d.z = az - b->z;
+    fn_801DD5E8(out, &d);
+}
+
+/* Distance between a and b. */
+static inline f32 Dist(f32 ax, f32 ay, f32 az, NJS_POINT3* b) {
+    f32 dx = ax - b->x;
+    f32 dy = ay - b->y;
+    f32 dz = az - b->z;
+    return fn_80291A5C(dz * dz + (dx * dx + dy * dy));
+}
+
+void fn_80095DFC(CamCtl* c, CamReq* r) {
+    f32 y, z, x;
+    NJS_POINT3 t;
+    Angle ang[3];
+    if (c->sub != 0) {
+        c->sub->flags &= ~0x8000;
+    }
+    if (lbl_80347450 != 0) {
+        fn_80095220(lbl_80347450, &c->pos, 0);
+    }
+    c->xb8 = 4.0f;
+    c->xbc = 10.0f;
+    c->x10c = 0;
+    c->flags &= ~0x20;
+    if (c->flags & 4) {
+        x = c->pos.x;
+        y = c->pos.y + c->lift.y;
+        z = c->pos.z;
+    } else {
+        if (!(r->flags & 4)) {
+            c->lift.z = 0.0f;
+            c->lift.x = 0.0f;
+            c->lift.y = 14.0f;
+        }
+        c->ang70[2] = 0;
+        c->xfc = 0.0f;
+        c->x104 = c->x100 = (r->flags & 0x400) ? r->limit : 0x10000 - 0x800;
+        c->ang70[0] = c->x100;
+        c->xd0 = (r->flags & 0x800) ? r->dist : 50.0f;
+        c->v4c.x = lbl_80311970.f[0];
+        c->v4c.y = lbl_80311970.f[1];
+        c->v4c.z = lbl_80311970.f[2];
+        c->w40[0] = (u16)lbl_80311970.w[0];
+        c->w40[1] = (u16)lbl_80311970.w[1];
+        c->w40[2] = (u16)lbl_80311970.w[2];
+        x = c->pos.x;
+        y = c->pos.y + c->lift.y;
+        z = c->pos.z;
+        if (r->flags & 0x10) {
+            c->v64.x = x + c->v58.x;
+            c->v64.y = c->pos.y + c->v58.y;
+            c->v64.z = c->pos.z + c->v58.z;
+            r->flags &= ~0x10;
+            r->flags |= 8;
+        }
+        if (r->flags & 8) {
+            AngleTo(ang, x, y, z, &c->v64);
+            c->xd4 = Dist(x, y, z, &c->v64);
+            if (c->xd0 < c->xd4) {
+                c->xd4 = c->xd0;
+                fn_801DCEB0(&t, ang, -c->xd0);
+                c->v64.x = x + t.x;
+                c->v64.y = y + t.y;
+                c->v64.z = z + t.z;
+            }
+            c->ang70[0] = ang[0];
+            c->ang70[1] = ang[1];
+        } else if (r->flags & 0x20) {
+            fn_801DCEB0(&t, c->ang70, -c->xd0);
+            c->v64.x = x + t.x;
+            c->v64.y = y + t.y;
+            c->v64.z = z + t.z;
+            c->xd4 = c->xd0;
+        } else {
+            AngleTo(c->ang70, x, y, z, &c->v4c);
+            c->xd4 = Dist(x, y, z, &c->v4c);
+            if (c->xd0 < c->xd4) {
+                c->xd4 = c->xd0;
+            }
+            fn_801DCEB0(&t, c->ang70, -c->xd4);
+            c->v64.x = x + t.x;
+            c->v64.y = y + t.y;
+            c->v64.z = z + t.z;
+        }
+    }
+    c->prev.x = x;
+    c->prev.y = y;
+    c->prev.z = z;
+    c->xcc = c->xd4;
+    c->v4c.x = c->v64.x;
+    c->v4c.y = c->v64.y;
+    c->v4c.z = c->v64.z;
+    c->w40[0] = c->ang70[0];
+    c->w40[1] = c->ang70[1];
+    c->w40[2] = c->ang70[2];
+    c->mode = (c->flags & 1) ? 6 : 4;
+    c->mode2 = 6;
+    c->xdc = 0.5f;
+    c->xe0 = 0x100;
+    c->xe4 = 0x78;
 }

@@ -1327,6 +1327,64 @@ typedef struct Ob_8005DB1C {
 extern s32 fn_800553B4(void);
 extern void fn_80034690(void*);
 extern void fn_80226DC4(void);
+typedef struct Cmd {
+    u8 pad0[0x10];
+    u32 flags;          /* 0x10 */
+    u8 pad14[4];
+    s16 s18;            /* 0x18 */
+    s16 s1a;            /* 0x1A */
+    s16 s1c;            /* 0x1C */
+    s16 s1e;            /* 0x1E */
+    s16 s20;            /* 0x20 */
+    s16 s22;            /* 0x22 type */
+    s16 s24;            /* 0x24 */
+    u8 pad26[2];
+    f32 f28;            /* 0x28 */
+    f32 f2c;            /* 0x2C */
+    f32 f30;            /* 0x30 */
+    f32 f34;            /* 0x34 */
+    f32 f38;            /* 0x38 */
+} Cmd;
+/* Screen shake parameters (fn_8006097C). */
+typedef struct Shake {
+    u8 b0;
+    u8 kind;
+    s8 amp;
+    u8 dur;
+    u8 b4;
+    u8 pad5[3];
+} Shake;
+typedef struct Work {
+    s16 cnt;            /* 0x00 */
+    u8 pad2[2];
+    void* x4;           /* 0x04 */
+    s16 timer;          /* 0x08 */
+    u8 pada[2];
+    f32 f0c;            /* 0x0C */
+    f32 f10;            /* 0x10 */
+    f32 f14;            /* 0x14 */
+    f32 f18;            /* 0x18 */
+    f32 f1c;            /* 0x1C */
+    u8 pad20[4];
+    f32 f24;            /* 0x24 */
+    f32 f28;            /* 0x28 */
+    f32 f2c;            /* 0x2C */
+    Shake shake;        /* 0x30 */
+    Cmd* cmd;           /* 0x38 */
+} Work;
+extern void fn_80060A54(void);
+extern void fn_8006097C(Shake* s);
+extern s32 fn_80075C70(void*, s32, s32);
+extern s32 fn_8022E068(f32* p, s32 i, f32* a, f32* b, f32* c, f32* d);
+/* 12-byte block descriptor: a heap array of 16- or 24-byte records, chosen by the low nibble of kind. */
+typedef struct Block {
+    void* data;         /* 0x00 */
+    u32 x4;             /* 0x04 */
+    u16 x8;             /* 0x08 */
+    u16 kind;           /* 0x0A */
+} Block;
+typedef struct Rec16 { s32 w[4]; } Rec16;
+typedef struct Rec24 { s32 w[6]; } Rec24;
 
 void fn_80055E94(u8 *p) {
     p[0x18] |= 0x40;
@@ -6290,4 +6348,198 @@ void fn_8005DB1C(Ob_8005DB1C* o) {
     }
     s->cnt++;
     fn_80037FD8(s->tab, &o->state);
+}
+
+void fn_8005DEB8(Task* o)
+{
+    Work* w = o->work;
+    s32 ok = 0;
+    void* t;
+    s16 i;
+    f32 fl;
+    Shake s = w->shake;
+
+    switch (o->state) {
+    case 0:
+        if (lbl_8030A10C.f6c & 0x10000) {
+            o->state = 0xFA;
+            return;
+        }
+        fn_80060A54();
+        o->state = 1;
+    case 1:
+        if (w->cmd->flags & 0x8000) {
+            t = fn_8001E05C(w->x4);
+            if (fn_80075C70(t, 0xB, -1) || fn_80075C70(t, 0x20, -1) || fn_80075C70(t, 0xC, -1)) {
+                ok = 1;
+            }
+        } else if (w->cnt >= w->cmd->s20) {
+            ok = 1;
+        }
+        if (ok) {
+            w->f0c = w->cmd->f28;
+            w->f18 = w->cmd->f34;
+            w->f10 = w->cmd->f2c;
+            w->f14 = w->cmd->f30;
+            if (!(w->cmd->flags & 0x2000)) {
+                w->f1c = w->cmd->f38;
+            }
+            w->timer = w->cmd->s1a;
+            w->cnt = 0;
+            if (w->cmd->s1c != 0) {
+                switch (w->cmd->s22) {
+                case 0:
+                case 1:
+                case 4:
+                case 5:
+                    fl = 0.0f;
+                    for (i = 0; i < w->cmd->s1c; i++) {
+                        fn_8022E068(&w->f0c, i, &w->f24, &w->f28, &w->f2c, &fl);
+                    }
+                    if (i != 0) {
+                        w->cnt = 1;
+                    }
+                    break;
+                }
+            }
+            o->state = 2;
+        } else {
+            w->cnt++;
+        }
+        break;
+    case 2:
+        if (w->cnt >= w->cmd->s1e - w->cmd->s1c) {
+            o->state = 0xFA;
+            s.kind = 0;
+            s.amp = 0;
+            s.b4 = 0;
+            fn_8006097C(&s);
+        } else {
+            switch (w->cmd->s22) {
+            case 0:
+            case 1:
+            case 4:
+            case 5:
+                fl = s.amp;
+                if (!fn_8022E068(&w->f0c, w->cnt, &w->f24, &w->f28, &w->f2c, &fl)) {
+                    s.amp = 0;
+                    s.kind = 0;
+                    s.b4 = 0;
+                    o->state = 0xFA;
+                } else {
+                    s.kind = 0;
+                    s.b4 = 0;
+                    switch (w->cmd->s22) {
+                    case 0:
+                    case 4:
+                    default:
+                        s.amp = fl;
+                        if (w->cmd->s22 < 4) {
+                            s.kind = 1;
+                        }
+                        break;
+                    case 1:
+                    case 5:
+                        s.amp = fl;
+                        if (s.amp < 0) {
+                            s.amp *= -1;
+                        }
+                        if (w->cmd->s22 < 4) {
+                            s.kind = 1;
+                        }
+                        break;
+                    }
+                }
+                break;
+            default:
+                s.amp = w->cmd->f30;
+                s.b4 = w->cmd->s24;
+                switch (w->cmd->s22) {
+                case 2:
+                case 6:
+                    if (w->cmd->s22 < 4) {
+                        s.kind = 9;
+                    } else {
+                        s.kind = 8;
+                    }
+                    break;
+                case 3:
+                case 7:
+                    if (w->cmd->s22 < 4) {
+                        s.kind = 0x81;
+                    } else {
+                        s.kind = 0x80;
+                    }
+                    break;
+                }
+                o->state = 3;
+                break;
+            }
+        }
+        s.dur = w->cmd->s18;
+        w->shake = s;
+        fn_8006097C(&s);
+        w->timer--;
+        if (w->timer <= 0) {
+            w->cnt++;
+            w->timer = w->cmd->s1a;
+        }
+        break;
+    case 3:
+        if (w->cnt >= w->cmd->s1e - w->cmd->s1c) {
+            o->state = 0xFA;
+            s.kind = 0;
+            s.amp = 0;
+            s.b4 = 0;
+            fn_8006097C(&s);
+        }
+        w->timer--;
+        if (w->timer <= 0) {
+            w->cnt++;
+            w->timer = w->cmd->s1a;
+        }
+        break;
+    case 0xF9:
+        s.kind = 0;
+        s.amp = 0;
+        s.b4 = 0;
+        fn_8006097C(&s);
+    case 0xFA:
+        o->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    default:
+        break;
+    }
+    fn_80037FD8(w->cmd, &o->state);
+}
+
+void fn_80072318(Block* src, Block* dst, s16 n)
+{
+    Rec16* d16;
+    Rec24* d24;
+    Rec24* s24;
+    s32 i;
+    Rec16* s16p;
+    s32 kind = src->kind & 0xF;
+
+    *dst = *src;
+    switch (kind) {
+    case 2:
+        fn_80061F58(dst, n * 16, 0);
+        d16 = dst->data;
+        s16p = src->data;
+        for (i = 0; i < n; i++) {
+            d16[i] = s16p[i];
+        }
+        break;
+    case 3:
+        fn_80061F58(dst, n * 24, 0);
+        d24 = dst->data;
+        s24 = src->data;
+        for (i = 0; i < n; i++) {
+            d24[i] = s24[i];
+        }
+        break;
+    }
 }
