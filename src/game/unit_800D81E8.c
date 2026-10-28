@@ -465,7 +465,6 @@ typedef struct K06Obj_800EC3EC {
 } K06Obj_800EC3EC;
 extern f32 lbl_802E3CB0[];
 extern f32 lbl_802E3CD0[];
-extern u8 lbl_80305C78[];
 typedef struct K06A {
     u8 pad0[0x8];
     u32 flags;
@@ -1632,23 +1631,92 @@ typedef struct {
     Work_800DE00C* work;
 } Obj_800DE00C;
 typedef struct {
-    u8 pad0[0xa];
-    s16 active;
-    s16 mode;
+    u32 flags;
+    u8 pad04[0x34 - 4];
+    f32 x, y;      /* 0x34 */
+    u8 pad3c[0x50 - 0x3c];
+} Obj50;
+/* A 2D sprite descriptor (fn_801D7A90; as in unit_801D24D0.c). */
+typedef struct {
+    u16 enable;    /* 0x00 */
+    u8 pad02[6];
+    f32 z;         /* 0x08 */
+    f32 colour;    /* 0x0C */
+    u32 attr;      /* 0x10 */
+    u32 blend;     /* 0x14 */
+    f32 ca, cb;    /* 0x18 */
+    u8 pad20[4];
+    u32 col;       /* 0x24 */
+    u8 pad28[0x34 - 0x28];
+    f32 x, y;      /* 0x34 */
+    f32 w, h;      /* 0x3C */
+    f32 ox, oy;    /* 0x44 */
+} Desc;
+/* lbl_80346DF0 (the board's sprites, inside the board work at 0x10). */
+typedef struct {
+    Desc bg;           /* 0x000 */
+    Desc cursor;       /* 0x04C */
+    Desc cursor2;      /* 0x098 */
+    Desc piece[10];    /* 0x0E4 */
+    Desc frame;        /* 0x3DC */
+    Desc slot[10];     /* 0x428 */
+    Desc cell[8][9];   /* 0x720 */
+} Board;
+typedef struct {
+    u8 on;
+    u8 pad1[3];
+} Mark;
+/* The board screen's work (lbl_80346DF4). */
+typedef struct {
+    s32 first;         /* 0x00 */
+    u8 pad4[6];
+    s16 active;        /* 0x0A */
+    s16 mode;          /* 0x0C */
+    u8 padE[2];
+    Board board;       /* 0x10 */
+    u8 pad1c90[8];
+    Obj50 base;        /* 0x1C98: the board's offset */
+    Obj50 cursor;      /* 0x1CE8 */
+    Obj50 slot[10];    /* 0x1D38 */
+    Obj50 cell[8][9];  /* 0x2058 */
+    Desc mark[8][9];   /* 0x36D8 */
+    Mark marked[8][9]; /* 0x4C38 */
 } Work_800ED360;
+/* lbl_80305C78 */
 typedef struct {
     s16 flag;
     u8 pad2[2];
     s16 x;
     s16 y;
-    u8 pad8[0x2c - 8];
+    u8 pad8[0xc];
+    u16 x14;
+    u16 count;
+    u16 piece[10];
     u8 cell[8][9];
     s16 v;
 } Cur_800ED360;
 typedef struct {
-    u8 pad[0x19];
+    u8 pad0[0x19];
     u8 state;
+    u8 pad1a[0x24 - 0x1A];
+    Work_800ED360* work;
 } Node_800ED360;
+typedef struct {
+    u8 pad0[0x20];
+    NJS_TEXLIST* texlist; /* 0x20 */
+} Res_800EC488;
+typedef struct {
+    u8 pad0[4];
+    Res_800EC488* res;  /* 0x04 */
+} Obj_800EC488;
+extern Cur_800ED360 lbl_80305C78;
+extern Board* lbl_80346DF0;
+extern Obj_800EC488* lbl_80346DEC;
+extern u8 lbl_802E3D68[8][9];
+extern s16 lbl_802E3CF4[10][4];
+extern void fn_801D7A08(Desc* p, f32 a, f32 b);
+extern void fn_801D7A14(Desc* p, f32 a, f32 b, f32 c, f32 d);
+extern void fn_801D7A90(NJS_TEXLIST* tex, Desc* d);
 extern Work_800ED360* lbl_80346DF4;
 extern Node_800ED360* lbl_80346DF8;
 extern void fn_80210450(const char* s);
@@ -1921,28 +1989,7 @@ extern void* memset(void*, int, unsigned long);
 extern void fn_801D89D4(void* p, s32 a, s32 b, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6, f32 f7, f32 f8);
 extern void fn_800EB754(void);
 extern void* lbl_803475A8;
-typedef struct {
-    s32 first;
-    u8 pad4[6];
-    s16 val;
-    u8 padc[0x1c98 - 0xc];
-    u8 anim[0x34];
-    f32 x;
-    f32 y;
-} Work_800EB58C;
-typedef struct {
-    u8 pad0[0x19];
-    u8 state;
-    u8 pad1a[0x24 - 0x1A];
-    Work_800EB58C* work;
-} Node_800EB58C;
-extern u8* lbl_80346DF0;
 extern s16 lbl_80346DE8;
-typedef struct {
-    s16 flag;
-    u8 pad[0x72];
-    s16 v;
-} Tbl_800EB58C;
 typedef struct Node_80109868 {
     u8 pad0[0x4];
     u8 *sub;
@@ -2299,10 +2346,6 @@ extern void fn_801C5B44(void* w, void* p);
 extern void fn_801C5AB4(void* w, void* p);
 extern void fn_801E66E0(void* w);
 typedef struct {
-    u32 flags;
-    u8 pad04[0x50 - 4];
-} Obj50;
-typedef struct {
     u8 pad00[0x48];
     void* p48;
     u8 pad4c[0xC5C - 0x4C];
@@ -2571,6 +2614,140 @@ void fn_800E36B0(void) {
     lbl_80346DD4 = 0;
     lbl_80346DD0 = 0;
     *(u32 *)((u8 *)lbl_80346DCC + 0x160c) = 0;
+}
+
+static inline void BoardDrawAt(Desc* d, f32 x, f32 y) {
+    fn_801D7A08(d, x + lbl_80346DF4->base.x, y + lbl_80346DF4->base.y);
+    fn_801D7A90(lbl_80346DEC->res->texlist, d);
+}
+
+static inline s32 CellSetFrame(Desc* d, s8 f) {
+    if (f != 0) {
+        if (f & 2) {
+            fn_801D7A14(d, lbl_802E3CF4[5][0], lbl_802E3CF4[5][1], lbl_802E3CF4[5][2], lbl_802E3CF4[5][3]);
+        } else if (f & 1) {
+            fn_801D7A14(d, lbl_802E3CF4[6][0], lbl_802E3CF4[6][1], lbl_802E3CF4[6][2], lbl_802E3CF4[6][3]);
+        } else if (f & 4) {
+            fn_801D7A14(d, lbl_802E3CF4[3][0], lbl_802E3CF4[3][1], lbl_802E3CF4[3][2], lbl_802E3CF4[3][3]);
+        } else {
+            fn_801D7A14(d, lbl_802E3CF4[2][0], lbl_802E3CF4[2][1], lbl_802E3CF4[2][2], lbl_802E3CF4[2][3]);
+        }
+        if (f & 0x40) {
+            d->col = 0xFFFF0000;
+        }
+        return 1;
+    }
+    return 0;
+}
+
+void fn_800EC488(void) {
+    Desc* d;
+    s16 i;
+    s16 c;
+
+    BoardDrawAt(&lbl_80346DF0->bg, 448.0f, 256.0f);
+    if (lbl_80305C78.x14 == 0) {
+        lbl_80346DF0->frame.col = 0xFFFF0000;
+    }
+    d = &lbl_80346DF0->frame;
+    BoardDrawAt(d, 485.0f, 434.0f);
+    for (i = 0; i < 10; i++) {
+        lbl_80346DF0->slot[i].cb = lbl_80346DF4->slot[i].x;
+        BoardDrawAt(&lbl_80346DF0->slot[i], 0x20b + i * 8, 437.0f);
+    }
+    for (i = 0; i < 10; i++) {
+        if (i < lbl_80305C78.count) {
+            lbl_80346DF0->piece[i].enable = 1;
+            lbl_80346DF0->piece[i].ox = (lbl_80305C78.piece[i] % 8) * 18 + 0x1c8;
+            lbl_80346DF0->piece[i].oy = (lbl_80305C78.piece[i] / 8) * 18 + 0xfa;
+        }
+        d = &lbl_80346DF0->piece[i];
+        d->ox += lbl_80346DF4->base.x;
+        d->oy += lbl_80346DF4->base.y;
+        fn_801D7A90(lbl_80346DEC->res->texlist, d);
+    }
+    for (i = 0; i < 8; i++) {
+        for (c = 0; c < 9; c++) {
+            if (lbl_802E3D68[i][c] == 0x80) {
+                continue;
+            }
+            if (CellSetFrame(&lbl_80346DF0->cell[i][c], lbl_80305C78.cell[i][c]) == 1) {
+                lbl_80346DF0->cell[i][c].cb = lbl_80346DF4->cell[i][c].x;
+                d = &lbl_80346DF0->cell[i][c];
+                BoardDrawAt(d, 0x1dc + i * 18, 0x10e + c * 18);
+            }
+            if (lbl_80346DF4->marked[i][c].on != 0) {
+                d = &lbl_80346DF4->mark[i][c];
+                BoardDrawAt(d, 0x1dc + i * 18, 0x10e + c * 18);
+            }
+        }
+    }
+    lbl_80346DF0->cursor.colour = 0xffff - lbl_80347450->ang[1] % 0xffff;
+    d = &lbl_80346DF0->cursor;
+    BoardDrawAt(d, lbl_80305C78.x * 18 + 0x1dc, lbl_80305C78.y * 18 + 0x10e);
+    lbl_80346DF0->cursor2.cb = lbl_80346DF4->cursor.x;
+    d = &lbl_80346DF0->cursor2;
+    BoardDrawAt(d, lbl_80305C78.x * 18 + 0x1c8, lbl_80305C78.y * 18 + 0xfa);
+}
+
+extern void fn_801D7A28(Desc* d, f32 z, f32 x, f32 y, f32 w, f32 h, f32 ox, f32 oy);
+extern u32 lbl_802E3E40[10];
+
+void fn_800ECC5C(void) {
+    f32 z;
+    s16 i;
+    s16 c;
+
+    z = -8.0f;
+    fn_801D7A28(&lbl_80346DF0->bg, z, lbl_802E3CF4[8][0], lbl_802E3CF4[8][1], lbl_802E3CF4[8][2], lbl_802E3CF4[8][3],
+                448.0f, 256.0f);
+    lbl_80346DF0->bg.cb = 0.8f;
+    for (i = 0; i < 8; i++) {
+        for (c = 0; c < 9; c++) {
+            z += 0.02f;
+            fn_801D7A28(&lbl_80346DF4->mark[i][c], z, lbl_802E3CF4[3][0], lbl_802E3CF4[3][1], lbl_802E3CF4[3][2],
+                        lbl_802E3CF4[3][3], 476.0f, 270.0f);
+            lbl_80346DF4->mark[i][c].cb = 0.0f;
+        }
+    }
+    for (i = 0; i < 8; i++) {
+        for (c = 0; c < 9; c++) {
+            z += 0.02f;
+            fn_801D7A28(&lbl_80346DF0->cell[i][c], z, lbl_802E3CF4[3][0], lbl_802E3CF4[3][1], lbl_802E3CF4[3][2],
+                        lbl_802E3CF4[3][3], 476.0f, 270.0f);
+            fn_801D8AB4(&lbl_80346DF4->cell[i][c], 1, 0, 0.8f, 0.8f);
+        }
+    }
+    for (i = 0; i < 10; i++) {
+        z += 0.02f;
+        fn_801D7A28(&lbl_80346DF0->piece[i], z, lbl_802E3CF4[1][0], lbl_802E3CF4[1][1], lbl_802E3CF4[1][2],
+                    lbl_802E3CF4[1][3], 474.0f, 268.0f);
+        lbl_80346DF0->piece[i].enable = 0;
+        lbl_80346DF0->piece[i].cb = 0.8f;
+    }
+    z += 0.02f;
+    fn_801D7A28(&lbl_80346DF0->cursor2, z, lbl_802E3CF4[0][0], lbl_802E3CF4[0][1], lbl_802E3CF4[0][2],
+                lbl_802E3CF4[0][3], 474.0f, 268.0f);
+    lbl_80346DF0->cursor2.cb = 0.8f;
+    z += 0.02f;
+    fn_801D7A28(&lbl_80346DF0->frame, z, lbl_802E3CF4[9][0], lbl_802E3CF4[9][1], lbl_802E3CF4[9][2],
+                lbl_802E3CF4[9][3], 485.0f, 434.0f);
+    for (c = 0, i = 9; i >= 0; i--, c++) {
+        z += 0.02f;
+        fn_801D7A28(&lbl_80346DF0->slot[c], z, lbl_802E3CF4[7][0], lbl_802E3CF4[7][1], lbl_802E3CF4[7][2],
+                    lbl_802E3CF4[7][3], 0x20b + i * 8, 437.0f);
+        lbl_80346DF0->piece[i].enable = 0;
+        lbl_80346DF0->piece[i].cb = 0.8f;
+        lbl_80346DF0->slot[c].col = lbl_802E3E40[c];
+        if (c < lbl_80305C78.x14) {
+            fn_801D8AB4(&lbl_80346DF4->slot[c], 1, 0, 1.0f, 1.0f);
+        } else {
+            fn_801D8AB4(&lbl_80346DF4->slot[c], 1, 0, 0.0f, 0.0f);
+        }
+    }
+    fn_801D7A28(&lbl_80346DF0->cursor, -3.0f, lbl_802E3CF4[4][0], lbl_802E3CF4[4][1], lbl_802E3CF4[4][2],
+                lbl_802E3CF4[4][3], 476.0f, 270.0f);
+    lbl_80346DF0->cursor.cb = 0.8f;
 }
 
 s32 fn_800F816C(u8 *obj) {
@@ -3248,8 +3425,8 @@ s16 fn_800EC3EC(K06Obj_800EC3EC *p) {
         }
         n7++;
     }
-    *(s16 *)(lbl_80305C78 + 4) = n6;
-    *(s16 *)(lbl_80305C78 + 6) = n7;
+    lbl_80305C78.x = n6;
+    lbl_80305C78.y = n7;
     return n6 + n7 * 8;
 }
 
@@ -5779,30 +5956,30 @@ void fn_800ED360(void) {
         switch (lbl_80346DF4->mode) {
         case 0:
             fn_80210450("Fship");
-            if (lbl_80346DF4 != 0 && (*(Cur_800ED360*)&lbl_80305C78).flag != 0) {
-                (*(Cur_800ED360*)&lbl_80305C78).v = lbl_80346DF4->active;
+            if (lbl_80346DF4 != 0 && lbl_80305C78.flag != 0) {
+                lbl_80305C78.v = lbl_80346DF4->active;
                 lbl_80346DF8->state = 3;
-                (*(Cur_800ED360*)&lbl_80305C78).flag = 0;
+                lbl_80305C78.flag = 0;
             }
             lbl_80346DF4->mode = -1;
-            (*(Cur_800ED360*)&lbl_80305C78).cell[(*(Cur_800ED360*)&lbl_80305C78).x][(*(Cur_800ED360*)&lbl_80305C78).y] |= 0x40;
+            lbl_80305C78.cell[lbl_80305C78.x][lbl_80305C78.y] |= 0x40;
             break;
         case 1:
             fn_80210450("Item1");
             lbl_80346DF4->mode = -1;
-            (*(Cur_800ED360*)&lbl_80305C78).cell[(*(Cur_800ED360*)&lbl_80305C78).x][(*(Cur_800ED360*)&lbl_80305C78).y] |= 0x40;
+            lbl_80305C78.cell[lbl_80305C78.x][lbl_80305C78.y] |= 0x40;
             break;
         case 2:
             fn_80210450("Item2");
             lbl_80346DF4->mode = -1;
-            (*(Cur_800ED360*)&lbl_80305C78).cell[(*(Cur_800ED360*)&lbl_80305C78).x][(*(Cur_800ED360*)&lbl_80305C78).y] |= 0x40;
+            lbl_80305C78.cell[lbl_80305C78.x][lbl_80305C78.y] |= 0x40;
             break;
         case 3:
             fn_80210450("Hazure");
-            if (lbl_80346DF4 != 0 && (*(Cur_800ED360*)&lbl_80305C78).flag != 0) {
-                (*(Cur_800ED360*)&lbl_80305C78).v = lbl_80346DF4->active;
+            if (lbl_80346DF4 != 0 && lbl_80305C78.flag != 0) {
+                lbl_80305C78.v = lbl_80346DF4->active;
                 lbl_80346DF8->state = 3;
-                (*(Cur_800ED360*)&lbl_80305C78).flag = 0;
+                lbl_80305C78.flag = 0;
             }
             lbl_80346DF4->mode = -1;
             break;
@@ -6482,39 +6659,39 @@ void fn_800EA244(s16 flag) {
 s32 fn_800EB58C(s32 mode) {
     switch (mode) {
     case 1:
-        (*(Node_800EB58C**)&lbl_80346DF8) = fn_802268E8(lbl_803475A8, fn_800EB754);
-        (*(Node_800EB58C**)&lbl_80346DF8)->work = fn_801E1C7C(0x4d58);
-        memset((*(Node_800EB58C**)&lbl_80346DF8)->work, 0, 0x4d58);
-        (*(Node_800EB58C**)&lbl_80346DF8)->state = 0;
-        (*(Work_800EB58C**)&lbl_80346DF4) = (*(Node_800EB58C**)&lbl_80346DF8)->work;
-        lbl_80346DF0 = (u8*)(*(Work_800EB58C**)&lbl_80346DF4) + 0x10;
-        (*(Work_800EB58C**)&lbl_80346DF4)->first = 0;
+        lbl_80346DF8 = fn_802268E8(lbl_803475A8, fn_800EB754);
+        lbl_80346DF8->work = fn_801E1C7C(0x4d58);
+        memset(lbl_80346DF8->work, 0, 0x4d58);
+        lbl_80346DF8->state = 0;
+        lbl_80346DF4 = lbl_80346DF8->work;
+        lbl_80346DF0 = &lbl_80346DF4->board;
+        lbl_80346DF4->first = 0;
         lbl_80346DE8 = 1;
         break;
     case 2:
-        (*(Node_800EB58C**)&lbl_80346DF8) = fn_802268E8(lbl_803475A8, fn_800EB754);
-        (*(Node_800EB58C**)&lbl_80346DF8)->work = fn_801E1C7C(0x4d58);
-        memset((*(Node_800EB58C**)&lbl_80346DF8)->work, 0, 0x4d58);
-        (*(Node_800EB58C**)&lbl_80346DF8)->state = 0;
-        (*(Work_800EB58C**)&lbl_80346DF4) = (*(Node_800EB58C**)&lbl_80346DF8)->work;
-        lbl_80346DF0 = (u8*)(*(Work_800EB58C**)&lbl_80346DF4) + 0x10;
-        (*(Work_800EB58C**)&lbl_80346DF4)->first = 1;
+        lbl_80346DF8 = fn_802268E8(lbl_803475A8, fn_800EB754);
+        lbl_80346DF8->work = fn_801E1C7C(0x4d58);
+        memset(lbl_80346DF8->work, 0, 0x4d58);
+        lbl_80346DF8->state = 0;
+        lbl_80346DF4 = lbl_80346DF8->work;
+        lbl_80346DF0 = &lbl_80346DF4->board;
+        lbl_80346DF4->first = 1;
         lbl_80346DE8 = 1;
         break;
     case 3:
-        if ((*(Work_800EB58C**)&lbl_80346DF4) != 0) {
-            if ((*(Tbl_800EB58C*)&lbl_80305C78).flag != 0) {
-                (*(Tbl_800EB58C*)&lbl_80305C78).v = (*(Work_800EB58C**)&lbl_80346DF4)->val;
-                (*(Node_800EB58C**)&lbl_80346DF8)->state = 3;
-                (*(Tbl_800EB58C*)&lbl_80305C78).flag = 0;
+        if (lbl_80346DF4 != 0) {
+            if (lbl_80305C78.flag != 0) {
+                lbl_80305C78.v = lbl_80346DF4->active;
+                lbl_80346DF8->state = 3;
+                lbl_80305C78.flag = 0;
             }
         }
         break;
     case 4:
-        fn_801D89D4((*(Work_800EB58C**)&lbl_80346DF4)->anim, 10, 0, (*(Work_800EB58C**)&lbl_80346DF4)->x, (*(Work_800EB58C**)&lbl_80346DF4)->y, 0.0f, 0.0f, 0.0f, -224.0f, 0.0f, 0.0f);
+        fn_801D89D4(&lbl_80346DF4->base, 10, 0, lbl_80346DF4->base.x, lbl_80346DF4->base.y, 0.0f, 0.0f, 0.0f, -224.0f, 0.0f, 0.0f);
         break;
     case 5:
-        fn_801D89D4((*(Work_800EB58C**)&lbl_80346DF4)->anim, 10, 0, (*(Work_800EB58C**)&lbl_80346DF4)->x, (*(Work_800EB58C**)&lbl_80346DF4)->y, 0.0f, 0.0f, 200.0f, -224.0f, 0.0f, 0.0f);
+        fn_801D89D4(&lbl_80346DF4->base, 10, 0, lbl_80346DF4->base.x, lbl_80346DF4->base.y, 0.0f, 0.0f, 200.0f, -224.0f, 0.0f, 0.0f);
         break;
     }
     return 0;
