@@ -234,6 +234,17 @@ misses in `docs/near/`:
 - **Empty case labels move a switch's pivot.** A switch on {0, 1, 2, 3, 4, 0xFF} pivots on 3;
   the original pivots on 4 and has a redundant `bge` after `cmpwi 0xff; beq`, which an empty
   `case 0xfe: break;` reproduces (fn_800A9D24, fn_800A4924).
+- **A `const` pointer parameter lets loads move above stores.** fn_801C8CC0 fills a local vertex
+  array from `size[0]`/`size[1]`; with `const f32* size` MWCC hoists those loads above the vertex
+  stores, with `f32* size` it keeps them where the source has them, as the original does.
+- **`.bss` pools too, from three objects up.** A function that references three or more `.bss`
+  objects of its file reaches them through one section base (`lis/addi` once, then fixed
+  offsets); with two it addresses each by name. Objects of 8 bytes or less go to `.sbss` and
+  don't count. The objects are laid out in order of first use in the file, whatever their
+  declaration order, `static` or not, file or function scope (fn_801C8DF0 in
+  docs/near/fn_801C9198.c).
+- **`unit_801C5A60.c` defines its `.rodata`** (0x802C3C20-0x802C4180, generated with
+  `tools/match/rodata_801C5A60.py`): fn_801C8DF0 and fn_801C9198 use its section base.
 - **Register colouring order.** Variables are split into webs and coloured one by one. A web
   takes the lowest-numbered callee-saved register already in use that it doesn't interfere
   with, and only allocates a new one (counting down from r31) when there is none. The order in

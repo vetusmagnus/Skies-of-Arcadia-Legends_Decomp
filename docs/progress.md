@@ -1265,6 +1265,14 @@ More (2026-10-27)
 - fn_800A9D24 (5.4 KB, unit_800972AC.c, a screen-quad effect): a near miss in
   [near/fn_800A9D24.c](near/fn_800A9D24.c), 24 fdiff lines, all volatile registers in its
   texture-scroll block.
+- unit_801C5A60.c now defines its `.rodata` (0x802C3C20-0x802C4180: the ending's sprite records,
+  picture tile table, tile sizes and file names, generated with `tools/match/rodata_801C5A60.py`);
+  the `.rodata` comes out byte-exact and every matching function in the unit still matches.
+  `Rect8` moved up for it, fn_80299040 takes its texture list and fn_801C8BC0 now lists its
+  texture list, sprite and colour before its floats (all still match). With that,
+  fn_801C8CC0 (the ending's tile draw) matches (50 of 69), and fn_801C9198 (5.3 KB, the
+  ending's picture show, 34 fdiff lines) and fn_801C8DF0 (936 bytes, the ending mode, 143
+  lines: a `.bss` layout question) are near misses in [near/fn_801C9198.c](near/fn_801C9198.c).
 
 ### Opus pass over the remaining near misses under 632 bytes (2026-10-27)
 
