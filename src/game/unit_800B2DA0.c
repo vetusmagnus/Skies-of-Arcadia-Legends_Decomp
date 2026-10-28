@@ -6,6 +6,7 @@
 #include "game/task.h"
 #include "game/drawstate.h"
 #include <math.h>
+#include "game/evobj.h"
 extern s32 lbl_803473C8;
 extern s32 lbl_803473CC;
 extern s32 lbl_803473D0;
@@ -3457,6 +3458,51 @@ typedef struct Fx_800B45D4 {
     Bone_800B45D4 *first;           /* 0x108 */
     Bone_800B45D4 *last;            /* 0x10C */
 } Fx_800B45D4;
+/* A dropped money/item pickup on the field map (task work). */
+typedef struct ItemMotion {
+    u8 pad0[4];
+    u32 nframes;             /* 0x04 */
+} ItemMotion;
+typedef struct ItemWork {
+    Task* owner;             /* 0x00 */
+    void* model;             /* 0x04 */
+    NJS_TEXLIST* texlist;    /* 0x08 */
+    ItemMotion* motion;      /* 0x0C */
+    void* shape;             /* 0x10 */
+    NJS_POINT3* base;        /* 0x14 */
+    f32 ofs[3];              /* 0x18 */
+    f32 vel[3];              /* 0x24 */
+    f32 range;               /* 0x30: wander range */
+    Angle* srcAng;           /* 0x34 */
+    Angle ang[3];            /* 0x38 */
+    NJS_POINT3 scl;          /* 0x44 */
+    f32 frame;               /* 0x50 */
+    f32 speed;               /* 0x54 */
+    f32 pickDist;            /* 0x58 */
+    f32 wander;              /* 0x5C */
+    s32 x60;                 /* 0x60 */
+    u8 pad64[4];
+    s32 timer;               /* 0x68 */
+    s32 x6c;                 /* 0x6C */
+    u8 pad70[4];
+    s32 mode;                /* 0x74 */
+    s32 item;                /* 0x78 */
+    s32 got;                 /* 0x7C */
+    s32* fade;               /* 0x80 */
+    s32* flag;               /* 0x84 */
+} ItemWork;
+extern u8 lbl_802DFEF0[0x2c];
+extern s32 lbl_80346D78;
+extern s32 lbl_80346D7C;
+extern void* memcpy(void* dst, const void* src, u32 n);
+extern void fn_80293544(void* model, ItemMotion* motion, void* shape, f32 frame);
+extern void fn_80292D88(void* model, ItemMotion* motion, f32 frame);
+extern void fn_8009009C(f32* v, f32 len);
+extern u32 fn_801B90E4(u16 id);
+extern s8 fn_801F452C(s16 id);
+extern void fn_801EFF0C(s16 id);
+extern void fn_8009D190(s32 a);
+#define ATAN_ANG(y, x) (((x) == 0.0f && (y) == 0.0f) ? 0 : (Angle)(10430.378f * (f32)atan2((y), (x))))
 
 void fn_800B2DA0(u8* p, u32 v) {
     u8* q = *(u8**)(p + 0x268);
@@ -9964,5 +10010,176 @@ void fn_800B45D4(Work_800B45D4 *w, Fx_800B45D4 *q)
             njRotateY(p->mtx.m, p->rotY);
             p->rotY = 0;
         }
+    }
+}
+
+static inline void ItemDraw(ItemWork* w)
+{
+    fn_80299040(w->texlist);
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    njTranslate(NULL, w->base->x + w->ofs[0], w->base->y + w->ofs[1], w->base->z + w->ofs[2]);
+    njRotateXYZ(NULL, w->ang[0], w->ang[1], w->ang[2]);
+    njScale(NULL, w->scl.x, w->scl.y, w->scl.z);
+    if (w->shape != NULL) {
+        fn_80293544(w->model, w->motion, w->shape, w->frame);
+    } else {
+        fn_80292D88(w->model, w->motion, w->frame);
+    }
+}
+
+void fn_800CA3C0(Task* t)
+{
+    u32 money;
+    DrawState ds;
+    DrawState ds2;
+    ItemWork* w;
+    s32 i;
+    f32 v;
+    f32 a;
+    f32 d;
+
+    w = t->work;
+    if ((t->parent->flags & 0x40) || (w->owner->flags & 0x40)) {
+        t->flags |= 0x40;
+        return;
+    }
+    if (*w->fade == -30) {
+        return;
+    }
+    if (lbl_80347450 == NULL) {
+        return;
+    }
+    if (t->state != 0xff && lbl_803473A8 == 0) {
+        return;
+    }
+    switch (t->state) {
+    case 0:
+        switch (w->mode) {
+        case 0:
+            if (!(lbl_80310B3C[0x88 / 4] & 0x8000)) {
+                for (i = 0; i < 3; i += 2) {
+                    v = w->vel[i];
+                    a = (v < 0.0f) ? -v : v;
+                    if (a < 0.1 || ((d = w->ofs[i] + v) < 0.0f ? -d : d) > w->range) {
+                        w->vel[i] = w->wander * (3.0517578e-05f * rand() - 0.5f);
+                    } else {
+                        w->ofs[i] += v;
+                        w->ang[1] = 0x4000 - ATAN_ANG(w->vel[2], w->vel[0]);
+                    }
+                }
+            }
+            break;
+        case 1:
+            memcpy(w->ang, w->srcAng, 12);
+            break;
+        }
+        if (*w->fade == 0) {
+            DrawStateDefault2D(&ds);
+        } else {
+            njMemCopy(&ds, lbl_802DFEF0, 10);
+            ds.colour.a = 0.033333335f * (f32)*w->fade;
+        }
+        DrawStatePush(&ds);
+        ItemDraw(w);
+        lbl_80346D78++;
+        njPopMatrixEx();
+        DrawStatePop(NULL);
+        w->frame += w->speed;
+        if (w->frame > (f32)w->motion->nframes - 1.0f) {
+            w->frame = 0.0f;
+        }
+        d = w->base->x + w->ofs[0] - lbl_80347450->pos[0];
+        if (d < 0.0f) {
+            d = -d;
+        }
+        if (d < w->pickDist) {
+            d = w->base->y + w->ofs[1] - lbl_80347450->pos[1];
+            if (d < 0.0f) {
+                d = -d;
+            }
+            if (d < w->pickDist) {
+                d = w->base->z + w->ofs[2] - lbl_80347450->pos[2];
+                if (d < 0.0f) {
+                    d = -d;
+                }
+                if (d < w->pickDist) {
+                    w->timer = 30;
+                    t->state = 1;
+                }
+            }
+        }
+        if (w->flag != NULL && *w->flag != 0) {
+            w->vel[0] = w->base->x + w->ofs[0] - lbl_80347450->pos[0];
+            w->vel[1] = w->base->y + w->ofs[1] - lbl_80347450->pos[1];
+            w->vel[2] = w->base->z + w->ofs[2] - lbl_80347450->pos[2];
+            fn_8009009C(w->vel, 3.0f);
+            w->ang[1] = 0x4000 - ATAN_ANG(w->vel[2], w->vel[0]);
+            w->speed = 5.0f;
+            w->timer = 30;
+            t->state = 3;
+        }
+        break;
+    case 1:
+        if (lbl_80346D7C != 0) {
+            break;
+        }
+        lbl_80346D7C = 1;
+        SePlay(8, 5, 7);
+        memcpy(&money, &lbl_8030CEA0.x17a0, 4);
+        if (money < 99999999) {
+            money++;
+        }
+        memcpy(&lbl_8030CEA0.x17a0, &money, 4);
+        memcpy(&money, &lbl_8030CEA0.x17a4, 4);
+        {
+            u32 add = fn_801B90E4(w->item);
+            if (money + add < 99999999) {
+                money = money + add;
+            } else {
+                money = 99999999;
+            }
+        }
+        memcpy(&lbl_8030CEA0.x17a4, &money, 4);
+        if (fn_801F452C(w->item) < 99) {
+            fn_801EFF0C(w->item);
+            w->got = 1;
+            fn_8009D190(w->x60);
+        } else {
+            w->got = 0;
+        }
+        t->state++;
+        break;
+    case 2:
+        w->timer--;
+        if (30 - w->timer == w->x6c && w->flag != NULL) {
+            *w->flag = 1;
+        }
+        if (w->timer <= 0) {
+            t->flags |= 0x40;
+        }
+        if (w->timer == 25) {
+            lbl_80346D7C = 0;
+        }
+        break;
+    case 3:
+        w->ofs[0] += w->vel[0];
+        w->ofs[2] += w->vel[2];
+        njMemCopy(&ds2, lbl_802DFEF0, 10);
+        ds2.colour.a = -(f32)(30 - w->timer) / 30.0f;
+        DrawStatePush(&ds2);
+        ItemDraw(w);
+        njPopMatrixEx();
+        DrawStatePop(NULL);
+        w->frame += w->speed;
+        if (w->frame > (f32)w->motion->nframes - 1.0f) {
+            w->frame = 0.0f;
+        }
+        w->timer--;
+        if (w->timer <= 0) {
+            t->flags |= 0x40;
+        }
+        break;
     }
 }
