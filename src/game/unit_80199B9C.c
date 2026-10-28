@@ -12,6 +12,7 @@ extern void TextPrint(s32 x, s32 y, const char *str);
 #include "game/menu.h"
 #include "game/drawstate.h"
 #include <math.h>
+#include <stdlib.h>
 /* A menu panel (0x6C bytes, the object at a menu part task's 0x28/0x2C): its UiObj, the text it
  * prints and four parameters (layout, item or member ids). */
 typedef struct MenuPanel {
@@ -97,7 +98,6 @@ extern void Ui2DBegin(void);
 extern void *lbl_8034718C[2];
 extern u32 lbl_80347184[2];
 extern s32 CARDUnmount(s32 slot);
-extern s32 sprintf(char *, const char *, ...);
 extern void strcpy(void *, const char *);
 extern void strcat(void *, const char *);
 extern char lbl_802B69C0[];
@@ -529,12 +529,16 @@ typedef struct Task_801B8E68 {
 } Task_801B8E68;
 extern void* lbl_803470EC;
 extern void* lbl_803470F4;
+typedef struct TexMdl_8019CB80 {
+    NJS_TEXLIST* texlist;
+    void* model;
+} TexMdl_8019CB80;
 typedef struct St {
     u8 pad00[4];
-    u8 x4[8];
+    TexMdl_8019CB80 x4;
     f32 xc, x10, x14;
     s32 x18, x1c, x20;
-    u8 pad24[0x30 - 0x24];
+    f32 x24, x28, x2c; /* scale */
     f32 x30, x34, x38;
     s32 x3c, x40, x44;
     f32 x48, x4c;
@@ -1990,6 +1994,76 @@ typedef struct Ent_801BE608 {
     s32 f24;
 } Ent_801BE608;
 extern TaskFunc lbl_802EBD30[33];
+typedef struct EvHit {
+    u8 pad0[0x24];
+    u16 h24;      /* 0x24 ADD: collision attribute (bits 8-14 the area id) */
+} EvHit;
+/* The emitter parameters (EvExt.info of a sparkle map object); game/evobj.h types this pointer
+ * as EvInfo, whose 0x24..0x40 fields are retyped here. */
+typedef struct EvInfo {
+    u8 pad0[4];
+    f32 rate;      /* 0x04 ADD: spawn threshold (0..1) */
+    f32 drag;      /* 0x08 ADD */
+    f32 spin;      /* 0x0C ADD */
+    f32 rise;      /* 0x10 ADD */
+    f32 riseVar;   /* 0x14 ADD */
+    f32 spread;    /* 0x18 ADD */
+    f32 gravity;   /* 0x1C ADD */
+    f32 side;      /* 0x20 ADD */
+    s32 angVel;    /* 0x24 (EvInfo.nearDist) */
+    s32 life;      /* 0x28 (EvInfo.actDist) */
+    f32 minDist;   /* 0x2C (EvInfo.x2c) */
+    f32 scale;     /* 0x30 (EvInfo.speed) */
+    u8 pad34[4];
+    f32 yOfs;      /* 0x38 (EvInfo.mode) */
+    f32 height;    /* 0x3C (EvInfo.flag) */
+    s32 area;      /* 0x40 ADD */
+} EvInfo;
+typedef struct EvExt {
+    u8 pad0[0x10];
+    EvInfo* info;          /* 0x10 */
+} EvExt;
+/* Copy of game/evobj.h's EvObj with the fields this function needs. */
+typedef struct EvObj {
+    u8 pad0[0x38];
+    NJS_POINT3 pos;          /* 0x38 */
+    u8 pad44[0xE4 - 0x44];
+    void* model;             /* 0xE4 */
+    u8 padE8[0x100 - 0xE8];
+    NJS_TEXLIST* texlist;    /* 0x100 */
+    NJS_POINT3 home;         /* 0x104 */
+    u8 pad110[0x1B8 - 0x110];
+    EvHit* hit;              /* 0x1B8 */
+    u8 pad1BC[0x1C8 - 0x1BC];
+    EvExt* ext;              /* 0x1C8 */
+    u8 pad1CC[0x20C - 0x1CC];
+    s32 x20c;                /* 0x20C ADD: the loop sound is playing */
+    s32 x210;                /* 0x210 */
+    u8 pad214[0x23C - 0x214];
+    s32 x23c;                /* 0x23C ADD: the loop sound's handle */
+} EvObj;
+extern EvObj *lbl_80347450;
+typedef struct Obj_8019CB80_8019C424 {
+    u8 pad00[8];
+    Flags_8019CB80* x8;
+    u8 pad0c[0x18 - 0x0c];
+    u8 flags;
+    u8 state;
+    u8 pad1a[0x24 - 0x1a];
+    St* st;
+    u8 pad28[0x40 - 0x28];
+    St buf;                /* 0x40 ADD: the work itself */
+} Obj_8019CB80_8019C424;
+extern Obj_8019CB80_8019C424 *fn_80226704(void *parent, void *cb, s32 size);
+extern void *fn_801C8930(void *p);
+extern f32 fn_80291A5C(f32 x);
+extern s32 fn_802254A0(NJS_POINT3 *p, EvHit *h);
+extern s32 fn_80227810(NJS_TEXLIST *t);
+extern void fn_802275A4(NJS_TEXLIST *t, s32 a);
+extern void fn_80217830(s32 h);
+extern void fn_80100B74(Task *t);
+#define RND() (3.0517578e-05f * rand())
+#define SIGN(x) (((x) > 0.0f) - ((x) < 0.0f))
 
 void fn_80199B9C(void* p, f32 v) {
     *(f32*)((u8*)p + 0x34) = v;
@@ -3177,7 +3251,7 @@ void fn_8019CB80(Obj_8019CB80* o) {
         s->x34 -= s->x4c;
         s->x30 *= s->x48;
         s->x38 *= s->x48;
-        fn_800906E8(s->x4);
+        fn_800906E8(&s->x4);
         s->x50--;
         if (s->x50 <= 0) o->state = 0xff;
         break;
@@ -7855,4 +7929,104 @@ void SaveLoadTask(Task *task) {
         task->state = 0x1F;
     }
     lbl_802EBD30[task->state](task);
+}
+
+void fn_8019C424(Task *t)
+{
+    EvInfo *info;
+    EvObj *o;
+    Obj_8019CB80_8019C424 *sp;
+    f32 dx;
+    f32 dz;
+    f32 dist;
+    f32 r1;
+    f32 r2;
+    NJS_POINT3 p;
+    s32 area;
+
+    o = t->work;
+    info = o->ext->info;
+    if (lbl_80347450 == 0) {
+        return;
+    }
+    switch (t->state) {
+    case 0:
+        fn_80227810(o->texlist);
+        t->state++;
+    case 1:
+        dx = lbl_80347450->pos.x - lbl_80347450->home.x;
+        dz = lbl_80347450->pos.z - lbl_80347450->home.z;
+        dist = fn_80291A5C(dx * dx + dz * dz);
+        area = (lbl_80347450->hit->h24 >> 8) & 0x7f;
+        if ((((u32)lbl_80347450->hit->h24 >> 8) & 0xff) == 0 || area != info->area) {
+            break;
+        }
+        memcpy(&p, &lbl_80347450->pos, sizeof(NJS_POINT3));
+        fn_802254A0(&p, lbl_80347450->hit);
+        if (lbl_80347450->pos.y < p.y || lbl_80347450->pos.y > p.y + info->height || !(dist > info->minDist)) {
+            break;
+        }
+        o->x210 = 1;
+        if (!(RND() > info->rate)) {
+            break;
+        }
+        sp = fn_80226704(t, fn_8019CB80, 0x5c);
+        if (sp == 0) {
+            break;
+        }
+        r1 = info->spread * RND();
+        r2 = RND();
+        sp->st = &sp->buf;
+        sp->st->x4.texlist = o->texlist;
+        sp->st->x4.model = fn_801C8930(o->model);
+        sp->st->x10 = lbl_80347450->pos.y + info->yOfs;
+        sp->st->x18 = 65536.0f * RND();
+        sp->st->x1c = 65536.0f * RND();
+        sp->st->x20 = 65536.0f * RND();
+        sp->st->x24 = info->scale;
+        sp->st->x28 = info->scale;
+        sp->st->x2c = info->scale;
+        sp->st->x50 = info->life;
+        sp->st->x48 = info->drag;
+        sp->st->x4c = info->gravity;
+        sp->st->x3c = info->angVel * RND();
+        sp->st->x40 = info->angVel * RND();
+        sp->st->x44 = info->angVel * RND();
+        if (RND() > 0.5f) {
+            sp->st->xc = lbl_80347450->pos.x + dx * r1 + info->side * SIGN(dz);
+            sp->st->x14 = lbl_80347450->pos.z + dz * r1 - info->side * SIGN(dx);
+            sp->st->x30 = dx + r2 * (dz * info->spin);
+            sp->st->x34 = info->rise + dist * info->riseVar * RND();
+            sp->st->x38 = dz - r2 * (dx * info->spin);
+        } else {
+            sp->st->xc = lbl_80347450->pos.x + dx * r1 - info->side * SIGN(dz);
+            sp->st->x14 = lbl_80347450->pos.z + dz * r1 + info->side * SIGN(dx);
+            sp->st->x30 = dx - r2 * (dz * info->spin);
+            sp->st->x34 = info->rise + dist * info->riseVar * RND();
+            sp->st->x38 = dz + r2 * (dx * info->spin);
+        }
+        break;
+    case 0xff:
+        if (o->texlist != 0) {
+            fn_802275A4(o->texlist, 0);
+        }
+        if (o->x20c != 0) {
+            o->x20c = 0;
+            fn_80217830(o->x23c);
+        }
+        fn_80100B74(t);
+        return;
+    }
+    if (info->area == 8) {
+        if (o->x210 != 0) {
+            o->x210 = 0;
+            if (o->x20c == 0) {
+                o->x20c = 1;
+                o->x23c = SePlay(8, 5, 8);
+            }
+        } else if (o->x20c != 0) {
+            o->x20c = 0;
+            fn_80217830(o->x23c);
+        }
+    }
 }
