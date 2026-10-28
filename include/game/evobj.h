@@ -48,19 +48,41 @@ typedef struct {
     EvScriptEntry entries[1];
 } EvScript;
 
+/* The object definition record (EvExt.info): the common part below, then the fields of each object
+ * kind (trail, sparkle, map object) from 0x24 on. */
 typedef struct {
     s32 count;     /* 0x00 */
     s32 w4;        /* 0x04 */
-    u8 pad8[0x14 - 8];
+    u8 pad8[0x10 - 8];
+    s32 x10;       /* 0x10 */
     u32 flags;     /* 0x14 */
-    u8 pad18[0x24 - 0x18];
+    u32 x18;       /* 0x18 texture id / flags */
+    u8 pad1c[0x20 - 0x1c];
+    u32 x20;       /* 0x20 */
     u32 nearDist;  /* 0x24 */
     u32 actDist;   /* 0x28 */
     u32 x2c;       /* 0x2C */
     u32 speed;     /* 0x30 */
-    u8 pad34[4];
+    u32 x34;       /* 0x34 */
     s32 mode;      /* 0x38 */
     u32 flag;      /* 0x3C story flag */
+    s32 x40;       /* 0x40 */
+    s32 x44;       /* 0x44 */
+    s32 x48;       /* 0x48 */
+    u32 x4c;       /* 0x4C */
+    u32 x50;       /* 0x50 */
+    u32 x54;       /* 0x54 trail mode */
+    u32 x58;       /* 0x58 */
+    u32 x5c, x60, x64; /* 0x5C */
+    NJS_POINT3 offA; /* 0x68 */
+    NJS_POINT3 offB; /* 0x74 */
+    u32 life;      /* 0x80 */
+    u32 total;     /* 0x84 */
+    u32 fadeIn;    /* 0x88 */
+    u32 seg;       /* 0x8C */
+    u32 x90;       /* 0x90 */
+    s32 scrollU;   /* 0x94 */
+    s32 scrollV;   /* 0x98 */
 } EvInfo;
 
 typedef struct {
@@ -201,7 +223,7 @@ typedef struct {
     void* x248;              /* 0x248 */
     NJS_POINT3 x24c;         /* 0x24C */
     u8 pad258[4];
-    EvScript* script;        /* 0x25C */
+    void* x25c;              /* 0x25C */
     EvMode* mapMode;         /* 0x260 */
 } EvObj;
 

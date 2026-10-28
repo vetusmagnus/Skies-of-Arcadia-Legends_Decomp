@@ -8217,7 +8217,7 @@ f32 fn_800C2D18(Pos_800C2D18* p) {
 }
 
 void fn_800D0CC8(EvObj* a) {
-    EvScript* s = a->script;
+    EvScript* s = a->x25c;
     EvScriptEntry* e = s->entries;
     s32 n = s->h2;
     do {
