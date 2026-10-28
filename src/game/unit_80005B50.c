@@ -113,14 +113,117 @@ typedef struct {
     u8 pad65[0x68 - 0x65];
     void* x68;
     u32 x6c;
-    u8 pad70[0xf0 - 0x70];
+    u8 pad70[0xec - 0x70];
+    f32 xec;            /* 0xec speed scale */
     s16 xf0;
     u8 padf2[0x180 - 0xf2];
     void* x180;         /* 0x180 */
-    u8 pad184[0x1c4 - 0x184];
+    void* x184;         /* 0x184 */
+    u8 pad188[0x1c4 - 0x188];
     s32 x1c4;
 } GS;
 extern GS lbl_8030A10C;
+typedef struct ChrMot {
+    u8 pad0[4];
+    u32 x4;
+} ChrMot;
+/* One motion entry of a character (0x18 bytes). */
+typedef struct ChrAnim {
+    s16 x0;
+    s16 x2;             /* 3 ends the table */
+    s16 x4;
+    s16 x6;
+    u32 flags;
+    s16 xc;
+    s16 xe;
+    f32 x10;
+    f32 x14;
+} ChrAnim;
+typedef struct ChrInfo {
+    s8 id;              /* 0x00 */
+    u8 pad1;
+    s16 x2;             /* 0x02 kind */
+    s8 target;          /* 0x04 */
+    u8 pad5;
+    s16 x6;             /* 0x06 */
+    s16 x8;             /* 0x08 */
+    u8 padA[8];
+    s16 state;          u8 pad_14[0x34];
+          s8 x48;
+          u8 pad_49[0x7];
+    u32 x50;            /* 0x50 draw flags */
+    u8 pad54[0x8];
+    ChrMot* x5c;        /* 0x5c */
+    void* x60;          /* 0x60 */
+    s16 x64;            /* 0x64 */
+    u8 pad66[2];
+    f32 x68;            /* 0x68 */
+    f32 x6c;            /* 0x6c frame step */
+    s32 x70;            /* 0x70 */
+    u8 x74[0x10];       /* 0x74 */
+    u8 x84[0x10];       /* 0x84 */
+    u8 pad94[0xdc - 0x94];
+    ChrAnim* anims;     /* 0xdc */
+    s32 xe0;            /* 0xe0 */
+    s16 xe4;            /* 0xe4 */
+    s16 xe6;            /* 0xe6 */
+    s16 xe8;            /* 0xe8 */
+    s16 xea;            /* 0xea */
+    u32 xec;            /* 0xec */
+    u32 xf0;            /* 0xf0 */
+    u8 padf4[4];
+    NJS_POINT3 pos;     /* 0xf8 */
+    u8 pad104[0x134 - 0x104];
+    s32 x134;           /* 0x134 */
+    s16 x138;           /* 0x138 */
+    u8 pad13a[2];
+    NJS_POINT3 x13c;    /* 0x13c saved pos */
+    Angle x148[3];      /* 0x148 saved angles */
+    void* x154;         /* 0x154 */
+    u8 pad158[0x160 - 0x158];
+    f32 x160;           /* 0x160 alpha */
+    f32 x164;           /* 0x164 */
+    u8 pad168[0x1dc - 0x168];
+    void* x1dc;         /* 0x1dc */
+    u8 pad1e0[0x1ec - 0x1e0];
+    u32 x1ec;           /* 0x1ec */
+    u8 pad1f0[4];
+    NJS_TEXLIST* x1f4;  /* 0x1f4 */
+    s16 x1f8;           /* 0x1f8 timer */
+    u8 pad1fa[2];
+    void* x1fc;         /* 0x1fc matrix */
+    u8 pad200[0x204 - 0x200];
+    s16 x204;           /* 0x204 */
+    u8 pad206[0x296 - 0x206];
+    s8 x296;            /* 0x296 draw kind */
+    u8 pad297;
+    void* x298;         /* 0x298 voice data */
+} ChrInfo;
+typedef struct Obj_80017B18 {
+    u8 pad0[0xc];
+    char xc[0x24];      /* 0x0c name */
+    u8 *x30;
+} Obj_80017B18;
+typedef struct ChrWork {
+    void* x0;           /* 0x00 model */
+    u8 pad4[4];
+    void* x8;           /* 0x08 */
+    u8 padc[4];
+    Obj_80017B18 *x10; /* 0x10 */
+    s16 x14;            /* 0x14 */
+    u8 pad16[0x1c - 0x16];
+    NJS_POINT3 pos;     /* 0x1c */
+    Angle rx, ry, rz;   /* 0x28 */
+    NJS_POINT3 scl;     /* 0x34 */
+    u8 pad40[4];
+    u8 x44;             /* 0x44 */
+    u8 pad45[0x4c - 0x45];
+    ChrInfo *st; /* 0x4c */
+} ChrWork;
+inline ChrWork* ChrW(Task* t)
+{
+    return t->work;
+}
 typedef struct {
     s16 id;
     s16 pad;
@@ -723,9 +826,6 @@ typedef struct Tk_8001C348 { u8 pad[0x24]; Mid_8001C348* mid; } Tk_8001C348;
 extern s32 fn_8001C1F0(void* t);
 typedef struct Cmd { u8 pad0[0x10]; s16 x10; s16 x12; } Cmd;
 typedef struct Item { s16 lo; s16 hi; u8 pad4[8]; Cmd* obj; } Item;
-typedef struct Work_8001DE78 { u8 pad0[0x138]; s16 x138; } Work_8001DE78;
-typedef struct Mid_8001DE78 { u8 pad[0x4c]; Work_8001DE78* w; } Mid_8001DE78;
-typedef struct Task_8001DE78 { u8 pad[0x24]; Mid_8001DE78* mid; } Task_8001DE78;
 typedef struct Sub143 { u8 pad00[0x30]; s16 state; } Sub143;
 typedef struct Wk143 {
     u8 pad00[0x20];
@@ -744,107 +844,6 @@ typedef struct B { u32 x0; u8 pad[0x24]; s32 x28; s32 x2c; s32 x30; } B;
 typedef struct A { s32 x0; s32 x4; s32 x8; s32 xc; u8 pad[0xc]; B* x1c; } A;
 typedef struct D { u8 pad[0x4c]; A* x4c; } D;
 typedef struct Obj_8000DF50 { u8 pad[0x18]; u8 flags; u8 state; u8 pad1a[0xa]; D* x24; } Obj_8000DF50;
-typedef struct ChrMot {
-    u8 pad0[4];
-    u32 x4;
-} ChrMot;
-/* One motion entry of a character (0x18 bytes). */
-typedef struct ChrAnim {
-    s16 x0;
-    s16 x2;             /* 3 ends the table */
-    s16 x4;
-    s16 x6;
-    u32 flags;
-    s16 xc;
-    s16 xe;
-    f32 x10;
-    f32 x14;
-} ChrAnim;
-typedef struct ChrInfo {
-    s8 id;              /* 0x00 */
-    u8 pad1;
-    s16 x2;             /* 0x02 kind */
-    s8 target;          /* 0x04 */
-    u8 pad5;
-    s16 x6;             /* 0x06 */
-    s16 x8;             /* 0x08 */
-    u8 padA[8];
-    s16 state;          u8 pad_14[0x34];
-          s8 x48;
-          u8 pad_49[0x7];
-    u32 x50;            /* 0x50 draw flags */
-    u8 pad54[0x8];
-    ChrMot* x5c;        /* 0x5c */
-    void* x60;          /* 0x60 */
-    s16 x64;            /* 0x64 */
-    u8 pad66[2];
-    f32 x68;            /* 0x68 */
-    f32 x6c;            /* 0x6c frame step */
-    s32 x70;            /* 0x70 */
-    u8 x74[0x10];       /* 0x74 */
-    u8 x84[0x10];       /* 0x84 */
-    u8 pad94[0xdc - 0x94];
-    ChrAnim* anims;     /* 0xdc */
-    s32 xe0;            /* 0xe0 */
-    s16 xe4;            /* 0xe4 */
-    s16 xe6;            /* 0xe6 */
-    s16 xe8;            /* 0xe8 */
-    s16 xea;            /* 0xea */
-    u32 xec;            /* 0xec */
-    u32 xf0;            /* 0xf0 */
-    u8 padf4[4];
-    NJS_POINT3 pos;     /* 0xf8 */
-    u8 pad104[0x134 - 0x104];
-    s32 x134;           /* 0x134 */
-    s16 x138;           /* 0x138 */
-    u8 pad13a[2];
-    NJS_POINT3 x13c;    /* 0x13c saved pos */
-    Angle x148[3];      /* 0x148 saved angles */
-    void* x154;         /* 0x154 */
-    u8 pad158[0x160 - 0x158];
-    f32 x160;           /* 0x160 alpha */
-    f32 x164;           /* 0x164 */
-    u8 pad168[0x1dc - 0x168];
-    void* x1dc;         /* 0x1dc */
-    u8 pad1e0[0x1ec - 0x1e0];
-    u32 x1ec;           /* 0x1ec */
-    u8 pad1f0[4];
-    NJS_TEXLIST* x1f4;  /* 0x1f4 */
-    s16 x1f8;           /* 0x1f8 timer */
-    u8 pad1fa[2];
-    void* x1fc;         /* 0x1fc matrix */
-    u8 pad200[0x204 - 0x200];
-    s16 x204;           /* 0x204 */
-    u8 pad206[0x296 - 0x206];
-    s8 x296;            /* 0x296 draw kind */
-    u8 pad297;
-    void* x298;         /* 0x298 voice data */
-} ChrInfo;
-typedef struct Obj_80017B18 {
-    u8 pad0[0xc];
-    char xc[0x24];      /* 0x0c name */
-    u8 *x30;
-} Obj_80017B18;
-typedef struct ChrWork {
-    void* x0;           /* 0x00 model */
-    u8 pad4[4];
-    void* x8;           /* 0x08 */
-    u8 padc[4];
-    Obj_80017B18 *x10; /* 0x10 */
-    s16 x14;            /* 0x14 */
-    u8 pad16[0x1c - 0x16];
-    NJS_POINT3 pos;     /* 0x1c */
-    Angle rx, ry, rz;   /* 0x28 */
-    NJS_POINT3 scl;     /* 0x34 */
-    u8 pad40[4];
-    u8 x44;             /* 0x44 */
-    u8 pad45[0x4c - 0x45];
-    ChrInfo *st; /* 0x4c */
-} ChrWork;
-inline ChrWork* ChrW(Task* t)
-{
-    return t->work;
-}
 typedef struct Tsk_80017018 { u8 pad_00[0x24]; ChrWork *work; } Tsk_80017018;
 extern s16 fn_80020094(ChrWork *w, s16 a, s16 b, s8 flag);
 extern s32 fn_800300C4(s16 i);
@@ -3502,9 +3501,9 @@ void fn_8001C348(Tk_8001C348* t) {
     }
 }
 
-void fn_8001DE78(Task_8001DE78* t, s8 which, Item* list) {
+void fn_8001DE78(Task* t, s8 which, Item* list) {
     Item* p;
-    Work_8001DE78* d = t->mid->w;
+    ChrInfo* d = ChrW(t)->st;
     Cmd* obj;
     if (list != NULL) {
         for (p = list;; p++) {
