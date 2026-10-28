@@ -88,7 +88,7 @@ extern void fn_801E1784(void* p);
 extern void* fn_801E1C34(s32 size);
 extern void* fn_80226354(PartTask* task);
 extern void fn_80222964(void* p);
-extern u32 lbl_80347568;
+extern NJS_TEXLIST lbl_80347568;
 extern DigitSprite lbl_802C39E4[];
 extern Obj14 lbl_802C39D0;
 extern NJS_TEXLIST lbl_80346818;
@@ -111,8 +111,6 @@ void fn_801C3F5C(f32 x, f32 y, f32 z);
 void UiTexlistLoad(void);
 void UiTexlistRelease(void);
 void SpriteObjDraw(SpriteObj* obj);
-s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, LayoutPart* parts, s32 count, f32* pos, f32 z, f32 a, f32 b, u16 index);
-s32 UiLayoutDraw(NJS_TEXLIST** texlists, LayoutPart* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
 s32 UiSpriteDraw(Sprite* sprite, f32 x, f32 y, f32 z, NJS_TEXLIST* texlist, u16 flags, f32 a, f32 b);
 s32 UiSpriteDrawEx(Sprite* sprite, f32 x, f32 y, f32 z, NJS_TEXLIST* texlist, u16 flags, f32 a, f32 b);
 s32 SpriteObjDrawScaled(SpriteObjScaled* obj);
@@ -696,13 +694,13 @@ void SpriteObjDraw(SpriteObj* obj) {
     }
 }
 
-s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, LayoutPart* parts, s32 count, f32* pos, f32 z, f32 a, f32 b, u16 index) {
-    LayoutPart* p = &parts[index];
+s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, const LayoutPart* parts, s32 count, f32* pos, f32 z, f32 a, f32 b, u16 index) {
+    const LayoutPart* p = &parts[index];
     return UiSpriteDrawEx(fn_801D68C4(menu_sprites.banks[p->bank], p->sprite),
                        pos[0] + p->x, pos[1] + p->y, p->z + z, texlists[p->texlist], p->flags, a, b);
 }
 
-s32 UiLayoutDraw(NJS_TEXLIST** texlists, LayoutPart* parts, u32 count, f32* pos, f32 z, f32 a, f32 b) {
+s32 UiLayoutDraw(NJS_TEXLIST** texlists, const LayoutPart* parts, u32 count, f32* pos, f32 z, f32 a, f32 b) {
     DrawState st;
     u32 i;
     s32 total;

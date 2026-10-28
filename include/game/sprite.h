@@ -58,6 +58,11 @@ typedef struct {
     u16 flags;   /* 0x12 */
 } LayoutPart;
 
+/* Draw count layout parts at pos; texlists is indexed by each part's texlist. */
+s32 UiLayoutDraw(NJS_TEXLIST** texlists, const LayoutPart* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
+s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, const LayoutPart* parts, s32 count, f32* pos, f32 z, f32 a, f32 b,
+                     u16 index);
+
 /* Colour from fn_801D65B4: four bytes, packed by callers as a<<24 | r<<16 | g<<8 | b
  * (byte 0 is shifted by 24). */
 typedef struct { u8 c[4]; } Colour4;
@@ -66,8 +71,8 @@ typedef struct { u8 c[4]; } Colour4;
 typedef struct {
     void* file;          /* 0x00 loaded menu file (->0x4 ->0x20 is a texlist-like thing) */
     u32 pad04;
-    void* texlist8;      /* 0x08 */
-    void* textlistC;     /* 0x0C = &lbl_80347568 */
+    NJS_TEXLIST* texlist8;  /* 0x08 the menu file's texlist */
+    NJS_TEXLIST* textlistC; /* 0x0C = &lbl_80347568 */
     void* tex10;         /* 0x10 */
     void* banks[4];      /* 0x14 sprite banks (fn_801D68C4 takes one) */
     void* data24;        /* 0x24 */

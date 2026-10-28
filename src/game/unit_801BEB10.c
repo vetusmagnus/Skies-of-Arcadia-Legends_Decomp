@@ -23,8 +23,6 @@ void fn_80217830(u32 h);
 T* fn_801BEB10(void* a, s32 b, s32 c, s32 d) {
     extern void MenuDummy(Task* t);
     extern TextNode* TextPrint(s32 x, s32 y, const char *str);
-    extern s32 UiLayoutDraw(NJS_TEXLIST** texlists, void* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
-    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, f32 z, f32 a, f32 b, u16 index);
     extern void* fn_802267AC(void* a, void (*b)(Task*));
     extern void* fn_801E1A74(s32 a, s32 b);
     extern T* lbl_803471B8;

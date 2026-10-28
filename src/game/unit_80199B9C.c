@@ -180,15 +180,41 @@ typedef struct Self_8019FDB0 {
     u8 pad1[0xa];
     Ctx_8019FDB0 *ctx;
 } Self_8019FDB0;
-typedef struct Work_801A6650 {
-    u8 pad[0x20c];
-    Task *slots[16];
-} Work_801A6650;
-typedef struct Task_801A6650 {
-    u8 pad[0x24];
-    Work_801A6650 *work;
-} Task_801A6650;
-extern void fn_801A6650(Task_801A6650 *t, u16 i);
+/* A menu part task: the task and its panel. */
+typedef struct Pnl {
+    Task task;
+    MenuPanel* obj; /* 0x28 */
+} Pnl;
+typedef struct { s32 f0; u8 pad[0x28]; } E2c;
+/* The save menu's work. */
+typedef struct SaveWork {
+    u8 x0;
+    u8 f1;           /* 0x01 */
+    u8 cnt;          /* 0x02 */
+    u8 f3;           /* 0x03 */
+    u8 sel;          /* 0x04 */
+    u8 pad5[2];
+    u8 f7;           /* 0x07 */
+    u8 pad8;
+    u8 f9;           /* 0x09 */
+    u8 padA[2];
+    s32 fc;          /* 0x0C */
+    u8 pad10[8];
+    f32 f18;         /* 0x18 */
+    u8 pad1c[4];
+    E2c ent[10];     /* 0x20 */
+    u8 pad_[0x20c - 0x20 - 10 * 0x2c];
+    Pnl* p[19];      /* 0x20C */
+    void* f258;      /* 0x258 */
+    s32 st[8];       /* 0x25C */
+} SaveWork;
+typedef struct SaveTask {
+    u8 pad[0x19];
+    u8 state;        /* 0x19 */
+    u8 pad1a[0x24 - 0x1a];
+    SaveWork* w;     /* 0x24 */
+} SaveTask;
+extern void fn_801A6650(SaveTask *t, u16 i);
 typedef struct Ctx_8019FE64 {
     u8 pad0[0x220];
     void *p220;
@@ -344,7 +370,7 @@ typedef struct Task_801AC094 {
     u32 w2c;
 } Task_801AC094;
 extern void fn_801B6BB4(void *ui, f32 *pos, s16 id, s32 b, s16 x, s16 y, f32 alpha);
-extern const u8 lbl_802B7720[0x50];
+extern const LayoutPart lbl_802B7720[4];
 typedef struct Task_801B0F1C {
     u8 pad00[0x18];
     u8 flags;     /* 0x18 */
@@ -361,28 +387,36 @@ typedef struct Task_801B1104 {
     MenuPanel* p28;
     u32 w2c;
 } Task_801B1104;
+/* A part's cursor (at the part task's 0x30): where it is drawn and the list position it points at. */
 typedef struct ShopList {
-    u8 pad0[0x8];
-    f32 x8;      /* 0x08 */
-    f32 xc;      /* 0x0C */
-    u8 pad10[4];
-    u16 h14;     /* 0x14 */
+    f32 x, y;    /* 0x00 draw position */
+    f32 ox, oy;  /* 0x08 offset from the panel */
+    f32 scale;   /* 0x10 pulse */
+    u16 angle;   /* 0x14 */
     u8 pad16[2];
     u16 page;    /* 0x18 */
     u16 row;     /* 0x1A */
-    u16 tab;     /* 0x1C */
-    u8 b1e;      /* 0x1E */
+    u16 tab;     /* 0x1C selected tab */
+    u8 part;     /* 0x1E layout part, 0xFF none */
+    u8 flags;    /* 0x1F 1 shown, 2 pulsing */
 } ShopList;
 
+/* A part's arrow (at the part task's 0x38). */
 typedef struct ShopSub38 {
-    u8 pad0[0xa];
-    u16 ha;      /* 0x0A */
-    u16 hc;      /* 0x0C */
+    f32 x, y;    /* 0x00 */
+    u16 idx;     /* 0x08 */
+    u16 state;   /* 0x0A */
+    u16 angle;   /* 0x0C */
+    u16 padE;
+    s32 f10;
+    f32 scale;   /* 0x14 */
 } ShopSub38;
 
+/* A menu part task. */
 typedef struct ShopPart {
-    u8 pad0[0x19];
-    u8 b19;          /* 0x19 */
+    u8 pad0[0x18];
+    u8 flags;        /* 0x18 */
+    u8 state;        /* 0x19 */
     u8 pad1a[0xa];
     MenuPartWork* flag; /* 0x24 */
     MenuPanel* obj;      /* 0x28 */
@@ -451,7 +485,7 @@ typedef struct ShopEntry {
 typedef struct ShopBuf {
     u8 pad0[4];
     u16 pages;
-    s16 count;
+    u16 count;
     ShopEntry out[0x30];
 } ShopBuf;
 
@@ -482,13 +516,7 @@ typedef struct Task_801B6240 {
     MenuPanel* p28;
     u32 w2c;
 } Task_801B6240;
-extern void fn_801B6950(void);
-typedef struct Task_801B6AE8 {
-    u8 pad00[0x24];
-    u8* p24;
-    MenuPanel* p28;
-    u32 w2c;
-} Task_801B6AE8;
+void fn_801B6950(ShopPart* t);
 typedef struct Pair_UNIT0000 {
     const char* a;
     const char* b;
@@ -743,33 +771,11 @@ typedef struct {
     MenuPanel* ui;  /* 0x28 */
 } PanelTask_801ABF70;
 extern const LayoutPart lbl_802B7C14[4];
-s32 UiLayoutDraw(NJS_TEXLIST** texlists, LayoutPart* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
 void fn_801C3F5C(f32 x, f32 y, f32 z);
-typedef struct {
-    u8 pad0[8];
-    u32 slot; /* 0x08 */
-} BufA_801ACC00;
-typedef struct {
-    u8 pad0[0x18];
-    s16 s18;
-    s16 s1A;
-    u8 pad1C[2];
-    u8 b1E;
-    u8 b1F;
-} BufC_801ACC00;
-typedef struct {
-    u8 pad[0x24];
-    BufA_801ACC00* a;     /* 0x24 */
-    MenuPanel* pan;  /* 0x28 */
-    s32 f2C;
-    BufC_801ACC00* c;     /* 0x30 */
-    u8 pad34[4];
-    void* d;     /* 0x38 */
-} Task3_801ACC00;
-extern void fn_801AC48C(void);
+void fn_801AC48C(ShopPart* t);
 typedef struct PanelTask_801AFAA4 PanelTask_801AFAA4;
 typedef struct {
-    LayoutPart* parts;
+    const LayoutPart* parts;
     u32 count;
 } LayoutDef;
 typedef struct {
@@ -802,30 +808,7 @@ typedef struct {
 } Task2_801B0470;
 extern void fn_801B02F4(void);
 extern const char* lbl_802EBF60[7];
-typedef struct {
-    u8 b0;
-    u8 pad1[7];
-    s16 s8;
-    s16 sA;
-} BufA_801B0DF8;
-typedef struct {
-    u8 pad0[0x18];
-    s16 s18;
-    s16 s1A;
-    u8 pad1C[2];
-    u8 b1E;
-    u8 b1F;
-} BufC_801B0DF8;
-typedef struct {
-    u8 pad[0x24];
-    void* a;     /* 0x24 */
-    MenuPanel* pan;  /* 0x28 */
-    s32 f2C;
-    BufC_801B0DF8* c;     /* 0x30 */
-    u8 pad34[4];
-    BufA_801B0DF8* d;     /* 0x38 */
-} Task3_801B0DF8;
-extern void fn_801B0B9C(void);
+void fn_801B0B9C(ShopPart* t);
 typedef struct {
     u8 pad0[8];
     s16 s8;
@@ -848,8 +831,8 @@ typedef struct {
     u8 pad34[4];
     BufD* d;     /* 0x38 */
 } Task3_801B2310;
-struct Task_1B3C;
-extern void fn_801B1B3C(struct Task_1B3C* t);
+ShopPart;
+extern void fn_801B1B3C(ShopPart* t);
 typedef struct {
     u8 pad[0x24];
     u8* a;       /* 0x24 */
@@ -857,7 +840,7 @@ typedef struct {
     s32 f2C;
 } Task2_801B2678;
 extern void UiDrawNumber(NJS_POINT3 *pos, u32 flags, u16 ndigits, u32 value, f32 c1);
-extern const u8 lbl_802B6DF8[0x50];
+extern const LayoutPart lbl_802B6DF8[4];
 typedef struct Task_801B2430 {
     u8 pad00[0x18];
     u8 flags;     /* 0x18 */
@@ -891,26 +874,11 @@ typedef struct {
     u32 pc;
 } Dummy;
 typedef struct {
-    LayoutPart* parts; /* 0x00 */
+    const LayoutPart* parts; /* 0x00 */
     u16 pad4;
     u16 flag6;         /* 0x06 */
     u32 pad8, padC;
 } AnimDef;
-typedef struct {
-    u8 pad0[8];
-    u16 idx;    /* 0x08 */
-    u16 state;  /* 0x0A */
-    u16 angle;  /* 0x0C */
-    u16 padE;
-    s32 f10;
-    f32 scale;  /* 0x14 */
-} AnimData;
-typedef struct {
-    u8 pad[0x28];
-    MenuPanel* ui;       /* 0x28 */
-    u8 pad2C[0xC];
-    AnimData* d;     /* 0x38 */
-} Task3_801B5D68;
 extern const AnimDef lbl_802B73A4[5];
 f32 njSin(u16 a);
 typedef struct PanelTask_801B5EA8 {
@@ -1131,7 +1099,6 @@ typedef struct Task_801A54AC {
     MenuPanel *pan;
 } Task_801A54AC;
 extern LayoutPart lbl_802B4B9C[6];
-s32 UiLayoutDraw(NJS_TEXLIST **texlists, LayoutPart *parts, u32 count, f32 *pos, f32 z, f32 a, f32 b);
 extern void fn_801A5600(void *t);
 #define TextPrintNumber TextPrintNumber_hdr
 #undef TextPrintNumber
@@ -1176,57 +1143,57 @@ extern s8 fn_801F452C(s16 id);
 #undef MenuDummy
 typedef struct { u8 pad[0x28]; MenuPanel* obj; } MP;
 typedef struct { u8 pad[0x28]; MenuPanel* obj; MenuPanel* obj2; } MP2;
-typedef struct { void* parts; u32 count; } LT;
 typedef struct ShopCmpPos {
     f32 x, y;
 } ShopCmpPos;
 /* .rodata 0x802B6A18-0x802B8EDC of the original (generated by tools/match/gen_rodata.py from the DOL).
  * Objects are sized to the next one, padding included. */
-extern const u32 lbl_802B6BAC[];
-extern const u32 lbl_802B6BFC[];
-extern const u32 lbl_802B6C4C[];
-extern const u32 lbl_802B6C9C[];
-extern const u32 lbl_802B6CEC[];
-extern const u32 lbl_802B6D3C[];
-extern const u32 lbl_802B6F38[];
-extern const u32 lbl_802B7000[];
-extern const u32 lbl_802B7078[];
-extern const u32 lbl_802B7104[];
-extern const u32 lbl_802B7228[];
-extern const u32 lbl_802B7250[];
-extern const u32 lbl_802B7278[];
-extern const u32 lbl_802B72A0[];
-extern const u32 lbl_802B72C8[];
-extern const u32 lbl_802B732C[];
-extern const u32 lbl_802B7354[];
-extern const u32 lbl_802B737C[];
-extern const u32 lbl_802B73F4[];
-extern const u32 lbl_802B7444[];
-extern const u32 lbl_802B7520[];
-extern const u32 lbl_802B75C0[];
-extern const u32 lbl_802B7770[];
-extern const u32 lbl_802B77C0[];
-extern const u32 lbl_802B78CC[];
-extern const u32 lbl_802B7958[];
-extern const u32 lbl_802B7A30[];
-extern const u32 lbl_802B7A58[];
-extern const u32 lbl_802B7A80[];
-extern const u32 lbl_802B7AA8[];
-extern const u32 lbl_802B7AD0[];
-extern const u32 lbl_802B7AF8[];
+extern const LayoutPart lbl_802B6BAC[4];
+extern const LayoutPart lbl_802B6BFC[4];
+extern const LayoutPart lbl_802B6C4C[4];
+extern const LayoutPart lbl_802B6C9C[4];
+extern const LayoutPart lbl_802B6CEC[4];
+extern const LayoutPart lbl_802B6D3C[4];
+extern const LayoutPart lbl_802B6F38[10];
+extern const LayoutPart lbl_802B7000[6];
+extern const LayoutPart lbl_802B7078[7];
+extern const LayoutPart lbl_802B7104[3];
+extern const LayoutPart lbl_802B7228[2];
+extern const LayoutPart lbl_802B7250[2];
+extern const LayoutPart lbl_802B7278[2];
+extern const LayoutPart lbl_802B72A0[2];
+extern const LayoutPart lbl_802B72C8[2];
+extern const LayoutPart lbl_802B732C[2];
+extern const LayoutPart lbl_802B7354[2];
+extern const LayoutPart lbl_802B737C[2];
+extern const LayoutPart lbl_802B73F4[4];
+extern const LayoutPart lbl_802B7444[11];
+extern const LayoutPart lbl_802B7520[8];
+extern const LayoutPart lbl_802B75C0[16];
+extern const LayoutPart lbl_802B7770[3];
+extern const LayoutPart lbl_802B77C0[3];
+extern const LayoutPart lbl_802B78CC[7];
+extern const LayoutPart lbl_802B7958[7];
+extern const LayoutPart lbl_802B7A30[2];
+extern const LayoutPart lbl_802B7A58[2];
+extern const LayoutPart lbl_802B7A80[2];
+extern const LayoutPart lbl_802B7AA8[2];
+extern const LayoutPart lbl_802B7AD0[2];
+extern const LayoutPart lbl_802B7AF8[2];
 const u32 lbl_802B6A18[19] = {
     0x001E001F, 0x00200021, 0x00220023, 0x00240026, 0x00250027, 0x00280029,
     0x002A002B, 0x002C002D, 0x002E002F, 0x00300031, 0x00320033, 0x00340035,
     0x000F0010, 0x00110012, 0x00130014, 0x000E000F, 0x00100011, 0x00120013,
     0x00140035,
 };
-const u32 lbl_802B6A64[35] = {
-    0x00030027, 0x41800000, 0x41400000, 0xC2160000, 0x00000001, 0x00030034,
-    0x43A80000, 0x41400000, 0xC2160000, 0x00000001, 0x00030027, 0x41800000,
-    0x41400000, 0xC2160000, 0x00000001, 0x00030034, 0x43A80000, 0x41400000,
-    0xC2160000, 0x00000001, 0x00030033, 0x41800000, 0x41400000, 0xC2160000,
-    0x00000001, 0x00030034, 0x41800000, 0x41400000, 0xC2160000, 0x00000001,
-    0x00030024, 0x41800000, 0x41400000, 0xC2160000, 0x00000001,
+const LayoutPart lbl_802B6A64[7] = {
+    {0x3, 0x27, 16.0f, 12.0f, -37.5f, 0x0, 0x1},
+    {0x3, 0x34, 336.0f, 12.0f, -37.5f, 0x0, 0x1},
+    {0x3, 0x27, 16.0f, 12.0f, -37.5f, 0x0, 0x1},
+    {0x3, 0x34, 336.0f, 12.0f, -37.5f, 0x0, 0x1},
+    {0x3, 0x33, 16.0f, 12.0f, -37.5f, 0x0, 0x1},
+    {0x3, 0x34, 16.0f, 12.0f, -37.5f, 0x0, 0x1},
+    {0x3, 0x24, 16.0f, 12.0f, -37.5f, 0x0, 0x1},
 };
 const u32 lbl_802B6AF0[4] = {
     0x001E0024, 0x00260025, 0x002F0033, 0x00350034,
@@ -1240,118 +1207,118 @@ const LayoutPart lbl_802B6B0C[4] = {
     {0x1, 0x6, 0.0f, 0.0f, -50.0f, 0x1, 0x0},
     {0x0, 0x5, 0.0f, 0.0f, -4000.0f, 0x1, 0x1},
 };
-const u32 lbl_802B6B5C[20] = {
-    0x00000039, 0x00000000, 0x00000000, 0xC22A0000, 0x00010001, 0x00030025,
-    0x00000000, 0x41200000, 0xC2200000, 0x00000001, 0x00010009, 0x00000000,
-    0x00000000, 0xC2480000, 0x00010000, 0x00000004, 0x00000000, 0x00000000,
-    0xC57A0000, 0x00010001,
+const LayoutPart lbl_802B6B5C[4] = {
+    {0x0, 0x39, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x25, 0.0f, 1e+01f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x9, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
+    {0x0, 0x4, 0.0f, 0.0f, -4e+03f, 0x1, 0x1},
 };
-const u32 lbl_802B6BAC[20] = {
-    0x0000003A, 0x41800000, 0xC0000000, 0xC2020000, 0x00010001, 0x0000000B,
-    0x00000000, 0x00000000, 0xC22A0000, 0x00010001, 0x00030028, 0x42B00000,
-    0x41500000, 0xC2200000, 0x00000001, 0x00010006, 0x00000000, 0x00000000,
-    0xC2480000, 0x00010000,
+const LayoutPart lbl_802B6BAC[4] = {
+    {0x0, 0x3A, 16.0f, -2.0f, -32.5f, 0x1, 0x1},
+    {0x0, 0xB, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x28, 88.0f, 13.0f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x6, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
 };
-const u32 lbl_802B6BFC[20] = {
-    0x0000003B, 0x41800000, 0xC0000000, 0xC2020000, 0x00010001, 0x0000000B,
-    0x00000000, 0x00000000, 0xC22A0000, 0x00010001, 0x00030028, 0x42B00000,
-    0x41500000, 0xC2200000, 0x00000001, 0x00010006, 0x00000000, 0x00000000,
-    0xC2480000, 0x00010000,
+const LayoutPart lbl_802B6BFC[4] = {
+    {0x0, 0x3B, 16.0f, -2.0f, -32.5f, 0x1, 0x1},
+    {0x0, 0xB, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x28, 88.0f, 13.0f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x6, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
 };
-const u32 lbl_802B6C4C[20] = {
-    0x0000003F, 0x41800000, 0xC0000000, 0xC2020000, 0x00010001, 0x0000000B,
-    0x00000000, 0x00000000, 0xC22A0000, 0x00010001, 0x00030028, 0x42B00000,
-    0x41500000, 0xC2200000, 0x00000001, 0x00010006, 0x00000000, 0x00000000,
-    0xC2480000, 0x00010000,
+const LayoutPart lbl_802B6C4C[4] = {
+    {0x0, 0x3F, 16.0f, -2.0f, -32.5f, 0x1, 0x1},
+    {0x0, 0xB, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x28, 88.0f, 13.0f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x6, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
 };
-const u32 lbl_802B6C9C[20] = {
-    0x0000003C, 0x41800000, 0xC0000000, 0xC2020000, 0x00010001, 0x0000000B,
-    0x00000000, 0x00000000, 0xC22A0000, 0x00010001, 0x00030023, 0x42B00000,
-    0x41500000, 0xC2200000, 0x00000001, 0x00010006, 0x00000000, 0x00000000,
-    0xC2480000, 0x00010000,
+const LayoutPart lbl_802B6C9C[4] = {
+    {0x0, 0x3C, 16.0f, -2.0f, -32.5f, 0x1, 0x1},
+    {0x0, 0xB, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x23, 88.0f, 13.0f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x6, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
 };
-const u32 lbl_802B6CEC[20] = {
-    0x00000052, 0x41800000, 0xC0000000, 0xC2020000, 0x00010001, 0x0000000B,
-    0x00000000, 0x00000000, 0xC22A0000, 0x00010001, 0x00030023, 0x42B00000,
-    0x41500000, 0xC2200000, 0x00000001, 0x00010006, 0x00000000, 0x00000000,
-    0xC2480000, 0x00010000,
+const LayoutPart lbl_802B6CEC[4] = {
+    {0x0, 0x52, 16.0f, -2.0f, -32.5f, 0x1, 0x1},
+    {0x0, 0xB, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x23, 88.0f, 13.0f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x6, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
 };
-const u32 lbl_802B6D3C[20] = {
-    0x0000003D, 0x41800000, 0xC0000000, 0xC2020000, 0x00010001, 0x0000000B,
-    0x00000000, 0x00000000, 0xC22A0000, 0x00010001, 0x00030023, 0x42B00000,
-    0x41500000, 0xC2200000, 0x00000001, 0x00010006, 0x00000000, 0x00000000,
-    0xC2480000, 0x00010000,
+const LayoutPart lbl_802B6D3C[4] = {
+    {0x0, 0x3D, 16.0f, -2.0f, -32.5f, 0x1, 0x1},
+    {0x0, 0xB, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x23, 88.0f, 13.0f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x6, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
 };
-const u8 lbl_802B6D8C[0x14] = {
-    0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0xC5, 0x7A, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01,
+const LayoutPart lbl_802B6D8C[1] = {
+    {0x0, 0x5, 0.0f, 0.0f, -4e+03f, 0x1, 0x1},
 };
-const LT lbl_802B6DA0[6] = {
-    {(void*)lbl_802B6BAC, 0x4},
-    {(void*)lbl_802B6BFC, 0x4},
-    {(void*)lbl_802B6C4C, 0x4},
-    {(void*)lbl_802B6C9C, 0x4},
-    {(void*)lbl_802B6D3C, 0x4},
-    {(void*)lbl_802B6CEC, 0x4},
+const LayoutDef lbl_802B6DA0[6] = {
+    {lbl_802B6BAC, 0x4},
+    {lbl_802B6BFC, 0x4},
+    {lbl_802B6C4C, 0x4},
+    {lbl_802B6C9C, 0x4},
+    {lbl_802B6D3C, 0x4},
+    {lbl_802B6CEC, 0x4},
 };
 const LayoutPart lbl_802B6DD0[2] = {
     {0x0, 0x1C, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
     {0x1, 0x4, 0.0f, 0.0f, -50.0f, 0x1, 0x0},
 };
-const u8 lbl_802B6DF8[0x50] = {
-    0x00, 0x00, 0x00, 0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0xC2, 0x2A, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x03, 0x00, 0x2A,
-    0x00, 0x00, 0x00, 0x00, 0x40, 0x80, 0x00, 0x00, 0xC2, 0x20, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x06, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0xC2, 0x48, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0xC5, 0x7A, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01,
+const LayoutPart lbl_802B6DF8[4] = {
+    {0x0, 0x42, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x2A, 0.0f, 4.0f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x6, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
+    {0x0, 0x5, 0.0f, 0.0f, -4e+03f, 0x1, 0x1},
 };
-const u32 lbl_802B6E48[40] = {
-    0x00000016, 0x00000000, 0x40000000, 0xC22C0000, 0x00010001, 0x00000015,
-    0x00000000, 0x43260000, 0xC22A0000, 0x00010001, 0x00010003, 0x00000000,
-    0x00000000, 0xC2480000, 0x00010000, 0x00000001, 0x00000000, 0x00000000,
-    0xC57A0000, 0x00010001, 0x00000016, 0x00000000, 0x40000000, 0xC22C0000,
-    0x00010001, 0x00000015, 0x00000000, 0x43260000, 0xC22A0000, 0x00010001,
-    0x00010003, 0x00000000, 0x00000000, 0xC2480000, 0x00010000, 0x00000001,
-    0x00000000, 0x00000000, 0xC57A0000, 0x00010001,
+const LayoutPart lbl_802B6E48[8] = {
+    {0x0, 0x16, 0.0f, 2.0f, -43.0f, 0x1, 0x1},
+    {0x0, 0x15, 0.0f, 166.0f, -42.5f, 0x1, 0x1},
+    {0x1, 0x3, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
+    {0x0, 0x1, 0.0f, 0.0f, -4e+03f, 0x1, 0x1},
+    {0x0, 0x16, 0.0f, 2.0f, -43.0f, 0x1, 0x1},
+    {0x0, 0x15, 0.0f, 166.0f, -42.5f, 0x1, 0x1},
+    {0x1, 0x3, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
+    {0x0, 0x1, 0.0f, 0.0f, -4e+03f, 0x1, 0x1},
 };
-const u32 lbl_802B6EE8[20] = {
-    0x00000050, 0x00000000, 0x40000000, 0xC4FA0000, 0x00010001, 0x00000051,
-    0x00000000, 0x43560000, 0xC4FA0000, 0x00010001, 0x0001000B, 0x00000000,
-    0x00000000, 0xC53B8000, 0x00010000, 0x0000004F, 0x00000000, 0x00000000,
-    0xC57A0000, 0x00010001,
+const LayoutPart lbl_802B6EE8[4] = {
+    {0x0, 0x50, 0.0f, 2.0f, -2e+03f, 0x1, 0x1},
+    {0x0, 0x51, 0.0f, 214.0f, -2e+03f, 0x1, 0x1},
+    {0x1, 0xB, 0.0f, 0.0f, -3e+03f, 0x1, 0x0},
+    {0x0, 0x4F, 0.0f, 0.0f, -4e+03f, 0x1, 0x1},
 };
-const u32 lbl_802B6F38[50] = {
-    0x00000040, 0x00000000, 0x00000000, 0xC22A0000, 0x00010001, 0x0003002F,
-    0x00000000, 0x40800000, 0xC2200000, 0x00000001, 0x00010007, 0x00000000,
-    0x00000000, 0xC2480000, 0x00010000, 0x0003000E, 0x437A0000, 0x40C00000,
-    0xC214999A, 0x00000001, 0x0003000F, 0x43980000, 0x40C00000, 0xC214CCCD,
-    0x00000001, 0x00030010, 0x43B30000, 0x40C00000, 0xC2150000, 0x00000001,
-    0x00030011, 0x43CE0000, 0x40C00000, 0xC2153333, 0x00000001, 0x00030012,
-    0x43E90000, 0x40C00000, 0xC2156666, 0x00000001, 0x00030013, 0x44020000,
-    0x40C00000, 0xC215999A, 0x00000001, 0x00030014, 0x440F8000, 0x40C00000,
-    0xC215CCCD, 0x00000001,
+const LayoutPart lbl_802B6F38[10] = {
+    {0x0, 0x40, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x2F, 0.0f, 4.0f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x7, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
+    {0x3, 0xE, 2.5e+02f, 6.0f, -37.15f, 0x0, 0x1},
+    {0x3, 0xF, 304.0f, 6.0f, -37.2f, 0x0, 0x1},
+    {0x3, 0x10, 358.0f, 6.0f, -37.25f, 0x0, 0x1},
+    {0x3, 0x11, 412.0f, 6.0f, -37.3f, 0x0, 0x1},
+    {0x3, 0x12, 466.0f, 6.0f, -37.35f, 0x0, 0x1},
+    {0x3, 0x13, 5.2e+02f, 6.0f, -37.4f, 0x0, 0x1},
+    {0x3, 0x14, 574.0f, 6.0f, -37.45f, 0x0, 0x1},
 };
-const u32 lbl_802B7000[30] = {
-    0x00000041, 0x00000000, 0x00000000, 0xC22A0000, 0x00010001, 0x00030030,
-    0x00000000, 0x40800000, 0xC2200000, 0x00000001, 0x00010008, 0x00000000,
-    0x00000000, 0xC2480000, 0x00010000, 0x0003000E, 0x437A0000, 0x40C00000,
-    0xC2156666, 0x00000001, 0x00030012, 0x43980000, 0x40C00000, 0xC215999A,
-    0x00000001, 0x00030017, 0x43B30000, 0x40C00000, 0xC215CCCD, 0x00000001,
+const LayoutPart lbl_802B7000[6] = {
+    {0x0, 0x41, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x30, 0.0f, 4.0f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x8, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
+    {0x3, 0xE, 2.5e+02f, 6.0f, -37.35f, 0x0, 0x1},
+    {0x3, 0x12, 304.0f, 6.0f, -37.4f, 0x0, 0x1},
+    {0x3, 0x17, 358.0f, 6.0f, -37.45f, 0x0, 0x1},
 };
-const u32 lbl_802B7078[35] = {
-    0x00000041, 0x00000000, 0x00000000, 0xC22A0000, 0x00010001, 0x00030031,
-    0x00000000, 0x40800000, 0xC2200000, 0x00000001, 0x00010008, 0x00000000,
-    0x00000000, 0xC2480000, 0x00010000, 0x0003000F, 0x437A0000, 0x40C00000,
-    0xC2153333, 0x00000001, 0x00030011, 0x43980000, 0x40C00000, 0xC2156666,
-    0x00000001, 0x00030013, 0x43B30000, 0x40C00000, 0xC215999A, 0x00000001,
-    0x00030014, 0x43CE0000, 0x40C00000, 0xC215CCCD, 0x00000001,
+const LayoutPart lbl_802B7078[7] = {
+    {0x0, 0x41, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x31, 0.0f, 4.0f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x8, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
+    {0x3, 0xF, 2.5e+02f, 6.0f, -37.3f, 0x0, 0x1},
+    {0x3, 0x11, 304.0f, 6.0f, -37.35f, 0x0, 0x1},
+    {0x3, 0x13, 358.0f, 6.0f, -37.4f, 0x0, 0x1},
+    {0x3, 0x14, 412.0f, 6.0f, -37.45f, 0x0, 0x1},
 };
-const u32 lbl_802B7104[15] = {
-    0x00000041, 0x00000000, 0x00000000, 0xC22A0000, 0x00010001, 0x00030032,
-    0x00000000, 0x40800000, 0xC2200000, 0x00000001, 0x00010008, 0x00000000,
-    0x00000000, 0xC2480000, 0x00010000,
+const LayoutPart lbl_802B7104[3] = {
+    {0x0, 0x41, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x32, 0.0f, 4.0f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x8, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
 };
 const LayoutPart lbl_802B7140[2] = {
     {0x0, 0x48, 83.0f, -11.0f, -32.5f, 0x1, 0x1},
@@ -1360,11 +1327,11 @@ const LayoutPart lbl_802B7140[2] = {
 const LayoutPart lbl_802B7168[1] = {
     {0x0, 0x49, 83.0f, -11.0f, -32.45f, 0x1, 0x1},
 };
-const LT lbl_802B717C[4] = {
-    {(void*)lbl_802B6F38, 0xA},
-    {(void*)lbl_802B7078, 0x7},
-    {(void*)lbl_802B7000, 0x6},
-    {(void*)lbl_802B7104, 0x3},
+const LayoutDef lbl_802B717C[4] = {
+    {lbl_802B6F38, 0xA},
+    {lbl_802B7078, 0x7},
+    {lbl_802B7000, 0x6},
+    {lbl_802B7104, 0x3},
 };
 const LayoutPart lbl_802B719C[4] = {
     {0x0, 0x8, 0.0f, 0.0f, -4000.0f, 0x1, 0x1},
@@ -1372,259 +1339,238 @@ const LayoutPart lbl_802B719C[4] = {
     {0x0, 0x9, 0.0f, 0.0f, -4000.0f, 0x1, 0x1},
     {0x0, 0x9, 0.0f, 0.0f, -4000.0f, 0x1, 0x1},
 };
-const u32 lbl_802B71EC[15] = {
-    0x00000015, 0x00000000, 0x43240000, 0xC22A0000, 0x00010001, 0x00010003,
-    0x00000000, 0x00000000, 0xC2480000, 0x00010000, 0x00000001, 0x00000000,
-    0x00000000, 0xC57A0000, 0x00010001,
+const LayoutPart lbl_802B71EC[3] = {
+    {0x0, 0x15, 0.0f, 164.0f, -42.5f, 0x1, 0x1},
+    {0x1, 0x3, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
+    {0x0, 0x1, 0.0f, 0.0f, -4e+03f, 0x1, 0x1},
 };
-const u32 lbl_802B7228[10] = {
-    0x00000025, 0x42880000, 0xC1D00000, 0x00000000, 0x00010001, 0x00000017,
-    0x00000000, 0xC1D00000, 0xBE4CCCCD, 0x00010001,
+const LayoutPart lbl_802B7228[2] = {
+    {0x0, 0x25, 68.0f, -26.0f, 0.0f, 0x1, 0x1},
+    {0x0, 0x17, 0.0f, -26.0f, -0.2f, 0x1, 0x1},
 };
-const u32 lbl_802B7250[10] = {
-    0x00000047, 0x42E80000, 0xC1D00000, 0x00000000, 0x00010001, 0x00000018,
-    0x00000000, 0xC1D00000, 0xBE4CCCCD, 0x00010001,
+const LayoutPart lbl_802B7250[2] = {
+    {0x0, 0x47, 116.0f, -26.0f, 0.0f, 0x1, 0x1},
+    {0x0, 0x18, 0.0f, -26.0f, -0.2f, 0x1, 0x1},
 };
-const u32 lbl_802B7278[10] = {
-    0x00000024, 0x43240000, 0xC1D00000, 0x00000000, 0x00010001, 0x00000019,
-    0x00000000, 0xC1D00000, 0xBE4CCCCD, 0x00010001,
+const LayoutPart lbl_802B7278[2] = {
+    {0x0, 0x24, 164.0f, -26.0f, 0.0f, 0x1, 0x1},
+    {0x0, 0x19, 0.0f, -26.0f, -0.2f, 0x1, 0x1},
 };
-const u32 lbl_802B72A0[10] = {
-    0x00000026, 0x43540000, 0xC1D00000, 0x00000000, 0x00010001, 0x0000001A,
-    0x00000000, 0xC1D00000, 0xBE4CCCCD, 0x00010001,
+const LayoutPart lbl_802B72A0[2] = {
+    {0x0, 0x26, 212.0f, -26.0f, 0.0f, 0x1, 0x1},
+    {0x0, 0x1A, 0.0f, -26.0f, -0.2f, 0x1, 0x1},
 };
-const u32 lbl_802B72C8[10] = {
-    0x00000035, 0x43820000, 0xC1D00000, 0x00000000, 0x00010001, 0x0000001B,
-    0x00000000, 0xC1D00000, 0xBE4CCCCD, 0x00010001,
+const LayoutPart lbl_802B72C8[2] = {
+    {0x0, 0x35, 2.6e+02f, -26.0f, 0.0f, 0x1, 0x1},
+    {0x0, 0x1B, 0.0f, -26.0f, -0.2f, 0x1, 0x1},
 };
-const u32 lbl_802B72F0[5] = {
-    0x00000016, 0x00000000, 0x40000000, 0x00000000, 0x00010001,
+const LayoutPart lbl_802B72F0[1] = {
+    {0x0, 0x16, 0.0f, 2.0f, 0.0f, 0x1, 0x1},
 };
-const void* const lbl_802B7304[10] = {
-    lbl_802B7228,
-    (const void*)0x00000002,
-    lbl_802B7250,
-    (const void*)0x00000002,
-    lbl_802B7278,
-    (const void*)0x00000002,
-    lbl_802B72A0,
-    (const void*)0x00000002,
-    lbl_802B72C8,
-    (const void*)0x00000002,
+const LayoutDef lbl_802B7304[5] = {
+    {lbl_802B7228, 0x2},
+    {lbl_802B7250, 0x2},
+    {lbl_802B7278, 0x2},
+    {lbl_802B72A0, 0x2},
+    {lbl_802B72C8, 0x2},
 };
-const u32 lbl_802B732C[10] = {
-    0x00000037, 0x42540000, 0xC1C80000, 0xC0A00000, 0x00010001, 0x00000036,
-    0x42BE0000, 0xC1C80000, 0xC0A00000, 0x00010001,
+const LayoutPart lbl_802B732C[2] = {
+    {0x0, 0x37, 53.0f, -25.0f, -5.0f, 0x1, 0x1},
+    {0x0, 0x36, 95.0f, -25.0f, -5.0f, 0x1, 0x1},
 };
-const u32 lbl_802B7354[10] = {
-    0x0000004C, 0x41C00000, 0x431C0000, 0xC0A00000, 0x00010001, 0x0000004D,
-    0x43A90000, 0x431C0000, 0xC0A00000, 0x00010001,
+const LayoutPart lbl_802B7354[2] = {
+    {0x0, 0x4C, 24.0f, 156.0f, -5.0f, 0x1, 0x1},
+    {0x0, 0x4D, 338.0f, 156.0f, -5.0f, 0x1, 0x1},
 };
-const u32 lbl_802B737C[10] = {
-    0x00000037, 0x41600000, 0x41880000, 0xC0A00000, 0x00010001, 0x00000036,
-    0x42580000, 0x41880000, 0xC0A00000, 0x00010001,
+const LayoutPart lbl_802B737C[2] = {
+    {0x0, 0x37, 14.0f, 17.0f, -5.0f, 0x1, 0x1},
+    {0x0, 0x36, 54.0f, 17.0f, -5.0f, 0x1, 0x1},
 };
 const AnimDef lbl_802B73A4[5] = {
-    {(LayoutPart*)lbl_802B7354, 0x2, 0x0, 0x1, 0x2},
-    {(LayoutPart*)lbl_802B732C, 0x2, 0x1, 0x1, 0x2},
-    {(LayoutPart*)lbl_802B7354, 0x2, 0x0, 0x1, 0x2},
-    {(LayoutPart*)lbl_802B737C, 0x2, 0x1, 0x1, 0x2},
-    {(LayoutPart*)lbl_802B737C, 0x2, 0x1, 0x1, 0x2},
+    {lbl_802B7354, 0x2, 0x0, 0x1, 0x2},
+    {lbl_802B732C, 0x2, 0x1, 0x1, 0x2},
+    {lbl_802B7354, 0x2, 0x0, 0x1, 0x2},
+    {lbl_802B737C, 0x2, 0x1, 0x1, 0x2},
+    {lbl_802B737C, 0x2, 0x1, 0x1, 0x2},
 };
-const u32 lbl_802B73F4[20] = {
-    0x0000000E, 0x00000000, 0x00000000, 0xC22A0000, 0x00010001, 0x0003002B,
-    0x00000000, 0x40C00000, 0xC2200000, 0x00000001, 0x00010002, 0x00000000,
-    0x00000000, 0xC2480000, 0x00010001, 0x00000003, 0x00000000, 0x00000000,
-    0xC57A0000, 0x00010001,
+const LayoutPart lbl_802B73F4[4] = {
+    {0x0, 0xE, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x2B, 0.0f, 6.0f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x2, 0.0f, 0.0f, -5e+01f, 0x1, 0x1},
+    {0x0, 0x3, 0.0f, 0.0f, -4e+03f, 0x1, 0x1},
 };
-const u32 lbl_802B7444[55] = {
-    0x0000001D, 0x00000000, 0x00000000, 0xC22A0000, 0x00010001, 0x0003002C,
-    0x41600000, 0x40C00000, 0xC2200000, 0x00000001, 0x00010005, 0x00000000,
-    0x00000000, 0xC2480000, 0x00010000, 0x00000007, 0x00000000, 0x00000000,
-    0xC57A0000, 0x00010001, 0x0003000E, 0x40800000, 0x41F00000, 0xC2020000,
-    0x00000001, 0x0003000F, 0x42980000, 0x41F00000, 0xC2020000, 0x00000001,
-    0x00030010, 0x43140000, 0x41F00000, 0xC2020000, 0x00000001, 0x00030011,
-    0x435C0000, 0x41F00000, 0xC2020000, 0x00000001, 0x00030012, 0x40800000,
-    0x42580000, 0xC2020000, 0x00000001, 0x00030013, 0x42980000, 0x42580000,
-    0xC2020000, 0x00000001, 0x00030014, 0x43140000, 0x42580000, 0xC2020000,
-    0x00000001,
+const LayoutPart lbl_802B7444[11] = {
+    {0x0, 0x1D, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x2C, 14.0f, 6.0f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x5, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
+    {0x0, 0x7, 0.0f, 0.0f, -4e+03f, 0x1, 0x1},
+    {0x3, 0xE, 4.0f, 3e+01f, -32.5f, 0x0, 0x1},
+    {0x3, 0xF, 76.0f, 3e+01f, -32.5f, 0x0, 0x1},
+    {0x3, 0x10, 148.0f, 3e+01f, -32.5f, 0x0, 0x1},
+    {0x3, 0x11, 2.2e+02f, 3e+01f, -32.5f, 0x0, 0x1},
+    {0x3, 0x12, 4.0f, 54.0f, -32.5f, 0x0, 0x1},
+    {0x3, 0x13, 76.0f, 54.0f, -32.5f, 0x0, 0x1},
+    {0x3, 0x14, 148.0f, 54.0f, -32.5f, 0x0, 0x1},
 };
-const u32 lbl_802B7520[40] = {
-    0x0000000E, 0x00000000, 0x00000000, 0xC22A0000, 0x00010001, 0x0003002D,
-    0x00000000, 0x40C00000, 0xC2200000, 0x00000001, 0x00010002, 0x00000000,
-    0x00000000, 0xC2480000, 0x00010000, 0x00000003, 0x00000000, 0x00000000,
-    0xC57A0000, 0x00010001, 0x0003000E, 0x41100000, 0x41F00000, 0xC2020000,
-    0x00000001, 0x00030012, 0x42A20000, 0x41F00000, 0xC2020000, 0x00000001,
-    0x00030017, 0x43190000, 0x41F00000, 0xC2020000, 0x00000001, 0x00030035,
-    0x43610000, 0x42080000, 0xC2020000, 0x00000001,
+const LayoutPart lbl_802B7520[8] = {
+    {0x0, 0xE, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x2D, 0.0f, 6.0f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x2, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
+    {0x0, 0x3, 0.0f, 0.0f, -4e+03f, 0x1, 0x1},
+    {0x3, 0xE, 9.0f, 3e+01f, -32.5f, 0x0, 0x1},
+    {0x3, 0x12, 81.0f, 3e+01f, -32.5f, 0x0, 0x1},
+    {0x3, 0x17, 153.0f, 3e+01f, -32.5f, 0x0, 0x1},
+    {0x3, 0x35, 225.0f, 34.0f, -32.5f, 0x0, 0x1},
 };
-const u32 lbl_802B75C0[80] = {
-    0x0000000E, 0x00000000, 0x00000000, 0xC22A0000, 0x00010001, 0x0003002D,
-    0x00000000, 0x40C00000, 0xC2200000, 0x00000001, 0x00010002, 0x00000000,
-    0x00000000, 0xC2480000, 0x00010000, 0x00000003, 0x00000000, 0x00000000,
-    0xC57A0000, 0x00010001, 0x0003000F, 0x41100000, 0x41F00000, 0xC2020000,
-    0x00000001, 0x00030011, 0x42A20000, 0x41F00000, 0xC2020000, 0x00000001,
-    0x00030013, 0x43190000, 0x41F00000, 0xC2020000, 0x00000001, 0x00030014,
-    0x43610000, 0x41F00000, 0xC2020000, 0x00000001, 0x0000000E, 0x00000000,
-    0x00000000, 0xC22A0000, 0x00010001, 0x0003002E, 0xC0C00000, 0x41E00000,
-    0xC2200000, 0x00000001, 0x00010002, 0x00000000, 0x00000000, 0xC2480000,
-    0x00010000, 0x00000003, 0x00000000, 0x00000000, 0xC57A0000, 0x00010001,
-    0x0003000F, 0x40800000, 0x41F00000, 0xC2020000, 0x00000001, 0x00030011,
-    0x42980000, 0x41F00000, 0xC2020000, 0x00000001, 0x00030013, 0x43140000,
-    0x41F00000, 0xC2020000, 0x00000001, 0x00030014, 0x435C0000, 0x41F00000,
-    0xC2020000, 0x00000001,
+const LayoutPart lbl_802B75C0[16] = {
+    {0x0, 0xE, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x2D, 0.0f, 6.0f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x2, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
+    {0x0, 0x3, 0.0f, 0.0f, -4e+03f, 0x1, 0x1},
+    {0x3, 0xF, 9.0f, 3e+01f, -32.5f, 0x0, 0x1},
+    {0x3, 0x11, 81.0f, 3e+01f, -32.5f, 0x0, 0x1},
+    {0x3, 0x13, 153.0f, 3e+01f, -32.5f, 0x0, 0x1},
+    {0x3, 0x14, 225.0f, 3e+01f, -32.5f, 0x0, 0x1},
+    {0x0, 0xE, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x2E, -6.0f, 28.0f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x2, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
+    {0x0, 0x3, 0.0f, 0.0f, -4e+03f, 0x1, 0x1},
+    {0x3, 0xF, 4.0f, 3e+01f, -32.5f, 0x0, 0x1},
+    {0x3, 0x11, 76.0f, 3e+01f, -32.5f, 0x0, 0x1},
+    {0x3, 0x13, 148.0f, 3e+01f, -32.5f, 0x0, 0x1},
+    {0x3, 0x14, 2.2e+02f, 3e+01f, -32.5f, 0x0, 0x1},
 };
-const void* const lbl_802B7700[8] = {
-    lbl_802B7444,
-    (const void*)0x0000000B,
-    lbl_802B75C0,
-    (const void*)0x00000008,
-    lbl_802B7520,
-    (const void*)0x00000008,
-    lbl_802B73F4,
-    (const void*)0x00000004,
+const LayoutDef lbl_802B7700[4] = {
+    {lbl_802B7444, 0xB},
+    {lbl_802B75C0, 0x8},
+    {lbl_802B7520, 0x8},
+    {lbl_802B73F4, 0x4},
 };
-const u8 lbl_802B7720[0x50] = {
-    0x00, 0x00, 0x00, 0x43, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0xC2, 0x2A, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x03, 0x00, 0x2B,
-    0x40, 0xC0, 0x00, 0x00, 0x41, 0xA0, 0x00, 0x00, 0xC2, 0x20, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0xC2, 0x48, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0xC5, 0x7A, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01,
+const LayoutPart lbl_802B7720[4] = {
+    {0x0, 0x43, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x2B, 6.0f, 2e+01f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x1, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
+    {0x0, 0x2, 0.0f, 0.0f, -4e+03f, 0x1, 0x1},
 };
-const u32 lbl_802B7770[15] = {
-    0x0000000D, 0x00000000, 0x00000000, 0xC22A0000, 0x00010001, 0x00030000,
-    0x42AA0000, 0x41F00000, 0xC2200000, 0x00000001, 0x00010001, 0x00000000,
-    0x00000000, 0xC2480000, 0x00010000,
+const LayoutPart lbl_802B7770[3] = {
+    {0x0, 0xD, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x0, 85.0f, 3e+01f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x1, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
 };
 const LayoutPart lbl_802B77AC[1] = {
     {0x0, 0x2, 0.0f, 0.0f, -4000.0f, 0x1, 0x1},
 };
-const u32 lbl_802B77C0[15] = {
-    0x0000000C, 0x00000000, 0x00000000, 0xC22A0000, 0x00010001, 0x00030001,
-    0x42C80000, 0x41500000, 0xC2200000, 0x00000001, 0x00010001, 0x00000000,
-    0x00000000, 0xC2480000, 0x00010000,
+const LayoutPart lbl_802B77C0[3] = {
+    {0x0, 0xC, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x1, 1e+02f, 13.0f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x1, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
 };
-const u32 lbl_802B77FC[35] = {
-    0x0000000F, 0x41C00000, 0xC0000000, 0xC2020000, 0x00010001, 0x00000010,
-    0x41C00000, 0xC0000000, 0xC2020000, 0x00010001, 0x00000011, 0x41C00000,
-    0xC0000000, 0xC2020000, 0x00010001, 0x00000012, 0x41C00000, 0xC0000000,
-    0xC2020000, 0x00010001, 0x00000013, 0x41C00000, 0xC0000000, 0xC2020000,
-    0x00010001, 0x00000014, 0x41C00000, 0xC0000000, 0xC2020000, 0x00010001,
-    0x0000003E, 0x41C00000, 0xC0000000, 0xC2020000, 0x00010001,
+const LayoutPart lbl_802B77FC[7] = {
+    {0x0, 0xF, 24.0f, -2.0f, -32.5f, 0x1, 0x1},
+    {0x0, 0x10, 24.0f, -2.0f, -32.5f, 0x1, 0x1},
+    {0x0, 0x11, 24.0f, -2.0f, -32.5f, 0x1, 0x1},
+    {0x0, 0x12, 24.0f, -2.0f, -32.5f, 0x1, 0x1},
+    {0x0, 0x13, 24.0f, -2.0f, -32.5f, 0x1, 0x1},
+    {0x0, 0x14, 24.0f, -2.0f, -32.5f, 0x1, 0x1},
+    {0x0, 0x3E, 24.0f, -2.0f, -32.5f, 0x1, 0x1},
 };
 const u32 lbl_802B7888[3] = {
     0x45717569, 0x70706564, 0x00000000,
 };
-const void* const lbl_802B7894[14] = {
-    lbl_802B7770,
-    (const void*)0x00000003,
-    lbl_802B7770,
-    (const void*)0x00000003,
-    lbl_802B7770,
-    (const void*)0x00000003,
-    lbl_802B7770,
-    (const void*)0x00000003,
-    lbl_802B7770,
-    (const void*)0x00000003,
-    lbl_802B7770,
-    (const void*)0x00000003,
-    lbl_802B77C0,
-    (const void*)0x00000003,
+const LayoutDef lbl_802B7894[7] = {
+    {lbl_802B7770, 0x3},
+    {lbl_802B7770, 0x3},
+    {lbl_802B7770, 0x3},
+    {lbl_802B7770, 0x3},
+    {lbl_802B7770, 0x3},
+    {lbl_802B7770, 0x3},
+    {lbl_802B77C0, 0x3},
 };
-const u32 lbl_802B78CC[35] = {
-    0x0000000D, 0x00000000, 0x00000000, 0xC22A0000, 0x00010001, 0x0003002D,
-    0x40C00000, 0x40C00000, 0xC2200000, 0x00000001, 0x00010001, 0x00000000,
-    0x00000000, 0xC2480000, 0x00010000, 0x0003000E, 0x41800000, 0x41F00000,
-    0xC2020000, 0x00000001, 0x00030012, 0x42B00000, 0x41F00000, 0xC2020000,
-    0x00000001, 0x00030017, 0x43200000, 0x41F00000, 0xC2020000, 0x00000001,
-    0x00030035, 0x43680000, 0x42080000, 0xC2020000, 0x00000001,
+const LayoutPart lbl_802B78CC[7] = {
+    {0x0, 0xD, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x2D, 6.0f, 6.0f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x1, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
+    {0x3, 0xE, 16.0f, 3e+01f, -32.5f, 0x0, 0x1},
+    {0x3, 0x12, 88.0f, 3e+01f, -32.5f, 0x0, 0x1},
+    {0x3, 0x17, 1.6e+02f, 3e+01f, -32.5f, 0x0, 0x1},
+    {0x3, 0x35, 232.0f, 34.0f, -32.5f, 0x0, 0x1},
 };
-const u32 lbl_802B7958[35] = {
-    0x0000000D, 0x00000000, 0x00000000, 0xC22A0000, 0x00010001, 0x0003002D,
-    0x40C00000, 0x40C00000, 0xC2200000, 0x00000001, 0x00010001, 0x00000000,
-    0x00000000, 0xC2480000, 0x00010000, 0x0003000F, 0x41800000, 0x41F00000,
-    0xC2020000, 0x00000001, 0x00030011, 0x42B00000, 0x41F00000, 0xC2020000,
-    0x00000001, 0x00030013, 0x43200000, 0x41F00000, 0xC2020000, 0x00000001,
-    0x00030014, 0x43680000, 0x41F00000, 0xC2020000, 0x00000001,
+const LayoutPart lbl_802B7958[7] = {
+    {0x0, 0xD, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x2D, 6.0f, 6.0f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x1, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
+    {0x3, 0xF, 16.0f, 3e+01f, -32.5f, 0x0, 0x1},
+    {0x3, 0x11, 88.0f, 3e+01f, -32.5f, 0x0, 0x1},
+    {0x3, 0x13, 1.6e+02f, 3e+01f, -32.5f, 0x0, 0x1},
+    {0x3, 0x14, 232.0f, 3e+01f, -32.5f, 0x0, 0x1},
 };
 const LayoutDef lbl_802B79E4[2] = {
-    {(LayoutPart*)lbl_802B78CC, 0x7},
-    {(LayoutPart*)lbl_802B7958, 0x7},
+    {lbl_802B78CC, 0x7},
+    {lbl_802B7958, 0x7},
 };
-const u32 lbl_802B79F4[15] = {
-    0x0000000E, 0x00000000, 0x00000000, 0xC22A0000, 0x00010001, 0x00010001,
-    0x00000000, 0x00000000, 0xC2480000, 0x00010000, 0x00030024, 0x41E00000,
-    0x40C00000, 0xC22A0000, 0x00000001,
+const LayoutPart lbl_802B79F4[3] = {
+    {0x0, 0xE, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x1, 0x1, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
+    {0x3, 0x24, 28.0f, 6.0f, -42.5f, 0x0, 0x1},
 };
-const u32 lbl_802B7A30[10] = {
-    0x00000027, 0x41E00000, 0x40C00000, 0xC2200000, 0x00010001, 0x0003001B,
-    0x41F00000, 0x41F00000, 0xC1DC0000, 0x00000001,
+const LayoutPart lbl_802B7A30[2] = {
+    {0x0, 0x27, 28.0f, 6.0f, -4e+01f, 0x1, 0x1},
+    {0x3, 0x1B, 3e+01f, 3e+01f, -27.5f, 0x0, 0x1},
 };
-const u32 lbl_802B7A58[10] = {
-    0x00000028, 0x42980000, 0x40C00000, 0xC2200000, 0x00010001, 0x0003001C,
-    0x429C0000, 0x41F00000, 0xC1DC0000, 0x00000001,
+const LayoutPart lbl_802B7A58[2] = {
+    {0x0, 0x28, 76.0f, 6.0f, -4e+01f, 0x1, 0x1},
+    {0x3, 0x1C, 78.0f, 3e+01f, -27.5f, 0x0, 0x1},
 };
-const u32 lbl_802B7A80[10] = {
-    0x00000029, 0x432C0000, 0x40C00000, 0xC2200000, 0x00010001, 0x0003001D,
-    0x432E0000, 0x41F00000, 0xC1DC0000, 0x00000001,
+const LayoutPart lbl_802B7A80[2] = {
+    {0x0, 0x29, 172.0f, 6.0f, -4e+01f, 0x1, 0x1},
+    {0x3, 0x1D, 174.0f, 3e+01f, -27.5f, 0x0, 0x1},
 };
-const u32 lbl_802B7AA8[10] = {
-    0x0000002A, 0x42F80000, 0x40C00000, 0xC2200000, 0x00010001, 0x0003001E,
-    0x42FC0000, 0x41F00000, 0xC1DC0000, 0x00000001,
+const LayoutPart lbl_802B7AA8[2] = {
+    {0x0, 0x2A, 124.0f, 6.0f, -4e+01f, 0x1, 0x1},
+    {0x3, 0x1E, 126.0f, 3e+01f, -27.5f, 0x0, 0x1},
 };
-const u32 lbl_802B7AD0[10] = {
-    0x0000002B, 0x435C0000, 0x40C00000, 0xC2200000, 0x00010001, 0x0003001F,
-    0x435E0000, 0x41F00000, 0xC1DC0000, 0x00000001,
+const LayoutPart lbl_802B7AD0[2] = {
+    {0x0, 0x2B, 2.2e+02f, 6.0f, -4e+01f, 0x1, 0x1},
+    {0x3, 0x1F, 222.0f, 3e+01f, -27.5f, 0x0, 0x1},
 };
-const u32 lbl_802B7AF8[10] = {
-    0x0000002C, 0x43860000, 0x40C00000, 0xC2200000, 0x00010001, 0x00030020,
-    0x43870000, 0x41F00000, 0xC1DC0000, 0x00000001,
+const LayoutPart lbl_802B7AF8[2] = {
+    {0x0, 0x2C, 268.0f, 6.0f, -4e+01f, 0x1, 0x1},
+    {0x3, 0x20, 2.7e+02f, 3e+01f, -27.5f, 0x0, 0x1},
 };
-const void* const lbl_802B7B20[12] = {
-    lbl_802B7A30,
-    (const void*)0x00000002,
-    lbl_802B7A58,
-    (const void*)0x00000002,
-    lbl_802B7AA8,
-    (const void*)0x00000002,
-    lbl_802B7A80,
-    (const void*)0x00000002,
-    lbl_802B7AD0,
-    (const void*)0x00000002,
-    lbl_802B7AF8,
-    (const void*)0x00000002,
+const LayoutDef lbl_802B7B20[6] = {
+    {lbl_802B7A30, 0x2},
+    {lbl_802B7A58, 0x2},
+    {lbl_802B7AA8, 0x2},
+    {lbl_802B7A80, 0x2},
+    {lbl_802B7AD0, 0x2},
+    {lbl_802B7AF8, 0x2},
 };
-const u32 lbl_802B7B50[5] = {
-    0x00000002, 0x00000000, 0x00000000, 0xC57A0000, 0x00010001,
+const LayoutPart lbl_802B7B50[1] = {
+    {0x0, 0x2, 0.0f, 0.0f, -4e+03f, 0x1, 0x1},
 };
-const LT lbl_802B7B64[6] = {
-    {(void*)lbl_802B7444, 0xB},
-    {(void*)lbl_802B7444, 0xB},
-    {(void*)lbl_802B75C0, 0x8},
-    {(void*)lbl_802B75C0, 0x8},
-    {(void*)lbl_802B75C0, 0x8},
-    {(void*)lbl_802B75C0, 0x8},
+const LayoutDef lbl_802B7B64[6] = {
+    {lbl_802B7444, 0xB},
+    {lbl_802B7444, 0xB},
+    {lbl_802B75C0, 0x8},
+    {lbl_802B75C0, 0x8},
+    {lbl_802B75C0, 0x8},
+    {lbl_802B75C0, 0x8},
 };
-const LT lbl_802B7B94[6] = {
-    {(void*)lbl_802B7444, 0xB},
-    {(void*)lbl_802B7444, 0xB},
-    {(void*)lbl_802B7520, 0x8},
-    {(void*)lbl_802B7520, 0x8},
-    {(void*)lbl_802B75C0, 0x8},
-    {(void*)lbl_802B75C0, 0x8},
+const LayoutDef lbl_802B7B94[6] = {
+    {lbl_802B7444, 0xB},
+    {lbl_802B7444, 0xB},
+    {lbl_802B7520, 0x8},
+    {lbl_802B7520, 0x8},
+    {lbl_802B75C0, 0x8},
+    {lbl_802B75C0, 0x8},
 };
-const u8 lbl_802B7BC4[0x3C] = {
-    0x00, 0x00, 0x00, 0x43, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0xC2, 0x2A, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x03, 0x00, 0x22,
-    0x00, 0x00, 0x00, 0x00, 0x42, 0x24, 0x00, 0x00, 0xC2, 0x20, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0xC2, 0x48, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,
+const LayoutPart lbl_802B7BC4[3] = {
+    {0x0, 0x43, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
+    {0x3, 0x22, 0.0f, 41.0f, -4e+01f, 0x0, 0x1},
+    {0x1, 0x1, 0.0f, 0.0f, -5e+01f, 0x1, 0x0},
 };
-const u8 lbl_802B7C00[0x14] = {
-    0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0xC5, 0x7A, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01,
+const LayoutPart lbl_802B7C00[1] = {
+    {0x0, 0x2, 0.0f, 0.0f, -4e+03f, 0x1, 0x1},
 };
 const LayoutPart lbl_802B7C14[4] = {
     {0x0, 0x44, 0.0f, 0.0f, -42.5f, 0x1, 0x1},
@@ -1704,7 +1650,6 @@ typedef struct { u8 pad[0x10]; u32 v; } W;
 void fn_801B277C(Task* t);
 typedef struct { u8 pad[0x24]; MenuPartWork* w; MenuPanel* obj; MenuPanel* obj2; u8 pad30[0xC]; void* p3c; } T_801B54D4;
 typedef struct { f32 a, b; } FP;
-extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, f32 z, f32 a, f32 b, u16 index);
 extern u8 fn_801F464C(s32 id);
 extern u16 fn_801B995C(s32 id);
 typedef struct { s16 id; s8 count; s8 pad; } Ent_801B9810;
@@ -1854,7 +1799,7 @@ typedef struct Self_801A0C3C {
     Ctx_801A0C3C *ctx;
 } Self_801A0C3C;
 typedef struct Flg_801A1B98 { u8 pad[8]; u32 flags; } Flg_801A1B98;
-extern Sub_801A0C3C *fn_801A53D4(void *o, s16 idx);
+extern Sub_801A0C3C *fn_801A53D4(void *o, u16 idx);
 extern const f32 lbl_802B4920[11];
 typedef struct Ent_801A1B98 { u8 idx; u8 b1; u8 b2; u8 b3; u8 b4; u8 b5; } Ent_801A1B98;
 extern const Ent_801A1B98 lbl_802B494C[7];
@@ -1868,43 +1813,11 @@ extern int lbl_80347170[2];
 extern int lbl_80347178;
 extern const u32 lbl_8034BAC0[];
 extern u8 lbl_803473BE;
-typedef struct { u8 pad[0x28]; MenuPanel* obj; } Pnl;
-typedef struct { s32 f0; u8 pad[0x28]; } E2c;
-typedef struct {
-    u8 pad0[7];
-    u8 f7;
-    u8 pad8;
-    u8 f9;
-    u8 padA[2];
-    s32 fc;
-    u8 pad10[0x20 - 0x10];
-    E2c ent[10];
-    u8 pad_[0x20c - 0x20 - 10 * 0x2c];
-    Pnl* p[19];
-    void* f258;
-} W_8019EFF8;
-typedef struct { u8 pad[0x19]; u8 state; u8 pad1a[0x24 - 0x1a]; W_8019EFF8* w; } Task_8019EFF8;
-extern s32 fn_801A3B30(Task_8019EFF8* t, s32* out);
+extern s32 fn_801A3B30(SaveTask* t, s32* out);
 extern s32 MenuPlaySe(s16 se);
-typedef struct {
-    u8 pad0[1];
-    u8 f1;
-    u8 cnt;
-    u8 f3;
-    u8 sel;
-    u8 pad5[0x18 - 5];
-    f32 f18;
-    u8 pad1c[0x20c - 0x1c];
-    Pnl* p[19];
-    s32 pad258;
-    s32 st[8];
-} W_801A11B0;
-typedef struct { u8 pad[0x19]; u8 state; u8 pad1a[0x24 - 0x1a]; W_801A11B0* w; } Task_801A11B0;
 typedef struct { u8 pad[0x14]; u32 f14; u8 pad18[0x50 - 0x18]; } Tab;
 extern s32 fn_801C09F8(s32 a, s32 b);
-extern void fn_801A20AC(Task_801A11B0* t);
-typedef struct V { u8 pad[4]; f32 a; f32 b; } V;
-typedef struct Ent_801B737C { u8 pad[0x28]; V* v; } Ent_801B737C;
+extern void fn_801A20AC(SaveTask* t);
 typedef struct St_801B737C { u8 pad[0x64]; s8 seen[8]; } St_801B737C;
 typedef struct Fl { u8 pad[4]; u32 f4; u8 pad8[0x18 - 8]; u32 f18; u32 f1c; u8 pad20[0x30 - 0x20]; u32 f30; u8 pad34[0x168 - 0x34]; u32 f168; u8 pad16c[4]; u32 f170; } Fl;
 typedef struct UiObj UiObj;
@@ -2215,31 +2128,31 @@ void fn_801AB98C(Obj_UNIT0000 *o)
     o->sub->f8 = 0.0f;
 }
 
-extern void fn_801AC678(void);
-Task3_801ACC00* fn_801ACD38(void* arg, u16 slot) {
-    Task3_801ACC00* t = fn_802267AC(arg, fn_801AC678);
-    t->a = fn_801E1A74(1, 0x58);
-    t->pan = fn_801E1A74(1, 0x6c);
-    t->c = fn_801E1A74(1, 0x20);
-    t->d = fn_801E1A74(1, 0x18);
-    t->f2C = 0;
-    t->a->slot = slot;
-    t->c->b1E = 4;
-    t->c->b1F = 3;
-    t->c->s18 = 0;
-    t->c->s1A = 0;
-    t->pan->o.alpha_en = 0;
-    ((u8*)t->a)[0] = 0;
-    t->pan->o.x = 648.0f;
-    t->pan->o.tx = 648.0f;
-    t->pan->o.y = 38.0f;
-    t->pan->o.ty = 38.0f;
-    t->pan->o.rdx = 0.0f;
-    t->pan->o.rdy = 0.0f;
-    *(f32*)((u8*)t->pan + 0x38) = 1.0f;
-    t->pan->o.alpha = 1.0f;
-    t->pan->o.z = -4500.0f;
-    UiObjSetLowered(&t->pan->o);
+void fn_801AC678(ShopPart* t);
+ShopPart* fn_801ACD38(void* arg, u16 slot) {
+    ShopPart* t = fn_802267AC(arg, fn_801AC678);
+    t->flag = fn_801E1A74(1, 0x58);
+    t->obj = fn_801E1A74(1, 0x6c);
+    t->list = fn_801E1A74(1, 0x20);
+    t->x38 = fn_801E1A74(1, 0x18);
+    t->obj2 = 0;
+    t->flag->w8 = slot;
+    t->list->part = 4;
+    t->list->flags = 3;
+    t->list->page = 0;
+    t->list->row = 0;
+    t->obj->o.alpha_en = 0;
+    ((u8*)t->flag)[0] = 0;
+    t->obj->o.x = 648.0f;
+    t->obj->o.tx = 648.0f;
+    t->obj->o.y = 38.0f;
+    t->obj->o.ty = 38.0f;
+    t->obj->o.rdx = 0.0f;
+    t->obj->o.rdy = 0.0f;
+    *(f32*)((u8*)t->obj + 0x38) = 1.0f;
+    t->obj->o.alpha = 1.0f;
+    t->obj->o.z = -4500.0f;
+    UiObjSetLowered(&t->obj->o);
     return t;
 }
 
@@ -2876,8 +2789,8 @@ void fn_801B11EC(Task_801B11EC* t) {
         z = TextGetZ();
         TextPushColor();
         TextSetColor(0xFF201008);
-        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, (LayoutPart*)lbl_802B7700[t->obj->h52 * 2],
-                     (u32)lbl_802B7700[t->obj->h52 * 2 + 1], &t->obj->o.x, t->obj->o.z, 1.0f, 1.0f);
+        UiLayoutDraw(&menu_sprites.texlist8, lbl_802B7700[t->obj->h52].parts,
+                     lbl_802B7700[t->obj->h52].count, &t->obj->o.x, t->obj->o.z, 1.0f, 1.0f);
         TextSetZ(-27.5f + t->obj->o.z);
         id = fn_801B93E8(lbl_803471B8);
         switch (fn_801F4C24(id)) {
@@ -2959,43 +2872,14 @@ Task_801B1A78* fn_801B1A78(void* a)
 }
 
 /* The shop's top menu panel (the task fn_801B2310 creates). */
-typedef struct Cur_1B3C {
-    f32 x, y;     /* 0x00 draw position */
-    f32 ox, oy;   /* 0x08 offset from the panel */
-    f32 scale;    /* 0x10 pulse */
-    u16 angle;    /* 0x14 */
-    u8 pad16[2];
-    s16 s18;
-    s16 s1A;
-    u16 sel;      /* 0x1C selected tab */
-    u8 part;      /* 0x1E layout part, 0xFF none */
-    u8 flags;     /* 0x1F 1 shown, 2 pulsing */
-} Cur_1B3C;
-typedef struct Arrow_1B3C {
-    f32 x, y;     /* 0x00 */
-    u16 idx;      /* 0x08 */
-    u16 state;    /* 0x0A */
-} Arrow_1B3C;
-typedef struct Task_1B3C {
-    u8 pad0[0x18];
-    u8 flags; /* 0x18 */
-    u8 state; /* 0x19 */
-    u8 pad1A[0xA];
-    u8* a;                /* 0x24 */
-    MenuPanel* pan;  /* 0x28 */
-    s32 f2C;
-    Cur_1B3C* c;          /* 0x30 */
-    u8 pad34[4];
-    Arrow_1B3C* d;        /* 0x38 */
-} Task_1B3C;
 
 extern f32 njCos(s32 a);
-extern void fn_801B1EA0(Task_1B3C* t);
+extern void fn_801B1EA0(ShopPart* t);
 s32 fn_801B94F0(void);
 u16 fn_801B952C(u16 i);
-void fn_801B5D68(Task3_801B5D68* t);
+void fn_801B5D68(ShopPart* t);
 
-void fn_801B1B3C(Task_1B3C* t) {
+void fn_801B1B3C(ShopPart* t) {
     NJS_TEXLIST** tl;
     f32 z;
     f32 s;
@@ -3007,48 +2891,48 @@ void fn_801B1B3C(Task_1B3C* t) {
     case 0:
     case 1:
     case 0xFE:
-        if (t->a[0] == 1) {
+        if (t->flag->b0 == 1) {
             return;
         }
-        UiObjUpdate(&t->pan->o);
-        tl = (NJS_TEXLIST**)&menu_sprites.texlist8;
-        UiLayoutDraw(tl, (LayoutPart*)lbl_802B71EC, 3, &t->pan->o.x, t->pan->o.z, 1.0f, 1.0f);
-        z = -42.75f + t->pan->o.z;
+        UiObjUpdate(&t->obj->o);
+        tl = &menu_sprites.texlist8;
+        UiLayoutDraw(tl, lbl_802B71EC, 3, &t->obj->o.x, t->obj->o.z, 1.0f, 1.0f);
+        z = -42.75f + t->obj->o.z;
         if (fn_801B94F0()) {
             s32 i;
-            const void* const* p;
-            UiLayoutDraw(tl, (LayoutPart*)lbl_802B7304[t->c->sel * 2], (u32)lbl_802B7304[t->c->sel * 2 + 1], &t->pan->o.x, z, 1.0f, 1.0f);
+            const LayoutDef* p;
+            UiLayoutDraw(tl, lbl_802B7304[t->list->tab].parts, lbl_802B7304[t->list->tab].count, &t->obj->o.x, z, 1.0f, 1.0f);
             z -= 0.25f;
-            for (i = 0, p = lbl_802B7304; i < 5; i++, p += 2) {
-                if (t->c->sel != i && fn_801B952C(i)) {
-                    UiLayoutDraw(tl, (LayoutPart*)p[0], 2, &t->pan->o.x, z, 0.7f, 1.0f);
+            for (i = 0, p = lbl_802B7304; i < 5; i++, p++) {
+                if (t->list->tab != i && fn_801B952C(i)) {
+                    UiLayoutDraw(tl, p->parts, 2, &t->obj->o.x, z, 0.7f, 1.0f);
                     z -= 0.25f;
                 }
             }
         } else {
-            UiLayoutDraw(tl, (LayoutPart*)lbl_802B72F0, 1, &t->pan->o.x, z, 1.0f, 1.0f);
+            UiLayoutDraw(tl, lbl_802B72F0, 1, &t->obj->o.x, z, 1.0f, 1.0f);
         }
         switch (t->state) {
         case 0:
             if (fn_801B94F0()) {
-                if (t->d->state == 0) {
-                    t->d->state = 1;
+                if (t->x38->state == 0) {
+                    t->x38->state = 1;
                 }
-                t->d->idx = 1;
-                t->d->x = t->pan->o.x + t->pan->o.rdx + (f32)(t->c->sel * 48);
-                t->d->y = t->pan->o.y + t->pan->o.rdy;
+                t->x38->idx = 1;
+                t->x38->x = t->obj->o.x + t->obj->o.rdx + (f32)(t->list->tab * 48);
+                t->x38->y = t->obj->o.y + t->obj->o.rdy;
             } else {
-                t->d->state = 0;
+                t->x38->state = 0;
             }
             break;
         case 1: {
             UiObj* ui;
-            Cur_1B3C* c;
-            t->d->idx = 2;
-            t->d->x = t->pan->o.x;
-            t->d->y = t->pan->o.y;
-            c = t->c;
-            ui = &t->pan->o;
+            ShopList* c;
+            t->x38->idx = 2;
+            t->x38->x = t->obj->o.x;
+            t->x38->y = t->obj->o.y;
+            c = t->list;
+            ui = &t->obj->o;
             if ((c->flags & 1) && c->part != 0xFF) {
                 s = 0.0f;
                 if (c->flags & 2) {
@@ -3063,7 +2947,7 @@ void fn_801B1B3C(Task_1B3C* t) {
             break;
         }
         }
-        fn_801B5D68((Task3_801B5D68*)t);
+        fn_801B5D68(t);
         fn_801B1EA0(t);
         break;
     case 0xFF:
@@ -3093,22 +2977,22 @@ Task_801B6240* fn_801B6240(void* a, f32 x)
     return o;
 }
 
-Task_801B6AE8* fn_801B6AE8(void* a)
+ShopPart* fn_801B6AE8(void* a)
 {
-    Task_801B6AE8* o = fn_802267AC(a, fn_801B6950);
-    o->p24 = fn_801E1A74(1, 0x58);
-    o->p28 = fn_801E1A74(1, 0x6c);
-    o->p24[0] = 0;
-    o->p28->o.alpha_en = 0;
-    o->p28->o.z = -4400.0f;
-    o->p28->o.x = -260.0f;
-    o->p28->o.tx = -260.0f;
-    o->p28->o.y = 100.0f;
-    o->p28->o.ty = 100.0f;
-    o->p28->o.rdx = 0.0f;
-    o->p28->o.rdy = 0.0f;
-    o->p28->o.alpha = 1.0f;
-    UiObjSetRaised(&o->p28->o);
+    ShopPart* o = fn_802267AC(a, fn_801B6950);
+    o->flag = fn_801E1A74(1, 0x58);
+    o->obj = fn_801E1A74(1, 0x6c);
+    o->flag->b0 = 0;
+    o->obj->o.alpha_en = 0;
+    o->obj->o.z = -4400.0f;
+    o->obj->o.x = -260.0f;
+    o->obj->o.tx = -260.0f;
+    o->obj->o.y = 100.0f;
+    o->obj->o.ty = 100.0f;
+    o->obj->o.rdx = 0.0f;
+    o->obj->o.rdy = 0.0f;
+    o->obj->o.alpha = 1.0f;
+    UiObjSetRaised(&o->obj->o);
     return o;
 }
 
@@ -3576,7 +3460,7 @@ void fn_801ABF70(PanelTask_801ABF70* t) {
             return;
         }
         UiObjUpdate(&t->ui->o);
-        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, (LayoutPart*)lbl_802B7C14, 4, &t->ui->o.x, t->ui->o.z, 1.0f, 1.0f);
+        UiLayoutDraw(&menu_sprites.texlist8, lbl_802B7C14, 4, &t->ui->o.x, t->ui->o.z, 1.0f, 1.0f);
         fn_801C3F5C(19.0f + t->ui->o.x, 17.0f + t->ui->o.y, -27.5f + t->ui->o.z);
         z = TextGetZ();
         TextPushColor();
@@ -3592,30 +3476,30 @@ void fn_801ABF70(PanelTask_801ABF70* t) {
     }
 }
 
-Task3_801ACC00* fn_801ACC00(void* arg, u16 slot) {
-    Task3_801ACC00* t = fn_802267AC(arg, fn_801AC48C);
-    t->a = fn_801E1A74(1, 0x58);
-    t->pan = fn_801E1A74(1, 0x6c);
-    t->c = fn_801E1A74(1, 0x20);
-    t->d = fn_801E1A74(1, 0x18);
-    t->f2C = 0;
-    t->a->slot = slot;
-    t->c->b1E = 4;
-    t->c->b1F = 3;
-    t->c->s18 = 0;
-    t->c->s1A = 0;
-    t->pan->o.alpha_en = 0;
-    ((u8*)t->a)[0] = 0;
-    t->pan->o.x = 648.0f;
-    t->pan->o.tx = 648.0f;
-    t->pan->o.y = 38.0f;
-    t->pan->o.ty = 38.0f;
-    t->pan->o.rdx = 0.0f;
-    t->pan->o.rdy = 0.0f;
-    *(f32*)((u8*)t->pan + 0x38) = 1.0f;
-    t->pan->o.alpha = 1.0f;
-    t->pan->o.z = -4500.0f;
-    UiObjSetLowered(&t->pan->o);
+ShopPart* fn_801ACC00(void* arg, u16 slot) {
+    ShopPart* t = fn_802267AC(arg, fn_801AC48C);
+    t->flag = fn_801E1A74(1, 0x58);
+    t->obj = fn_801E1A74(1, 0x6c);
+    t->list = fn_801E1A74(1, 0x20);
+    t->x38 = fn_801E1A74(1, 0x18);
+    t->obj2 = 0;
+    t->flag->w8 = slot;
+    t->list->part = 4;
+    t->list->flags = 3;
+    t->list->page = 0;
+    t->list->row = 0;
+    t->obj->o.alpha_en = 0;
+    ((u8*)t->flag)[0] = 0;
+    t->obj->o.x = 648.0f;
+    t->obj->o.tx = 648.0f;
+    t->obj->o.y = 38.0f;
+    t->obj->o.ty = 38.0f;
+    t->obj->o.rdx = 0.0f;
+    t->obj->o.rdy = 0.0f;
+    *(f32*)((u8*)t->obj + 0x38) = 1.0f;
+    t->obj->o.alpha = 1.0f;
+    t->obj->o.z = -4500.0f;
+    UiObjSetLowered(&t->obj->o);
     return t;
 }
 
@@ -3630,9 +3514,9 @@ void fn_801AFAA4(PanelTask_801AFAA4* t) {
         }
         UiObjUpdate(&t->pan->o);
         UiObjCalcRect(&t->pan->o);
-        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, lbl_802B79E4[t->pan->h54].parts,
+        UiLayoutDraw(&menu_sprites.texlist8, lbl_802B79E4[t->pan->h54].parts,
                      lbl_802B79E4[t->pan->h54].count, t->pan->o.rect, t->pan->o.z, t->pan->o.alpha, 1.0f);
-        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, (LayoutPart*)lbl_802B77AC, 1, &t->pan->o.rect[2], t->pan->o.z, 1.0f, 1.0f);
+        UiLayoutDraw(&menu_sprites.texlist8, lbl_802B77AC, 1, &t->pan->o.rect[2], t->pan->o.z, 1.0f, 1.0f);
         cb = t->data->cb;
         if (cb != 0) {
             z = TextGetZ();
@@ -3672,30 +3556,30 @@ Task2_801B0470* fn_801B0470(void* arg) {
     return t;
 }
 
-Task3_801B0DF8* fn_801B0DF8(void* arg) {
-    Task3_801B0DF8* t = fn_802267AC(arg, fn_801B0B9C);
-    t->a = fn_801E1A74(1, 0x58);
-    t->pan = fn_801E1A74(1, 0x6c);
-    t->c = fn_801E1A74(1, 0x20);
-    t->d = fn_801E1A74(1, 0x18);
-    t->f2C = 0;
-    t->d->s8 = 3;
-    t->d->sA = 0;
-    *(f32*)((u8*)t->pan + 0x38) = 1.0f;
-    t->pan->o.alpha = 1.0f;
-    *(f32*)((u8*)t->pan + 0x38) = 1.0f;
-    t->pan->o.alpha = 1.0f;
-    t->pan->o.z = -4300.0f;
-    t->pan->o.alpha_en = 0;
-    t->pan->h54 = 0;
-    t->pan->h52 = 0;
-    ((u8*)t->a)[0] = 0;
-    t->pan->o.x = -348.0f;
-    t->pan->o.tx = -348.0f;
-    t->pan->o.y = 164.0f;
-    t->pan->o.ty = 164.0f;
-    UiObjSetLowered(&t->pan->o);
-    t->d->sA = 1;
+ShopPart* fn_801B0DF8(void* arg) {
+    ShopPart* t = fn_802267AC(arg, fn_801B0B9C);
+    t->flag = fn_801E1A74(1, 0x58);
+    t->obj = fn_801E1A74(1, 0x6c);
+    t->list = fn_801E1A74(1, 0x20);
+    t->x38 = fn_801E1A74(1, 0x18);
+    t->obj2 = 0;
+    t->x38->idx = 3;
+    t->x38->state = 0;
+    *(f32*)((u8*)t->obj + 0x38) = 1.0f;
+    t->obj->o.alpha = 1.0f;
+    *(f32*)((u8*)t->obj + 0x38) = 1.0f;
+    t->obj->o.alpha = 1.0f;
+    t->obj->o.z = -4300.0f;
+    t->obj->o.alpha_en = 0;
+    t->obj->h54 = 0;
+    t->obj->h52 = 0;
+    ((u8*)t->flag)[0] = 0;
+    t->obj->o.x = -348.0f;
+    t->obj->o.tx = -348.0f;
+    t->obj->o.y = 164.0f;
+    t->obj->o.ty = 164.0f;
+    UiObjSetLowered(&t->obj->o);
+    t->x38->state = 1;
     return t;
 }
 
@@ -3775,26 +3659,26 @@ Task3_801B5C4C* fn_801B5C4C(void* arg) {
     return t;
 }
 
-void fn_801B5D68(Task3_801B5D68* t) {
-    if (t->d != 0) {
-        switch (t->d->state) {
+void fn_801B5D68(ShopPart* t) {
+    if (t->x38 != 0) {
+        switch (t->x38->state) {
         case 0:
-            t->d->f10 = 0;
-            t->d->angle = 0;
-            t->d->scale = 1.0f;
+            t->x38->f10 = 0;
+            t->x38->angle = 0;
+            t->x38->scale = 1.0f;
             break;
         case 1:
-            t->d->scale = 1.0f;
-            t->d->state = 2;
-            t->d->angle = 0;
+            t->x38->scale = 1.0f;
+            t->x38->state = 2;
+            t->x38->angle = 0;
         case 2:
-            if (lbl_802B73A4[t->d->idx].flag6 != 0) {
-                t->d->scale = 1.0f - 0.7f * njSin(t->d->angle);
-                t->d->angle += 0x400;
-                t->d->angle &= 0x7F00;
+            if (lbl_802B73A4[t->x38->idx].flag6 != 0) {
+                t->x38->scale = 1.0f - 0.7f * njSin(t->x38->angle);
+                t->x38->angle += 0x400;
+                t->x38->angle &= 0x7F00;
             }
-            UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, lbl_802B73A4[t->d->idx].parts, 2,
-                         (f32*)t->d, -32.5f + t->ui->o.z, 1.0f, t->d->scale);
+            UiLayoutDraw(&menu_sprites.texlist8, lbl_802B73A4[t->x38->idx].parts, 2,
+                         (f32*)t->x38, -32.5f + t->obj->o.z, 1.0f, t->x38->scale);
             break;
         }
     }
@@ -3809,7 +3693,7 @@ void fn_801B5EA8(PanelTask_801B5EA8* t) {
             return;
         }
         UiObjUpdate(&t->ui->o);
-        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, (LayoutPart*)lbl_802B6DD0, 2, &t->ui->o.x, t->ui->o.z, 1.0f, 1.0f);
+        UiLayoutDraw(&menu_sprites.texlist8, lbl_802B6DD0, 2, &t->ui->o.x, t->ui->o.z, 1.0f, 1.0f);
         z = TextGetZ();
         TextPushColor();
         TextSetColor(0xFF201008);
@@ -3837,7 +3721,7 @@ void fn_801B5FA8(PanelTask_801B5FA8* t) {
         z = TextGetZ();
         TextPushColor();
         TextSetColor(0xFF201008);
-        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, (LayoutPart*)lbl_802B6DD0, 2, &t->pan->o.x, t->pan->o.z, 1.0f, 1.0f);
+        UiLayoutDraw(&menu_sprites.texlist8, lbl_802B6DD0, 2, &t->pan->o.x, t->pan->o.z, 1.0f, 1.0f);
         if (t->pan->text != 0) {
             TextSetZ(-27.5f + t->pan->o.z);
             TextPrint(18.0f + t->pan->o.x, 12.0f + t->pan->o.y, t->pan->text);
@@ -3864,7 +3748,7 @@ void fn_801B66F8(PanelTask_801B66F8* t) {
             return;
         }
         UiObjUpdate(&t->pan->o);
-        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, (LayoutPart*)lbl_802B6B0C, 4, &t->pan->o.x, t->pan->o.z, 1.0f, 1.0f);
+        UiLayoutDraw(&menu_sprites.texlist8, lbl_802B6B0C, 4, &t->pan->o.x, t->pan->o.z, 1.0f, 1.0f);
         z = TextGetZ();
         TextSetZ(-4027.5f);
         TextPushColor();
@@ -4191,7 +4075,7 @@ void fn_801A54AC(Task_801A54AC *t) {
             } else {
                 t->pan->o.alpha = 0.5f;
             }
-            UiLayoutDraw((NJS_TEXLIST **)&menu_sprites.texlist8, lbl_802B4B9C, 6, &t->pan->o.x, t->pan->o.z, t->pan->o.alpha * t->parent->ctx->f18, 1.0f);
+            UiLayoutDraw(&menu_sprites.texlist8, lbl_802B4B9C, 6, &t->pan->o.x, t->pan->o.z, t->pan->o.alpha * t->parent->ctx->f18, 1.0f);
             TextPushColor();
             z = TextGetZ();
             fn_801A5600(t);
@@ -4314,8 +4198,6 @@ u8 fn_801AB82C(s32 mode, u8 cur, s32 idxp) {
 void fn_801AC16C(Task* task) {
     extern void MenuDummy(Task* t);
     extern TextNode* TextPrint(s32 x, s32 y, const char *str);
-    extern s32 UiLayoutDraw(NJS_TEXLIST** texlists, void* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
-    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, f32 z, f32 a, f32 b, u16 index);
     extern void* fn_802267AC(void* a, void (*b)(Task*));
     extern void* fn_801E1A74(s32 a, s32 b);
     MP* p = (MP*)task;
@@ -4329,7 +4211,7 @@ void fn_801AC16C(Task* task) {
         }
         UiObjUpdate(&p->obj->o);
         UiObjCalcRect(&p->obj->o);
-        tl = (NJS_TEXLIST**)&menu_sprites.texlist8;
+        tl = &menu_sprites.texlist8;
         UiLayoutDraw(tl, (void*)lbl_802B7BC4, 3, p->obj->o.rect, p->obj->o.z, 1.0f, 1.0f);
         UiLayoutDraw(tl, (void*)lbl_802B7C00, 1, &p->obj->o.rect[2], p->obj->o.z, 1.0f, 1.0f);
         z = TextGetZ();
@@ -4352,8 +4234,6 @@ void fn_801AC16C(Task* task) {
 void fn_801ACE70(Task* task) {
     extern void MenuDummy(Task* t);
     extern TextNode* TextPrint(s32 x, s32 y, const char *str);
-    extern s32 UiLayoutDraw(NJS_TEXLIST** texlists, void* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
-    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, f32 z, f32 a, f32 b, u16 index);
     extern void* fn_802267AC(void* a, void (*b)(Task*));
     extern void* fn_801E1A74(s32 a, s32 b);
     extern void fn_801AD1D4(Task* t);
@@ -4372,7 +4252,7 @@ void fn_801ACE70(Task* task) {
         UiObjUpdate(&p->obj2->o);
         UiObjCalcRect(&p->obj->o);
         UiObjCalcRect(&p->obj2->o);
-        tl = (NJS_TEXLIST**)&menu_sprites.texlist8;
+        tl = &menu_sprites.texlist8;
         UiLayoutDraw(tl, lbl_802B7B64[p->obj->h54].parts, lbl_802B7B64[p->obj->h54].count, p->obj->o.rect, p->obj->o.z, p->obj->o.alpha, 1.0f);
         UiLayoutDraw(tl, lbl_802B7B94[p->obj2->h54].parts, lbl_802B7B94[p->obj2->h54].count, p->obj2->o.rect, p->obj2->o.z, p->obj2->o.alpha, 1.0f);
         z = TextGetZ();
@@ -4400,8 +4280,6 @@ void fn_801ACE70(Task* task) {
 void fn_801B277C(Task* task) {
     extern void MenuDummy(Task* t);
     extern TextNode* TextPrint(s32 x, s32 y, const char *str);
-    extern s32 UiLayoutDraw(NJS_TEXLIST** texlists, void* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
-    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, f32 z, f32 a, f32 b, u16 index);
     extern void* fn_802267AC(void* a, void (*b)(Task*));
     extern void* fn_801E1A74(s32 a, s32 b);
     extern void fn_801B28D4(Task* t);
@@ -4447,8 +4325,6 @@ void fn_801B277C(Task* task) {
 void* fn_801B54D4(void* a) {
     extern void MenuDummy(Task* t);
     extern TextNode* TextPrint(s32 x, s32 y, const char *str);
-    extern s32 UiLayoutDraw(NJS_TEXLIST** texlists, void* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
-    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, f32 z, f32 a, f32 b, u16 index);
     extern void* fn_802267AC(void* a, void (*b)(Task*));
     extern void* fn_801E1A74(s32 a, s32 b);
     T_801B54D4* t = fn_802267AC(a, fn_801B277C);
@@ -4488,8 +4364,6 @@ void* fn_801B54D4(void* a) {
 void fn_801B6420(Task* task) {
     extern void MenuDummy(Task* t);
     extern TextNode* TextPrint(s32 x, s32 y, const char *str);
-    extern s32 UiLayoutDraw(NJS_TEXLIST** texlists, void* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
-    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, f32 z, f32 a, f32 b, u16 index);
     extern void* fn_802267AC(void* a, void (*b)(Task*));
     extern void* fn_801E1A74(s32 a, s32 b);
     extern FP lbl_802EC01C[];
@@ -4507,7 +4381,7 @@ void fn_801B6420(Task* task) {
         }
         UiObjUpdate(&p->obj->o);
         UiObjCalcRect(&p->obj->o);
-        tl = (NJS_TEXLIST**)&menu_sprites.texlist8;
+        tl = &menu_sprites.texlist8;
         UiLayoutDraw(tl, lbl_802B6DA0[p->obj->h54].parts, lbl_802B6DA0[p->obj->h54].count, p->obj->o.rect, p->obj->o.z, p->obj->o.alpha, 1.0f);
         UiLayoutDraw(tl, (void*)lbl_802B6D8C, 1, &p->obj->o.rect[2], p->obj->o.z, 1.0f, 1.0f);
         z = TextGetZ();
@@ -4528,8 +4402,6 @@ void fn_801B6420(Task* task) {
 s32 fn_801B8F48(s32 mode, s16* sel, s16 id) {
     extern void MenuDummy(Task* t);
     extern TextNode* TextPrint(s32 x, s32 y, const char *str);
-    extern s32 UiLayoutDraw(NJS_TEXLIST** texlists, void* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
-    extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, f32 z, f32 a, f32 b, u16 index);
     extern void* fn_802267AC(void* a, void (*b)(Task*));
     extern void* fn_801E1A74(s32 a, s32 b);
     extern u8 fn_801F464C(s32 id);
@@ -4831,7 +4703,7 @@ void fn_801A5274(Task_801A5274 *t) {
             return;
         }
         UiObjUpdate(&t->pan->o);
-        UiLayoutDraw((NJS_TEXLIST **)&menu_sprites.texlist8, lbl_802B4A00, 2, &t->pan->o.x, t->pan->o.z, t->pan->o.alpha, 1.0f);
+        UiLayoutDraw(&menu_sprites.texlist8, lbl_802B4A00, 2, &t->pan->o.x, t->pan->o.z, t->pan->o.alpha, 1.0f);
         z = TextGetZ();
         y = 12.0f + t->pan->o.y;
         x = 18.0f + t->pan->o.x;
@@ -4862,8 +4734,8 @@ void fn_801A5D08(Task_801A5D08 *t) {
         }
         UiObjUpdate(&t->pan->o);
         UiObjCalcRect(&t->pan->o);
-        UiLayoutDraw((NJS_TEXLIST **)&menu_sprites.texlist8, lbl_802B4B88, 1, &t->pan->o.rect[2], t->pan->o.z, 1.0f, 1.0f);
-        UiLayoutDraw((NJS_TEXLIST **)&menu_sprites.texlist8, lbl_802B4B4C, 3, &t->pan->o.rect[0], t->pan->o.z, t->pan->o.alpha * t->parent->ctx->f18, 1.0f);
+        UiLayoutDraw(&menu_sprites.texlist8, lbl_802B4B88, 1, &t->pan->o.rect[2], t->pan->o.z, 1.0f, 1.0f);
+        UiLayoutDraw(&menu_sprites.texlist8, lbl_802B4B4C, 3, &t->pan->o.rect[0], t->pan->o.z, t->pan->o.alpha * t->parent->ctx->f18, 1.0f);
         z = TextGetZ();
         y = 19.0f + t->pan->o.rect[1];
         x = 74.0f + t->pan->o.rect[0];
@@ -4893,7 +4765,7 @@ void fn_801A6344(Task_801A6344 *t) {
             return;
         }
         UiObjUpdate(&t->pan->o);
-        UiLayoutDraw((NJS_TEXLIST **)&menu_sprites.texlist8, lbl_802B4A28, 3, &t->pan->o.x, t->pan->o.z, t->pan->o.alpha * t->parent->ctx->f18, 1.0f);
+        UiLayoutDraw(&menu_sprites.texlist8, lbl_802B4A28, 3, &t->pan->o.x, t->pan->o.z, t->pan->o.alpha * t->parent->ctx->f18, 1.0f);
         z = TextGetZ();
         y = 18.0f + t->pan->o.y;
         x = 105.0f + t->pan->o.x;
@@ -4959,7 +4831,7 @@ void fn_801B0F1C(Task_801B0F1C *t) {
         z = TextGetZ();
         TextPushColor();
         TextSetColor(0xFF201008);
-        UiLayoutDraw((void *)((NJS_TEXLIST **)&menu_sprites.texlist8), (void *)(lbl_802B7720), 4, (void *)(&t->pan->o.x), t->pan->o.z, 1.0f, 1.0f);
+        UiLayoutDraw(&menu_sprites.texlist8, lbl_802B7720, 4, &t->pan->o.x, t->pan->o.z, 1.0f, 1.0f);
         fn_801B6BB4(t->pan, &t->pan->o.x, lbl_803471B8->w->item, -1, 0x18, 0x14, 1.0f);
         TextSetZ(-27.5f + t->pan->o.z);
         TextPrint(55.0f + t->pan->o.x, 20.0f + t->pan->o.y, t->pan->text);
@@ -4988,7 +4860,7 @@ void fn_801B2430(Task_801B2430 *t) {
             return;
         }
         UiObjUpdate(&t->pan->o);
-        UiLayoutDraw((void *)((NJS_TEXLIST **)&menu_sprites.texlist8), (void *)(lbl_802B6DF8), 4, (void *)(&t->pan->o.x), t->pan->o.z, 1.0f, 1.0f);
+        UiLayoutDraw(&menu_sprites.texlist8, lbl_802B6DF8, 4, &t->pan->o.x, t->pan->o.z, 1.0f, 1.0f);
         z = TextGetZ();
         TextPushColor();
         TextSetColor(0xFF201008);
@@ -5147,7 +5019,7 @@ void fn_801BEA70(void *a, u32 idx, s32 mode) {
     }
 }
 
-void fn_8019EFF8(Task_8019EFF8* t) {
+void fn_8019EFF8(SaveTask* t) {
     s32 r;
     if (fn_801A3B30(t, &r) == 0) return;
     if (r == 0) {
@@ -5189,7 +5061,7 @@ void fn_8019EFF8(Task_8019EFF8* t) {
     }
 }
 
-void fn_801A11B0(Task_801A11B0* t) {
+void fn_801A11B0(SaveTask* t) {
     u32 bits;
     u8 v;
     s32 arg;
@@ -5251,7 +5123,7 @@ void fn_801A11B0(Task_801A11B0* t) {
     }
 }
 
-void fn_801B737C(Ent_801B737C* t)
+void fn_801B737C(ShopPart* t)
 {
     char buf[32];
     s32 i;
@@ -5291,7 +5163,7 @@ void fn_801B737C(Ent_801B737C* t)
             if (((*(Fl*)&lbl_80310B3C).f30 & 0x10000) || (*(St_801B737C*)&lbl_80310A1C).seen[5] > 0) {
                 ok = 1;
                 if ((*(St_801B737C*)&lbl_80310A1C).seen[5] > 1) {
-                    fn_8025F120((void *)(buf), (void *)(lbl_802B8F70));
+                    fn_8025F120((void *)(buf), lbl_802B8F70);
                 } else {
                     fn_8025F120((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
                 }
@@ -5312,10 +5184,10 @@ void fn_801B737C(Ent_801B737C* t)
         }
         if (ok == 0) {
             TextSetColor(0x40201008);
-            TextPrint((s32)(16.0f + t->v->a), (s32)(12.0f + t->v->b + (f32)(i * 24)), (void *)(lbl_802B8F94));
+            TextPrint((s32)(16.0f + t->obj->o.x), (s32)(12.0f + t->obj->o.y + (f32)(i * 24)), lbl_802B8F94);
             TextSetColor(0xFF201008);
         } else {
-            TextPrint((s32)(16.0f + t->v->a), (s32)(12.0f + t->v->b + (f32)(i * 24)), (void *)(buf));
+            TextPrint((s32)(16.0f + t->obj->o.x), (s32)(12.0f + t->obj->o.y + (f32)(i * 24)), (void *)(buf));
         }
         if ((*(St_801B737C*)&lbl_80310A1C).seen[i] == 0 && ok == 1) {
             (*(St_801B737C*)&lbl_80310A1C).seen[i] = 1;
@@ -5431,8 +5303,8 @@ extern void fn_801C1148(s16 id, u8 n);
     {                                           \
         ShopPart* lp_ = (part);                 \
         ShopList* ll_ = lp_->list;              \
-        ll_->xc = ll_->row * 24;                \
-        lp_->list->x8 = 0.0f;                   \
+        ll_->oy = ll_->row * 24;                \
+        lp_->list->ox = 0.0f;                   \
     }
 
 #define ShopShowEquip(t) \
@@ -5455,7 +5327,7 @@ extern void fn_801C1148(s16 id, u8 n);
 
 #define ShopBackToList(t) \
     { \
-        t->w->parts[8]->list->b1e = 0; \
+        t->w->parts[8]->list->part = 0; \
         t->w->parts[9]->flag->b0 = 0; \
         UiObjMoveToX(&t->w->parts[9]->obj->o, 6, -1, -8.0f); \
         UiObjSetCommand(&t->w->parts[9]->obj->o, 15, 2); \
@@ -5600,7 +5472,7 @@ void fn_801A6BDC(ShopTask* t) {
     case 2:
         if (UiObjIsBusy(&t->w->parts[7]->obj->o) == 0 || PAD_A) {
             MenuPartsFinish((MenuTask*)t);
-            t->w->parts[8]->x38->ha = 1 < t->buf->pages;
+            t->w->parts[8]->x38->state = 1 < t->buf->pages;
             t->w->state = 3;
         }
         break;
@@ -5610,7 +5482,7 @@ void fn_801A6BDC(ShopTask* t) {
         row = p->list->row;
         if (fn_801C09F8(0, 1)) {
             t->w->state = 0x18;
-            t->w->parts[8]->x38->ha = 0;
+            t->w->parts[8]->x38->state = 0;
             MenuPlaySe(5);
         } else {
             if (fn_801C09F8(0, 4)) {
@@ -5641,7 +5513,7 @@ void fn_801A6BDC(ShopTask* t) {
                     }
                     p->list->page--;
                     if (page != p->list->page) {
-                        t->w->parts[8]->x38->hc = 0;
+                        t->w->parts[8]->x38->angle = 0;
                     }
                 } else if (fn_801C09F8(0, 7)) {
                     p->list->page++;
@@ -5649,7 +5521,7 @@ void fn_801A6BDC(ShopTask* t) {
                         p->list->page = 0;
                     }
                     if (page != p->list->page) {
-                        t->w->parts[8]->x38->hc = 0;
+                        t->w->parts[8]->x38->angle = 0;
                     }
                 } else {
                     goto no_move;
@@ -5670,7 +5542,7 @@ void fn_801A6BDC(ShopTask* t) {
             p = t->w->parts[8];
             SHOP_CUR_ENTRY(e, t, p);
             fn_801B571C(t->w->parts[9], e->id);
-            p->list->h14 = 0;
+            p->list->angle = 0;
             goto tail3;
         no_move: /* no direction pressed */
             if (PAD_A) {
@@ -5687,7 +5559,7 @@ void fn_801A6BDC(ShopTask* t) {
                 t->w->parts[2]->flag->b0 = 0;
                 UiObjMoveToX(&t->w->parts[2]->obj->o, 6, -1, -8.0f);
                 UiObjSetCommand(&t->w->parts[2]->obj->o, 15, 1);
-                t->w->parts[8]->x38->ha = 0;
+                t->w->parts[8]->x38->state = 0;
                 fn_801C08B4(2);
                 t->w->state = 4;
             } else {
@@ -5704,7 +5576,7 @@ void fn_801A6BDC(ShopTask* t) {
         if (UiObjIsBusy(&t->w->parts[2]->obj->o) == 0 && UiObjIsBusy(&t->w->parts[9]->obj->o) == 0) {
             t->w->state = 5;
             t->w->parts[9]->flag->b0 = 1;
-            t->w->parts[8]->list->b1e = 1;
+            t->w->parts[8]->list->part = 1;
         } else if (PAD_A) {
             MenuPartsFinish((MenuTask*)t);
         }
@@ -5727,7 +5599,7 @@ void fn_801A6BDC(ShopTask* t) {
             t->w->qty = fn_801AB82C(2, t->w->qty, t->w->item);
         } else if (PAD_A) {
             t->w->state = 6;
-            t->w->parts[8]->list->b1e = 0xFF;
+            t->w->parts[8]->list->part = 0xFF;
             MenuPlaySe(2);
             fn_801C08B4(0x19);
         }
@@ -5865,7 +5737,7 @@ void fn_801A6BDC(ShopTask* t) {
             UiObjSetCommand(&t->w->parts[13]->obj->o, 15, 2);
             t->w->stat[0][0] = lbl_803471B8->w->m[t->w->who[0]].ha;
             fn_801C1FC0(t->w->item, t->w->who[0]);
-            t->w->parts[14] = (ShopPart*)fn_801B0DF8(t);
+            t->w->parts[14] = fn_801B0DF8(t);
             t->w->parts[14]->list->page = fn_801AB6E8(0, fn_801C2C84(t->w->who[0]));
             t->w->xc[t->w->who[0]] = 0;
             UiObjMoveToX(&t->w->parts[14]->obj->o, 6, 4, -8.0f);
@@ -5994,7 +5866,7 @@ void fn_801A6BDC(ShopTask* t) {
         list_ready:
             t->w->parts[2]->flag->b0 = 1;
             t->w->state = 3;
-            t->w->parts[8]->x38->ha = 1 < t->buf->pages;
+            t->w->parts[8]->x38->state = 1 < t->buf->pages;
         } else if (UiObjIsBusy(&t->w->parts[2]->obj->o) == 0 && UiObjIsBusy(&t->w->parts[9]->obj->o) == 0) {
             goto list_ready; /* shared with the cancel path above */
         }
@@ -6012,7 +5884,7 @@ void fn_801A6BDC(ShopTask* t) {
             if (t->w->xa == 4) {
                 break;
             }
-            t->w->parts[14]->x38->ha = 1;
+            t->w->parts[14]->x38->state = 1;
             t->w->xc[t->w->who[0]] = 0;
             lbl_803471B8->chr[t->w->who[0]].h6c = -1;
             fn_801C0AB4(t->w->stat[0][0], t->w->who[0]);
@@ -6026,7 +5898,7 @@ void fn_801A6BDC(ShopTask* t) {
             case 1:
             case 2:
             case 3:
-                if (t->w->x9 != 0 && t->w->parts[14]->x38->ha != 0) {
+                if (t->w->x9 != 0 && t->w->parts[14]->x38->state != 0) {
                     fn_801C0AB4(t->w->item, t->w->who[0]);
                     if (fn_801F4CA0()) {
                         fn_801C2C4C(t->w->who[0], t->w->parts[14]->list->page);
@@ -6044,7 +5916,7 @@ void fn_801A6BDC(ShopTask* t) {
                     }
                     fn_801C08B4(0x16);
                     SHOP_SLOT_CMDS(t, cmd, o);
-                    t->w->parts[14]->x38->ha = 0;
+                    t->w->parts[14]->x38->state = 0;
                 } else {
                     fn_801C08B4(3);
                 }
@@ -6072,7 +5944,7 @@ void fn_801A6BDC(ShopTask* t) {
             }
         } else if (fn_801AB094((Task_801AB094*)t) == 0) {
             if (fn_801C09F8(0, 6)) {
-                if (t->w->xa == 0 && t->w->parts[14]->x38->ha != 0 &&
+                if (t->w->xa == 0 && t->w->parts[14]->x38->state != 0 &&
                     t->w->stat[0][0] == lbl_803471B8->w->m[t->w->who[0]].ha) {
                     page = t->w->parts[14]->list->page;
                     t->w->parts[14]->list->page = fn_801AB6E8(-1, page);
@@ -6081,7 +5953,7 @@ void fn_801A6BDC(ShopTask* t) {
                     }
                 }
             } else if (fn_801C09F8(0, 7)) {
-                if (t->w->xa == 0 && t->w->parts[14]->x38->ha != 0 &&
+                if (t->w->xa == 0 && t->w->parts[14]->x38->state != 0 &&
                     t->w->stat[0][0] == lbl_803471B8->w->m[t->w->who[0]].ha) {
                     page = t->w->parts[14]->list->page;
                     t->w->parts[14]->list->page = fn_801AB6E8(1, page);
@@ -6098,7 +5970,7 @@ void fn_801A6BDC(ShopTask* t) {
             ShopFreeCompare(t);
             MenuPartsFinish((MenuTask*)t);
             t->w->state = 3;
-            t->w->parts[8]->x38->ha = 1 < t->buf->pages;
+            t->w->parts[8]->x38->state = 1 < t->buf->pages;
         } else if (UiObjIsBusy(&t->w->parts[10]->obj->o) == 0) {
             ShopFreeCompare(t);
             t->w->state = 0x17;
@@ -6199,7 +6071,7 @@ void fn_801A6BDC(ShopTask* t) {
             fn_801AB328((Self_801AB328*)t);
             MenuPartsFinish((MenuTask*)t);
             t->w->state = 3;
-            t->w->parts[8]->x38->ha = 1 < t->buf->pages;
+            t->w->parts[8]->x38->state = 1 < t->buf->pages;
         } else if (UiObjIsBusy(&t->w->parts[12]->obj->o) == 0) {
             MenuPartFree((MenuTask*)t, 12);
             MenuPartFree((MenuTask*)t, 18);
@@ -6210,7 +6082,7 @@ void fn_801A6BDC(ShopTask* t) {
             }
             fn_801AB328((Self_801AB328*)t);
             t->w->state = 3;
-            t->w->parts[8]->x38->ha = 1 < t->buf->pages;
+            t->w->parts[8]->x38->state = 1 < t->buf->pages;
         }
         break;
     case 18:
@@ -6396,11 +6268,11 @@ void fn_801A6BDC(ShopTask* t) {
     case 23:
         if (UiObjIsBusy(&t->w->parts[1]->obj->o) == 0) {
             t->w->state = 3;
-            t->w->parts[8]->x38->ha = 1 < t->buf->pages;
+            t->w->parts[8]->x38->state = 1 < t->buf->pages;
         } else if (PAD_A || fn_801C09F8(0, 1)) {
             MenuPartsFinish((MenuTask*)t);
             t->w->state = 3;
-            t->w->parts[8]->x38->ha = 1 < t->buf->pages;
+            t->w->parts[8]->x38->state = 1 < t->buf->pages;
         }
         break;
     case 24:
@@ -6471,11 +6343,11 @@ s32 fn_801B5868(s16 id) {
     }
 }
 
-void fn_801A6650(Task_801A6650 *t, u16 i)
+void fn_801A6650(SaveTask *t, u16 i)
 {
-    if (t->work->slots[i] != NULL) {
-        TaskDelete(t->work->slots[i]);
-        t->work->slots[i] = NULL;
+    if (t->w->p[i] != NULL) {
+        TaskDelete(&t->w->p[i]->task);
+        t->w->p[i] = NULL;
     }
 }
 
@@ -6696,7 +6568,7 @@ void fn_801ABD40(PanelTask_801ABD40* t) {
             return;
         }
         UiObjUpdate(&t->pan->o);
-        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, (LayoutPart*)lbl_802B6B0C, 4, &t->pan->o.x, t->pan->o.z, 1.0f, 1.0f);
+        UiLayoutDraw(&menu_sprites.texlist8, lbl_802B6B0C, 4, &t->pan->o.x, t->pan->o.z, 1.0f, 1.0f);
         z = TextGetZ();
         TextSetZ(-4027.5f);
         TextPushColor();
@@ -7462,7 +7334,7 @@ void fn_801B0014(void* arg) {
     }
 }
 
-void fn_801A20AC(Task_801A11B0* t) {
+void fn_801A20AC(SaveTask* t) {
     s32 b = 0;
     s32 a = 0;
     u16 cmd;
@@ -7661,7 +7533,7 @@ void fn_801B914C(ShopTask* t, u8 dir)
         if ((s32)old != s->list->tab) {
             s->list->page = 0;
             s->list->row = 0;
-            s->x38->hc = 0;
+            s->x38->angle = 0;
         }
         return;
     case 3:
@@ -7676,9 +7548,223 @@ void fn_801B914C(ShopTask* t, u8 dir)
         if ((s32)old != s->list->tab) {
             s->list->page = 0;
             s->list->row = 0;
-            s->x38->hc = 0;
+            s->x38->angle = 0;
         }
         break;
+    }
+}
+
+extern u32 lbl_80347198;
+void fn_801AC87C(ShopPart* t);
+
+void fn_801AC48C(ShopPart* t) {
+    f32 z;
+    ShopList* p;
+    UiObj* ui;
+    NJS_TEXLIST** tl;
+    switch (t->state) {
+    case 0:
+    case 0xFE:
+        if (t->flag->b0 == 1) {
+            return;
+        }
+        UiObjUpdate(&t->obj->o);
+        tl = &menu_sprites.texlist8;
+        UiLayoutDraw(tl, lbl_802B6EE8, 4, &t->obj->o.x, t->obj->o.z, 1.0f, 1.0f);
+        lbl_80347198 = t->list->row;
+        t->list->oy = (f32)(t->list->row * 0x18);
+        p = t->list;
+        ui = &t->obj->o;
+        if ((p->flags & 1) && p->part != 0xff) {
+            f32 a = 0.0f;
+            if (p->flags & 2) {
+                p->x = ui->x + p->ox;
+                p->y = ui->y + p->oy;
+                p->scale = 0.3f * njCos(p->angle) + 1.0f;
+                p->angle += 0x800;
+                a = p->scale;
+            }
+            UiLayoutDrawPart(tl, lbl_802B6A64, 1, &p->x, ui->z, a, 1.0f, p->part);
+        }
+        z = TextGetZ();
+        TextPushColor();
+        TextSetColor(0xFF201008);
+        fn_801B737C(t);
+        TextSetZ(-27.5f + t->obj->o.z);
+        TextPopColor(1);
+        TextSetZ(z);
+        break;
+    case 0xFF:
+        MenuDummy();
+        t->flags |= 0x40;
+        break;
+    }
+}
+
+void fn_801AC678(ShopPart* t) {
+    f32 z;
+    ShopList* p;
+    UiObj* ui;
+    NJS_TEXLIST** tl;
+    switch (t->state) {
+    case 0:
+    case 0xFE:
+        if (t->flag->b0 == 1) {
+            return;
+        }
+        UiObjUpdate(&t->obj->o);
+        tl = &menu_sprites.texlist8;
+        UiLayoutDraw(tl, lbl_802B6E48, 4, &t->obj->o.x, t->obj->o.z, 1.0f, 1.0f);
+        if (lbl_803471B8->buf->count != 0) {
+            p = t->list;
+            ui = &t->obj->o;
+            if ((p->flags & 1) && p->part != 0xff) {
+                f32 a = 0.0f;
+                if (p->flags & 2) {
+                    p->x = ui->x + p->ox;
+                    p->y = ui->y + p->oy;
+                    p->scale = 0.3f * njCos(p->angle) + 1.0f;
+                    p->angle += 0x800;
+                    a = p->scale;
+                }
+                UiLayoutDrawPart(tl, lbl_802B6A64, 1, &p->x, ui->z, a, 1.0f, p->part);
+            }
+        }
+        if (lbl_803471B8->buf->pages != 0) {
+            t->x38->idx = 2;
+            t->x38->x = t->obj->o.x;
+            t->x38->y = t->obj->o.y;
+            fn_801B5D68(t);
+        }
+        z = TextGetZ();
+        TextPushColor();
+        fn_801AC87C(t);
+        TextSetZ(-27.5f + t->obj->o.z);
+        TextPopColor(1);
+        TextSetZ(z);
+        break;
+    case 0xFF:
+        MenuDummy();
+        t->flags |= 0x40;
+        break;
+    }
+}
+
+void fn_801B6950(ShopPart* t) {
+    f32 z;
+    NJS_POINT3 pos;
+    if (lbl_803475D8 != 0) {
+        t->state = 0xFF;
+    }
+    switch (t->state) {
+    case 0:
+    case 0xFE:
+        if (t->flag->b0 == 1) {
+            return;
+        }
+        UiObjUpdate(&t->obj->o);
+        UiLayoutDraw(&menu_sprites.texlist8, lbl_802B6B5C, 4, &t->obj->o.x, t->obj->o.z, 1.0f, 1.0f);
+        z = TextGetZ();
+        TextSetZ(-4427.5f);
+        TextPushColor();
+        TextSetColor(0xFF201008);
+        TextPrint(20.0f + t->obj->o.x, 10.0f + t->obj->o.y, lbl_802EC04C[9]);
+        TextPopColor(1);
+        TextSetZ(z);
+        pos.x = 182.0f + t->obj->o.x;
+        pos.y = 14.0f + t->obj->o.y;
+        pos.z = -4432.5f;
+        UiDrawNumber(&pos, 0, 8, lbl_8030B7F4.w34c, t->obj->o.alpha);
+        break;
+    case 0xFF:
+        MenuDummy(t);
+        t->flags |= 0x40;
+        break;
+    }
+}
+
+void fn_801B0B9C(ShopPart* t) {
+    const LayoutDef* e;
+    u32 i;
+    u32 n;
+    s32 mask;
+    f32 z;
+    switch (t->state) {
+    case 0:
+    case 0xFE:
+        if (t->flag->b0 == 1) {
+            return;
+        }
+        UiObjUpdate(&t->obj->o);
+        UiObjCalcRect(&t->obj->o);
+        z = TextGetZ();
+        TextPushColor();
+        TextSetColor(0xFF201008);
+        UiLayoutDraw(&menu_sprites.texlist8, lbl_802B79F4, 2, t->obj->o.rect, t->obj->o.z, t->obj->o.alpha, 1.0f);
+        mask = fn_801F4CA0();
+        i = n = 0;
+        e = &lbl_802B7B20[i];
+        do {
+            if (mask & (1 << i)) {
+                MenuPanel* pan = t->obj;
+                UiLayoutDraw(&menu_sprites.texlist8, e->parts, e->count, pan->o.rect, pan->o.z,
+                             i == t->list->page ? pan->o.alpha : pan->o.alpha - 0.5f, pan->o.f38);
+                n++;
+            }
+            i++;
+            e++;
+        } while (i < 6);
+        if (n == 0) {
+            TextPrint(24.0f + (8.0f + t->obj->o.rect[0]), 17.0f + t->obj->o.rect[1], lbl_802EC04C[8]);
+        } else if (n >= 2) {
+            t->x38->idx = 3;
+            t->x38->x = t->obj->o.rect[0] + (f32)(t->list->page * 0x30);
+            t->x38->y = t->obj->o.rect[1];
+            fn_801B5D68(t);
+        }
+        UiLayoutDraw(&menu_sprites.texlist8, lbl_802B7B50, 1, &t->obj->o.rect[2], t->obj->o.z, 1.0f, 1.0f);
+        TextPopColor(1);
+        TextSetZ(z);
+        break;
+    case 0xFF:
+        MenuDummy(t);
+        t->flags |= 0x40;
+        break;
+    }
+}
+
+/* A panel's start position, z and alpha (0x18 bytes). */
+typedef struct PanelStart {
+    f32 x, y;
+    f32 f8, fc;
+    f32 z;
+    f32 alpha;
+} PanelStart;
+extern const PanelStart lbl_802B690C[];
+
+Sub_801A0C3C *fn_801A53D4(void *o, u16 idx) {
+    Sub_801A0C3C *t = fn_802267AC(o, fn_801A54AC);
+    t->w = fn_801E1A74(1, 0x58);
+    t->obj = fn_801E1A74(1, 0x6c);
+    t->w->b0 = 0;
+    t->obj->o.alpha_en = 0;
+    t->obj->h54 = idx;
+    t->obj->o.z = lbl_802B690C[idx].z;
+    t->obj->o.tx = t->obj->o.x = lbl_802B690C[idx].x;
+    t->obj->o.ty = t->obj->o.y = lbl_802B690C[idx].y;
+    t->obj->o.alpha = lbl_802B690C[idx].alpha;
+    return t;
+}
+
+void fn_8019F898(SaveTask *t) {
+    u8 k;
+    if (fn_801A6554(t) == 0 || (lbl_80311A60[0]->held & 0x200)) {
+        fn_801A64E0(t);
+        fn_801A6650(t, 5);
+        fn_801A6650(t, 6);
+        k = t->w->f1 == 1 ? 0xc : 5;
+        fn_801A64B4(t, k);
+        t->state = 8;
     }
 }
 
