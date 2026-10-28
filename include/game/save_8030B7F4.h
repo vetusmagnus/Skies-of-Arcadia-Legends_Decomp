@@ -6,8 +6,7 @@
 /* lbl_8030B7F4: the 0x16A0-byte save/party data. Eight 0x5c-byte character records, the party
  * table, the inventory tables at 0x354..0xaac, the gold word and the option bytes. */
 typedef struct SaveChar {
-    s16 x0;
-    u8 pad2[9];
+    char name[11];          /* 0x00 */
     u8 xb;                  /* 0x0b */
     u8 xc;
     s8 mp;                  /* 0x0d */
@@ -69,7 +68,8 @@ typedef struct SaveData {
     InvEnt sa0c[0x28];
     InvEnt saac[0x28];
     u8 xb4c;
-    u8 padb4d[3];
+    u8 xb4d;                /* proximity level of the nearest sparkle (0..4) */
+    u8 padb4e[2];
     u8 xb50;
     u8 padb51[0x1568 - 0xb51];
     Save1568 x1568;             /* 0x1568 */

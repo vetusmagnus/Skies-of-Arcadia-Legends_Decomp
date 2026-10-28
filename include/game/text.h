@@ -112,7 +112,7 @@ TextNode* TextPrintNumber(s16 x, s16 y, u32 value, u16 flags);
 TextNode* TextPrintN(s16 x, s16 y, const char* str, s16 n);
 TextNode* TextPrint(s16 x, s16 y, const char* str);
 TextNode* TextPrintf(s16 x, s16 y, const char* fmt, ...);
-void TextCopyN(u8* dst, const u8* p, s16 n);
+u8* TextCopyN(u8* dst, const u8* p, s16 n);
 s32 TextStrlen(const char* s);
 u16 TextReadChar(const u8** pp);
 void TextGetState(TextState* out);

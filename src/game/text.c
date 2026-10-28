@@ -534,12 +534,12 @@ TextNode* TextPrintf(s16 x, s16 y, const char* fmt, ...) {
     return node;
 }
 
-void TextCopyN(u8* dst, const u8* p, s16 n) {
+u8* TextCopyN(u8* dst, const u8* p, s16 n) {
     u16 c;
     u16 code;
     s32 i;
     i = n;
-    if (i <= 0) return;
+    if (i <= 0) return dst;
     do {
         c = *p;
         code = c;
@@ -559,8 +559,9 @@ void TextCopyN(u8* dst, const u8* p, s16 n) {
             *dst++ = code;
         }
         i--;
-        if (code == 0) return;
+        if (code == 0) return dst;
     } while (i > 0);
+    return dst;
 }
 
 s32 TextStrlen(const char* s) {

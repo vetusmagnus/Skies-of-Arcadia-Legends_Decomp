@@ -1,3 +1,4 @@
+#include "game/save_8030B7F4.h"
 #include "types.h"
 #include "game/work_8030CEA0.h"
 #include <string.h>
@@ -10,6 +11,8 @@
 #include "game/task.h"
 #include "game/evobj.h"
 #include "game/sprite.h"
+#include "game/uiobj.h"
+#include "game/text.h"
 extern void fn_80226D14(void);
 extern void fn_80226BD0(f32 a, f32 b);
 typedef struct {
@@ -158,7 +161,7 @@ typedef struct Rec {
     void* p8;
 } Rec;
 extern Rec* fn_80109404();
-extern void fn_80109D74(void* p);
+extern void* fn_80109D74(void* p);
 extern void* fn_801C6180(void* a);
 typedef struct {
     u32 count;
@@ -489,7 +492,7 @@ typedef struct K06Ent {
 s32 fn_800F13F0(K06Obj_800F1598 *p, s16 ty, s16 id, void *data);
 void *fn_800D5184(void *e, s16 n);
 typedef struct K06Rec {
-    u8 data[0x1c];
+    Sprite spr;
     f32 f1c;
     f32 f20;
     f32 f24;
@@ -664,17 +667,33 @@ typedef struct {           /* 0x42 */
     u8 pad18[0x2a];
 } ResRow;
 typedef struct {           /* 0x6E */
-    s16 h0;      /* 0x00 */
-    s16 h2;      /* 0x02 */
+    s16 h[2];    /* 0x00 indexed by ResSwap.sel */
     u8 pad4[4];
-    u8 b8;       /* 0x08 */
+    s8 b8;       /* 0x08 */
     u8 b9[99];   /* 0x09 */
-    u8 b6c;      /* 0x6C */
-    u8 b6d;      /* 0x6D */
+    u8 b6c[2];   /* 0x6C indexed by ResSwap.sel */
 } ResStat;
+typedef struct {           /* 0x04 */
+    s16 h;       /* 0x00 item id, < 0 for none */
+    s8 n;        /* 0x02 count */
+    u8 pad3;
+} ResItem;
+typedef struct {           /* 0x0C, one per party member */
+    s8 chr;      /* 0x00 character (lbl_8030B7F4.chr index) */
+    u8 level;    /* 0x01 */
+    u8 pad2[10];
+} ResMember;
+typedef struct {           /* 0x14, one per party member */
+    s16 sel;     /* 0x00 which of the two slots is shown */
+    s8 moving;   /* 0x02 */
+    u8 pad3;
+    s16 obj[2];  /* 0x04 */
+    s16 spr[2];  /* 0x08 */
+    f32 x[2];    /* 0x0C */
+} ResSwap;
 typedef struct {
     u32 w0;              /* 0x00 */
-    s32 state;           /* 0x04 */
+    u32 state;           /* 0x04 */
     u32 w8;              /* 0x08 */
     s32 count;           /* 0x0C */
     s32 w10;             /* 0x10 */
@@ -683,7 +702,7 @@ typedef struct {
     s32 w1c;             /* 0x1C */
     s32 w20;             /* 0x20 */
     s32 cur;             /* 0x24 */
-    struct { s16 h; u8 pad[2]; } h28[3]; /* 0x28 */
+    ResItem h28[3];      /* 0x28 */
     s8 b34[4];           /* 0x34 */
     s8 b38[4];           /* 0x38 */
     u8 pad3c[4];
@@ -691,14 +710,21 @@ typedef struct {
     s32 w44;             /* 0x44 */
     s32 w48;             /* 0x48 */
     f32 fade;            /* 0x4C */
-    u8 pad50[0x170];
+    ResMember member[4]; /* 0x50 */
+    u8 pad80[0x140];
     ResRow row[4];       /* 0x1C0 */
     ResMem mem[4];       /* 0x2C8 */
-    u8 pad318[0x58];
+    f32 z318[4];         /* 0x318 per-member draw z */
+    u8 pad328[0x20];
+    f32 x348[4];         /* 0x348 */
+    f32 x358[4];         /* 0x358 */
+    u8 pad368[4];
+    f32 z36c;            /* 0x36C draw z */
     ResSpr spr[22];      /* 0x370 */
     ResPanel obj[22];    /* 0x580 */
     ResStat stat[4];     /* 0xEC8 */
-    u8 pad1080[0x470];
+    ResSwap swap[4];     /* 0x1080 */
+    u8 pad10d0[0x420];
     s16 evIdx;           /* 0x14F0 */
     s16 h14f2;           /* 0x14F2 */
     u8 pad14f4[0x44];
@@ -872,9 +898,9 @@ typedef K06Rec Item;
 extern u8* lbl_80346E3C;
 extern void fn_8011D548(void);
 extern void CampPanelDrawFrame(void* p);
-extern void fn_801D4F0C(Item* it, s32 a, s32 b, s32 c, f32 f1, f32 f2, f32 f3, f32 f4);
-extern void fn_801D4C54(Item* it, s32 a, s32 b, s32 c, f32 f1, f32 f2, f32 f3, f32 f4);
-extern void fn_801D52A8(Item* it, s32 a, s32 b, f32 f1, f32 f2, f32 f3, f32 f4);
+extern void fn_801D4F0C(Sprite* it, s32 a, s32 b, s32 c, f32 f1, f32 f2, f32 f3, f32 f4);
+extern void fn_801D4C54(Sprite* it, s32 a, s32 b, s32 c, f32 f1, f32 f2, f32 f3, f32 f4);
+extern void fn_801D52A8(Sprite* it, s32 a, s32 b, f32 f1, f32 f2, f32 f3, f32 f4);
 extern EvObj* lbl_80347450;
 extern s32 lbl_803474B0[2];
 extern s16 lbl_803474AC[2];
@@ -2327,13 +2353,6 @@ extern void fn_801C5A60(NJS_MATRIX m, NJS_POINT3 *p, NJS_POINT3 *out);
 extern u32 fn_80222E00(u32 flags, Ent_800F1E5C *e);
 extern s32 fn_802254A0(NJS_POINT3 *p, Hit *h);
 extern NJS_POINT3 lbl_802B2228;
-/* lbl_8030B7F4 (game/save_8030B7F4.h), up to the byte at 0xb4d. */
-typedef struct SaveData {
-    u8 pad0[0xb4c];
-    u8 xb4c;
-    u8 xb4d;                    /* 0xb4d ADD: proximity level of the nearest sparkle (0..4) */
-    u8 padb4e[0x16A0 - 0xb4e];
-} SaveData;
 extern SaveData lbl_8030B7F4;
 /* fn_80005D98's sprite (as in evobj.c). */
 typedef struct Obj14 {
@@ -2354,6 +2373,106 @@ extern s32 lbl_80347408;
 extern f32 fn_80290008(NJS_POINT3* a, NJS_POINT3* b);
 extern void fn_80005D98(Obj20* obj, s32 a, s32 b, f32 z);
 extern int rand(void);
+/* unit has s8; read here with lbz and no extsb */
+extern u32 lbl_80310B3C[0x356];
+extern s32 lbl_80346E40;
+extern s32 lbl_803473D8;
+extern void* lbl_80346E54;
+extern void* lbl_80346E50;
+extern s32 lbl_80346DAC;
+extern f32 lbl_80347484;
+extern f32 lbl_80347480;
+extern s32 lbl_8034747C;
+extern u16 lbl_80347478;
+extern void* lbl_80347370;
+extern char lbl_802B244C[];
+extern void fn_80101378(void);
+extern s32 fn_800FFB24(void);
+extern s32 fn_801015AC(s32 state);
+extern s32 fn_80090D78(void);
+extern void fn_80217554(void);
+extern s32 fn_800C7DD4(void);
+extern s32 fn_800C7DFC(void);
+extern void fn_802126C8(void);
+extern void fn_80212130(void);
+extern void fn_8012A39C(void);
+extern void fn_80129DD0(void);
+extern void fn_800E1A24(void);
+extern void fn_8022D9C4(void);
+extern void fn_80129AA4(void);
+extern void fn_800CD16C(void);
+extern void fn_801DA0AC(void);
+extern void fn_801299B4(void);
+extern void fn_800FF218(void);
+extern void fn_800D2E60(void);
+extern s32 fn_800C1C24(void);
+extern void fn_80217C24(void);
+extern void fn_80217608(void);
+extern void fn_80219324(s32 n);
+extern void fn_80097AFC(void);
+extern s32 fn_80097CA4(s32 id);
+extern s32 fn_801D6CBC(s32 h, u8* p);
+extern s32 fn_801D6C3C(s32 h);
+extern void fn_80128F80(void);
+extern void fn_80219378(char* s);
+extern s32 fn_80128F2C(void);
+extern void fn_80101494(void);
+/* item table (evobj.c's TblC, 0x24 per entry from id 0x190) */
+typedef struct ItemTbl {
+    u8 pad0[0x12];
+    s8 kind;     /* ADD: 0x12 */
+    u8 pad13[0x24 - 0x13];
+} ItemTbl;
+extern ItemTbl lbl_802D7E4C[];
+extern void fn_800EA4A8(ResSpr* spr);
+extern s32 fn_801F4C24(s16 id);
+/* item category: 0 weapon ... 5 accessory (evobj.c declares it (void)) */
+extern char* fn_801F4AE4(s16 id);
+typedef struct ResStat_800E9B04 {           /* 0x6E */
+    s16 h0;      /* 0x00 */
+    s16 h2;      /* 0x02 */
+    u8 pad4[4];
+    u8 b8;       /* 0x08 */
+    u8 b9[99];   /* 0x09 */
+    u8 b6c;      /* 0x6C */
+    u8 b6d;      /* 0x6D */
+} ResStat_800E9B04;
+typedef struct Ctx3594_800E9B04 {
+    u32 w0;              /* 0x00 */
+    s32 state;           /* 0x04 */
+    u32 w8;              /* 0x08 */
+    s32 count;           /* 0x0C */
+    s32 w10;             /* 0x10 */
+    s32 w14;             /* 0x14 */
+    s32 total;           /* 0x18 */
+    s32 w1c;             /* 0x1C */
+    s32 w20;             /* 0x20 */
+    s32 cur;             /* 0x24 */
+    struct { s16 h; u8 pad[2]; } h28[3]; /* 0x28 */
+    s8 b34[4];           /* 0x34 */
+    s8 b38[4];           /* 0x38 */
+    u8 pad3c[4];
+    s32 timer;           /* 0x40 */
+    s32 w44;             /* 0x44 */
+    s32 w48;             /* 0x48 */
+    f32 fade;            /* 0x4C */
+    ResMember member[4]; /* 0x50 ADD */
+    u8 pad80[0x140];
+    ResRow row[4];       /* 0x1C0 */
+    ResMem mem[4];       /* 0x2C8 */
+    f32 z318[4];         /* 0x318 ADD: per-member draw z */
+    u8 pad328[0x48];
+    ResSpr spr[22];      /* 0x370 */
+    ResPanel obj[22];    /* 0x580 */
+    ResStat_800E9B04 stat[4];     /* 0xEC8 */
+    u8 pad1080[0x470];
+    s16 evIdx;           /* 0x14F0 */
+    s16 h14f2;           /* 0x14F2 */
+    u8 pad14f4[0x44];
+    ResEv ev[16];        /* 0x1538 */
+    u8 sub[0x14];        /* 0x15F8 */
+    s32 active;          /* 0x160C */
+} Ctx3594_800E9B04;
 
 void fn_800D81E8(void) {
     fn_80226D14();
@@ -4227,11 +4346,11 @@ void fn_800FF218(void)
             it = lbl_80346E34;
             for (i = 0; i < lbl_80346E30; i++) {
                 if (it->kind == 0) {
-                    fn_801D4F0C(it, 0, 0, 1, it->f1c, 0.0f, 1.0f, it->f24);
+                    fn_801D4F0C(&it->spr, 0, 0, 1, it->f1c, 0.0f, 1.0f, it->f24);
                 } else if (it->kind == 1) {
-                    fn_801D4C54(it, 0, 0, 1, it->f1c, 0.0f, it->f20, it->f24);
+                    fn_801D4C54(&it->spr, 0, 0, 1, it->f1c, 0.0f, it->f20, it->f24);
                 } else {
-                    fn_801D52A8(it, 0, 1, it->f1c, 0.0f, 1.0f, it->f24);
+                    fn_801D52A8(&it->spr, 0, 1, it->f1c, 0.0f, 1.0f, it->f24);
                 }
                 it++;
             }
@@ -6339,26 +6458,26 @@ void fn_800EA244(s16 flag) {
     f32 s = (*(Work_800EA244**)&lbl_80346DCC)->f4c;
     Sprite* it;
     it = fn_801D68C4((*(Work_800EA244**)&lbl_80346DCC)->sub, 0);
-    fn_801D4F0C((void *)(it), 0, 0, 0, -10000.0f, 0.0f, s, 1.0f);
+    fn_801D4F0C(it, 0, 0, 0, -10000.0f, 0.0f, s, 1.0f);
     y += 0.05f * (f32)it->count;
     if (flag != 0) {
         it = fn_801D68C4((*(Work_800EA244**)&lbl_80346DCC)->sub, 2);
     } else {
         it = fn_801D68C4((*(Work_800EA244**)&lbl_80346DCC)->sub, 1);
     }
-    fn_801D4F0C((void *)(it), 0, 0, 0, y, 0.0f, s, 1.0f);
+    fn_801D4F0C(it, 0, 0, 0, y, 0.0f, s, 1.0f);
     y += 0.05f * (f32)it->count;
     it = fn_801D68C4((*(Work_800EA244**)&lbl_80346DCC)->sub, 3);
-    fn_801D4F0C((void *)(it), 0, 1, 1, y, 0.0f, s, 1.0f);
+    fn_801D4F0C(it, 0, 1, 1, y, 0.0f, s, 1.0f);
     y += 0.05f * (f32)it->count;
     it = fn_801D68C4((*(Work_800EA244**)&lbl_80346DCC)->sub, 4);
-    fn_801D4F0C((void *)(it), 0, 0, 0, y, 0.0f, s, 1.0f);
+    fn_801D4F0C(it, 0, 0, 0, y, 0.0f, s, 1.0f);
     y += 0.05f * (f32)it->count;
     it = fn_801D68C4((*(Work_800EA244**)&lbl_80346DCC)->sub, 5);
-    fn_801D4F0C((void *)(it), 0, 0, 1, y, 0.0f, s, 1.0f);
+    fn_801D4F0C(it, 0, 0, 1, y, 0.0f, s, 1.0f);
     y += 0.05f * (f32)it->count;
     it = fn_801D68C4((*(Work_800EA244**)&lbl_80346DCC)->sub, 0xb);
-    fn_801D4F0C((void *)(it), 0, 0, 1, y, 0.0f, 1.0f, 1.0f);
+    fn_801D4F0C(it, 0, 0, 1, y, 0.0f, 1.0f, 1.0f);
 }
 
 s32 fn_800EB58C(s32 mode) {
@@ -6939,13 +7058,14 @@ static inline Entry *FindByPtr(void *key)
     return 0;
 }
 
-void fn_80109D74(void *p)
+void *fn_80109D74(void *p)
 {
     void *key = fn_801CC0A0(p);
 
     if (key != 0) {
         FindByPtr(key)->p8 = 0;
     }
+    return key;
 }
 
 void* fn_8010062C(Tbl68* t, u16 key) {
@@ -8348,4 +8468,390 @@ s32 fn_800EAE2C(EvObj* pl, EvObj* obj) {
         obj->x202 = 0;
     }
     return 1;
+}
+
+/* Inline copy of fn_800FF438: the memory card slot to use, or -1. */
+inline s32 SaveSlot_80101828(void) {
+    s32 ret = -1;
+    if (lbl_80310B3C[0x22] & 0x10) {
+        if (fn_801D6E38(lbl_8034757C) == 1) {
+            ret = lbl_8034757C;
+        }
+    }
+    return ret;
+}
+
+inline void CardOpen_80101828(void) {
+    s32 n;
+    s32 r;
+    lbl_80346E40 = SaveSlot_80101828();
+    if (lbl_80346E40 >= 0) {
+        u8 buf[5];
+        buf[0] = 1;
+        buf[1] = 1;
+        buf[2] = 1;
+        buf[3] = 0x2e;
+        buf[4] = 0;
+        n = 9;
+        do {
+            r = fn_801D6CBC(lbl_80346E40, buf);
+            if (r == 0 || r == -2) {
+                break;
+            }
+        } while (n-- != 0);
+    }
+}
+
+inline void CardClose_80101828(void) {
+    s32 n;
+    s32 r;
+    if (lbl_80346E40 >= 0) {
+        n = 9;
+        do {
+            r = fn_801D6C3C(lbl_80346E40);
+            if (r == 0 || r == -2) {
+                break;
+            }
+        } while (n-- != 0);
+        lbl_80346E40 = -1;
+    }
+}
+
+inline void FreeBufs_80101828(void) {
+    if (lbl_80346E3C != NULL) {
+        fn_801E17E0(lbl_80346E3C);
+        lbl_80346E3C = NULL;
+    }
+    if (lbl_80346E34 != NULL) {
+        fn_801E17E0(lbl_80346E34);
+        lbl_80346E34 = NULL;
+    }
+}
+
+inline s32 SavePlayer_80101828(void) {
+    s32 ok;
+    lbl_80346E44 = fn_800C1C24();
+    if (lbl_80346E44 > 0) {
+        fn_80226D14();
+        lbl_80347488 = lbl_80347450->pos.x;
+        lbl_80347484 = lbl_80347450->pos.y;
+        lbl_80347480 = lbl_80347450->pos.z;
+        lbl_8034747C = lbl_80347450->ang[1];
+        lbl_80347478 = lbl_80347450->hit->id;
+        ok = 1;
+    } else {
+        ok = 0;
+    }
+    return ok;
+}
+
+void fn_80101828(void) {
+    s32 ok = 0;
+
+    if (lbl_803475D8 == 1) {
+        lbl_80311AD4[6] = 15;
+    }
+    switch (lbl_80311AD4[6]) {
+    case 0:
+        fn_80101378();
+        lbl_80311AD4[6] = 1;
+        break;
+    case 2:
+        if (fn_800FFB24() != 0) {
+            lbl_80311AD4[6] = 3;
+        }
+        break;
+    case 1:
+        if (lbl_803475D4 == 0) {
+            lbl_8030A5D4[0] = 0;
+            lbl_8030A5D4[1] = 0;
+            lbl_80311AD4[6] = 2;
+            break;
+        }
+        lbl_803475D4 = 0;
+        lbl_80311AD4[6] = 3;
+    case 3:
+        lbl_80311AD4[6] = fn_801015AC(lbl_80311AD4[6]);
+        break;
+    case 4:
+        if (fn_80090D78() == 1) {
+            fn_80217554();
+            lbl_80311AD4[6] = 5;
+        }
+        break;
+    case 5:
+        ok = 0;
+        lbl_80311AC0.p0c = fn_80109D74(lbl_80346E54);
+        if (lbl_80311AC0.p0c != NULL) {
+            if (lbl_80346E50 != NULL) {
+                lbl_80311AC0.p10 = fn_80109D74(lbl_80346E50);
+                if (lbl_80311AC0.p10 == NULL) {
+                    ok = 0;
+                } else {
+                    ok = 1;
+                }
+            } else {
+                ok = 1;
+            }
+        }
+        if (ok == 1) {
+            if (fn_800C7DD4() == 1) {
+                lbl_80311AD4[6] = 6;
+            } else {
+                lbl_80311AD4[6] = 7;
+            }
+        }
+        break;
+    case 6:
+        if (fn_800C7DFC() != 1) {
+            break;
+        }
+        lbl_80311AD4[6] = 7;
+    case 7:
+        fn_8022642C();
+        if (lbl_80311AC0.map == 0x83 && lbl_80311AC0.room == 'e') {
+            fn_802126C8();
+            for (ok = 0; ok < 200; ok++) {
+                fn_80212130();
+            }
+            ok = 1;
+        }
+        fn_8012A39C();
+        fn_8022642C();
+        lbl_80311AD4[6] = 8;
+        if (ok == 0) {
+            fn_802126C8();
+        }
+        lbl_803473EC = 0;
+        lbl_803473E8 = 1;
+        lbl_803475B0 = 0;
+        lbl_80347280 = 0;
+        break;
+    case 8:
+        lbl_80346DAC = 0;
+        fn_80129DD0();
+        fn_800E1A24();
+        fn_8022D9C4();
+        fn_80212130();
+        fn_80129AA4();
+        fn_800CD16C();
+        DrawStateRestore();
+        fn_801DA0AC();
+        fn_8022642C();
+        fn_801299B4();
+        fn_800FF218();
+        fn_800D2E60();
+        if (SavePlayer_80101828() == 1 && lbl_80311AD4[6] == 8) {
+            FreeBufs_80101828();
+            fn_80217C24();
+            fn_80217608();
+            fn_80219324(5);
+            fn_80219324(6);
+            fn_80097AFC();
+            fn_80097CA4(lbl_803473D8);
+            CardOpen_80101828();
+            lbl_80311AD4[6] = 9;
+        } else if (lbl_803472E4 == 1) {
+            s32 next;
+            lbl_803472E4 = 0;
+            fn_80128F80();
+            fn_80217CB0();
+            if (lbl_80311AC0.w4 < 500) {
+                fn_80226D14();
+                fn_80097AFC();
+                lbl_80311AD4[6] = 12;
+                fn_80097CA4(lbl_803473D8);
+                CardOpen_80101828();
+                next = 12;
+            } else {
+                next = 14;
+            }
+            lbl_80311AD4[6] = next;
+        } else if ((s32)lbl_80310A1C[0x4c] == 0x4c) {
+            lbl_80311AD4[6] = 15;
+        }
+        break;
+    case 12:
+        SePlay(-2, 1, 0xe);
+        lbl_80311AD4[6] = 13;
+    case 13:
+        if (fn_80097CA4(lbl_803473D8) == 1) {
+            lbl_803473D8 = -1;
+            lbl_80311AD4[6] = 14;
+        }
+        break;
+    case 9:
+        fn_80219378(lbl_802B244C);
+        SePlay(-2, 1, 0xe);
+        lbl_80347474 = 0;
+        lbl_80311AD4[6] = 10;
+    case 10:
+        if (fn_80097CA4(lbl_803473D8) == 1) {
+            CardClose_80101828();
+            lbl_803473D8 = -1;
+            lbl_80311AD4[6] = 11;
+        }
+        break;
+    case 14:
+        if (fn_80128F2C() != 1) {
+            break;
+        }
+        fn_80218570(0, 4, 0);
+        CardClose_80101828();
+        lbl_80311AD4[6] = 15;
+    case 15:
+        fn_80101494();
+        break;
+    case 11:
+        FreeBufs_80101828();
+        fn_8022697C(0x7FFFFFFF);
+        fn_800FF908();
+        fn_80101158();
+        fn_8012A26C();
+        fn_8022642C();
+        fn_8022642C();
+        fn_8022642C();
+        fn_80219378(lbl_802B244C);
+        lbl_80347450 = NULL;
+        lbl_80347370 = NULL;
+        lbl_803475D4 = 1;
+        fn_801DBE6C(7);
+        break;
+    }
+}
+
+void fn_800E96C0(void) {
+    s32 tbl[18] = { 30, 45, 31, 30, 48, 49, 54, 53, 39, 40, 41, 42, 43, 44, 49, 50, 51, 52 };
+    f32 z0;
+    f32 z;
+    UiObj* o;
+    s16 x;
+    s16 y;
+    s32 yy;
+    s16 i;
+    s16 k;
+    Sprite* s;
+    ResItem* e;
+
+    z0 = TextGetZ();
+    fn_800EA4A8(&lbl_80346DCC->spr[21]);
+    o = &lbl_80346DCC->obj[21].o;
+    UiObjUpdate(o);
+    x = o->x;
+    y = o->y;
+    TextPushColor();
+    TextSetColor(0xFF160800);
+    z = lbl_80346DCC->z36c;
+    s = fn_801D68C4(lbl_80346DCC->sub, 8);
+    s->x = x + 0x9e;
+    s->y = y + 0x168;
+    fn_801D4F0C(s, 0, 0, 1, z, 0.0f, 1.0f, 1.0f);
+    z += 0.05f * s->count;
+    s = fn_801D68C4(lbl_80346DCC->sub, 10);
+    s->x = x + 0x9e;
+    s->y = y + 0x168;
+    fn_801D4F0C(s, 0, 0, 1, z, 0.0f, 1.0f, 1.0f);
+    z += 0.05f * s->count;
+    for (i = 0; i < 3; i++) {
+        e = &lbl_80346DCC->h28[i];
+        if (e->h < 0) {
+            continue;
+        }
+        k = fn_801F4C24(e->h);
+        if (k == 0) {
+            if (e->h == 0x47 || e->h == 0x49) {
+                k = 8;
+            } else if (e->h == 0x48) {
+                k = 9;
+            } else if (e->h < 0x10) {
+                k = 8;
+            } else if (e->h < 0x20) {
+                k = 9;
+            } else if (e->h < 0x30) {
+                k = 10;
+            } else if (e->h < 0x3a) {
+                k = 11;
+            } else if (e->h < 0x40) {
+                k = 12;
+            } else {
+                k = 13;
+            }
+        } else if (k == 5) {
+            switch (lbl_802D7E4C[e->h - 0x190].kind) {
+            case 1:
+                k = 15;
+                break;
+            case 2:
+                k = 16;
+                break;
+            case 3:
+                k = 17;
+                break;
+            case 0:
+            default:
+                k = 14;
+                break;
+            }
+        }
+        s = fn_801D68C4(lbl_80346DCC->sub, tbl[k]);
+        yy = y + (i * 0x19 + 0x173);
+        s->x = x + 0xd8;
+        s->y = yy;
+        fn_801D4F0C(s, 0, 0, 1, z, 0.0f, 1.0f, 1.0f);
+        z += 0.05f * s->count;
+        TextSetZ(z);
+        TextPrint(x + 0xf0, yy, fn_801F4AE4(e->h));
+        TextPrint(x + 0x1b0, yy, "\x82\x77");
+        TextPrintNumber(x + 0x1c6, yy, e->n, 0xc002);
+        z += 0.8f;
+    }
+    TextPopColor(1);
+    TextSetZ(z0);
+}
+
+static inline f32 ResDrawPart(s32 n, s32 x, s32 y, f32 z) {
+    Sprite* s = fn_801D68C4(lbl_80346DCC->sub, n);
+    s->x = x;
+    s->y = y;
+    fn_801D4F0C(s, 0, 0, 1, z, 0.0f, 1.0f, 1.0f);
+    return z + 0.05f * s->count;
+}
+
+void fn_800E9B04(void) {
+    u8 chr;
+    f32 z0;
+    s16 i;
+    ResSpr* spr;
+    ResPanel* pan;
+    s16 x;
+    s16 y;
+    f32 z;
+
+    z0 = TextGetZ();
+    for (i = 0; i < lbl_80346DCC->count; i++) {
+        chr = lbl_80346DCC->member[i].chr;
+        TextPushColor();
+        TextSetColor(0xFF160800);
+        spr = &lbl_80346DCC->spr[i];
+        fn_800EA4A8(spr);
+        pan = &lbl_80346DCC->obj[i];
+        UiObjUpdate(&pan->o);
+        x = pan->o.x;
+        y = pan->o.y;
+        z = lbl_80346DCC->z318[i];
+        z = ResDrawPart(0xf, x - 8, y + (i * 64 + 0x58), z);
+        z = ResDrawPart(0x10, x - 8, y + (i * 64 + 0x58), z);
+        z = ResDrawPart(0x11, x - 8, y + (i * 64 + 0x58), z);
+        z = ResDrawPart(chr + 0x18, x + 0x10, y + (i * 64 + 0x56), z);
+        TextSetZ(z);
+        TextPrint(x + 0x4e, y + (i * 64 + 0x5e), lbl_8030B7F4.chr[chr].name);
+        TextPrint(x + 0xd8, y + (i * 64 + 0x5e), "Lv");
+        TextPrintNumber(x + 0xf0, y + (i * 64 + 0x5e), lbl_80346DCC->member[i].level, 0xC002);
+        z += 1.25f;
+        TextSetZ(z);
+        TextSetColor(spr->c8);
+        TextPrintNumber(x + 0xef, y + (i * 64 + 0x5d), lbl_80346DCC->member[i].level, 0xC002);
+        TextPopColor(1);
+    }
+    TextSetZ(z0);
 }
