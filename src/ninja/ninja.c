@@ -2184,175 +2184,99 @@ static inline void tev_color(s32 hasAlpha) {
     GXSetTevAlphaOp(0, 0, 0, 0, 1, 0);
 }
 
+/* The material setup is done the same way whether or not the kind changed; the compiler won't
+ * inline a helper this size, so it is a macro. */
+#define MATERIAL_SETUP(kind, flag)                                                                  \
+    switch (kind) {                                                                                 \
+    case 0:                                                                                         \
+        GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);                                                  \
+        GXClearVtxDesc();                                                                           \
+        GXSetVtxDesc(GX_VA_POS, 1);                                                                 \
+        GXSetVtxDesc(GX_VA_CLR0, 1);                                                                \
+        GXSetVtxDesc(GX_VA_TEX0, 1);                                                                \
+        GXSetVtxAttrFmt(0, 9, 1, 4, 0);                                                             \
+        GXSetVtxAttrFmt(0, 11, 1, 5, 0);                                                            \
+        GXSetVtxAttrFmt(0, 13, 1, 4, 0);                                                            \
+        GXSetNumChans(1);                                                                           \
+        GXSetChanCtrl(4, 0, 1, 1, 0, 0, 2);                                                         \
+        GXSetNumTexGens(1);                                                                         \
+        tev_tex(flag);                                                                              \
+        break;                                                                                      \
+    case 1:                                                                                         \
+        GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);                                                  \
+        GXClearVtxDesc();                                                                           \
+        GXSetVtxDesc(GX_VA_POS, 1);                                                                 \
+        GXSetVtxDesc(GX_VA_CLR0, 1);                                                                \
+        GXSetVtxDesc(GX_VA_CLR1, 1);                                                                \
+        GXSetVtxDesc(GX_VA_TEX0, 1);                                                                \
+        GXSetVtxAttrFmt(0, 9, 1, 4, 0);                                                             \
+        GXSetVtxAttrFmt(0, 11, 1, 5, 0);                                                            \
+        GXSetVtxAttrFmt(0, 12, 1, 5, 0);                                                            \
+        GXSetVtxAttrFmt(0, 13, 1, 4, 0);                                                            \
+        GXSetNumChans(2);                                                                           \
+        GXSetChanCtrl(4, 0, 1, 1, 0, 0, 2);                                                         \
+        GXSetChanCtrl(5, 0, 1, 1, 0, 0, 2);                                                         \
+        GXSetNumTexGens(1);                                                                         \
+        tev_tex_spec(flag);                                                                         \
+        break;                                                                                      \
+    case 2:                                                                                         \
+        GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);                                                  \
+        GXClearVtxDesc();                                                                           \
+        GXSetVtxDesc(GX_VA_POS, 1);                                                                 \
+        GXSetVtxDesc(GX_VA_TEX0, 1);                                                                \
+        GXSetVtxAttrFmt(0, 9, 1, 4, 0);                                                             \
+        GXSetVtxAttrFmt(0, 11, 1, 5, 0);                                                            \
+        GXSetVtxAttrFmt(0, 13, 1, 4, 0);                                                            \
+        GXSetNumChans(1);                                                                           \
+        GXSetChanCtrl(4, 0, 1, 0, 0, 0, 2);                                                         \
+        GXSetNumTexGens(1);                                                                         \
+        tev_tex(flag);                                                                              \
+        break;                                                                                      \
+    case 3:                                                                                         \
+        GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);                                                  \
+        GXClearVtxDesc();                                                                           \
+        GXSetVtxDesc(GX_VA_POS, 1);                                                                 \
+        GXSetVtxDesc(GX_VA_TEX0, 1);                                                                \
+        GXSetVtxAttrFmt(0, 9, 1, 4, 0);                                                             \
+        GXSetVtxAttrFmt(0, 11, 1, 5, 0);                                                            \
+        GXSetVtxAttrFmt(0, 12, 1, 5, 0);                                                            \
+        GXSetVtxAttrFmt(0, 13, 1, 4, 0);                                                            \
+        GXSetNumChans(2);                                                                           \
+        GXSetChanCtrl(4, 0, 1, 0, 0, 0, 2);                                                         \
+        GXSetChanCtrl(5, 0, 0, 1, 0, 0, 2);                                                         \
+        GXSetNumTexGens(1);                                                                         \
+        tev_tex_spec(flag);                                                                         \
+        break;                                                                                      \
+    case 4:                                                                                         \
+        GXClearVtxDesc();                                                                           \
+        GXSetVtxDesc(GX_VA_POS, 1);                                                                 \
+        GXSetVtxDesc(GX_VA_CLR0, 1);                                                                \
+        GXSetVtxAttrFmt(0, 9, 1, 4, 0);                                                             \
+        GXSetVtxAttrFmt(0, 11, 1, 5, 0);                                                            \
+        GXSetNumChans(1);                                                                           \
+        GXSetChanCtrl(4, 0, 1, 1, 0, 0, 2);                                                         \
+        GXSetNumTexGens(0);                                                                         \
+        tev_color(flag);                                                                            \
+        break;                                                                                      \
+    case 5:                                                                                         \
+        GXClearVtxDesc();                                                                           \
+        GXSetVtxDesc(GX_VA_POS, 1);                                                                 \
+        GXSetVtxAttrFmt(0, 9, 1, 4, 0);                                                             \
+        GXSetVtxAttrFmt(0, 11, 1, 5, 0);                                                            \
+        GXSetNumChans(1);                                                                           \
+        GXSetChanCtrl(4, 0, 1, 0, 0, 0, 2);                                                         \
+        GXSetNumTexGens(0);                                                                         \
+        tev_color(flag);                                                                            \
+        break;                                                                                      \
+    }
+
 void fn_8029B248(s32 kind, s32 flag) {
     if (lbl_80347F74 != kind) {
-        switch (kind) {
-        case 0:
-            GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);
-            GXClearVtxDesc();
-            GXSetVtxDesc(GX_VA_POS, 1);
-            GXSetVtxDesc(GX_VA_CLR0, 1);
-            GXSetVtxDesc(GX_VA_TEX0, 1);
-            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
-            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
-            GXSetVtxAttrFmt(0, 13, 1, 4, 0);
-            GXSetNumChans(1);
-            GXSetChanCtrl(4, 0, 1, 1, 0, 0, 2);
-            GXSetNumTexGens(1);
-            tev_tex(flag);
-            break;
-        case 1:
-            GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);
-            GXClearVtxDesc();
-            GXSetVtxDesc(GX_VA_POS, 1);
-            GXSetVtxDesc(GX_VA_CLR0, 1);
-            GXSetVtxDesc(GX_VA_CLR1, 1);
-            GXSetVtxDesc(GX_VA_TEX0, 1);
-            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
-            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
-            GXSetVtxAttrFmt(0, 12, 1, 5, 0);
-            GXSetVtxAttrFmt(0, 13, 1, 4, 0);
-            GXSetNumChans(2);
-            GXSetChanCtrl(4, 0, 1, 1, 0, 0, 2);
-            GXSetChanCtrl(5, 0, 1, 1, 0, 0, 2);
-            GXSetNumTexGens(1);
-            tev_tex_spec(flag);
-            break;
-        case 2:
-            GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);
-            GXClearVtxDesc();
-            GXSetVtxDesc(GX_VA_POS, 1);
-            GXSetVtxDesc(GX_VA_TEX0, 1);
-            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
-            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
-            GXSetVtxAttrFmt(0, 13, 1, 4, 0);
-            GXSetNumChans(1);
-            GXSetChanCtrl(4, 0, 1, 0, 0, 0, 2);
-            GXSetNumTexGens(1);
-            tev_tex(flag);
-            break;
-        case 3:
-            GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);
-            GXClearVtxDesc();
-            GXSetVtxDesc(GX_VA_POS, 1);
-            GXSetVtxDesc(GX_VA_TEX0, 1);
-            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
-            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
-            GXSetVtxAttrFmt(0, 12, 1, 5, 0);
-            GXSetVtxAttrFmt(0, 13, 1, 4, 0);
-            GXSetNumChans(2);
-            GXSetChanCtrl(4, 0, 1, 0, 0, 0, 2);
-            GXSetChanCtrl(5, 0, 0, 1, 0, 0, 2);
-            GXSetNumTexGens(1);
-            tev_tex_spec(flag);
-            break;
-        case 4:
-            GXClearVtxDesc();
-            GXSetVtxDesc(GX_VA_POS, 1);
-            GXSetVtxDesc(GX_VA_CLR0, 1);
-            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
-            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
-            GXSetNumChans(1);
-            GXSetChanCtrl(4, 0, 1, 1, 0, 0, 2);
-            GXSetNumTexGens(0);
-            tev_color(flag);
-            break;
-        case 5:
-            GXClearVtxDesc();
-            GXSetVtxDesc(GX_VA_POS, 1);
-            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
-            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
-            GXSetNumChans(1);
-            GXSetChanCtrl(4, 0, 1, 0, 0, 0, 2);
-            GXSetNumTexGens(0);
-            tev_color(flag);
-            break;
-        }
+        MATERIAL_SETUP(kind, flag);
         lbl_80347F74 = kind;
         lbl_80347F68 = flag;
     } else {
-        switch (kind) {
-        case 0:
-            GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);
-            GXClearVtxDesc();
-            GXSetVtxDesc(GX_VA_POS, 1);
-            GXSetVtxDesc(GX_VA_CLR0, 1);
-            GXSetVtxDesc(GX_VA_TEX0, 1);
-            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
-            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
-            GXSetVtxAttrFmt(0, 13, 1, 4, 0);
-            GXSetNumChans(1);
-            GXSetChanCtrl(4, 0, 1, 1, 0, 0, 2);
-            GXSetNumTexGens(1);
-            tev_tex(flag);
-            break;
-        case 1:
-            GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);
-            GXClearVtxDesc();
-            GXSetVtxDesc(GX_VA_POS, 1);
-            GXSetVtxDesc(GX_VA_CLR0, 1);
-            GXSetVtxDesc(GX_VA_CLR1, 1);
-            GXSetVtxDesc(GX_VA_TEX0, 1);
-            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
-            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
-            GXSetVtxAttrFmt(0, 12, 1, 5, 0);
-            GXSetVtxAttrFmt(0, 13, 1, 4, 0);
-            GXSetNumChans(2);
-            GXSetChanCtrl(4, 0, 1, 1, 0, 0, 2);
-            GXSetChanCtrl(5, 0, 1, 1, 0, 0, 2);
-            GXSetNumTexGens(1);
-            tev_tex_spec(flag);
-            break;
-        case 2:
-            GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);
-            GXClearVtxDesc();
-            GXSetVtxDesc(GX_VA_POS, 1);
-            GXSetVtxDesc(GX_VA_TEX0, 1);
-            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
-            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
-            GXSetVtxAttrFmt(0, 13, 1, 4, 0);
-            GXSetNumChans(1);
-            GXSetChanCtrl(4, 0, 1, 0, 0, 0, 2);
-            GXSetNumTexGens(1);
-            tev_tex(flag);
-            break;
-        case 3:
-            GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);
-            GXClearVtxDesc();
-            GXSetVtxDesc(GX_VA_POS, 1);
-            GXSetVtxDesc(GX_VA_TEX0, 1);
-            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
-            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
-            GXSetVtxAttrFmt(0, 12, 1, 5, 0);
-            GXSetVtxAttrFmt(0, 13, 1, 4, 0);
-            GXSetNumChans(2);
-            GXSetChanCtrl(4, 0, 1, 0, 0, 0, 2);
-            GXSetChanCtrl(5, 0, 0, 1, 0, 0, 2);
-            GXSetNumTexGens(1);
-            tev_tex_spec(flag);
-            break;
-        case 4:
-            GXClearVtxDesc();
-            GXSetVtxDesc(GX_VA_POS, 1);
-            GXSetVtxDesc(GX_VA_CLR0, 1);
-            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
-            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
-            GXSetNumChans(1);
-            GXSetChanCtrl(4, 0, 1, 1, 0, 0, 2);
-            GXSetNumTexGens(0);
-            tev_color(flag);
-            break;
-        case 5:
-            GXClearVtxDesc();
-            GXSetVtxDesc(GX_VA_POS, 1);
-            GXSetVtxAttrFmt(0, 9, 1, 4, 0);
-            GXSetVtxAttrFmt(0, 11, 1, 5, 0);
-            GXSetNumChans(1);
-            GXSetChanCtrl(4, 0, 1, 0, 0, 0, 2);
-            GXSetNumTexGens(0);
-            tev_color(flag);
-            break;
-        }
+        MATERIAL_SETUP(kind, flag);
         lbl_80347F68 = flag;
     }
 }
