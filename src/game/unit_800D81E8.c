@@ -2758,6 +2758,53 @@ extern void fn_800EF0D8(u16 area);
 extern void fn_800EEFB0(void);
 extern void fn_800EECA8(s16 save);
 extern s32 fn_800EEDD4(s32 n, f32 fx, f32 fy);
+typedef struct KeySet_800F1780 {
+    void* keys;
+    s32 count;
+} KeySet_800F1780;
+typedef struct PosTbl_800F1780 {
+    NJS_POINT3* base;
+} PosTbl_800F1780;
+typedef struct Tex_800F1780 {
+    NJS_POINT3* a;
+    s32 b;
+} Tex_800F1780;
+typedef struct Work_800F1780 {
+    u8 pad0[0x1c];
+    f32 f1c[3];
+    u8 pad28[0x50 - 0x28];
+    f32 f50[3];
+    f32 vx, vy, vz;
+    u8 pad68[0xb4 - 0x68];
+    f32 px, py, pz;
+    u8 padc0[0xe4 - 0xc0];
+    void* e4;
+    void* e8;
+    u8 padec[0x100 - 0xec];
+    Tex_800F1780* p100;
+    u8 pad104[0x158 - 0x104];
+    f32 f158, f15c, f160, f164;
+    u8 pad168[0x1c8 - 0x168];
+    void* p1c8;
+    u8 pad1cc[0x204 - 0x1cc];
+    s16 s204;
+    u8 pad206[2];
+    s16 s208;
+    u8 pad20a[0x24c - 0x20a];
+    f32 f24c, f250, f254, f258;
+    KeySet_800F1780* p25c;
+    u8 pad260[8];
+    PosTbl_800F1780* p268;
+} Work_800F1780;
+typedef struct Player_800F1780 {
+    u8 pad0[0x188];
+    u32 flags;
+    u8 pad18c[0x204 - 0x18c];
+    s16 s204;
+    u8 pad206[0x25c - 0x206];
+    KeySet_800F1780* p25c;
+} Player_800F1780;
+extern s32 fn_801DE6F0(f32* a, f32* b, f32* c, f32 t, KeySet_800F1780* ks);
 
 void fn_800D81E8(void) {
     fn_80226D14();
@@ -10397,4 +10444,89 @@ void fn_800EE51C(void) {
     lbl_80346E14->f1c = fn_800EEDD4(lbl_80346E14->area, lbl_80346E14->f0c, lbl_80346E14->f10);
     lbl_80346E14->h36 = lbl_80346E14->f1c;
     lbl_80346E00 = 0.0f;
+}
+
+void fn_800F1780(Task* t)
+{
+    Work_800F1780* w = t->work;
+    Player_800F1780* q;
+    KeySet_800F1780* info;
+    Tex_800F1780 tmp;
+    Tex_800F1780* saved;
+    f32 v;
+    f32 av;
+    f32 z;
+    if (!(t->parent->flags & 0x40)) {
+        q = t->parent->work;
+        info = q->p25c;
+    } else {
+        t->state = 0xFF;
+    }
+    switch (t->state) {
+    case 0:
+        if (0.0f != w->f254) {
+            w->vx = w->f254 * (0.000030517578f * (f32)rand()) + w->vx;
+        }
+        v = w->vx;
+        av = fabs(v);
+        if (0.001f > av) {
+            v = 0.1f;
+        }
+        w->f250 = v;
+        z = 0.0f;
+        if (0.0f > w->f250) {
+            z = (f32)info->count - 1.0f;
+        }
+        w->f24c = z;
+        if (0.0f != w->f164 || 0.0f != w->f258) {
+            w->f164 = w->f258 * (0.000030517578f * (f32)rand()) + w->f164;
+            if (4.0f > 8.0f * (0.000030517578f * (f32)rand())) {
+                w->f164 = -w->f164;
+            }
+            w->vx = w->f158 * w->f164;
+            w->vy = w->f15c * w->f164;
+            w->vz = w->f160 * w->f164;
+        } else {
+            w->vz = 0.0f;
+            w->vy = 0.0f;
+            w->vx = 0.0f;
+        }
+        t->f20 = -200.0f;
+        t->state = 1;
+        break;
+    case 1:
+        if (q->flags & 2) {
+            fn_801DE6F0(&w->px, w->f50, w->f1c, w->f24c, info);
+            w->px += w->vx;
+            w->py += w->vy;
+            w->pz += w->vz;
+            saved = w->p100;
+            w->p100 = &tmp;
+            tmp.b = saved->b;
+            tmp.a = w->p268->base + w->s208;
+            fn_801E66E0(w);
+            w->p100 = saved;
+        }
+        w->f24c += w->f250;
+        if (0.0f > w->f250) {
+            if (0.0f > w->f24c) {
+                t->state = 2;
+            }
+        } else if ((f32)info->count - 1.0f < w->f24c) {
+            t->state = 2;
+        }
+        break;
+    case 2:
+        q->s204--;
+    default:
+        w->p100 = 0;
+        w->e4 = 0;
+        w->e8 = 0;
+        w->p1c8 = 0;
+        w->p25c = 0;
+        fn_80100B74(t);
+        break;
+    case 0xFE:
+        break;
+    }
 }

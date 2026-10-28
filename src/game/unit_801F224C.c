@@ -262,3 +262,27 @@ s32 fn_801F5100(s16 *a, s16 *b)
     }
     return p - q;
 }
+
+u16 fn_801F477C(s16 id)
+{
+    switch (fn_801F4C24(id)) {
+    case 0:
+        return lbl_802C5790[id].price;
+    case 1:
+        return lbl_802C6190[id - 80].price;
+    case 2:
+        return lbl_802C6E10[id - 160].price;
+    case 3:
+        return lbl_802C7C34[id - 240].price;
+    case 4:
+        return lbl_802C8774[id - 320].price;
+    case 5:
+        return lbl_802D7E4C[id - 400].price;
+    case 6:
+        return lbl_802D83EC[id - 440].price;
+    case 7:
+        return lbl_802D8A2C[id - 480].price;
+    default:
+        return 0;
+    }
+}

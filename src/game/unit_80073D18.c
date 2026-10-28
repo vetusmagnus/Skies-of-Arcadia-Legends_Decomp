@@ -1,5 +1,7 @@
 #include "types.h"
-typedef struct TNode { u8 pad[0x2c]; struct TNode* child; struct TNode* next; } TNode;
+typedef struct TNode { u8 pad_0[0x4];
+ u32 f4;
+ u8 pad_8[0x24]; struct TNode* child; struct TNode* next; } TNode;
 void fn_800740D0(TNode* n, s16* count);
 void* fn_801E1A74(s32 n, s32 size);
 void fn_80074394(void* a, s16* b);
@@ -15,6 +17,7 @@ extern void fn_80061F58(void *p, u32 n, s32 c);
 extern void fn_80073DD0(void *a, void *b, s32 c, s32 e, s16 *m);
 extern s16 fn_80060F6C(s32 i, void *c, s32 k);
 typedef struct E34 { u32 flags; u8 pad[0x30]; } E34;
+void ReverbSTDFree(TNode *n, TNode **out);
 
 void fn_80073D18(u8* a, u8* b, s16 idx) {
     s32 off = idx * 0x34;
@@ -140,5 +143,58 @@ void fn_80073FB8(E34 *src, E34 *dst, s16 n, s16 keep) {
                 dst[i].flags |= 8;
             }
         }
+    }
+}
+
+static inline void F0(TNode *n, TNode **out)
+{
+    if (n->f4 != 0) {
+        *out = n;
+        return;
+    }
+    if (n->child != NULL) {
+        ReverbSTDFree(n->child, out);
+    }
+    if (n->next != NULL) {
+        ReverbSTDFree(n->next, out);
+    }
+}
+static inline void F1(TNode *n, TNode **out)
+{
+    if (n->f4 != 0) {
+        *out = n;
+        return;
+    }
+    if (n->child != NULL) {
+        F0(n->child, out);
+    }
+    if (n->next != NULL) {
+        F0(n->next, out);
+    }
+}
+static inline void F2(TNode *n, TNode **out)
+{
+    if (n->f4 != 0) {
+        *out = n;
+        return;
+    }
+    if (n->child != NULL) {
+        F1(n->child, out);
+    }
+    if (n->next != NULL) {
+        F1(n->next, out);
+    }
+}
+void ReverbSTDFree(TNode *n, TNode **out)
+{
+    if (n->f4 != 0) {
+        *out = n;
+        return;
+    }
+    if (n->child != NULL) {
+        F2(n->child, out);
+    }
+    if (n->next != NULL) {
+        F2(n->next, out);
     }
 }
