@@ -169,7 +169,22 @@ Logged, not integrated as matches. Functions marked * are in the unit as NonMatc
   `fn_802911CC`, `fn_80296918`, `fn_8029DCD0`, the strip drawers `fn_8029DEDC`-`fn_802A2E18`
   (`fn_8029EE78`, `fn_8029F2A8`, `fn_8029F528` are 4 lines off, `fn_8029F9F8`, `fn_8029FB54`,
   `fn_8029FCB0`, `fn_802A018C` 2 lines), `fn_802A5738`, `fn_802A58DC`, `fn_802AAE5C`, `fn_802AB608`,
-  `fn_802AB8FC`, `fn_802ABB9C` (also the `rotlwi 8` colour swap).
+  `fn_802AB8FC`, `fn_802ABB9C`.
+  - The ARGB-to-RGBA colour swap is `__rlwinm(c, 8, 0, 31)` (gives `rotlwi r0,r0,8`);
+    `(c << 8) | (c >> 24)` gives `srwi` + `rlwimi` here. With that, `fn_8028A0F4`, `fn_80291064`
+    and `fn_8029681C` differ only in the address registers.
+  - The register pattern is per write, not per call: within one vertex the first two writes share
+    the hoisted `lis`, and every later write has its own copy (`fn_8029681C` has a single
+    `GXPosition3f32` and still copies the address for z). `fn_80289B70`, unrolled 8 times, keeps
+    24 separate copies and spills some to the stack, so the address was a separate value per write
+    before unrolling.
+  - Also ruled out (all fold to one register): every GC compiler from 1.0 to 3.0a5.2 at
+    `-O2`..`-O4,p`/`-O4,s`, `-opt` no-cse/no-prop/no-lifetimes/no-loop-invariants and other
+    switches, `-inline` deferred/auto/smart, C++ mode; `extern volatile` / non-volatile `AT_ADDRESS`
+    unions, separate same-address symbols, const/enum/global-const addresses, pointers returned by
+    an inline function, `register` pointers, pointer parameters per write and per call, nested
+    `POS2`+`POS1` helpers, inlines defined after use, indexed and pointer loops. Test files are in
+    `build/agents/fifo/` (local).
 - Register allocation or scheduling only: `fn_80286EE8`, `fn_8028B498`, `fn_80288C68`,
   `fn_8028F884`, `fn_8028FD98`, `fn_8028FEA4`, `fn_802904E8`, `fn_802907D0`, `fn_80290918`,
   `fn_80291700` (Bezier), `fn_802917C8` (Catmull-Rom), `fn_80291888`, `fn_802918DC`, `fn_80291978`,
