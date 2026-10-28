@@ -209,6 +209,31 @@ misses in `docs/near/`:
 - **Cheaper forms of the same code.** A loop that MWCC unrolls costs fewer inline nodes than the
   unrolled source: the party count `for (n = 0; n < 4; n++) if (p[n] < 0) break;` compiles to
   the same if chain as writing it out, at 44 nodes instead of 70.
+- **Constant addends sink to the end of a sum; an inline helper's sum doesn't.** A colour
+  written `0xFF0000C0 + (c << 16) + (c << 8)` (or any bracketing or cast of it) comes out with
+  the `+ 0xC0` last; the original adds 0xFF000000 and 0xC0 before `c << 8`. Only
+  `static inline u32 Color(u8 a, u8 r, u8 g, u8 b) { return (a << 24) + (r << 16) + (g << 8) + b; }`
+  gives that order (fn_80025624).
+- **Literal constants go first in a float add; a folded product doesn't.** `x + -180.0f`
+  compiles to `fadds fD, fK, fX`. The original's angle table has `fadds fD, fX, fK`: it is a
+  loop, `tab[i] = (s32)(182.04445f * (x + -180.0f * (i + 1)))`, fully unrolled with the
+  products folded (fn_80025624). Subtracting the constant instead stays an `fsubs`.
+- **`x / 6.0f / 2.0f`** is how a halving shows up as `fmuls` by 0.5 after the division with the
+  original's registers; `x / 6.0f * 0.5f` gives the same instructions with two registers
+  swapped.
+- **Integer parameters before float ones** move where the `li` of the integer arguments is
+  scheduled: when the original sets them before evaluating a float ternary argument, the
+  integers come first in the prototype (fn_801D5340: model, two flags, then four floats).
+- **Unrolling depends on the body's size.** MWCC unrolls a counted loop by 8 when the body is
+  small and by 2 (`srwi. rN, n, 1`) when it is big. A copy loop with three float adds and a
+  float-to-byte conversion is unrolled by 8 only when it advances `dst++`/`src++` inside the body;
+  indexing `dst[j]` or advancing the pointers in the `for` header costs enough to drop it to 2
+  (fn_800A4924).
+- **`a + b - 1` and `a + (b - 1)`**: MWCC reassociates the parenthesised form to `(a + b) - 1`;
+  the plain one computes `b - 1` first.
+- **Empty case labels move a switch's pivot.** A switch on {0, 1, 2, 3, 4, 0xFF} pivots on 3;
+  the original pivots on 4 and has a redundant `bge` after `cmpwi 0xff; beq`, which an empty
+  `case 0xfe: break;` reproduces (fn_800A9D24, fn_800A4924).
 - **Register colouring order.** Variables are split into webs and coloured one by one. A web
   takes the lowest-numbered callee-saved register already in use that it doesn't interfere
   with, and only allocates a new one (counting down from r31) when there is none. The order in

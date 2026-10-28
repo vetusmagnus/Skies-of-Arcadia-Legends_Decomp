@@ -9,7 +9,7 @@ void fn_8002E5D0(Top *t);
 extern void *lbl_803475A8;
 extern void *lbl_80346BA0;
 typedef struct Holder { u8 pad[0x24]; void *ptr; } Holder;
-void *fn_802268E8(void *a, void (*b)(void));
+void *fn_802268E8(void *a, void *b);
 void *fn_801E1C7C(s32 n);
 void fn_80022B04(void);
 extern void *lbl_80346AA0;
@@ -266,7 +266,8 @@ void fn_80023D14(void *p) {
   *(void **)((Holder *)lbl_80346BA8)->ptr = p;
 }
 
-extern void fn_80025624(void);
+struct RingTask;
+extern void fn_80025624(struct RingTask *o);
 void fn_800255CC(void *p) {
   lbl_80346BAC = fn_802268E8(lbl_803475A8, fn_80025624);
   ((Holder *)lbl_80346BAC)->ptr = fn_801E1C7C(4);
@@ -542,8 +543,8 @@ s32 fn_80021EB8(Tsk *t) {
     return 0;
 }
 
-extern void fn_801D68C4(s32 a, s32 b);
-extern s32 lbl_8034762C;
+extern void* fn_801D68C4(void* a, s32 b);
+extern void* lbl_8034762C;
 
 Obj* fn_80023FEC(s16 a) {
     switch (a) {
@@ -819,4 +820,428 @@ T21 *fn_80021658(s8 id)
         return r;
     }
     return Find21(0);
+}
+
+/* fn_80025624: the seven-item ring menu. The items sit on a ring that turns 60 degrees a step
+ * (lbl_80302A00 holds each item's angle); the task loads the item models, turns the ring when
+ * the cursor moves and draws the items, the highlighted item and the arrows. */
+typedef struct RingMenu {
+    s8* avail;  /* 0x0: per item, 0 when it can't be chosen */
+    s8 count;   /* 0x4 */
+    s8 cursor;  /* 0x5: -1 while turning */
+    s8 cmd;     /* 0x6: 1 turn left, 2 turn right */
+    s8 lock;    /* 0x7 */
+    s8 side;    /* 0x8 */
+    s8 arrows;  /* 0x9 */
+} RingMenu;
+
+typedef struct RingHolder {
+    RingMenu* menu;
+} RingHolder;
+
+typedef struct RingMdlSub {
+    u8 pad0[0x14];
+    u32 color;
+} RingMdlSub;
+
+typedef struct RingMdl {
+    u8 pad0[4];
+    RingMdlSub* sub;    /* 0x04 */
+    u8 pad8[0xC];
+    f32 x;              /* 0x14 */
+    f32 y;              /* 0x18 */
+} RingMdl;
+
+typedef struct RingTask {
+    u8 pad0[0x18];
+    u8 flags;           /* 0x18 */
+    u8 state;           /* 0x19 */
+    u8 pad1a[6];
+    f32 z;              /* 0x20 */
+    RingHolder* holder; /* 0x24 */
+    RingMdl** mdl;      /* 0x28 */
+} RingTask;
+
+extern void* lbl_80347628;
+extern RingTask* lbl_80346B48;
+extern s8 lbl_80346B12;
+extern f32 lbl_80346B14;
+extern f32 lbl_80346B18;
+extern f32 lbl_80346B1C;
+extern f32 lbl_80346B20;
+extern f32 lbl_80346B24;
+extern f32 lbl_80346B28;
+extern f32 lbl_80346B2C;
+extern s32 lbl_80346B30;
+extern s32 lbl_80346B34;
+extern s32 lbl_80346B38;
+extern s32 lbl_80346B3C;
+extern s32 lbl_80346B40;
+extern f32 lbl_80346B44;
+extern s32 lbl_80346B4C;
+extern s32 lbl_80346B98;
+extern s32 lbl_80346B9C;
+extern s32 lbl_80347324;
+extern s32 lbl_8034733C;
+extern f32 lbl_80302A00[7];
+extern RingMdl* fn_801D497C(void* p);
+extern void fn_801D4954(RingMdl* m);
+extern void fn_801D5340(RingMdl* m, s32 c, s32 d, f32 z, f32 ang, f32 a, f32 b);
+extern void fn_800277F4(RingMdl** m, s32 n, f32* ang);
+extern void fn_80027484(RingMdl** m, s32 n, s32 step);
+extern s32 fn_80026FEC(RingTask* o, s32* p);
+extern void fn_80026B20(RingTask* o, RingMdl** a, RingMdl** b, RingMdl** c, s32 dir);
+
+#define RING_LOAD(n) fn_801D497C(fn_801D68C4(lbl_80347628, n))
+#define RING_Z(k) (0.001f * (k) + -1.2f)
+
+/* A colour as 0xAARRGGBB. */
+static inline u32 RingColor(u8 a, u8 r, u8 g, u8 b)
+{
+    return (a << 24) + (r << 16) + (g << 8) + b;
+}
+
+void fn_80025624(RingTask* o)
+{
+    NJS_POINT3 p;
+    NJS_POINT3 q;
+    NJS_POINT3 axis;
+    NJS_MATRIX m;
+    RingMdl* sel;
+    RingMdl* next;
+    RingMdl* prev;
+    RingMenu* menu;
+    s32 i;
+    s32 k;
+    f32 a;
+    f32 fade;
+    u8 c;
+
+    switch (o->state) {
+    case 0:
+    case 0xfe:
+        lbl_80346B48 = o;
+        o->mdl = fn_801E1C7C(0x58);
+        o->mdl[0] = RING_LOAD(0xd);
+        o->mdl[1] = RING_LOAD(0xf);
+        o->mdl[2] = RING_LOAD(0x11);
+        o->mdl[3] = RING_LOAD(0xb);
+        o->mdl[4] = RING_LOAD(0xc);
+        o->mdl[5] = RING_LOAD(0xe);
+        o->mdl[6] = RING_LOAD(0x10);
+        o->mdl[7] = RING_LOAD(0x34);
+        o->mdl[8] = RING_LOAD(0x36);
+        o->mdl[9] = RING_LOAD(0x38);
+        o->mdl[10] = RING_LOAD(0x32);
+        o->mdl[11] = RING_LOAD(0x33);
+        o->mdl[12] = RING_LOAD(0x35);
+        o->mdl[13] = RING_LOAD(0x37);
+        o->mdl[14] = RING_LOAD(0x15);
+        o->mdl[17] = RING_LOAD(0x15);
+        o->mdl[15] = RING_LOAD(0x1f);
+        o->mdl[16] = RING_LOAD(0x20);
+        o->mdl[18] = RING_LOAD(0xa);
+        o->mdl[19] = RING_LOAD(0x9);
+        o->mdl[20] = RING_LOAD(0x1d);
+        o->mdl[21] = RING_LOAD(0x1e);
+        fn_800277F4(o->mdl, o->holder->menu->count, lbl_80302A00);
+        lbl_80346B40 = 0;
+        lbl_80346B3C = 0;
+        lbl_80346B4C = 0;
+        lbl_80346B12 = o->holder->menu->side;
+        lbl_80346B28 = 0.0f;
+        lbl_80346B24 = 1.0f;
+        lbl_80346B20 = 1.0f;
+        lbl_80346B34 = 1;
+        lbl_80346B18 = 1.0f;
+        lbl_80346B14 = 1.0f;
+        lbl_80346B2C = 0.0f;
+        lbl_80346B1C = 0.0f;
+        lbl_80346B38 = 0;
+        lbl_80346B44 = 0.0f;
+        lbl_80346B30 = 0;
+        lbl_80346B9C = 0;
+        lbl_80346B98 = 0;
+        o->z = -1.3f;
+        o->state = 4;
+        break;
+    case 1:
+        break;
+    case 2:
+        if (fn_80026FEC(o, &lbl_80346B9C) == 1) {
+            o->holder->menu->cursor = 3;
+            o->state = 4;
+            lbl_80346B98 = 1;
+        }
+        break;
+    case 3:
+        if (lbl_80346B48 != o) {
+            lbl_80346B48 = NULL;
+        }
+        lbl_80346B38++;
+        fn_80027484(o->mdl, o->holder->menu->count, lbl_80346B38);
+        fn_800277F4(o->mdl, o->holder->menu->count, lbl_80302A00);
+        if (lbl_80346B38 == 2) {
+            for (i = 0; i < 7; i++) {
+                fn_801D4954(o->mdl[i]);
+                o->mdl[i] = NULL;
+            }
+            o->mdl[0] = RING_LOAD(0xd);
+            o->mdl[1] = RING_LOAD(0xf);
+            o->mdl[2] = RING_LOAD(0x11);
+            o->mdl[3] = RING_LOAD(0xb);
+            o->mdl[4] = RING_LOAD(0xc);
+            o->mdl[5] = RING_LOAD(0xe);
+            if (lbl_80346B98 == 1 && o->holder->menu->side == 0) {
+                o->mdl[6] = RING_LOAD(0x12);
+            } else {
+                o->mdl[6] = RING_LOAD(0x10);
+            }
+            fn_800277F4(o->mdl, o->holder->menu->count, lbl_80302A00);
+            o->state = 4;
+        }
+        break;
+    case 4:
+        if (lbl_80347324 == 0) {
+            if (lbl_80346B9C == 0 && o->holder->menu->avail[6] == 2) {
+                o->holder->menu->cursor = -1;
+                o->state = 2;
+                o->holder->menu->cmd = 0;
+            }
+            menu = o->holder->menu;
+            if (lbl_80346B12 != menu->side) {
+                lbl_80346B2C = 0.0f;
+                lbl_80346B1C = 0.0f;
+                o->state = 3;
+                lbl_80346B38 = 0;
+                if (lbl_80346B98 == 1) {
+                    if (o->holder->menu->side != 0) {
+                        fn_801D4954(o->mdl[6]);
+                        o->mdl[6] = RING_LOAD(0x10);
+                        fn_801D4954(o->mdl[13]);
+                        o->mdl[13] = RING_LOAD(0x37);
+                    } else {
+                        fn_801D4954(o->mdl[6]);
+                        o->mdl[6] = RING_LOAD(0x12);
+                        fn_801D4954(o->mdl[13]);
+                        o->mdl[13] = RING_LOAD(0x39);
+                    }
+                }
+                fn_80027484(o->mdl, o->holder->menu->count, lbl_80346B38);
+                fn_800277F4(o->mdl, o->holder->menu->count, lbl_80302A00);
+                for (i = 0; i < 7; i++) {
+                    sel = o->mdl[i];
+                    if (o->holder->menu->avail[i] == 0) {
+                        fn_801D5340(sel, 0, 0, RING_Z(i), lbl_80302A00[i], 0.5f, 1.0f);
+                    } else {
+                        fn_801D5340(sel, 0, 0, RING_Z(i), lbl_80302A00[i], 1.0f, 1.0f);
+                    }
+                }
+                fn_801D5340(o->mdl[20], 0, 0, -1.1880001f, 0.0f, 1.0f, 1.0f);
+                fn_801D5340(o->mdl[21], 0, 0, -1.1880001f, 0.0f, 1.0f, 1.0f);
+                fn_801D5340(o->mdl[19], 0, 0, RING_Z(i), 0.0f, 1.0f, 1.0f);
+                fn_801D5340(o->mdl[18], 0, 0, RING_Z(i + 1), 0.0f, 1.0f, 1.0f);
+                lbl_80346B12 = o->holder->menu->side;
+                break;
+            }
+            switch (menu->cmd) {
+            case 0:
+                break;
+            case 1:
+                lbl_80346B40 = -1;
+                lbl_80346B3C = 3;
+                lbl_80346B4C = o->holder->menu->cursor;
+                break;
+            case 2:
+                lbl_80346B40 = 1;
+                lbl_80346B3C = 3;
+                lbl_80346B4C = o->holder->menu->cursor;
+                break;
+            }
+            if (lbl_80346B40 != 0) {
+                lbl_80346B3C--;
+                axis.x = 0.0f;
+                axis.y = 0.0f;
+                axis.z = 1.0f;
+                for (i = 0; i < o->holder->menu->count; i++) {
+                    p.x = 19.0f + o->mdl[i]->x - 102.0f;
+                    p.y = 19.0f + o->mdl[i]->y - 381.0f;
+                    p.z = 0.0f;
+                    njUnitMatrix(m);
+                    njRotate(m, &axis, -lbl_80346B40 * -0x71c);
+                    njCalcPoint(m, &p, &q);
+                    o->mdl[i]->x = 102.0f + (q.x - 19.0f);
+                    o->mdl[i]->y = 381.0f + (q.y - 19.0f);
+                }
+                k = lbl_80346B40;
+                lbl_80346B2C = 60.0f * k + lbl_80346B2C;
+                for (i = 0; i < 7; i++) {
+                    lbl_80302A00[i] = (s32)(182.04445f * (lbl_80346B2C + -180.0f * (i + 1)));
+                }
+                if (30.0f + lbl_80346B2C <= 180.0f || 0.0f <= lbl_80346B2C - 30.0f) {
+                    if ((s32)lbl_80346B2C == 0) {
+                        lbl_80346B2C = 0.0f;
+                    }
+                    if ((s32)lbl_80346B2C == -121) {
+                        lbl_80346B2C = 180.0f;
+                    }
+                }
+                if (lbl_80346B3C <= 0) {
+                    o->holder->menu->cursor = lbl_80346B4C + k;
+                    if (o->holder->menu->cursor < 0) {
+                        o->holder->menu->cursor = 6;
+                    }
+                    if (o->holder->menu->cursor >= 7) {
+                        o->holder->menu->cursor = 0;
+                    }
+                    lbl_80346B40 = 0;
+                } else {
+                    o->holder->menu->cursor = -1;
+                }
+                lbl_80346B1C = lbl_80346B2C / 6.0f / 2.0f;
+                lbl_80346B44 = (s32)(182.04445f * (-15.0f * lbl_80346B1C / 15.0f));
+            }
+            prev = NULL;
+            next = NULL;
+            sel = NULL;
+            fn_80026B20(o, &sel, &next, &prev, lbl_80346B40);
+            if ((u32)o->mdl[14] > 0x8CFFFFFF) {
+                o->mdl[14] = NULL;
+                o->mdl[14] = NULL;
+            }
+            fn_801D4954(o->mdl[14]);
+            o->mdl[14] = NULL;
+            if (sel == NULL) { /* the original stores the 0 back */
+                sel = NULL;
+            }
+            o->mdl[14] = fn_801D497C(sel);
+            if (lbl_80346B40 != 0) {
+                if (next == NULL) { /* as above */
+                    next = NULL;
+                }
+                fn_801D4954(o->mdl[17]);
+                o->mdl[17] = NULL;
+                o->mdl[17] = fn_801D497C(next);
+            }
+            for (i = 0; i < 7; i++) {
+                sel = o->mdl[i];
+                if (o->holder->menu->avail[i] == 0) {
+                    fn_801D5340(sel, 0, 0, RING_Z(i), lbl_80302A00[i], 0.5f, 1.0f);
+                } else {
+                    fn_801D5340(sel, 0, 0, RING_Z(i), lbl_80302A00[i], 1.0f, 1.0f);
+                }
+            }
+            sel = o->mdl[20];
+            fn_801D5340(sel, 0, 0, -1.1880001f, 0.0f, 1.0f, 1.0f);
+            sel = o->mdl[21];
+            fn_801D5340(sel, 0, 0, -1.1880001f, 0.0f, 1.0f, 1.0f);
+            sel = o->mdl[19];
+            fn_801D5340(sel, 0, 0, RING_Z(i), lbl_80346B44, 1.0f, 1.0f);
+            sel = o->mdl[18];
+            fn_801D5340(sel, 0, 0, RING_Z(i + 1), 0.0f, 1.0f, 1.0f);
+            if (o->holder->menu->cursor != -1) {
+                lbl_80346B18 = 1.0f;
+                sel = o->mdl[7 + o->holder->menu->cursor];
+                if (o->holder->menu->lock != 0) {
+                    sel->sub->color = RingColor(0xff, 0xc8, 0xc8, 0xc8);
+                    fn_801D5340(sel, 0, 0, RING_Z(i + 2), 0.0f, 1.0f, 1.0f);
+                    lbl_80346B30 = 0;
+                } else {
+                    if (lbl_80346B30 >= 0 && lbl_80346B30 < 3) {
+                        c = (3 - lbl_80346B30) * 0x15 + 0xc0;
+                        sel->sub->color = RingColor(0xff, c, c, 0xc0);
+                        fn_801D5340(sel, 0, 0, RING_Z(i + 2), 0.0f, 1.0f, 1.0f);
+                    } else {
+                        sel->sub->color = RingColor(0xff, 0xc8, 0xc8, 0xc8);
+                        fn_801D5340(sel, 0, 0, RING_Z(i + 2), 0.0f, 1.0f, 1.0f);
+                        lbl_80346B30 = 4;
+                    }
+                    lbl_80346B30++;
+                }
+            } else {
+                fade = lbl_80346B18 - 0.33333334f;
+                lbl_80346B30 = 0;
+                lbl_80346B18 = fade;
+                lbl_80346B14 = 1.0f - fade;
+                if (o->holder->menu->cursor == -1) {
+                    a = o->holder->menu->avail[lbl_80346B4C] == 0 ? 0.5f : 1.0f;
+                } else {
+                    lbl_80346B18 = 1.0f;
+                    a = 0.5f;
+                }
+                sel = prev;
+                sel->sub->color = RingColor(0xff, 0xc8, 0xc8, 0xc8);
+                fn_801D5340(sel, 0, 0, RING_Z(i + 2), 0.0f, a, fade);
+            }
+            if (o->holder->menu->cursor == -1 || o->holder->menu->avail[o->holder->menu->cursor] == 0) {
+                lbl_80346B24 -= 0.33333334f;
+                lbl_80346B20 = 1.0f - lbl_80346B24;
+                if (o->holder->menu->cursor == -1) {
+                    if (o->holder->menu->avail[lbl_80346B4C] == 0) {
+                        a = 0.5f;
+                    } else {
+                        a = 1.0f;
+                    }
+                } else {
+                    lbl_80346B24 = 1.0f;
+                    a = 0.5f;
+                }
+            } else {
+                a = 1.0f;
+                lbl_80346B24 = a;
+            }
+            fn_801D5340(o->mdl[14], 0, 0, RING_Z(i + 3), 0.0f, a, lbl_80346B24);
+            if (lbl_80346B40 != 0) {
+                k = lbl_80346B4C + lbl_80346B40;
+                if (k < 0) {
+                    k += 7;
+                } else if (k > 6) {
+                    k -= 7;
+                }
+                fn_801D5340(o->mdl[17], 0, 0, RING_Z(i + 4), 0.0f, o->holder->menu->avail[k] == 0 ? 0.5f : 1.0f, lbl_80346B20);
+            }
+            if (o->holder->menu->arrows == 1) {
+                switch (lbl_80346B40) {
+                case 0:
+                    if (lbl_80346B28 > 1.0 || 0.0 > lbl_80346B28) {
+                        lbl_80346B34 *= -1;
+                    }
+                    fn_801D5340(o->mdl[15], 0, 1, -1.09f, 0.0f, 1.0f, lbl_80346B28);
+                    fn_801D5340(o->mdl[16], 0, 1, -1.09f, 0.0f, 1.0f, lbl_80346B28);
+                    lbl_80346B28 += lbl_80346B34 / 15.0f;
+                    break;
+                case 1:
+                    lbl_80346B34 = 1;
+                    lbl_80346B28 = 1.0f;
+                    fn_801D5340(o->mdl[16], 0, 1, -1.09f, 0.0f, 1.0f, lbl_80346B28);
+                    lbl_80346B28 = 0.0f;
+                    break;
+                case -1:
+                    lbl_80346B34 = 1;
+                    lbl_80346B28 = 1.0f;
+                    fn_801D5340(o->mdl[15], 0, 1, -1.09f, 0.0f, 1.0f, lbl_80346B28);
+                    lbl_80346B28 = 0.0f;
+                    break;
+                }
+            } else {
+                lbl_80346B34 = -1;
+                lbl_80346B28 = 0.0f;
+            }
+            lbl_80346B12 = o->holder->menu->side;
+        }
+        if (lbl_8034733C == 4) {
+            lbl_80346B9C = 0;
+            lbl_80346B98 = 0;
+        }
+        break;
+    case 5:
+        for (i = 0; i < 22; i++) {
+            fn_801D4954(o->mdl[i]);
+        }
+        o->state = 0xff;
+        break;
+    case 0xff:
+        o->flags |= 0x40;
+        break;
+    }
 }

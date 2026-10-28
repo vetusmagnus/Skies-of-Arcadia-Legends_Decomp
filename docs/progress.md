@@ -1249,6 +1249,22 @@ More (2026-10-27)
   differ in registers. It only inlines fully under GC/1.3: under 1.3.2 it goes over the inline
   budget (matching.md). Whether this unit was built with 1.3 is open. Everything that matches in
   the unit is identical under both.
+- fn_80025624 (5.3 KB, unit_80020B50.c, the seven-item ring menu) matches. Its colour is an
+  inline `RingColor(a, r, g, b)`, its angle table a fully unrolled loop, and fn_801D5340 takes
+  its two integer flags before its four floats (matching.md has the details). The unit's
+  `fn_801D68C4` now returns `void*` (fn_80023FEC is unchanged), fn_802268E8 takes its task
+  callback as `void*` (as the other units declare it) so `fn_80025624` keeps its real
+  prototype, and the ring's arc offset is -1.1880001f (0xBF981063, not -1.188f).
+- fn_800AE4E0 (4.7 KB, unit_800972AC.c, the six neighbours of a hex-spiral cell) and its
+  byte-identical copy fn_800DA744: a near miss in [near/fn_800AE4E0.c](near/fn_800AE4E0.c),
+  structure exact, 151 instructions (430 fdiff lines) differ in registers.
+- fn_800A4924 (6.2 KB, unit_800972AC.c, a ribbon effect): a near miss in
+  [near/fn_800A4924.c](near/fn_800A4924.c), instructions exact but one scheduling line; the
+  callee-saved registers are a different grouping (1066 lines). fn_800A10A8 now has its third
+  parameter (`s32 n`), as unit_800B2DA0 already declares it; it still matches.
+- fn_800A9D24 (5.4 KB, unit_800972AC.c, a screen-quad effect): a near miss in
+  [near/fn_800A9D24.c](near/fn_800A9D24.c), 24 fdiff lines, all volatile registers in its
+  texture-scroll block.
 
 ### Opus pass over the remaining near misses under 632 bytes (2026-10-27)
 

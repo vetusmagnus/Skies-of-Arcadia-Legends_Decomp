@@ -1445,7 +1445,7 @@ void fn_8009E804(ItemList_8009E804 *list, s32 idx) {
     list->count--;
 }
 
-u32 *fn_800A10A8(u32 *base, u32 i)
+u32 *fn_800A10A8(u32 *base, u32 i, s32 n)
 {
     u32 *p = base + (2 * i + 1);
     if (p == NULL) {
