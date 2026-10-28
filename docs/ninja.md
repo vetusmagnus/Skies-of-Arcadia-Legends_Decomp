@@ -181,7 +181,7 @@ Logged, not integrated as matches. Functions marked * are in the unit as NonMatc
   - Also ruled out (all fold to one register): every GC compiler from 1.0 to 3.0a5.2 at
     `-O2`..`-O4,p`/`-O4,s`, `-opt` no-cse/no-prop/no-lifetimes/no-loop-invariants and other
     switches, `-inline` deferred/auto/smart, C++ mode; `extern volatile` / non-volatile `AT_ADDRESS`
-    unions, separate same-address symbols, const/enum/global-const addresses, pointers returned by
+    unions, unions and structs with `volatile` members, separate same-address symbols, const/enum/global-const addresses, pointers returned by
     an inline function, `register` pointers, pointer parameters per write and per call, nested
     `POS2`+`POS1` helpers, inlines defined after use, indexed and pointer loops. Test files are in
     `build/agents/fifo/` (local).
