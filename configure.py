@@ -439,6 +439,7 @@ config.libs += [
         "progress_category": "sdk",
         "src_dir": "extern/sdk",
         "objects": [
+            Object(Matching, "dolphin/os/OSFatal.c"),
             Object(Matching, "dolphin/os/OSFont.c"),
             Object(Matching, "dolphin/os/OSReboot.c"),
             Object(Matching, "dolphin/os/OSThread.c"),

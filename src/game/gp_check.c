@@ -23,9 +23,9 @@ extern void* lbl_803476B4;
 extern GXRenderModeObj lbl_80313550;
 
 extern void fn_801DBA70(const char* file, s32 line, const char* msg, ...);
-extern void fn_8023E928(GXRenderModeObj* rm);
+extern void VIConfigure(const GXRenderModeObj* rm);
 extern void* VIGetNextFrameBuffer(void);
-extern void fn_8024DEA8(void);
+extern void GXAbortFrame(void);
 extern void fn_8024DF5C(u16 token);
 extern u16 fn_8024E014(void);
 extern void fn_8024E020(void);
@@ -181,7 +181,7 @@ void fn_801D1ED4(void) {
     base = GXGetFifoBase(cpu);
     size = GXGetFifoSize(cpu);
     VIWaitForRetrace();
-    fn_8024DEA8();
+    GXAbortFrame();
     GXInitFifoBase(&fifo, fb, 0x10000);
     GXSetCPUFifo(&fifo);
     GXSetGPFifo(&fifo);
@@ -244,7 +244,7 @@ void fn_801D1C04(void) {
     }
     GXAdjustForOverscan(lbl_803476C0, &lbl_80313550, 0, 0);
     lbl_803476C0 = &lbl_80313550;
-    fn_8023E928(lbl_803476C0);
+    VIConfigure(lbl_803476C0);
 }
 
 void fn_801D1B28(void) {
