@@ -756,6 +756,19 @@ typedef struct Plane {
     NJS_POINT3 n;
 } Plane;
 extern f32 fn_8028FD98(Ray *r, Plane *pl, NJS_POINT3 *out);
+extern void fn_801D81C0(void* a, void* obj, s32 d, s32 e, s32 g, f32 f1, f32 f2, f32 f3);
+/* ADD: a 12-byte record: type tag 0x23, two shorts, one float. */
+typedef struct Rec23 {
+    s32 type;  /* 0x00 */
+    s16 s4;    /* 0x04 */
+    s16 s6;    /* 0x06 */
+    f32 f8;    /* 0x08 */
+} Rec23;
+extern f32 lbl_8034BEF0;
+extern f32 lbl_8034BEEC;
+typedef struct Src { s16 n0; s16 n2; } Src;
+typedef struct Hdr_801DF450 { void *data; s32 count; } Hdr_801DF450;
+extern s32 fn_801DEF3C(Hdr_801DF450 *h, Src *a, void *b);
 
 void fn_801D49E4(s32 a, s32 b, s32 c, s32 d, f32 p1, f32 p2, f32 p3, f32 p4) {
     fn_801D4A2C(a, b, c, &lbl_80347568, d, 1.0f, 1.0f, p1, p2, p3, p4);
@@ -3726,4 +3739,79 @@ s32 fn_801D3EB4(NJS_POINT3 *out, NJS_POINT3 *p1, NJS_POINT3 *p2, Tri *t)
         out->z = best.z;
     }
     return res;
+}
+
+void fn_801D8118(void* a, f32 f1, f32 f2, s16 b, f32 f3, s16 c, f32 f4, s32 d, s32 e, s32 g) {
+    Rec23* o;
+    o = fn_801E1C7C(12);
+    o->s4 = b;
+    o->s6 = c;
+    o->type = 0x23;
+    o->f8 = f2;
+    fn_801D81C0(a, o, d, e, g, f1, f3, f4);
+    fn_801E17E0(o);
+}
+
+s32 fn_801DB6B0(void)
+{
+    s32 i;
+
+    for (i = 0; i < 16; i++) {
+        if (lbl_80312D00[i] != 0) {
+            break;
+        }
+    }
+    if (i >= 16) {
+        lbl_803474DC = 0;
+    }
+    return lbl_803474DC;
+}
+
+void fn_801DD3B8(NJS_VECTOR *out1, NJS_VECTOR *out2, Angle *rot)
+{
+    NJS_MATRIX m;
+
+    njUnitMatrix(m);
+    njRotateZXY(m, rot[0], rot[1], rot[2]);
+    njCalcVector(m, &lbl_802F6694, out1);
+    njCalcVector(m, &lbl_802F66A0, out2);
+    out1->x = -out1->x;
+    out1->y = -out1->y;
+    out1->z = -out1->z;
+}
+
+u16 fn_801DD544(NJS_VECTOR *v)
+{
+    f32 len = fn_80291A5C(v->x * v->x + v->z * v->z);
+    f32 ang;
+
+    if (lbl_8034BEEC != v->y || lbl_8034BEEC != len) {
+        ang = (f32)atan2(v->y, len);
+        lbl_8030EA10[0] = 0;
+        return (u16)(s32)(lbl_8034BEF0 * ang);
+    }
+    lbl_8030EA10[0] = 1;
+    return 0;
+}
+
+void *fn_801DF450(Src *a, void *b)
+{
+    Hdr_801DF450 *h;
+    s32 n;
+
+    n = a->n2;
+    if (n < 3 || a->n0 < 3) {
+        return 0;
+    }
+    h = fn_801E1C7C(n * 0x50 + 8);
+    if (h == 0) {
+        return 0;
+    }
+    h->data = h + 1;
+    h->count = n;
+    if (fn_801DEF3C(h, a, b) == 0) {
+        fn_801E17E0(h);
+        h = 0;
+    }
+    return h;
 }

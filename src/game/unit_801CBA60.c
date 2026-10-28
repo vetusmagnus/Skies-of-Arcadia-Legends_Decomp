@@ -59,6 +59,7 @@ AkFio* fn_801C63EC(const char* name);
 void fn_801C6384(AkFio* f);
 AkFio* fn_801C64DC(const char* name);
 void fn_801C6C7C(AkFio* f);
+extern s32 fn_801CB460(s32 type);
 
 /* 1 once the open file is done (state 3), 2 on an error (state 4), else 0. */
 static inline s32 FioResult(AkFio* f) {
@@ -917,4 +918,29 @@ s32 fn_801CBE38(void) {
         }
     }
     return 3;
+}
+
+s16* fn_801CB5F4(s16* p, s16 lo, s16 hi) {
+    s32 c;
+    s32 n;
+    s32 stride;
+    if (p == NULL) {
+        return NULL;
+    }
+    do {
+        c = p[0] & 0xFF;
+        if (lo <= c && hi >= c) {
+            return p;
+        }
+        p++;
+        stride = fn_801CB460(c);
+        if (stride >= 0) {
+            n = p[0];
+            p++;
+        } else {
+            n = (u16)stride;
+        }
+        p += n;
+    } while (c != 0xFF);
+    return NULL;
 }

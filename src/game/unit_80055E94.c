@@ -334,7 +334,6 @@ typedef struct {
     u8 pad200[8];
     f32 f208;            /* 0x208 */
 } CamChr;
-
 typedef struct {
     u8 pad0[0x1c];
     f32 pos[3];          /* 0x1C */
@@ -343,7 +342,6 @@ typedef struct {
     u8 pad40[0xc];
     CamChr* chr;         /* 0x4C */
 } CamBody;
-
 typedef struct {
     u8 pad0[0x24];
     CamBody* body;       /* 0x24 */
@@ -1428,6 +1426,42 @@ typedef struct Block {
 } Block;
 typedef struct Rec16 { s32 w[4]; } Rec16;
 typedef struct Rec24 { s32 w[6]; } Rec24;
+/* Work of this task: p0 links to a record whose 0x24 link holds the 0x4c link to a record with s16 at 0x6. */
+typedef struct WkLink2 {
+    u8 pad_0[0x6];
+    s16 s6;
+} WkLink2;
+typedef struct WkLink1 {
+    u8 pad_0[0x4c];
+    WkLink2 *p4c;
+} WkLink1;
+typedef struct WkTop {
+    u8 pad_0[0x24];
+    WkLink1 *p24;
+} WkTop;
+typedef struct Work62 {
+    WkTop *p0;
+    s16 s4;
+} Work62;
+s16 fn_80010CBC(s16 i);
+typedef struct TblObj {
+    s8 kind;
+    u8 pad1[7];
+    s16 x8;
+} TblObj;
+typedef struct TblEnt_8006B5B8 {
+    TblObj *f0;
+    void *f4;
+    u32 f8;
+    u8 fc;
+    u8 pad[3];
+} TblEnt_8006B5B8;
+extern void *fn_802268E8(void *a, void *fp);
+void fn_8006BEFC(O6BEFC *o);
+extern s8 lbl_803092F4[12];
+extern s8 lbl_80347335;
+extern void fn_8006C8DC(char *, char *);
+extern void fn_80074E2C(char *, char *, void *, int, int);
 
 void fn_80055E94(u8 *p) {
     p[0x18] |= 0x40;
@@ -7369,4 +7403,132 @@ void fn_80072318(Block* src, Block* dst, s16 n)
         }
         break;
     }
+}
+
+void fn_80062444(Task *task) {
+    Work62 *w;
+    w = task->work;
+    if (w->p0->p24->p4c->s6 != w->s4) {
+        task->state = 2;
+    }
+    switch (task->state) {
+    case 0:
+        task->state = 1;
+        fn_80075FF0(w->p0, 0x20, -1);
+        lbl_80346BD8->x88 = 1;
+        lbl_80346BD8->x8a = 0;
+        lbl_80346BD8->x8c = 0xf;
+        break;
+    case 1:
+        break;
+    case 2:
+    case 3:
+        task->flags |= 0x40;
+        break;
+    }
+}
+
+void fn_80069C24(s16 a, s16 i, s32 b, s8 v) {
+    lbl_80309700[i]->work->x3c = 0;
+    if (lbl_80309DE4[i]->bits & 0x6100 || lbl_80309DE4[i]->bits & 0x1000) {
+        lbl_80309700[i]->work->x44 = -1;
+    } else {
+        lbl_80309700[i]->work->x3c = fn_80010CBC(a) * 2;
+        lbl_80309700[i]->work->x44 = v;
+    }
+}
+
+s32 fn_8006B5B8(void *key) {
+    s32 i;
+    TblObj *o = 0;
+    for (i = 0; i < 4; i++) {
+        if (lbl_80309E88[i].f4 == key) {
+            o = lbl_80309E88[i].f0;
+            break;
+        }
+    }
+    if (o == 0) {
+        return 0;
+    }
+    switch (o->kind) {
+    case 4:
+        fn_80287274(o->x8 + 1, 0);
+        break;
+    }
+    memset(&lbl_80309E88[i], 0, 0x10);
+    return 0;
+}
+
+s32 fn_8006DCFC(void *a, s16 b, s16 c)
+{
+    O6BEFC *obj;
+    s32 r;
+
+    if (lbl_8030A10C.f6c & 0x80000000) {
+        r = 0;
+    } else {
+        lbl_8030A10C.f6c |= 0x80000000;
+        r = 1;
+    }
+    if (r == 0) {
+        return 0;
+    }
+    obj = fn_802268E8(lbl_803475A8, fn_8006BEFC);
+    fn_80061F58(&obj->s, 0xac, 0);
+    obj->s->p94 = a;
+    obj->s->s98 = b;
+    obj->s->s9a = c;
+    return 1;
+}
+
+s32 fn_8006EDA0(void)
+{
+    s8 *p;
+    s32 c;
+    s32 i;
+
+    i = lbl_80347335;
+    p = &lbl_803092F4[i];
+    for (;;) {
+        i++;
+        p++;
+        if (i >= 12) {
+            return -1;
+        }
+        c = *p;
+        if (c == -1) {
+            return -1;
+        }
+        if (fn_80078610(c) == 0) {
+            continue;
+        }
+        if (lbl_80309DE4[c]->bits & 0x6500) {
+            continue;
+        }
+        if (lbl_80309174[c].x0 == 0xb) {
+            continue;
+        }
+        return c;
+    }
+}
+
+s32 fn_80072DD4(s16 a, s16 b, s16 c, void *d)
+{
+    char buf2[0x20];
+    char buf1[0x20];
+
+    switch (a) {
+    case 0x18:
+    case 0x19:
+    case 0x1d:
+    case 0x1e:
+        sprintf(buf2, lbl_802B0708, b, a);
+        break;
+    default:
+        sprintf(buf2, lbl_802B0708, c, a);
+        break;
+    }
+    fn_8006C8DC(buf1, buf2);
+    fn_80074E2C(buf1, buf2, d, 0, 1);
+    return 1;
 }

@@ -681,6 +681,10 @@ typedef struct Scpt_802139F8 {
 typedef struct Args14 { s32 i[14]; } Args14;
 void fn_8015596C(void* p);
 void fn_80155944(s32 *a);
+extern SaveData lbl_8030B7F4;
+void fn_801BEAE4(void *a, s32 b);
+void fn_801E74C8(s32 v);
+s32 fn_80100424(void *p);
 
 void fn_801F5334(s8 n) {
     s32 i;
@@ -7996,5 +8000,122 @@ s32 fn_80214270(u32 flags, Scpt *c)
         fn_80155944(a);
         return 0;
     }
+    return 1;
+}
+
+s32 fn_801F59C0(s32 unused, Scpt *s) {
+    f32 *p;
+    u32 v;
+    p = s->cur.f;
+    p++;
+    if (3.4028235e38f == *p) {
+        p++;
+        v = 0x7FFFFFFF;
+    } else {
+        v = (s32)fn_801F6120(&p);
+    }
+    s->cur.f = p;
+    if (lbl_80310B3C[v >> 5] & (1u << (v & 31))) {
+        lbl_80310B3C[v >> 5] &= ~(1u << (v & 31));
+    } else {
+        lbl_80310B3C[v >> 5] |= 1u << (v & 31);
+    }
+    return 0;
+}
+
+s16 fn_801FD8F0(u32 a, Scpt *s) {
+    u16 f = a;
+    u32 flags;
+    s16 r;
+    if (a & 1) {
+        s->cur.u += 1;
+        flags = lbl_80310B3C[32];
+        if ((flags >> 8) & 1) lbl_8030B7F4.chr[0].mp = lbl_8030B7F4.chr[0].mpMax;
+        if (flags & 0x200) lbl_8030B7F4.chr[1].mp = lbl_8030B7F4.chr[1].mpMax;
+        if (flags & 0x400) lbl_8030B7F4.chr[2].mp = lbl_8030B7F4.chr[2].mpMax;
+        if (flags & 0x800) lbl_8030B7F4.chr[3].mp = lbl_8030B7F4.chr[3].mpMax;
+        if (flags & 0x1000) lbl_8030B7F4.chr[4].mp = lbl_8030B7F4.chr[4].mpMax;
+        if (flags & 0x2000) lbl_8030B7F4.chr[5].mp = lbl_8030B7F4.chr[5].mpMax;
+    }
+    r = (f >> 3) & 1;
+    return r;
+}
+
+s16 fn_801FD9B0(u32 a, Scpt *s) {
+    u16 f = a;
+    u32 flags;
+    s16 r;
+    if (a & 1) {
+        s->cur.u += 1;
+        flags = lbl_80310B3C[32];
+        if ((flags >> 8) & 1) lbl_8030B7F4.chr[0].hp = lbl_8030B7F4.chr[0].hpMax;
+        if (flags & 0x200) lbl_8030B7F4.chr[1].hp = lbl_8030B7F4.chr[1].hpMax;
+        if (flags & 0x400) lbl_8030B7F4.chr[2].hp = lbl_8030B7F4.chr[2].hpMax;
+        if (flags & 0x800) lbl_8030B7F4.chr[3].hp = lbl_8030B7F4.chr[3].hpMax;
+        if (flags & 0x1000) lbl_8030B7F4.chr[4].hp = lbl_8030B7F4.chr[4].hpMax;
+        if (flags & 0x2000) lbl_8030B7F4.chr[5].hp = lbl_8030B7F4.chr[5].hpMax;
+    }
+    r = (f >> 3) & 1;
+    return r;
+}
+
+s32 fn_801FDDB0(u32 a, Scpt *s) {
+    u16 f = a;
+    f32 *p;
+    s32 v;
+    if (a & 1) {
+        p = s->cur.f + 1;
+        if (3.4028235e38f == *p) {
+            p++;
+            v = 0x7FFFFFFF;
+        } else {
+            v = (s32)fn_801F6120(&p);
+        }
+        s->cur.f = p;
+        fn_801BEAE4(lbl_8034759C, v);
+    }
+    if ((f & 2) && lbl_803473C0 == 0) return 0;
+    if (f & 8) return 0;
+    return 1;
+}
+
+s32 fn_801FDF0C(u32 a, Scpt *s) {
+    u16 f = a;
+    f32 *p;
+    s32 v;
+    if (a & 1) {
+        p = s->cur.f + 1;
+        if (3.4028235e38f == *p) {
+            p++;
+            v = 0x7FFFFFFF;
+        } else {
+            v = (s32)fn_801F6120(&p);
+        }
+        s->cur.f = p;
+        if (v != 0) v = -1;
+        fn_801E74C8(v);
+    }
+    if (f & 8) return 1;
+    return 0;
+}
+
+s32 fn_801FF13C(u32 a, Scpt *s) {
+    u16 f = a;
+    u8 *q;
+    u8 *end;
+    if (a & 1) {
+        q = s->cur.b + 4;
+        end = q + s->cur.u[1];
+        s->cur.b = q + 4;
+        fn_80100424(end);
+        s->work.p = end;
+    }
+    if (f & 2) {
+        if (fn_8010038C(s->work.p) == 1) {
+            s->work.p = 0;
+            return 0;
+        }
+    }
+    if (f & 8) return 0;
     return 1;
 }

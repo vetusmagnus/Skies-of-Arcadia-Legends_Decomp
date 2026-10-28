@@ -2412,6 +2412,8 @@ typedef struct Self_8018C00C {
     Obj48 panel;      /* 0x74 */
     s8 *data;         /* 0xBC */
 } Self_8018C00C;
+extern s32 fn_80194ECC(void);
+extern void fn_80194F3C(void);
 
 s32 fn_8015DC6C(Obj_8015DC6C* self, Src* src)
 {
@@ -10502,4 +10504,23 @@ void fn_8018C00C(Self_8018C00C *self, f32 a, s8 unused, s8 mode)
     o->p30->f0 = 0.0f;
     o->p30->f4 = 0.0f;
     o->p44 = fn_801D68C4(lbl_803470F0, 4);
+}
+
+void fn_8017BB1C(void) {
+    s16 *base = camp_work.p04;
+    CampCtrl *c = &lbl_80307638[11];
+    s32 v = fn_80194ECC();
+    s16 *row = base + c->cur[0].sel;
+    s32 x = row[17];
+    s32 st = c->cur[2].sel;
+    switch (st) {
+    case 0:
+        row[12] = v; fn_801929B8(0x16);
+        break;
+    case 1:
+        if (x == v) { row[17] = -1; fn_801929B8(2); }
+        else { row[17] = v; fn_801929B8(0x16); }
+        break;
+    }
+    fn_80194F3C();
 }

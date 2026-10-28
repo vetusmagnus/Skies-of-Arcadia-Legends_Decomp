@@ -752,6 +752,16 @@ extern void fn_801315A8(s8 *src);
 extern void fn_80131598(s8 v);
 extern void fn_801315EC(s8 v);
 extern void fn_801315FC(s8 v);
+typedef struct Obj_8014F770 {
+    u8 pad0[0x14];
+    s8 seq[0x81];
+    u8 pad95;
+    s16 x96;
+    s16 x98;
+    s16 x9a;
+    s16 x9c;
+    s16 x9e;
+} Obj_8014F770;
 
 void fn_8013D400(s32 a, s32 b) {
     fn_80136A28(a, b, 3, -1, -1, -1);
@@ -2639,4 +2649,51 @@ void fn_80140800(s32 mode)
     fn_801315EC(mode);
     fn_801315FC(1);
     fn_801316B4(0);
+}
+
+void fn_8014F770(Obj_8014F770 *p)
+{
+    s32 i;
+    s32 state;
+    s8 cur;
+    s8 prev;
+    s8 *q;
+
+    p->x96 = 0;
+    p->x98 = 0;
+    p->x9a = 0;
+    p->x9c = 0;
+    p->x9e = 0;
+    state = 0;
+    prev = -1;
+    q = p->seq;
+    for (i = 0; i < 0x81; i++) {
+        cur = *q;
+        if (prev != cur) {
+            switch (state) {
+            case 0:
+                if (cur != 0) {
+                    p->x98 = i;
+                    state++;
+                }
+                break;
+            case 1:
+                p->x9a = i;
+                p->x96 = 1;
+                state++;
+                break;
+            case 2:
+                p->x9c = i;
+                state++;
+                break;
+            case 3:
+                p->x9e = i;
+                p->x96 = 2;
+                state++;
+                break;
+            }
+        }
+        prev = cur;
+        q++;
+    }
 }

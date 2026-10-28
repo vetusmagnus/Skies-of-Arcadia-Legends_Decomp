@@ -156,6 +156,12 @@ extern char lbl_8034C750;
 extern int strncmp(const char *a, const char *b, u32 n);
 extern char lbl_8034C760;
 extern void fn_80230920(s16 *p, s16 *v);
+typedef struct Ent28 { u8 pad[0x1c]; } Ent28;
+typedef struct Rec3 { u32 hi; u32 *cmd; Ent28 *base; } Rec3;
+extern u32 lbl_80347EF4;
+extern u32 lbl_80347EF8;
+extern Rec3 lbl_80316930;
+extern void fn_802A5D20(u32 hi, Ent28 *dst, u32 *src);
 
 void fn_8022D34C(s32 a, f32 b) {
     if (a > 0) {
@@ -938,4 +944,60 @@ s16 *fn_8023080C(void *p0, s16 *v0, s16 *res0) {
         return tmp;
     }
     return res;
+}
+
+void fn_8022EF58(Node *n, s32 mask) {
+    s16 *cur = NULL;
+    s16 *next;
+
+    if (fn_8022E734(8, n, &cur, &next, 1, 0, 0)) {
+        do {
+            *cur &= 0xfff;
+            *cur |= mask;
+            cur = next;
+        } while (fn_8022E734(8, n, &cur, &next, 0, 0, 0));
+    }
+}
+
+void fn_8022FCE4(Node *n, s32 mask) {
+    s16 *cur = NULL;
+    s16 *next;
+
+    if (fn_8022E734(8, n, &cur, &next, 1, 0, 0)) {
+        do {
+            cur += 1;
+            *cur &= 0xefff;
+            *cur |= mask;
+            cur = next;
+        } while (fn_8022E734(8, n, &cur, &next, 0, 0, 0));
+    }
+}
+
+u32 fn_8023109C(u32 *cmd, Ent28 *base) {
+    Rec3 *rec = &lbl_80316930;
+    u32 cnt;
+    u32 lo;
+    u32 w;
+    u32 w1;
+    u32 hi;
+    u32 idx;
+
+    while ((u8)(w = *cmd) != 0xff) {
+        w1 = cmd[1];
+        cmd += 2;
+        hi = w1 >> 16;
+        lbl_80347EF4 += hi;
+        cnt = w >> 16;
+        idx = w1 & 0xffff;
+        rec->hi = hi;
+        lo = w & 0x7fff;
+        rec->cmd = cmd;
+        lbl_80347EF8 += hi;
+        if ((s32)(u8)w == 0x2a) {
+            rec->base = base + idx;
+            fn_802A5D20(hi, base + idx, cmd);
+        }
+        cmd += cnt - 1;
+    }
+    return lo;
 }

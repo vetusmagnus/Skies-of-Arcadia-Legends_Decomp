@@ -24,17 +24,23 @@ typedef struct Ent {
     u8 pad_c[0x6];
     s16 x12;
     s32 x14;
-    u8 pad_18[0x24];
+    u8 pad_18[0x8];
+    f32 f20;
+    u8 pad_24[0x4];
+    s32 x28;
+    u8 pad_2c[0x10];
     u16 h3c;
     u16 h3e;
-    u8 pad_40[0x4];
+    u16 h40;
+    u8 pad_42[0x2];
     s16 h44;
     s16 h46;
     s16 h48;
     u8 pad_4a[0xe];
     f32 f58;
     f32 f5c;
-    u8 pad_60[0xe];
+    u8 pad_60[0xc];
+    s16 x6c;
     s16 h6e;
     s16 s70;
     u8 pad_72[0x17c];
@@ -64,11 +70,12 @@ typedef struct {
 extern Obj* fn_80023FEC(s16);
 extern void fn_801D52F4(Obj*, f32, f32, f32, f32, int, int);
 typedef struct HudEnt {
-    u8 pad0[0x14];
-    s32 s14;
+    u8 pad_0[0x14];
+    s32 x14;
     s32 s18;
-    u8 pad1c[0x100 - 0x1c];
+    u8 pad_1c[0xe4];
     s8 kind;
+    u8 pad_101[0x3];
 } HudEnt;
 typedef struct HudSlot {
     u8 pad0[0x24];
@@ -208,6 +215,12 @@ extern void* lbl_80347628;
 extern s32 lbl_80346B4C;
 extern s32 lbl_80346B98;
 extern void* fn_801D68C4(void* a, s32 b);
+typedef struct KindRec {
+    u8 kind;          /* 0x00 */
+    u8 pad1[0x23];
+    s16 mode;         /* 0x24 */
+} KindRec;
+extern int fn_80014C90(u8 id, int flags);
 
 void fn_80020B50(Top *t, s16 *out1, s16 *out2) {
   Inner *i = t->mid->inner;
@@ -393,8 +406,8 @@ void fn_8002969C(s16 id) {
     w->flags &= ~0x40000000;
     if (lbl_80347394 == 0) {
         w->s2c = lbl_80309DE4[id]->s18;
-        w->s28 = lbl_80309DE4[id]->s14;
-        w->f20 = (f32)lbl_80309DE4[id]->s14;
+        w->s28 = lbl_80309DE4[id]->x14;
+        w->f20 = (f32)lbl_80309DE4[id]->x14;
         w->f68 = fn_800177C0((u8)id, tmp);
     } else {
         w->s2c = 0xff;
@@ -1383,6 +1396,152 @@ void fn_80026B20(RingTask* o, RingMdl** a, RingMdl** b, RingMdl** c, s32 dir)
             }
             break;
         }
+        break;
+    }
+}
+
+s16 fn_800217D0(u32 id, u32 *flags) {
+    s16 r = -1;
+    switch (id) {
+    case 0:
+    case 2:
+        r = 2;
+        break;
+    case 1:
+    case 3:
+        r = 7;
+        break;
+    case 4:
+        r = 6;
+        break;
+    case 5:
+        r = 4;
+        break;
+    case 6:
+        r = 8;
+        break;
+    case 7:
+        r = 5;
+        break;
+    case 8:
+        r = 0xc;
+        break;
+    case 9:
+        r = 0x11;
+        break;
+    case 10:
+        r = 0x14;
+        break;
+    case 11:
+        r = 0x1d;
+        break;
+    case 15:
+        r = 0x13;
+        break;
+    case 12:
+        r = 0x18;
+        break;
+    case 13:
+        r = 0x19;
+        break;
+    case 17:
+        *flags |= 0x100000;
+        r = 4;
+        break;
+    case 14:
+        r = 0xe;
+        break;
+    case 19:
+        r = 0xf;
+        break;
+    case 16:
+    case 18:
+    case 20:
+    case 21:
+    case 22:
+        break;
+    }
+    while (r < 0) {
+    }
+    return r;
+}
+
+int fn_8002188C(KindRec *p) {
+    if ((s8)p->kind >= 12) {
+        return 0x23;
+    }
+    if (fn_80014C90(p->kind, 0x400)) {
+        return 0x23;
+    }
+    if (fn_80014C90(p->kind, 0x800)) {
+        switch (p->mode) {
+        default:
+            return 0x24;
+        case 1:
+        case 3:
+            return 0x25;
+        }
+    }
+    return 0x23;
+}
+
+void fn_8002923C(s16 id, u32 mask, s32 mode) {
+    Ent *e;
+    s32 bits;
+    e = lbl_80302AB0[id];
+    if (e == 0) {
+        return;
+    }
+    if (e->w0 & 0x40000000) {
+        return;
+    }
+    if (mode == 1) {
+        switch (e->x12) {
+        case 1:
+        case 2:
+        case 6:
+        case 8:
+            bits = mask & e->h3c;
+            if ((u16)bits == 0) {
+                return;
+            }
+            e->h40 = e->h40 | bits;
+            lbl_80302AB0[id]->x6c = 0xff;
+            lbl_80302AB0[id]->w0 = lbl_80302AB0[id]->w0 | 0x08000000;
+            return;
+        default:
+            e->h3c = e->h3c & ~mask;
+            return;
+        }
+    }
+    e->h3c = e->h3c & ~mask;
+}
+
+void fn_8002942C(s16 id, s16 n) {
+    Ent *e;
+    HudEnt *s;
+    s32 v;
+    if (lbl_80302AB0[id] == 0) {
+        return;
+    }
+    if (lbl_80302AB0[id]->w0 & 0x40000000) {
+        return;
+    }
+    lbl_80302AB0[id]->x12 = n;
+    switch (n) {
+    case 2:
+        if (lbl_80347394 == 0) {
+            e = lbl_80302AB0[id];
+            s = lbl_80309DE4[id];
+            v = s->x14;
+            if (e->x28 != v) {
+                e->x28 = v;
+                lbl_80302AB0[id]->f20 = (f32)v;
+            }
+        }
+        break;
+    case 9:
+        lbl_80302AB0[id]->w0 = lbl_80302AB0[id]->w0 | 0x02000000;
         break;
     }
 }

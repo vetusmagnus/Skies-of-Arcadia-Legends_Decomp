@@ -6,7 +6,12 @@
 #include <string.h>
 #define PTR(p, off) (*(void**)((u8*)(p) + (off)))
 extern void* fn_80005B9C(void* heap);
-extern void fn_800090F8(s32 packed, s16* p);
+extern void fn_8007E13C(void* a);
+extern void fn_8007E118(void* a);
+extern void fn_8007DFC0(void* a);
+extern void fn_8007DEE0(void* a);
+extern void fn_8001FE44(void* a);
+s32 fn_800090F8(s32 packed, s16* p);
 extern void* lbl_803475A8;
 extern void* fn_802268E8(void* a, void (*cb)(void*));
 extern void* fn_801E1C7C(u32 size);
@@ -977,7 +982,9 @@ typedef struct ChrInfo {
     u8 padA[8];
     s16 state;          u8 pad_14[0x34];
           s8 x48;
-          u8 pad_49[0x13];
+          u8 pad_49[0x7];
+          u32 x50;
+          u8 pad_54[0x8];
     ChrMot* x5c;        /* 0x5c */
     void* x60;          /* 0x60 */
     u8 pad64[4];
@@ -1006,7 +1013,9 @@ typedef struct ChrInfo {
     u32 x1ec;           /* 0x1ec */
 } ChrInfo;
 typedef struct Obj_80017B18 {
-    u8 pad0[0x30];
+    u8 pad_0[0xc];
+    u32 x0c;
+    u8 pad_10[0x20];
     u8 *x30;
 } Obj_80017B18;
 typedef struct ChrWork {
@@ -1225,6 +1234,60 @@ typedef struct {
 typedef struct Slot24 { u32 flags; u8 pad[0x20]; } Slot24;
 /* ADD: lbl_8030A6D4 entries (0x24 bytes) */
 extern Slot24 lbl_8030A6D4[];
+typedef struct HeapBlock {
+    struct HeapBlock* prev; /* 0x0 */
+    struct HeapBlock* next; /* 0x4 */
+    u32 size;               /* 0x8 */
+} HeapBlock;
+extern void fn_80061048(char* s);
+extern void fn_80035FC0(char* name, void* slot, s32 flag);
+typedef struct CE8Pos {
+    u8 pad0[0x1C];
+    NJS_POINT3 p1c;
+} CE8Pos;
+typedef struct CE8Ext {
+    u8 pad0[0x10];
+    f32 x10;
+} CE8Ext;
+typedef struct CE8State {
+    CE8Pos* x0;
+    CE8Ext* x4;
+    u8 pad8[2];
+    s16 xa;
+    u8 padc[0x18 - 0xC];
+    NJS_POINT3 p18;
+    u8 pad24[0x44 - 0x24];
+    f32 x44;
+    s16 x48;
+    u8 pad4a[2];
+    s16 x4c;
+    s16 x4e;
+} CE8State;
+typedef struct CE8Work {
+    u8 pad0[0x4C];
+    CE8State* st;
+} CE8Work;
+extern void fn_802307EC(void* p, void* v, s32 n);
+typedef struct E02Ctr {
+    u16 cur;
+    u16 max;
+    void* x4;
+} E02Ctr;
+typedef struct E02Work {
+    void* x0;
+    u8 pad4[0x4C - 0x4];
+    E02Ctr* ctr;
+} E02Work;
+/* Object reached through extra->obj: a position at 0x1c and three s32 angles at 0x28. */
+typedef struct RotObj {
+    u8 pad0[0x1c];
+    NJS_POINT3 pos;   /* 0x1c */
+    s32 rot[3];       /* 0x28 */
+} RotObj;
+typedef struct RotRef {
+    u8 pad0[0x24];
+    RotObj *obj;      /* 0x24 */
+} RotRef;
 
 void* fn_80005B50(void* heap, u32 size) {
     void* p = fn_80005B9C(heap);
@@ -4837,4 +4900,217 @@ s32 fn_8001F3F0(Task* t, NJS_POINT3* out)
         break;
     }
     return 1;
+}
+
+HeapBlock* fn_80005CEC(HeapBlock* head, HeapBlock* b) {
+    HeapBlock* prev = NULL;
+    HeapBlock* cur = head;
+    while (cur != NULL) {
+        if ((u32)b <= (u32)cur) {
+            break;
+        }
+        prev = cur;
+        cur = cur->next;
+    }
+    b->next = cur;
+    b->prev = prev;
+    if (cur != NULL) {
+        cur->prev = b;
+        if ((u8*)b + b->size == (u8*)cur) {
+            b->size += cur->size;
+            cur = cur->next;
+            b->next = cur;
+            if (cur != NULL) {
+                cur->prev = b;
+            }
+        }
+    }
+    if (prev != NULL) {
+        prev->next = b;
+        if ((u8*)prev + prev->size == (u8*)b) {
+            prev->size += b->size;
+            prev->next = cur;
+            if (cur != NULL) {
+                cur->prev = prev;
+            }
+        }
+        return head;
+    }
+    return b;
+}
+
+s32 fn_800090F8(s32 packed, s16* p) {
+    s32 ret = 1;
+    switch (packed) {
+    case 0:
+        fn_8007E13C(p);
+        break;
+    case 1:
+        fn_8007E118(p);
+        break;
+    case 2:
+        fn_8007DFC0(p);
+        break;
+    case 3:
+        fn_8007DEE0(p);
+        break;
+    case 4:
+        break;
+    case 0x10000:
+        fn_8001FE44(p);
+        break;
+    default:
+        ret = 0;
+        break;
+    }
+    return ret;
+}
+
+void fn_80009750(char* dir, char* name, void* slot) {
+    char path[0x80];
+    char base[0x40];
+    strcpy(base, name);
+    fn_80061048(base);
+    if (dir[0] != '/') {
+        strcpy(path, "/");
+        strcat(path, dir);
+        strcat(path, base);
+        strcat(path, ".STD");
+    } else {
+        sprintf(path, "%s%s.STD", dir, base);
+    }
+    fn_80035FC0(path, slot, 1);
+}
+
+void fn_8000CEE8(Task* task)
+{
+    CE8State* st = ((CE8Work*)task->work)->st;
+    CE8Pos* pos = st->x0;
+    CE8Ext* ext = st->x4;
+
+    st->x4c++;
+    if (st->xa != -1 && st->x4c > st->xa) {
+        task->state = 3;
+    } else {
+        st->x4e = 0;
+        if (st->x44 != 0.0f) {
+            ext->x10 = -1.0f;
+            st->x48 = 0;
+        } else {
+            st->x48 = 1;
+        }
+        fn_80071CF0(&st->p18, &pos->p1c);
+        task->state = 2;
+    }
+}
+
+void fn_8000E02C(Task* task)
+{
+    E02Work* w = task->work;
+    E02Ctr* c;
+
+    c = w->ctr;
+    if (w->x0 == 0) {
+        task->state = 3;
+    }
+    switch (task->state) {
+    case 0:
+        if (c->cur >= c->max) {
+            task->state = 1;
+        } else {
+            c->cur = c->cur + 1;
+        }
+        break;
+    case 1:
+        fn_802307EC(w->x0, &c->x4, 0);
+        break;
+    case 3:
+        task->flags |= 0x40;
+        break;
+    }
+}
+
+void fn_8000F0BC(void)
+{
+    u16 id = lbl_80309E5C.x0;
+
+    if (id == 0xf || id == 0x10 || id == 0x1f) {
+        fn_80035910(0x10004000);
+    } else if (id == 0x6e || id == 0x71 || id == 0x74 || id == 0x78 || id == 0x80 || id == 0x82) {
+        fn_80035910(0x10104000);
+    } else if (id == 0x1e) {
+        fn_80035910(0x10008000);
+    } else {
+        fn_80035910(0x08000000);
+    }
+}
+
+void fn_80011160(s8* ids)
+{
+    s8 i;
+    s8 j;
+    ChrInfo* u;
+    Task* t;
+
+    for (i = 0; i < 12; i++) {
+        t = fn_800215EC(i);
+        if (t != NULL) {
+            u = ((ChrWork*)t->work)->st;
+            for (j = 0; j < 12; j++) {
+                if (u->id == ids[j]) {
+                    break;
+                }
+            }
+            if (j == 12) {
+                u->x164 = 0.0f;
+            }
+        }
+    }
+}
+
+s32 fn_8001C12C(void)
+{
+    ChrInfo* st;
+    s8 i;
+    s8 a = 0;
+    s8 b = 0;
+    Task* t;
+    ChrWork* w;
+    s32 r;
+
+    for (i = 0; i < 12; i++) {
+        t = lbl_80309E24[i];
+        if (t != NULL) {
+            w = t->work;
+            st = w->st;
+            r = fn_80020E10(&w->x10->x0c);
+            if ((s8)r < 0) {
+                if (st->x6 != 0xe) {
+                    a++;
+                }
+            } else {
+                if (st->x6 != 0xe) {
+                    b++;
+                }
+            }
+        }
+    }
+    if (a == 0) {
+        return 1;
+    }
+    return (b != 0) ? 0 : 2;
+}
+
+void fn_8001E50C(NJS_POINT3 *a, NJS_POINT3 *out, RotRef *extra) {
+    NJS_POINT3 d;
+    RotObj *obj = extra->obj;
+    fn_80071CF0(a, &d);
+    d.x = d.x - obj->pos.x;
+    d.y = d.y - obj->pos.y;
+    d.z = d.z - obj->pos.z;
+    obj = extra->obj;
+    fn_800615B4(&d, out, obj->rot);
+    out->x = out->x + obj->pos.x;
+    out->y = out->y + obj->pos.y;
+    out->z = out->z + obj->pos.z;
 }

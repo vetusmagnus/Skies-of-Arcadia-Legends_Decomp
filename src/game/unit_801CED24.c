@@ -51,6 +51,8 @@ extern u8 lbl_80308CF0[0x100];
 extern s32 lbl_80347270;
 extern s32 lbl_80347274;
 extern void fn_8029CFF8(s32 a);
+extern s32 lbl_8034721C;
+extern void GXResetWriteGatherPipe(void);
 
 void fn_801CED24(u32 a, u32 b, u32 c, f32 d, u32 e)
 {
@@ -803,4 +805,22 @@ u32 fn_801D0AB4(u32 x) {
         fn_8029CFF8(1);
     }
     return r;
+}
+
+void fn_801D0ED4(void* a, s32 b, u32 c) {
+    if (lbl_803475D8 != 0) {
+        a = NULL;
+    }
+    if (a != NULL) {
+        GXFlush();
+        if (lbl_8034721C == 0) {
+            fn_802A8E50(a, lbl_80347218, c);
+            lbl_8034721C = 1;
+        } else {
+            fn_802A8D64(a, b, c);
+        }
+        GXResetWriteGatherPipe();
+    } else {
+        fn_802A8E50(a, b, c);
+    }
 }

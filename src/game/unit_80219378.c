@@ -815,6 +815,20 @@ extern void *lbl_802D9620[];
 extern void *lbl_802D9630[];
 extern void fn_8022638C(void **list);
 extern void fn_80226318(void *p);
+extern f32 njSin(s32 a);
+/* Oscillator/damping state: mode 0 reads the value at +4; otherwise the update below runs. */
+typedef struct Osc_802282BC {
+    s32 mode;     /* 0x00 */
+    f32 pos;      /* 0x04 */
+    f32 vel;      /* 0x08 */
+    u8 pad0c[4];
+    f32 f10;      /* 0x10 */
+    f32 f14;      /* 0x14 */
+    f32 f18;      /* 0x18 */
+} Osc_802282BC;
+extern s32 lbl_80347830;
+extern void fn_801A2C40(void);
+extern s32 fn_801A2670(s32 idx, s32 *out);
 
 void fn_80219378(s32 a)
 {
@@ -4172,3 +4186,82 @@ void fn_80220074(Task *t) {
     }
 }
 
+f32 fn_802282BC(Osc_802282BC *o)
+{
+    if (o->mode == 0) {
+        return o->pos;
+    }
+    o->vel = o->vel + (f32)(0.005444444444444445 * njSin((s32)(o->f10 - o->pos)));
+    o->vel = o->vel * o->f18;
+    o->pos = o->pos + (f32)(65536.0 * (o->vel / (3.14159265 * (2.0f * o->f14))));
+    return o->pos;
+}
+
+void fn_8022A5D0(void)
+{
+    fn_801D0B2C();
+    if (lbl_80347830 != 0) {
+        lbl_80347830 = 0;
+        lbl_80311AD4[3] = 2;
+        lbl_8034781C = 0;
+    } else {
+        if (FontIsReady() == 0) {
+            lbl_80311AD4[3] = 2;
+        } else {
+            if (lbl_8034782C != 0) {
+                lbl_8034782C = 0;
+                lbl_80311AD4[3] = 9;
+                fn_801D0B2C();
+            } else {
+                s32 n;
+                s32 v;
+                fn_801A372C();
+                n = lbl_8034781C;
+                v = (n & 1) + 7;
+                lbl_8034781C = n + 1;
+                lbl_80311AD4[3] = v;
+            }
+        }
+    }
+}
+
+void fn_8022B128(Obj *o) {
+    TextPrint(0x18, 0xf8, lbl_802F9238[24]);
+    if (o->x1c == 0 && (lbl_80311A60.p->f8 & 0x100)) {
+        fn_801A2C40();
+        o->xc = fn_801A28F4(&o->x10);
+        switch (o->xc) {
+        case 0:
+            o->x0 = 1;
+            break;
+        case 2:
+        case 3:
+            o->x0 = 3;
+            break;
+        case 1:
+        default:
+            o->x0 = 2;
+            break;
+        }
+    }
+}
+
+void fn_8022B258(Obj *o) {
+    s32 v;
+
+    TextPrint(0x18, 0xf8, lbl_802F9238[20 + o->x10]);
+    TextPrint(0x18, 0x128, lbl_802F9238[22]);
+    if (fn_801A2670(o->x10, &v)) {
+        if (v == 0) {
+            MenuPlaySe(0x14);
+            o->x0 = 5;
+        } else {
+            if (v == -3) {
+                o->xc = 1;
+            }
+            MenuPlaySe(3);
+            o->x0 = 6;
+        }
+        lbl_803475D0 = 0;
+    }
+}

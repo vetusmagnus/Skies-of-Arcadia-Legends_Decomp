@@ -1717,3 +1717,54 @@ instead of an induction variable; an empty `case 5: break;` gives the original's
 switch; `in = (a >= lo && a < hi) ? 1 : 0; if (!in)` gives the `neg/or/srwi` range flag; a hoisted unrolled copy loop
 is the 8x-versus-2x unroll count. Agents given 14 functions of 0x500-0x1400 bytes stop after two or three: this tier needs
 about 6 functions per agent.
+
+## Batch 15b: never-tried functions under 200 bytes (2026-10-28)
+
+16 Haiku 5.5 agents (model set explicitly; s01-s16, 9-10 functions each in address order) on the 151 unmatched game
+functions of 0x40-0xC4 bytes that no earlier batch had touched (mostly 168-196 bytes; copies of an already-matched
+function in `docs/duplicates.txt` were left out, one representative per unmatched group), about 10 tries per function,
+no retry or merge agents. 89 matched in isolation (fdiff and `floatcheck.py` re-run on every file), 53 near misses,
+9 never reached (fn_800149AC, fn_8012813C, fn_80128414, fn_801285D8, fn_80146E34, fn_801497CC, fn_8015073C,
+fn_801575C8, fn_8015D6A4). **49 are in the unit files** (5,155 to 5,204 of 7,117) by `u1_fix.py`, one unit at a time;
+every function of every touched unit passes fdiff and the float check (the one exception, fn_801BE608 in
+unit_80199B9C.c, already failed before this batch), `main.dol` force-relinks to the `build.sha1` SHA-1.
+
+Merged: unit_80005B50.c (9), unit_80020B50.c (4), unit_80055E94.c (6), unit_8008B4A0.c (1),
+unit_8010E164.c (2), unit_8013D400.c (1), unit_8015DC6C.c (1), unit_80193F28.c (2), unit_80199B9C.c (1, SaveLoadTask),
+unit_801BEB10.c (1, MenuPlaySe), unit_801C5A60.c (1), unit_801CBA60.c (1), unit_801CED24.c (1), unit_801D24D0.c (5),
+unit_801F5334.c (6), unit_80219378.c (4), unit_8022D34C.c (3).
+
+Matched in isolation, not merged (40; the unit already types the same object another way, or declares a prototype the
+agent's function contradicts; agent files are in `build/agents/s*/` of the machine that ran the batch):
+
+- unit_80005B50.c: fn_800071D8 (`MotionState` is declared after use), fn_80008194 (`lbl_803478DC` is `u8 *` there, the
+  agent has `DVDFileInfo *`), fn_80008530 and fn_800085EC (`fn_800086BC` returns `s16`, the unit declares it `s32`),
+  fn_80008938 (`fn_80061F58` is `void` in the unit), fn_80011400, fn_80015580, fn_8001712C (fdiff fails once merged or the
+  `fn_802268E8` callback types disagree).
+- unit_80055E94.c: fn_8005CAF4 (`fn_80021658` returns `T5C188 *`), fn_80068A58, fn_80068B1C, fn_80068CB8, fn_8006AA40
+  (`fn_8006AFD0` takes `(s32, s16, s32, s32)`, the unit has a pointer second argument), fn_8006D954 (`Node_8006D888` tag).
+- unit_8013D400.c fn_80145F50 (prototype), unit_80199B9C.c fn_801A37D8 (needs `fn_801A388C`'s second parameter to be a
+  `const char *`; the unit has `s32`), unit_801CBA60.c fn_801CC0E4 (`FioName` typedef clash), unit_801D24D0.c fn_801D6528,
+  fn_801DB5F8, fn_801DB764 (`lbl_80312D00` is `Task *[]` in the unit), unit_80219378.c fn_8022B808, fn_8022B8BC.
+- unit_80193F28.c / unit_8015DC6C.c: CampMenuAnyPanelBusy, CampMenuFinishAllPanels (the agents' `CampWork`/`CampPnl`/
+  `CampWin` (pnl[0xB9], a `UiObj` at 0x08 of the window) against the unit's `CampWork`/`Node`/`Body` (objs[0xD0])),
+  CampMenuCreate (`lbl_80347114` is a `CampTask`).
+- unit_801F5334.c script commands (15): fn_801FDFB8, fn_802000A0 (`lbl_8030CEA0.x15d4`/`x14b0` are not in `Scpt`),
+  fn_8020014C, fn_802051D0, fn_8020726C, fn_80207C2C, fn_8020BAE0, fn_8020BB8C, fn_8020BC38, fn_8020BCF4 (`Work8030CEA0`
+  declared twice), fn_8020EF30, fn_8020EFD4 (`Scpt` tag), fn_80213718, fn_80216E38, ScreenFadeDraw.
+
+Near misses (diff lines): CampMenuHideAllPanels (18, the original keeps the `camp_work` base live across both loops),
+TaskDelete (2, the return value is copied into r3 before the final `flags |= 0x10`), TextReadChar (7, an int return with
+`rlwimi` and no `clrlwi`), fn_80006CE0 (0 but only with `(u8 *)` arithmetic on `MotionState.mdata`: rejected),
+fn_800089F0 (11, the start index is not re-extended), fn_80010474 (18), fn_80020D50 (40), fn_80061450 (52),
+fn_80068810 (20), fn_8006922C (31), fn_80069DA0 (24), fn_8006A2C8 (30), fn_8006D7CC (24), fn_8006E75C (14, `r30`/`r31`
+swapped), fn_800D6088 (28, byte-pointer arithmetic), fn_800EEEEC (30), fn_800F1DB4 (21), fn_80114A44 (38, a 31-entry
+jump table), fn_80126354 (20, 0x4f0 frame), fn_8012F61C (29), fn_8013DA50 (47), fn_8011B624 (24), fn_80166E14 (32),
+fn_801669BC (56), fn_80166A78 (48), fn_80195410 (23), fn_801C6BC8 (39), fn_801CB460 (17), fn_801C8B18 (32),
+fn_801C812C (13), fn_801D1434 (31), fn_801D65B4 (32, `psq_l` results as doubles), fn_801D732C (29), fn_801D995C (40),
+fn_801E0FD4 (needs the buffer viewed as u8/u16/u32), fn_801F4EA0 (20), fn_801F53A4 (not attempted), fn_801F57F8 (6),
+fn_802074B0 (3), fn_80212084 (42, a runtime unsigned-to-float), fn_80217134 (3), fn_80217554 (21), fn_8021A11C (17),
+fn_8021A880, fn_8021AB60, fn_8021AC20, fn_8021ACE0 (4 each, the zero return stays in r3), fn_8021BED0 (74, 16 unrolled
+`stb`), fn_80221E24 (25), fn_80226D14 (9), fn_8022ABEC (3), fn_8022BAA0 (6), fn_802300F0 (16).
+
+Hit rate was 59% (89 of 151); the near misses are register allocation and block layout, as in the earlier small batches.

@@ -4,6 +4,7 @@
 #include <math.h>
 #include "game/drawstate.h"
 #include "game/evobj.h"
+#include "game/task.h"
 typedef struct Ent_UNIT0000 {
     u8 pad[0x1C];
     u32 x1c;
@@ -499,7 +500,15 @@ typedef struct {
 } Chr_80094144;
 FindEntry *fn_8008F2CC(FindEntry *head, s16 id);
 typedef struct { u8 pad[0xC]; u8 xc[1]; } TaskSub;
-typedef struct { u8 pad0[0x10]; TaskSub* x10; u8 pad1[0x4C - 0x14]; void* x4c; } TaskRes;
+typedef struct { u8 pad_0[0x8];
+ u32 x8;
+ u8 pad_c[0x4]; TaskSub* x10; u8 pad_14[0x20];
+ f32 x34;
+ f32 x38;
+ f32 x3c;
+ u8 pad_40[0x4];
+ u8 x44;
+ u8 pad_45[0x7]; void* x4c; } TaskRes;
 typedef struct { u8 pad[0x24]; TaskRes* res; } TaskArg;
 typedef struct { u8 pad[0xC]; void* obj; } Handler;
 typedef struct { TaskArg* arg; void* owner; } Work_8008F1F8;
@@ -580,6 +589,42 @@ typedef struct CamCtl {
     u32 x10c;           /* 0x10C */
 } CamCtl;
 extern void fn_801DCEB0(NJS_POINT3* out, Angle* ang, f32 dist);
+typedef struct MdlNode {
+    u8 pad0[0x2C];
+    struct MdlNode* child;
+    struct MdlNode* sibling;
+} MdlNode;
+typedef struct Body_8008F138 {
+    u8 pad0[0x5C];
+    s32 x5c;
+    u8 pad60[8];
+    f32 x68;
+    u8 pad6c[0x154 - 0x6C];
+    MdlNode* x154;
+    u8 pad158[0x194 - 0x158];
+    s32 x194;
+    s32 x198;
+    f32 x19c;
+} Body_8008F138;
+typedef struct TaskArg_8008F138 { u8 pad[0x24]; TaskRes* res; } TaskArg_8008F138;
+typedef struct ObjRef_8008F138 { u8 pad0[0x10]; s16 x10; } ObjRef_8008F138;
+typedef struct Work_8008F138_8008F138 {
+    TaskArg_8008F138* arg;        /* 0x00 */
+    void* owner;         /* 0x04 */
+    MdlNode* root;       /* 0x08 */
+    u8 pad0c[4];
+    u32 x10;             /* 0x10 */
+    u8 pad14[0x3C - 0x14];
+    f32 x3c;
+    f32 x40;
+    f32 x44;
+    u8 pad48[0x4C - 0x48];
+    u8 x4c;
+    u8 pad4d[0x114 - 0x4D];
+} Work_8008F138_8008F138;
+extern void fn_8008E6F4(Task* t);
+extern void fn_80061F58(void* dst, s32 size, s32 a);
+extern MdlNode* fn_8006C9AC(MdlNode* root, u16 target);
 
 u32 fn_8008B55C(void* a0, Ent_UNIT0000* e) {
     return (e->x1c >> 9) & 1;
@@ -2612,4 +2657,33 @@ void fn_80095DFC(CamCtl* c, CamReq* r) {
     c->xdc = 0.5f;
     c->xe0 = 0x100;
     c->xe4 = 0x78;
+}
+
+int fn_8008F138(Handler* h, TaskArg_8008F138* arg)
+{
+    TaskRes* res;
+    Body_8008F138* b;
+    ObjRef_8008F138* obj;
+    Task* node;
+    Work_8008F138_8008F138* w;
+
+    obj = h->obj;
+    res = arg->res;
+    b = res->x4c;
+    if (fn_8003DCF4(obj, b)) {
+        node = fn_8003DB34(fn_8008E6F4);
+        fn_80061F58(&node->work, 0x114, 0);
+        w = node->work;
+        w->arg = arg;
+        w->owner = obj;
+        w->root = fn_8006C9AC(b->x154, obj->x10);
+        w->x10 = res->x8;
+        w->x3c = res->x34;
+        w->x40 = res->x38;
+        w->x44 = res->x3c;
+        w->x4c = res->x44;
+    } else {
+        return 0;
+    }
+    return 1;
 }

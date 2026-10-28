@@ -1989,6 +1989,7 @@ typedef struct Ent_801BE608 {
     s32 f10, f14, f18, f1c, f20;
     s32 f24;
 } Ent_801BE608;
+extern TaskFunc lbl_802EBD30[33];
 
 void fn_80199B9C(void* p, f32 v) {
     *(f32*)((u8*)p + 0x34) = v;
@@ -7847,4 +7848,11 @@ s32 fn_801BD748(ShopTask_801BD748* t, ShopEntry_801BD748* tmp, s32 start) {
         t->buf->out[start].val = tmp[i].val;
     }
     return start;
+}
+
+void SaveLoadTask(Task *task) {
+    if (lbl_803475D8 != 0) {
+        task->state = 0x1F;
+    }
+    lbl_802EBD30[task->state](task);
 }

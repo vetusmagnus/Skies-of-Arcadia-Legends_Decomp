@@ -71,7 +71,8 @@ typedef struct Req {
     s32 a;
     s32 b;
     u8 d;
-    u8 pad09[0x14 - 9];
+    s8 x9;
+    u8 pad_a[0xa];
     Ent e[6];
 } Req;
 extern void fn_801F224C(Req* r);
@@ -278,6 +279,14 @@ typedef struct Rec14 {
 } Rec14;
 extern void fn_80195540(Rec14 *recs);
 typedef struct Blob { u8 pad[0x70c]; s32 st; } Blob;
+extern void fn_80195F9C(void);
+extern void fn_801D6CBC(void *h, void *p);
+extern void fn_801D6C3C(void *h);
+extern s32 camp_screen;
+extern void (*camp_screen_funcs[21])(void);
+extern void *lbl_80347140;
+extern u8 lbl_80347134[8];
+extern s32 lbl_8034713C;
 
 int fn_80193F28(void) {
     fn_801DBE1C("Nothing VM Tanken.");
@@ -2112,5 +2121,47 @@ void fn_80195EA4(Req *o, s8 a, s32 b, s32 c, s8 mode) {
     case 4:
         fn_801F1280(o);
         break;
+    }
+}
+
+s32 fn_80195CD0(s8 a0, s8 a1, s8 a2, u8 a3) {
+    Req r;
+    s32 res = 1;
+
+    r.a = a0;
+    r.b = a1;
+    r.d = a3;
+    switch (a2) {
+    case 1:
+        fn_801F224C(&r);
+        break;
+    case 0:
+        fn_801F1774(&r);
+        break;
+    case 3:
+        fn_801F1280(&r);
+        break;
+    case 2:
+        fn_801F2518(&r);
+        break;
+    case 4:
+        fn_801F1280(&r);
+        break;
+    }
+    if (r.b != -1) {
+        res = r.x9;
+    }
+    return res;
+}
+
+void CampMenuRunScreen(void) {
+    fn_80195F9C();
+    camp_screen_funcs[camp_screen]();
+    if (lbl_8034713C != 0) {
+        fn_801D6CBC(lbl_80347140, lbl_80347134);
+        lbl_8034713C -= 1;
+        if (lbl_8034713C <= 0) {
+            fn_801D6C3C(lbl_80347140);
+        }
     }
 }

@@ -11,7 +11,14 @@
 extern void fn_80117748();
 extern void fn_80114C84(void *a, void *b, void *c, void *d, void *e, void *f);
 extern void fn_80114A44(void);
-extern void fn_80114AB8(void);
+extern f32 lbl_80349E00;
+extern f32 lbl_80349E04;
+/* Only the flags halfword at 0x24 is used here. */
+typedef struct Ent114 {
+    u8 pad0[0x24];
+    u16 flags; /* 0x24: bit 0x8000 gates the test, bits 8..14 select the case */
+} Ent114;
+s32 fn_80114AB8(s32 a, f32 t, s32 unused, Ent114 *e);
 extern s32 lbl_80346E80;
 extern s32 fn_801161B4(void);
 extern u8 lbl_802E54B0[];
@@ -7932,4 +7939,40 @@ void fn_8011B024(f32* p, int n, int k, f32* out, f32 t)
         x += *q++ * b;
     }
     *out = x;
+}
+
+s32 fn_80114AB8(s32 a, f32 t, s32 unused, Ent114 *e) {
+    s32 r = 0;
+    if (a != 0) {
+        if (lbl_80349E00 >= t) {
+            if (e->flags & 0x8000) {
+                switch ((e->flags >> 8) & 0x7f) {
+                case 1:
+                case 3:
+                case 30:
+                    r = 1;
+                    break;
+                case 5:
+                case 7:
+                    if (lbl_80349E04 <= t) {
+                        r = 1;
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    return r;
+}
+
+f32 fn_8011A8B0(Vec3 *a, Vec3 *b) {
+    f32 dx = a->x - b->x;
+    f32 dy = a->y - b->y;
+    f32 dz = a->z - b->z;
+    f32 d2 = dx * dx + dy * dy + dz * dz;
+
+    if (d2 < 0.025f) {
+        return 0.0f;
+    }
+    return sqrtf(d2);
 }

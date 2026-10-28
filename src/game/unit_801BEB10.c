@@ -84,3 +84,10 @@ void fn_801C08B4(s32 msg) {
     }
     lbl_803471C0 = PlaySe(msg);
 }
+
+s32 MenuPlaySe(s16 se) {
+    if (se >= MENU_SE_COUNT || se == -1) {
+        return 0;
+    }
+    return SePlay(menu_se_table[se].bank, 1, menu_se_table[se].id);
+}
