@@ -1656,3 +1656,8 @@ Not merged:
   same lbl_80309E24 typing.
 - The unit still has ~20 work views and ~20 record views of the character task (ChrWork, W6065C, Wk, Wk_8005C480,
   X5B094, Par_*, W80067CA4, ...); folding them is the remaining step and would let both functions in.
+
+Paused after pass 3 (matching new functions comes first for now). Still open from the 66: the `MapObj` to `EvObj` fold
+(unit_800B2DA0.c, unit_800D81E8.c, unit_8010E164.c; the 9 functions and the fields it needs are listed under Batch 13
+above; not started, and it would also unblock fn_800D42B8), the camp unit's fn_801920AC and fn_801649BC, the
+unit_80055E94 character fold above, and whether unit_801F5334.c keeps its `ScptCur`/`Scpt` unions.
