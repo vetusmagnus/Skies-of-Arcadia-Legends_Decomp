@@ -217,7 +217,6 @@ extern void fn_80291064(VertexTex* v, s32 count, s32 mode);
 extern void fn_802947CC(s32);
 extern void fn_80297DC8(void* tex);
 extern void fn_80298FE4(s32 i);
-extern void fn_80299040(NJS_TEXLIST* t);
 extern void fn_802AA2F0(Args*, s32, s32);
 
 void fn_80033A18(Billboard* o, s16 idx, NJS_MATRIX m, s8 level);

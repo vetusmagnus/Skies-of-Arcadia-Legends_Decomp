@@ -2529,9 +2529,6 @@ typedef struct {
     void *unk1BC;
 } Unk80347450;
 extern s32 fn_80222B30(HitNode *a, HitNode *b);
-typedef struct {
-    u8 r, g, b, a;
-} GXColor;
 extern void GXSetFog(s32 type, f32 startz, f32 endz, f32 nearz, f32 farz, GXColor color);
 extern void fn_80296F28(void);
 typedef struct Obj_800BF7AC {

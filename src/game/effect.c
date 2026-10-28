@@ -251,7 +251,6 @@ extern void fn_8001E4A0(Vec*, Vec*, void*);
 extern void fn_8023080C(void*, s16*, int);
 extern s32 fn_80035908(void);
 extern void fn_80035910(s32);
-extern void fn_80299040(void*);
 extern void fn_8003440C(void* o, s16 idx, void* m, void* a, void* b, f32 f);
 extern void fn_80034E6C(void* o, s16 idx, void* m, void* a, f32 f);
 extern void fn_80048E58(struct NodeSrc*);

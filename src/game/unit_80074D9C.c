@@ -319,7 +319,6 @@ typedef struct Tbl {
 } Tbl;
 extern int fn_80018B80(void*);
 extern void fn_80018C94(void);
-extern void fn_80299040(void*);
 extern void fn_800342BC(void*);
 extern int fn_80082840(s8 x, s8 y, u8 c, u8* grid, void* extra);
 typedef struct Obj24 {

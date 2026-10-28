@@ -102,7 +102,6 @@ typedef struct {
     Angle rx, ry, rz;     /* 0x14 */
     f32 sx, sy, sz;       /* 0x20 */
 } Xform;
-void fn_80299040(NJS_TEXLIST* texlist);
 void njPushMatrixEx(void);
 void njPopMatrixEx(void);
 void fn_80286EE8(void);

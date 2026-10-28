@@ -1099,10 +1099,8 @@ typedef struct Rec_8011D2D8 {
     void *x24;
     void *x28;
     void *x2c;
-    u8 pad30[8];
-    void *x38;
-    void *x3c;
-    s32 x40;
+    NJS_TEXNAME name;    /* 0x30 */
+    NJS_TEXLIST texlist; /* 0x3c */
     u8 x44[0x88 - 0x44];
     s32 x88;
 } Rec_8011D2D8;
@@ -1114,7 +1112,6 @@ extern void *fn_80227E74(void);
 extern void fn_80297DB4(void *a, void *b, s32 c, s32 d, s32 e);
 extern void fn_80297DA4(void *a, void *b, void *c, s32 d);
 extern void *fn_80227268(void *a, s32 b, s32 c, s32 d);
-extern void fn_80299040(void *p);
 extern void fn_80298ED0(s32 a);
 extern void fn_8024E020(void);
 extern void fn_8011D02C(Rec_8011D2D8 *rec);
@@ -6331,13 +6328,13 @@ void fn_8011D2D8(Task_8011D2D8 *t) {
         }
         rec->x2c = fn_80227E74();
         fn_80297DB4(rec->x44, rec->x24, 5, rec->sc, rec->se);
-        fn_80297DA4(&rec->pad30, rec->x44, rec->x2c, 0x40800000);
-        rec->x38 = fn_80227268(rec->x2c, 5, rec->sc, rec->se);
-        rec->x3c = &rec->pad30;
-        rec->x40 = 1;
+        fn_80297DA4(&rec->name, rec->x44, rec->x2c, 0x40800000);
+        rec->name.texaddr = fn_80227268(rec->x2c, 5, rec->sc, rec->se);
+        rec->texlist.textures = &rec->name;
+        rec->texlist.nbTexture = 1;
         rec->x4 |= 1;
     } else {
-        fn_80299040(&rec->x3c);
+        fn_80299040(&rec->texlist);
         fn_80298ED0(0);
         fn_8024E020();
         fn_8011D02C(rec);

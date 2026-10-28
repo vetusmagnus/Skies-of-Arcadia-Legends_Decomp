@@ -173,7 +173,6 @@ extern void* fn_801E1C7C(s32 size);
 extern void OSPanic(const char* file, int line, const char* msg, ...);
 extern s32 fn_8023A4B0(s32 h);
 extern s32 fn_8023A7A4(s32 h, void* out);
-extern void fn_80299040(void* texlist);
 extern void fn_80291428(s32 a);
 extern void fn_802913E8(s32 a, s32 b);
 extern void fn_802911CC(f32 *v, f32 s);
@@ -736,7 +735,7 @@ AkFio* fn_801C63EC(s32 h)
     return f;
 }
 
-void fn_801C8BC0(void* texlist, Rect8 *r, s32 n, f32 a, f32 b, f32 s) {
+void fn_801C8BC0(NJS_TEXLIST* texlist, Rect8 *r, s32 n, f32 a, f32 b, f32 s) {
     f32 v[8];
     if (!(b < -512.0f || b > 512.0f)) {
         fn_80299040(texlist);
@@ -755,41 +754,23 @@ void fn_801C8BC0(void* texlist, Rect8 *r, s32 n, f32 a, f32 b, f32 s) {
     }
 }
 
-typedef struct EndTexSub {
-    s32* x0;
-} EndTexSub;
-
-typedef struct EndTex {
-    u8 pad0[0xC];
-    EndTexSub* xc;
-} EndTex;
-
-typedef struct EndTexEnt {
-    u8 pad0[8];
-    EndTex* tex;
-} EndTexEnt;
-
-typedef struct EndTexList {
-    EndTexEnt* ents;
-} EndTexList;
-
 typedef struct EndVtx {
     f32 x, y, z;
     f32 u, v;
     u32 col;
 } EndVtx;
 
-extern void fn_80297DC8(s32* a);
+extern void fn_80297DC8(u32 id);
 extern void fn_80291064(EndVtx* v, s32 n, s32 flag);
 
 /* Draws tile `tile` of a texture list as a w x h quad at (x, y, z). */
-void fn_801C8CC0(EndTexList* tl, f32* size, u32 col, u16 tile, s32 flag, f32 x, f32 y, f32 z)
+void fn_801C8CC0(NJS_TEXLIST* tl, f32* size, u32 col, u16 tile, s32 flag, f32 x, f32 y, f32 z)
 {
     EndVtx v[4];
-    EndTex* t = tl->ents[tile].tex;
+    NjTexRef* t = tl->textures[tile].texaddr;
 
     fn_80299040(tl);
-    fn_80297DC8(t->xc->x0);
+    fn_80297DC8(t->mem->id);
     v[0].x = x;
     v[0].y = y;
     v[0].z = z;

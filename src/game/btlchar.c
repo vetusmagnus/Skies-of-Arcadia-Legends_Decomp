@@ -3,6 +3,7 @@
  * command task fn_800317FC, "show" wrappers that check the lbl_80347394 channel (BtlCanShow), and
  * the music/state save-restore fn_80032C6C. Per-function work layouts carry the function address. */
 #include "types.h"
+#include "ninja.h"
 #include "game/task.h"
 
 typedef struct { u8 pad[0x24]; void* work; } Node;
@@ -72,7 +73,6 @@ extern void fn_801E17E0(void*);
 extern s32 fn_80075FCC(void*);
 extern void fn_80075F2C(void*);
 extern void fn_8022E4CC(Obj* o, s32 a, s32 b, s32 c, s32 d, s32 e);
-extern void fn_80299040(void);
 
 typedef struct { s8 kind; u8 pad1[0x31]; s16 v; u8 pad34[0x1dc - 0x34]; u32 x1dc; } Inner36C;
 typedef struct { u8 pad[0x24]; struct { u8 pad[0x4c]; Inner36C* inner; } *work; } Node36C;
@@ -136,7 +136,6 @@ typedef struct { u8 pad[0x24]; struct { u8 pad[0x4c]; Inner5B8* inner; }* sub; }
 typedef struct { s32 key; s32 val; } KV;
 typedef struct { u8 pad[0x50]; s32 id; s32 alt; } Info;
 typedef struct { u8 pad[0x24]; Info* info; } ObjInfo;
-typedef struct { u32 unk0; void* unk4; } E44;
 extern KV lbl_802DC1F8[];
 extern Obj5FC* lbl_80309E24[12];
 
@@ -716,8 +715,8 @@ void fn_80032C6C(s32 restore, ObjInfo* o) {
     }
 }
 
-void fn_80032E44(E44* p) {
-    if (p != 0 && p->unk4 != 0) {
-        fn_80299040();
+void fn_80032E44(NJS_TEXLIST* p) {
+    if (p != 0 && p->nbTexture != 0) {
+        fn_80299040(p);
     }
 }

@@ -296,38 +296,7 @@ void fn_80296680(u32* p, u32 n);
 void fn_80295EB8(NjModel* m);
 void fn_802960FC(void);
 
-/* ---- Textures ---- */
-
-/* The part of a texture slot handed to the loaders (0x20 bytes). */
-typedef struct {
-    u32 w00;
-    u32 w04;
-    u32 w08;
-    u32 w0c;
-    u32 w10;
-    u32 size;  /* 0x14 */
-    u32 flags; /* 0x18 */
-    void* data; /* 0x1c */
-} NjTexBody;
-
-/* Texture memory slot (lbl_80347ECC, 0x48 bytes). */
-typedef struct {
-    u32 id; /* 0x00, -1 = free */
-    NjTexBody body;  /* 0x04 */
-    GXTexObj texobj; /* 0x24 */
-    s32 refs;        /* 0x44 */
-} NjTexMem;
-
-/* Texture reference (lbl_80347ED4, 0x18 bytes); NJS_TEXNAME.texaddr points at one. */
-struct NjTexRef {
-    u32 w00;
-    u32 w04;
-    u32 key;      /* 0x08 */
-    NjTexMem* mem; /* 0x0c */
-    s32 refs;     /* 0x10 */
-    u32 w14;
-};
-typedef struct NjTexRef NjTexRef;
+/* ---- Textures (NjTexBody, NjTexMem and NjTexRef are in ninja.h) ---- */
 
 /* Texture error status (lbl_803457F8), returned by fn_80298E6C. */
 typedef struct {

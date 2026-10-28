@@ -217,7 +217,6 @@ typedef struct {
     s32 hidden;       /* 0x184 */
 } Obj80156DA0;
 extern f32 lbl_8034A900;
-extern void fn_80299040(void* texlist);
 extern void fn_80286EE8(void);
 extern void fn_8028B498(void);
 extern void fn_802974E0(void* v);
@@ -949,10 +948,6 @@ extern s32 fn_8021EE1C(void *t, u32 a);
 extern void fn_80291064(Vtx_80159610 *v, s32 n, s32 mode);
 extern char lbl_802B3BD8[];
 typedef struct {
-    u32 a;
-    u32 b;
-} Tex_80156E54;
-typedef struct {
     u8 pad0[4];
     u32 cnt;
 } Anim_80156E54;
@@ -966,7 +961,7 @@ typedef struct {
     Anim_80156E54 *anim;
     void *xec;
     u8 padf0[0x100 - 0xf0];
-    Tex_80156E54 *texlist;
+    NJS_TEXLIST *texlist;
     u8 pad104[0x176 - 0x104];
     u16 flags176;
     u8 pad178[0x184 - 0x178];
@@ -3756,12 +3751,12 @@ static inline void Advance(Obj_80156E54 *self)
 
 void fn_80156E54(Obj_80156E54 *self, void *m)
 {
-    Tex_80156E54 t;
-    Tex_80156E54 *tex = self->texlist;
+    NJS_TEXLIST t;
+    NJS_TEXLIST *tex = self->texlist;
     u32 tex4;
 
     if (tex != 0) {
-        tex4 = tex->b;
+        tex4 = tex->nbTexture;
     } else {
         tex4 = 0;
     }
@@ -3777,8 +3772,8 @@ void fn_80156E54(Obj_80156E54 *self, void *m)
         return;
     }
     if (tex != 0) {
-        t.b = tex4;
-        t.a = self->texlist->a;
+        t.nbTexture = tex4;
+        t.textures = self->texlist->textures;
         fn_80299040(&t);
     }
     njPushMatrixEx();

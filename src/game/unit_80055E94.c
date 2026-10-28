@@ -542,7 +542,6 @@ typedef struct O5D8F8 {
     f32 alpha;
     NJS_TEXLIST *tex;
 } O5D8F8;
-extern void fn_80299040(NJS_TEXLIST *);
 extern void fn_8029D008(NJS_TEXLIST *);
 extern void fn_8007E678(void *, DrawState *);
 extern void fn_80032AD8(void *, s32, s32, s32);

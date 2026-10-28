@@ -165,7 +165,6 @@ extern void fn_801CF0F8(void* model, s32 v);
 extern void fn_801D184C(void* model, NJS_ARGB* p);
 extern f32 fn_801DBD9C(f32 z);
 extern void fn_8000610C(NJS_POINT2COL* p, s32 n, s32 attr);
-extern void fn_80299040(NJS_TEXLIST* texlist);
 extern void njPushMatrixEx(void);
 extern void njPopMatrixEx(void);
 extern void fn_80286EE8(void);

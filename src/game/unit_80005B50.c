@@ -254,7 +254,6 @@ extern void fn_80060950(void*);
 extern int fn_80035908(void);
 extern void fn_80035910(int);
 extern void fn_8000F0BC(void);
-extern void fn_80299040(void*);
 extern void fn_8000B6F0(W*);
 extern void fn_8000B5F4(W*, f32);
 extern void fn_800D2048(void);

@@ -13,7 +13,7 @@ void VIWaitForRetrace(void);
 extern void *lbl_803476AC;
 extern u32 *lbl_803476C0;
 void fn_801D4A2C(s32 a, s32 b, s32 c, void *d, s32 e, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
-extern s32 lbl_80347568[2];
+extern NJS_TEXLIST lbl_80347568;
 typedef struct Sub { u8 pad[0x20]; s32 val; } Sub;
 typedef struct Outer { u8 pad[4]; Sub *sub; } Outer;
 void fn_801D5A50(s32 a, s32 b, s32 c, s32 d, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
@@ -632,22 +632,6 @@ typedef struct KeyList {
     KeyEnt *ents;
     u32 count;
 } KeyList;
-typedef struct L3 {
-    u8 pad[0x20];
-    u32 f20;
-} L3;
-typedef struct L2 {
-    u8 pad[0xc];
-    L3 *fc;
-} L2;
-typedef struct L1 {
-    u8 pad[8];
-    L2 *f8;
-} L1;
-typedef struct Top {
-    L1 *f0;
-} Top;
-extern s32 fn_80299040(void *p);
 extern void fn_80291428(s32 a);
 extern void fn_802913E8(s32 a, s32 b);
 typedef struct {
@@ -760,7 +744,7 @@ typedef struct Box {
 extern void fn_8028FEA4(NJS_POINT3* p, Ellipsoid* e, NJS_POINT3* out);
 
 void fn_801D49E4(s32 a, s32 b, s32 c, s32 d, f32 p1, f32 p2, f32 p3, f32 p4) {
-    fn_801D4A2C(a, b, c, lbl_80347568, d, 1.0f, 1.0f, p1, p2, p3, p4);
+    fn_801D4A2C(a, b, c, &lbl_80347568, d, 1.0f, 1.0f, p1, p2, p3, p4);
 }
 
 typedef struct {
@@ -783,33 +767,23 @@ typedef struct {
     f32 x, y;
 } Layout;
 
-void fn_801D4C9C(Layout* lay, u32 flags, u32 mode, s32* tex, s32 vmode, f32 f1, f32 f2, f32 base, f32 f4, f32 a, f32 b);
+void fn_801D4C9C(Layout* lay, u32 flags, u32 mode, NJS_TEXLIST* tex, s32 vmode, f32 f1, f32 f2, f32 base, f32 f4, f32 a, f32 b);
 void fn_801D4C54(Layout* a, u32 b, u32 c, s32 d, f32 p1, f32 p2, f32 p3, f32 p4) {
-    fn_801D4C9C(a, b, c, lbl_80347568, d, 1.0f, 1.0f, p1, p2, p3, p4);
+    fn_801D4C9C(a, b, c, &lbl_80347568, d, 1.0f, 1.0f, p1, p2, p3, p4);
 }
 
-void fn_801D4F54(Layout* lay, u32 flags, u32 mode, s32* tex, s32 vmode, f32 f1, f32 f2, f32 base, f32 f4, f32 a, f32 b);
-typedef struct {
-    u8 pad[0xc];
-    s32** tex;
-} TexInfo;
-typedef struct {
-    s32 unused0;
-    s32 unused4;
-    TexInfo* info;
-} TexHolder;
+void fn_801D4F54(Layout* lay, u32 flags, u32 mode, NJS_TEXLIST* tex, s32 vmode, f32 f1, f32 f2, f32 base, f32 f4, f32 a, f32 b);
 typedef struct {
     f32 x, y, z, u, v;
     u32 colour;
 } VertexTex;
 extern s32 fn_801E7554(void);
-extern s32 fn_80299040(void* p);
 extern s32 fn_80297DC8(s32 id);
 extern VertexTex lbl_80308E30[4];
 extern f32 fn_801DBD9C(f32);
 extern void fn_801D65B4(u32 colour, u8* out, f32 a, f32 b);
 extern void fn_80291064(VertexTex* v, s32 n, s32 mode);
-void fn_801D4C9C(Layout* lay, u32 flags, u32 mode, s32* tex, s32 vmode, f32 f1, f32 f2, f32 base, f32 f4, f32 a, f32 b)
+void fn_801D4C9C(Layout* lay, u32 flags, u32 mode, NJS_TEXLIST* tex, s32 vmode, f32 f1, f32 f2, f32 base, f32 f4, f32 a, f32 b)
 {
     DrawState st;
     u8 col[4];
@@ -829,10 +803,9 @@ void fn_801D4C9C(Layout* lay, u32 flags, u32 mode, s32* tex, s32 vmode, f32 f1, 
     }
     DrawStatePush(&st);
     {
-        TexHolder* h = (TexHolder*)tex[0];
-        TexHolder* t = *(TexHolder**)((u8*)h + 8);
+        NjTexRef* t = tex->textures[0].texaddr;
         fn_80299040(tex);
-        fn_80297DC8(**(s32**)((u8*)t + 0xc));
+        fn_80297DC8(t->mem->id);
     }
     v = lbl_80308E30;
     for (i = 0; i < lay->count; i++) {
@@ -874,10 +847,10 @@ void fn_801D4C9C(Layout* lay, u32 flags, u32 mode, s32* tex, s32 vmode, f32 f1, 
 }
 
 void fn_801D4F0C(Layout* a, u32 b, u32 c, s32 d, f32 p1, f32 p2, f32 p3, f32 p4) {
-    fn_801D4F54(a, b, c, lbl_80347568, d, 1.0f, 1.0f, p1, p2, p3, p4);
+    fn_801D4F54(a, b, c, &lbl_80347568, d, 1.0f, 1.0f, p1, p2, p3, p4);
 }
 
-void fn_801D4F54(Layout* lay, u32 flags, u32 mode, s32* tex, s32 vmode, f32 f1, f32 f2, f32 base, f32 f4, f32 a, f32 b)
+void fn_801D4F54(Layout* lay, u32 flags, u32 mode, NJS_TEXLIST* tex, s32 vmode, f32 f1, f32 f2, f32 base, f32 f4, f32 a, f32 b)
 {
     DrawState st;
     u8 col[4];
@@ -897,10 +870,9 @@ void fn_801D4F54(Layout* lay, u32 flags, u32 mode, s32* tex, s32 vmode, f32 f1, 
     }
     DrawStatePush(&st);
     {
-        TexHolder* h = (TexHolder*)tex[0];
-        TexHolder* t = *(TexHolder**)((u8*)h + 8);
+        NjTexRef* t = tex->textures[0].texaddr;
         fn_80299040(tex);
-        fn_80297DC8(**(s32**)((u8*)t + 0xc));
+        fn_80297DC8(t->mem->id);
     }
     v = lbl_80308E30;
     for (i = 0; i < lay->count; i++) {
@@ -2900,9 +2872,10 @@ s32 fn_801DDC48(KeyList *x, KeyList *y) {
 }
 
 /* fn_80299040 takes t itself (it stores its argument), which is what kept r3 live. */
-s32 fn_801D80A0(Top *t) {
+s32 fn_801D80A0(NJS_TEXLIST *t) {
     s32 r = 0;
-    if (t != 0 && t->f0 != 0 && t->f0->f8 != 0 && t->f0->f8->fc != 0 && t->f0->f8->fc->f20 != 0) {
+    if (t != 0 && t->textures != 0 && t->textures->texaddr != 0 && t->textures->texaddr->mem != 0 &&
+        t->textures->texaddr->mem->body.data != 0) {
         fn_80299040(t);
         fn_80291428(1);
         fn_802913E8(0, -1);

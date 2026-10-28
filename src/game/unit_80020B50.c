@@ -189,7 +189,6 @@ typedef struct Work21CBC {
     u8 pad45[7];
     Info* info;
 } Work21CBC;
-extern void fn_80299040(void* p);
 extern void njPushMatrixEx(void);
 extern void njPopMatrixEx(void);
 extern void fn_80286EE8(void);

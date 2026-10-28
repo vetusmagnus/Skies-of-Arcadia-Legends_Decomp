@@ -669,7 +669,6 @@ extern void fn_8028BB90(void* p);
 extern void fn_8022B960(void* p);
 extern void fn_80286EE8(void);
 extern void fn_8028B498(void);
-extern void fn_80299040(NJS_TEXLIST* t);
 extern void fn_80287B38(void* p);
 extern s32 fn_80097720(void);
 extern s32 fn_80097CEC(void* p);
