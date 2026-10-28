@@ -1376,8 +1376,8 @@ void fn_801EAA08(Task* task) {
     }
     if (dist < (f32)obj->ext->info->nearDist) {
         fn_801C5DEC(obj);
-        fn_80222838(obj->x1bc);
-        if (fn_80222E00(0x2800, obj->x1bc) != 0) {
+        fn_80222838(obj->coll);
+        if (fn_80222E00(0x2800, obj->coll) != 0) {
             lbl_80347798 = 1;
         } else {
             lbl_80347798 = 0;

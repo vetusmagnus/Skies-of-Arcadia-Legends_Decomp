@@ -69,6 +69,14 @@ typedef struct {
     s16 x2e;      /* 0x2E */
 } EvHit;
 
+/* The object's collision record (0x1BC), refreshed by fn_80222838. */
+typedef struct {
+    u8 pad0[0x18];
+    f32* pos;                /* 0x18 */
+    u8 pad1c[4];
+    u32* ang;                /* 0x20 */
+} EvColl;
+
 typedef struct {
     u8 pad0[4];
     s32 kind;                /* 0x04 */
@@ -118,7 +126,7 @@ typedef struct {
     s32 x198;                /* 0x198 */
     u8 pad19C[0x1B8 - 0x19C];
     EvHit* hit;              /* 0x1B8 */
-    void* x1bc;              /* 0x1BC */
+    EvColl* coll;            /* 0x1BC */
     u8 pad1C0[0x1C8 - 0x1C0];
     EvExt* ext;              /* 0x1C8 */
     u8 pad1CC[0x1D8 - 0x1CC];
@@ -138,7 +146,8 @@ typedef struct {
     s16 x20a;                /* 0x20A */
     Angle x20c;              /* 0x20C */
     u32 x210;                /* 0x210 */
-    u8 pad214[0x21C - 0x214];
+    s32 x214;                /* 0x214, with x20c/x210 the saved angles */
+    u8 pad218[0x21C - 0x218];
     u8 x21c;                 /* 0x21C */
     u8 x21d;                 /* 0x21D */
     u8 x21e;                 /* 0x21E */
