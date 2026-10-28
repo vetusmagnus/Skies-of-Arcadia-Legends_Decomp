@@ -227,6 +227,10 @@ void fn_8028BA48(Angle a);
 extern NJS_POINT3 lbl_802DAB18;
 extern f32 lbl_80347E70;
 void fn_802956F0(NJS_MOTION* mot, f32 frame);
+s32 fn_802951D4(NjObj* obj, f32* pos, Angle* rot, f32* scale, f32* quat);
+void fn_802929C0(f32* q);
+extern GXColor lbl_80347E98;
+s32 fn_80298FE4(s32 n);
 void fn_80293B4C(NJS_MOTION* mot, f32 frame);
 s32 fn_80293EA8(f32* p);
 s32 fn_80293E38(s16* p);
@@ -363,6 +367,8 @@ s32 fn_80298694(NjTexBody* b, const void* src);
 s32 fn_802986C8(NjTexBody* b, void* a, void* c, void* d);
 s32 fn_80297804(NjTexBody* b, u32 w, u32 h, u32 fmt);
 s32 fn_8029959C(NjTexBody* b);
+s32 fn_8029954C(void* dst, NjTexBody* b);
+void fn_80298144(NjTexRef* r);
 
 /* ---- GX render state ---- */
 

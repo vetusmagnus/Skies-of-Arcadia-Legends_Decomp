@@ -1694,6 +1694,13 @@ void fn_80297504(Angle a, f32* s, f32* c) {
     *c = njCos(a);
 }
 
+static inline s32 read_tex(NjTexRef* r, void* dst) {
+    if (fn_8029954C(dst, &r->mem->body)) {
+        return -1;
+    }
+    return 1;
+}
+
 void fn_802979B8(void) {
     s32 i;
     NjTexMem* a = lbl_80347ECC;
@@ -1723,6 +1730,24 @@ void fn_802979B8(void) {
     }
     lbl_80347EC4 = 0;
     lbl_803457A8.w48 = -1;
+}
+
+s32 fn_80297AC0(NjTexRef* r) {
+    if (r->mem == 0) {
+        return -1;
+    }
+    if (r->refs > 0) {
+        r->refs--;
+    }
+    if (r->mem->refs > 0) {
+        r->mem->refs--;
+        if (r->mem->refs == 0) {
+            fn_8029959C(&r->mem->body);
+            lbl_803457A8.w48 = -1;
+        }
+    }
+    fn_80298144(r);
+    return 1;
 }
 
 s32 fn_80297B5C(s32 key) {
