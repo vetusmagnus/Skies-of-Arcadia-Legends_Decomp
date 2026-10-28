@@ -414,8 +414,50 @@ f32 fn_802917A0(f32 x) {
     return modf(x, &ip);
 }
 
+f32 fn_80291888(f32 x) {
+    f32 a;
+    f32 t;
+    f32 r;
+    if (x < 0.0f) {
+        a = fabs(x);
+        t = floor(a);
+        r = -t;
+    } else {
+        a = fabs(x);
+        t = floor(a);
+        r = t;
+    }
+    return r;
+}
+
+f32 fn_802918DC(f32 x) {
+    f32 a;
+    f32 t;
+    f32 r;
+    if (x < 0.0f) {
+        a = fabs(x);
+        t = ceil(a);
+        r = -t;
+    } else {
+        a = fabs(x);
+        t = ceil(a);
+        r = t;
+    }
+    return r;
+}
+
 f32 njSin(Angle a) {
     return sin(a * ANG_RAD);
+}
+
+f32 fn_80291A5C(f64 x) {
+    f32 r;
+    if (x < 0.0) {
+        r = -sqrtf(-x);
+    } else {
+        r = sqrtf(x);
+    }
+    return r;
 }
 
 f32 njTan(Angle a) {
@@ -1463,6 +1505,13 @@ void fn_80296ED4(s32 a) {
     lbl_803457A8.w48 = -1;
 }
 
+void fn_80296EEC(u16 enable, s32 func, u16 update) {
+    lbl_803457A8.h00 = enable;
+    lbl_803457A8.h02 = func;
+    lbl_803457A8.h04 = update;
+    GXSetZMode(enable, func, update);
+}
+
 void fn_80296F28(void) {
     lbl_80347F74 = -1;
     lbl_80347F68 = -1;
@@ -1650,6 +1699,16 @@ void fn_80297DB4(Rec6* p, s32 a, s32 b, s32 c, s32 d) {
     p->f10 = c;
     p->f14 = d;
     p->f4 = b;
+}
+
+s32 fn_8029800C(u8 fmt) {
+    switch (fmt) {
+    case 8:
+    case 9:
+    case 10:
+        return 1;
+    }
+    return 0;
 }
 
 s32 fn_802981B8(u32 id, u32 key) {

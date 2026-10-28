@@ -192,6 +192,7 @@ typedef struct {
     NjGetAng16 getRot16; /* 0x44 */
 } NjMotState;
 extern NjMotState* lbl_80347E64;
+extern NjMotState lbl_803456D0[2];
 
 typedef struct {
     f32 p0[3];
@@ -264,6 +265,7 @@ typedef struct {
 extern NjCacheIdx** lbl_80347E80;
 extern NjCacheEnt* lbl_80347E84;
 extern NjCacheCtx* lbl_80347E88;
+extern NjCacheCtx lbl_80345770[2];
 void fn_80296680(u32* p, u32 n);
 void fn_80295EB8(NjModel* m);
 void fn_802960FC(void);
@@ -337,7 +339,7 @@ s32 fn_80297AC0(NjTexRef* e);
 s32 fn_802995CC(NjTexBody* b, void* a, void* c);
 s32 fn_80298694(NjTexBody* b, const void* src);
 s32 fn_802986C8(NjTexBody* b, void* a, void* c, void* d);
-s32 fn_80297804(NjTexBody* b, u16 w, u16 h, u32 fmt);
+s32 fn_80297804(NjTexBody* b, u32 w, u32 h, u32 fmt);
 s32 fn_8029959C(NjTexBody* b);
 
 /* ---- GX render state ---- */
@@ -440,7 +442,7 @@ extern s32 lbl_80347F50;
 extern s32 lbl_80346A40;
 extern NjTexBody lbl_80346500;
 extern u8 lbl_80300A00[];
-void fn_802976F8();
+s32 fn_802976F8();
 extern s32 lbl_80347F7C;
 extern s32 lbl_80347F78;
 extern s32 lbl_80347EE0;
