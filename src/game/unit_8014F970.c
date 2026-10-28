@@ -393,7 +393,13 @@ void fn_8022642C(void);
 void fn_802275A4(s32 a, s32 b);
 typedef struct { u8 pad0[0x10]; s32 f10; } Q;
 typedef struct {
-    u8 pad0[0x1c];
+    s32 x0;
+    s32 len;
+    s32 t8;
+    s32 tc;
+    s32 t10;
+    s32 t14;
+    s32 t18;
     s32 f1c;
     void *f20;
     s32 f24;
@@ -1175,6 +1181,33 @@ typedef struct KeyStep {
 } KeyStep;
 extern KeyEnt* fn_8009FDA0(KeyAnim* a, u32 idx, s32 b, s32 c, s32 d, s32 e, s32 f);
 extern f32 fn_80212A78(s32 type, f32 x, f32 t);
+typedef struct PadSlot {
+    s32 on;
+    u8 pad[0x18];
+} PadSlot;
+typedef struct PadState {
+    u8 pad[0x28];
+    PadSlot slot[4]; /* 0x28 */
+} PadState;
+typedef struct SeqRec {
+    u8 pad0[0xc];
+    s32 xc;
+    u8 pad10[0x80];
+} SeqRec;
+extern s32 lbl_80347288;
+extern s32 lbl_80347044;
+extern s32 lbl_80347040;
+extern s32 lbl_8034703C;
+extern s32 lbl_80347064;
+extern s32 lbl_80347060;
+extern PadState *lbl_80347050[2];
+extern SeqRec lbl_80306E38[2];
+extern u8 lbl_80310A1C[0x120];
+extern void fn_8015C1E4(void);
+extern void fn_80156584(void);
+extern void fn_8015983C(s32 on, s32 who, SeqRec *rec, s32 flag);
+extern void fn_80159F28(s32 who);
+extern void fn_8015A36C(s32 who);
 
 void fn_8014F970(u8 *self) {
     fn_80153270(self + 0x95c);
@@ -4286,4 +4319,120 @@ s32 fn_8015CC20(KeyObj* obj, KeyStep* k) {
         break;
     }
     return 1;
+}
+
+inline s32 PadAny(PadState *p)
+{
+    s32 r = 0;
+    if (p->slot[0].on != 0) {
+        r = 1;
+    } else if (p->slot[1].on != 0) {
+        r = 1;
+    } else if (p->slot[2].on != 0) {
+        r = 1;
+    } else if (p->slot[3].on != 0) {
+        r = 1;
+    }
+    return r;
+}
+
+inline void StartSeq(s32 who)
+{
+    lbl_80310B3C[0x3a] &= ~1;
+    if (who == 0) {
+        lbl_80310A1C[0x109] = 6;
+    } else {
+        lbl_80310A1C[0x109] = 5;
+    }
+    fn_80159F28(who);
+}
+
+s32 fn_8015BB58(s32 t)
+{
+    s32 r = 0;
+
+    if (t >= lbl_803472A4->t8 && t < lbl_803472A4->tc) {
+        if (t == lbl_803472A4->t8) {
+            r = 1;
+        }
+        if (lbl_80347288 == 1 && lbl_8034704C == 0) {
+            fn_8015C1E4();
+            lbl_8034704C = 1;
+            fn_80156584();
+        }
+    } else if (t >= lbl_803472A4->tc && t < lbl_803472A4->t10) {
+        lbl_80347044 = 0;
+        lbl_80347040 = 0;
+        lbl_8034703C = 0;
+        if (t == lbl_803472A4->tc) {
+            r = 2;
+        }
+    } else if (t >= lbl_803472A4->t10 && t < lbl_803472A4->t14) {
+        if (t >= lbl_803472A4->t10 && t < lbl_803472A4->t10 + 60 && fn_8010CED4() != 1) {
+            if (PadAny(lbl_80347050[1]) == 1 || (lbl_80310B3C[0x3a] & 1) ||
+                t >= lbl_803472A4->t10 + 30) {
+                lbl_8034703C = 1;
+            }
+            fn_8015983C(1, lbl_80347064, &lbl_80306E38[0], lbl_8034703C);
+            lbl_80347040 = 1;
+        } else if (lbl_80347040 == 1) {
+            fn_8015983C(0, lbl_80347064, &lbl_80306E38[0], 0);
+            lbl_80347040 = 0;
+        }
+        if ((t >= lbl_803472A4->t14 - lbl_803472DC - 10.0f && lbl_80306E38[0].xc != 0) ||
+            PadAny(lbl_80347050[0]) == 1 || (lbl_80310B3C[0x3a] & 1)) {
+            if (lbl_80347044 == 0) {
+                StartSeq(lbl_80347064);
+                lbl_80347044 = 1;
+            }
+        }
+        if (t == lbl_803472A4->t10) {
+            fn_8015A36C(lbl_80347064);
+        }
+        if (t == lbl_803472A4->t10) {
+            r = 3;
+        }
+    } else if (t >= lbl_803472A4->t14 && t < lbl_803472A4->t18) {
+        if (t == lbl_803472A4->t18 - 1) {
+            fn_80158690(0);
+            fn_80158690(1);
+        }
+        lbl_80347044 = 0;
+        lbl_80347040 = 0;
+        lbl_8034703C = 0;
+        if (t == lbl_803472A4->t14) {
+            r = 4;
+        }
+    } else if (t >= lbl_803472A4->t18 && t < lbl_803472A4->t8 + lbl_803472A4->len - 2) {
+        if (t >= lbl_803472A4->t18 && t < lbl_803472A4->t18 + 60 && fn_8010CED4() != 1) {
+            if (PadAny(lbl_80347050[1]) == 1 || (lbl_80310B3C[0x3a] & 1) ||
+                t >= lbl_803472A4->t18 + 30) {
+                lbl_8034703C = 1;
+            }
+            fn_8015983C(1, lbl_80347060, &lbl_80306E38[1], lbl_8034703C);
+            lbl_80347040 = 1;
+        } else if (lbl_80347040 == 1) {
+            fn_8015983C(0, lbl_80347060, &lbl_80306E38[1], 0);
+            lbl_80347040 = 0;
+        }
+        if ((t >= lbl_803472A4->t8 + lbl_803472A4->len - 10.0f - lbl_803472DC && lbl_80306E38[1].xc != 0) ||
+            PadAny(lbl_80347050[1]) == 1 || (lbl_80310B3C[0x3a] & 1)) {
+            if (lbl_80347044 == 0) {
+                StartSeq(lbl_80347060);
+                lbl_80347044 = 1;
+            }
+        }
+        if (t == lbl_803472A4->t18) {
+            fn_8015A36C(lbl_80347060);
+        }
+        if (t == lbl_803472A4->t18) {
+            r = 5;
+        }
+    } else {
+        if (t == lbl_803472A4->t8 + lbl_803472A4->len - 1.0f) {
+            lbl_8034704C = 0;
+            r = 0;
+        }
+    }
+    return r;
 }

@@ -285,6 +285,21 @@ extern s16 lbl_80346B10;
 extern Sprite* fn_801D497C(Sprite* p);
 extern void fn_801D4954(Sprite* p);
 extern void fn_8002468C(ListTask* t);
+extern s8 fn_800176DC(s8 kind);
+typedef struct Rec28B90 {
+    u8 pad0[4];
+    s16 s4;
+    s16 s6;
+    u8 pad8[2];
+    s8 kind;
+} Rec28B90;
+typedef struct Item36 { u8 pad0[0x12]; s8 f12; u8 pad13[0x24 - 0x13]; } Item36;
+typedef struct Item48 { u8 pad0[0x15]; s8 f15; u8 pad16[0x30 - 0x16]; } Item48;
+extern s32 lbl_8034733C;
+extern s32 lbl_80346B78;
+extern Item36 lbl_802C7C34[];
+extern Item48 lbl_802C4BF0[];
+extern Rec28B90 *fn_800786C0(void);
 
 void fn_80020B50(Top *t, s16 *out1, s16 *out2) {
   Inner *i = t->mid->inner;
@@ -1856,5 +1871,123 @@ void fn_800240EC(ListTask* t)
     case 0xff:
         t->flags |= 0x40;
         break;
+    }
+}
+
+s32 fn_80020FF0(s32 idx) {
+    s32 r = 0;
+    if (idx != 0) {
+        s8 i;
+        for (i = 0; i < 4; i++) {
+            switch (lbl_8030B7F4.party[i]) {
+            case 0:
+                r |= 0x1;
+                break;
+            case 1:
+                r |= 0x2;
+                break;
+            case 2:
+                r |= 0x4;
+                break;
+            case 3:
+                r |= 0x8;
+                break;
+            case 4:
+                r |= 0x10;
+                break;
+            case 5:
+                r |= 0x20;
+                break;
+            }
+        }
+        return r;
+    }
+    if (fn_800176DC(0) >= 0) r |= 0x1;
+    if (fn_800176DC(1) >= 0) r |= 0x2;
+    if (fn_800176DC(3) >= 0) r |= 0x8;
+    if (fn_800176DC(4) >= 0) r |= 0x10;
+    if (fn_800176DC(5) >= 0) r |= 0x20;
+    return r;
+}
+
+s32 fn_80028B90(void)
+{
+    Rec28B90 *r;
+    s32 c;
+    switch (lbl_8034733C) {
+    case 1:
+        return 0;
+    case 4:
+        r = fn_800786C0();
+        if (r == NULL) {
+            lbl_80346B78 = 0;
+            return 1;
+        }
+        c = ++lbl_80346B78;
+        if (r->kind == 1) {
+            switch (r->s4) {
+            case 9:
+                if (c >= 0 && c < 0x27) {
+                    return 3;
+                } else if (c >= 0x27 && c < 0x4e) {
+                    return 2;
+                } else {
+                    return 2;
+                }
+            case 13:
+                switch (lbl_802C7C34[r->s6].f12) {
+                case 0x22:
+                case 0x23:
+                    if (c >= 0 && c < 0x27) {
+                        return 3;
+                    } else if (c >= 0x27 && c < 0x4e) {
+                        return 2;
+                    } else {
+                        return 2;
+                    }
+                default:
+                    if (lbl_80346B78 >= 0 && lbl_80346B78 < 0x4e) {
+                        return 3;
+                    } else {
+                        return 3;
+                    }
+                }
+            case 12:
+                switch (lbl_802C4BF0[r->s6].f15) {
+                case 0x29:
+                    if (c >= 0 && c < 0x27) {
+                        return 3;
+                    } else if (c >= 0x27 && c < 0x75) {
+                        return 3;
+                    } else {
+                        return 2;
+                    }
+                default:
+                    if (c >= 0 && c < 0x27) {
+                        return 2;
+                    } else if (c >= 0x27 && c < 0x4e) {
+                        return 4;
+                    } else {
+                        return 3;
+                    }
+                }
+            default:
+                if (lbl_80346B78 >= 0 && lbl_80346B78 < 0x27) {
+                    return 2;
+                } else if (lbl_80346B78 >= 0x27 && lbl_80346B78 < 0x4e) {
+                    return 4;
+                } else {
+                    return 3;
+                }
+            }
+        } else {
+            if (c >= 0 && c < 0x4e) {
+                return 3;
+            } else {
+                return 3;
+            }
+        }
+    default:
+        return 1;
     }
 }

@@ -10,21 +10,33 @@ extern u8 lbl_802C8E54[];
 s8 fn_801EF300(void);
 u32 fn_801F4C24(s16 id);
 s8 fn_801EFCC4(s16 id, s32 n);
-typedef struct { u8 pad[0x12]; u8 f; u8 g; u8 pad2[0xc]; } T0;
+typedef struct { u8 pad[0x12]; u8 f; u8 g; u8 pad_14[0x2];
+ u16 v;
+ u8 pad_18[0x8]; } T0;
 extern T0 lbl_802C5790[];
-typedef struct { u8 pad[0x12]; u8 f; u8 g; u8 pad2[0x14]; } T1;
+typedef struct { u8 pad[0x12]; u8 f; u8 g; u8 pad_14[0x2];
+ u16 v;
+ u8 pad_18[0x10]; } T1;
 extern T1 lbl_802C6190[];
-typedef struct { u8 pad[0x12]; u8 f; u8 g; u8 pad2[0x14]; } T2;
+typedef struct { u8 pad[0x12]; u8 f; u8 g; u8 pad_14[0x2];
+ u16 v;
+ u8 pad_18[0x10]; } T2;
 extern T2 lbl_802C6E10[];
-typedef struct { u8 pad[0x15]; u8 f; u8 g; u8 pad2[0xd]; } T3;
+typedef struct { u8 pad[0x15]; u8 f; u8 g; u8 pad_17[0x1];
+ u16 v;
+ u8 pad_1a[0xa]; } T3;
 extern T3 lbl_802C7C34[];
-typedef struct { u8 pad[0x11]; u8 f; u8 g; u8 pad2[0x3]; } T4;
+typedef struct { u8 pad[0x11]; u8 f; u8 g; u8 pad_13[0x1];
+ u16 v; } T4;
 extern T4 lbl_802C8774[];
-typedef struct { u8 pad[0x20]; u8 f; u8 g; u8 pad2[0x2]; } T5;
+typedef struct { u8 pad_0[0x1e];
+ u16 v; u8 f; u8 g; u8 pad2[0x2]; } T5;
 extern T5 lbl_802D7E4C[];
-typedef struct { u8 pad[0x24]; u8 f; u8 g; u8 pad2[0x2]; } T6;
+typedef struct { u8 pad_0[0x22];
+ u16 v; u8 f; u8 g; u8 pad2[0x2]; } T6;
 extern T6 lbl_802D83EC[];
-typedef struct { u8 pad[0x18]; u8 f; u8 g; u8 pad2[0xa]; } T7;
+typedef struct { u8 pad_0[0x16];
+ u16 v; u8 f; u8 g; u8 pad2[0xa]; } T7;
 extern T7 lbl_802D8A2C[];
 extern const s8 lbl_802D4600[24];
 s32 fn_801E4BBC(s8 i);
@@ -285,4 +297,28 @@ s32 fn_801F5100(s16 *a, s16 *b)
     case 7: p = lbl_802D8A2C[x - 0x1e0].g; q = lbl_802D8A2C[y - 0x1e0].g; break;
     }
     return p - q;
+}
+
+u16 fn_801F477C(s16 id)
+{
+    switch (fn_801F4C24(id)) {
+    case 0:
+        return lbl_802C5790[id].v;
+    case 1:
+        return lbl_802C6190[id - 80].v;
+    case 2:
+        return lbl_802C6E10[id - 160].v;
+    case 3:
+        return lbl_802C7C34[id - 240].v;
+    case 4:
+        return lbl_802C8774[id - 320].v;
+    case 5:
+        return lbl_802D7E4C[id - 400].v;
+    case 6:
+        return lbl_802D83EC[id - 440].v;
+    case 7:
+        return lbl_802D8A2C[id - 480].v;
+    default:
+        return 0;
+    }
 }

@@ -10942,3 +10942,46 @@ void fn_8017BB1C(void) {
     }
     fn_80194F3C();
 }
+
+void fn_8017DF14(void)
+{
+    UiObj *obj;
+    s32 i;
+    UiObj *first;
+    f32 y;
+
+    first = &camp_work.pnl[lbl_80307638[1].cur[0].sel]->win->obj;
+    fn_80199BB8(first, -8.0f, 61.0f);
+    fn_80199BAC(first, -8.0f, 61.0f);
+
+    obj = &camp_work.pnl[lbl_80307638[4].cur[0].sel + 0x78]->win->obj;
+    fn_80199BB8(obj, -348.0f, 125.0f);
+    fn_80199BAC(obj, -348.0f, 125.0f);
+
+    obj = &camp_work.pnl[0x6e]->win->obj;
+    fn_80199BB8(obj, -348.0f, 189.0f);
+    fn_80199BAC(obj, -348.0f, 189.0f);
+
+    obj = &camp_work.pnl[0x6f]->win->obj;
+    fn_80199BB8(obj, -348.0f, 253.0f);
+    fn_80199BAC(obj, -348.0f, 253.0f);
+
+    for (i = 0; i < 5; i++) {
+        obj = &camp_work.pnl[0x7a + i]->win->obj;
+        UiObjSetLowered(obj);
+        y = (f32)(i * 64 + 61);
+        fn_80199BB8(obj, 668.0f, y);
+        fn_80199BAC(obj, 668.0f, y);
+    }
+    for (i = 5; i < 8; i++) {
+        obj = &camp_work.pnl[0x7a + i]->win->obj;
+        UiObjSetLowered(obj);
+        y = (f32)((i - 5) * 64 + 61);
+        fn_80199BB8(obj, 668.0f, y);
+        fn_80199BAC(obj, 668.0f, y);
+    }
+
+    obj = &camp_work.pnl[0x60]->win->obj;
+    fn_80199BB8(obj, 632.0f, 480.0f);
+    fn_80199BAC(obj, 632.0f, 480.0f);
+}

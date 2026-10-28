@@ -220,6 +220,38 @@ typedef struct ChrWork {
     u8 pad45[0x4c - 0x45];
     ChrInfo *st; /* 0x4c */
 } ChrWork;
+typedef struct Key7 {
+    u16 x0;
+    u8 x2;
+    u8 x3;
+    u8 x4;
+    u8 x5;
+    u8 x6;
+} Key7;
+typedef struct Key16 {
+    u32 frame;
+    f32 v[3];
+} Key16;
+typedef struct Track {
+    Key16* keys;
+    u32 pad4;
+    u32 count;
+} Track;
+typedef struct AnimHdr {
+    Track* track;
+    u32 length;
+} AnimHdr;
+typedef struct AnimPlay {
+    AnimHdr* anim;
+    u8 pad4[4];
+    u32 end;
+    u32 idx;
+    u8 pad10[4];
+    f32 speed;
+    f32 time;
+    f32 out[3];
+} AnimPlay;
+
 inline ChrWork* ChrW(Task* t)
 {
     return t->work;
@@ -5381,4 +5413,58 @@ void fn_80012F58(Task* t)
         }
         break;
     }
+}
+
+s32 fn_8000743C(Key7* a, Key7* b) {
+    if (a->x0 > b->x0) return 1;
+    if (a->x0 < b->x0) return -1;
+    if (a->x2 > b->x2) return 1;
+    if (a->x2 < b->x2) return -1;
+    if (a->x3 > b->x3) return 1;
+    if (a->x3 < b->x3) return -1;
+    if (a->x4 > b->x4) return 1;
+    if (a->x4 < b->x4) return -1;
+    if (a->x5 > b->x5) return 1;
+    if (a->x5 < b->x5) return -1;
+    if (a->x6 > b->x6) return 1;
+    if (a->x6 < b->x6) return -1;
+    return 0;
+}
+
+s32 fn_80011984(AnimPlay* a) {
+    s32 ret;
+    Key16* k;
+    u32 fr;
+    f32 t;
+    Track* trk;
+    Key16* keys;
+    ret = 0;
+    a->end = a->anim->length;
+    a->time = a->time + a->speed;
+    if (a->time >= (f32)a->end) {
+        return 1;
+    }
+    trk = a->anim->track;
+    keys = trk->keys;
+    while (trk->count > a->idx) {
+        k = &keys[a->idx];
+        fr = k->frame;
+        t = a->time;
+        if (t == (f32)fr) {
+            fn_80071CF0(k->v, a->out);
+            break;
+        }
+        if ((f32)fr > t) {
+            f32 dx = k->v[0] - k[-1].v[0];
+            f32 dy = k->v[1] - k[-1].v[1];
+            f32 dz = k->v[2] - k[-1].v[2];
+            a->out[0] = k[-1].v[0] + dx * t / (f32)fr;
+            a->out[1] = (&keys[a->idx])[-1].v[1] + dy * a->time / (f32)keys[a->idx].frame;
+            a->out[2] = (&keys[a->idx])[-1].v[2] + dz * a->time / (f32)keys[a->idx].frame;
+            break;
+        }
+        ret = 2;
+        a->idx++;
+    }
+    return ret;
 }

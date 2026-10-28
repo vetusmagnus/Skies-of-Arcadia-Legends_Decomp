@@ -1123,3 +1123,42 @@ void fn_801CE6D0(NJS_TEXLIST *tex, s16 id, VertexTex *v, s32 n, s32 a, u32 flags
         }
     }
 }
+
+s16 *fn_801CB51C(s16 *p, s16 want)
+{
+    s32 c0;
+    s32 c;
+    s32 n;
+    s32 stride;
+    if (p == NULL) {
+        return NULL;
+    }
+    c0 = p[0] & 0xFF;
+    p++;
+    stride = fn_801CB460(c0);
+    if (stride >= 0) {
+        n = p[0];
+        p++;
+    } else {
+        n = (u16)stride;
+    }
+    p += n;
+    if (c0 != 0xFF) {
+        do {
+            c = p[0] & 0xFF;
+            if (want == c) {
+                return p;
+            }
+            p++;
+            stride = fn_801CB460(c);
+            if (stride >= 0) {
+                n = p[0];
+                p++;
+            } else {
+                n = (u16)stride;
+            }
+            p += n;
+        } while (c != 0xFF);
+    }
+    return NULL;
+}

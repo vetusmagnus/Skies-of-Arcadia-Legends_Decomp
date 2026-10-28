@@ -551,10 +551,9 @@ typedef struct Xf_80224F28 {
 /* A collision query's result: the triangle hit and what it belongs to. */
 typedef struct Cmp {
     NJS_POINT3 v[3];
-    u16 id;         /* 0x24 */
-    u8 pad26[4];
-    u16 key;        /* 0x2a */
-    u8 pad2c[2];
+    u16 id;         u8 pad_26[0x2];
+         u16 group;
+    u16 key;        s16 slot;
     s16 idx;        /* 0x2e */
     u16 flags;      /* 0x30 */
     s16 w32;
@@ -830,6 +829,9 @@ typedef struct Osc_802282BC {
 extern s32 lbl_80347830;
 extern void fn_801A2C40(void);
 extern s32 fn_801A2670(s32 idx, s32 *out);
+struct Xf_80224F28;
+void fn_8022445C(Slot *g, Seg *segs, s32 count);
+s32 fn_80225330(Slot *o, NJS_POINT3 *p, Cmp *res);
 
 void fn_80219378(s32 a)
 {
@@ -4271,4 +4273,200 @@ void fn_8022B258(Obj *o) {
         }
         lbl_803475D0 = 0;
     }
+}
+
+Node *fn_80222E00(u16 mask, Node *self)
+{
+    Node *n;
+    for (n = lbl_80347524; n != NULL; n = n->next) {
+        if (n == self || n->flag14 < 0 || mask != (mask & n->mask10)) {
+            continue;
+        }
+        if (fn_80222B30(self, n) == 1) {
+            if (self->cb != NULL) {
+                if (self->cb(self, n) != 0) {
+                    self->flag14 |= 0x4000;
+                }
+            } else {
+                self->flag14 |= 0x4000;
+            }
+            if (n->cb != NULL) {
+                if (n->cb(n, self) != 0) {
+                    n->flag14 |= 0x4000;
+                }
+            } else {
+                n->flag14 |= 0x4000;
+            }
+            return n;
+        }
+    }
+    return NULL;
+}
+
+s32 fn_80224588(u16 key, Seg *segs, s32 count)
+{
+    Seg *seg;
+    Slot *g;
+    s32 n;
+    s32 i;
+    s32 r;
+    if (count <= 0) {
+        return 0;
+    }
+    seg = segs;
+    i = count;
+    do {
+        seg->found = 0;
+        seg++;
+    } while (--i > 0);
+    g = lbl_8034752C;
+    n = lbl_80347528;
+    r = 0;
+    if (key == 0xFFFF) {
+        do {
+            if (g->p0 != NULL) {
+                fn_8022445C(g, segs, count);
+                r = 1;
+                n--;
+            }
+            g++;
+        } while (n > 0);
+    } else {
+        do {
+            if (g->p0 != NULL && key == g->key8) {
+                fn_8022445C(g, segs, count);
+                return 1;
+            }
+            g++;
+        } while (n > 0);
+    }
+    return r;
+}
+
+s32 fn_802254A0(NJS_POINT3 *p, Cmp *res)
+{
+    s32 n;
+    Slot *g;
+    Cmp c;
+    s32 i = 0;
+    s32 ret;
+    u16 grp;
+    g = lbl_8034752C;
+    c = *res;
+    n = lbl_80347528;
+    grp = c.group;
+    if (grp == 0xFFFF) {
+        ret = 0;
+        do {
+            if (g->p0 != NULL) {
+                c.idx = -1;
+                ret = fn_80225330(g, p, &c);
+                if (ret != 0) {
+                    c.group = g->key8;
+                    c.slot = i;
+                    goto done;
+                }
+                n--;
+            }
+            i++;
+            g++;
+        } while (n > 0);
+    } else if (c.slot < 0) {
+        ret = 0;
+        do {
+            if (g->p0 != NULL) {
+                if (g->key8 == grp) {
+                    c.slot = i;
+                    c.idx = -1;
+                    ret = fn_80225330(g, p, &c);
+                    goto done;
+                }
+                n--;
+            }
+            i++;
+            g++;
+        } while (n > 0);
+    } else {
+        g += c.slot;
+        if (g->p0 != NULL) {
+            ret = fn_80225330(g, p, &c);
+        } else {
+            ret = 0;
+        }
+    }
+done:
+    if (ret != 0) {
+        *res = c;
+    }
+    return ret;
+}
+
+s32 fn_802256A0(NJS_POINT3 *p, Cmp *out, u16 grp, u16 key)
+{
+    Cmp c;
+    Slot *g;
+    s32 i;
+    s16 idx;
+    s32 ret;
+    s32 n;
+    ret = 0;
+    i = 0;
+    c.flags = out->flags;
+    g = lbl_8034752C;
+    n = lbl_80347528;
+    if (grp == 0xFFFF) {
+        do {
+            if (g->p0 != NULL) {
+                idx = XfFind(g->p0, key, g->count);
+                if (idx >= 0) {
+                    ret = fn_80224F28(&g->p0[idx], p, &c);
+                    if (ret != 0) {
+                        grp = g->key8;
+                    }
+                    break;
+                }
+                n--;
+            }
+            i++;
+            g++;
+        } while (n > 0);
+    } else {
+        do {
+            if (g->p0 != NULL && grp == g->key8) {
+                idx = XfFind(g->p0, key, g->count);
+                if (idx >= 0) {
+                    ret = fn_80224F28(&g->p0[idx], p, &c);
+                }
+                break;
+            }
+            i++;
+            g++;
+        } while (n > 0);
+    }
+    if (ret != 0) {
+        fn_801C812C(c.v, p->x, p->z, &p->y);
+        *out = c;
+        out->key = key;
+        out->group = grp;
+        out->slot = i;
+        out->idx = idx;
+    }
+    return ret;
+}
+
+Ctx802281DC *fn_80227E84(u32 id)
+{
+    s32 i;
+    Ctx802281DC *e;
+    if (id == 0xFFFFFFFF) {
+        return 0;
+    }
+    e = lbl_803475EC;
+    for (i = 0; i < 1024; e++, i++) {
+        if (e->sub != 0 && e->sub->a == id) {
+            lbl_803477F8 = i;
+            return e;
+        }
+    }
+    return 0;
 }

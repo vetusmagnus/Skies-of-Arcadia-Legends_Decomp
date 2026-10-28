@@ -2165,3 +2165,15 @@ void CampMenuRunScreen(void) {
         }
     }
 }
+
+s8 fn_801952D0(u32 mask)
+{
+    s8 count = 0;
+    s32 i;
+    for (i = 0; i < 32; i++) {
+        if (mask & (1 << i)) {
+            count++;
+        }
+    }
+    return count;
+}
