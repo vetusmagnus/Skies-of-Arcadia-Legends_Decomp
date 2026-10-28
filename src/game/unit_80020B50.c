@@ -1,7 +1,20 @@
 #include "types.h"
 #include "ninja.h"
 #include "game/task.h"
+#include "game/save_8030B7F4.h"
 #include <math.h>
+/* The argument block fn_80022F1C hands the task (work points at a pointer to it). */
+typedef struct StArg {
+    s8 x0;
+} StArg;
+typedef struct StHolder {
+    StArg* arg;
+} StHolder;
+/* The task fn_80022F1C creates. */
+typedef struct StTask {
+    Task task;
+    void** tab; /* 0x28: 28 model pointers per party member */
+} StTask;
 typedef struct Inner { u8 pad0[0x6]; s16 f6; s16 f8; u8 pad1[0xa]; s16 f14; s16 f16; u8 pad2[0x68-0x18]; float f68; u8 pad3[0xec-0x6c]; u32 fec; u32 ff0; } Inner;
 typedef struct Mid { u8 pad[0x4c]; Inner *inner; } Mid;
 typedef struct Top { u8 pad[0x24]; Mid *mid; } Top;
@@ -221,6 +234,11 @@ typedef struct KindRec {
     s16 mode;         /* 0x24 */
 } KindRec;
 extern int fn_80014C90(u8 id, int flags);
+extern s32 lbl_80346AD0;
+extern s32 lbl_80346ACC;
+extern s32 lbl_80347324;
+extern void* lbl_8034762C;
+extern void fn_8002356C(StArg* arg, void** tab, s8 a, s8 b);
 
 void fn_80020B50(Top *t, s16 *out1, s16 *out2) {
   Inner *i = t->mid->inner;
@@ -264,7 +282,7 @@ void fn_80022F0C(void) {
 }
 
 extern Mgr_800C8F3C *lbl_80346BA8;
-extern void fn_80022F74(void);
+void fn_80022F74(StTask* t);
 void fn_80022F1C(void *p) {
   lbl_80346BA4 = fn_802268E8(lbl_803475A8, fn_80022F74);
   ((Holder *)lbl_80346BA4)->ptr = fn_801E1C7C(4);
@@ -1542,6 +1560,123 @@ void fn_8002942C(s16 id, s16 n) {
         break;
     case 9:
         lbl_80302AB0[id]->w0 = lbl_80302AB0[id]->w0 | 0x02000000;
+        break;
+    }
+}
+
+void fn_80022F74(StTask* t)
+{
+    StHolder* h = t->task.work;
+    StArg* arg = h->arg;
+    s32 i;
+    s32 n;
+    s32 c;
+    s32 cur;
+    void* a;
+    void* b;
+
+    switch (t->task.state) {
+    case 0:
+    case 0xfe:
+        n = 0;
+        c = 0;
+        while (c != -1 && n < 4) {
+            c = lbl_8030B7F4.party[n];
+            n++;
+        }
+        i = n;
+        if (c == -1) {
+            i = n - 1;
+        }
+        lbl_80346AD0 = i;
+        t->tab = fn_801E1C7C(i * 0x70);
+        for (i = 0; i < lbl_80346AD0; i++) {
+            t->tab[i * 0x1c] = fn_801D497C(fn_801D68C4(lbl_8034762C, 0));
+            switch (lbl_8030B7F4.party[i]) {
+            case 0:
+                a = fn_801D68C4(lbl_8034762C, 0x22);
+                b = fn_801D68C4(lbl_8034762C, 1);
+                break;
+            case 1:
+                a = fn_801D68C4(lbl_8034762C, 0x23);
+                b = fn_801D68C4(lbl_8034762C, 2);
+                break;
+            case 2:
+                a = fn_801D68C4(lbl_8034762C, 0x24);
+                b = fn_801D68C4(lbl_8034762C, 3);
+                break;
+            case 3:
+                a = fn_801D68C4(lbl_8034762C, 0x25);
+                b = fn_801D68C4(lbl_8034762C, 4);
+                break;
+            case 4:
+                a = fn_801D68C4(lbl_8034762C, 0x26);
+                b = fn_801D68C4(lbl_8034762C, 5);
+                break;
+            case 5:
+                a = fn_801D68C4(lbl_8034762C, 0x27);
+                b = fn_801D68C4(lbl_8034762C, 6);
+                break;
+            case -1:
+            case 6:
+                a = fn_801D68C4(lbl_8034762C, 0x22);
+                b = fn_801D68C4(lbl_8034762C, 1);
+                break;
+            }
+            t->tab[i * 0x1c + 1] = fn_801D497C(a);
+            t->tab[i * 0x1c + 2] = fn_801D497C(b);
+            t->tab[i * 0x1c + 3] = fn_801D497C(fn_801D68C4(lbl_8034762C, 0x14));
+            t->tab[i * 0x1c + 4] = fn_801D497C(fn_801D68C4(lbl_8034762C, 0x12));
+            t->tab[i * 0x1c + 5] = fn_801D497C(fn_801D68C4(lbl_8034762C, 0x13));
+            t->tab[i * 0x1c + 6] = fn_801D497C(fn_801D68C4(lbl_8034762C, 0x1f));
+            t->tab[i * 0x1c + 7] = fn_801D497C(fn_801D68C4(lbl_8034762C, 7));
+            t->tab[i * 0x1c + 8] = fn_801D497C(fn_801D68C4(lbl_8034762C, 8));
+            t->tab[i * 0x1c + 9] = fn_801D497C(fn_801D68C4(lbl_8034762C, 9));
+            t->tab[i * 0x1c + 10] = fn_801D497C(fn_801D68C4(lbl_8034762C, 10));
+            t->tab[i * 0x1c + 11] = fn_801D497C(fn_801D68C4(lbl_8034762C, 11));
+            t->tab[i * 0x1c + 12] = fn_801D497C(fn_801D68C4(lbl_8034762C, 12));
+            t->tab[i * 0x1c + 13] = fn_801D497C(fn_801D68C4(lbl_8034762C, 13));
+            t->tab[i * 0x1c + 14] = fn_801D497C(fn_801D68C4(lbl_8034762C, 14));
+            t->tab[i * 0x1c + 15] = fn_801D497C(fn_801D68C4(lbl_8034762C, 15));
+            t->tab[i * 0x1c + 16] = fn_801D497C(fn_801D68C4(lbl_8034762C, 16));
+            t->tab[i * 0x1c + 17] = fn_801D497C(fn_801D68C4(lbl_8034762C, 0x15));
+            t->tab[i * 0x1c + 18] = fn_801D497C(fn_801D68C4(lbl_8034762C, 0x16));
+            t->tab[i * 0x1c + 19] = fn_801D497C(fn_801D68C4(lbl_8034762C, 0x17));
+            t->tab[i * 0x1c + 20] = fn_801D497C(fn_801D68C4(lbl_8034762C, 0x18));
+            t->tab[i * 0x1c + 21] = fn_801D497C(fn_801D68C4(lbl_8034762C, 0x19));
+            t->tab[i * 0x1c + 22] = fn_801D497C(fn_801D68C4(lbl_8034762C, 0x1a));
+            t->tab[i * 0x1c + 23] = fn_801D497C(fn_801D68C4(lbl_8034762C, 0x1b));
+            t->tab[i * 0x1c + 24] = fn_801D497C(fn_801D68C4(lbl_8034762C, 0x1c));
+            t->tab[i * 0x1c + 25] = fn_801D497C(fn_801D68C4(lbl_8034762C, 0x1d));
+            t->tab[i * 0x1c + 26] = fn_801D497C(fn_801D68C4(lbl_8034762C, 0x1e));
+            t->tab[i * 0x1c + 27] = fn_801D497C(fn_801D68C4(lbl_8034762C, 0x20));
+        }
+        lbl_80346ACC = 0;
+        t->task.f20 = -1.3f;
+        t->task.state = 1;
+        break;
+    case 1:
+        if (lbl_80347324 != 0) {
+            break;
+        }
+        cur = lbl_8034732C;
+        if ((lbl_80346ACC = arg->x0) == 0) {
+            fn_8002356C(arg, t->tab, cur, 0);
+        } else {
+            for (i = 0; i < lbl_80346AD0; i++) {
+                fn_8002356C(arg, t->tab, i, i);
+            }
+        }
+        break;
+    case 2:
+        for (i = 0; i < lbl_80346AD0 * 0x1c; i++) {
+            fn_801D4954(t->tab[i]);
+            t->tab[i] = NULL;
+        }
+        t->task.state = 0xff;
+        break;
+    case 0xff:
+        t->task.flags |= 0x40;
         break;
     }
 }
