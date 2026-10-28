@@ -90,7 +90,7 @@ extern void fn_801EAA08(Task* task);
 extern f32 fn_801DBD9C(f32 z);
 extern void fn_80005D98(Obj20* obj, s32 a, s32 b, f32 z);
 extern void fn_801EC854(EvObj* obj, s32 dist);
-extern void fn_80217830(void* p);
+extern void fn_80217830(s32 h);
 extern void fn_801EAF00(EvObj* obj);
 extern void fn_80095630(f32* v, s32 n);
 extern void fn_802275A4(NJS_TEXLIST* texlist, s32 a);
@@ -639,7 +639,7 @@ extern u16 fn_801ED69C(EvObj* obj, s32 force);
 extern u16 fn_801EDAC0(EvObj* obj, s32 force);
 extern u8 fn_801EDF24(EvObj* obj, u8 dir);
 extern u8 fn_801EE140(EvObj* obj, u8 dir, u8 range);
-extern void fn_802172C8(void* p, s8 vol);
+extern void fn_802172C8(s32 h, s8 vol);
 extern f32 fn_801C59F8(NJS_POINT3* a, NJS_POINT3* b);
 extern void fn_801C588C(NJS_POINT3* from, NJS_POINT3* to, Angle* out);
 extern void fn_801C5AB4(EvObj* obj, Angle* out);
@@ -1822,7 +1822,7 @@ EvInfo* info; f32 p, d, nr, act; s16 v;
             obj->x21e = 0;
         }
         if (!obj->x21f) {
-            obj->x240 = (void*)SePlay(0, 1, 0x24);
+            obj->x240 = SePlay(0, 1, 0x24);
             obj->x21f = 1;
             fn_802172C8(obj->x240, 0x7F);
         }
@@ -1832,7 +1832,7 @@ EvInfo* info; f32 p, d, nr, act; s16 v;
             obj->x21f = 0;
         }
         if (!obj->x21e) {
-            obj->x23c = (void*)SePlay(0, 1, 0x23);
+            obj->x23c = SePlay(0, 1, 0x23);
             obj->x21e = 1;
         }
         p = 100.0f - (dist - (f32)obj->ext->info->nearDist) * (100.0f / ((f32)obj->ext->info->actDist - (f32)obj->ext->info->nearDist));

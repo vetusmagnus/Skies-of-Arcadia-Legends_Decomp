@@ -248,12 +248,17 @@ typedef struct Rec18 {
 } Rec18;
 /* Battle character record (character task work +0x4C). */
 typedef struct U5C188 {
-    u8 id;              /* 0x000 */
-    u8 pad1[5];
-    s16 kind;           /* 0x006 */
-    u8 pad_8[0xa];
-    s16 state;          /* 0x012 */
-    u8 pad_14[0x3c];
+    u8 id;              u8 pad_1[0x3];
+              u8 b4;
+              u8 pad_5[0x1];
+    s16 kind;           s16 sub;
+           u8 pad_a[0x8];
+    s16 state;          u8 pad_14[0x6];
+          s16 x1a;
+          s16 prev_kind;
+          u8 pad_1e[0x2];
+          s16 x20;
+          u8 pad_22[0x2e];
     u32 f50;            /* 0x050 */
     u8 pad_54[0x5c - 0x54];
     void *p5c;          /* 0x05C */
@@ -271,8 +276,8 @@ typedef struct U5C188 {
     s16 xe8;            /* 0x0E8 */
     s16 xea;            /* 0x0EA */
     u32 xec;            /* 0x0EC */
-    u32 ff0;            /* 0x0F0 */
-    u8 pad_f4[0x40];
+    u32 ff0;            u32 ff4;
+            u8 pad_f8[0x3c];
     s32 x134;           /* 0x134 */
     s16 x138;           /* 0x138 */
     u8 pad_13a[0x154 - 0x13a];
@@ -462,7 +467,9 @@ typedef struct G800624FC {
     f32 v[3];
     u8 pad_48[0x8];
     f32 f50;
-    u8 pad_54[0x18];
+    u8 pad_54[0xc];
+    s32 w60;
+    u8 pad_64[0x8];
     f32 f6c;
     u8 pad_70[0xc];
     u32 f7c;
@@ -497,6 +504,8 @@ extern void fn_80075FF0(void *, s32, s32);
 typedef struct U80064CA4 {
     u8 pad0[6];
     s16 kind;
+    u8 pad_8[0xe8];
+    u32 flags;
 } U80064CA4;
 typedef struct W80064CA4 {
     u8 pad0[0x24];
@@ -1462,6 +1471,23 @@ extern s8 lbl_803092F4[12];
 extern s8 lbl_80347335;
 extern void fn_8006C8DC(char *, char *);
 extern void fn_80074E2C(char *, char *, void *, int, int);
+typedef struct S80062674 {
+    W80064CA4 *p0;
+    s16 kind;   /* 0x04 */
+    s16 mode;   /* 0x06 */
+} S80062674;
+typedef struct O80062674 {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 state;
+    u8 pad1A[10];
+    S80062674 *s;
+} O80062674;
+extern s32 fn_8001C1F0(void* t);
+extern s16 fn_8001552C(U5C188 *);
+extern s16 fn_8002188C(U5C188 *);
+extern void fn_800208F4(s16 *, s16 *, T5C188 *);
+extern s16 fn_800670E4(W5C188 *, s16, s16, s32);
 
 void fn_80055E94(u8 *p) {
     p[0x18] |= 0x40;
@@ -7531,4 +7557,454 @@ s32 fn_80072DD4(s16 a, s16 b, s16 c, void *d)
     fn_8006C8DC(buf1, buf2);
     fn_80074E2C(buf1, buf2, d, 0, 1);
     return 1;
+}
+
+void fn_80062674(O80062674 *o) {
+    S80062674 *s = o->s;
+    W80064CA4 *p = s->p0;
+    U80064CA4 *u = p->work->u;
+    s32 n;
+
+    switch (s->mode) {
+    case 3:
+        switch (u->kind) {
+        case 26:
+        case 27:
+        case 28:
+            lbl_80346BD8->f7c &= ~0x40000000;
+            u->flags |= 0x80000000;
+            lbl_80346BD8->x88 = 0;
+            lbl_80346BD8->f7c &= ~0x08000000;
+            o->state = 6;
+            break;
+        default:
+            if (lbl_80346BD8->x8e != s->mode) {
+                lbl_80346BD8->f7c &= ~0x40000000;
+                if (u->kind != s->kind && o->state != 6) {
+                    o->state = 5;
+                } else {
+                    o->state = 0;
+                    lbl_80346BD8->x88 = 0;
+                }
+            }
+            break;
+        }
+        break;
+    default:
+        switch (u->kind) {
+        case 11:
+        case 12:
+        case 13:
+        case 32:
+            lbl_80346BD8->w60 = 0;
+            lbl_80346BD8->v8[1] = 0.0f;
+            lbl_80346BD8->v8[2] = 0.0f;
+            lbl_80346BD8->v[2] = 0.0f;
+            lbl_80346BD8->v[1] = 0.0f;
+            lbl_80346BD8->x88 = 0;
+            lbl_80346BD8->f7c &= ~0x08000000;
+            o->state = 6;
+            break;
+        case 26:
+        case 27:
+        case 28:
+            u->flags |= 0x80000000;
+            lbl_80346BD8->x88 = 0;
+            lbl_80346BD8->f7c &= ~0x08000000;
+            o->state = 6;
+            break;
+        default:
+            if (u->kind != s->kind && o->state != 6) {
+                o->state = 5;
+            }
+            break;
+        }
+    }
+
+    switch (o->state) {
+    case 1:
+        o->state = 0;
+        lbl_80346BD8->v8[1] = 0.0f;
+        lbl_80346BD8->v[2] = 0.0f;
+        lbl_80346BD8->v[1] = 0.0f;
+        lbl_80346BD8->x88 = 0;
+        lbl_80346BD8->f7c &= ~0x08000000;
+        break;
+    case 2:
+        switch (lbl_80346BD8->x8e) {
+        case 4:
+            n = 0;
+            lbl_80346BD8->v8[1] -= 0.2f;
+            if (lbl_80346BD8->v8[1] <= -3.2f) {
+                lbl_80346BD8->v8[1] = -3.2f;
+                n = 1;
+            }
+            lbl_80346BD8->v8[2] += 0.2f;
+            if (lbl_80346BD8->v8[2] >= 3.2f) {
+                lbl_80346BD8->v8[2] = 3.2f;
+                n++;
+            }
+            lbl_80346BD8->ang[1] -= 10.0f;
+            if (lbl_80346BD8->ang[1] <= 0.0f) {
+                lbl_80346BD8->ang[1] = 0.0f;
+                n++;
+            }
+            if (n == 3) {
+                o->state = 3;
+            }
+            break;
+        default:
+            o->state = 4;
+        }
+        break;
+    case 3:
+        switch (lbl_80346BD8->x8e) {
+        case 4:
+            lbl_80346BD8->v8[0] = 4.0f;
+            lbl_80346BD8->v[1] -= 10.0f;
+            if (lbl_80346BD8->v[1] <= -90.0f) {
+                lbl_80346BD8->v[1] = -90.0f;
+                fn_80075FF0(p, 0x1d, lbl_80346BD8->x8e);
+                o->state = 3;
+            }
+            break;
+        default:
+            o->state = 4;
+        }
+        break;
+    case 0:
+        lbl_80346BD8->x88 = 0;
+        lbl_80346BD8->v8[1] = 0.0f;
+        s->mode = lbl_80346BD8->x8e;
+        switch (lbl_80346BD8->x8e) {
+        case 4:
+            o->state = 2;
+            fn_80075FF0(p, 2, -1);
+            break;
+        case -1:
+            o->state = 4;
+            fn_80075FF0(p, 2, -1);
+            break;
+        case 3:
+            lbl_80346BD8->f7c |= 0x40000000;
+            lbl_80346BD8->x88 = 4;
+        case 1:
+        case 7:
+            lbl_80346BD8->f7c |= 0x08000000;
+        default:
+            fn_80075FF0(p, 0x1d, lbl_80346BD8->x8e);
+            o->state = 4;
+            break;
+        }
+    case 4:
+        if (lbl_80346BD8->x8e != s->mode) {
+            o->state = 1;
+        }
+        switch (lbl_80346BD8->x8e) {
+        case -1:
+        case 6:
+            lbl_80346BD8->ang[1] -= 5.0f;
+            while (lbl_80346BD8->ang[1] < 0.0f) {
+                lbl_80346BD8->ang[1] += 360.0f;
+            }
+            lbl_80346BD8->v8[1] = 0.5f * njSin(lbl_80346BD8->w60);
+            lbl_80346BD8->w60 += 0x5b0;
+            break;
+        case 1:
+        case 7:
+            lbl_80346BD8->ang[1] -= 2.5f;
+            while (lbl_80346BD8->ang[1] < 0.0f) {
+                lbl_80346BD8->ang[1] += 360.0f;
+            }
+            lbl_80346BD8->v8[1] = 2.0f * njSin(lbl_80346BD8->w60);
+            lbl_80346BD8->w60 += 0x2d8;
+            lbl_80346BD8->v[2] -= 2.0f;
+            if (lbl_80346BD8->v[2] < 0.0f) {
+                lbl_80346BD8->v[2] += 360.0f;
+            }
+            break;
+        case 2:
+        default:
+            break;
+        }
+        break;
+    case 5:
+        switch (s->mode) {
+        case 3:
+            lbl_80346BD8->x88 = 0;
+            o->state = 6;
+            break;
+        case 1:
+        case 7:
+            n = 0;
+            if (0.0f == lbl_80346BD8->v8[1] || u->kind == 12) {
+                n = 1;
+            } else if (lbl_80346BD8->v8[1] > 0.0f) {
+                lbl_80346BD8->v8[1] = 2.0f * njSin(lbl_80346BD8->w60);
+                lbl_80346BD8->w60 += 0x71c;
+                if (lbl_80346BD8->v8[1] <= 0.0f) {
+                    lbl_80346BD8->w60 = 0;
+                    n = 1;
+                    lbl_80346BD8->v8[1] = 0.0f;
+                }
+            } else {
+                lbl_80346BD8->v8[1] = 2.0f * njSin(lbl_80346BD8->w60);
+                lbl_80346BD8->w60 += 0x71c;
+                if (lbl_80346BD8->v8[1] >= 0.0f) {
+                    lbl_80346BD8->w60 = 0;
+                    n = 1;
+                    lbl_80346BD8->v8[1] = 0.0f;
+                }
+            }
+            if (lbl_80346BD8->v[2] <= 0.0f) {
+                lbl_80346BD8->v[2] = 0.0f;
+                n++;
+            } else {
+                lbl_80346BD8->v[2] -= 10.0f;
+            }
+            if (n == 2) {
+                lbl_80346BD8->x88 = 0;
+                lbl_80346BD8->f7c &= ~0x08000000;
+                o->state = 6;
+            }
+            break;
+        case 4:
+            if (u->kind == 12) {
+                lbl_80346BD8->x88 = 0;
+                o->state = 6;
+            } else {
+                n = 0;
+                lbl_80346BD8->v8[1] += 0.2f;
+                if (lbl_80346BD8->v8[1] >= 0.0f) {
+                    lbl_80346BD8->v8[1] = 0.0f;
+                    n = 1;
+                }
+                lbl_80346BD8->v8[2] -= 0.2f;
+                if (lbl_80346BD8->v8[2] <= 0.0f) {
+                    lbl_80346BD8->v8[2] = 0.0f;
+                    n++;
+                }
+                lbl_80346BD8->v[1] += 10.0f;
+                if (lbl_80346BD8->v[1] >= 0.0f) {
+                    lbl_80346BD8->v[1] = 0.0f;
+                    n++;
+                }
+                if (n == 3) {
+                    o->state = 6;
+                    lbl_80346BD8->x88 = 0;
+                }
+            }
+            break;
+        case 2:
+        default:
+            lbl_80346BD8->x88 = 0;
+            o->state = 6;
+            break;
+        }
+        break;
+    case 6:
+        o->flags |= 0x40;
+        break;
+    }
+}
+
+s32 fn_8006721C(T5C188 *o) {
+    s16 kind;
+    s16 sub;
+    char buf[0x44];
+    W5C188 *w;
+    U5C188 *u;
+    T5C188 *t;
+    U5C188 *tu;
+    s16 idx;
+    s32 n;
+    u32 f;
+
+    sub = -1;
+    w = o->work;
+    u = w->u;
+    t = fn_80021658(lbl_80346BD8->x90);
+    tu = t->work->u;
+    if (u->kind == 12 && tu->x20 == 0x33 && !(lbl_80346BD8->f7c & 0x04000000)) {
+        idx = fn_800670E4(w, 2, 0, 0);
+        lbl_80346BD8->f7c |= 0x04000000;
+        if (idx >= 0) {
+            u->prev_kind = u->kind;
+            u->kind = 2;
+            u->state = 0;
+            u->xe8 = u->xe4;
+            u->xe4 = idx;
+            u->x134 = 0;
+            u->xec &= ~0x80000000;
+            fn_80075F2C(o);
+        }
+        return 0;
+    }
+    if (TypeA(tu->kind) == 1 && TypeA(u->kind) == 0) {
+        lbl_80346BD8->f7c &= ~0x04000000;
+    } else {
+        lbl_80346BD8->f7c &= ~0x04000000;
+        if (u->x134 == 0 || lbl_80346BD8->w4 == 1
+            || (u->kind == tu->kind && tu->x134 != 0)
+            || (u->kind == 12 && (tu->kind == 11 || tu->kind == 32))
+            || ((lbl_80346BD8->f7c & 0x40000000) && tu->kind != 14 && TypeA(tu->kind) != 1)) {
+            return 0;
+        }
+    }
+    if (u->xec & 0x40000000) {
+        kind = tu->kind;
+        switch (kind) {
+        case 21:
+        case 22:
+        case 23:
+        case 24:
+        case 25:
+            kind = 16;
+            sub = -1;
+            break;
+        case 29:
+        case 30:
+            sub = tu->x1a;
+            break;
+        default:
+            sub = -1;
+            break;
+        }
+    } else {
+        kind = tu->kind;
+        if ((u->kind == 11 || u->kind == 32) && kind != u->kind) {
+            u->xec &= ~0x20;
+        }
+        switch (kind) {
+        case 9:
+        case 10:
+            kind = 2;
+            break;
+        case 4:
+        case 5:
+            if (fn_8001C1F0(t) == 1) {
+                kind = 2;
+            }
+            break;
+        case 11:
+        case 32:
+            if (fn_8001C1F0(t) == 1) {
+                kind = 2;
+            } else if (tu->f50 & 0x40000000) {
+                kind = 11;
+            } else {
+                switch (fn_8001552C(tu)) {
+                case 0:
+                default:
+                    switch (tu->state) {
+                    case 2:
+                    case 4:
+                    case 6:
+                        kind = 2;
+                        break;
+                    default:
+                        if (tu->ff4 & 0x80000000) {
+                            kind = 12;
+                        }
+                        break;
+                    }
+                    break;
+                case 1:
+                    u->xec |= 0x20;
+                    kind = 2;
+                    break;
+                case 2:
+                    kind = 12;
+                    break;
+                }
+            }
+            break;
+        case 21:
+        case 22:
+        case 23:
+        case 24:
+        case 25:
+            kind = 16;
+            sub = -1;
+            break;
+        case 30:
+            sub = fn_8002188C(tu);
+            switch (sub) {
+            case 35:
+            case 36:
+            case 37:
+                kind = 2;
+                break;
+            }
+            break;
+        case 29:
+            break;
+        default:
+            sub = -1;
+            break;
+        }
+    }
+    if (u->kind == 14 && kind != 15) {
+        sprintf(buf, "DEAD CHARA");
+        return 0;
+    }
+    if (lbl_80347394 == NULL) {
+        switch (u->kind) {
+        case 26:
+        case 27:
+        case 28:
+            return 0;
+        }
+    }
+    idx = fn_800670E4(w, kind, sub, 1);
+    if (idx >= 0) {
+        fn_800208F4(&kind, &sub, o);
+    }
+    idx = fn_800670E4(w, kind, sub, 0);
+    if (idx < 0) {
+        switch (kind) {
+        case 5:
+        case 8:
+            kind = 4;
+            break;
+        case 19:
+            kind = 6;
+            break;
+        }
+        idx = fn_800670E4(w, kind, sub, 0);
+    }
+    if (idx >= 0) {
+        n = 0;
+        if (u->kind != kind) {
+            n = 1;
+        }
+        f = u->tbl[idx].flags8;
+        if (f & 0x04000000) {
+            n = 1;
+        }
+        if ((f & 0x01000000) && (u->xec & 0x20000)) {
+            n = 1;
+        }
+        if (n != 0) {
+            u->b4 = tu->b4;
+            u->prev_kind = u->kind;
+            u->kind = kind;
+            u->sub = sub;
+            u->state = 0;
+            u->xe8 = u->xe4;
+            u->xe4 = idx;
+            if (u->kind != 2) {
+                u->x134 = 0;
+            }
+            if (TypeB(u->kind)) {
+                tu->xec |= 0x80000;
+            }
+            u->xec &= ~0x20000;
+            return 1;
+        }
+    }
+    if (u->xec & 0x8000) {
+        u->xec &= ~0x8000;
+    }
+    return 0;
 }

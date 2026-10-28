@@ -149,8 +149,8 @@ typedef struct {
     u16 x230;                /* 0x230 */
     u16 point;               /* 0x232 */
     u8 pad234[0x23C - 0x234];
-    void* x23c;              /* 0x23C */
-    void* x240;              /* 0x240 */
+    s32 x23c;                /* 0x23C sound handle */
+    s32 x240;                /* 0x240 sound handle */
     u8 pad244[0x24C - 0x244];
     NJS_POINT3 x24c;         /* 0x24C */
     u8 pad258[0x260 - 0x258];

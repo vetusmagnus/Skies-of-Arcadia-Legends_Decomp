@@ -3338,6 +3338,125 @@ extern void fn_800B8028(Work_800B88F8*);
         (w)->x25c = NULL; \
     } \
 } while (0)
+extern void njSetMatrix(NJS_MATRIX md, NJS_MATRIX ms);
+extern void njRotateX(NJS_MATRIX m, Angle a);
+extern void njTranslate(NJS_MATRIX m, f32 x, f32 y, f32 z);
+extern void fn_80291C44(NJS_MATRIX m);
+typedef struct Col_800B45D4 {
+    u8 a, r, g, b;
+} Col_800B45D4;
+typedef struct Mtx_800B45D4 {
+    NJS_MATRIX m;
+} Mtx_800B45D4;
+extern const Mtx_800B45D4 lbl_802B1128;
+typedef struct Bone_800B45D4 {
+    u32 x00;
+    Mtx_800B45D4 mtx;               /* 0x04 */
+    f32 x44;                        /* 0x44 */
+    u8 pad48[0x6c - 0x48];
+    Angle rotY;                     /* 0x6C */
+    u8 pad70[0x74 - 0x70];
+    struct Bone_800B45D4 *parent;   /* 0x74 */
+    struct Bone_800B45D4 *child;    /* 0x78 */
+    struct Bone_800B45D4 *next;     /* 0x7C */
+} Bone_800B45D4;
+typedef struct Vtx_800B45D4 {
+    NJS_POINT3 p;
+    Col_800B45D4 col;
+} Vtx_800B45D4;
+typedef struct Cfg_800B45D4 {
+    u8 pad0[0x48];
+    f32 x48;
+    s32 x4c;
+    s32 x50;
+    s32 x54, x58, x5c;
+    s32 x60, x64, x68;
+    u32 x6c;
+    u32 x70;
+    s32 x74;
+    u32 x78;
+    s32 x7c;
+    u32 x80;
+    s32 x84;
+    f32 x88, x8c, x90;
+    s32 x94;
+    s32 x98, x9c, xa0;
+    s32 xa4;
+    s32 xa8;
+    s32 xac;
+    s32 xb0;
+    s32 xb4;
+    s32 xb8;
+    s32 xbc;
+    s32 xc0;
+    s32 xc4;
+    s32 xc8;
+    u32 xcc;
+    f32 xd0;
+    u32 xd4;
+    f32 xd8;
+} Cfg_800B45D4;
+typedef struct Link_800B45D4 {
+    u8 pad[0x10];
+    Cfg_800B45D4 *cfg;
+} Link_800B45D4;
+typedef struct Lt_800B45D4 {
+    u32 flags;                      /* 0x00 */
+    u8 pad4[0x78 - 0x04];
+    s32 x78;                        /* 0x78 */
+} Lt_800B45D4;
+typedef struct Work_800B45D4 {
+    u8 pad0[0x1c8];
+    Link_800B45D4 *link;            /* 0x1C8 */
+    u8 pad1cc[0x200 - 0x1cc];
+    s16 x200;                       /* 0x200 */
+    s16 x202;                       /* 0x202 */
+    u8 pad204[0x268 - 0x204];
+    Lt_800B45D4 *x268;              /* 0x268 */
+} Work_800B45D4;
+typedef struct Fx_800B45D4 {
+    u32 flags;                      /* 0x00 */
+    u8 pad4[0x1c - 0x04];
+    f32 radius;                     /* 0x1C */
+    f32 x20;                        /* 0x20 */
+    u8 pad24[0x28 - 0x24];
+    f32 x28;                        /* 0x28 */
+    f32 x2c;                        /* 0x2C */
+    f32 x30, x34, x38;              /* 0x30 */
+    f32 x3c;                        /* 0x3C */
+    Angle x40;                      /* 0x40 */
+    f32 x44;                        /* 0x44 */
+    f32 x48;                        /* 0x48 */
+    f32 x4c;                        /* 0x4C */
+    s32 x50, x54, x58;              /* 0x50 */
+    s16 x5c;                        /* 0x5C */
+    u8 pad5e[0x60 - 0x5e];
+    s16 x60;                        /* 0x60 */
+    u8 pad62[0x64 - 0x62];
+    s16 x64;                        /* 0x64 */
+    s16 x66;                        /* 0x66 */
+    u16 x68;                        /* 0x68 */
+    u8 x6a;                         /* 0x6A */
+    u8 x6b;                         /* 0x6B */
+    s16 x6c;                        /* 0x6C */
+    u8 x6e;                         /* 0x6E */
+    u8 pad6f;
+    u8 x70;                         /* 0x70 */
+    u8 x71;                         /* 0x71 */
+    u8 x72;                         /* 0x72 */
+    u8 x73;                         /* 0x73 */
+    s16 x74;                        /* 0x74 */
+    s16 x76;                        /* 0x76 */
+    u8 pad78[0x7c - 0x78];
+    s32 x7c;                        /* 0x7C */
+    Vtx_800B45D4 v[6];              /* 0x80 */
+    DrawState ds;                   /* 0xE0 */
+    u8 padds[0x100 - 0xe0 - sizeof(DrawState)];
+    s32 x100;                       /* 0x100 */
+    u8 pad104[0x108 - 0x104];
+    Bone_800B45D4 *first;           /* 0x108 */
+    Bone_800B45D4 *last;            /* 0x10C */
+} Fx_800B45D4;
 
 void fn_800B2DA0(u8* p, u32 v) {
     u8* q = *(u8**)(p + 0x268);
@@ -9567,5 +9686,283 @@ void fn_800B88F8(Obj_800B88F8* o) {
         break;
     case 5:
         break;
+    }
+}
+
+void fn_800B45D4(Work_800B45D4 *w, Fx_800B45D4 *q)
+{
+    s32 odd;
+    s32 per;
+    Angle acc;
+    Bone_800B45D4 *cur;
+    Bone_800B45D4 *prev;
+    Bone_800B45D4 *row;
+    Bone_800B45D4 *head;
+    Angle rx;
+    s32 j;
+    s32 ring;
+    s32 total;
+    s32 col;
+    s32 idx;
+    s32 found;
+    Bone_800B45D4 *ref;
+    s32 i;
+    s32 n;
+    Cfg_800B45D4 *cfg = w->link->cfg;
+    Lt_800B45D4 *lt;
+    s32 lim;
+    u8 a1;
+    u8 a2;
+    Col_800B45D4 c1;
+    Col_800B45D4 c0;
+    f32 inv;
+    Angle rz;
+    NJS_POINT3 pt;
+    Angle ang[3];
+    f32 y;
+    s32 cnt;
+    Bone_800B45D4 *tail;
+    Bone_800B45D4 *p;
+    Bone_800B45D4 *nb;
+
+    q->flags = 0;
+    lt = w->x268;
+    if (lt != NULL) {
+        lt->x78 = -1;
+        lt->flags |= 0x200;
+    }
+    q->radius = cfg->x48;
+    q->x64 = cfg->x4c;
+    lim = cfg->x50;
+    if (lim > q->x64) {
+        lim = q->x64;
+    }
+    q->x64 *= 2;
+    c0.r = cfg->x54;
+    c0.g = cfg->x58;
+    c0.b = cfg->x5c;
+    c1.r = cfg->x60;
+    c1.g = cfg->x64;
+    c1.b = cfg->x68;
+    a1 = cfg->x6c;
+    c1.a = a1;
+    c0.a = a1;
+    a2 = cfg->x70;
+    q->x68 = cfg->x74;
+    q->x4c = a1;
+    DrawStateDefault2D(&q->ds);
+    if (cfg->x78 != 0) {
+        q->x100 = 10;
+    } else {
+        q->x100 = 6;
+    }
+    q->x6c = cfg->x7c;
+    if (cfg->x80 != 0) {
+        q->flags |= 1;
+    }
+    q->x73 = cfg->x84;
+    q->x30 = cfg->x88;
+    q->x34 = cfg->x8c;
+    q->x38 = cfg->x90;
+    q->x6e = cfg->x94;
+    q->x50 = cfg->x98;
+    q->x54 = cfg->x9c;
+    q->x58 = cfg->xa0;
+    q->x71 = cfg->xa4;
+    q->x76 = cfg->xa8;
+    q->x7c = cfg->xac;
+    q->x2c = cfg->xb0 == 0 ? 1.0f : 1.0f / cfg->xb0;
+    q->x72 = cfg->xb4;
+    q->x28 = cfg->xb8 == 0 ? 1.0f : 1.0f / cfg->xb8;
+    q->x70 = cfg->xbc;
+    q->x74 = cfg->xc0;
+    q->x6a = cfg->xc4;
+    q->x6b = cfg->xc8;
+    if (cfg->xcc != 0) {
+        q->flags |= 0x40;
+    }
+    q->x3c = cfg->xd0;
+    q->x40 = 182.04445f * cfg->xd4;
+    q->x44 = cfg->xd8;
+    if (q->x6a) {
+        q->flags |= 0x10;
+    }
+    if (q->x6b) {
+        q->flags |= 0x20;
+    }
+    if (q->x40 != 0) {
+        q->flags |= 4;
+    }
+    if (q->x3c) {
+        q->flags |= 8;
+    }
+    if (q->x44) {
+        q->flags |= 2;
+    }
+    if (q->x50 != 0 || q->x54 != 0 || q->x58 != 0) {
+        q->flags |= 0x100;
+    }
+    if (q->x30 || q->x34 || q->x38) {
+        q->flags |= 0x80;
+    }
+    q->x5c = 0;
+    q->x30 = q->x30 - q->x34;
+    q->x48 = 3.1415927f / q->x68;
+    w->x200 = a1;
+    w->x202 = a2;
+    inv = 1.0f / q->x64;
+    rx = 10430.37835 * (7.2551975f * inv);
+    rz = 10430.37835 * (4.1887903f * inv);
+
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    njUnitMatrix(NULL);
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    pt.z = 0.0f;
+    pt.x = 0.0f;
+    pt.y = q->radius;
+    ang[1] = 0;
+    ang[0] = 0;
+    ang[2] = rz;
+    q->x20 = q->radius * njCos(rz);
+    njRotateEx(ang, 1);
+    njCalcPoint(NULL, &pt, &q->v[0].p);
+    njPopMatrixEx();
+    ang[1] = 0x2aaa;
+    ang[2] = 0;
+    ring = 1;
+    cnt = lim > q->x64 ? 0.21650635f * q->x64 + 1.0f : lim;
+    q->x66 = cnt;
+    njRotateEx(ang, 1);
+    njCalcPoint(NULL, &q->v[0].p, &q->v[1].p);
+    njCalcPoint(NULL, &q->v[1].p, &q->v[3].p);
+    njCalcPoint(NULL, &q->v[3].p, &q->v[5].p);
+    njCalcPoint(NULL, &q->v[5].p, &q->v[4].p);
+    njCalcPoint(NULL, &q->v[4].p, &q->v[2].p);
+    q->v[5].col = c1;
+    q->v[3].col = c1;
+    q->v[2].col = c1;
+    q->v[4].col = c0;
+    q->v[1].col = c0;
+    q->v[0].col = c0;
+    y = q->v[0].p.y;
+    q->v[5].p.y = 0.0f;
+    q->v[4].p.y = 0.0f;
+    q->v[3].p.y = 0.0f;
+    q->v[2].p.y = 0.0f;
+    q->v[1].p.y = 0.0f;
+    q->v[0].p.y = 0.0f;
+    njPopMatrixEx();
+
+    cur = fn_801E1A2C(1, 0x80);
+    cur->mtx = lbl_802B1128;
+    cur->x44 = 0.0f;
+    tail = row = cur;
+    acc = rx;
+    total = 1;
+    per = 6;
+    q->first = tail;
+    while (ring < cnt) {
+        total += per;
+        col = 0;
+        idx = 0;
+        for (i = 0; i < per; i++) {
+            prev = cur;
+            cur = fn_801E1A2C(1, 0x80);
+            if (i == 0) {
+                row->child = cur;
+                head = cur;
+                cur->parent = row;
+            } else {
+                prev->next = cur;
+            }
+            cur->x44 = row->x44;
+        }
+        tail->next = head;
+        ang[0] = 0;
+        prev = cur;
+        tail = cur;
+        cur = head;
+        ang[1] = 0x2aaa;
+        found = 0;
+        njSetMatrix(NULL, row->mtx.m);
+        odd = ring % 2;
+        while (row->child == NULL || !(row->child != NULL && found)) {
+            if (row->child != NULL) {
+                ref = row;
+                found = 1;
+            }
+            n = 1;
+            if (ring != 1) {
+                if (col % (ring - 1) == 0) {
+                    n = 2;
+                }
+            } else {
+                n = 6;
+            }
+            for (j = 0; j < n; j++) {
+                if (idx % ring > 1 && odd == 0) {
+                    njPushMatrixEx();
+                    fn_80286EE8();
+                    fn_8028B498();
+                    if (row->next == head) {
+                        njSetMatrix(cur->mtx.m, ref->mtx.m);
+                    } else {
+                        njSetMatrix(cur->mtx.m, row->next->mtx.m);
+                    }
+                    njRotateY(cur->mtx.m, -0x2aaa);
+                    njRotateX(cur->mtx.m, rx);
+                    njRotateY(cur->mtx.m, 0x2aaa);
+                    njPopMatrixEx();
+                    cur->rotY = 0x2aaa;
+                } else {
+                    fn_80291C44(cur->mtx.m);
+                    njRotateX(cur->mtx.m, rx);
+                }
+                prev = cur;
+                cur = cur->next;
+                idx++;
+                njRotateEx(ang, 1);
+            }
+            if (cur == NULL) {
+                break;
+            }
+            row = row->next;
+            njSetMatrix(NULL, row->mtx.m);
+            col++;
+        }
+        acc += rx;
+        row = head;
+        per += 6;
+        ring++;
+        njSin(acc);
+    }
+    q->last = head;
+    nb = fn_801E1A2C(1, 0x80);
+    nb->parent = q->last;
+    q->last->child = nb;
+    prev->next = nb;
+    q->x60 = total;
+    if (q->x74 == 0) {
+        q->x74 = total;
+    }
+    if (q->x76 == 0) {
+        q->x76 = total;
+    }
+    for (p = q->first; p != NULL; p = p->next) {
+        njTranslate(p->mtx.m, 0.0f, y, 0.0f);
+    }
+    njPopMatrixEx();
+    for (p = q->first; p != NULL; p = p->next) {
+        if (p->rotY != 0) {
+            njRotateY(p->mtx.m, p->rotY);
+            p->rotY = 0;
+        }
     }
 }

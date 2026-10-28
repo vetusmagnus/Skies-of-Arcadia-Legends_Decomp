@@ -2327,6 +2327,33 @@ extern void fn_801C5A60(NJS_MATRIX m, NJS_POINT3 *p, NJS_POINT3 *out);
 extern u32 fn_80222E00(u32 flags, Ent_800F1E5C *e);
 extern s32 fn_802254A0(NJS_POINT3 *p, Hit *h);
 extern NJS_POINT3 lbl_802B2228;
+/* lbl_8030B7F4 (game/save_8030B7F4.h), up to the byte at 0xb4d. */
+typedef struct SaveData {
+    u8 pad0[0xb4c];
+    u8 xb4c;
+    u8 xb4d;                    /* 0xb4d ADD: proximity level of the nearest sparkle (0..4) */
+    u8 padb4e[0x16A0 - 0xb4e];
+} SaveData;
+extern SaveData lbl_8030B7F4;
+/* fn_80005D98's sprite (as in evobj.c). */
+typedef struct Obj14 {
+    u32 w[4];
+    s16 flag; /* 0x10 */
+    u16 pad;
+} Obj14;
+typedef struct Obj20 {
+    f32 x, y;      /* 0x00 */
+    f32 pad08;     /* 0x08 */
+    f32 sx, sy;    /* 0x0C */
+    u32 colour;    /* 0x14 */
+    NJS_TEXLIST* texlist; /* 0x18 */
+    Obj14* data;   /* 0x1C */
+} Obj20;
+extern u32 lbl_80347648;
+extern s32 lbl_80347408;
+extern f32 fn_80290008(NJS_POINT3* a, NJS_POINT3* b);
+extern void fn_80005D98(Obj20* obj, s32 a, s32 b, f32 z);
+extern int rand(void);
 
 void fn_800D81E8(void) {
     fn_80226D14();
@@ -8211,4 +8238,114 @@ s32 fn_800F04C8(void) {
     DrawStatePop(0);
     DrawStateRestore();
     return ret;
+}
+
+s32 fn_800EAE2C(EvObj* pl, EvObj* obj) {
+    Obj20 o;
+    s16 thr[15] = { 6, 6, 6, 6, 1, 1, 1, 1, 1, 3, 3, 3, 3, 3, 3 };
+    Obj14 parts[15] = {
+        { { 0x00540054, 0x00000000, 0x00000000, 0x00530053 }, 0 },
+        { { 0x00540054, 0x00000000, 0x00540000, 0x00A70053 }, 0 },
+        { { 0x00540054, 0x00000000, 0x00000000, 0x00530053 }, 0 },
+        { { 0x00540054, 0x00000000, 0x00540000, 0x00A70053 }, 0 },
+        { { 0x00540054, 0x00000000, 0x00A80000, 0x00FB0053 }, 0 },
+        { { 0x00540054, 0x00000000, 0x00000054, 0x005300A7 }, 0 },
+        { { 0x00540054, 0x00000000, 0x00540054, 0x00A700A7 }, 0 },
+        { { 0x00540054, 0x00000000, 0x00A80054, 0x00FB00A7 }, 0 },
+        { { 0x00540054, 0x00000000, 0x000000A8, 0x005300FB }, 0 },
+        { { 0x00540054, 0x00000000, 0x005400A8, 0x00A700FB }, 0 },
+        { { 0x00540054, 0x00000000, 0x00A800A8, 0x00FB00FB }, 0 },
+        { { 0x00540054, 0x00000000, 0x005400A8, 0x00A700FB }, 0 },
+        { { 0x00540054, 0x00000000, 0x00A800A8, 0x00FB00FB }, 0 },
+        { { 0x00540054, 0x00000000, 0x005400A8, 0x00A700FB }, 0 },
+        { { 0x00540054, 0x00000000, 0x00A800A8, 0x00FB00FB }, 0 },
+    };
+    NJS_POINT3 a;
+    NJS_POINT3 b;
+    EvInfo* info;
+    f32 range;
+    f32 dist;
+
+    if (lbl_80347648 == 0) {
+        lbl_8030B7F4.xb4d = 0;
+        lbl_80310B3C[0x22] &= ~0x80;
+        lbl_80347648 = 1;
+    }
+    info = obj->ext->info;
+    if (FlagTest(info->nearDist + 0x500) != 0) {
+        return 0;
+    }
+    range = info->actDist / 10;
+    a.x = pl->pos.x;
+    a.y = pl->pos.y;
+    a.z = pl->pos.z;
+    b.x = obj->pos.x;
+    b.y = obj->pos.y;
+    b.z = obj->pos.z;
+    dist = fn_80290008(&a, &b);
+    obj->x24c.x = dist;
+    obj->x24c.y = range;
+    if (dist < 2.0f * range) {
+        lbl_8030B7F4.xb4d = 1;
+        lbl_80310B3C[0x22] |= 0x80;
+        o.colour = 0;
+        o.texlist = obj->ext->texlist;
+        o.sx = 0.5f;
+        o.sy = 0.5f;
+        o.x = 48.0f;
+        o.y = 48.0f;
+        o.data = &parts[obj->x1fc];
+        if (obj->x200++ >= thr[obj->x1fc]) {
+            obj->x200 = 0;
+            if (obj->x1fc++ >= 14) {
+                obj->x1fc = 0;
+            }
+        }
+        if (lbl_80347408 == 0) {
+            fn_80005D98(&o, 0, 0x21, fn_801DBD9C(-1.5f));
+        }
+        if (obj->x202 > 30 - obj->x206 && lbl_8030CEA0.x15c8 == 0 && lbl_80347408 == 0) {
+            obj->x23c = SePlay(0, 1, 0x26);
+            obj->x202 = 0;
+            obj->x206 = (s16)rand() % 20;
+        }
+    } else if (dist < 4.0f * range) {
+        lbl_8030B7F4.xb4d = 2;
+        if (obj->x202 > 50 - obj->x206 && lbl_8030CEA0.x15c8 == 0 && lbl_80347408 == 0) {
+            obj->x23c = SePlay(0, 1, 0x26);
+            obj->x202 = 0;
+            obj->x206 = (s16)rand() % 25;
+            if (rand() % 5 == 0) {
+                obj->x206 = (s16)rand() % 20 + 20;
+            }
+        }
+    } else if (dist < 7.0f * range) {
+        lbl_8030B7F4.xb4d = 3;
+        if (obj->x202 > 70 - obj->x206 && lbl_8030CEA0.x15c8 == 0 && lbl_80347408 == 0) {
+            obj->x23c = SePlay(0, 1, 0x26);
+            obj->x202 = 0;
+            obj->x206 = (s16)rand() % 35;
+            if (rand() % 5 == 0) {
+                obj->x206 = (s16)rand() % 20 + 40;
+            }
+        }
+    } else if (dist < 10.0f * range) {
+        lbl_8030B7F4.xb4d = 4;
+        if (obj->x202 > 90 - obj->x206 && lbl_8030CEA0.x15c8 == 0 && lbl_80347408 == 0) {
+            obj->x23c = SePlay(0, 1, 0x26);
+            obj->x202 = 0;
+            obj->x206 = (s16)rand() % 45;
+            if (rand() % 5 == 0) {
+                obj->x206 = (s16)rand() % 20 + 60;
+            }
+        }
+    } else {
+        return 0;
+    }
+    if (lbl_8030CEA0.x15c8 == 0) {
+        obj->x202++;
+    } else {
+        obj->x202 = 0;
+    }
+    return 1;
 }
