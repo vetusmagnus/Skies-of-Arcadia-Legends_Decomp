@@ -155,6 +155,7 @@ typedef int s32_8022B014;
 extern s32_8022B014 lbl_80347508;
 typedef int s32_8022B064;
 extern s32_8022B064 lbl_80347508;
+extern s32 fn_801DD078(void *a, void *b);
 extern s32 fn_801DCFA0(void *a, void *b);
 s32 fn_80225958(s32 c);
 s32 fn_8022377C(void *a, void *b, s32 r, s32 c);
@@ -1325,6 +1326,12 @@ s32 fn_8021A83C(s8 *a, void *b)
 s32 fn_8022BA10(void *a, void *b)
 {
     s32 x = fn_801DCFA0(b, a);
+    return (0 <= x) ? (u16)-x : 0;
+}
+
+s32 fn_8022BA58(void *a, void *b)
+{
+    s32 x = fn_801DD078(b, a);
     return (0 <= x) ? (u16)-x : 0;
 }
 

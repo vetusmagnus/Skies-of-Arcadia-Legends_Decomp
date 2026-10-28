@@ -127,7 +127,15 @@ extern s32 fn_801298E8(void);
 extern void fn_801299A0(void);
 extern void fn_80129BD4(void);
 extern void fn_8015635C(void);
-extern u8 lbl_80308E90[];
+/* lbl_80308E90: 8 records, indexed by i + 4 for i in [-4, 4). */
+typedef struct {
+    s8 kind;
+    s8 key;
+    s8 member;
+    s8 x3;
+    s8 level;
+} Rec5;
+extern Rec5 lbl_80308E90[8];
 extern u32 fn_8013FCF0(s32 a, s32 key, s32 n);
 typedef struct { u8 pad[0x2a]; s16 v; u8 pad2[4]; } E30;
 typedef struct { u8 pad[0x24]; } E24;
@@ -562,13 +570,6 @@ typedef struct {
 } Sys_8014654C;
 extern s32 fn_8013D718(s32 kind, u8 *tbl, s32 id);
 typedef struct {
-    s8 kind;
-    s8 key;
-    s8 member;
-    u8 pad3;
-    s8 level;
-} Rec5;
-typedef struct {
     u8 pad0[0x14];
     s8 state;
     u8 pad15[0x22 - 0x15];
@@ -800,6 +801,16 @@ out:
 s32 fn_8013F694(u8* p) {
     p[0x1] = 0;
     return 2;
+}
+
+void fn_8013F6A4(s32 i) {
+    if (i >= -4 && i < 4) {
+        lbl_80308E90[i + 4].kind = -1;
+        lbl_80308E90[i + 4].key = -1;
+        lbl_80308E90[i + 4].member = -1;
+        lbl_80308E90[i + 4].x3 = -1;
+        lbl_80308E90[i + 4].level = -1;
+    }
 }
 
 void fn_801415C4(CountObj* o) {
@@ -1323,11 +1334,11 @@ u32 fn_8013FE10(s32 a, s32 key) {
     u32 flags = 0;
     s32 n = NameCount();
 
-    if (a >= 0 && a < n && (s8)lbl_80308E90[a * 5 + 0x14] != -1 &&
-        key == (s8)lbl_80308E90[a * 5 + 0x15]) {
+    if (a >= 0 && a < n && lbl_80308E90[a + 4].kind != -1 &&
+        key == lbl_80308E90[a + 4].key) {
         flags = 1;
     } else {
-        if (a >= 0 && a < n && (s8)lbl_80308E90[a * 5 + 0x14] != -1) {
+        if (a >= 0 && a < n && lbl_80308E90[a + 4].kind != -1) {
             flags = 2;
         } else if (a >= n) {
             flags = 0x10;
@@ -2211,9 +2222,9 @@ u32 fn_8013FCF0(s32 a, s32 key, s32 n)
 
     end = a > n ? n : a;
     for (i = -n; i < end; i++) {
-        if (((Rec5*)lbl_80308E90)[i + 4].kind == 4 && key == ((Rec5*)lbl_80308E90)[i + 4].key) {
-            st = MemberStatus(((Rec5*)lbl_80308E90)[i + 4].member);
-            level = ((Rec5*)lbl_80308E90)[i + 4].level;
+        if (lbl_80308E90[i + 4].kind == 4 && key == lbl_80308E90[i + 4].key) {
+            st = MemberStatus(lbl_80308E90[i + 4].member);
+            level = lbl_80308E90[i + 4].level;
             switch (st) {
             case 1:
                 if (a <= level) {

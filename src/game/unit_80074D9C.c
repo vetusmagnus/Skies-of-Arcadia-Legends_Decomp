@@ -3690,6 +3690,25 @@ f32 fn_80083F34(s8 a, s8 b)
     return r;
 }
 
+f32 fn_80083FF8(s8 a, s8 b)
+{
+    f32 r;
+    switch (b) {
+    case 1:
+        r = a * 15 - 75;
+        break;
+    case 2:
+        r = a * 15 - 75;
+        r += 7.0f;
+        break;
+    case 3:
+        r = a * 15 - 75;
+        r += 15.0f;
+        break;
+    }
+    return r;
+}
+
 /* Trace the path back from the walker's position, recording each step and marking the grid. */
 s8 fn_800823E4(Walk_800823E4 *w)
 {

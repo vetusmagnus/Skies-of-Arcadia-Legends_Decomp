@@ -374,7 +374,20 @@ void fn_801E448C(NJS_MKEY_A* keys, u32 i, u32 nbKeys, Angle* out) {
     out[2] = k1->key[2] * u + k2->key[2] * t;
 }
 
-/* fn_801E461C: not decompiled yet. */
+void fn_801E461C(NJS_MKEY_F* keys, u32 i, u32 nbKeys, f32* out) {
+    f32 div[2] = {1.0f, 1.0f};
+    NJS_MKEY_F* k1 = &keys[i];
+    NJS_MKEY_F* k2 = &keys[(i + 1) % nbKeys];
+    f32 t;
+    f32 u;
+
+    div[1] = (f32)(k2->keyframe - k1->keyframe);
+    t = (lbl_80313678.frame - (f32)k1->keyframe) / div[(s32)(k2->keyframe - k1->keyframe) > 0];
+    u = 1.0f - t;
+    out[0] = k1->key[0] * u + k2->key[0] * t;
+    out[1] = k1->key[1] * u + k2->key[1] * t;
+    out[2] = k1->key[2] * u + k2->key[2] * t;
+}
 
 /* Catmull-Rom interpolation of a float key track at the current frame, between key i and i+1. */
 void fn_801E46FC(NJS_MKEY_F* keys, u32 i, u32 nbKeys, f32* out) {

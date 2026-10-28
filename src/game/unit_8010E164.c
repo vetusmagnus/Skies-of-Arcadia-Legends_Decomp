@@ -6836,6 +6836,16 @@ void fn_8012A900(Arg_8012A900 *p)
     fn_801D5DD8(p->x0, 1.0f, 1.0f, p->x4, p->x8, p->xc, p->x10, p->x14, p->x18, (*(Obj_8012A900 **)&lbl_80346EF8)->x4->x20);
 }
 
+void fn_8012A954(Arg_8012A900 *p)
+{
+    fn_801D5DD8(p->x0, 1.0f, 1.0f, p->x4, p->x8, p->xc, p->x10, p->x14, p->x18, (*(Obj_8012A900 **)&lbl_80346EF4)->x4->x20);
+}
+
+void fn_8012A9A8(Arg_8012A900 *p)
+{
+    fn_801D5DD8(p->x0, 1.0f, 1.0f, p->x4, p->x8, p->xc, p->x10, p->x14, p->x18, (*(Obj_8012A900 **)&lbl_80346EF0)->x4->x20);
+}
+
 void fn_8011DD9C(Obj_8011DD9C *self) {
     Ctx_8011DD9C *c = self->ctx;
     Sub *sub = c->sub;

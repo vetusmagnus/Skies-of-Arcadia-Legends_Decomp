@@ -7500,6 +7500,46 @@ s16 fn_8020623C(u16 a, Scpt *st) {
     return (a >> 3) & 1;
 }
 
+s16 fn_80206424(u16 a, Scpt *st) {
+    if (a & 1) {
+        f32 *cur = st->cur.f;
+        f32 f0, f1, f2, f3, f4, f5;
+        s32 v;
+        fn_801F7500();
+        cur++;
+        f0 = fn_801F6120(&cur);
+        f1 = fn_801F6120(&cur);
+        f2 = fn_801F6120(&cur);
+        f3 = fn_801F6120(&cur);
+        f4 = fn_801F6120(&cur);
+        f5 = fn_801F6120(&cur);
+        v = ReadInt(&cur);
+        st->cur.f = cur;
+        fn_80097294(1);
+        if (f0 != 3.4028235e38f) {
+            fn_80097228(f0, f1, f2);
+        }
+        if (f3 == 3.4028235e38f) {
+            f3 = 14.0f;
+        }
+        fn_8009724C(0.0f, f3, 0.0f);
+        if (f4 == 3.4028235e38f) {
+            f4 = 40.0f;
+        }
+        fn_800971A8(f4);
+        if (f5 == 3.4028235e38f) {
+            f5 = 348.0f;
+        }
+        fn_80097134((s32)f5);
+        if (v == 0) {
+            fn_80097318(1);
+        } else {
+            fn_80097318(0);
+        }
+    }
+    return (a >> 3) & 1;
+}
+
 /* The work of a type-5 message with a value: the head, the value and the text. */
 typedef struct Work_8020A584 {
     EvHead hd;
