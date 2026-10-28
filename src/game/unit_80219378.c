@@ -7,6 +7,7 @@
 #include <dolphin/os.h>
 #include "game/text.h"
 #include "game/menu.h"
+#include "game/gamedata.h"
 extern void fn_802193BC(s32 a, s32 b);
 extern s32 fn_801D168C(void);
 extern void fn_801D150C(s32 v);
@@ -372,21 +373,10 @@ typedef struct Ent_UNIT0000 {
 typedef struct Sys_UNIT0000 { s32 f0; s16 f4; s16 f6; f32 f8; f32 fc; u8 p10[4]; s16 f14; u8 p16[2]; Ent_UNIT0000 *ents; } Sys_UNIT0000;
 typedef struct Slot_80219998 { u8 pad_00[0x38]; u8 x38; u8 pad39[3]; } Slot_80219998;
 extern Slot_80219998 lbl_80315120[];
-typedef struct {
-    u8 pad0[0x12];
-    s8 kind;
-    u8 pad13;
-    s16 x14;
-    s16 x16;
-    u8 a18;
-    u8 a19;
-    u8 pad1a[0x24 - 0x1a];
-} TblC;
-extern TblC lbl_802D7E4C[];
 typedef struct { s16 x0; s16 x2; s8 x4; s8 x5; } Out;
 typedef struct { s8 id; u8 pad1[0x17]; s16 ids[5]; } Src;
-s32 fn_8021A6E8(Src* a, void* b, TblC* c);
-s32 fn_8021A620(Src* a, void* b, TblC* c);
+s32 fn_8021A6E8(Src* a, void* b, CannonData* c);
+s32 fn_8021A620(Src* a, void* b, CannonData* c);
 typedef struct { Vec pos; f32 r; } Sphere_80221AAC;
 typedef struct { Vec b; Vec a; f32 r; } Capsule_80221AAC;
 typedef struct {
@@ -774,20 +764,6 @@ extern void fn_801DA1C0(void);
 extern void fn_8028BB90(Camera803119E0 *cam);
 extern void njClipZ(f32 n, f32 f);
 extern void TextReset(void);
-typedef struct MenuEnt {
-    u8 pad0[0x18];
-    s16 a18;
-    s16 a1a;
-    u8 pad_1c[0x8];
-    s16 v[0x6];
-    u8 pad_30[0x10];
-    s32 f40;
-    u8 pad44[0x8];
-    s16 a4c;
-    s16 a4e;
-    u8 pad50[0x14];
-} MenuEnt;
-extern MenuEnt lbl_802D6740[5];
 typedef struct Seg {
     NJS_POINT3 pos;
     f32 y;          /* the ground height found */
@@ -2033,7 +2009,7 @@ static inline s32 valid_id(s32 i) { return i >= 0x190 && i <= 0x1b7; }
 void fn_8021AE68(Out* out, Src* src, void* b, s32 slot)
 {
     s32 id;
-    TblC* t;
+    CannonData* t;
     if (out == 0) return;
     if (src == 0 || !valid_slot(slot) || !valid_id(id = src->ids[slot])) {
         if (out != 0) {
@@ -2049,12 +2025,12 @@ void fn_8021AE68(Out* out, Src* src, void* b, s32 slot)
     out->x2 = fn_8021A620(src, b, t);
     {
         s8 v = 0;
-        if (t) v = t->a18;
+        if (t) v = t->limit;
         out->x4 = v;
     }
     {
         s8 v = 0;
-        if (t) v = t->a19;
+        if (t) v = t->cost;
         out->x5 = v;
     }
 }
@@ -2099,14 +2075,14 @@ void fn_80221EDC(f32* out, Shape* a, Shape* b)
 
 extern s32 fn_8021A2B0(Src* a, void* b, s32 code);
 
-s32 fn_8021A620(Src* a, void* b, TblC* c)
+s32 fn_8021A620(Src* a, void* b, CannonData* c)
 {
     s32 ret = 0;
     if (c != NULL) {
-        ret = c->x16;
+        ret = c->accuracy;
     }
     if (c != NULL && a != NULL && b != NULL) {
-        s32 k = c->kind;
+        s32 k = c->type;
         if (InRange4(k)) {
             s32 code;
             switch (k) {
@@ -2134,14 +2110,14 @@ s32 fn_8021A620(Src* a, void* b, TblC* c)
 
 extern s32 fn_8021A2B0(Src* a, void* b, s32 code);
 
-s32 fn_8021A6E8(Src* a, void* b, TblC* c)
+s32 fn_8021A6E8(Src* a, void* b, CannonData* c)
 {
     s32 ret = 0;
     if (c != NULL) {
-        ret = c->x14;
+        ret = c->attack;
     }
     if (c != NULL && a != NULL && b != NULL) {
-        s32 k = c->kind;
+        s32 k = c->type;
         if (InRange4(k)) {
             s32 code;
             switch (k) {
@@ -3442,9 +3418,9 @@ void fn_8022A68C(void) {
     lbl_80311AD4[3] = 1;
 }
 
-static inline MenuEnt* GetEnt(s32 idx)
+static inline ShipData* GetEnt(s32 idx)
 {
-    MenuEnt* e = NULL;
+    ShipData* e = NULL;
     if (InRange(idx)) {
         e = &lbl_802D6740[idx];
     }
@@ -3456,9 +3432,9 @@ s32 fn_8021A7B0(Src* p, void* q)
 {
     s32 r = 0;
     if (p != NULL && q != NULL) {
-        MenuEnt* e = GetEnt(p->id);
+        ShipData* e = GetEnt(p->id);
         if (e != NULL) {
-            r = e->f40;
+            r = e->value;
             r += fn_8021A2B0(p, q, 7);
         }
     }
@@ -3481,10 +3457,10 @@ s32 fn_8021AA48(Src* p, void* q, s32 k)
 {
     s32 r = 0;
     if (p != NULL && q != NULL) {
-        MenuEnt* e = GetEnt(p->id);
+        ShipData* e = GetEnt(p->id);
         if (e != NULL && InRange6(k)) {
             s32 code;
-            r = e->v[k];
+            r = e->elem_def[k];
             switch (k) {
             case 0: code = 0x20; break;
             case 1: code = 0x21; break;

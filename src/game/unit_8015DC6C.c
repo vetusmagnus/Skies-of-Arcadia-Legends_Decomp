@@ -8,6 +8,7 @@
 #include "ninja.h"
 #include "game/camera_803119E0.h"
 #include "game/uiobj.h"
+#include "game/gamedata.h"
 #include "game/text.h"
 #include "game/sprite.h"
 #include <math.h>
@@ -3555,16 +3556,6 @@ s32 fn_8018126C(void) {
 }
 
 /* The item table (as in evobj.c). */
-typedef struct Item {
-    u8 pad00[0x12];
-    s8 kind;
-    u8 flag;
-    u8 chance;
-    u8 pad15[7];
-    s16 amount;
-    u8 pad1e[6];
-} Item;
-extern const Item lbl_802C7C34[];
 extern CampCtrl* fn_80195540(CampReq* r);
 extern void fn_80182DF4(void);
 extern void fn_80181D94(void);
@@ -3583,7 +3574,7 @@ static inline s32 CampKind(void) {
         who = lbl_8030B7F4.party[s[7].cur[0].sel];
         fn_80195EA4(&req, who, s[7].cur[1].sel, s[7].cur[4].sel, 0);
         id = req.e[s[7].cur[0].sel].x6 - 0xf0;
-        v = lbl_802C7C34[id].kind;
+        v = lbl_802C7C34[id].effect;
         switch (v) {
         case 0x35:
         case 0x4b:

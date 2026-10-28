@@ -4,6 +4,7 @@
 #include "game/stat_8030B4D4.h"
 #include "ninja.h"
 #include "game/drawstate.h"
+#include "game/gamedata.h"
 /* One declaration per global / prototype. Tk and Chr tables are read through raw offsets
    (same offsets and widths as the per-function struct views they replace). */
 typedef struct Lim { u8 pad_0[0x4];
@@ -1051,11 +1052,6 @@ typedef struct WorkRec_8006A114 {
     s16 x48;
     s16 x4a;
 } WorkRec_8006A114;
-typedef struct { s8 pad[0x18]; s8 x18; s8 x19;
- u8 pad_1a[0x2];
- s16 v;
- u8 pad_1e[0x12]; } T30;
-extern T30 lbl_802C4BF0[];
 extern s16 fn_80078354(s16);
 extern void fn_8021A1C4(s8 *buf);
 typedef struct { u8 pad[0x14]; s16 x14; s16 x16; } D_8005CBA4;
@@ -1220,10 +1216,6 @@ extern void fn_8007DEE0(void *a);
 extern char lbl_802B04C8[];
 extern const u8 lbl_803489B0[8];
 extern void fn_8008F75C(void *, void *, void *, const void *);
-typedef struct T24 { u8 pad[0x15]; u8 x15; u8 pad16[2]; s16 v; u8 pad2[0xA]; } T24;
-typedef struct T24b { u8 pad[0x1C]; s16 v; u8 pad2[0x6]; } T24b;
-extern T24 lbl_802AD440[];
-extern const T24b lbl_802C7C34[];
 extern s16 lbl_8034736A;
 extern s32 lbl_80346A90;
 extern u32 lbl_80347364;
@@ -5458,7 +5450,7 @@ int fn_8006EE54(int idx) {
         if (idx <= 3) return 2;
         break;
     case 2:
-        if ((s32)lbl_802C4BF0[(u8)lbl_80309174[idx].x6].x18 == 2) return 2;
+        if ((s32)lbl_802C4BF0[(u8)lbl_80309174[idx].x6].speed == 2) return 2;
         break;
     case 12: {
         switch ((u8)fn_80078354(lbl_80309174[idx].x6)) {
@@ -6194,8 +6186,8 @@ s32 fn_80068640(s16 a, s16 b) {
         return 0;
     }
     if (a <= 3) {
-        T30 *t = &lbl_802C4BF0[lbl_80309174[a].x6];
-        if (t->x19 > lbl_80347390->x8) {
+        SkillData *t = &lbl_802C4BF0[lbl_80309174[a].x6];
+        if (t->cost > lbl_80347390->x8) {
             lbl_80309730[b].x8 = 6;
             lbl_80309730[a].x8 = 6;
             return 0;
@@ -6233,19 +6225,19 @@ void fn_80069E4C(s16 a, s16 slot, int mode, s8 val) {
     switch (mode) {
     case 1:
         if (a < 4) {
-            const T30* t = lbl_802C4BF0 + lbl_80309174[a].x6;
-            v = t->v;
+            const SkillData* t = lbl_802C4BF0 + lbl_80309174[a].x6;
+            v = t->power;
         } else {
-            const T24* t = lbl_802AD440 + lbl_80309174[a].x6;
-            v = t->v;
+            const EnemySkill* t = lbl_802AD440 + lbl_80309174[a].x6;
+            v = t->param;
         }
         break;
     case 4:
         i = lbl_80309174[a].x6 - 0xF0;
-        {const T24b* t = lbl_802C7C34 + i; v = t->v;}
+        {const UseItemData* t = lbl_802C7C34 + i; v = t->power;}
         break;
     case 5:
-        {const T24* t = lbl_802AD440 + (s16)(lbl_80309174[a].x6 + 0x24); v = t->v;}
+        {const EnemySkill* t = lbl_802AD440 + (s16)(lbl_80309174[a].x6 + 0x24); v = t->param;}
         break;
     case 2:
     case 6:
@@ -6962,8 +6954,8 @@ void fn_80068E20(s16 a, s16 b) {
         id = a;
         k = lbl_80309174[id].x6 + 0x24;
         {
-            T24 *t = &lbl_802AD440[k];
-            v = t->v;
+            EnemySkill *t = &lbl_802AD440[k];
+            v = t->param;
         }
         for (j = 4; j <= 11; j++) {
             if (fn_80078610(j) != 0 && v != lbl_80309700[j]->work->x2) {
@@ -6984,9 +6976,9 @@ void fn_80068E20(s16 a, s16 b) {
 void fn_80068F68(s16 idx, s16 p2, void *unused, s8 v)
 {
     s16 k = lbl_80309174[idx].x6 + 0x24;
-    const T24 *t = &lbl_802AD440[k];
+    const EnemySkill *t = &lbl_802AD440[k];
     lbl_80309700[idx]->work->x44 = v;
-    lbl_80309700[idx]->work->x3c = t->v;
+    lbl_80309700[idx]->work->x3c = t->param;
     lbl_80309DE4[p2]->bits |= 0x01000000;
     lbl_80309DE4[p2]->bits |= 0x400;
     lbl_80309DE4[p2]->bits |= 0x00040000;
@@ -7010,21 +7002,21 @@ s32 fn_800683D8(s16 a, s16 b, s32 c, s8 d) {
         lbl_80309730[a].x8 = 1;
         k = lbl_80309174[a].x6;
         if (a < 4) {
-            T30 *r = &lbl_802C4BF0[k];
-            if (r->x18 == 0 && fn_80068640(a, b) == 0) {
+            SkillData *r = &lbl_802C4BF0[k];
+            if (r->speed == 0 && fn_80068640(a, b) == 0) {
                 return 0;
             }
         } else {
-            T24 *q = &lbl_802AD440[k];
-            s32 v = q->x15;
+            EnemySkill *q = &lbl_802AD440[k];
+            s32 v = q->kind;
             if (v == 1 && fn_80068640(a, b) == 0) {
                 return 0;
             }
         }
     }
     if (c == 5) {
-        T24 *q = &lbl_802AD440[lbl_80309174[a].x6 + 0x24];
-        s8 v = q->x15;
+        EnemySkill *q = &lbl_802AD440[lbl_80309174[a].x6 + 0x24];
+        s8 v = q->kind;
         if (v == 1 && fn_80068640(a, b) == 0) {
             return 0;
         }

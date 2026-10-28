@@ -1,5 +1,6 @@
 #include "types.h"
 #include "game/work_8030CEA0.h"
+#include "game/gamedata.h"
 #include <dolphin/types.h>
 extern void fn_80136A28(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f);
 extern void fn_8013DA50(s32 a, s32 b);
@@ -137,14 +138,6 @@ typedef struct {
 } Rec5;
 extern Rec5 lbl_80308E90[8];
 extern u32 fn_8013FCF0(s32 a, s32 key, s32 n);
-typedef struct { u8 pad[0x2a]; s16 v; u8 pad2[4]; } E30;
-typedef struct { u8 pad[0x24]; } E24;
-typedef struct { s16 v; u8 pad[0x22]; } E24c;
-typedef struct { u8 pad[0x1c]; s16 v; u8 pad2[6]; } E24b;
-extern E30 lbl_802C4BF0[];
-extern E24 lbl_802D8A2C[];
-extern E24 lbl_802C7C34[];
-extern E24b lbl_802D8E64[];
 typedef struct {
     s8 kind;
     u8 pad1;
@@ -1411,16 +1404,16 @@ void fn_801462D0(Req_801462D0 *o) {
 
     switch (o->kind) {
     case 5:
-        d = lbl_802C4BF0[o->id].v;
+        d = lbl_802C4BF0[o->id].ship_power;
         break;
     case 1:
-        d = ((E24c *)((u8 *)lbl_802D8A2C - 0x4364))[o->id].v;
+        d = lbl_802D8A2C[o->id - 0x1E0].power;
         break;
     case 2:
-        d = ((E24c *)((u8 *)lbl_802C7C34 - 0x21a4))[o->id].v;
+        d = lbl_802C7C34[o->id - 0xF0].power;
         break;
     case 7:
-        d = lbl_802D8E64[o->id].v;
+        d = lbl_802D8E64[o->id].power;
         break;
     }
     p[0xe] += d;
@@ -1607,8 +1600,8 @@ void fn_80143734(Out_80143734* o, s32 idx) {
         o->f14 = 0x6b;
         break;
     case 5:
-        o->f9 = (*(u8(*)[])&lbl_802C4BF0)[o->fc * 0x30 + 0x11];
-        o->f14 = *(s16*)((*(u8(*)[])&lbl_802C4BF0) + o->fc * 0x30 + 0x26);
+        o->f9 = lbl_802C4BF0[o->fc].element;
+        o->f14 = lbl_802C4BF0[o->fc].ship_effect;
         break;
     default:
         o->f9 = 6;

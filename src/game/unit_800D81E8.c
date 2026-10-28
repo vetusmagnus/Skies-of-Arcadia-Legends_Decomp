@@ -13,6 +13,7 @@
 #include "game/sprite.h"
 #include "game/uiobj.h"
 #include "game/text.h"
+#include "game/gamedata.h"
 extern void fn_80226D14(void);
 extern void fn_80226BD0(f32 a, f32 b);
 typedef struct {
@@ -2472,13 +2473,6 @@ extern void fn_80128F80(void);
 extern void fn_80219378(char* s);
 extern s32 fn_80128F2C(void);
 extern void fn_80101494(void);
-/* item table (evobj.c's TblC, 0x24 per entry from id 0x190) */
-typedef struct ItemTbl {
-    u8 pad0[0x12];
-    s8 kind;     /* ADD: 0x12 */
-    u8 pad13[0x24 - 0x13];
-} ItemTbl;
-extern ItemTbl lbl_802D7E4C[];
 extern void fn_800EA4A8(ResSpr* spr);
 extern s32 fn_801F4C24(s16 id);
 /* item category: 0 weapon ... 5 accessory (evobj.c declares it (void)) */
@@ -9207,7 +9201,7 @@ void fn_800E96C0(void) {
                 k = 13;
             }
         } else if (k == 5) {
-            switch (lbl_802D7E4C[e->h - 0x190].kind) {
+            switch (lbl_802D7E4C[e->h - 0x190].type) {
             case 1:
                 k = 15;
                 break;

@@ -1,6 +1,7 @@
 #include <dolphin/types.h>
 #include "types.h"
 #include "game/stat_8030B4D4.h"
+#include "game/gamedata.h"
 #include <string.h>
 typedef struct {
     s32 w[7];
@@ -411,8 +412,6 @@ typedef struct {
 extern char *lbl_802F7050[];
 void fn_8012F458(s8 flag);
 void fn_8012F468(char *str);
-typedef struct E24 { u8 pad0[0x17]; s8 x17; u8 pad18[0x24 - 0x18]; } E24;
-extern E24 lbl_802D8E64[];
 extern s32 fn_80136C14(s8 *src, s32 i, s32 a);
 extern void fn_8012E4FC(void **p);
 extern void fn_8012E498(s8 *p);
@@ -1695,17 +1694,17 @@ static inline s32 Bits(s8 *c) {
     return r;
 }
 
-static inline void Set(E24 *tbl, void **p, s8 *a, s8 *b, s8 *c, s8 *src, s32 i, s32 a0) {
+static inline void Set(CrewData *tbl, void **p, s8 *a, s8 *b, s8 *c, s8 *src, s32 i, s32 a0) {
     s32 id = 0x16;
     if (InRange(i, 6)) {
         id = src[i];
     }
     if (InRange(id, 0x16)) {
-        E24 *e = &tbl[id];
+        CrewData *e = &tbl[id];
         s32 v = 100;
         p[i] = e;
         if (e != NULL) {
-            v = e->x17;
+            v = e->cost;
         }
         a[i] = v;
         b[i] = 12;
@@ -1714,7 +1713,7 @@ static inline void Set(E24 *tbl, void **p, s8 *a, s8 *b, s8 *c, s8 *src, s32 i, 
 }
 
 void fn_801375A0(s32 a0, s32 a1, s8 *src) {
-    E24 *tbl = lbl_802D8E64;
+    CrewData *tbl = lbl_802D8E64;
     void *ptrs[6];
     s8 a[6];
     s8 b[6];
