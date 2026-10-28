@@ -12,6 +12,32 @@ extern void TextPrint(s32 x, s32 y, const char *str);
 #include "game/menu.h"
 #include "game/drawstate.h"
 #include <math.h>
+/* A menu panel (0x6C bytes, the object at a menu part task's 0x28/0x2C): its UiObj, the text it
+ * prints and four parameters (layout, item or member ids). */
+typedef struct MenuPanel {
+    UiObj o;
+    const char* text; /* 0x4C */
+    u16 h50;          /* 0x50 */
+    u16 h52;          /* 0x52 */
+    u16 h54;          /* 0x54 */
+    u16 h56;          /* 0x56 */
+    u8 pad58[0x14];
+} MenuPanel;
+/* A menu part's work (0x58 bytes, at the part task's 0x24). b0 == 1 hides the part. */
+typedef struct MenuPartWork {
+    u8 b0;            /* 0x00 */
+    u8 pad1[3];
+    s16 h4;           /* 0x04 */
+    s16 h6;           /* 0x06 */
+    s32 w8;           /* 0x08 */
+    s32 wc;           /* 0x0C */
+    s32 w10;          /* 0x10 */
+    u8 pad14[0x1e - 0x14];
+    u8 b1e;           /* 0x1E */
+    u8 pad1f[0x48 - 0x1f];
+    void (*cb)(void* t); /* 0x48 */
+    u8 pad4c[0x58 - 0x4c];
+} MenuPartWork;
 extern u8 lbl_8030741C[];
 extern u32 lbl_80347180;
 extern u8 lbl_8034717C[2];
@@ -41,7 +67,12 @@ typedef struct Obj_UNIT0000 {
 } Obj_UNIT0000;
 extern s32 lbl_80347508;
 extern void fn_801A65D4(Task *t);
-extern u8 *lbl_80311A60[];
+/* A controller's state; lbl_80311A60 has one per port. */
+typedef struct PadState {
+    u8 pad0[8];
+    u32 held; /* 0x08: buttons held this frame (0x100 A, 0x200 B) */
+} PadState;
+extern PadState *lbl_80311A60[];
 extern s32 fn_801A6554(void *o);
 extern void fn_801A64E0(void *o);
 typedef struct VertexCol {
@@ -55,7 +86,7 @@ typedef struct Ctx_801A66AC {
 typedef struct Task_801A66AC {
     u8 pad0[0x24];
     Ctx_801A66AC *ctx;
-    UiObj *ui;
+    MenuPanel* ui;
 } Task_801A66AC;
 extern f32 fn_801DBD9C(f32 z);
 extern void fn_80290ED4(VertexCol *v, s32 count, s32 flag);
@@ -131,7 +162,7 @@ typedef struct Self_8019E650 {
 } Self_8019E650;
 typedef struct Holder_8019FDB0 {
     u8 pad0[0x28];
-    UiObj *ui;
+    MenuPanel* ui;
 } Holder_8019FDB0;
 typedef struct Ctx_8019FDB0 {
     u8 pad0[8];
@@ -172,7 +203,7 @@ typedef struct Self_8019FE64 {
 } Self_8019FE64;
 typedef struct Holder_8019FF38 {
     u8 pad0[0x28];
-    UiObj *ui;
+    MenuPanel* ui;
 } Holder_8019FF38;
 typedef struct Ctx_8019FF38 {
     u8 pad0[4];
@@ -273,163 +304,189 @@ typedef struct Wk_801A4E58 {
     u8 pad04[0x14];
     f32 f18;
 } Wk_801A4E58;
-typedef struct PanelUi_801A5274 {
-    UiObj ui;
-    const char *label;
-} PanelUi_801A5274;
 typedef struct Task_801A5274 {
     u8 pad0[0x18];
     u8 flags;
     u8 state;
     u8 pad1a[0xa];
     u8 *flag;
-    PanelUi_801A5274 *pan;
+    MenuPanel *pan;
 } Task_801A5274;
 extern LayoutPart lbl_802B4A00[2];
 void fn_801A5274(Task_801A5274 *t);
-typedef struct MenuUi {
-    f32 z;
-    f32 x, y;
-    f32 tx, ty;
-    f32 vx, vy;
-    f32 rdx, rdy;
-    f32 rect[4];
-    f32 alpha;
-    f32 f38, f3c;
-    u8 alpha_en;
-    u8 raised;
-    u16 frames;
-    u16 delay;
-    u16 cmd;
-    s16 se;
-    u16 pad4A;
-    const char* w4c;
-    s16 h50;
-    s16 h52;
-    s16 h54;
-    s16 h56;
-    u8 pad58[0x14];
-} MenuUi;
 typedef struct Task_801A51A8 {
     u8 pad00[0x24];
     u8* p24;
-    MenuUi* p28;
+    MenuPanel* p28;
     u32 w2c;
 } Task_801A51A8;
-/* A title panel: a UiObj and the index of the label to print on it. */
-typedef struct Panel_801ABD40 {
-    UiObj ui;
-    u8 pad4C[0x56 - 0x4C];
-    u16 label; /* 0x56 */
-} Panel_801ABD40;
 typedef struct PanelTask_801ABD40 {
     u8 pad0[0x18];
     u8 flags;   /* 0x18 */
     u8 state;   /* 0x19 */
     u8 pad1A[0x24 - 0x1A];
     u8* flag;   /* 0x24 */
-    Panel_801ABD40* pan; /* 0x28 */
+    MenuPanel* pan; /* 0x28 */
 } PanelTask_801ABD40;
 extern const char* lbl_80346810[2];
 void fn_801ABD40(PanelTask_801ABD40* t);
 typedef struct Task_801ABE90 {
     u8 pad00[0x24];
     u8* p24;
-    MenuUi* p28;
+    MenuPanel* p28;
     u32 w2c;
 } Task_801ABE90;
 extern void fn_801ABF70();
 typedef struct Task_801AC094 {
     u8 pad00[0x24];
     u8* p24;
-    MenuUi* p28;
+    MenuPanel* p28;
     u32 w2c;
 } Task_801AC094;
-extern void fn_801B6BB4(void *ui, f32 *pos, s16 a, s32 b, s32 c, s32 d, f32 e);
+extern void fn_801B6BB4(void *ui, f32 *pos, s16 id, s32 b, s16 x, s16 y, f32 alpha);
 extern const u8 lbl_802B7720[0x50];
-typedef struct Cfg_801B0F1C { u8 pad[6]; u16 h6; u8 pad8; u8 b9; } Cfg_801B0F1C;
-typedef struct Gl_801B0F1C { u8 pad[0x24]; Cfg_801B0F1C *cfg; } Gl_801B0F1C;
-typedef struct Pan_801B0F1C { UiObj ui; const char *label; } Pan_801B0F1C;
 typedef struct Task_801B0F1C {
     u8 pad00[0x18];
     u8 flags;     /* 0x18 */
     u8 state;     /* 0x19 */
     u8 pad1a[0x24 - 0x1a];
     u8 *flag;     /* 0x24 */
-    Pan_801B0F1C *pan;  /* 0x28 */
+    MenuPanel *pan;  /* 0x28 */
 } Task_801B0F1C;
 void fn_801B0F1C(Task_801B0F1C *t);
 extern const char* fn_801F4AE4(s16 v);
 typedef struct Task_801B1104 {
     u8 pad00[0x24];
     u8* p24;
-    MenuUi* p28;
+    MenuPanel* p28;
     u32 w2c;
 } Task_801B1104;
-typedef struct Sub_801B1104 {
-    u8 pad00[6];
-    u16 h06;
-} Sub_801B1104;
-typedef struct Pl {
-    u32 w00;
-    u8 pad04[0x140];
-    u32 w144;
-    u8 pad148[0x140];
-    u32 w288;
-    u8 pad28C[0x140];
-    u32 w3cc;
-    u8 pad3D0[0x140];
-    u32 w510;
-} Pl;
-typedef struct {
+typedef struct ShopList {
+    u8 pad0[0x8];
+    f32 x8;      /* 0x08 */
+    f32 xc;      /* 0x0C */
+    u8 pad10[4];
+    u16 h14;     /* 0x14 */
+    u8 pad16[2];
+    u16 page;    /* 0x18 */
+    u16 row;     /* 0x1A */
+    u16 tab;     /* 0x1C */
+    u8 b1e;      /* 0x1E */
+} ShopList;
+
+typedef struct ShopSub38 {
+    u8 pad0[0xa];
+    u16 ha;      /* 0x0A */
+    u16 hc;      /* 0x0C */
+} ShopSub38;
+
+typedef struct ShopPart {
+    u8 pad0[0x19];
+    u8 b19;          /* 0x19 */
+    u8 pad1a[0xa];
+    MenuPartWork* flag; /* 0x24 */
+    MenuPanel* obj;      /* 0x28 */
+    MenuPanel* obj2;     /* 0x2C */
+    ShopList* list;  /* 0x30 */
+    u8 pad34[4];
+    ShopSub38* x38;  /* 0x38 */
+} ShopPart;
+
+/* A party member's record in the shop work (0x24 bytes). */
+typedef struct ShopMember {
+    const char* name; /* 0x00 */
+    s8 id;            /* 0x04 */
+    s8 b5, b6, b7;    /* 0x05 level and the two values shown after it */
+    u8 pad8[2];
+    s16 ha, hc, he;   /* 0x0A */
+    s16 h10, h12;     /* 0x10 */
+    u8 pad14[0x24 - 0x14];
+} ShopMember;
+typedef struct ShopChar {
+    u8 pad0[0x6c];
+    s16 h6c;
+    u8 pad6e[0x2e];
+} ShopChar;
+/* A sell tab's list: a count and the items' entries. */
+typedef struct SellList {
+    u32 n;
+    s16* e[80];
+} SellList;
+typedef struct ShopWork {
+    u8 pad0[3];
+    u8 state;        /* 0x03 */
+    s16 qty;         /* 0x04 */
+    u16 item;        /* 0x06 */
+    u8 pad8[1];
+    u8 x9;           /* 0x09 */
+    u8 xa;           /* 0x0A */
+    u8 xb;           /* 0x0B */
+    u8 xc[4];        /* 0x0C */
+    s8 who[4];       /* 0x10 */
+    s16 stat[4][4];  /* 0x14 */
+    u8 b34;          /* 0x34 */
+    u8 pad35;
+    u8 b36;          /* 0x36 */
+    u8 b37;          /* 0x37 */
+    ShopMember m[4];     /* 0x38: the party, in order */
+    u8 padc8[0xd8 - 0xc8];
+    struct { s16 v; u8 pad[8]; } d8[4]; /* 0xD8 */
+    u8 pad100[0x10a - 0x100];
+    s16 h10a[3];         /* 0x10A */
+    u8 pad110[0x11c - 0x110];
+    u32 cost;        /* 0x11C */
+    u32 left;        /* 0x120 */
+    u32 step;        /* 0x124 */
+    u8 pad128[0xd0];
+    ShopPart* parts[19]; /* 0x1F8 */
+} ShopWork;
+
+typedef struct ShopEntry {
+    s8 flag;
+    s8 type;
+    s16 id;
+    u8 pad4[2];
+} ShopEntry;
+
+typedef struct ShopBuf {
     u8 pad0[4];
-    s16* g[5][81]; /* 0x04 */
-} Tables;
-typedef struct {
-    u8 pad0[0x18];
-    u16 a;      /* 0x18 */
-    u16 c;      /* 0x1A */
-    u16 kind;   /* 0x1C */
-} Sel;
-typedef struct {
-    u8 pad0[0x30];
-    Sel* sel;   /* 0x30 */
-} Inner;
-typedef struct ShopSelOwner {
-    u8 pad[0x218];
-    struct {
-        u8 pad[0x30];
-        Sel* s;
-    }* in;
-} ShopSelOwner;
-typedef struct Game_UNIT {
-    u8 pad00[0x24];
-    union { Sub_801B1104* p24; ShopSelOwner* o; };
-    u8 pad28[0x8];
-    union { Pl* p30; Tables* t; };
-} Game_UNIT;
-extern Game_UNIT* lbl_803471B8;
-extern s32 fn_801B93E8(Game_UNIT* t);
+    u16 pages;
+    s16 count;
+    ShopEntry out[0x30];
+} ShopBuf;
+
+typedef struct ShopTask {
+    u8 pad0[0x19];
+    u8 state;        /* 0x19 */
+    u8 pad1a[0xa];
+    ShopWork* w;     /* 0x24 */
+    ShopChar* chr;   /* 0x28 */
+    ShopBuf* buf;    /* 0x2C */
+    SellList* sell;  /* 0x30: the five sell tabs' lists */
+} ShopTask;
+
+extern ShopTask* lbl_803471B8;
+extern s32 fn_801B93E8(ShopTask* t);
 struct Task_801B11EC;
 extern void fn_801B11EC(struct Task_801B11EC* t);
 typedef struct Task_801B1A78 {
     u8 pad00[0x24];
     u8* p24;
-    MenuUi* p28;
+    MenuPanel* p28;
     u32 w2c;
 } Task_801B1A78;
 extern void fn_801B5EA8();
 typedef struct Task_801B6240 {
     u8 pad00[0x24];
     u8* p24;
-    MenuUi* p28;
+    MenuPanel* p28;
     u32 w2c;
 } Task_801B6240;
 extern void fn_801B6950(void);
 typedef struct Task_801B6AE8 {
     u8 pad00[0x24];
     u8* p24;
-    MenuUi* p28;
+    MenuPanel* p28;
     u32 w2c;
 } Task_801B6AE8;
 typedef struct Pair_UNIT0000 {
@@ -449,10 +506,6 @@ typedef struct Task_801B8E68 {
     u8 pad00[0x24];
     Sub2* p24;
 } Task_801B8E68;
-typedef struct Flags_UNIT0000 {
-    u8 pad00[8];
-    u32 w08;
-} Flags_UNIT0000;
 extern void* lbl_803470EC;
 extern void* lbl_803470F4;
 typedef struct St {
@@ -477,7 +530,7 @@ typedef struct Obj_8019CB80 {
     St* st;
 } Obj_8019CB80;
 extern void fn_800906E8(void*);
-typedef struct Sub28 { u8 pad[0x28]; UiObj* obj; } Sub28;
+typedef struct Sub28 { u8 pad[0x28]; MenuPanel* obj; } Sub28;
 typedef struct Ctx_801A0B18 {
     u8 pad00[4];
     u8 idx;           /* 0x04 */
@@ -513,7 +566,6 @@ typedef struct Self_801A1494 {
     u8 pad1a[0x24 - 0x1a];
     Ctx_801A1494* ctx;
 } Self_801A1494;
-typedef struct Flg { u8 pad[8]; u32 flags; } Flg;
 typedef struct Sv {
     u8 pad00[0x14];
     u32 x14;
@@ -599,21 +651,13 @@ typedef struct Hdr_801A49E0 {
 extern char lbl_802B49C4[];
 extern char lbl_802B49D0[];
 extern void fn_801DBA70(const char* file, s32 line, const char* msg, ...);
-typedef struct Named {
-    UiObj o;
-    const char* name; /* 0x4c */
-} Named;
 typedef struct Node {
     u8 pad00[0x24];
     u8* a;       /* 0x24 */
-    Named* b;    /* 0x28 */
+    MenuPanel* b;    /* 0x28 */
 } Node;
 extern const char lbl_80346808[4];
 extern const char lbl_8034680C[3];
-typedef struct Panel_801A5D08 {
-    UiObj ui;
-    const char *label;
-} Panel_801A5D08;
 typedef struct Ctx_801A5D08 {
     u8 pad0[0x18];
     f32 f18;
@@ -630,28 +674,18 @@ typedef struct Task_801A5D08 {
     u8 state;
     u8 pad1a[0xa];
     u8 *flag;
-    Panel_801A5D08 *pan;
+    MenuPanel *pan;
 } Task_801A5D08;
 extern LayoutPart lbl_802B4B88[1];
 extern LayoutPart lbl_802B4B4C[3];
 void fn_801A5D08(Task_801A5D08 *t);
 typedef struct {
-    UiObj ui;
-    const char* label; /* 0x4C */
-    u8 pad50[4];
-    s16 slot;          /* 0x54 */
-} SlotPanel;
-typedef struct {
     u8 pad[0x24];
     u8* buf;        /* 0x24 */
-    SlotPanel* pan; /* 0x28 */
+    MenuPanel* pan; /* 0x28 */
 } SlotTask;
 extern void* fn_801E1A74(s32 n, s32 size);
 extern void fn_801A5FD8(void);
-typedef struct Panel_801A6344 {
-    UiObj ui;
-    const char *label;
-} Panel_801A6344;
 typedef struct Ctx_801A6344 {
     u8 pad0[0x18];
     f32 f18;
@@ -668,7 +702,7 @@ typedef struct Task_801A6344 {
     u8 state;
     u8 pad1a[0xa];
     u8 *flag;
-    Panel_801A6344 *pan;
+    MenuPanel *pan;
 } Task_801A6344;
 extern LayoutPart lbl_802B4A28[3];
 void fn_801A6344(Task_801A6344 *t);
@@ -706,17 +740,11 @@ typedef struct {
     u8 state;   /* 0x19 */
     u8 pad1A[0x24 - 0x1A];
     u8* flag;   /* 0x24 */
-    UiObj* ui;  /* 0x28 */
+    MenuPanel* ui;  /* 0x28 */
 } PanelTask_801ABF70;
 extern const LayoutPart lbl_802B7C14[4];
 s32 UiLayoutDraw(NJS_TEXLIST** texlists, LayoutPart* parts, u32 count, f32* pos, f32 z, f32 a, f32 b);
 void fn_801C3F5C(f32 x, f32 y, f32 z);
-typedef struct {
-    UiObj ui;
-    const char* label; /* 0x4C */
-    u8 pad50[4];
-    s16 slot;          /* 0x54 */
-} Panel_801ACC00;
 typedef struct {
     u8 pad0[8];
     u32 slot; /* 0x08 */
@@ -732,7 +760,7 @@ typedef struct {
 typedef struct {
     u8 pad[0x24];
     BufA_801ACC00* a;     /* 0x24 */
-    Panel_801ACC00* pan;  /* 0x28 */
+    MenuPanel* pan;  /* 0x28 */
     s32 f2C;
     BufC_801ACC00* c;     /* 0x30 */
     u8 pad34[4];
@@ -749,28 +777,16 @@ typedef struct {
     u8 pad1[0x48 - 1];
     void (*cb)(PanelTask_801AFAA4*); /* 0x48 */
 } PanelData_801AFAA4;
-typedef struct {
-    UiObj ui;
-    u8 pad4C[8];
-    u16 layout; /* 0x54 */
-} Panel_801AFAA4;
 struct PanelTask_801AFAA4 {
     u8 pad0[0x18];
     u8 flags;
     u8 state;
     u8 pad1A[0x24 - 0x1A];
     PanelData_801AFAA4* data;
-    Panel_801AFAA4* pan;
+    MenuPanel* pan;
 };
 extern const LayoutDef lbl_802B79E4[2];
 extern const LayoutPart lbl_802B77AC[1];
-typedef struct {
-    UiObj ui;
-    u32 f4C;       /* 0x4C */
-    u16 pad50;
-    u16 f52;       /* 0x52 */
-    u16 layout;    /* 0x54 */
-} Panel_801B0470;
 typedef struct {
     u8 b0;           /* 0x00 */
     u8 pad1[5];
@@ -781,19 +797,11 @@ typedef struct {
 typedef struct {
     u8 pad[0x24];
     PanelData_801B0470* data; /* 0x24 */
-    Panel_801B0470* pan;      /* 0x28 */
+    MenuPanel* pan;      /* 0x28 */
     s32 f2C;
 } Task2_801B0470;
 extern void fn_801B02F4(void);
-extern u32 lbl_802EBF60[7];
-typedef struct {
-    UiObj ui;
-    u32 f4C;
-    u16 f50;
-    u16 f52;
-    u16 f54;
-    u16 f56;
-} Panel_801B0DF8;
+extern const char* lbl_802EBF60[7];
 typedef struct {
     u8 b0;
     u8 pad1[7];
@@ -811,21 +819,13 @@ typedef struct {
 typedef struct {
     u8 pad[0x24];
     void* a;     /* 0x24 */
-    Panel_801B0DF8* pan;  /* 0x28 */
+    MenuPanel* pan;  /* 0x28 */
     s32 f2C;
     BufC_801B0DF8* c;     /* 0x30 */
     u8 pad34[4];
     BufA_801B0DF8* d;     /* 0x38 */
 } Task3_801B0DF8;
 extern void fn_801B0B9C(void);
-typedef struct {
-    UiObj ui;
-    u32 f4C;
-    u16 f50;
-    u16 f52;
-    u16 f54;
-    u16 f56;
-} Panel_801B2310;
 typedef struct {
     u8 pad0[8];
     s16 s8;
@@ -842,7 +842,7 @@ typedef struct {
 typedef struct {
     u8 pad[0x24];
     u8* a;       /* 0x24 */
-    Panel_801B2310* pan;  /* 0x28 */
+    MenuPanel* pan;  /* 0x28 */
     s32 f2C;
     BufC_801B2310* c;     /* 0x30 */
     u8 pad34[4];
@@ -851,37 +851,23 @@ typedef struct {
 struct Task_1B3C;
 extern void fn_801B1B3C(struct Task_1B3C* t);
 typedef struct {
-    UiObj ui;
-    u32 f4C;
-    u16 f50;
-    u16 f52;
-    u16 f54;
-    u16 f56;
-} Panel_801B2678;
-typedef struct {
     u8 pad[0x24];
     u8* a;       /* 0x24 */
-    Panel_801B2678* pan;  /* 0x28 */
+    MenuPanel* pan;  /* 0x28 */
     s32 f2C;
 } Task2_801B2678;
 extern void UiDrawNumber(NJS_POINT3 *pos, u32 flags, u16 ndigits, u32 value, f32 c1);
 extern const u8 lbl_802B6DF8[0x50];
-typedef struct Cfg_801B2430 { u8 pad[0x11c]; u32 w11c; u32 w120; } Cfg_801B2430;
-typedef struct Gl_801B2430 { u8 pad[0x24]; Cfg_801B2430 *cfg; } Gl_801B2430;
-typedef struct Pan_801B2430 { UiObj ui; const char *label; } Pan_801B2430;
 typedef struct Task_801B2430 {
     u8 pad00[0x18];
     u8 flags;     /* 0x18 */
     u8 state;     /* 0x19 */
     u8 pad1a[0x24 - 0x1a];
     u8 *flag;     /* 0x24 */
-    Pan_801B2430 *pan;  /* 0x28 */
+    MenuPanel *pan;  /* 0x28 */
 } Task_801B2430;
 void fn_801B2430(Task_801B2430 *t);
-extern u32 lbl_802EC04C[13];
-typedef struct {
-    UiObj ui;
-} Panel_801B5C4C;
+extern const char* lbl_802EC04C[13];
 typedef struct {
     u8 pad0[0x1E];
     u8 b1E;
@@ -890,7 +876,7 @@ typedef struct {
 typedef struct {
     u8 pad[0x24];
     u8* a;       /* 0x24 */
-    Panel_801B5C4C* pan;  /* 0x28 */
+    MenuPanel* pan;  /* 0x28 */
     s32 f2C;
     BufC_801B5C4C* c;     /* 0x30 */
     u8 pad34[4];
@@ -921,7 +907,7 @@ typedef struct {
 } AnimData;
 typedef struct {
     u8 pad[0x28];
-    UiObj* ui;       /* 0x28 */
+    MenuPanel* ui;       /* 0x28 */
     u8 pad2C[0xC];
     AnimData* d;     /* 0x38 */
 } Task3_801B5D68;
@@ -933,45 +919,33 @@ typedef struct PanelTask_801B5EA8 {
     u8 state;   /* 0x19 */
     u8 pad1A[0x24 - 0x1A];
     u8* flag;   /* 0x24 */
-    UiObj* ui;  /* 0x28 */
+    MenuPanel* ui;  /* 0x28 */
 } PanelTask_801B5EA8;
 extern const LayoutPart lbl_802B6DD0[2];
 void fn_801B6E5C(PanelTask_801B5EA8* t);
-typedef struct {
-    UiObj ui;
-    const char* label; /* 0x4C */
-} Panel_801B5FA8;
 typedef struct PanelTask_801B5FA8 {
     u8 pad0[0x18];
     u8 flags;   /* 0x18 */
     u8 state;   /* 0x19 */
     u8 pad1A[0x24 - 0x1A];
     u8* flag;   /* 0x24 */
-    Panel_801B5FA8* pan; /* 0x28 */
+    MenuPanel* pan; /* 0x28 */
 } PanelTask_801B5FA8;
-typedef struct {
-    UiObj ui;
-    const char* label; /* 0x4C */
-} Panel_801B66F8;
 typedef struct PanelTask_801B66F8 {
     u8 pad0[0x18];
     u8 flags;   /* 0x18 */
     u8 state;   /* 0x19 */
     u8 pad1A[0x24 - 0x1A];
     u8* flag;   /* 0x24 */
-    Panel_801B66F8* pan; /* 0x28 */
+    MenuPanel* pan; /* 0x28 */
 } PanelTask_801B66F8;
 extern const LayoutPart lbl_802B6B0C[4];
 extern s32 lbl_803475D8;
 void MenuDummy();
 typedef struct {
-    UiObj ui;
-    const char* label; /* 0x4C */
-} Panel_801B6838;
-typedef struct {
     u8 pad[0x24];
     u8* a;       /* 0x24 */
-    Panel_801B6838* pan;  /* 0x28 */
+    MenuPanel* pan;  /* 0x28 */
 } Task2_801B6838;
 typedef struct {
     u32 x0;
@@ -1042,7 +1016,7 @@ typedef struct Obj48 {
 } Obj48;
 typedef struct Holder_8019E96C {
     u8 pad0[0x28];
-    UiObj *ui;
+    MenuPanel* ui;
 } Holder_8019E96C;
 typedef struct Ctx_8019E96C {
     u8 pad0[4];
@@ -1064,7 +1038,7 @@ typedef struct Self_8019E96C {
 extern s32 fn_801A28AC(s32 obj);
 typedef struct Holder_8019EE4C {
     u8 pad0[0x28];
-    UiObj *ui;
+    MenuPanel* ui;
 } Holder_8019EE4C;
 typedef struct Ctx_8019EE4C {
     u8 pad0[4];
@@ -1089,7 +1063,7 @@ typedef struct Self_8019EE4C {
 } Self_8019EE4C;
 typedef struct Holder_8019F730 {
     u8 pad0[0x28];
-    UiObj *ui;
+    MenuPanel* ui;
 } Holder_8019F730;
 typedef struct Ctx_8019F730 {
     u8 pad0[1];
@@ -1117,7 +1091,7 @@ extern void fn_801A4060(void *o);
 extern void fn_801A41C0(void *o);
 typedef struct Holder_801A0214 {
     u8 pad0[0x28];
-    UiObj *ui;
+    MenuPanel* ui;
 } Holder_801A0214;
 typedef struct Ctx_801A0214 {
     u8 pad0[4];
@@ -1136,12 +1110,6 @@ typedef struct Self_801A0214 {
     u8 pad1a[0xa];
     Ctx_801A0214 *ctx;
 } Self_801A0214;
-typedef struct Panel_801A54AC {
-    UiObj ui;
-    const char *label;
-    u8 pad50[4];
-    u16 slot;
-} Panel_801A54AC;
 typedef struct Ctx_801A54AC {
     u8 pad0[7];
     u8 b7;
@@ -1160,7 +1128,7 @@ typedef struct Task_801A54AC {
     u8 state;
     u8 pad1a[0xa];
     u8 *flag;
-    Panel_801A54AC *pan;
+    MenuPanel *pan;
 } Task_801A54AC;
 extern LayoutPart lbl_802B4B9C[6];
 s32 UiLayoutDraw(NJS_TEXLIST **texlists, LayoutPart *parts, u32 count, f32 *pos, f32 z, f32 a, f32 b);
@@ -1169,7 +1137,7 @@ extern void fn_801A5600(void *t);
 #undef TextPrintNumber
 typedef struct Holder_801A6A88 {
     u8 pad0[0x28];
-    UiObj *ui;
+    MenuPanel* ui;
 } Holder_801A6A88;
 typedef struct Ctx_801A6A88 {
     u8 pad0[4];
@@ -1206,9 +1174,8 @@ extern u16 fn_801F477C(s16 id);
 extern s8 fn_801F452C(s16 id);
 #define MenuDummy MenuDummy_hdr
 #undef MenuDummy
-typedef struct { UiObj o; const char* text; u16 h50, h52, h54, h56; } MObj;
-typedef struct { u8 pad[0x28]; MObj* obj; } MP;
-typedef struct { u8 pad[0x28]; MObj* obj; MObj* obj2; } MP2;
+typedef struct { u8 pad[0x28]; MenuPanel* obj; } MP;
+typedef struct { u8 pad[0x28]; MenuPanel* obj; MenuPanel* obj2; } MP2;
 typedef struct { void* parts; u32 count; } LT;
 typedef struct ShopCmpPos {
     f32 x, y;
@@ -1735,8 +1702,7 @@ const s16 lbl_802B8EBC[8] = {0xF0, 0x126, 0x15C, 0x1AE, 0x29, 0x71, 0xB9, 0x118}
 const s16 lbl_802B8ECC[8] = {0xF0, 0x126, 0x15C, 0x192, 0x29, 0x71, 0xB9, 0x101};
 typedef struct { u8 pad[0x10]; u32 v; } W;
 void fn_801B277C(Task* t);
-typedef struct { u8 b0; u8 pad1[3]; s16 h4; u8 pad6[2]; s32 w8; s32 wc; s32 w10; } W_801B54D4;
-typedef struct { u8 pad[0x24]; W_801B54D4* w; MObj* obj; MObj* obj2; u8 pad30[0xC]; void* p3c; } T_801B54D4;
+typedef struct { u8 pad[0x24]; MenuPartWork* w; MenuPanel* obj; MenuPanel* obj2; u8 pad30[0xC]; void* p3c; } T_801B54D4;
 typedef struct { f32 a, b; } FP;
 extern s32 UiLayoutDrawPart(NJS_TEXLIST** texlists, void* parts, s32 count, f32* pos, f32 z, f32 a, f32 b, u16 index);
 extern u8 fn_801F464C(s32 id);
@@ -1789,13 +1755,12 @@ typedef struct Self_801A1DB4 {
     u8 pad00[0x24];
     Ctx_801A1DB4 *ctx;
 } Self_801A1DB4;
-typedef struct Flag_801AB328 { u8 b0; u8 pad1[7]; s32 w8; u8 pad0c[0x1e - 0xc]; u8 b1e; } Flag_801AB328;
 typedef struct Sub_801AB328 {
     u8 pad00[0x24];
-    Flag_801AB328 *flag;   /* 0x24 */
-    UiObj *obj;            /* 0x28 */
+    MenuPartWork *flag;   /* 0x24 */
+    MenuPanel* obj;            /* 0x28 */
     u8 pad2c[4];
-    Flag_801AB328 *flag30; /* 0x30 */
+    MenuPartWork *flag30; /* 0x30 */
 } Sub_801AB328;
 typedef struct Ctx_801AB328 {
     u8 pad00[0x1f8];
@@ -1813,7 +1778,7 @@ typedef struct Self_801AB328 {
     Ctx_801AB328 *ctx;
 } Self_801AB328;
 typedef struct Flg_801A0FD8 { u8 pad[8]; u32 flags; } Flg_801A0FD8;
-typedef struct Sub_801A0FD8 { u8 pad[0x19]; u8 x19; u8 pad1a[0x28 - 0x1a]; UiObj *obj; } Sub_801A0FD8;
+typedef struct Sub_801A0FD8 { u8 pad[0x19]; u8 x19; u8 pad1a[0x28 - 0x1a]; MenuPanel* obj; } Sub_801A0FD8;
 typedef struct Ctx_801A0FD8 {
     u8 pad00[1];
     u8 x1;
@@ -1844,7 +1809,6 @@ typedef struct Self_801A0FD8 {
     Ctx_801A0FD8 *ctx;
 } Self_801A0FD8;
 extern void UiObjMoveToY(UiObj *o, u16 frames, s16 se, f32 y);
-typedef struct { u8 pad[0x24]; struct { u8 pad[6]; u16 idx; } *p; } G;
 typedef struct { void* a; void* b; void* c; u16 xc;
  u8 lo;
  u8 hi;
@@ -1857,9 +1821,9 @@ typedef struct { void* a; void* b; void* c; u16 xc;
 extern Ent_801AC2E4 lbl_802ED258[];
 extern s8 fn_801BE608(s16 x);
 void fn_801AC16C(Task* task);
-typedef struct { u8 pad[0x24]; u8* w; MObj* obj; u32 x2c; } T;
+typedef struct { u8 pad[0x24]; u8* w; MenuPanel* obj; u32 x2c; } T;
 typedef struct Flg_801A0C3C { u8 pad[8]; u32 flags; } Flg_801A0C3C;
-typedef struct Sub_801A0C3C { u8 pad[0x28]; UiObj *obj; } Sub_801A0C3C;
+typedef struct Sub_801A0C3C { u8 pad[0x24]; MenuPartWork* w; MenuPanel* obj; } Sub_801A0C3C;
 typedef struct Ctx_801A0C3C {
     u8 pad00[1];
     u8 x1;
@@ -1890,7 +1854,7 @@ typedef struct Self_801A0C3C {
     Ctx_801A0C3C *ctx;
 } Self_801A0C3C;
 typedef struct Flg_801A1B98 { u8 pad[8]; u32 flags; } Flg_801A1B98;
-extern Sub_801A0C3C *fn_801A53D4(void *o, u8 k);
+extern Sub_801A0C3C *fn_801A53D4(void *o, s16 idx);
 extern const f32 lbl_802B4920[11];
 typedef struct Ent_801A1B98 { u8 idx; u8 b1; u8 b2; u8 b3; u8 b4; u8 b5; } Ent_801A1B98;
 extern const Ent_801A1B98 lbl_802B494C[7];
@@ -1904,7 +1868,7 @@ extern int lbl_80347170[2];
 extern int lbl_80347178;
 extern const u32 lbl_8034BAC0[];
 extern u8 lbl_803473BE;
-typedef struct { u8 pad[0x28]; UiObj* obj; } Pnl;
+typedef struct { u8 pad[0x28]; MenuPanel* obj; } Pnl;
 typedef struct { s32 f0; u8 pad[0x28]; } E2c;
 typedef struct {
     u8 pad0[7];
@@ -1937,8 +1901,6 @@ typedef struct {
 } W_801A11B0;
 typedef struct { u8 pad[0x19]; u8 state; u8 pad1a[0x24 - 0x1a]; W_801A11B0* w; } Task_801A11B0;
 typedef struct { u8 pad[0x14]; u32 f14; u8 pad18[0x50 - 0x18]; } Tab;
-typedef struct { u8 pad[8]; u32 bits; } Pad;
-typedef struct { Pad* pad; } PadInfo;
 extern s32 fn_801C09F8(s32 a, s32 b);
 extern void fn_801A20AC(Task_801A11B0* t);
 typedef struct V { u8 pad[4]; f32 a; f32 b; } V;
@@ -1946,13 +1908,13 @@ typedef struct Ent_801B737C { u8 pad[0x28]; V* v; } Ent_801B737C;
 typedef struct St_801B737C { u8 pad[0x64]; s8 seen[8]; } St_801B737C;
 typedef struct Fl { u8 pad[4]; u32 f4; u8 pad8[0x18 - 8]; u32 f18; u32 f1c; u8 pad20[0x30 - 0x20]; u32 f30; u8 pad34[0x168 - 0x34]; u32 f168; u8 pad16c[4]; u32 f170; } Fl;
 typedef struct UiObj UiObj;
-typedef struct Slot { u8 pad[0x28]; UiObj* obj; } Slot;
+typedef struct Slot { u8 pad[0x28]; MenuPanel* obj; } Slot;
 extern void UiObjSetCommand(UiObj* obj, u16 cmd, u16 delay);
 typedef struct Menu { u8 pad[0xA]; u8 cur; u8 pad2[0x230-0xB]; Slot* slot[5]; } Menu;
 typedef struct Task_801AB094 { u8 pad[0x24]; Menu* m; } Task_801AB094;
 typedef struct Holder_801A0E7C {
     u8 pad0[0x28];
-    UiObj *ui;
+    MenuPanel* ui;
 } Holder_801A0E7C;
 typedef struct Ctx_801A0E7C {
     u8 pad0[4];
@@ -2007,43 +1969,10 @@ extern CardStampBuf lbl_80308198;
 extern CardRec lbl_803081A4;
 extern void *memcpy(void *, const void *, u32);
 extern void *memset(void *, s32, u32);
-typedef struct Item_801AAFAC {
-    u8 pad0[0x34];
-    f32 alpha;
-} Item_801AAFAC;
-typedef struct Holder_801AAFAC {
-    u8 pad0[0x28];
-    Item_801AAFAC *ui;
-} Holder_801AAFAC;
-typedef struct Ctx_801AAFAC {
-    u8 pad0[6];
-    u16 id;
-    u8 pad8;
-    u8 b9;
-    u8 padA;
-    u8 count;
-    u8 padC[4];
-    s8 slot[0x220];
-    Holder_801AAFAC *items[16];
-} Ctx_801AAFAC;
-typedef struct Self_801AAFAC {
-    u8 pad0[0x24];
-    Ctx_801AAFAC *ctx;
-} Self_801AAFAC;
 extern s32 fn_801C0B88(s16 id, u8 slot);
-typedef struct MenuPanel {
-    UiObj o;
-    const char* text; /* 0x4C */
-    u16 h50, h52, h54, h56;
-} MenuPanel;
-typedef struct PanelWork_801AFBE8 {
-    u8 state;
-    u8 pad1[0x47];
-    void (*cb_801AFBE8)(void *t); /* 0x48 */
-} PanelWork_801AFBE8;
 typedef struct PanelTask_801AFBE8 {
     u8 pad[0x24];
-    PanelWork_801AFBE8* w;   /* 0x24 */
+    MenuPartWork* w;   /* 0x24 */
     MenuPanel* obj; /* 0x28 */
     u32 x2c;
 } PanelTask_801AFBE8;
@@ -2082,7 +2011,7 @@ extern void fn_8009076C(s32 a, Data* d);
 extern s32 strlen(const char* s);
 extern char* const lbl_802B9428[];
 typedef struct Flg_801A1958 { u8 pad[8]; u32 flags; } Flg_801A1958;
-typedef struct Sub_801A1958 { u8 pad[0x28]; UiObj *obj; } Sub_801A1958;
+typedef struct Sub_801A1958 { u8 pad[0x28]; MenuPanel* obj; } Sub_801A1958;
 typedef struct Item_801A1958 { u8 pad[0x18]; s32 kind; u8 rest[0x2c - 0x1c]; } Item_801A1958;
 typedef struct Ctx_801A1958 {
     u8 pad00[1];
@@ -2127,8 +2056,7 @@ typedef struct {
 } Obj_8019BED8;
 extern void* fn_802258BC(s32 a, u32 b, s32 c);
 extern void fn_801DCE18(f32* a, f32* b, s32 c);
-typedef struct Pos { u8 pad[4]; f32 x; f32 y; } Pos;
-typedef struct MP_801B60E8 { u8 pad[0x28]; Pos* obj; } MP_801B60E8;
+typedef struct MP_801B60E8 { u8 pad[0x28]; MenuPanel* obj; } MP_801B60E8;
 typedef struct Tri { VertexCol v[3]; } Tri;
 extern Tri lbl_802B8EF0;
 
@@ -2300,28 +2228,28 @@ Task3_801ACC00* fn_801ACD38(void* arg, u16 slot) {
     t->c->b1F = 3;
     t->c->s18 = 0;
     t->c->s1A = 0;
-    t->pan->ui.alpha_en = 0;
+    t->pan->o.alpha_en = 0;
     ((u8*)t->a)[0] = 0;
-    t->pan->ui.x = 648.0f;
-    t->pan->ui.tx = 648.0f;
-    t->pan->ui.y = 38.0f;
-    t->pan->ui.ty = 38.0f;
-    t->pan->ui.rdx = 0.0f;
-    t->pan->ui.rdy = 0.0f;
+    t->pan->o.x = 648.0f;
+    t->pan->o.tx = 648.0f;
+    t->pan->o.y = 38.0f;
+    t->pan->o.ty = 38.0f;
+    t->pan->o.rdx = 0.0f;
+    t->pan->o.rdy = 0.0f;
     *(f32*)((u8*)t->pan + 0x38) = 1.0f;
-    t->pan->ui.alpha = 1.0f;
-    t->pan->ui.z = -4500.0f;
-    UiObjSetLowered(&t->pan->ui);
+    t->pan->o.alpha = 1.0f;
+    t->pan->o.z = -4500.0f;
+    UiObjSetLowered(&t->pan->o);
     return t;
 }
 
-void fn_801B6400(u32 v) {
-    u8* p = *(u8**)((u8*)lbl_803471B8 + 0x24);
-    u8* q = *(u8**)(p + 0x214);
+void fn_801B6400(const char* v) {
+    ShopWork* w = lbl_803471B8->w;
+    ShopPart* q = w->parts[7];
     if (q == 0) {
         return;
     }
-    *(u32*)(*(u8**)(q + 0x28) + 0x4C) = v;
+    q->obj->text = v;
 }
 
 void fn_801BCFAC(u8* obj, s32 idx) {
@@ -2413,7 +2341,7 @@ void fn_8019E33C(Task *t) {
 void fn_8019E3E0(Task *t) {
     if (fn_801A6554(t) == 0) {
         t->state = 0x1E;
-    } else if (*(u32 *)(lbl_80311A60[0] + 0x8) & 0x200) {
+    } else if (lbl_80311A60[0]->held & 0x200) {
         fn_801A64E0(t);
         t->state = 0x1E;
     }
@@ -2421,14 +2349,14 @@ void fn_8019E3E0(Task *t) {
 
 void fn_8019E5F0(Task *t) {
     fn_801A66AC(*(void **)((u8 *)t->work + 0x20C));
-    if (*(u32 *)(lbl_80311A60[0] + 0x8) & 0x300) {
+    if (lbl_80311A60[0]->held & 0x300) {
         fn_801A4DCC(t, 1);
         t->state = 0xC;
     }
 }
 
 void fn_8019EDEC(Task *t) {
-    if (fn_801A6554(t) == 0 || (*(u32 *)(lbl_80311A60[0] + 0x8) & 0x200)) {
+    if (fn_801A6554(t) == 0 || (lbl_80311A60[0]->held & 0x200)) {
         fn_801A64B4(t, 5);
         t->state = 0x8;
     }
@@ -2635,19 +2563,19 @@ void fn_8019E650(Self_8019E650 *o) {
 }
 
 void fn_8019FDB0(Self_8019FDB0 *o) {
-    if (fn_801A6554(o) == 0 || (*(u32 *)(lbl_80311A60[0] + 8) & 0x100)) {
+    if (fn_801A6554(o) == 0 || (lbl_80311A60[0]->held & 0x100)) {
         s32 cmd;
         fn_801A64E0(o);
         cmd = 0x14;
         if (o->ctx->b8 == 0) {
             cmd = 0x15;
         }
-        UiObjSetCommand(o->ctx->p220->ui, (u16)cmd, 0);
+        UiObjSetCommand(&o->ctx->p220->ui->o, (u16)cmd, 0);
         cmd = 0x14;
         if (o->ctx->b8 == 1) {
             cmd = 0x15;
         }
-        UiObjSetCommand(o->ctx->p224->ui, (u16)cmd, 0);
+        UiObjSetCommand(&o->ctx->p224->ui->o, (u16)cmd, 0);
         o->state19 = 0xf;
     }
 }
@@ -2658,7 +2586,7 @@ void fn_8019FE64(Self_8019FE64 *o) {
 
     if (fn_801A6554(o) == 0) {
         doit = 1;
-    } else if (*(u32 *)(lbl_80311A60[0] + 8) & 0x100) {
+    } else if (lbl_80311A60[0]->held & 0x100) {
         fn_801A64E0(o);
         doit = 1;
     }
@@ -2681,13 +2609,13 @@ void fn_8019FF38(Self_8019FF38 *o) {
         return;
     }
     if (o->ctx->b4 == 0) {
-        UiObjMoveToX(o->ctx->p21c->ui, 6, 5, -8.0f);
-        UiObjSetCommand(o->ctx->p21c->ui, 0xf, 0);
+        UiObjMoveToX(&o->ctx->p21c->ui->o, 6, 5, -8.0f);
+        UiObjSetCommand(&o->ctx->p21c->ui->o, 0xf, 0);
     } else {
-        UiObjMoveToX(o->ctx->p218->ui, 6, 5, -8.0f);
-        UiObjSetCommand(o->ctx->p218->ui, 0xf, 3);
-        UiObjMoveToY(o->ctx->p21c->ui, 3, -1, 164.0f);
-        UiObjSetCommand(o->ctx->p21c->ui, 0xf, 0);
+        UiObjMoveToX(&o->ctx->p218->ui->o, 6, 5, -8.0f);
+        UiObjSetCommand(&o->ctx->p218->ui->o, 0xf, 3);
+        UiObjMoveToY(&o->ctx->p21c->ui->o, 3, -1, 164.0f);
+        UiObjSetCommand(&o->ctx->p21c->ui->o, 0xf, 0);
     }
     o->state19 = 0xd;
 }
@@ -2819,16 +2747,16 @@ Task_801A51A8* fn_801A51A8(void* a)
     o->p24 = fn_801E1A74(1, 0x58);
     o->p28 = fn_801E1A74(1, 0x6c);
     o->p24[0] = 0;
-    o->p28->alpha_en = 0;
-    o->p28->z = -4000.0f;
-    o->p28->x = 640.0f;
-    o->p28->tx = 640.0f;
-    o->p28->y = 480.0f;
-    o->p28->ty = 480.0f;
-    o->p28->rdx = 0.0f;
-    o->p28->rdy = 0.0f;
-    o->p28->alpha = 1.0f;
-    o->p28->w4c = 0;
+    o->p28->o.alpha_en = 0;
+    o->p28->o.z = -4000.0f;
+    o->p28->o.x = 640.0f;
+    o->p28->o.tx = 640.0f;
+    o->p28->o.y = 480.0f;
+    o->p28->o.ty = 480.0f;
+    o->p28->o.rdx = 0.0f;
+    o->p28->o.rdy = 0.0f;
+    o->p28->o.alpha = 1.0f;
+    o->p28->text = 0;
     return o;
 }
 
@@ -2837,20 +2765,20 @@ Task_801ABE90* fn_801ABE90(void* a)
     Task_801ABE90* o = fn_802267AC(a, fn_801ABD40);
     o->p24 = fn_801E1A74(1, 0x58);
     o->p28 = fn_801E1A74(1, 0x6c);
-    o->p28->alpha_en = 0;
+    o->p28->o.alpha_en = 0;
     o->p24[0] = 0;
-    o->p28->x = -260.0f;
-    o->p28->tx = -260.0f;
-    o->p28->y = 324.0f;
-    o->p28->ty = 324.0f;
-    o->p28->rdx = 0.0f;
-    o->p28->rdy = 0.0f;
-    o->p28->f38 = 1.0f;
-    o->p28->alpha = 1.0f;
-    o->p28->z = -4250.0f;
+    o->p28->o.x = -260.0f;
+    o->p28->o.tx = -260.0f;
+    o->p28->o.y = 324.0f;
+    o->p28->o.ty = 324.0f;
+    o->p28->o.rdx = 0.0f;
+    o->p28->o.rdy = 0.0f;
+    o->p28->o.f38 = 1.0f;
+    o->p28->o.alpha = 1.0f;
+    o->p28->o.z = -4250.0f;
     o->w2c = 0;
-    UiObjSetLowered((UiObj*)o->p28);
-    UiObjCalcRect((UiObj*)o->p28);
+    UiObjSetLowered(&o->p28->o);
+    UiObjCalcRect(&o->p28->o);
     return o;
 }
 
@@ -2859,19 +2787,19 @@ Task_801AC094* fn_801AC094(void* a)
     Task_801AC094* o = fn_802267AC(a, fn_801ABF70);
     o->p24 = fn_801E1A74(1, 0x58);
     o->p28 = fn_801E1A74(1, 0x6c);
-    o->p28->alpha_en = 0;
+    o->p28->o.alpha_en = 0;
     o->p24[0] = 0;
-    o->p28->x = 640.0f;
-    o->p28->tx = 640.0f;
-    o->p28->y = 84.0f;
-    o->p28->ty = 84.0f;
-    o->p28->rdx = 0.0f;
-    o->p28->rdy = 0.0f;
-    o->p28->f38 = 1.0f;
-    o->p28->alpha = 1.0f;
-    o->p28->z = -4350.0f;
+    o->p28->o.x = 640.0f;
+    o->p28->o.tx = 640.0f;
+    o->p28->o.y = 84.0f;
+    o->p28->o.ty = 84.0f;
+    o->p28->o.rdx = 0.0f;
+    o->p28->o.rdy = 0.0f;
+    o->p28->o.f38 = 1.0f;
+    o->p28->o.alpha = 1.0f;
+    o->p28->o.z = -4350.0f;
     o->w2c = 0;
-    UiObjSetLowered((UiObj*)o->p28);
+    UiObjSetLowered(&o->p28->o);
     return o;
 }
 
@@ -2880,19 +2808,19 @@ Task_801B1104* fn_801B1104(void* a)
     Task_801B1104* o = fn_802267AC(a, fn_801B0F1C);
     o->p24 = fn_801E1A74(1, 0x58);
     o->p28 = fn_801E1A74(1, 0x6c);
-    o->p28->f38 = 1.0f;
-    o->p28->alpha = 1.0f;
+    o->p28->o.f38 = 1.0f;
+    o->p28->o.alpha = 1.0f;
     o->w2c = 0;
     o->p28->h54 = 0;
     o->p24[0] = 0;
-    o->p28->x = -348.0f;
-    o->p28->tx = -348.0f;
-    o->p28->y = 36.0f;
-    o->p28->ty = 36.0f;
-    o->p28->z = -4050.0f;
+    o->p28->o.x = -348.0f;
+    o->p28->o.tx = -348.0f;
+    o->p28->o.y = 36.0f;
+    o->p28->o.ty = 36.0f;
+    o->p28->o.z = -4050.0f;
     o->p28->h52 = 0;
-    o->p28->w4c = fn_801F4AE4((s16)lbl_803471B8->p24->h06);
-    UiObjSetLowered((UiObj*)o->p28);
+    o->p28->text = fn_801F4AE4((s16)lbl_803471B8->w->item);
+    UiObjSetLowered(&o->p28->o);
     return o;
 }
 
@@ -2907,7 +2835,7 @@ typedef struct Task_801B11EC {
     u8 state; /* 0x19 */
     u8 pad1a[0x24 - 0x1a];
     u8* flag;  /* 0x24 */
-    MObj* obj; /* 0x28 */
+    MenuPanel* obj; /* 0x28 */
 } Task_801B11EC;
 
 /* Draws a signed number: a minus sign at (x, y), then the digits like TextPrintNumber. Its
@@ -3018,15 +2946,15 @@ Task_801B1A78* fn_801B1A78(void* a)
     o->p28 = fn_801E1A74(1, 0x6c);
     o->w2c = 0;
     o->p24[0] = 0;
-    o->p28->x = 648.0f;
-    o->p28->tx = 648.0f;
-    o->p28->y = 282.0f;
-    o->p28->ty = 282.0f;
+    o->p28->o.x = 648.0f;
+    o->p28->o.tx = 648.0f;
+    o->p28->o.y = 282.0f;
+    o->p28->o.ty = 282.0f;
     o->p28->h54 = 0;
     o->p28->h52 = 0;
-    o->p28->f38 = 1.0f;
-    o->p28->alpha = 1.0f;
-    o->p28->z = -4400.0f;
+    o->p28->o.f38 = 1.0f;
+    o->p28->o.alpha = 1.0f;
+    o->p28->o.z = -4400.0f;
     return o;
 }
 
@@ -3054,7 +2982,7 @@ typedef struct Task_1B3C {
     u8 state; /* 0x19 */
     u8 pad1A[0xA];
     u8* a;                /* 0x24 */
-    Panel_801B2310* pan;  /* 0x28 */
+    MenuPanel* pan;  /* 0x28 */
     s32 f2C;
     Cur_1B3C* c;          /* 0x30 */
     u8 pad34[4];
@@ -3082,23 +3010,23 @@ void fn_801B1B3C(Task_1B3C* t) {
         if (t->a[0] == 1) {
             return;
         }
-        UiObjUpdate(&t->pan->ui);
+        UiObjUpdate(&t->pan->o);
         tl = (NJS_TEXLIST**)&menu_sprites.texlist8;
-        UiLayoutDraw(tl, (LayoutPart*)lbl_802B71EC, 3, &t->pan->ui.x, t->pan->ui.z, 1.0f, 1.0f);
-        z = -42.75f + t->pan->ui.z;
+        UiLayoutDraw(tl, (LayoutPart*)lbl_802B71EC, 3, &t->pan->o.x, t->pan->o.z, 1.0f, 1.0f);
+        z = -42.75f + t->pan->o.z;
         if (fn_801B94F0()) {
             s32 i;
             const void* const* p;
-            UiLayoutDraw(tl, (LayoutPart*)lbl_802B7304[t->c->sel * 2], (u32)lbl_802B7304[t->c->sel * 2 + 1], &t->pan->ui.x, z, 1.0f, 1.0f);
+            UiLayoutDraw(tl, (LayoutPart*)lbl_802B7304[t->c->sel * 2], (u32)lbl_802B7304[t->c->sel * 2 + 1], &t->pan->o.x, z, 1.0f, 1.0f);
             z -= 0.25f;
             for (i = 0, p = lbl_802B7304; i < 5; i++, p += 2) {
                 if (t->c->sel != i && fn_801B952C(i)) {
-                    UiLayoutDraw(tl, (LayoutPart*)p[0], 2, &t->pan->ui.x, z, 0.7f, 1.0f);
+                    UiLayoutDraw(tl, (LayoutPart*)p[0], 2, &t->pan->o.x, z, 0.7f, 1.0f);
                     z -= 0.25f;
                 }
             }
         } else {
-            UiLayoutDraw(tl, (LayoutPart*)lbl_802B72F0, 1, &t->pan->ui.x, z, 1.0f, 1.0f);
+            UiLayoutDraw(tl, (LayoutPart*)lbl_802B72F0, 1, &t->pan->o.x, z, 1.0f, 1.0f);
         }
         switch (t->state) {
         case 0:
@@ -3107,8 +3035,8 @@ void fn_801B1B3C(Task_1B3C* t) {
                     t->d->state = 1;
                 }
                 t->d->idx = 1;
-                t->d->x = t->pan->ui.x + t->pan->ui.rdx + (f32)(t->c->sel * 48);
-                t->d->y = t->pan->ui.y + t->pan->ui.rdy;
+                t->d->x = t->pan->o.x + t->pan->o.rdx + (f32)(t->c->sel * 48);
+                t->d->y = t->pan->o.y + t->pan->o.rdy;
             } else {
                 t->d->state = 0;
             }
@@ -3117,10 +3045,10 @@ void fn_801B1B3C(Task_1B3C* t) {
             UiObj* ui;
             Cur_1B3C* c;
             t->d->idx = 2;
-            t->d->x = t->pan->ui.x;
-            t->d->y = t->pan->ui.y;
+            t->d->x = t->pan->o.x;
+            t->d->y = t->pan->o.y;
             c = t->c;
-            ui = &t->pan->ui;
+            ui = &t->pan->o;
             if ((c->flags & 1) && c->part != 0xFF) {
                 s = 0.0f;
                 if (c->flags & 2) {
@@ -3152,16 +3080,16 @@ Task_801B6240* fn_801B6240(void* a, f32 x)
     o->p28 = fn_801E1A74(1, 0x6c);
     o->w2c = 0;
     o->p24[0] = 0;
-    o->p28->alpha_en = 0;
-    o->p28->x = 640.0f;
-    o->p28->tx = 640.0f;
-    o->p28->y = 480.0f;
-    o->p28->ty = 480.0f;
-    o->p28->rdx = 0.0f;
-    o->p28->rdy = 0.0f;
-    o->p28->alpha = 1.0f;
-    o->p28->z = x;
-    UiObjSetLowered((UiObj*)o->p28);
+    o->p28->o.alpha_en = 0;
+    o->p28->o.x = 640.0f;
+    o->p28->o.tx = 640.0f;
+    o->p28->o.y = 480.0f;
+    o->p28->o.ty = 480.0f;
+    o->p28->o.rdx = 0.0f;
+    o->p28->o.rdy = 0.0f;
+    o->p28->o.alpha = 1.0f;
+    o->p28->o.z = x;
+    UiObjSetLowered(&o->p28->o);
     return o;
 }
 
@@ -3171,16 +3099,16 @@ Task_801B6AE8* fn_801B6AE8(void* a)
     o->p24 = fn_801E1A74(1, 0x58);
     o->p28 = fn_801E1A74(1, 0x6c);
     o->p24[0] = 0;
-    o->p28->alpha_en = 0;
-    o->p28->z = -4400.0f;
-    o->p28->x = -260.0f;
-    o->p28->tx = -260.0f;
-    o->p28->y = 100.0f;
-    o->p28->ty = 100.0f;
-    o->p28->rdx = 0.0f;
-    o->p28->rdy = 0.0f;
-    o->p28->alpha = 1.0f;
-    UiObjSetRaised((UiObj*)o->p28);
+    o->p28->o.alpha_en = 0;
+    o->p28->o.z = -4400.0f;
+    o->p28->o.x = -260.0f;
+    o->p28->o.tx = -260.0f;
+    o->p28->o.y = 100.0f;
+    o->p28->o.ty = 100.0f;
+    o->p28->o.rdx = 0.0f;
+    o->p28->o.rdy = 0.0f;
+    o->p28->o.alpha = 1.0f;
+    UiObjSetRaised(&o->p28->o);
     return o;
 }
 
@@ -3194,7 +3122,7 @@ void fn_801B8E68(Task_801B8E68* t)
     if (n == 0) {
         return;
     }
-    if (((Flags_UNIT0000 *)lbl_80311A60[0])->w08 & 0x100) {
+    if (lbl_80311A60[0]->held & 0x100) {
         lbl_8030B7F4.w34c += n;
         s->w11c = 0;
         if (lbl_8030B7F4.w34c >= 99999999) {
@@ -3221,11 +3149,11 @@ void fn_801B8E68(Task_801B8E68* t)
  * them, fn_801B7624 (after) has them inlined. */
 inline s32 fn_801B94F0(void)
 {
-    u32 sum = lbl_803471B8->p30->w3cc;
-    sum += lbl_803471B8->p30->w00;
-    sum += lbl_803471B8->p30->w144;
-    sum += lbl_803471B8->p30->w288;
-    sum += lbl_803471B8->p30->w510;
+    u32 sum = lbl_803471B8->sell[3].n;
+    sum += lbl_803471B8->sell[0].n;
+    sum += lbl_803471B8->sell[1].n;
+    sum += lbl_803471B8->sell[2].n;
+    sum += lbl_803471B8->sell[4].n;
     return sum != 0;
 }
 
@@ -3234,15 +3162,15 @@ inline u16 fn_801B952C(u16 k)
 {
     switch (k) {
     case 0:
-        return (u16)lbl_803471B8->p30->w3cc;
+        return (u16)lbl_803471B8->sell[3].n;
     case 1:
-        return (u16)lbl_803471B8->p30->w00;
+        return (u16)lbl_803471B8->sell[0].n;
     case 2:
-        return (u16)lbl_803471B8->p30->w144;
+        return (u16)lbl_803471B8->sell[1].n;
     case 3:
-        return (u16)lbl_803471B8->p30->w288;
+        return (u16)lbl_803471B8->sell[2].n;
     case 4:
-        return (u16)lbl_803471B8->p30->w510;
+        return (u16)lbl_803471B8->sell[4].n;
     default:
         return 0;
     }
@@ -3366,8 +3294,8 @@ void fn_801A0B18(Self_801A0B18* o) {
         if (1.0f != o->ctx->x18) {
             fn_801A4DCC(o, 1);
         }
-        UiObjMoveToXIfChanged(o->ctx->x210->obj, 6, 4, -330.0f);
-        UiObjSetCommand(o->ctx->x210->obj, 0xf, 0);
+        UiObjMoveToXIfChanged(&o->ctx->x210->obj->o, 6, 4, -330.0f);
+        UiObjSetCommand(&o->ctx->x210->obj->o, 0xf, 0);
         k = fn_801A6A58(o->ctx->idx, o->ctx->slot[o->ctx->idx]);
         fn_801A64B4(o, (u8)k);
         MenuPlaySe(3);
@@ -3384,7 +3312,7 @@ void fn_801A0B18(Self_801A0B18* o) {
 void fn_801A1494(Self_801A1494* o) {
     u32 f;
     s32 k;
-    if (fn_801A6554(o) == 0 || ((f = ((Flg *)lbl_80311A60[0])->flags) & 0x100)) {
+    if (fn_801A6554(o) == 0 || ((f = lbl_80311A60[0]->held) & 0x100)) {
         fn_801A64E0(o);
         o->state = 4;
     } else if (f & 0x400) {
@@ -3529,14 +3457,14 @@ Node* fn_801A5BE8(void* parent, u16 mode) {
         n->b->o.tx = -240.0f;
         n->b->o.y = 228.0f;
         n->b->o.ty = 228.0f;
-        n->b->name = lbl_80346808;
+        n->b->text = lbl_80346808;
     } else {
         n->b->o.z = -4300.0f;
         n->b->o.x = -240.0f;
         n->b->o.tx = -240.0f;
         n->b->o.y = 292.0f;
         n->b->o.ty = 292.0f;
-        n->b->name = lbl_8034680C;
+        n->b->text = lbl_8034680C;
     }
     n->b->o.alpha = 1.0f;
     UiObjSetLowered(&n->b->o);
@@ -3548,25 +3476,25 @@ SlotTask* fn_801A5EB4(void* a, u16 slot) {
     t->buf = fn_801E1A74(1, 0x58);
     t->pan = fn_801E1A74(1, 0x6c);
     t->buf[0] = 0;
-    t->pan->ui.alpha_en = 0;
-    t->pan->slot = slot;
+    t->pan->o.alpha_en = 0;
+    t->pan->h54 = slot;
     if (slot == 0) {
-        t->pan->ui.z = -4200.0f;
-        t->pan->ui.x = -340.0f;
-        t->pan->ui.tx = -340.0f;
-        t->pan->ui.y = 100.0f;
-        t->pan->ui.ty = 100.0f;
-        t->pan->label = "Slot A";
+        t->pan->o.z = -4200.0f;
+        t->pan->o.x = -340.0f;
+        t->pan->o.tx = -340.0f;
+        t->pan->o.y = 100.0f;
+        t->pan->o.ty = 100.0f;
+        t->pan->text = "Slot A";
     } else {
-        t->pan->ui.z = -4150.0f;
-        t->pan->ui.x = -340.0f;
-        t->pan->ui.tx = -340.0f;
-        t->pan->ui.y = 164.0f;
-        t->pan->ui.ty = 164.0f;
-        t->pan->label = "Slot B";
+        t->pan->o.z = -4150.0f;
+        t->pan->o.x = -340.0f;
+        t->pan->o.tx = -340.0f;
+        t->pan->o.y = 164.0f;
+        t->pan->o.ty = 164.0f;
+        t->pan->text = "Slot B";
     }
-    t->pan->ui.alpha = 1.0f;
-    UiObjSetLowered(&t->pan->ui);
+    t->pan->o.alpha = 1.0f;
+    UiObjSetLowered(&t->pan->o);
     return t;
 }
 
@@ -3575,20 +3503,20 @@ SlotTask* fn_801A6244(void* a, u16 slot) {
     t->buf = fn_801E1A74(1, 0x58);
     t->pan = fn_801E1A74(1, 0x6c);
     t->buf[0] = 0;
-    t->pan->ui.alpha_en = 0;
-    t->pan->ui.z = -4100.0f;
-    t->pan->ui.x = -340.0f;
-    t->pan->ui.tx = -340.0f;
-    t->pan->ui.y = 36.0f;
-    t->pan->ui.ty = 36.0f;
-    t->pan->ui.rdx = 105.0f;
-    t->pan->ui.rdy = 18.0f;
-    t->pan->ui.alpha = 1.0f;
-    t->pan->slot = slot;
+    t->pan->o.alpha_en = 0;
+    t->pan->o.z = -4100.0f;
+    t->pan->o.x = -340.0f;
+    t->pan->o.tx = -340.0f;
+    t->pan->o.y = 36.0f;
+    t->pan->o.ty = 36.0f;
+    t->pan->o.rdx = 105.0f;
+    t->pan->o.rdy = 18.0f;
+    t->pan->o.alpha = 1.0f;
+    t->pan->h54 = slot;
     if (slot == 0) {
-        t->pan->label = "Save";
+        t->pan->text = "Save";
     } else {
-        t->pan->label = "Load";
+        t->pan->text = "Load";
     }
     return t;
 }
@@ -3647,13 +3575,13 @@ void fn_801ABF70(PanelTask_801ABF70* t) {
         if (t->flag[0] == 1) {
             return;
         }
-        UiObjUpdate(t->ui);
-        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, (LayoutPart*)lbl_802B7C14, 4, &t->ui->x, t->ui->z, 1.0f, 1.0f);
-        fn_801C3F5C(19.0f + t->ui->x, 17.0f + t->ui->y, -27.5f + t->ui->z);
+        UiObjUpdate(&t->ui->o);
+        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, (LayoutPart*)lbl_802B7C14, 4, &t->ui->o.x, t->ui->o.z, 1.0f, 1.0f);
+        fn_801C3F5C(19.0f + t->ui->o.x, 17.0f + t->ui->o.y, -27.5f + t->ui->o.z);
         z = TextGetZ();
         TextPushColor();
         TextSetColor(0xFF201008);
-        TextSetZ(-27.5f + t->ui->z);
+        TextSetZ(-27.5f + t->ui->o.z);
         TextPopColor(1);
         TextSetZ(z);
         break;
@@ -3676,18 +3604,18 @@ Task3_801ACC00* fn_801ACC00(void* arg, u16 slot) {
     t->c->b1F = 3;
     t->c->s18 = 0;
     t->c->s1A = 0;
-    t->pan->ui.alpha_en = 0;
+    t->pan->o.alpha_en = 0;
     ((u8*)t->a)[0] = 0;
-    t->pan->ui.x = 648.0f;
-    t->pan->ui.tx = 648.0f;
-    t->pan->ui.y = 38.0f;
-    t->pan->ui.ty = 38.0f;
-    t->pan->ui.rdx = 0.0f;
-    t->pan->ui.rdy = 0.0f;
+    t->pan->o.x = 648.0f;
+    t->pan->o.tx = 648.0f;
+    t->pan->o.y = 38.0f;
+    t->pan->o.ty = 38.0f;
+    t->pan->o.rdx = 0.0f;
+    t->pan->o.rdy = 0.0f;
     *(f32*)((u8*)t->pan + 0x38) = 1.0f;
-    t->pan->ui.alpha = 1.0f;
-    t->pan->ui.z = -4500.0f;
-    UiObjSetLowered(&t->pan->ui);
+    t->pan->o.alpha = 1.0f;
+    t->pan->o.z = -4500.0f;
+    UiObjSetLowered(&t->pan->o);
     return t;
 }
 
@@ -3700,11 +3628,11 @@ void fn_801AFAA4(PanelTask_801AFAA4* t) {
         if (t->data->flag == 1) {
             return;
         }
-        UiObjUpdate(&t->pan->ui);
-        UiObjCalcRect(&t->pan->ui);
-        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, lbl_802B79E4[t->pan->layout].parts,
-                     lbl_802B79E4[t->pan->layout].count, t->pan->ui.rect, t->pan->ui.z, t->pan->ui.alpha, 1.0f);
-        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, (LayoutPart*)lbl_802B77AC, 1, &t->pan->ui.rect[2], t->pan->ui.z, 1.0f, 1.0f);
+        UiObjUpdate(&t->pan->o);
+        UiObjCalcRect(&t->pan->o);
+        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, lbl_802B79E4[t->pan->h54].parts,
+                     lbl_802B79E4[t->pan->h54].count, t->pan->o.rect, t->pan->o.z, t->pan->o.alpha, 1.0f);
+        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, (LayoutPart*)lbl_802B77AC, 1, &t->pan->o.rect[2], t->pan->o.z, 1.0f, 1.0f);
         cb = t->data->cb;
         if (cb != 0) {
             z = TextGetZ();
@@ -3726,21 +3654,21 @@ Task2_801B0470* fn_801B0470(void* arg) {
     t->data = fn_801E1A74(1, 0x58);
     t->pan = fn_801E1A74(1, 0x6c);
     *(f32*)((u8*)t->pan + 0x38) = 1.0f;
-    t->pan->ui.alpha = 1.0f;
-    t->pan->layout = 4;
+    t->pan->o.alpha = 1.0f;
+    t->pan->h54 = 4;
     t->data->s6 = 6;
     t->f2C = 0;
     t->data->cb = fn_801B0B2C;
-    t->pan->ui.alpha_en = 0;
+    t->pan->o.alpha_en = 0;
     t->data->b0 = 0;
-    t->pan->ui.x = -348.0f;
-    t->pan->ui.tx = -348.0f;
-    t->pan->ui.y = 356.0f;
-    t->pan->ui.ty = 356.0f;
-    t->pan->ui.z = -4150.0f;
-    t->pan->f52 = 1;
-    t->pan->f4C = lbl_802EBF60[6];
-    UiObjSetLowered(&t->pan->ui);
+    t->pan->o.x = -348.0f;
+    t->pan->o.tx = -348.0f;
+    t->pan->o.y = 356.0f;
+    t->pan->o.ty = 356.0f;
+    t->pan->o.z = -4150.0f;
+    t->pan->h52 = 1;
+    t->pan->text = lbl_802EBF60[6];
+    UiObjSetLowered(&t->pan->o);
     return t;
 }
 
@@ -3754,19 +3682,19 @@ Task3_801B0DF8* fn_801B0DF8(void* arg) {
     t->d->s8 = 3;
     t->d->sA = 0;
     *(f32*)((u8*)t->pan + 0x38) = 1.0f;
-    t->pan->ui.alpha = 1.0f;
+    t->pan->o.alpha = 1.0f;
     *(f32*)((u8*)t->pan + 0x38) = 1.0f;
-    t->pan->ui.alpha = 1.0f;
-    t->pan->ui.z = -4300.0f;
-    t->pan->ui.alpha_en = 0;
-    t->pan->f54 = 0;
-    t->pan->f52 = 0;
+    t->pan->o.alpha = 1.0f;
+    t->pan->o.z = -4300.0f;
+    t->pan->o.alpha_en = 0;
+    t->pan->h54 = 0;
+    t->pan->h52 = 0;
     ((u8*)t->a)[0] = 0;
-    t->pan->ui.x = -348.0f;
-    t->pan->ui.tx = -348.0f;
-    t->pan->ui.y = 164.0f;
-    t->pan->ui.ty = 164.0f;
-    UiObjSetLowered(&t->pan->ui);
+    t->pan->o.x = -348.0f;
+    t->pan->o.tx = -348.0f;
+    t->pan->o.y = 164.0f;
+    t->pan->o.ty = 164.0f;
+    UiObjSetLowered(&t->pan->o);
     t->d->sA = 1;
     return t;
 }
@@ -3778,7 +3706,7 @@ Task3_801B2310* fn_801B2310(void* arg) {
     t->c = fn_801E1A74(1, 0x20);
     t->d = fn_801E1A74(1, 0x18);
     *(f32*)((u8*)t->pan + 0x38) = 1.0f;
-    t->pan->ui.alpha = 1.0f;
+    t->pan->o.alpha = 1.0f;
     t->d->sA = 0;
     t->f2C = 0;
     t->c->b1E = 0;
@@ -3786,15 +3714,15 @@ Task3_801B2310* fn_801B2310(void* arg) {
     t->c->s18 = 0;
     t->c->s1A = 0;
     t->c->b1F = 3;
-    t->pan->f54 = 0;
-    t->pan->f56 = 0;
+    t->pan->h54 = 0;
+    t->pan->h56 = 0;
     t->a[0] = 0;
-    t->pan->ui.x = 648.0f;
-    t->pan->ui.tx = 648.0f;
-    t->pan->ui.y = 100.0f;
-    t->pan->ui.ty = 100.0f;
-    t->pan->ui.z = -4500.0f;
-    UiObjSetLowered(&t->pan->ui);
+    t->pan->o.x = 648.0f;
+    t->pan->o.tx = 648.0f;
+    t->pan->o.y = 100.0f;
+    t->pan->o.ty = 100.0f;
+    t->pan->o.z = -4500.0f;
+    UiObjSetLowered(&t->pan->o);
     return t;
 }
 
@@ -3802,22 +3730,22 @@ Task2_801B2678* fn_801B2678(void* arg, u16 sel) {
     Task2_801B2678* t = fn_802267AC(arg, fn_801B2430);
     t->a = fn_801E1A74(1, 0x58);
     t->pan = fn_801E1A74(1, 0x6c);
-    t->pan->ui.z = -4400.0f;
+    t->pan->o.z = -4400.0f;
     *(f32*)((u8*)t->pan + 0x38) = 1.0f;
-    t->pan->ui.alpha = 1.0f;
+    t->pan->o.alpha = 1.0f;
     t->f2C = 0;
-    t->pan->f54 = 0;
+    t->pan->h54 = 0;
     t->a[0] = 0;
-    t->pan->ui.x = -240.0f;
-    t->pan->ui.tx = -240.0f;
-    t->pan->ui.y = 206.0f;
-    t->pan->ui.ty = 206.0f;
+    t->pan->o.x = -240.0f;
+    t->pan->o.tx = -240.0f;
+    t->pan->o.y = 206.0f;
+    t->pan->o.ty = 206.0f;
     if (sel == 0) {
-        t->pan->f4C = lbl_802EC04C[3];
+        t->pan->text = lbl_802EC04C[3];
     } else {
-        t->pan->f4C = lbl_802EC04C[4];
+        t->pan->text = lbl_802EC04C[4];
     }
-    UiObjSetLowered(&t->pan->ui);
+    UiObjSetLowered(&t->pan->o);
     return t;
 }
 
@@ -3832,18 +3760,18 @@ Task3_801B5C4C* fn_801B5C4C(void* arg) {
     t->d->sA = 0;
     t->c->b1E = 0;
     t->c->b1F = 3;
-    t->pan->ui.alpha_en = 0;
+    t->pan->o.alpha_en = 0;
     t->a[0] = 0;
-    t->pan->ui.x = 648.0f;
-    t->pan->ui.tx = 648.0f;
-    t->pan->ui.y = 38.0f;
-    t->pan->ui.ty = 38.0f;
-    t->pan->ui.rdx = 0.0f;
-    t->pan->ui.rdy = 0.0f;
+    t->pan->o.x = 648.0f;
+    t->pan->o.tx = 648.0f;
+    t->pan->o.y = 38.0f;
+    t->pan->o.ty = 38.0f;
+    t->pan->o.rdx = 0.0f;
+    t->pan->o.rdy = 0.0f;
     *(f32*)((u8*)t->pan + 0x38) = 1.0f;
-    t->pan->ui.alpha = 1.0f;
-    t->pan->ui.z = -4500.0f;
-    UiObjSetLowered(&t->pan->ui);
+    t->pan->o.alpha = 1.0f;
+    t->pan->o.z = -4500.0f;
+    UiObjSetLowered(&t->pan->o);
     return t;
 }
 
@@ -3866,7 +3794,7 @@ void fn_801B5D68(Task3_801B5D68* t) {
                 t->d->angle &= 0x7F00;
             }
             UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, lbl_802B73A4[t->d->idx].parts, 2,
-                         (f32*)t->d, -32.5f + t->ui->z, 1.0f, t->d->scale);
+                         (f32*)t->d, -32.5f + t->ui->o.z, 1.0f, t->d->scale);
             break;
         }
     }
@@ -3880,13 +3808,13 @@ void fn_801B5EA8(PanelTask_801B5EA8* t) {
         if (t->flag[0] == 1) {
             return;
         }
-        UiObjUpdate(t->ui);
-        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, (LayoutPart*)lbl_802B6DD0, 2, &t->ui->x, t->ui->z, 1.0f, 1.0f);
+        UiObjUpdate(&t->ui->o);
+        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, (LayoutPart*)lbl_802B6DD0, 2, &t->ui->o.x, t->ui->o.z, 1.0f, 1.0f);
         z = TextGetZ();
         TextPushColor();
         TextSetColor(0xFF201008);
         fn_801B6E5C(t);
-        TextSetZ(-27.5f + t->ui->z);
+        TextSetZ(-27.5f + t->ui->o.z);
         TextPopColor(1);
         TextSetZ(z);
         break;
@@ -3905,14 +3833,14 @@ void fn_801B5FA8(PanelTask_801B5FA8* t) {
         if (t->flag[0] == 1) {
             return;
         }
-        UiObjUpdate(&t->pan->ui);
+        UiObjUpdate(&t->pan->o);
         z = TextGetZ();
         TextPushColor();
         TextSetColor(0xFF201008);
-        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, (LayoutPart*)lbl_802B6DD0, 2, &t->pan->ui.x, t->pan->ui.z, 1.0f, 1.0f);
-        if (t->pan->label != 0) {
-            TextSetZ(-27.5f + t->pan->ui.z);
-            TextPrint(18.0f + t->pan->ui.x, 12.0f + t->pan->ui.y, t->pan->label);
+        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, (LayoutPart*)lbl_802B6DD0, 2, &t->pan->o.x, t->pan->o.z, 1.0f, 1.0f);
+        if (t->pan->text != 0) {
+            TextSetZ(-27.5f + t->pan->o.z);
+            TextPrint(18.0f + t->pan->o.x, 12.0f + t->pan->o.y, t->pan->text);
             TextSetZ(z);
         }
         TextPopColor(1);
@@ -3935,13 +3863,13 @@ void fn_801B66F8(PanelTask_801B66F8* t) {
         if (t->flag[0] == 1) {
             return;
         }
-        UiObjUpdate(&t->pan->ui);
-        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, (LayoutPart*)lbl_802B6B0C, 4, &t->pan->ui.x, t->pan->ui.z, 1.0f, 1.0f);
+        UiObjUpdate(&t->pan->o);
+        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, (LayoutPart*)lbl_802B6B0C, 4, &t->pan->o.x, t->pan->o.z, 1.0f, 1.0f);
         z = TextGetZ();
         TextSetZ(-4027.5f);
         TextPushColor();
         TextSetColor(0xFF201008);
-        TextPrint(20.0f + t->pan->ui.x, 20.0f + t->pan->ui.y, t->pan->label);
+        TextPrint(20.0f + t->pan->o.x, 20.0f + t->pan->o.y, t->pan->text);
         TextPopColor(1);
         TextSetZ(z);
         break;
@@ -3957,49 +3885,49 @@ Task2_801B6838* fn_801B6838(void* arg) {
     t->a = fn_801E1A74(1, 0x58);
     t->pan = fn_801E1A74(1, 0x6c);
     t->a[0] = 0;
-    t->pan->ui.alpha_en = 0;
-    t->pan->ui.z = -4000.0f;
-    t->pan->ui.x = -260.0f;
-    t->pan->ui.tx = -260.0f;
-    t->pan->ui.y = 36.0f;
-    t->pan->ui.ty = 36.0f;
-    t->pan->ui.rdx = 0.0f;
-    t->pan->ui.rdy = 0.0f;
-    t->pan->ui.alpha = 1.0f;
+    t->pan->o.alpha_en = 0;
+    t->pan->o.z = -4000.0f;
+    t->pan->o.x = -260.0f;
+    t->pan->o.tx = -260.0f;
+    t->pan->o.y = 36.0f;
+    t->pan->o.ty = 36.0f;
+    t->pan->o.rdx = 0.0f;
+    t->pan->o.rdy = 0.0f;
+    t->pan->o.alpha = 1.0f;
     if (lbl_803473BF == 0) {
-        t->pan->label = lbl_802EC0A0[lbl_803473BC].label;
+        t->pan->text = lbl_802EC0A0[lbl_803473BC].label;
     } else {
-        t->pan->label = lbl_802ED218[lbl_803473BC].label;
+        t->pan->text = lbl_802ED218[lbl_803473BC].label;
     }
-    UiObjSetRaised(&t->pan->ui);
+    UiObjSetRaised(&t->pan->o);
     return t;
 }
 
 
-s32 fn_801B93E8(Game_UNIT* t) {
+s32 fn_801B93E8(ShopTask* t) {
     s32 r = -1;
-    Sel* s = t->o->in->s;
-    u16 idx = s->c + s->a * 6;
+    ShopList* s = t->w->parts[8]->list;
+    u16 idx = s->row + s->page * 6;
     s16* p;
-    switch (s->kind) {
+    switch (s->tab) {
     case 0:
-        p = lbl_803471B8->t->g[3][idx];
+        p = lbl_803471B8->sell[3].e[idx];
         if (p != 0) r = *p;
         break;
     case 1:
-        p = lbl_803471B8->t->g[0][idx];
+        p = lbl_803471B8->sell[0].e[idx];
         if (p != 0) r = *p;
         break;
     case 2:
-        p = lbl_803471B8->t->g[1][idx];
+        p = lbl_803471B8->sell[1].e[idx];
         if (p != 0) r = *p;
         break;
     case 3:
-        p = lbl_803471B8->t->g[2][idx];
+        p = lbl_803471B8->sell[2].e[idx];
         if (p != 0) r = *p;
         break;
     case 4:
-        p = lbl_803471B8->t->g[4][idx];
+        p = lbl_803471B8->sell[4].e[idx];
         if (p != 0) r = *p;
         break;
     }
@@ -4127,26 +4055,26 @@ void fn_8019E96C(Self_8019E96C *self) {
     s32 r = fn_801A28AC(self->ctx->b4);
     if (r == 1) {
         self->ctx->w25c[self->ctx->b4] = r;
-        UiObjMoveToX(self->ctx->p220->ui, 6, 5, -240.0f);
-        UiObjSetCommand(self->ctx->p220->ui, 0x1a, 2);
-        UiObjMoveToX(self->ctx->p224->ui, 6, 5, -240.0f);
-        UiObjSetCommand(self->ctx->p224->ui, 0x1a, 0);
+        UiObjMoveToX(&self->ctx->p220->ui->o, 6, 5, -240.0f);
+        UiObjSetCommand(&self->ctx->p220->ui->o, 0x1a, 2);
+        UiObjMoveToX(&self->ctx->p224->ui->o, 6, 5, -240.0f);
+        UiObjSetCommand(&self->ctx->p224->ui->o, 0x1a, 0);
         MenuPlaySe(3);
         fn_801A64B4(self, 4);
         self->state19 = 0x17;
-    } else if (fn_801A6554(self) == 0 || (*(u32 *)(lbl_80311A60[0] + 8) & 0x100) != 0) {
+    } else if (fn_801A6554(self) == 0 || (lbl_80311A60[0]->held & 0x100) != 0) {
         u32 cmd;
         fn_801A64E0(self);
         cmd = 0x14;
         if (self->ctx->b8 == 0) {
             cmd = 0x15;
         }
-        UiObjSetCommand(self->ctx->p220->ui, cmd, 0);
+        UiObjSetCommand(&self->ctx->p220->ui->o, cmd, 0);
         cmd = 0x14;
         if (self->ctx->b8 == 1) {
             cmd = 0x15;
         }
-        UiObjSetCommand(self->ctx->p224->ui, cmd, 0);
+        UiObjSetCommand(&self->ctx->p224->ui->o, cmd, 0);
         self->state19 = 0x19;
     }
 }
@@ -4162,13 +4090,13 @@ void fn_8019EE4C(Self_8019EE4C *self) {
     if (self->ctx->wc != 0) {
         self->ctx->wc--;
     }
-    if (self->ctx->wc == 0 || (*(u32 *)(lbl_80311A60[0] + 8) & 0x300) != 0) {
+    if (self->ctx->wc == 0 || (lbl_80311A60[0]->held & 0x300) != 0) {
         fn_801A1B98(self, 1);
         fn_801A4DCC(self, 1);
-        UiObjMoveToXIfChanged(self->ctx->p210->ui, 6, 4, -330.0f);
-        UiObjSetCommand(self->ctx->p210->ui, 0xf, 0);
+        UiObjMoveToXIfChanged(&self->ctx->p210->ui->o, 6, 4, -330.0f);
+        UiObjSetCommand(&self->ctx->p210->ui->o, 0xf, 0);
         self->state19 = 0x16;
-    } else if ((*(u32 *)(lbl_80311A60[0] + 8) & 0x400) != 0) {
+    } else if ((lbl_80311A60[0]->held & 0x400) != 0) {
         self->state19 = 0x1e;
     }
     self->ctx->w25c[self->ctx->b4] = fn_801A28AC(self->ctx->b4);
@@ -4177,8 +4105,8 @@ void fn_8019EE4C(Self_8019EE4C *self) {
         if (1.0f != self->ctx->f18) {
             fn_801A4DCC(self, 1);
         }
-        UiObjMoveToXIfChanged(self->ctx->p210->ui, 6, 4, -330.0f);
-        UiObjSetCommand(self->ctx->p210->ui, 0xf, 0);
+        UiObjMoveToXIfChanged(&self->ctx->p210->ui->o, 6, 4, -330.0f);
+        UiObjSetCommand(&self->ctx->p210->ui->o, 0xf, 0);
         k = fn_801A6A58(self->ctx->b4, self->ctx->w25c[self->ctx->b4]);
         fn_801A64B4(self, k);
         MenuPlaySe(3);
@@ -4197,12 +4125,12 @@ void fn_8019F730(Self_8019F730 *self) {
             self->ctx->p258 = 0;
             fn_801A64B4(self, 0x28);
             MenuPlaySe(3);
-            UiObjMoveToXIfChanged(self->ctx->p210->ui, 6, 4, -330.0f);
-            UiObjSetCommand(self->ctx->p210->ui, 0xf, 0);
-            UiObjMoveToX(self->ctx->p220->ui, 6, 5, -240.0f);
-            UiObjSetCommand(self->ctx->p220->ui, 0x1a, 2);
-            UiObjMoveToX(self->ctx->p224->ui, 6, 5, -240.0f);
-            UiObjSetCommand(self->ctx->p224->ui, 0x1a, 0);
+            UiObjMoveToXIfChanged(&self->ctx->p210->ui->o, 6, 4, -330.0f);
+            UiObjSetCommand(&self->ctx->p210->ui->o, 0xf, 0);
+            UiObjMoveToX(&self->ctx->p220->ui->o, 6, 5, -240.0f);
+            UiObjSetCommand(&self->ctx->p220->ui->o, 0x1a, 2);
+            UiObjMoveToX(&self->ctx->p224->ui->o, 6, 5, -240.0f);
+            UiObjSetCommand(&self->ctx->p224->ui->o, 0x1a, 0);
             fn_801A4DCC(self, 1);
             lbl_803475D0 = 0;
             lbl_803475E0 = 0;
@@ -4227,7 +4155,7 @@ void fn_801A0214(Self_801A0214 *self) {
             s32 j = i + 7;
             Holder_801A0214 *h = self->ctx->h[j];
             if (h != 0 && h->ui != 0) {
-                UiObjFinish(h->ui);
+                UiObjFinish(&h->ui->o);
             }
         }
         self->state19 = 9;
@@ -4237,8 +4165,8 @@ void fn_801A0214(Self_801A0214 *self) {
             if (1.0f != self->ctx->f18) {
                 fn_801A4DCC(self, 1);
             }
-            UiObjMoveToXIfChanged(self->ctx->h[1]->ui, 6, 4, -330.0f);
-            UiObjSetCommand(self->ctx->h[1]->ui, 0xf, 0);
+            UiObjMoveToXIfChanged(&self->ctx->h[1]->ui->o, 6, 4, -330.0f);
+            UiObjSetCommand(&self->ctx->h[1]->ui->o, 0xf, 0);
             k = fn_801A6A58(self->ctx->b4, self->ctx->w25c[self->ctx->b4]);
             fn_801A64B4(self, k);
             MenuPlaySe(3);
@@ -4256,14 +4184,14 @@ void fn_801A54AC(Task_801A54AC *t) {
         if (t->flag[0] == 1) {
             return;
         }
-        UiObjUpdate(&t->pan->ui);
-        if (-132.0f < t->pan->ui.y && t->pan->ui.y < 370.0f) {
-            if (UiObjIsBusy(&t->pan->ui) == 0 && t->pan->slot == parent->ctx->b7) {
-                t->pan->ui.alpha = 1.0f;
+        UiObjUpdate(&t->pan->o);
+        if (-132.0f < t->pan->o.y && t->pan->o.y < 370.0f) {
+            if (UiObjIsBusy(&t->pan->o) == 0 && t->pan->h54 == parent->ctx->b7) {
+                t->pan->o.alpha = 1.0f;
             } else {
-                t->pan->ui.alpha = 0.5f;
+                t->pan->o.alpha = 0.5f;
             }
-            UiLayoutDraw((NJS_TEXLIST **)&menu_sprites.texlist8, lbl_802B4B9C, 6, &t->pan->ui.x, t->pan->ui.z, t->pan->ui.alpha * t->parent->ctx->f18, 1.0f);
+            UiLayoutDraw((NJS_TEXLIST **)&menu_sprites.texlist8, lbl_802B4B9C, 6, &t->pan->o.x, t->pan->o.z, t->pan->o.alpha * t->parent->ctx->f18, 1.0f);
             TextPushColor();
             z = TextGetZ();
             fn_801A5600(t);
@@ -4282,11 +4210,11 @@ void fn_801A6A88(Task_801A6A88 *t, u16 idx, f32 off) {
     f32 z = TextGetZ();
     TextPushColor();
     TextSetColor(0xFF2222F0);
-    TextSetZ(-27.5f + t->ctx->h[idx]->ui->z);
-    TextPrint((s32)(336.0f + (t->ctx->h[idx]->ui->x + t->ctx->h[idx]->ui->rdx)),
-              (s32)(off + (t->ctx->h[idx]->ui->y - t->ctx->h[idx]->ui->rdy)), "\x81\x7e");
-    TextPrintNumber((s32)(360.0f + (t->ctx->h[idx]->ui->x + t->ctx->h[idx]->ui->rdx)),
-                    (s32)(off + (t->ctx->h[idx]->ui->y - t->ctx->h[idx]->ui->rdy)), t->ctx->h4, 0xC002);
+    TextSetZ(-27.5f + t->ctx->h[idx]->ui->o.z);
+    TextPrint((s32)(336.0f + (t->ctx->h[idx]->ui->o.x + t->ctx->h[idx]->ui->o.rdx)),
+              (s32)(off + (t->ctx->h[idx]->ui->o.y - t->ctx->h[idx]->ui->o.rdy)), "\x81\x7e");
+    TextPrintNumber((s32)(360.0f + (t->ctx->h[idx]->ui->o.x + t->ctx->h[idx]->ui->o.rdx)),
+                    (s32)(off + (t->ctx->h[idx]->ui->o.y - t->ctx->h[idx]->ui->o.rdy)), t->ctx->h4, 0xC002);
     TextPopColor(1);
     TextSetZ(z);
 }
@@ -4709,8 +4637,8 @@ void fn_801A66AC(Task_801A66AC *t) {
         if ((n & 8) == 0) {
             p = v;
             for (i = 0; i < 3; i++, p++) {
-                p->x = 18.0f + p->x + 264.0f + t->ui->x;
-                p->y = 16.0f + p->y + 48.0f + t->ui->y;
+                p->x = 18.0f + p->x + 264.0f + t->ui->o.x;
+                p->y = 16.0f + p->y + 48.0f + t->ui->o.y;
                 p->z = fn_801DBD9C(-0.1f);
             }
             fn_80290ED4(v, 3, 0);
@@ -4839,23 +4767,23 @@ void fn_801AB328(Self_801AB328 *o) {
     o->ctx->x218->flag->b0 = 0;
     o->ctx->x214->flag->b0 = 0;
     o->ctx->x1f8->flag->b0 = 0;
-    UiObjMoveToX(o->ctx->x1f8->obj, 6, 4, -8.0f);
-    UiObjSetCommand(o->ctx->x1f8->obj, 0xf, 0);
+    UiObjMoveToX(&o->ctx->x1f8->obj->o, 6, 4, -8.0f);
+    UiObjSetCommand(&o->ctx->x1f8->obj->o, 0xf, 0);
     o->ctx->x204->flag->b0 = 0;
-    UiObjMoveToX(o->ctx->x204->obj, 6, 4, -8.0f);
-    UiObjSetCommand(o->ctx->x204->obj, 0xf, 1);
+    UiObjMoveToX(&o->ctx->x204->obj->o, 6, 4, -8.0f);
+    UiObjSetCommand(&o->ctx->x204->obj->o, 0xf, 1);
     o->ctx->x1fc->flag->b0 = 0;
-    UiObjMoveToX(o->ctx->x1fc->obj, 6, 4, -8.0f);
-    UiObjSetCommand(o->ctx->x1fc->obj, 0xf, 2);
+    UiObjMoveToX(&o->ctx->x1fc->obj->o, 6, 4, -8.0f);
+    UiObjSetCommand(&o->ctx->x1fc->obj->o, 0xf, 2);
     o->ctx->x218->flag->b0 = 0;
-    UiObjMoveToX(o->ctx->x218->obj, 6, -1, 240.0f);
-    UiObjSetCommand(o->ctx->x218->obj, 0xf, 0);
+    UiObjMoveToX(&o->ctx->x218->obj->o, 6, -1, 240.0f);
+    UiObjSetCommand(&o->ctx->x218->obj->o, 0xf, 0);
     o->ctx->x214->flag->b0 = 0;
-    UiObjMoveTo(o->ctx->x214->obj, 6, -1, 24.0f, 384.0f);
-    UiObjSetCommand(o->ctx->x214->obj, 0xf, 1);
+    UiObjMoveTo(&o->ctx->x214->obj->o, 6, -1, 24.0f, 384.0f);
+    UiObjSetCommand(&o->ctx->x214->obj->o, 0xf, 1);
     o->ctx->x21c->flag->b0 = 0;
-    UiObjMoveToX(o->ctx->x21c->obj, 6, -1, -8.0f);
-    UiObjSetCommand(o->ctx->x21c->obj, 0xf, 1);
+    UiObjMoveToX(&o->ctx->x21c->obj->o, 6, -1, -8.0f);
+    UiObjSetCommand(&o->ctx->x21c->obj->o, 0xf, 1);
     o->ctx->x21c->flag->w8 = 0xffff;
     o->ctx->x218->flag30->b1e = 0;
 }
@@ -4867,8 +4795,8 @@ void fn_801A0FD8(Self_801A0FD8 *o) {
     if (o->ctx->slot[o->ctx->idx] != 0) {
         o->ctx->x9 = 0;
         if (1.0f != o->ctx->x18) fn_801A4DCC(o, 1);
-        UiObjMoveToXIfChanged(o->ctx->objs[1]->obj, 6, 4, -330.0f);
-        UiObjSetCommand(o->ctx->objs[1]->obj, 0xf, 0);
+        UiObjMoveToXIfChanged(&o->ctx->objs[1]->obj->o, 6, 4, -330.0f);
+        UiObjSetCommand(&o->ctx->objs[1]->obj->o, 0xf, 0);
         k = fn_801A6A58(o->ctx->idx, o->ctx->slot[o->ctx->idx]);
         fn_801A64B4(o, (u8)k);
         MenuPlaySe(3);
@@ -4879,14 +4807,14 @@ void fn_801A0FD8(Self_801A0FD8 *o) {
     }
     if (r != 0 && fn_801A6554(o) == 0 && o->ctx->idx < 2) {
         if (o->ctx->idx == 1) {
-            UiObjMoveToY(o->ctx->objs[4]->obj, 3, 4, 100.0f);
-            UiObjSetCommand(o->ctx->objs[4]->obj, 0xf, 0);
+            UiObjMoveToY(&o->ctx->objs[4]->obj->o, 3, 4, 100.0f);
+            UiObjSetCommand(&o->ctx->objs[4]->obj->o, 0xf, 0);
         }
         o->ctx->objs[1]->x19 = 1;
         ((u16 *)o->ctx->objs[1]->obj)[0x54 / 2] = 1;
         o->ctx->x1c = 0.0f;
-        UiObjMoveToX(o->ctx->objs[1]->obj, 6, 4, 160.0f);
-        UiObjSetCommand(o->ctx->objs[1]->obj, 0xf, 0);
+        UiObjMoveToX(&o->ctx->objs[1]->obj->o, 6, 4, 160.0f);
+        UiObjSetCommand(&o->ctx->objs[1]->obj->o, 0xf, 0);
         fn_801A4DCC(o, 0);
         o->state = 6;
     }
@@ -4902,16 +4830,16 @@ void fn_801A5274(Task_801A5274 *t) {
         if (t->flag[0] == 1) {
             return;
         }
-        UiObjUpdate(&t->pan->ui);
-        UiLayoutDraw((NJS_TEXLIST **)&menu_sprites.texlist8, lbl_802B4A00, 2, &t->pan->ui.x, t->pan->ui.z, t->pan->ui.alpha, 1.0f);
+        UiObjUpdate(&t->pan->o);
+        UiLayoutDraw((NJS_TEXLIST **)&menu_sprites.texlist8, lbl_802B4A00, 2, &t->pan->o.x, t->pan->o.z, t->pan->o.alpha, 1.0f);
         z = TextGetZ();
-        y = 12.0f + t->pan->ui.y;
-        x = 18.0f + t->pan->ui.x;
-        if (t->pan->label != 0) {
+        y = 12.0f + t->pan->o.y;
+        x = 18.0f + t->pan->o.x;
+        if (t->pan->text != 0) {
             TextPushColor();
             TextSetColor(0xFF201008);
-            TextSetZ(-27.5f + t->pan->ui.z);
-            TextPrint((s32)x, (s32)y, t->pan->label);
+            TextSetZ(-27.5f + t->pan->o.z);
+            TextPrint((s32)x, (s32)y, t->pan->text);
             TextPopColor(1);
         }
         TextSetZ(z);
@@ -4932,18 +4860,18 @@ void fn_801A5D08(Task_801A5D08 *t) {
         if (t->flag[0] == 1) {
             return;
         }
-        UiObjUpdate(&t->pan->ui);
-        UiObjCalcRect(&t->pan->ui);
-        UiLayoutDraw((NJS_TEXLIST **)&menu_sprites.texlist8, lbl_802B4B88, 1, &t->pan->ui.rect[2], t->pan->ui.z, 1.0f, 1.0f);
-        UiLayoutDraw((NJS_TEXLIST **)&menu_sprites.texlist8, lbl_802B4B4C, 3, &t->pan->ui.rect[0], t->pan->ui.z, t->pan->ui.alpha * t->parent->ctx->f18, 1.0f);
+        UiObjUpdate(&t->pan->o);
+        UiObjCalcRect(&t->pan->o);
+        UiLayoutDraw((NJS_TEXLIST **)&menu_sprites.texlist8, lbl_802B4B88, 1, &t->pan->o.rect[2], t->pan->o.z, 1.0f, 1.0f);
+        UiLayoutDraw((NJS_TEXLIST **)&menu_sprites.texlist8, lbl_802B4B4C, 3, &t->pan->o.rect[0], t->pan->o.z, t->pan->o.alpha * t->parent->ctx->f18, 1.0f);
         z = TextGetZ();
-        y = 19.0f + t->pan->ui.rect[1];
-        x = 74.0f + t->pan->ui.rect[0];
-        if (t->pan->label != 0) {
+        y = 19.0f + t->pan->o.rect[1];
+        x = 74.0f + t->pan->o.rect[0];
+        if (t->pan->text != 0) {
             TextPushColor();
             TextSetColor(0xFF201008);
-            TextSetZ(-27.5f + t->pan->ui.z);
-            TextPrint((s32)x, (s32)y, t->pan->label);
+            TextSetZ(-27.5f + t->pan->o.z);
+            TextPrint((s32)x, (s32)y, t->pan->text);
             TextPopColor(1);
         }
         TextSetZ(z);
@@ -4964,16 +4892,16 @@ void fn_801A6344(Task_801A6344 *t) {
         if (t->flag[0] == 1) {
             return;
         }
-        UiObjUpdate(&t->pan->ui);
-        UiLayoutDraw((NJS_TEXLIST **)&menu_sprites.texlist8, lbl_802B4A28, 3, &t->pan->ui.x, t->pan->ui.z, t->pan->ui.alpha * t->parent->ctx->f18, 1.0f);
+        UiObjUpdate(&t->pan->o);
+        UiLayoutDraw((NJS_TEXLIST **)&menu_sprites.texlist8, lbl_802B4A28, 3, &t->pan->o.x, t->pan->o.z, t->pan->o.alpha * t->parent->ctx->f18, 1.0f);
         z = TextGetZ();
-        y = 18.0f + t->pan->ui.y;
-        x = 105.0f + t->pan->ui.x;
-        if (t->pan->label != 0) {
+        y = 18.0f + t->pan->o.y;
+        x = 105.0f + t->pan->o.x;
+        if (t->pan->text != 0) {
             TextPushColor();
             TextSetColor(0xFF201008);
-            TextSetZ(-27.5f + t->pan->ui.z);
-            TextPrint((s32)x, (s32)y, t->pan->label);
+            TextSetZ(-27.5f + t->pan->o.z);
+            TextPrint((s32)x, (s32)y, t->pan->text);
             TextPopColor(1);
         }
         TextSetZ(z);
@@ -4988,15 +4916,15 @@ void* fn_801AC2E4(void* a) {
     T* t = fn_802267AC((void *)(a), (void *)(fn_801AC16C));
     t->w = fn_801E1A74(1, 0x58);
     t->obj = fn_801E1A74(1, 0x6c);
-    switch (fn_801BE608((*(G**)&lbl_803471B8)->p->idx)) {
+    switch (fn_801BE608(lbl_803471B8->w->item)) {
     case 0:
-        t->obj->text = lbl_802ED258[(*(G**)&lbl_803471B8)->p->idx].a;
+        t->obj->text = lbl_802ED258[lbl_803471B8->w->item].a;
         break;
     case 1:
-        t->obj->text = lbl_802ED258[(*(G**)&lbl_803471B8)->p->idx].c;
+        t->obj->text = lbl_802ED258[lbl_803471B8->w->item].c;
         break;
     case 2:
-        t->obj->text = lbl_802ED258[(*(G**)&lbl_803471B8)->p->idx].b;
+        t->obj->text = lbl_802ED258[lbl_803471B8->w->item].b;
         break;
     default:
         t->obj->text = NULL;
@@ -5027,16 +4955,16 @@ void fn_801B0F1C(Task_801B0F1C *t) {
         if (t->flag[0] == 1) {
             return;
         }
-        UiObjUpdate(&t->pan->ui);
+        UiObjUpdate(&t->pan->o);
         z = TextGetZ();
         TextPushColor();
         TextSetColor(0xFF201008);
-        UiLayoutDraw((void *)((NJS_TEXLIST **)&menu_sprites.texlist8), (void *)(lbl_802B7720), 4, (void *)(&t->pan->ui.x), t->pan->ui.z, 1.0f, 1.0f);
-        fn_801B6BB4(t->pan, &t->pan->ui.x, (*(Gl_801B0F1C *(*)[2])&lbl_803471B8)[0]->cfg->h6, -1, 0x18, 0x14, 1.0f);
-        TextSetZ(-27.5f + t->pan->ui.z);
-        TextPrint(55.0f + t->pan->ui.x, 20.0f + t->pan->ui.y, t->pan->label);
-        TextPrint(264.0f + t->pan->ui.x, 20.0f + t->pan->ui.y, "\x81\x7e");
-        TextPrintNumber(288.0f + t->pan->ui.x, 20.0f + t->pan->ui.y, (*(Gl_801B0F1C *(*)[2])&lbl_803471B8)[0]->cfg->b9, 0xC002);
+        UiLayoutDraw((void *)((NJS_TEXLIST **)&menu_sprites.texlist8), (void *)(lbl_802B7720), 4, (void *)(&t->pan->o.x), t->pan->o.z, 1.0f, 1.0f);
+        fn_801B6BB4(t->pan, &t->pan->o.x, lbl_803471B8->w->item, -1, 0x18, 0x14, 1.0f);
+        TextSetZ(-27.5f + t->pan->o.z);
+        TextPrint(55.0f + t->pan->o.x, 20.0f + t->pan->o.y, t->pan->text);
+        TextPrint(264.0f + t->pan->o.x, 20.0f + t->pan->o.y, "\x81\x7e");
+        TextPrintNumber(288.0f + t->pan->o.x, 20.0f + t->pan->o.y, lbl_803471B8->w->x9, 0xC002);
         TextPopColor(1);
         TextSetZ(z);
         break;
@@ -5059,22 +4987,22 @@ void fn_801B2430(Task_801B2430 *t) {
         if (t->flag[0] == 1) {
             return;
         }
-        UiObjUpdate(&t->pan->ui);
-        UiLayoutDraw((void *)((NJS_TEXLIST **)&menu_sprites.texlist8), (void *)(lbl_802B6DF8), 4, (void *)(&t->pan->ui.x), t->pan->ui.z, 1.0f, 1.0f);
+        UiObjUpdate(&t->pan->o);
+        UiLayoutDraw((void *)((NJS_TEXLIST **)&menu_sprites.texlist8), (void *)(lbl_802B6DF8), 4, (void *)(&t->pan->o.x), t->pan->o.z, 1.0f, 1.0f);
         z = TextGetZ();
         TextPushColor();
         TextSetColor(0xFF201008);
-        TextSetZ(-27.5f + t->pan->ui.z);
-        TextPrint(20.0f + t->pan->ui.x, 5.0f + t->pan->ui.y, t->pan->label);
-        TextPrint(20.0f + t->pan->ui.x, 32.0f + t->pan->ui.y, (*(const char *(*)[13])&lbl_802EC04C)[5]);
+        TextSetZ(-27.5f + t->pan->o.z);
+        TextPrint(20.0f + t->pan->o.x, 5.0f + t->pan->o.y, t->pan->text);
+        TextPrint(20.0f + t->pan->o.x, 32.0f + t->pan->o.y, lbl_802EC04C[5]);
         TextPopColor(1);
-        pos.x = 84.0f + (97.0f + (t->pan->ui.x + t->pan->ui.rdx));
-        pos.y = 7.0f + (t->pan->ui.y - t->pan->ui.rdy);
-        pos.z = -32.0f + t->pan->ui.z;
-        UiDrawNumber(&pos, 0, 8, (*(Gl_801B2430 *(*)[2])&lbl_803471B8)[0]->cfg->w11c, t->pan->ui.alpha);
-        pos.y = 34.0f + (t->pan->ui.y - t->pan->ui.rdy);
-        pos.z = -31.5f + t->pan->ui.z;
-        UiDrawNumber(&pos, 0, 8, (*(Gl_801B2430 *(*)[2])&lbl_803471B8)[0]->cfg->w120, t->pan->ui.alpha);
+        pos.x = 84.0f + (97.0f + (t->pan->o.x + t->pan->o.rdx));
+        pos.y = 7.0f + (t->pan->o.y - t->pan->o.rdy);
+        pos.z = -32.0f + t->pan->o.z;
+        UiDrawNumber(&pos, 0, 8, lbl_803471B8->w->cost, t->pan->o.alpha);
+        pos.y = 34.0f + (t->pan->o.y - t->pan->o.rdy);
+        pos.z = -31.5f + t->pan->o.z;
+        UiDrawNumber(&pos, 0, 8, lbl_803471B8->w->left, t->pan->o.alpha);
         TextSetZ(z);
         break;
     case 0xFF:
@@ -5090,8 +5018,8 @@ void fn_801A0C3C(Self_801A0C3C *o) {
     if (o->ctx->x250 == 0) return;
     if (o->ctx->slot[o->ctx->idx] != 0) {
         MenuPlaySe(3);
-        UiObjMoveToXIfChanged(o->ctx->objs[1]->obj, 6, 4, -330.0f);
-        UiObjSetCommand(o->ctx->objs[1]->obj, 0xf, 0);
+        UiObjMoveToXIfChanged(&o->ctx->objs[1]->obj->o, 6, 4, -330.0f);
+        UiObjSetCommand(&o->ctx->objs[1]->obj->o, 0xf, 0);
         fn_801A4DCC(o, 1);
         k = fn_801A6A58(o->ctx->idx, o->ctx->slot[o->ctx->idx]);
         fn_801A64B4(o, k);
@@ -5100,8 +5028,8 @@ void fn_801A0C3C(Self_801A0C3C *o) {
         fn_801A1DB4();
         fn_801A1B98(o, 0);
         fn_801A4DCC(o, 1);
-        UiObjMoveToXIfChanged(o->ctx->objs[1]->obj, 6, 4, -330.0f);
-        UiObjSetCommand(o->ctx->objs[1]->obj, 0xf, 0);
+        UiObjMoveToXIfChanged(&o->ctx->objs[1]->obj->o, 6, 4, -330.0f);
+        UiObjSetCommand(&o->ctx->objs[1]->obj->o, 0xf, 0);
         o->ctx->x9 = 0;
         o->state = 8;
     } else if (o->ctx->x14 != 0) {
@@ -5109,8 +5037,8 @@ void fn_801A0C3C(Self_801A0C3C *o) {
         fn_801A1B98(o, 0);
         o->ctx->x9 = 0;
         fn_801A4DCC(o, 1);
-        UiObjMoveToXIfChanged(o->ctx->objs[1]->obj, 6, 4, -330.0f);
-        UiObjSetCommand(o->ctx->objs[1]->obj, 0xf, 0);
+        UiObjMoveToXIfChanged(&o->ctx->objs[1]->obj->o, 6, 4, -330.0f);
+        UiObjSetCommand(&o->ctx->objs[1]->obj->o, 0xf, 0);
         o->state = 8;
     } else {
         o->ctx->slot[o->ctx->idx] = 6;
@@ -5118,8 +5046,8 @@ void fn_801A0C3C(Self_801A0C3C *o) {
         o->ctx->x26c = 3;
         MenuPlaySe(3);
         fn_801A4DCC(o, 1);
-        UiObjMoveToXIfChanged(o->ctx->objs[1]->obj, 6, 4, -330.0f);
-        UiObjSetCommand(o->ctx->objs[1]->obj, 0xf, 0);
+        UiObjMoveToXIfChanged(&o->ctx->objs[1]->obj->o, 6, 4, -330.0f);
+        UiObjSetCommand(&o->ctx->objs[1]->obj->o, 0xf, 0);
         o->state = 0xb;
     }
 }
@@ -5131,16 +5059,16 @@ Task_801B6240* fn_801B6320(void* a, f32 x)
     o->p28 = fn_801E1A74(1, 0x6c);
     o->w2c = 0;
     o->p24[0] = 0;
-    o->p28->alpha_en = 0;
-    o->p28->x = 640.0f;
-    o->p28->tx = 640.0f;
-    o->p28->y = 480.0f;
-    o->p28->ty = 480.0f;
-    o->p28->rdx = 0.0f;
-    o->p28->rdy = 0.0f;
-    o->p28->alpha = 1.0f;
-    o->p28->z = x;
-    UiObjSetLowered((UiObj*)o->p28);
+    o->p28->o.alpha_en = 0;
+    o->p28->o.x = 640.0f;
+    o->p28->o.tx = 640.0f;
+    o->p28->o.y = 480.0f;
+    o->p28->o.ty = 480.0f;
+    o->p28->o.rdx = 0.0f;
+    o->p28->o.rdy = 0.0f;
+    o->p28->o.alpha = 1.0f;
+    o->p28->o.z = x;
+    UiObjSetLowered(&o->p28->o);
     return o;
 }
 
@@ -5230,13 +5158,13 @@ void fn_8019EFF8(Task_8019EFF8* t) {
         t->w->f258 = NULL;
         fn_801A64B4(t, 10);
         MenuPlaySe(0xd);
-        UiObjMoveToXIfChanged(t->w->p[1]->obj, 6, 4, -330.0f);
-        UiObjSetCommand(t->w->p[1]->obj, 0xf, 0);
+        UiObjMoveToXIfChanged(&t->w->p[1]->obj->o, 6, 4, -330.0f);
+        UiObjSetCommand(&t->w->p[1]->obj->o, 0xf, 0);
         fn_801A4DCC(t, 1);
-        UiObjMoveToX(t->w->p[5]->obj, 6, 5, -240.0f);
-        UiObjSetCommand(t->w->p[5]->obj, 0x1a, 2);
-        UiObjMoveToX(t->w->p[6]->obj, 6, 5, -240.0f);
-        UiObjSetCommand(t->w->p[6]->obj, 0x1a, 0);
+        UiObjMoveToX(&t->w->p[5]->obj->o, 6, 5, -240.0f);
+        UiObjSetCommand(&t->w->p[5]->obj->o, 0x1a, 2);
+        UiObjMoveToX(&t->w->p[6]->obj->o, 6, 5, -240.0f);
+        UiObjSetCommand(&t->w->p[6]->obj->o, 0x1a, 0);
         lbl_803475D0 = 0;
         lbl_803475E0 = 0;
         t->w->fc = 10;
@@ -5248,12 +5176,12 @@ void fn_8019EFF8(Task_8019EFF8* t) {
         t->w->f258 = NULL;
         fn_801A64B4(t, 9);
         MenuPlaySe(3);
-        UiObjMoveToXIfChanged(t->w->p[1]->obj, 6, 4, -330.0f);
-        UiObjSetCommand(t->w->p[1]->obj, 0xf, 0);
-        UiObjMoveToX(t->w->p[5]->obj, 6, 5, -240.0f);
-        UiObjSetCommand(t->w->p[5]->obj, 0x1a, 2);
-        UiObjMoveToX(t->w->p[6]->obj, 6, 5, -240.0f);
-        UiObjSetCommand(t->w->p[6]->obj, 0x1a, 0);
+        UiObjMoveToXIfChanged(&t->w->p[1]->obj->o, 6, 4, -330.0f);
+        UiObjSetCommand(&t->w->p[1]->obj->o, 0xf, 0);
+        UiObjMoveToX(&t->w->p[5]->obj->o, 6, 5, -240.0f);
+        UiObjSetCommand(&t->w->p[5]->obj->o, 0x1a, 2);
+        UiObjMoveToX(&t->w->p[6]->obj->o, 6, 5, -240.0f);
+        UiObjSetCommand(&t->w->p[6]->obj->o, 0x1a, 0);
         fn_801A4DCC(t, 1);
         lbl_803475D0 = 0;
         lbl_803475E0 = 0;
@@ -5282,20 +5210,20 @@ void fn_801A11B0(Task_801A11B0* t) {
             t->w->sel &= 1;
         }
     } else {
-        bits = ((PadInfo*)lbl_80311A60)[0].pad->bits;
+        bits = lbl_80311A60[0]->held;
         if (bits & 0x100) {
             if (t->w->cnt == 0) {
                 MenuPlaySe(3);
             } else if (t->w->sel != 2) {
                 MenuPlaySe(2);
                 if (t->w->sel == 0) {
-                    UiObjSetCommand(t->w->p[3]->obj, 0x14, 0);
-                    UiObjMoveToX(t->w->p[4]->obj, 6, 5, -340.0f);
-                    UiObjSetCommand(t->w->p[4]->obj, 0xf, 0);
+                    UiObjSetCommand(&t->w->p[3]->obj->o, 0x14, 0);
+                    UiObjMoveToX(&t->w->p[4]->obj->o, 6, 5, -340.0f);
+                    UiObjSetCommand(&t->w->p[4]->obj->o, 0xf, 0);
                 } else {
-                    UiObjMoveToX(t->w->p[3]->obj, 6, 5, -340.0f);
-                    UiObjSetCommand(t->w->p[3]->obj, 0xf, 0);
-                    UiObjSetCommand(t->w->p[4]->obj, 0x14, 0);
+                    UiObjMoveToX(&t->w->p[3]->obj->o, 6, 5, -340.0f);
+                    UiObjSetCommand(&t->w->p[3]->obj->o, 0xf, 0);
+                    UiObjSetCommand(&t->w->p[4]->obj->o, 0x14, 0);
                 }
                 fn_801A64B4((void *)(t), 0x11);
                 t->state = 5;
@@ -5304,8 +5232,8 @@ void fn_801A11B0(Task_801A11B0* t) {
             }
         } else if (bits & 0x200) {
         cancel:
-            UiObjSetCommand(t->w->p[3]->obj, 0x14, 0);
-            UiObjSetCommand(t->w->p[4]->obj, 0x14, 0);
+            UiObjSetCommand(&t->w->p[3]->obj->o, 0x14, 0);
+            UiObjSetCommand(&t->w->p[4]->obj->o, 0x14, 0);
             t->state = 0x1c;
         } else if (bits & 0x400) {
             t->state = 0x1e;
@@ -5426,148 +5354,34 @@ s32 fn_801AB094(Task_801AB094* t)
     if (old != t->m->cur) MenuPlaySe(0);
     cmd = 0x14;
     if (t->m->cur == 0) cmd = 0x15;
-    UiObjSetCommand(t->m->slot[0]->obj, cmd, 0);
+    UiObjSetCommand(&t->m->slot[0]->obj->o, cmd, 0);
     if ((s = t->m->slot[1]) != 0) {
-        o = s->obj;
+        o = &s->obj->o;
         cmd = 0x14;
         if (t->m->cur == 1) cmd = 0x15;
         UiObjSetCommand(o, cmd, 0);
     }
     if ((s = t->m->slot[2]) != 0) {
-        o = s->obj;
+        o = &s->obj->o;
         cmd = 0x14;
         if (t->m->cur == 2) cmd = 0x15;
         UiObjSetCommand(o, cmd, 0);
     }
     if ((s = t->m->slot[3]) != 0) {
-        o = s->obj;
+        o = &s->obj->o;
         cmd = 0x14;
         if (t->m->cur == 3) cmd = 0x15;
         UiObjSetCommand(o, cmd, 0);
     }
     cmd = 0x14;
     if (t->m->cur == 4) cmd = 0x15;
-    UiObjSetCommand(t->m->slot[4]->obj, cmd, 0);
+    UiObjSetCommand(&t->m->slot[4]->obj->o, cmd, 0);
     return ret;
 }
 
 /* fn_801A6BDC: the shop's buy screen (item list, quantity, gold) and the equip-now prompt that
  * follows a purchase (weapon, armor and accessory comparison windows). The work keeps the menu
  * parts in a table like MenuWork; the state byte at work+0x03 drives the switch. */
-typedef struct ShopPadState {
-    u8 pad0[0x8];
-    u32 x8; /* buttons held this frame: 0x100 A, 0x200 B */
-} ShopPadState;
-/* The globals below are declared with other types earlier in this file. */
-#define SHOP_PAD ((ShopPadState*)lbl_80311A60[0])
-#define SHOP_PARTY ((ShopParty*)lbl_803471B8)
-
-typedef struct ShopList {
-    u8 pad0[0x8];
-    f32 x8;      /* 0x08 */
-    f32 xc;      /* 0x0C */
-    u8 pad10[4];
-    u16 h14;     /* 0x14 */
-    u8 pad16[2];
-    u16 page;    /* 0x18 */
-    u16 row;     /* 0x1A */
-    u16 tab;     /* 0x1C */
-    u8 b1e;      /* 0x1E */
-} ShopList;
-
-typedef struct ShopSub38 {
-    u8 pad0[0xa];
-    u16 ha;      /* 0x0A */
-    u16 hc;      /* 0x0C */
-} ShopSub38;
-
-typedef struct ShopPart {
-    u8 pad0[0x19];
-    u8 b19;          /* 0x19 */
-    u8 pad1a[0xa];
-    u8* flag;        /* 0x24 */
-    UiObj* obj;      /* 0x28 */
-    UiObj* obj2;     /* 0x2C */
-    ShopList* list;  /* 0x30 */
-    u8 pad34[4];
-    ShopSub38* x38;  /* 0x38 */
-} ShopPart;
-
-typedef struct ShopWork {
-    u8 pad0[3];
-    u8 state;        /* 0x03 */
-    s16 qty;         /* 0x04 */
-    u16 item;        /* 0x06 */
-    u8 pad8[1];
-    u8 x9;           /* 0x09 */
-    u8 xa;           /* 0x0A */
-    u8 xb;           /* 0x0B */
-    u8 xc[4];        /* 0x0C */
-    s8 who[4];       /* 0x10 */
-    s16 stat[4][4];  /* 0x14 */
-    u8 b34;          /* 0x34 */
-    u8 pad35;
-    u8 b36;          /* 0x36 */
-    u8 b37;          /* 0x37 */
-    u8 pad38[0xe4];
-    u32 cost;        /* 0x11C */
-    u32 left;        /* 0x120 */
-    u32 step;        /* 0x124 */
-    u8 pad128[0xd0];
-    ShopPart* parts[19]; /* 0x1F8 */
-} ShopWork;
-
-typedef struct ShopEntry {
-    s8 flag;
-    s8 type;
-    s16 id;
-    u8 pad4[2];
-} ShopEntry;
-
-typedef struct ShopBuf {
-    u8 pad0[4];
-    u16 pages;
-    s16 count;
-    ShopEntry out[0x30];
-} ShopBuf;
-
-typedef struct ShopTask {
-    u8 pad0[0x19];
-    u8 state;        /* 0x19 */
-    u8 pad1a[0xa];
-    union {
-        ShopWork* w;
-        Ctx_801AAFAC* ctx;
-    };               /* 0x24 */
-    u8 pad28[4];
-    ShopBuf* buf;    /* 0x2C */
-    Pl* p30;         /* 0x30: the sell lists */
-} ShopTask;
-
-typedef struct ShopMember {
-    s8 id;
-    u8 pad1[5];
-    s16 x06, x08, x0a;
-    u8 padc[0x18];
-} ShopMember;
-typedef struct ShopPartyInfo {
-    u8 pad0[0x3c];
-    ShopMember m[4];  /* 0x3C */
-    u8 padcc[0xc];
-    struct { s16 v; u8 pad[8]; } d8[4]; /* 0xD8 */
-    u8 pad100[0xa];
-    s16 h10a[3];      /* 0x10A */
-} ShopPartyInfo;
-typedef struct ShopChar {
-    u8 pad0[0x6c];
-    s16 h6c;
-    u8 pad6e[0x2e];
-} ShopChar;
-typedef struct ShopParty {
-    u8 pad0[0x24];
-    ShopPartyInfo* info;  /* 0x24 */
-    ShopChar* chr;        /* 0x28 */
-} ShopParty;
 extern u8 fn_801C0CA0(s16 id);
 extern s8 fn_801C0C14(s16 id);
 extern s32 fn_801C2C84(u8 i);
@@ -5589,11 +5403,6 @@ extern void fn_801C1728(s16 id, s32 slot);
 extern s32 fn_801AAFAC(ShopTask* t);
 extern void fn_801C0AB4(u16 id, u8 who);
 extern void fn_801C2C4C(u8 who, s8 v);
-typedef struct ShopMObj {
-    UiObj o;
-    const char* text;
-    u16 h50, h52, h54, h56;
-} ShopMObj;
 extern void fn_8021B1CC(void* a, void* b);
 extern void fn_801C1E48(void);
 extern s32 fn_801AACB0(ShopTask* t);
@@ -5608,8 +5417,8 @@ extern void fn_801C08B4(s32 msg);
 extern void fn_801C0814(ShopTask* t);
 extern void fn_801C1148(s16 id, u8 n);
 
-#define PAD_A (SHOP_PAD->x8 & 0x100)
-#define PAD_B (SHOP_PAD->x8 & 0x200)
+#define PAD_A (lbl_80311A60[0]->held & 0x100)
+#define PAD_B (lbl_80311A60[0]->held & 0x200)
 /* The entry under the cursor. The original keeps the entry address in a register (addi 8; add;
  * lha 2) even for one use; only the extra copy through cur_ reproduces that. */
 #define SHOP_CUR_ENTRY(e, t, p)                                                          \
@@ -5628,52 +5437,52 @@ extern void fn_801C1148(s16 id, u8 n);
 
 #define ShopShowEquip(t) \
     { \
-        UiObjMoveToX(t->w->parts[0]->obj, 6, 5, -260.0f); \
-        UiObjSetCommand(t->w->parts[0]->obj, 15, 0); \
-        UiObjMoveToX(t->w->parts[3]->obj, 6, 5, -260.0f); \
-        UiObjSetCommand(t->w->parts[3]->obj, 15, 2); \
-        UiObjMoveToX(t->w->parts[1]->obj, 6, 5, -260.0f); \
-        UiObjSetCommand(t->w->parts[1]->obj, 15, 4); \
-        UiObjMoveToX(t->w->parts[2]->obj, 6, 5, -240.0f); \
-        UiObjSetCommand(t->w->parts[2]->obj, 15, 6); \
-        UiObjMoveToX(t->w->parts[8]->obj, 6, -1, 648.0f); \
-        UiObjSetCommand(t->w->parts[8]->obj, 15, 0); \
-        UiObjMoveTo(t->w->parts[7]->obj, 6, -1, 640.0f, 480.0f); \
-        UiObjSetCommand(t->w->parts[7]->obj, 15, 2); \
-        *t->w->parts[9]->flag = 1; \
+        UiObjMoveToX(&t->w->parts[0]->obj->o, 6, 5, -260.0f); \
+        UiObjSetCommand(&t->w->parts[0]->obj->o, 15, 0); \
+        UiObjMoveToX(&t->w->parts[3]->obj->o, 6, 5, -260.0f); \
+        UiObjSetCommand(&t->w->parts[3]->obj->o, 15, 2); \
+        UiObjMoveToX(&t->w->parts[1]->obj->o, 6, 5, -260.0f); \
+        UiObjSetCommand(&t->w->parts[1]->obj->o, 15, 4); \
+        UiObjMoveToX(&t->w->parts[2]->obj->o, 6, 5, -240.0f); \
+        UiObjSetCommand(&t->w->parts[2]->obj->o, 15, 6); \
+        UiObjMoveToX(&t->w->parts[8]->obj->o, 6, -1, 648.0f); \
+        UiObjSetCommand(&t->w->parts[8]->obj->o, 15, 0); \
+        UiObjMoveTo(&t->w->parts[7]->obj->o, 6, -1, 640.0f, 480.0f); \
+        UiObjSetCommand(&t->w->parts[7]->obj->o, 15, 2); \
+        t->w->parts[9]->flag->b0 = 1; \
         t->w->state = 8; \
     }
 
 #define ShopBackToList(t) \
     { \
         t->w->parts[8]->list->b1e = 0; \
-        *t->w->parts[9]->flag = 0; \
-        UiObjMoveToX(t->w->parts[9]->obj, 6, -1, -8.0f); \
-        UiObjSetCommand(t->w->parts[9]->obj, 15, 2); \
-        UiObjMoveToX(t->w->parts[2]->obj, 6, -1, -240.0f); \
-        UiObjSetCommand(t->w->parts[2]->obj, 15, 0); \
+        t->w->parts[9]->flag->b0 = 0; \
+        UiObjMoveToX(&t->w->parts[9]->obj->o, 6, -1, -8.0f); \
+        UiObjSetCommand(&t->w->parts[9]->obj->o, 15, 2); \
+        UiObjMoveToX(&t->w->parts[2]->obj->o, 6, -1, -240.0f); \
+        UiObjSetCommand(&t->w->parts[2]->obj->o, 15, 0); \
     }
 
 #define ShopHideList(t) \
     { \
-        *t->w->parts[0]->flag = 1; \
-        *t->w->parts[3]->flag = 1; \
-        *t->w->parts[1]->flag = 1; \
-        *t->w->parts[2]->flag = 1; \
-        *t->w->parts[8]->flag = 1; \
-        *t->w->parts[7]->flag = 1; \
+        t->w->parts[0]->flag->b0 = 1; \
+        t->w->parts[3]->flag->b0 = 1; \
+        t->w->parts[1]->flag->b0 = 1; \
+        t->w->parts[2]->flag->b0 = 1; \
+        t->w->parts[8]->flag->b0 = 1; \
+        t->w->parts[7]->flag->b0 = 1; \
     }
 
 #define ShopShowCompare(t) \
     { \
-        UiObjMoveToX(t->w->parts[10]->obj, 6, -1, 328.0f); \
-        UiObjSetCommand(t->w->parts[10]->obj, 15, 0); \
-        UiObjMoveToX(t->w->parts[10]->obj2, 6, -1, 328.0f); \
-        UiObjSetCommand(t->w->parts[10]->obj2, 15, 2); \
-        UiObjMoveToX(t->w->parts[11]->obj, 6, -1, 328.0f); \
-        UiObjSetCommand(t->w->parts[11]->obj, 15, 4); \
-        UiObjMoveToX(t->w->parts[11]->obj2, 6, -1, 328.0f); \
-        UiObjSetCommand(t->w->parts[11]->obj2, 15, 6); \
+        UiObjMoveToX(&t->w->parts[10]->obj->o, 6, -1, 328.0f); \
+        UiObjSetCommand(&t->w->parts[10]->obj->o, 15, 0); \
+        UiObjMoveToX(&t->w->parts[10]->obj2->o, 6, -1, 328.0f); \
+        UiObjSetCommand(&t->w->parts[10]->obj2->o, 15, 2); \
+        UiObjMoveToX(&t->w->parts[11]->obj->o, 6, -1, 328.0f); \
+        UiObjSetCommand(&t->w->parts[11]->obj->o, 15, 4); \
+        UiObjMoveToX(&t->w->parts[11]->obj2->o, 6, -1, 328.0f); \
+        UiObjSetCommand(&t->w->parts[11]->obj2->o, 15, 6); \
     }
 
 #define ShopCompareDone(t) \
@@ -5701,11 +5510,11 @@ extern void fn_801C1148(s16 id, u8 n);
         if (t->w->xa == 0) { \
             cmd = 21; \
         } \
-        UiObjSetCommand(t->w->parts[14]->obj, cmd, 0); \
+        UiObjSetCommand(&t->w->parts[14]->obj->o, cmd, 0); \
         { \
             ShopPart* q_ = t->w->parts[15]; \
             if (q_) { \
-                o = q_->obj; \
+                o = &q_->obj->o; \
                 cmd = 20; \
                 if (t->w->xa == 1) { \
                     cmd = 21; \
@@ -5716,7 +5525,7 @@ extern void fn_801C1148(s16 id, u8 n);
         { \
             ShopPart* q_ = t->w->parts[16]; \
             if (q_) { \
-                o = q_->obj; \
+                o = &q_->obj->o; \
                 cmd = 20; \
                 if (t->w->xa == 2) { \
                     cmd = 21; \
@@ -5727,7 +5536,7 @@ extern void fn_801C1148(s16 id, u8 n);
         { \
             ShopPart* q_ = t->w->parts[17]; \
             if (q_) { \
-                o = q_->obj; \
+                o = &q_->obj->o; \
                 cmd = 20; \
                 if (t->w->xa == 3) { \
                     cmd = 21; \
@@ -5739,7 +5548,7 @@ extern void fn_801C1148(s16 id, u8 n);
         if (t->w->xa == 4) { \
             cmd = 21; \
         } \
-        UiObjSetCommand(t->w->parts[18]->obj, cmd, 0); \
+        UiObjSetCommand(&t->w->parts[18]->obj->o, cmd, 0); \
     }
 
 void fn_801A6BDC(ShopTask* t) {
@@ -5765,31 +5574,31 @@ void fn_801A6BDC(ShopTask* t) {
     case 0:
         fn_801C12C8();
         fn_801AB580((Self_801AB580*)t);
-        *t->w->parts[4]->flag = 1;
-        *t->w->parts[5]->flag = 1;
+        t->w->parts[4]->flag->b0 = 1;
+        t->w->parts[5]->flag->b0 = 1;
         t->w->parts[7] = (ShopPart*)fn_801B6320(t, -4450.0f);
         t->w->parts[8] = (ShopPart*)fn_801B5C4C(t);
         t->w->parts[9] = (ShopPart*)fn_801B54D4(t);
         t->w->parts[2] = (ShopPart*)fn_801B2678(t, 0);
-        *t->w->parts[2]->flag = 1;
+        t->w->parts[2]->flag->b0 = 1;
         t->w->parts[8]->list->page = 0;
         t->w->parts[8]->list->row = 0;
         t->w->qty = 1;
         t->w->state = 1;
         SHOP_LIST_SET_Y(t->w->parts[8]);
     case 1:
-        UiObjMoveTo(t->w->parts[7]->obj, 6, -1, 24.0f, 384.0f);
-        UiObjSetCommand(t->w->parts[7]->obj, 15, 0);
+        UiObjMoveTo(&t->w->parts[7]->obj->o, 6, -1, 24.0f, 384.0f);
+        UiObjSetCommand(&t->w->parts[7]->obj->o, 15, 0);
         SHOP_CUR_ENTRY(e, t, t->w->parts[8]);
-        fn_801B6400((u32)fn_801F48AC(e->id));
-        UiObjMoveToX(t->w->parts[8]->obj, 6, -1, 240.0f);
-        UiObjSetCommand(t->w->parts[8]->obj, 15, 0);
+        fn_801B6400(fn_801F48AC(e->id));
+        UiObjMoveToX(&t->w->parts[8]->obj->o, 6, -1, 240.0f);
+        UiObjSetCommand(&t->w->parts[8]->obj->o, 15, 0);
         SHOP_CUR_ENTRY(e, t, t->w->parts[8]);
         fn_801B5644(t->w->parts[9], e->id);
         t->w->state = 2;
         break;
     case 2:
-        if (UiObjIsBusy(t->w->parts[7]->obj) == 0 || PAD_A) {
+        if (UiObjIsBusy(&t->w->parts[7]->obj->o) == 0 || PAD_A) {
             MenuPartsFinish((MenuTask*)t);
             t->w->parts[8]->x38->ha = 1 < t->buf->pages;
             t->w->state = 3;
@@ -5873,11 +5682,11 @@ void fn_801A6BDC(ShopTask* t) {
                 price = fn_801F477C(t->w->item);
                 t->w->cost = price * t->w->qty;
                 t->w->left = (s32)(lbl_8030B7F4.w34c - t->w->cost) <= 0 ? 0 : lbl_8030B7F4.w34c - t->w->cost;
-                UiObjMoveToX(t->w->parts[9]->obj, 6, -1, -624.0f);
-                UiObjSetCommand(t->w->parts[9]->obj, 15, 0);
-                *t->w->parts[2]->flag = 0;
-                UiObjMoveToX(t->w->parts[2]->obj, 6, -1, -8.0f);
-                UiObjSetCommand(t->w->parts[2]->obj, 15, 1);
+                UiObjMoveToX(&t->w->parts[9]->obj->o, 6, -1, -624.0f);
+                UiObjSetCommand(&t->w->parts[9]->obj->o, 15, 0);
+                t->w->parts[2]->flag->b0 = 0;
+                UiObjMoveToX(&t->w->parts[2]->obj->o, 6, -1, -8.0f);
+                UiObjSetCommand(&t->w->parts[2]->obj->o, 15, 1);
                 t->w->parts[8]->x38->ha = 0;
                 fn_801C08B4(2);
                 t->w->state = 4;
@@ -5889,12 +5698,12 @@ void fn_801A6BDC(ShopTask* t) {
     tail3:
         SHOP_LIST_SET_Y(t->w->parts[8]);
         SHOP_CUR_ENTRY(e, t, t->w->parts[8]);
-        fn_801B6400((u32)fn_801F48AC(e->id));
+        fn_801B6400(fn_801F48AC(e->id));
         break;
     case 4:
-        if (UiObjIsBusy(t->w->parts[2]->obj) == 0 && UiObjIsBusy(t->w->parts[9]->obj) == 0) {
+        if (UiObjIsBusy(&t->w->parts[2]->obj->o) == 0 && UiObjIsBusy(&t->w->parts[9]->obj->o) == 0) {
             t->w->state = 5;
-            *t->w->parts[9]->flag = 1;
+            t->w->parts[9]->flag->b0 = 1;
             t->w->parts[8]->list->b1e = 1;
         } else if (PAD_A) {
             MenuPartsFinish((MenuTask*)t);
@@ -5926,11 +5735,11 @@ void fn_801A6BDC(ShopTask* t) {
         z = TextGetZ();
         TextPushColor();
         TextSetColor(0xFF2222F0);
-        TextSetZ(-27.5f + t->w->parts[8]->obj->z);
-        TextPrint((s32)(336.0f + (t->w->parts[8]->obj->x + t->w->parts[8]->obj->rdx)),
-                  (s32)(y + (t->w->parts[8]->obj->y - t->w->parts[8]->obj->rdy)), "\x81\x7e");
-        TextPrintNumber((s32)(360.0f + (t->w->parts[8]->obj->x + t->w->parts[8]->obj->rdx)),
-                        (s32)(y + (t->w->parts[8]->obj->y - t->w->parts[8]->obj->rdy)), t->w->qty, 0xC002);
+        TextSetZ(-27.5f + t->w->parts[8]->obj->o.z);
+        TextPrint((s32)(336.0f + (t->w->parts[8]->obj->o.x + t->w->parts[8]->obj->o.rdx)),
+                  (s32)(y + (t->w->parts[8]->obj->o.y - t->w->parts[8]->obj->o.rdy)), "\x81\x7e");
+        TextPrintNumber((s32)(360.0f + (t->w->parts[8]->obj->o.x + t->w->parts[8]->obj->o.rdx)),
+                        (s32)(y + (t->w->parts[8]->obj->o.y - t->w->parts[8]->obj->o.rdy)), t->w->qty, 0xC002);
         TextPopColor(1);
         TextSetZ(z);
         price = fn_801F477C(t->w->item);
@@ -5989,11 +5798,11 @@ void fn_801A6BDC(ShopTask* t) {
         case 2:
             t->w->xa = 0;
             for (i = 0; i < 4; i++) {
-                if (fn_801F3FD0(SHOP_PARTY->info->m[i].id, t->w->item)) {
+                if (fn_801F3FD0(lbl_803471B8->w->m[i].id, t->w->item)) {
                     t->w->who[t->w->xb] = i;
-                    t->w->stat[i][0] = SHOP_PARTY->info->m[i].x06;
-                    t->w->stat[i][1] = SHOP_PARTY->info->m[i].x08;
-                    t->w->stat[i][2] = SHOP_PARTY->info->m[i].x0a;
+                    t->w->stat[i][0] = lbl_803471B8->w->m[i].ha;
+                    t->w->stat[i][1] = lbl_803471B8->w->m[i].hc;
+                    t->w->stat[i][2] = lbl_803471B8->w->m[i].he;
                     t->w->xb++;
                     if (fn_801C0B88(t->w->item, i)) {
                         t->w->xa++;
@@ -6037,7 +5846,7 @@ void fn_801A6BDC(ShopTask* t) {
         }
         break;
     case 8:
-        if (UiObjIsBusy(t->w->parts[2]->obj)) {
+        if (UiObjIsBusy(&t->w->parts[2]->obj->o)) {
             if (!PAD_A) {
                 break;
             }
@@ -6052,19 +5861,19 @@ void fn_801A6BDC(ShopTask* t) {
             t->w->parts[10] = fn_801AD00C(t, 0, t->w->who[0]);
             t->w->parts[11] = fn_801AD00C(t, 1, t->w->who[0]);
             t->w->parts[13] = fn_801B057C(t, 0, t->w->who[0]);
-            UiObjMoveToX(t->w->parts[13]->obj, 6, 4, -8.0f);
-            UiObjSetCommand(t->w->parts[13]->obj, 15, 2);
-            t->w->stat[0][0] = SHOP_PARTY->info->m[t->w->who[0]].x06;
+            UiObjMoveToX(&t->w->parts[13]->obj->o, 6, 4, -8.0f);
+            UiObjSetCommand(&t->w->parts[13]->obj->o, 15, 2);
+            t->w->stat[0][0] = lbl_803471B8->w->m[t->w->who[0]].ha;
             fn_801C1FC0(t->w->item, t->w->who[0]);
             t->w->parts[14] = (ShopPart*)fn_801B0DF8(t);
             t->w->parts[14]->list->page = fn_801AB6E8(0, fn_801C2C84(t->w->who[0]));
             t->w->xc[t->w->who[0]] = 0;
-            UiObjMoveToX(t->w->parts[14]->obj, 6, 4, -8.0f);
-            UiObjSetCommand(t->w->parts[14]->obj, 15, 4);
-            UiObjMoveToX(t->w->parts[12]->obj, 6, 5, -8.0f);
-            UiObjSetCommand(t->w->parts[12]->obj, 15, 0);
-            UiObjMoveToX(t->w->parts[18]->obj, 6, 5, -8.0f);
-            UiObjSetCommand(t->w->parts[18]->obj, 15, 6);
+            UiObjMoveToX(&t->w->parts[14]->obj->o, 6, 4, -8.0f);
+            UiObjSetCommand(&t->w->parts[14]->obj->o, 15, 4);
+            UiObjMoveToX(&t->w->parts[12]->obj->o, 6, 5, -8.0f);
+            UiObjSetCommand(&t->w->parts[12]->obj->o, 15, 0);
+            UiObjMoveToX(&t->w->parts[18]->obj->o, 6, 5, -8.0f);
+            UiObjSetCommand(&t->w->parts[18]->obj->o, 15, 6);
             ShopShowCompare(t);
             t->w->state = 11;
             break;
@@ -6087,8 +5896,8 @@ void fn_801A6BDC(ShopTask* t) {
                 }
                 fn_801C1FC0(t->w->item, t->w->who[i]);
                 t->w->parts[lbl_802B69E8[i].idx] = fn_801B06CC(t, i, t->w->who[i], a);
-                UiObjMoveToX(t->w->parts[lbl_802B69E8[i].idx]->obj, 6, 4, lbl_802B69E8[i].x);
-                UiObjSetCommand(t->w->parts[lbl_802B69E8[i].idx]->obj, 15, i * 2 + 2);
+                UiObjMoveToX(&t->w->parts[lbl_802B69E8[i].idx]->obj->o, 6, 4, lbl_802B69E8[i].x);
+                UiObjSetCommand(&t->w->parts[lbl_802B69E8[i].idx]->obj->o, 15, i * 2 + 2);
             }
             if (n == t->w->xb) {
                 t->w->xa = 4;
@@ -6104,10 +5913,10 @@ void fn_801A6BDC(ShopTask* t) {
             t->w->parts[10] = fn_801AD00C(t, 0, t->w->who[i]);
             t->w->parts[11] = fn_801AD00C(t, 1, t->w->who[i]);
             d8 = t->w->xb * 2 + 2;
-            UiObjMoveToX(t->w->parts[12]->obj, 6, 5, -8.0f);
-            UiObjSetCommand(t->w->parts[12]->obj, 15, 0);
-            UiObjMoveToX(t->w->parts[18]->obj, 6, 5, -8.0f);
-            UiObjSetCommand(t->w->parts[18]->obj, 15, d8);
+            UiObjMoveToX(&t->w->parts[12]->obj->o, 6, 5, -8.0f);
+            UiObjSetCommand(&t->w->parts[12]->obj->o, 15, 0);
+            UiObjMoveToX(&t->w->parts[18]->obj->o, 6, 5, -8.0f);
+            UiObjSetCommand(&t->w->parts[18]->obj->o, 15, d8);
             ShopShowCompare(t);
             t->w->state = 15;
             break;
@@ -6120,18 +5929,18 @@ void fn_801A6BDC(ShopTask* t) {
             t->w->xc[0] = 0;
             t->w->parts[10] = fn_801AD00C(t, 2, fn_801C16D0(t->w->item));
             t->w->parts[11] = fn_801AD00C(t, 3, fn_801C16D0(t->w->item));
-            t->w->stat[0][0] = SHOP_PARTY->info->d8[0].v;
-            t->w->stat[0][1] = SHOP_PARTY->info->d8[1].v;
-            t->w->stat[0][2] = SHOP_PARTY->info->d8[2].v;
-            t->w->stat[0][3] = SHOP_PARTY->info->d8[3].v;
+            t->w->stat[0][0] = lbl_803471B8->w->d8[0].v;
+            t->w->stat[0][1] = lbl_803471B8->w->d8[1].v;
+            t->w->stat[0][2] = lbl_803471B8->w->d8[2].v;
+            t->w->stat[0][3] = lbl_803471B8->w->d8[3].v;
             fn_801C1728(t->w->item, 0);
             fn_801C1728(t->w->item, 1);
             fn_801C1728(t->w->item, 2);
             fn_801C1728(t->w->item, 3);
             for (i = 0; i < 4; i++) {
                 t->w->parts[lbl_802B69E8[i].idx] = fn_801AFBE8(t, i, 0, lbl_8030B7F4.s158a[i] == t->w->item ? 0.7f : 1.0f);
-                UiObjMoveToX(t->w->parts[lbl_802B69E8[i].idx]->obj, 6, 4, lbl_802B69E8[i].x);
-                UiObjSetCommand(t->w->parts[lbl_802B69E8[i].idx]->obj, 15, i * 2 + 2);
+                UiObjMoveToX(&t->w->parts[lbl_802B69E8[i].idx]->obj->o, 6, 4, lbl_802B69E8[i].x);
+                UiObjSetCommand(&t->w->parts[lbl_802B69E8[i].idx]->obj->o, 15, i * 2 + 2);
             }
             goto accessory; /* types 5 and 6 share their tail */
         case 6:
@@ -6143,25 +5952,25 @@ void fn_801A6BDC(ShopTask* t) {
             t->w->xc[0] = 0;
             t->w->parts[10] = fn_801AD00C(t, 4, 0);
             t->w->parts[11] = fn_801AD00C(t, 5, 0);
-            t->w->stat[0][0] = SHOP_PARTY->info->h10a[0];
-            t->w->stat[0][1] = SHOP_PARTY->info->h10a[1];
-            t->w->stat[0][2] = SHOP_PARTY->info->h10a[2];
+            t->w->stat[0][0] = lbl_803471B8->w->h10a[0];
+            t->w->stat[0][1] = lbl_803471B8->w->h10a[1];
+            t->w->stat[0][2] = lbl_803471B8->w->h10a[2];
             fn_801C1728(t->w->item, 0);
             fn_801C1728(t->w->item, 1);
             fn_801C1728(t->w->item, 2);
             for (i = 0; i < 3; i++) {
                 t->w->parts[lbl_802B69E8[i].idx] = fn_801AFBE8(t, i, 1, lbl_8030B7F4.s1580[i] == t->w->item ? 0.7f : 1.0f);
-                UiObjMoveToX(t->w->parts[lbl_802B69E8[i].idx]->obj, 6, 4, lbl_802B69E8[i].x);
-                UiObjSetCommand(t->w->parts[lbl_802B69E8[i].idx]->obj, 15, i * 2 + 2);
+                UiObjMoveToX(&t->w->parts[lbl_802B69E8[i].idx]->obj->o, 6, 4, lbl_802B69E8[i].x);
+                UiObjSetCommand(&t->w->parts[lbl_802B69E8[i].idx]->obj->o, 15, i * 2 + 2);
             }
         accessory:
             ShopHideList(t);
             t->w->parts[12] = (ShopPart*)fn_801B1104(t);
             t->w->parts[18] = (ShopPart*)fn_801B0470(t);
-            UiObjMoveToX(t->w->parts[12]->obj, 6, 5, -8.0f);
-            UiObjSetCommand(t->w->parts[12]->obj, 15, 0);
-            UiObjMoveToX(t->w->parts[18]->obj, 6, 5, -8.0f);
-            UiObjSetCommand(t->w->parts[18]->obj, 15, (u8)(i * 2 + 2));
+            UiObjMoveToX(&t->w->parts[12]->obj->o, 6, 5, -8.0f);
+            UiObjSetCommand(&t->w->parts[12]->obj->o, 15, 0);
+            UiObjMoveToX(&t->w->parts[18]->obj->o, 6, 5, -8.0f);
+            UiObjSetCommand(&t->w->parts[18]->obj->o, 15, (u8)(i * 2 + 2));
             ShopShowCompare(t);
             t->w->state = 19;
             break;
@@ -6183,15 +5992,15 @@ void fn_801A6BDC(ShopTask* t) {
         if (fn_801C09F8(0, 1) || PAD_B) {
             MenuPartsFinish((MenuTask*)t);
         list_ready:
-            *t->w->parts[2]->flag = 1;
+            t->w->parts[2]->flag->b0 = 1;
             t->w->state = 3;
             t->w->parts[8]->x38->ha = 1 < t->buf->pages;
-        } else if (UiObjIsBusy(t->w->parts[2]->obj) == 0 && UiObjIsBusy(t->w->parts[9]->obj) == 0) {
+        } else if (UiObjIsBusy(&t->w->parts[2]->obj->o) == 0 && UiObjIsBusy(&t->w->parts[9]->obj->o) == 0) {
             goto list_ready; /* shared with the cancel path above */
         }
         break;
     case 11:
-        if (UiObjIsBusy(t->w->parts[18]->obj) == 0 && UiObjIsBusy(t->w->parts[11]->obj2) == 0) {
+        if (UiObjIsBusy(&t->w->parts[18]->obj->o) == 0 && UiObjIsBusy(&t->w->parts[11]->obj2->o) == 0) {
             ShopCompareDone(t);
         } else if (PAD_A) {
             MenuPartsFinish((MenuTask*)t);
@@ -6205,7 +6014,7 @@ void fn_801A6BDC(ShopTask* t) {
             }
             t->w->parts[14]->x38->ha = 1;
             t->w->xc[t->w->who[0]] = 0;
-            SHOP_PARTY->chr[t->w->who[0]].h6c = -1;
+            lbl_803471B8->chr[t->w->who[0]].h6c = -1;
             fn_801C0AB4(t->w->stat[0][0], t->w->who[0]);
             fn_801C2C4C(t->w->who[0], t->w->b34);
             fn_801C12C8();
@@ -6221,11 +6030,11 @@ void fn_801A6BDC(ShopTask* t) {
                     fn_801C0AB4(t->w->item, t->w->who[0]);
                     if (fn_801F4CA0()) {
                         fn_801C2C4C(t->w->who[0], t->w->parts[14]->list->page);
-                        SHOP_PARTY->chr[t->w->who[0]].h6c = t->w->parts[14]->list->page;
+                        lbl_803471B8->chr[t->w->who[0]].h6c = t->w->parts[14]->list->page;
                         t->w->xc[t->w->who[0]] = 1;
                     } else {
                         fn_801C2C4C(t->w->who[0], t->w->b34);
-                        SHOP_PARTY->chr[t->w->who[0]].h6c = t->w->b34;
+                        lbl_803471B8->chr[t->w->who[0]].h6c = t->w->b34;
                         t->w->xc[t->w->who[0]] = 1;
                     }
                     fn_801C12C8();
@@ -6242,29 +6051,29 @@ void fn_801A6BDC(ShopTask* t) {
                 break;
             case 4:
                 fn_801C08B4(2);
-                UiObjMoveToX(t->w->parts[13]->obj, 6, 5, -348.0f);
-                UiObjSetCommand(t->w->parts[13]->obj, 15, 4);
-                UiObjMoveToX(t->w->parts[14]->obj, 6, 5, -348.0f);
-                UiObjSetCommand(t->w->parts[14]->obj, 15, 2);
-                UiObjMoveToX(t->w->parts[12]->obj, 6, 5, -348.0f);
-                UiObjSetCommand(t->w->parts[12]->obj, 15, 6);
-                UiObjMoveToX(t->w->parts[18]->obj, 6, 5, -348.0f);
-                UiObjSetCommand(t->w->parts[18]->obj, 15, 0);
-                UiObjMoveToX(t->w->parts[10]->obj, 6, -1, 648.0f);
-                UiObjSetCommand(t->w->parts[10]->obj, 15, 6);
-                UiObjMoveToX(t->w->parts[10]->obj2, 6, -1, 648.0f);
-                UiObjSetCommand(t->w->parts[10]->obj2, 15, 4);
-                UiObjMoveToX(t->w->parts[11]->obj, 6, -1, 648.0f);
-                UiObjSetCommand(t->w->parts[11]->obj, 15, 2);
-                UiObjMoveToX(t->w->parts[11]->obj2, 6, -1, 648.0f);
-                UiObjSetCommand(t->w->parts[11]->obj2, 15, 0);
+                UiObjMoveToX(&t->w->parts[13]->obj->o, 6, 5, -348.0f);
+                UiObjSetCommand(&t->w->parts[13]->obj->o, 15, 4);
+                UiObjMoveToX(&t->w->parts[14]->obj->o, 6, 5, -348.0f);
+                UiObjSetCommand(&t->w->parts[14]->obj->o, 15, 2);
+                UiObjMoveToX(&t->w->parts[12]->obj->o, 6, 5, -348.0f);
+                UiObjSetCommand(&t->w->parts[12]->obj->o, 15, 6);
+                UiObjMoveToX(&t->w->parts[18]->obj->o, 6, 5, -348.0f);
+                UiObjSetCommand(&t->w->parts[18]->obj->o, 15, 0);
+                UiObjMoveToX(&t->w->parts[10]->obj->o, 6, -1, 648.0f);
+                UiObjSetCommand(&t->w->parts[10]->obj->o, 15, 6);
+                UiObjMoveToX(&t->w->parts[10]->obj2->o, 6, -1, 648.0f);
+                UiObjSetCommand(&t->w->parts[10]->obj2->o, 15, 4);
+                UiObjMoveToX(&t->w->parts[11]->obj->o, 6, -1, 648.0f);
+                UiObjSetCommand(&t->w->parts[11]->obj->o, 15, 2);
+                UiObjMoveToX(&t->w->parts[11]->obj2->o, 6, -1, 648.0f);
+                UiObjSetCommand(&t->w->parts[11]->obj2->o, 15, 0);
                 t->w->state = 14;
                 break;
             }
         } else if (fn_801AB094((Task_801AB094*)t) == 0) {
             if (fn_801C09F8(0, 6)) {
                 if (t->w->xa == 0 && t->w->parts[14]->x38->ha != 0 &&
-                    t->w->stat[0][0] == SHOP_PARTY->info->m[t->w->who[0]].x06) {
+                    t->w->stat[0][0] == lbl_803471B8->w->m[t->w->who[0]].ha) {
                     page = t->w->parts[14]->list->page;
                     t->w->parts[14]->list->page = fn_801AB6E8(-1, page);
                     if (page != t->w->parts[14]->list->page) {
@@ -6273,7 +6082,7 @@ void fn_801A6BDC(ShopTask* t) {
                 }
             } else if (fn_801C09F8(0, 7)) {
                 if (t->w->xa == 0 && t->w->parts[14]->x38->ha != 0 &&
-                    t->w->stat[0][0] == SHOP_PARTY->info->m[t->w->who[0]].x06) {
+                    t->w->stat[0][0] == lbl_803471B8->w->m[t->w->who[0]].ha) {
                     page = t->w->parts[14]->list->page;
                     t->w->parts[14]->list->page = fn_801AB6E8(1, page);
                     if (page != t->w->parts[14]->list->page) {
@@ -6290,13 +6099,13 @@ void fn_801A6BDC(ShopTask* t) {
             MenuPartsFinish((MenuTask*)t);
             t->w->state = 3;
             t->w->parts[8]->x38->ha = 1 < t->buf->pages;
-        } else if (UiObjIsBusy(t->w->parts[10]->obj) == 0) {
+        } else if (UiObjIsBusy(&t->w->parts[10]->obj->o) == 0) {
             ShopFreeCompare(t);
             t->w->state = 0x17;
         }
         break;
     case 15:
-        if (UiObjIsBusy(t->w->parts[18]->obj) == 0 && UiObjIsBusy(t->w->parts[11]->obj2) == 0) {
+        if (UiObjIsBusy(&t->w->parts[18]->obj->o) == 0 && UiObjIsBusy(&t->w->parts[11]->obj2->o) == 0) {
             t->w->state = 16;
         } else if (PAD_A) {
             MenuPartsFinish((MenuTask*)t);
@@ -6316,14 +6125,14 @@ void fn_801A6BDC(ShopTask* t) {
                     return;
                 }
                 t->w->xc[t->w->who[t->w->xa]] = 0;
-                fn_801F4E38(SHOP_PARTY->info->m[t->w->who[t->w->xa]].id, t->w->stat[t->w->who[t->w->xa]][1]);
+                fn_801F4E38(lbl_803471B8->w->m[t->w->who[t->w->xa]].id, t->w->stat[t->w->who[t->w->xa]][1]);
                 break;
             case 2:
                 if (t->w->item == t->w->stat[t->w->who[t->w->xa]][2]) {
                     return;
                 }
                 t->w->xc[t->w->who[t->w->xa]] = 0;
-                fn_801F4E04(SHOP_PARTY->info->m[t->w->who[t->w->xa]].id, t->w->stat[t->w->who[t->w->xa]][2]);
+                fn_801F4E04(lbl_803471B8->w->m[t->w->who[t->w->xa]].id, t->w->stat[t->w->who[t->w->xa]][2]);
                 break;
             }
         armor_changed:
@@ -6352,28 +6161,28 @@ void fn_801A6BDC(ShopTask* t) {
                 fn_801AAFAC(t);
                 d = t->w->xb * 2;
                 for (cnt = 0; cnt < (i = t->w->xb); cnt++, d -= 2) {
-                    UiObjMoveToX(t->w->parts[lbl_802B69E8[cnt].idx]->obj, 6, 5, lbl_802B69E8[cnt].x2);
-                    UiObjSetCommand(t->w->parts[lbl_802B69E8[cnt].idx]->obj, 15, d);
+                    UiObjMoveToX(&t->w->parts[lbl_802B69E8[cnt].idx]->obj->o, 6, 5, lbl_802B69E8[cnt].x2);
+                    UiObjSetCommand(&t->w->parts[lbl_802B69E8[cnt].idx]->obj->o, 15, d);
                 }
-                UiObjMoveToX(t->w->parts[12]->obj, 6, 5, -348.0f);
-                UiObjSetCommand(t->w->parts[12]->obj, 15, (u8)(i * 2 + 2));
-                UiObjMoveToX(t->w->parts[18]->obj, 6, 5, -348.0f);
-                UiObjSetCommand(t->w->parts[18]->obj, 15, 0);
-                UiObjMoveToX(t->w->parts[10]->obj, 6, -1, 648.0f);
-                UiObjSetCommand(t->w->parts[10]->obj, 15, 6);
-                UiObjMoveToX(t->w->parts[10]->obj2, 6, -1, 648.0f);
-                UiObjSetCommand(t->w->parts[10]->obj2, 15, 4);
-                UiObjMoveToX(t->w->parts[11]->obj, 6, -1, 648.0f);
-                UiObjSetCommand(t->w->parts[11]->obj, 15, 2);
-                UiObjMoveToX(t->w->parts[11]->obj2, 6, -1, 648.0f);
-                UiObjSetCommand(t->w->parts[11]->obj2, 15, 0);
+                UiObjMoveToX(&t->w->parts[12]->obj->o, 6, 5, -348.0f);
+                UiObjSetCommand(&t->w->parts[12]->obj->o, 15, (u8)(i * 2 + 2));
+                UiObjMoveToX(&t->w->parts[18]->obj->o, 6, 5, -348.0f);
+                UiObjSetCommand(&t->w->parts[18]->obj->o, 15, 0);
+                UiObjMoveToX(&t->w->parts[10]->obj->o, 6, -1, 648.0f);
+                UiObjSetCommand(&t->w->parts[10]->obj->o, 15, 6);
+                UiObjMoveToX(&t->w->parts[10]->obj2->o, 6, -1, 648.0f);
+                UiObjSetCommand(&t->w->parts[10]->obj2->o, 15, 4);
+                UiObjMoveToX(&t->w->parts[11]->obj->o, 6, -1, 648.0f);
+                UiObjSetCommand(&t->w->parts[11]->obj->o, 15, 2);
+                UiObjMoveToX(&t->w->parts[11]->obj2->o, 6, -1, 648.0f);
+                UiObjSetCommand(&t->w->parts[11]->obj2->o, 15, 0);
                 t->w->state = 17;
                 break;
             }
         } else if (fn_801AB094((Task_801AB094*)t)) {
             if (t->w->xa != 4 && (old = t->w->who[t->w->xa]) != -1) {
-                ((ShopMObj*)t->w->parts[11]->obj)->h56 = old;
-                ((ShopMObj*)t->w->parts[10]->obj)->h56 = old;
+                t->w->parts[11]->obj->h56 = old;
+                t->w->parts[10]->obj->h56 = old;
             }
         }
         break;
@@ -6391,7 +6200,7 @@ void fn_801A6BDC(ShopTask* t) {
             MenuPartsFinish((MenuTask*)t);
             t->w->state = 3;
             t->w->parts[8]->x38->ha = 1 < t->buf->pages;
-        } else if (UiObjIsBusy(t->w->parts[12]->obj) == 0) {
+        } else if (UiObjIsBusy(&t->w->parts[12]->obj->o) == 0) {
             MenuPartFree((MenuTask*)t, 12);
             MenuPartFree((MenuTask*)t, 18);
             MenuPartFree((MenuTask*)t, 10);
@@ -6409,7 +6218,7 @@ void fn_801A6BDC(ShopTask* t) {
         break;
     case 19:
         fn_801C0FBC(t->w->item);
-        if (UiObjIsBusy(t->w->parts[18]->obj) == 0 && UiObjIsBusy(t->w->parts[11]->obj2) == 0) {
+        if (UiObjIsBusy(&t->w->parts[18]->obj->o) == 0 && UiObjIsBusy(&t->w->parts[11]->obj2->o) == 0) {
             t->w->state = 20;
             if (fn_801AACB0(t)) {
                 t->w->xa = 4;
@@ -6481,38 +6290,38 @@ void fn_801A6BDC(ShopTask* t) {
             case 4:
                 if (t->w->b37 == 0) {
                     for (cnt = 0, d = 8; cnt < 4; cnt++, d -= 2) {
-                        UiObjMoveToX(t->w->parts[lbl_802B69E8[cnt].idx]->obj, 6, 4, lbl_802B69E8[cnt].x2);
-                        UiObjSetCommand(t->w->parts[lbl_802B69E8[cnt].idx]->obj, 15, d + 2);
+                        UiObjMoveToX(&t->w->parts[lbl_802B69E8[cnt].idx]->obj->o, 6, 4, lbl_802B69E8[cnt].x2);
+                        UiObjSetCommand(&t->w->parts[lbl_802B69E8[cnt].idx]->obj->o, 15, d + 2);
                     }
-                    UiObjMoveToX(t->w->parts[12]->obj, 6, 5, -348.0f);
-                    UiObjSetCommand(t->w->parts[12]->obj, 15, 12);
-                    UiObjMoveToX(t->w->parts[18]->obj, 6, 5, -348.0f);
-                    UiObjSetCommand(t->w->parts[18]->obj, 15, 0);
-                    UiObjMoveToX(t->w->parts[10]->obj, 6, -1, 648.0f);
-                    UiObjSetCommand(t->w->parts[10]->obj, 15, 6);
-                    UiObjMoveToX(t->w->parts[10]->obj2, 6, -1, 648.0f);
-                    UiObjSetCommand(t->w->parts[10]->obj2, 15, 4);
-                    UiObjMoveToX(t->w->parts[11]->obj, 6, -1, 648.0f);
-                    UiObjSetCommand(t->w->parts[11]->obj, 15, 2);
-                    UiObjMoveToX(t->w->parts[11]->obj2, 6, -1, 648.0f);
-                    UiObjSetCommand(t->w->parts[11]->obj2, 15, 0);
+                    UiObjMoveToX(&t->w->parts[12]->obj->o, 6, 5, -348.0f);
+                    UiObjSetCommand(&t->w->parts[12]->obj->o, 15, 12);
+                    UiObjMoveToX(&t->w->parts[18]->obj->o, 6, 5, -348.0f);
+                    UiObjSetCommand(&t->w->parts[18]->obj->o, 15, 0);
+                    UiObjMoveToX(&t->w->parts[10]->obj->o, 6, -1, 648.0f);
+                    UiObjSetCommand(&t->w->parts[10]->obj->o, 15, 6);
+                    UiObjMoveToX(&t->w->parts[10]->obj2->o, 6, -1, 648.0f);
+                    UiObjSetCommand(&t->w->parts[10]->obj2->o, 15, 4);
+                    UiObjMoveToX(&t->w->parts[11]->obj->o, 6, -1, 648.0f);
+                    UiObjSetCommand(&t->w->parts[11]->obj->o, 15, 2);
+                    UiObjMoveToX(&t->w->parts[11]->obj2->o, 6, -1, 648.0f);
+                    UiObjSetCommand(&t->w->parts[11]->obj2->o, 15, 0);
                 } else {
                     for (cnt = 0, d = 6; cnt < 3; cnt++, d -= 2) {
-                        UiObjMoveToX(t->w->parts[lbl_802B69E8[cnt].idx]->obj, 6, 4, lbl_802B69E8[cnt].x2);
-                        UiObjSetCommand(t->w->parts[lbl_802B69E8[cnt].idx]->obj, 15, d + 2);
+                        UiObjMoveToX(&t->w->parts[lbl_802B69E8[cnt].idx]->obj->o, 6, 4, lbl_802B69E8[cnt].x2);
+                        UiObjSetCommand(&t->w->parts[lbl_802B69E8[cnt].idx]->obj->o, 15, d + 2);
                     }
-                    UiObjMoveToX(t->w->parts[12]->obj, 6, 5, -348.0f);
-                    UiObjSetCommand(t->w->parts[12]->obj, 15, 10);
-                    UiObjMoveToX(t->w->parts[18]->obj, 6, 5, -348.0f);
-                    UiObjSetCommand(t->w->parts[18]->obj, 15, 0);
-                    UiObjMoveToX(t->w->parts[10]->obj, 6, -1, 648.0f);
-                    UiObjSetCommand(t->w->parts[10]->obj, 15, 6);
-                    UiObjMoveToX(t->w->parts[10]->obj2, 6, -1, 648.0f);
-                    UiObjSetCommand(t->w->parts[10]->obj2, 15, 4);
-                    UiObjMoveToX(t->w->parts[11]->obj, 6, -1, 648.0f);
-                    UiObjSetCommand(t->w->parts[11]->obj, 15, 2);
-                    UiObjMoveToX(t->w->parts[11]->obj2, 6, -1, 648.0f);
-                    UiObjSetCommand(t->w->parts[11]->obj2, 15, 0);
+                    UiObjMoveToX(&t->w->parts[12]->obj->o, 6, 5, -348.0f);
+                    UiObjSetCommand(&t->w->parts[12]->obj->o, 15, 10);
+                    UiObjMoveToX(&t->w->parts[18]->obj->o, 6, 5, -348.0f);
+                    UiObjSetCommand(&t->w->parts[18]->obj->o, 15, 0);
+                    UiObjMoveToX(&t->w->parts[10]->obj->o, 6, -1, 648.0f);
+                    UiObjSetCommand(&t->w->parts[10]->obj->o, 15, 6);
+                    UiObjMoveToX(&t->w->parts[10]->obj2->o, 6, -1, 648.0f);
+                    UiObjSetCommand(&t->w->parts[10]->obj2->o, 15, 4);
+                    UiObjMoveToX(&t->w->parts[11]->obj->o, 6, -1, 648.0f);
+                    UiObjSetCommand(&t->w->parts[11]->obj->o, 15, 2);
+                    UiObjMoveToX(&t->w->parts[11]->obj2->o, 6, -1, 648.0f);
+                    UiObjSetCommand(&t->w->parts[11]->obj2->o, 15, 0);
                 }
                 t->w->state = 21;
                 fn_801C08B4(2);
@@ -6534,8 +6343,8 @@ void fn_801A6BDC(ShopTask* t) {
                 t->w->xa--;
             }
             if ((n = t->w->xa) != 4) {
-                ((ShopMObj*)t->w->parts[11]->obj)->h56 = n;
-                ((ShopMObj*)t->w->parts[10]->obj)->h56 = n;
+                t->w->parts[11]->obj->h56 = n;
+                t->w->parts[10]->obj->h56 = n;
             }
             if (row != t->w->xa) {
                 MenuPlaySe(4);
@@ -6557,8 +6366,8 @@ void fn_801A6BDC(ShopTask* t) {
                 }
             }
             if ((n = t->w->xa) != 4) {
-                ((ShopMObj*)t->w->parts[11]->obj)->h56 = n;
-                ((ShopMObj*)t->w->parts[10]->obj)->h56 = n;
+                t->w->parts[11]->obj->h56 = n;
+                t->w->parts[10]->obj->h56 = n;
             }
             SHOP_SLOT_CMDS(t, cmd, o);
             if (row != t->w->xa) {
@@ -6569,7 +6378,7 @@ void fn_801A6BDC(ShopTask* t) {
     case 21:
         if (fn_801C09F8(0, 1) || PAD_A) {
             MenuPartsFinish((MenuTask*)t);
-        } else if (UiObjIsBusy(t->w->parts[12]->obj)) {
+        } else if (UiObjIsBusy(&t->w->parts[12]->obj->o)) {
             break;
         }
         MenuPartFree((MenuTask*)t, 12);
@@ -6585,7 +6394,7 @@ void fn_801A6BDC(ShopTask* t) {
         t->w->state = 0x17;
         break;
     case 23:
-        if (UiObjIsBusy(t->w->parts[1]->obj) == 0) {
+        if (UiObjIsBusy(&t->w->parts[1]->obj->o) == 0) {
             t->w->state = 3;
             t->w->parts[8]->x38->ha = 1 < t->buf->pages;
         } else if (PAD_A || fn_801C09F8(0, 1)) {
@@ -6595,14 +6404,14 @@ void fn_801A6BDC(ShopTask* t) {
         }
         break;
     case 24:
-        UiObjMoveTo(t->w->parts[7]->obj, 6, -1, 640.0f, 480.0f);
-        UiObjSetCommand(t->w->parts[7]->obj, 15, 0);
-        UiObjMoveToX(t->w->parts[8]->obj, 6, -1, 648.0f);
-        UiObjSetCommand(t->w->parts[8]->obj, 15, 0);
-        UiObjMoveToX(t->w->parts[9]->obj, 6, -1, -624.0f);
-        UiObjSetCommand(t->w->parts[9]->obj, 15, 0);
-        UiObjMoveToX(t->w->parts[9]->obj2, 6, -1, -624.0f);
-        UiObjSetCommand(t->w->parts[9]->obj2, 15, 0);
+        UiObjMoveTo(&t->w->parts[7]->obj->o, 6, -1, 640.0f, 480.0f);
+        UiObjSetCommand(&t->w->parts[7]->obj->o, 15, 0);
+        UiObjMoveToX(&t->w->parts[8]->obj->o, 6, -1, 648.0f);
+        UiObjSetCommand(&t->w->parts[8]->obj->o, 15, 0);
+        UiObjMoveToX(&t->w->parts[9]->obj->o, 6, -1, -624.0f);
+        UiObjSetCommand(&t->w->parts[9]->obj->o, 15, 0);
+        UiObjMoveToX(&t->w->parts[9]->obj2->o, 6, -1, -624.0f);
+        UiObjSetCommand(&t->w->parts[9]->obj2->o, 15, 0);
         t->w->state = 25;
     case 25:
         if (fn_801C09F8(0, 1)) {
@@ -6610,16 +6419,16 @@ void fn_801A6BDC(ShopTask* t) {
             MenuPartFree((MenuTask*)t, 8);
             MenuPartFree((MenuTask*)t, 9);
             MenuPartFree((MenuTask*)t, 2);
-            *t->w->parts[4]->flag = 0;
-            *t->w->parts[5]->flag = 0;
+            t->w->parts[4]->flag->b0 = 0;
+            t->w->parts[5]->flag->b0 = 0;
             t->w->state = 26;
-        } else if (UiObjIsBusy(t->w->parts[7]->obj) == 0) {
+        } else if (UiObjIsBusy(&t->w->parts[7]->obj->o) == 0) {
             MenuPartFree((MenuTask*)t, 7);
             MenuPartFree((MenuTask*)t, 8);
             MenuPartFree((MenuTask*)t, 9);
             MenuPartFree((MenuTask*)t, 2);
-            *t->w->parts[4]->flag = 0;
-            *t->w->parts[5]->flag = 0;
+            t->w->parts[4]->flag->b0 = 0;
+            t->w->parts[5]->flag->b0 = 0;
             t->w->state = 26;
         }
         break;
@@ -6740,8 +6549,8 @@ static inline s32 SelectSlot(Self_801A0E7C *self) {
         if (1.0f != self->ctx->f18) {
             fn_801A4DCC(self, 1);
         }
-        UiObjMoveToXIfChanged(self->ctx->h[1]->ui, 6, 4, -330.0f);
-        UiObjSetCommand(self->ctx->h[1]->ui, 0xf, 0);
+        UiObjMoveToXIfChanged(&self->ctx->h[1]->ui->o, 6, 4, -330.0f);
+        UiObjSetCommand(&self->ctx->h[1]->ui->o, 0xf, 0);
         k = fn_801A6A58(self->ctx->b4, self->ctx->w25c[self->ctx->b4]);
         fn_801A64B4(self, k);
         MenuPlaySe(3);
@@ -6858,17 +6667,17 @@ s32 fn_801AAFAC(ShopTask *self) {
     u32 n;
     s32 done = 0;
 
-    for (i = n = 0; i < self->ctx->count; i++) {
-        if (fn_801C0B88(self->ctx->id, self->ctx->slot[i])) {
+    for (i = n = 0; i < self->w->xb; i++) {
+        if (fn_801C0B88(self->w->item, self->w->who[i])) {
             n++;
-            self->ctx->items[i]->ui->alpha = 0.7f;
-            if (n == self->ctx->count) {
+            self->w->parts[14 + i]->obj->o.alpha = 0.7f;
+            if (n == self->w->xb) {
                 done = 1;
             }
-        } else if (self->ctx->b9 != 0) {
-            self->ctx->items[i]->ui->alpha = 1.0f;
+        } else if (self->w->x9 != 0) {
+            self->w->parts[14 + i]->obj->o.alpha = 1.0f;
         } else {
-            self->ctx->items[i]->ui->alpha = 0.7f;
+            self->w->parts[14 + i]->obj->o.alpha = 0.7f;
             done = 1;
         }
     }
@@ -6886,13 +6695,13 @@ void fn_801ABD40(PanelTask_801ABD40* t) {
         if (t->flag[0] == 1) {
             return;
         }
-        UiObjUpdate(&t->pan->ui);
-        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, (LayoutPart*)lbl_802B6B0C, 4, &t->pan->ui.x, t->pan->ui.z, 1.0f, 1.0f);
+        UiObjUpdate(&t->pan->o);
+        UiLayoutDraw((NJS_TEXLIST**)&menu_sprites.texlist8, (LayoutPart*)lbl_802B6B0C, 4, &t->pan->o.x, t->pan->o.z, 1.0f, 1.0f);
         z = TextGetZ();
         TextSetZ(-4027.5f);
         TextPushColor();
         TextSetColor(0xFF201008);
-        TextPrint(24.0f + t->pan->ui.x, 20.0f + t->pan->ui.y, lbl_80346810[t->pan->label]);
+        TextPrint(24.0f + t->pan->o.x, 20.0f + t->pan->o.y, lbl_80346810[t->pan->h56]);
         TextPopColor(1);
         TextSetZ(z);
         break;
@@ -6908,13 +6717,13 @@ void* fn_801AFBE8(void* parent, u16 idx, u16 mode, f32 alpha) {
 
     t->w = fn_801E1A74(1, 0x58);
     t->obj = fn_801E1A74(1, 0x6c);
-    *(f32 *)&t->obj->o.pad38[0] = 1.0f;
+    t->obj->o.f38 = 1.0f;
     t->x2c = 0;
     t->obj->h56 = idx;
     t->obj->h54 = mode;
     t->obj->o.alpha_en = 0;
     t->obj->o.alpha = alpha;
-    t->w->state = 0;
+    t->w->b0 = 0;
     t->obj->o.x = -348.0f;
     t->obj->o.tx = -348.0f;
     t->obj->o.y = lbl_802B8F20[idx].y;
@@ -6922,9 +6731,9 @@ void* fn_801AFBE8(void* parent, u16 idx, u16 mode, f32 alpha) {
     t->obj->o.z = lbl_802B8F20[idx].z;
     t->obj->h52 = 1;
     if (mode != 0) {
-        t->w->cb_801AFBE8 = fn_801AFD34;
+        t->w->cb = fn_801AFD34;
     } else {
-        t->w->cb_801AFBE8 = fn_801B0014;
+        t->w->cb = fn_801B0014;
     }
     UiObjSetLowered(&t->obj->o);
     return t;
@@ -7118,8 +6927,7 @@ void fn_8019D598(Self* o) {
     }
 }
 
-typedef struct { u8 b0; } W_801B65CC;
-typedef struct { u8 pad[0x24]; W_801B65CC* w; MObj* obj; u32 w2c; } T_801B65CC;
+typedef struct { u8 pad[0x24]; MenuPartWork* w; MenuPanel* obj; u32 w2c; } T_801B65CC;
 typedef struct { const char* text; f32 x; } NameEnt;
 extern const f32 lbl_802B8EDC[];
 extern NameEnt lbl_802EC01C[];
@@ -7207,8 +7015,8 @@ static inline void ScrollUp(Self_801A1958 *o, s32 st) {
     s32 i;
     o->ctx->x6--;
     for (i = 0; i < 7; i++) {
-        UiObjMoveToY(o->ctx->objs[i]->obj, 6, -1, 110.0f + o->ctx->objs[i]->obj->y);
-        UiObjSetCommand(o->ctx->objs[i]->obj, 0xf, 0);
+        UiObjMoveToY(&o->ctx->objs[i]->obj->o, 6, -1, 110.0f + o->ctx->objs[i]->obj->o.y);
+        UiObjSetCommand(&o->ctx->objs[i]->obj->o, 0xf, 0);
     }
     MenuPlaySe(4);
     o->state = st;
@@ -7218,8 +7026,8 @@ static inline void ScrollDown(Self_801A1958 *o, s32 st) {
     s32 i;
     o->ctx->x6++;
     for (i = 0; i < 7; i++) {
-        UiObjMoveToY(o->ctx->objs[i]->obj, 6, -1, o->ctx->objs[i]->obj->y - 110.0f);
-        UiObjSetCommand(o->ctx->objs[i]->obj, 0xf, 0);
+        UiObjMoveToY(&o->ctx->objs[i]->obj->o, 6, -1, o->ctx->objs[i]->obj->o.y - 110.0f);
+        UiObjSetCommand(&o->ctx->objs[i]->obj->o, 0xf, 0);
     }
     MenuPlaySe(4);
     o->state = st;
@@ -7315,11 +7123,11 @@ void fn_801A1B98(Self_801A0C3C *o, u8 mode) {
                 f32 f;
                 o->ctx->objs[lbl_802B494C[i].idx] = fn_801A53D4(o, lbl_802B494C[i].b1);
                 f = tb[i];
-                o->ctx->objs[lbl_802B494C[i].idx]->obj->ty = f;
-                o->ctx->objs[lbl_802B494C[i].idx]->obj->y = f;
+                o->ctx->objs[lbl_802B494C[i].idx]->obj->o.ty = f;
+                o->ctx->objs[lbl_802B494C[i].idx]->obj->o.y = f;
             }
-            UiObjMoveToX(o->ctx->objs[lbl_802B494C[i].idx]->obj, 6, 4, 336.0f);
-            UiObjSetCommand(o->ctx->objs[lbl_802B494C[i].idx]->obj, 0xf, lbl_802B494C[i].b2);
+            UiObjMoveToX(&o->ctx->objs[lbl_802B494C[i].idx]->obj->o, 6, 4, 336.0f);
+            UiObjSetCommand(&o->ctx->objs[lbl_802B494C[i].idx]->obj->o, 0xf, lbl_802B494C[i].b2);
         }
     } else {
         tb = &lbl_802B4920[k];
@@ -7329,11 +7137,11 @@ void fn_801A1B98(Self_801A0C3C *o, u8 mode) {
                     f32 f;
                     o->ctx->objs[lbl_802B494C[i].idx] = fn_801A53D4(o, lbl_802B494C[i].b1);
                     f = tb[i];
-                    o->ctx->objs[lbl_802B494C[i].idx]->obj->ty = f;
-                    o->ctx->objs[lbl_802B494C[i].idx]->obj->y = f;
+                    o->ctx->objs[lbl_802B494C[i].idx]->obj->o.ty = f;
+                    o->ctx->objs[lbl_802B494C[i].idx]->obj->o.y = f;
                 }
-                UiObjMoveToX(o->ctx->objs[lbl_802B494C[i].idx]->obj, 6, 4, 336.0f);
-                UiObjSetCommand(o->ctx->objs[lbl_802B494C[i].idx]->obj, 0xf, lbl_802B494C[i].b4);
+                UiObjMoveToX(&o->ctx->objs[lbl_802B494C[i].idx]->obj->o, 6, 4, 336.0f);
+                UiObjSetCommand(&o->ctx->objs[lbl_802B494C[i].idx]->obj->o, 0xf, lbl_802B494C[i].b4);
             }
         }
     }
@@ -7346,8 +7154,8 @@ void fn_801B60E8(MP_801B60E8* p) {
     f32 z = fn_801DBD9C(-0.1f);
     for (i = 0; i < 3; i++) {
         v = &t.v[i];
-        v->x = 264.0f + (18.0f + v->x) + p->obj->x;
-        v->y = 48.0f + (16.0f + v->y) + p->obj->y;
+        v->x = 264.0f + (18.0f + v->x) + p->obj->o.x;
+        v->y = 48.0f + (16.0f + v->y) + p->obj->o.y;
         v->z = z;
     }
     fn_80290ED4(t.v, 3, 0);
@@ -7474,3 +7282,403 @@ void fn_801BE468(void) {
         }
     }
 }
+extern const f32 lbl_802B8F40[6];
+extern const f32 lbl_802B8F58[6];
+ShopPart* fn_801AD00C(ShopTask* t, u8 kind, u16 who) {
+    ShopPart* p = fn_802267AC(t, fn_801ACE70);
+    p->flag = fn_801E1A74(1, 0x58);
+    p->obj = fn_801E1A74(1, 0x6c);
+    p->obj->o.alpha_en = 0;
+    p->obj->o.tx = p->obj->o.x = 648.0f;
+    p->obj->o.ty = p->obj->o.y = lbl_802B8F40[kind];
+    UiObjSetLowered(&p->obj->o);
+    p->obj->o.z = kind == 0 ? -4600.0f : -4700.0f;
+    p->obj->o.alpha = (kind & 1) == 0 ? 0.7f : 1.0f;
+    p->obj->o.f38 = 1.0f;
+    p->obj->h52 = 1;
+    p->obj->h54 = kind;
+    p->obj->h56 = who;
+    p->obj2 = fn_801E1A74(1, 0x6c);
+    p->obj2->o.alpha_en = 0;
+    p->obj2->o.tx = p->obj2->o.x = 648.0f;
+    p->obj2->o.ty = p->obj2->o.y = lbl_802B8F58[kind];
+    UiObjSetLowered(&p->obj2->o);
+    p->obj2->o.z = kind == 0 ? -4650.0f : -4750.0f;
+    p->obj2->o.alpha = (kind & 1) == 0 ? 0.7f : 1.0f;
+    p->obj2->o.f38 = 1.0f;
+    p->obj2->h52 = 1;
+    p->obj2->h54 = kind;
+    p->flag->b0 = 0;
+    return p;
+}
+
+/* fn_801F4C24's item type folded into the item panel's five layouts (its h52). */
+static inline u8 ShopItemKind(s16 id) {
+    u8 r;
+    s16 kind = fn_801F4C24(id);
+    switch (kind) {
+    case 0: case 1: case 2: r = 0; break;
+    case 5: r = 2; break;
+    case 6: r = 1; break;
+    case 3: case 4: case 7: r = 3; break;
+    default: r = 4; break;
+    }
+    return r;
+}
+
+void fn_801B5644(ShopPart* p, u16 id) {
+    UiObjMoveToX(&p->obj->o, 6, -1, -8.0f);
+    UiObjSetCommand(&p->obj->o, 15, 0);
+    p->obj->o.z = -4700.0f;
+    p->obj->h52 = ShopItemKind(id);
+    p->obj->h56 = id;
+}
+
+void fn_801B571C(ShopPart* p, u16 id) {
+    if (UiObjIsBusy(&p->obj->o)) {
+        UiObjFinish(&p->obj->o);
+    }
+    if (p->obj->h52 != ShopItemKind(id)) {
+        p->flag->w10 = 0;
+    }
+    p->obj->h52 = ShopItemKind(id);
+    p->obj->h56 = id;
+}
+
+void* fn_801BE17C(u16 id) {
+    s32 f1 = FlagTest(id + 0xBAE);
+    s32 f2;
+    if (f1) {
+        return lbl_802ED258[id].b;
+    }
+    f2 = FlagTest(id + 0xC62);
+    if (f2) {
+        return lbl_802ED258[id].b;
+    }
+    switch ((s8)Rank(id)) {
+    case 0:
+        return lbl_802ED258[id].a;
+    case 1:
+        return lbl_802ED258[id].c;
+    case 2:
+        return lbl_802ED258[id].c;
+    }
+    return NULL;
+}
+
+void fn_801BE2F0(ShopEntry* e, u8 mode) {
+    u32 thr;
+    s8 c;
+    c = e->flag = Rank(e->id);
+    if (mode == 0) {
+        switch (c) {
+        case 0:
+            e->type = 1;
+        default:
+            return;
+        case 1:
+            thr = lbl_802ED258[e->id].f14;
+            break;
+        case 2:
+            thr = lbl_802ED258[e->id].f10;
+            break;
+        }
+        if (FlagTest(e->id + 0xC08) != 0 || FlagTest(e->id + 0xC62) != 0) {
+            e->type = 1;
+            return;
+        }
+        if (lbl_8030B7F4.w34c >= thr) {
+            e->type = 0;
+        } else {
+            e->type = 1;
+        }
+    } else {
+        e->type = 0;
+    }
+}
+
+extern char* fn_801C2CBC(s16 id);
+void fn_801AFD34(void* arg) {
+    PanelTask_801AFBE8* t = arg;
+    MenuPanel* p;
+    CmpEq eq;
+    s16 id = lbl_8030B7F4.s158a[t->obj->h56];
+    s32 x;
+    s16 y;
+
+    TextSetColor(0xFF201008);
+    TextSetZ(-27.5f + t->obj->o.z);
+    fn_801C2CF4(&eq, id);
+    fn_801B6BB4(t->obj, t->obj->o.rect, id, -1, 0x14, 6, t->obj->o.alpha);
+    if (id != -1) {
+        p = t->obj;
+        TextPrint(50.0f + p->o.rect[0], 5.0f + p->o.rect[1], fn_801C2CBC(id));
+        y = 31.0f + t->obj->o.rect[1];
+        x = (s16)(t->obj->o.rect[0] - 2.0f);
+        TextPrintNumber(x + lbl_802B8ECC[4], y, eq.v[1], 0xC004);
+        TextPrintNumber(x + lbl_802B8ECC[5], y, eq.v[2], 0xC004);
+        TextPrintNumber(x + lbl_802B8ECC[6], y, eq.v[4], 0xC004);
+        TextPrintNumber(x + lbl_802B8ECC[7], y, eq.v[7], 0xC004);
+    } else {
+        TextPrint(50.0f + t->obj->o.rect[0], 5.0f + t->obj->o.rect[1], lbl_802EC04C[0]);
+        y = 31.0f + t->obj->o.rect[1];
+        x = (s16)(t->obj->o.rect[0] - 2.0f);
+        TextPrintNumber(x + lbl_802B8ECC[4], y, eq.v[1], 0xC004);
+        TextPrintNumber(x + lbl_802B8ECC[5], y, eq.v[2], 0xC004);
+        TextPrintNumber(x + lbl_802B8ECC[6], y, eq.v[4], 0xC004);
+        TextPrintNumber(x + lbl_802B8ECC[7], y, eq.v[7], 0xC004);
+    }
+}
+
+void fn_801B0014(void* arg) {
+    PanelTask_801AFBE8* t = arg;
+    MenuPanel* p;
+    CmpEq eq;
+    s16 id = lbl_8030B7F4.s1580[t->obj->h56];
+    s32 x;
+    s16 y;
+
+    TextSetColor(0xFF201008);
+    TextSetZ(-27.5f + t->obj->o.z);
+    fn_801C2CF4(&eq, id);
+    fn_801B6BB4(t->obj, t->obj->o.rect, id, -1, 0x14, 6, t->obj->o.alpha);
+    if (id != -1) {
+        p = t->obj;
+        TextPrint(50.0f + p->o.rect[0], 5.0f + p->o.rect[1], fn_801C2CBC(id));
+        y = 31.0f + t->obj->o.rect[1];
+        x = (s16)(t->obj->o.rect[0] - 2.0f);
+        TextPrintNumber(x + lbl_802B8EBC[4], y, eq.v[0], 0xC004);
+        TextPrintNumber(x + lbl_802B8EBC[5], y, eq.v[3], 0xC004);
+        TextPrintNumber(x + lbl_802B8EBC[6], y, eq.v[5], 0xC004);
+        TextPrintNumber(x + lbl_802B8EBC[7], y, eq.v[6], 0xC001);
+    } else {
+        TextPrint(50.0f + t->obj->o.rect[0], 5.0f + t->obj->o.rect[1], lbl_802EC04C[0]);
+        y = 31.0f + t->obj->o.rect[1];
+        x = (s16)(t->obj->o.rect[0] - 2.0f);
+        TextPrintNumber(x + lbl_802B8EBC[4], y, eq.v[0], 0xC004);
+        TextPrintNumber(x + lbl_802B8EBC[5], y, eq.v[3], 0xC004);
+        TextPrintNumber(x + lbl_802B8EBC[6], y, eq.v[5], 0xC004);
+        TextPrintNumber(x + lbl_802B8EBC[7], y, eq.v[6], 0xC001);
+    }
+}
+
+void fn_801A20AC(Task_801A11B0* t) {
+    s32 b = 0;
+    s32 a = 0;
+    u16 cmd;
+    UiObj *ui;
+    if (t->w->sel == 2) {
+        if (t->w->st[1] != 1) {
+            t->w->sel = 1;
+            b = 1;
+        }
+        if (t->w->st[0] != 1) {
+            t->w->sel = 0;
+            a = 1;
+        }
+    } else {
+        if (t->w->st[0] != 1) {
+            a = 1;
+        } else if (t->w->st[1] != 1) {
+            t->w->sel = 1;
+        }
+        if (t->w->st[1] != 1) {
+            b = 1;
+        } else if (t->w->st[0] != 1) {
+            t->w->sel = 0;
+        }
+    }
+    ui = &t->w->p[3]->obj->o;
+    if (a != 0) {
+        s32 c = 0x14;
+        if (t->w->sel == 0) {
+            c = 0x15;
+        }
+        cmd = c;
+    } else {
+        cmd = 0x14;
+    }
+    UiObjSetCommand(ui, cmd, 0);
+    ui = &t->w->p[4]->obj->o;
+    if (b != 0) {
+        s32 c = 0x14;
+        if (t->w->sel == 1) {
+            c = 0x15;
+        }
+        cmd = c;
+    } else {
+        cmd = 0x14;
+    }
+    UiObjSetCommand(ui, cmd, 0);
+}
+
+void fn_801B0838(void* arg) {
+    ShopPart* t = arg;
+    TextSetColor(0xFF201008);
+    TextPrint(86.0f + t->obj->o.rect[0], 6.0f + t->obj->o.rect[1], t->obj->text);
+    TextPrint(224.0f + t->obj->o.rect[0], 6.0f + t->obj->o.rect[1], "Lv");
+    TextPrint(86.0f + t->obj->o.rect[0], 30.0f + t->obj->o.rect[1], "Hp    /");
+    TextPrint(224.0f + t->obj->o.rect[0], 30.0f + t->obj->o.rect[1], "Mp  /");
+    if (t->obj->h54 != 4) {
+        TextPrintNumber(248.0f + t->obj->o.rect[0], 6.0f + t->obj->o.rect[1], lbl_803471B8->w->m[t->obj->h56].b5, 0xC002);
+        TextPrintNumber(248.0f + t->obj->o.rect[0], 30.0f + t->obj->o.rect[1], lbl_803471B8->w->m[t->obj->h56].b6, 0xC002);
+        TextPrintNumber(284.0f + t->obj->o.rect[0], 30.0f + t->obj->o.rect[1], lbl_803471B8->w->m[t->obj->h56].b7, 0xC002);
+        TextPrintNumber(110.0f + t->obj->o.rect[0], 30.0f + t->obj->o.rect[1], lbl_803471B8->w->m[t->obj->h56].h10, 0xC004);
+        TextPrintNumber(170.0f + t->obj->o.rect[0], 30.0f + t->obj->o.rect[1], lbl_803471B8->w->m[t->obj->h56].h12, 0xC004);
+    }
+}
+
+ShopPart* fn_801B057C(ShopTask* t, u16 kind, u16 who) {
+    ShopPart* p = fn_802267AC(t, fn_801B02F4);
+    p->flag = fn_801E1A74(1, 0x58);
+    p->obj = fn_801E1A74(1, 0x6c);
+    p->obj->o.f38 = 1.0f;
+    p->obj->o.alpha = 1.0f;
+    p->obj->h56 = who;
+    p->obj->h54 = kind;
+    p->flag->h6 = lbl_803471B8->w->m[who].id;
+    p->flag->cb = fn_801B0838;
+    p->obj->o.alpha_en = 0;
+    p->flag->b0 = 0;
+    p->obj->o.tx = p->obj->o.x = -348.0f;
+    p->obj->o.ty = p->obj->o.y = lbl_802B8F20[kind].y;
+    p->obj->o.z = lbl_802B8F20[kind].z;
+    p->obj->h52 = 1;
+    p->obj->text = lbl_803471B8->w->m[who].name;
+    UiObjSetLowered(&p->obj->o);
+    return p;
+}
+
+ShopPart* fn_801B06CC(ShopTask* t, u16 kind, u16 who, f32 alpha) {
+    ShopPart* p = fn_802267AC(t, fn_801B02F4);
+    p->flag = fn_801E1A74(1, 0x58);
+    p->obj = fn_801E1A74(1, 0x6c);
+    p->obj->o.f38 = 1.0f;
+    p->obj2 = NULL;
+    p->obj->h56 = who;
+    p->obj->h54 = kind;
+    p->flag->h6 = lbl_803471B8->w->m[who].id;
+    p->flag->cb = fn_801B0838;
+    p->obj->o.alpha_en = 0;
+    p->obj->o.alpha = alpha;
+    p->flag->b0 = 0;
+    p->obj->o.tx = p->obj->o.x = -348.0f;
+    p->obj->o.ty = p->obj->o.y = lbl_802B8F20[kind].y;
+    p->obj->o.z = lbl_802B8F20[kind].z;
+    p->obj->h52 = 1;
+    p->obj->text = lbl_803471B8->w->m[who].name;
+    UiObjSetLowered(&p->obj->o);
+    return p;
+}
+
+extern void fn_801B4F78(s32 x, s32 y, u16 cur, u16 id);
+extern s16 fn_801C153C(s16 i, s16 cur);
+
+void fn_801B46EC(void* arg) {
+    ShopPart* t = arg;
+    MenuPanel* v = t->obj;
+    s16 id;
+    s32 i;
+    for (i = 0; i < 3; i++) {
+        id = lbl_803471B8->w->h10a[i];
+        if (id != -1) {
+            if (id == v->h56) {
+                TextSetColor(0x40201008);
+                TextPrint(260.0f + v->o.rect[0], 60.0f + v->o.rect[1] + (f32)(i * 25), lbl_802EC04C[2]);
+            } else {
+                TextSetColor(0xFF201008);
+                fn_801B4F78(v->o.rect[0], 60.0f + v->o.rect[1] + (f32)(i * 24), v->h56, lbl_803471B8->w->h10a[i]);
+            }
+            TextPrint(44.0f + v->o.rect[0], 60.0f + v->o.rect[1] + (f32)(i * 25), fn_801F4AE4(lbl_803471B8->w->h10a[i]));
+            fn_801B6BB4(v, &v->o.rect[0], lbl_803471B8->w->h10a[i], -1, 0x10, 0x3C + i * 25, v->o.alpha);
+        } else {
+            TextSetColor(0xFF201008);
+            TextPrint(44.0f + v->o.rect[0], 60.0f + v->o.rect[1] + (f32)(i * 25), lbl_802EC04C[0]);
+            fn_801B4F78(v->o.rect[0], 60.0f + v->o.rect[1] + (f32)(i * 24), v->h56, lbl_803471B8->w->h10a[i]);
+        }
+    }
+}
+
+void fn_801B4CF0(void* arg) {
+    ShopPart* t = arg;
+    MenuPanel* v = t->obj;
+    s32 i;
+    s32 sel;
+    u32 color;
+    f32 f;
+
+    for (i = 0; i < 4; i++) {
+        switch (fn_801C153C(i, v->h56)) {
+        case 0:
+            f = v->o.alpha;
+            color = 0xFF201008;
+            sel = -1;
+            fn_801B4F78(v->o.rect[0], 60.0f + v->o.rect[1] + (f32)(i * 24), v->h56, lbl_803471B8->w->d8[i].v);
+            break;
+        case 1:
+            f = 0.7f * v->o.alpha;
+            color = 0x40201008;
+            sel = 2;
+            break;
+        case 2:
+            f = 0.7f * v->o.alpha;
+            color = 0x40201008;
+            sel = 1;
+            break;
+        }
+        TextSetColor(color);
+        fn_801B6BB4(v, &v->o.rect[0], lbl_803471B8->w->d8[i].v, -1, 0x10, 0x3C + i * 25, f);
+        TextPrint(44.0f + v->o.rect[0], 60.0f + v->o.rect[1] + (f32)(i * 25), fn_801F4AE4(lbl_803471B8->w->d8[i].v));
+        if (sel != -1) {
+            TextPrint(236.0f + v->o.rect[0], 60.0f + v->o.rect[1] + (f32)(i * 25), lbl_802EC04C[sel]);
+        }
+    }
+}
+
+void fn_801B914C(ShopTask* t, u8 dir)
+{
+    u16 old;
+    ShopPart* s;
+    s32 i;
+    u16 ok;
+    s = t->w->parts[8];
+    old = s->list->tab;
+    switch (dir) {
+    case 0:
+        s->list->tab = 0;
+        goto fwd;
+    case 2:
+        if (old == 4) s->list->tab = 0;
+        else s->list->tab = old + 1;
+    case 1:
+    fwd:
+        for (i = 0; i < 5; i++) {
+            ok = fn_801B952C(t->w->parts[8]->list->tab);
+            if (ok != 0) break;
+            s->list->tab++;
+            if (s->list->tab == 5) s->list->tab = 0;
+        }
+        if ((s32)old != s->list->tab) {
+            s->list->page = 0;
+            s->list->row = 0;
+            s->x38->hc = 0;
+        }
+        return;
+    case 3:
+        if (old == 0) s->list->tab = 5;
+        s->list->tab--;
+        for (i = 0; i < 5; i++) {
+            ok = fn_801B952C(t->w->parts[8]->list->tab);
+            if (ok != 0) break;
+            if (s->list->tab == 0) s->list->tab = 5;
+            s->list->tab--;
+        }
+        if ((s32)old != s->list->tab) {
+            s->list->page = 0;
+            s->list->row = 0;
+            s->x38->hc = 0;
+        }
+        break;
+    }
+}
+

@@ -15,7 +15,8 @@ typedef struct UiObj {
     f32 rdx, rdy; /* 0x1C "raise" offset (highlighted panels move 12 px right, 4 px up) */
     f32 rect[4];  /* 0x24 draw position from UiObjCalcRect */
     f32 alpha;    /* 0x34 0.7 lowered, 1.0 raised (when alpha_en) */
-    u8 pad38[8];
+    f32 f38;      /* 0x38 */
+    f32 f3c;      /* 0x3C */
     u8 alpha_en; /* 0x40 */
     u8 raised;   /* 0x41 */
     u16 frames;  /* 0x42 move frames left */
