@@ -167,9 +167,10 @@ void fn_8022D34C(s32 a, f32 b) {
     }
 }
 
-extern void fn_8022E964(void*, void*);
+void fn_8022E964(Node *n, s32 mask);
+extern void fn_8022EF58(Node *n, s32 mask);
 extern char lbl_8034C750;
-void fn_8022E8F8(void* p, void* arg) {
+void fn_8022E8F8(void* p, s32 arg) {
     if (!(*(u32*)p & 0x80000000)) {
         if (strncmp((const char*)p, &lbl_8034C750, 4) == 0) {
             p = (u8*)p + 8;
@@ -178,6 +179,64 @@ void fn_8022E8F8(void* p, void* arg) {
         }
     }
     fn_8022E964(p, arg);
+}
+
+static inline void E964_SetFlags(Node *n, s32 mask)
+{
+    s16 *cur = NULL;
+    s16 *next;
+
+    if (fn_8022E734(8, n, &cur, &next, 1, 0, 0)) {
+        do {
+            *cur &= 0xfff;
+            *cur |= mask;
+            cur = next;
+        } while (fn_8022E734(8, n, &cur, &next, 0, 0, 0));
+    }
+}
+
+static inline void E964_Leaf(Node *n, s32 mask)
+{
+    fn_8022EF58(n, mask);
+    if (n->child != NULL) {
+        fn_8022E964(n->child, mask);
+    }
+    if (n->next != NULL) {
+        fn_8022E964(n->next, mask);
+    }
+}
+
+static inline void E964_Lvl2(Node *n, s32 mask)
+{
+    E964_SetFlags(n, mask);
+    if (n->child != NULL) {
+        E964_Leaf(n->child, mask);
+    }
+    if (n->next != NULL) {
+        E964_Leaf(n->next, mask);
+    }
+}
+
+static inline void E964_Lvl1(Node *n, s32 mask)
+{
+    E964_SetFlags(n, mask);
+    if (n->child != NULL) {
+        E964_Lvl2(n->child, mask);
+    }
+    if (n->next != NULL) {
+        E964_Lvl2(n->next, mask);
+    }
+}
+
+void fn_8022E964(Node *n, s32 mask)
+{
+    E964_SetFlags(n, mask);
+    if (n->child != NULL) {
+        E964_Lvl1(n->child, mask);
+    }
+    if (n->next != NULL) {
+        E964_Lvl1(n->next, mask);
+    }
 }
 
 void fn_8022F00C(void *p) {
@@ -200,7 +259,8 @@ void fn_8022F030(void *p, s32 a, s32 b) {
 }
 
 s16 *fn_8023080C(void *p, s16 *v, s16 *res);
-extern void fn_8022F6B8(void*, u32);
+void fn_8022F6B8(Node *n, s32 mask);
+extern void fn_8022FCE4(Node *n, s32 mask);
 void fn_8022F64C(void* p, u32 arg) {
 
     if (!(*(u32*)p & 0x80000000)) {
@@ -211,6 +271,65 @@ void fn_8022F64C(void* p, u32 arg) {
         }
     }
     fn_8022F6B8(p, arg);
+}
+
+static inline void F6B8_SetFlags(Node *n, s32 mask)
+{
+    s16 *cur = NULL;
+    s16 *next;
+
+    if (fn_8022E734(8, n, &cur, &next, 1, 0, 0)) {
+        do {
+            cur++;
+            *cur &= 0xefff;
+            *cur |= mask;
+            cur = next;
+        } while (fn_8022E734(8, n, &cur, &next, 0, 0, 0));
+    }
+}
+
+static inline void F6B8_Leaf(Node *n, s32 mask)
+{
+    fn_8022FCE4(n, mask);
+    if (n->child != NULL) {
+        fn_8022F6B8(n->child, mask);
+    }
+    if (n->next != NULL) {
+        fn_8022F6B8(n->next, mask);
+    }
+}
+
+static inline void F6B8_Lvl2(Node *n, s32 mask)
+{
+    F6B8_SetFlags(n, mask);
+    if (n->child != NULL) {
+        F6B8_Leaf(n->child, mask);
+    }
+    if (n->next != NULL) {
+        F6B8_Leaf(n->next, mask);
+    }
+}
+
+static inline void F6B8_Lvl1(Node *n, s32 mask)
+{
+    F6B8_SetFlags(n, mask);
+    if (n->child != NULL) {
+        F6B8_Lvl2(n->child, mask);
+    }
+    if (n->next != NULL) {
+        F6B8_Lvl2(n->next, mask);
+    }
+}
+
+void fn_8022F6B8(Node *n, s32 mask)
+{
+    F6B8_SetFlags(n, mask);
+    if (n->child != NULL) {
+        F6B8_Lvl1(n->child, mask);
+    }
+    if (n->next != NULL) {
+        F6B8_Lvl1(n->next, mask);
+    }
 }
 
 s16 *fn_802307EC(void *p, s16 *v, s16 *res) {

@@ -74,7 +74,12 @@ extern Task* lbl_80347394;
 typedef struct ChrRec { u8 pad0[0x1c]; u32 bits; } ChrRec;
 extern ChrRec* lbl_80309DE4[];
 extern s32 fn_8000F718(void* p, s32 a, s32 b);
-extern void fn_8000F6F8(void* obj, s32 a, s32 b, s32 c, s32 d);
+typedef struct HNode {
+    u8 pad0[0x2c];
+    struct HNode* child;   /* 0x2c */
+    struct HNode* sibling; /* 0x30 */
+} HNode;
+extern void fn_8000F6F8(HNode* n, u8 kind, s32 a, s32 b, s32 c);
 typedef struct Entry16 {
     u8 pad[8];
     s8 mode;
@@ -1932,9 +1937,54 @@ void fn_8000E0D8(E0D8Obj *obj) {
     }
 }
 
-extern void fn_8000F2A0(void);
-void fn_8000F6F8(void* obj, s32 a, s32 b, s32 c, s32 d) {
-    fn_8000F2A0();
+extern s32 fn_8022E734(u8 kind, void* p, void* a, void* b, s32 f1, s32 f2, s32 f3);
+extern void fn_8022E4CC(HNode* o, s32 a, s32 b, s32 c, s32 d, s32 e);
+void fn_8000F2A0(HNode* n, u8 kind, s32 a, s32 b, s32 c);
+
+static inline void visit(HNode* n, u8 kind, s32 a, s32 b, s32 c) {
+    s32 s0 = 0, s1;
+    if (fn_8022E734(kind, n, &s0, &s1, 1, 0, 0)) {
+        fn_8022E4CC(n, a, b, c, 0, 0);
+        fn_8022E4CC(n, a, b, c, 1, 0);
+    }
+}
+
+static inline void walk0(HNode* n, u8 kind, s32 a, s32 b, s32 c) {
+    visit(n, kind, a, b, c);
+    if (n->child != 0) {
+        fn_8000F2A0(n->child, kind, a, b, c);
+    }
+    if (n->sibling != 0) {
+        fn_8000F2A0(n->sibling, kind, a, b, c);
+    }
+}
+
+static inline void walk1(HNode* n, u8 kind, s32 a, s32 b, s32 c) {
+    visit(n, kind, a, b, c);
+    if (n->child != 0) {
+        walk0(n->child, kind, a, b, c);
+    }
+    if (n->sibling != 0) {
+        walk0(n->sibling, kind, a, b, c);
+    }
+}
+
+void fn_8000F2A0(HNode* n, u8 kind, s32 a, s32 b, s32 c) {
+    s32 s0 = 0, s1;
+    if (fn_8022E734(kind, n, &s0, &s1, 1, 0, 0)) {
+        fn_8022E4CC(n, a, b, c, 0, 0);
+        fn_8022E4CC(n, a, b, c, 1, 0);
+    }
+    if (n->child != 0) {
+        walk1(n->child, kind, a, b, c);
+    }
+    if (n->sibling != 0) {
+        walk1(n->sibling, kind, a, b, c);
+    }
+}
+
+void fn_8000F6F8(HNode* n, u8 kind, s32 a, s32 b, s32 c) {
+    fn_8000F2A0(n, kind, a, b, c);
 }
 
 void fn_80018764(Tk* t, f32* a, f32* b) {
