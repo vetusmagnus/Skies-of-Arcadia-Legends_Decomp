@@ -7,11 +7,12 @@
  * table, the inventory tables at 0x354..0xaac, the gold word and the option bytes. */
 typedef struct SaveChar {
     s16 x0;
-    u8 pad2[0xa];
+    u8 pad2[9];
+    u8 xb;                  /* 0x0b */
     u8 xc;
     s8 mp;                  /* 0x0d */
     s8 mpMax;
-    u8 xf;
+    s8 xf;                  /* 0x0f */
     s16 slot0;              /* 0x10 */
     s16 slot1;
     s16 slot2;
@@ -33,6 +34,16 @@ typedef struct SaveChar {
 } SaveChar;
 /* 0x5c */
 typedef struct { s16 id; s8 cnt; u8 pad; } InvEnt;
+
+/* The block at 0x1568 of the save data; the field names give the offset in SaveData. */
+typedef struct Save1568 {
+    s8 b1568;                   /* 0x00 */
+    u8 x1569;                   /* 0x01 */
+    u8 pad156a[0x12];
+    s32 x157c;                  /* 0x14 */
+    s16 s1580[5];               /* 0x18 */
+    s16 s158a[5];               /* 0x22 */
+} Save1568;
 
 typedef struct SaveData {
     SaveChar chr[8];            /* 0x000 */
@@ -61,12 +72,7 @@ typedef struct SaveData {
     u8 padb4d[3];
     u8 xb50;
     u8 padb51[0x1568 - 0xb51];
-    s8 b1568;
-    u8 x1569;
-    u8 pad156a[0x12];
-    s32 x157c;
-    s16 s1580[5];
-    s16 s158a[5];
+    Save1568 x1568;             /* 0x1568 */
     u8 pad1594[0x16A0 - 0x1594];
 } SaveData;
 

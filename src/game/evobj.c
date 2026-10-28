@@ -2518,18 +2518,18 @@ int fn_801F039C(int a, s16 kind)
 
     switch (kind) {
     case 0x64:
-        g->x157c += it->amount * 10;
-        if (g->x157c > cfg->limit) {
-            g->x157c = cfg->limit;
+        g->x1568.x157c += it->amount * 10;
+        if (g->x1568.x157c > cfg->limit) {
+            g->x1568.x157c = cfg->limit;
         }
         ItemChance(a);
         break;
     case 0x65:
-        g->x157c = cfg->limit;
+        g->x1568.x157c = cfg->limit;
         ItemChance(a);
         break;
     case 0x73:
-        g->x1569++;
+        g->x1568.x1569++;
         fn_8021B2B4();
         ItemChance(a);
         break;
@@ -2855,10 +2855,10 @@ void fn_801F1590(Menu *m, Slot *arr, s32 n, s32 mode)
     i = 0;
     chr = m->chr;
     pa = &lbl_8030B7F4.chr[chr].slot0;
-    pb = &lbl_8030B7F4.s1580[chr];
+    pb = &lbl_8030B7F4.x1568.s1580[chr];
     pc = &lbl_8030B7F4.chr[chr].slot1;
     pd = &lbl_8030B7F4.chr[chr].slot2;
-    pe = &lbl_8030B7F4.s158a[chr];
+    pe = &lbl_8030B7F4.x1568.s158a[chr];
     for (; i < n; arr++, i++) {
         id = arr->id;
         if (id == -1) continue;

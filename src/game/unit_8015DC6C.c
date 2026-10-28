@@ -1,6 +1,7 @@
 #include "types.h"
 #include "game/stat_8030B4D4.h"
 #include "game/work_8030CEA0.h"
+#include "game/save_8030B7F4.h"
 #include "game/task.h"
 #include "game/menu.h"
 #include "ninja.h"
@@ -52,7 +53,9 @@ typedef struct CampPnl {
 } CampPnl;
 /* camp_work: the camp menu's panels and the state of each screen. */
 typedef struct CampWork {
-    u8 pad0[0xC];
+    s8 *ids;            /* 0x000 */
+    void *p04;          /* 0x004 */
+    u8 pad08[4];
     s8 count;           /* 0x00C */
     u8 pad0d[3];
     CampPnl *pnl[0xB9]; /* 0x010 */
@@ -68,7 +71,7 @@ extern CampCtrl lbl_80307638[22];
 extern CampTask *lbl_8034710C;
 /* One entry of a camp menu request (fn_80195EA4 fills six). */
 typedef struct CampEnt {
-    u8 x0;            /* 0x00 */
+    s8 x0;            /* 0x00 */
     u8 x1;            /* 0x01 */
     u8 x2;            /* 0x02 */
     u8 pad3;
@@ -206,13 +209,12 @@ typedef struct Obj_8016645C { u8 pad[0x1d8]; Sub_8016645C *x1d8; } Obj_8016645C;
 typedef struct Arg { u8 pad[0x1c]; u32 x1c; u32 x20; } Arg;
 extern u8 lbl_80310B3C[];
 void fn_8016DBAC(void *out, void *p);
-extern u8 lbl_8030B7F4[0x16a0];
 typedef struct Out {
     f32 f0;
     u8 pad4;
     s8 idx;
     u8 pad6[2];
-    u8 *rec;
+    SaveChar *rec;
     u8 b0c;
     u8 pad_d[3];
     s32 i10;
@@ -963,7 +965,7 @@ typedef struct {
 typedef struct {
     u8 pad0;
     u8 a;  /* 0x01 */
-    u8 b;  /* 0x02 */
+    s8 b;  /* 0x02 */
     u8 c;  /* 0x03 */
     s32 d; /* 0x04 */
     u32 e; /* 0x08 */
@@ -1385,7 +1387,6 @@ extern s32 fn_8019A21C(u32 mask, s32 d, s32 n, s32 unused, s32 max);
 typedef struct { s32 hide; u8 pad4[4]; UiObj obj; u8 pad_[0xbc - 8 - sizeof(UiObj)]; void* sub; } Win_8017A754;
 typedef struct { u8 pad[0x24]; Win_8017A754* in; } Pnl_8017A754;
 typedef struct { u8 pad[0xc]; s8 count; u8 pad1[3]; Pnl_8017A754* pnl[0xcf]; f32 f34c, f350, f354; } CampW_8017A754;
-extern u8 lbl_8030B7F4[0x16A0];
 extern s32 (*lbl_802E9418[3])(void);
 typedef struct { s32 hide; u8 pad4[4]; UiObj obj; u8 pad_[0xbc - 8 - sizeof(UiObj)]; void* sub; } Win_8017A8A8;
 typedef struct { u8 pad[0x24]; Win_8017A8A8* in; } Pnl_8017A8A8;
@@ -2634,16 +2635,16 @@ s32 fn_8016E1D8(void *p) {
 }
 
 void fn_8016F0D4(Out *o, s8 idx, f32 f) {
-    u8 *r;
+    SaveChar *r;
     o->f0 = f;
     o->idx = idx;
-    r = lbl_8030B7F4 + (s32)idx * 0x5c;
+    r = &lbl_8030B7F4.chr[idx];
     o->rec = r;
-    o->b0c = r[0xb];
-    o->i10 = *(s16 *)(r + 0x18);
-    o->i14 = *(s16 *)(r + 0x1a);
-    o->i18 = (s8)r[0xd];
-    o->i1c = (s8)r[0xe];
+    o->b0c = r->xb;
+    o->i10 = r->hp;
+    o->i14 = r->hpMax;
+    o->i18 = r->mp;
+    o->i1c = r->mpMax;
 }
 
 void fn_8016F128(Rec_8016F128* r, u8 a, u8 b, f32 v)
@@ -3146,9 +3147,257 @@ s32 fn_8017B6F4(void) {
 s32 fn_8018126C(void) {
     CampReq req;
     s32 off = lbl_80307638[1].cur[0].sel;
-    s8 v = (s8)lbl_8030B7F4[off + 0x328];
+    s32 v = lbl_8030B7F4.party[off];
     fn_80195EA4(&req, v, 0, 0, 2);
     return req.xc;
+}
+
+/* The item table (as in evobj.c). */
+typedef struct Item {
+    u8 pad00[0x12];
+    s8 kind;
+    u8 flag;
+    u8 chance;
+    u8 pad15[7];
+    s16 amount;
+    u8 pad1e[6];
+} Item;
+extern const Item lbl_802C7C34[];
+extern CampCtrl* fn_80195540(CampReq* r);
+extern void fn_80182DF4(void);
+extern void fn_80181D94(void);
+
+static inline s32 CampKind(void) {
+    CampReq req;
+    CampCtrl* s = lbl_80307638;
+    s32 kind;
+    s32 special;
+    s32 v;
+    s32 id;
+    s32 who;
+    if (s[3].cur[0].sel == 1) {
+        kind = 0;
+    } else if (s[7].cur[1].sel == 0) {
+        who = lbl_8030B7F4.party[s[7].cur[0].sel];
+        fn_80195EA4(&req, who, s[7].cur[1].sel, s[7].cur[4].sel, 0);
+        id = req.e[s[7].cur[0].sel].x6 - 0xf0;
+        v = lbl_802C7C34[id].kind;
+        switch (v) {
+        case 0x35:
+        case 0x4b:
+        case 0x4c:
+            special = 1;
+            break;
+        default:
+            special = 0;
+            break;
+        }
+        if (special != 0) {
+            kind = 3;
+        } else {
+            kind = 1;
+        }
+    } else {
+        kind = 2;
+    }
+    return kind;
+}
+
+s32 fn_801818EC(void) {
+    CampCtrl* slots = lbl_80307638;
+    CampCtrl* ctrl = lbl_8034710C->holder->ctrl;
+    CampReq req;
+    CampCtrl* slot;
+
+    slot = fn_80195540(&req);
+    if (req.e[slot->cur[0].sel].x0 == 0) {
+        fn_801929B8(3);
+        return -1;
+    }
+    slot = fn_80195540(&req);
+    switch (req.e[slot->cur[0].sel].x4) {
+    case 1:
+        if (fn_801C09F8(lbl_80347154, 5) != 0) {
+            ctrl->cur[0].x8 = ctrl->cur[0].sel;
+            ctrl->cur[0].sel = fn_8019A21C(ctrl->cur[0].mask, 1, ctrl->cur[0].sel, 0, 7);
+            goto moved_cursor;
+        } else if (fn_801C09F8(lbl_80347154, 4) != 0) {
+            ctrl->cur[0].x8 = ctrl->cur[0].sel;
+            ctrl->cur[0].sel = fn_8019A21C(ctrl->cur[0].mask, -1, ctrl->cur[0].sel, 0, 7);
+            goto moved_cursor;
+        } else if (fn_801C09F8(lbl_80347154, 2) != 0) {
+            goto confirm;
+        } else if (fn_801C09F8(lbl_80347154, 1) != 0) {
+            fn_801929B8(5);
+            return -1;
+        }
+        goto done;
+    case 2:
+        if (fn_801C09F8(lbl_80347154, 2) != 0) {
+            goto confirm;
+        } else if (fn_801C09F8(lbl_80347154, 1) != 0) {
+            return -1;
+        }
+        goto done;
+    case 0:
+    case 0xf0:
+        if (fn_801C09F8(lbl_80347154, 2) != 0) {
+            goto confirm;
+        } else if (fn_801C09F8(lbl_80347154, 1) != 0) {
+            return -1;
+        }
+        goto done;
+    default:
+        goto done;
+    }
+
+moved_cursor:
+    {
+        CampPnl** objs = camp_work.pnl;
+        UiObjSetCommand(&objs[ctrl->cur[0].sel]->win->obj, 0x15, 0);
+        fn_801929B8(4);
+        UiObjSetCommand(&objs[ctrl->cur[0].x8]->win->obj, 0x14, 0);
+        fn_801929B8(4);
+    }
+    goto done;
+
+confirm:
+    {
+        s32 id0;
+        s32 party;
+        s8 a;
+        s8 b;
+        CampCtrl* sel;
+        CampPnl** objs;
+        s32 idx;
+        slot = fn_80195540(&req);
+        id0 = req.e[slot->cur[0].sel].x6;
+        switch (CampKind()) {
+        case 2:
+            fn_80182DF4();
+            break;
+        case 1:
+            fn_80182DF4();
+            break;
+        case 0:
+            fn_80182DF4();
+            break;
+        case 3:
+            fn_80182DF4();
+            break;
+        }
+        slot = fn_80195540(&req);
+        if (id0 != req.e[slot->cur[0].sel].x6) {
+            a = slot->cur[1].sel;
+            b = slot->cur[4].sel;
+            fn_80181D94();
+            sel = fn_80195540(&req);
+            party = lbl_8030B7F4.party[slots[1].cur[0].sel];
+            fn_80195EA4(&req, party, a, b, 0);
+            if (req.b != -1) {
+                sel->cur[1].sel = a;
+                if (req.count > b) {
+                    sel->cur[4].sel = b;
+                    if (fn_80195D8C(party, sel->cur[1].sel, 0, sel->cur[4].sel) <= sel->cur[0].sel) {
+                        sel->cur[0].sel--;
+                    }
+                }
+            }
+            objs = camp_work.pnl;
+            objs[0x34]->win->f74 = -4000.0f;
+            objs[0x35]->win->f74 = -4000.0f;
+            objs[0x36]->win->f74 = -4000.0f;
+            objs[0x37]->win->f74 = -4000.0f;
+            objs[0x38]->win->f74 = -4000.0f;
+            objs[0x39]->win->f74 = -4000.0f;
+            idx = sel->cur[1].sel + 0x34;
+            objs[idx]->win->f74 += 150.0f;
+            objs[idx]->win->f74 += 150.0f;
+            return -1;
+        }
+    }
+done:
+    return 0;
+}
+
+void fn_801825D8(void) {
+    CampCtrl* ctrl = lbl_8034710C->holder->ctrl;
+    s32 i;
+    UiObj* ui;
+    CampCtrl* slot;
+    CampReq req;
+
+    switch (CampKind()) {
+    case 0:
+        for (i = 0; i < camp_work.count; i++) {
+            ui = &camp_work.pnl[i]->win->obj;
+            UiObjMoveTo(ui, 6, 4, -8.0f, (f32)(61 + i * 64));
+            slot = fn_80195540(&req);
+            switch (req.e[slot->cur[0].sel].x4) {
+            case 1:
+                if (ctrl->cur[0].sel == i) {
+                    UiObjSetCommand(ui, 10, i);
+                } else {
+                    UiObjSetCommand(ui, 0xf, i + 1);
+                }
+                break;
+            case 2:
+                UiObjSetCommand(ui, 10, i);
+                break;
+            }
+        }
+        if (fn_801953B8() != 0) {
+            ui = &camp_work.pnl[4]->win->obj;
+            UiObjMoveTo(ui, 6, 4, -8.0f, 317.0f);
+            slot = fn_80195540(&req);
+            switch (req.e[slot->cur[0].sel].x4) {
+            case 2:
+                break;
+            case 1:
+                if (ctrl->cur[0].sel == 4) {
+                    UiObjSetCommand(ui, 10, 4);
+                } else {
+                    UiObjSetCommand(ui, 0xf, 5);
+                }
+                break;
+            }
+        }
+        break;
+    case 1:
+        for (i = 0; i < camp_work.count; i++) {
+            ui = &camp_work.pnl[i]->win->obj;
+            UiObjMoveTo(ui, 6, 4, -8.0f, (f32)(61 + i * 64));
+            slot = fn_80195540(&req);
+            switch (req.e[slot->cur[0].sel].x4) {
+            case 1:
+                if (ctrl->cur[0].sel == i) {
+                    UiObjSetCommand(ui, 10, i);
+                } else {
+                    UiObjSetCommand(ui, 0xf, i + 1);
+                }
+                break;
+            case 2:
+                UiObjSetCommand(ui, 10, i);
+                break;
+            }
+        }
+        break;
+    case 2:
+        if (fn_801953B8() != 0) {
+            ui = &camp_work.pnl[4]->win->obj;
+            UiObjMoveTo(ui, 6, 4, -8.0f, 317.0f);
+            UiObjSetCommand(ui, 10, 4);
+        }
+        break;
+    case 3:
+        ui = &camp_work.pnl[149]->win->obj;
+        UiObjMoveTo(ui, 6, 4, -8.0f, 61.0f);
+        UiObjSetCommand(ui, 10, 0);
+        ui = &camp_work.pnl[150]->win->obj;
+        UiObjMoveTo(ui, 6, 4, 328.0f, 61.0f);
+        UiObjSetCommand(ui, 10, 0);
+        break;
+    }
 }
 
 void fn_80186E20(Rec_80186E20* r, u8 c, s8 b, u8 a, f32 v)
@@ -3233,17 +3482,17 @@ void fn_80192800(void)
 
 void fn_80192920(void)
 {
-    s16* p = (s16*)(lbl_8030B7F4 + 0x1568);
+    Save1568* p = &lbl_8030B7F4.x1568;
     s32 i;
 
     for (i = 0; i < 5; i++) {
-        if (p[12 + i] != -1) {
-            fn_801C1148(p[12 + i], 1);
+        if (p->s1580[i] != -1) {
+            fn_801C1148(p->s1580[i], 1);
         }
     }
     for (i = 0; i < 3; i++) {
-        if (p[17 + i] != -1) {
-            fn_801C1148(p[17 + i], 1);
+        if (p->s158a[i] != -1) {
+            fn_801C1148(p->s158a[i], 1);
         }
     }
 }
@@ -3515,7 +3764,7 @@ s32 fn_801812C0(void)
 {
     CampReq req;
     s32 off = lbl_80307638[1].cur[0].sel;
-    s8 v = (s8)lbl_8030B7F4[off + 0x328];
+    s32 v = lbl_8030B7F4.party[off];
     s8 r;
     fn_80195EA4(&req, v, 0, 0, 2);
     r = req.x0b;
@@ -3935,8 +4184,8 @@ void fn_8017B0F8(void) {
 s32 fn_80183750(s8 a)
 {
     if (a < 4) {
-        CampRec_UNIT0000* r = &((CampRec_UNIT0000*)lbl_8030B7F4)[((CampWork_UNIT0000*)CWB)->ids[a]];
-        return r->x1a > r->x18;
+        SaveChar* r = &lbl_8030B7F4.chr[camp_work.ids[a]];
+        return r->hpMax > r->hp;
     }
     if (fn_801953B8() == 0) {
         return 0;
@@ -3950,7 +4199,7 @@ s32 fn_80183750(s8 a)
 
 s32 fn_80183800(s32 a, s32 b)
 {
-    s16 v = fn_801838C8(a, *((s8*)lbl_8030B7F4 + b + 0x328));
+    s16 v = fn_801838C8(a, lbl_8030B7F4.party[b]);
     switch (a) {
     case 0x36: case 0x37: case 0x38: case 0x39: case 0x3a:
         return v < 0x3e7;
@@ -4285,17 +4534,17 @@ void fn_801925D8(void)
 
 void fn_80192888(void)
 {
-    s16* p = (s16*)(lbl_8030B7F4 + 0x1568);
+    Save1568* p = &lbl_8030B7F4.x1568;
     s32 i;
 
     for (i = 0; i < 5; i++) {
-        if (p[12 + i] != -1) {
-            fn_801C0FE8(p[12 + i], 1);
+        if (p->s1580[i] != -1) {
+            fn_801C0FE8(p->s1580[i], 1);
         }
     }
     for (i = 0; i < 3; i++) {
-        if (p[17 + i] != -1) {
-            fn_801C0FE8(p[17 + i], 1);
+        if (p->s158a[i] != -1) {
+            fn_801C0FE8(p->s158a[i], 1);
         }
     }
 }
@@ -5323,9 +5572,9 @@ s32 fn_80189A70(s32 id, u32* out) {
     s32 i;
     *out = 0;
     for (i = 0; i < (s8)CWB[0xc]; i++) {
-        CampRec_80189A70* r = &((CampRec_80189A70*)lbl_8030B7F4)[(s8)lbl_8030B7F4[0x328 + i]];
-        if (id == r->id) {
-            switch (r->kind) {
+        SaveChar* r = &lbl_8030B7F4.chr[lbl_8030B7F4.party[i]];
+        if (id == r->slot0) {
+            switch (r->xf) {
             case 0: *out = 0xff20ff0a; break;
             case 1: *out = 0xffff4020; break;
             case 2: *out = 0xffc800ff; break;
@@ -9007,7 +9256,7 @@ typedef struct Chr_801838C8 {
     u8 pad1c[0x5c - 0x1c];
 } Chr_801838C8;
 s16 fn_801838C8(s32 kind, s32 idx) {
-    Chr_801838C8* c = &((Chr_801838C8*)lbl_8030B7F4)[idx];
+    SaveChar* c = &lbl_8030B7F4.chr[idx];
     StatRec* s = &lbl_8030B4D4.chr[idx];
     s16 r = 0;
     switch (kind) {
@@ -9016,8 +9265,8 @@ s16 fn_801838C8(s32 kind, s32 idx) {
     case 0x38: r = s->x48[2]; break;
     case 0x39: r = s->x48[3]; break;
     case 0x3a: r = s->x48[4]; break;
-    case 0x3b: r = c->x1a; break;
-    case 0x3c: r = c->xe; break;
+    case 0x3b: r = c->hpMax; break;
+    case 0x3c: r = c->mpMax; break;
     }
     return r;
 }
@@ -9262,7 +9511,7 @@ void fn_80184E2C(void) {
 
     for (i = 0; i < (*(CampWork_80184E2C*)&camp_work).count; i++) {
         p = (*(CampWork_80184E2C*)&camp_work).pnl[i * 5 + 8];
-        who = (*(Game*)&lbl_8030B7F4).party[i];
+        who = lbl_8030B7F4.party[i];
         switch (who) {
         case 0:
             s = fn_801D68C4(lbl_803470F0, 0x2b);

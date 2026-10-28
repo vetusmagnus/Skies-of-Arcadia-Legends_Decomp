@@ -760,7 +760,7 @@ s32 fn_801FDA70(u32 a, Scpt *st) {
     u16 f = a;
     if (a & 1) {
         st->cur.b += 4;
-        *(u32 *)&lbl_8030B7F4.x157c = *(u32 *)(lbl_8030B4D4 + 0x2dc);
+        *(u32 *)&lbl_8030B7F4.x1568.x157c = *(u32 *)(lbl_8030B4D4 + 0x2dc);
     }
     if (f & 8) return 1;
     return 0;

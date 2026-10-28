@@ -2435,7 +2435,7 @@ static inline void fill(s8 *out) {
 void fn_8021B2B4(void) {
     s8 buf[22];
     fill(buf);
-    fn_8021AF94(&lbl_8030B4D4.limit, &lbl_8030B7F4.b1568, buf);
+    fn_8021AF94(&lbl_8030B4D4.limit, &lbl_8030B7F4.x1568.b1568, buf);
 }
 
 typedef struct { f32 x, y, z; u32 colour; } VertexCol;

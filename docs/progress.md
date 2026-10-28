@@ -1597,3 +1597,30 @@ Not merged yet, with what each needs:
 - fn_8009ED04, fn_800A2D2C (unit_800972AC.c): agents used ninja_lib.h and a private NJS_OBJECT copy.
 - unit_801F5334.c handlers: the unit already reads the script stream through `union ScptCur` and keeps per-command
   work in a union at Scpt 0x30; the batch 13 rejections were for the same pattern, so that needs one decision first.
+
+## Struct unification of the batch 13 held-back matches, pass 2: camp menu (2026-10-28)
+
+By hand, no agents. 6 more merged in unit_8015DC6C.c (5,139 of 7,117): fn_80173F30, fn_80179760, fn_8017A040,
+fn_8017B6F4, fn_801818EC, fn_801825D8.
+- `CampCtrl` (0x78) is the control block of one camp menu screen: seven 0x10-byte `CampCur` cursors (`x0`, `sel`,
+  `x8`, `mask`; `mask` is the `u32` row mask fn_8019A21C takes), `state` at 0x70 and `f74`. `lbl_80307638` is
+  `CampCtrl[22]` (one per screen; it was `u8[0xA50]` read with raw offsets) and the camp task `lbl_8034710C` is a
+  `CampTask` whose work's first word points at the current one. The 48 per-function ctrl/holder/task views
+  (Ctrl_*, Ctl*, Holder_*, Outer_*, MS_*) and their casts are gone (build/agents/cm/step3.py).
+- `camp_work` is one `CampWork`: `ids` 0x0, `count` 0xC, `CampPnl *pnl[0xB9]` (a panel task, `CampWin` work at
+  0x24), `u32 state[22]` at 0x2F4 (one per screen, like lbl_80307638), f34c-f358. The other panel/window views and
+  the `CWB`/`PNL*`/`CW*` raw-offset macros of the older functions are still there (next cleanup).
+- `CampReq`/`CampEnt` (0x88, filled by fn_80195EA4) replace `Tmp`/`SrcRec` and the `s32 buf[0x20]` buffers. The camp
+  unit now declares fn_80195EA4 as its definition does, `(CampReq *, s8, s32, s32, s8)`; unit_80193F28.c's
+  definition takes `s32 c` (was `u8`, matches either way). fn_80189900 takes `(Dst_80189958 *, s8, s8, s32, s8)`
+  (its `(s8)` casts and byte offsets are gone) and fn_80189958 `(Dst *, void *, s8, s32, s8, s32)`.
+- The unit includes save_8030B7F4.h instead of `u8 lbl_8030B7F4[0x16A0]`. `SaveChar` gained `xb`, `xf` is `s8`,
+  and SaveData 0x1568-0x1594 is a `Save1568` block (fn_80192888/fn_80192920 keep a pointer to it: the asm indexes
+  from 0x1568). Users in evobj.c, unit_80199B9C.c, unit_801F5334.c, unit_80219378.c now write `.x1568.`.
+- `SaveData.party` stays `s8`: the "lbz + extsb" of the camp near misses comes from an `s32` local passed to an `s8`
+  parameter, not from a `u8` party (u8 breaks six matched functions that compare with -1).
+
+Left in the camp unit: fn_801920AC (the menu's controlling task: `Task` needs its word at 0x14 named and
+`lbl_803470FC`'s 4-byte work typed as `{ CampWork *cw; }`), fn_801649BC (a model object of the 0x1D8 family; the
+agent used ninja_lib.h), the near misses fn_80175EE8 and fn_80177348 (no agent source kept), and the remaining raw
+camp_work offsets in older functions.

@@ -5719,7 +5719,7 @@ void fn_801A6BDC(ShopTask* t) {
                 t->w->state = 10;
                 break;
             default:
-                if (fn_801F3FD0(0, t->w->item) == 2 && lbl_8030B7F4.b1568 != -1) {
+                if (fn_801F3FD0(0, t->w->item) == 2 && lbl_8030B7F4.x1568.b1568 != -1) {
                     ShopShowEquip(t);
                 } else {
                     t->w->state = 10;
@@ -5827,7 +5827,7 @@ void fn_801A6BDC(ShopTask* t) {
             fn_801C1728(t->w->item, 2);
             fn_801C1728(t->w->item, 3);
             for (i = 0; i < 4; i++) {
-                t->w->parts[lbl_802B69E8[i].idx] = fn_801AFBE8(t, i, 0, lbl_8030B7F4.s158a[i] == t->w->item ? 0.7f : 1.0f);
+                t->w->parts[lbl_802B69E8[i].idx] = fn_801AFBE8(t, i, 0, lbl_8030B7F4.x1568.s158a[i] == t->w->item ? 0.7f : 1.0f);
                 UiObjMoveToX(&t->w->parts[lbl_802B69E8[i].idx]->obj->o, 6, 4, lbl_802B69E8[i].x);
                 UiObjSetCommand(&t->w->parts[lbl_802B69E8[i].idx]->obj->o, 15, i * 2 + 2);
             }
@@ -5848,7 +5848,7 @@ void fn_801A6BDC(ShopTask* t) {
             fn_801C1728(t->w->item, 1);
             fn_801C1728(t->w->item, 2);
             for (i = 0; i < 3; i++) {
-                t->w->parts[lbl_802B69E8[i].idx] = fn_801AFBE8(t, i, 1, lbl_8030B7F4.s1580[i] == t->w->item ? 0.7f : 1.0f);
+                t->w->parts[lbl_802B69E8[i].idx] = fn_801AFBE8(t, i, 1, lbl_8030B7F4.x1568.s1580[i] == t->w->item ? 0.7f : 1.0f);
                 UiObjMoveToX(&t->w->parts[lbl_802B69E8[i].idx]->obj->o, 6, 4, lbl_802B69E8[i].x);
                 UiObjSetCommand(&t->w->parts[lbl_802B69E8[i].idx]->obj->o, 15, i * 2 + 2);
             }
@@ -6130,12 +6130,12 @@ void fn_801A6BDC(ShopTask* t) {
                 break;
             }
             if (t->w->b37 == 0) {
-                lbl_8030B7F4.s1580[t->w->xa] = t->w->stat[0][t->w->xa];
+                lbl_8030B7F4.x1568.s1580[t->w->xa] = t->w->stat[0][t->w->xa];
             } else {
-                lbl_8030B7F4.s158a[t->w->xa] = t->w->stat[0][t->w->xa];
+                lbl_8030B7F4.x1568.s158a[t->w->xa] = t->w->stat[0][t->w->xa];
             }
             t->w->xc[t->w->xa] = 0;
-            fn_8021B1CC(lbl_8030B4D4 + 0x2dc, &lbl_8030B7F4.b1568);
+            fn_8021B1CC(lbl_8030B4D4 + 0x2dc, &lbl_8030B7F4.x1568.b1568);
             fn_801C1E48();
             fn_801C0FBC(t->w->item);
             fn_801AACB0(t);
@@ -6147,8 +6147,8 @@ void fn_801A6BDC(ShopTask* t) {
             case 2:
             case 3:
                 if (t->w->b37 == 0) {
-                    if (lbl_8030B7F4.s1580[(u8)t->w->xa] != t->w->item && t->w->x9 != 0) {
-                        lbl_8030B7F4.s1580[(u8)t->w->xa] = t->w->item;
+                    if (lbl_8030B7F4.x1568.s1580[(u8)t->w->xa] != t->w->item && t->w->x9 != 0) {
+                        lbl_8030B7F4.x1568.s1580[(u8)t->w->xa] = t->w->item;
                         t->w->xc[t->w->xa] = 1;
                         fn_801C08B4(0x16);
                     } else {
@@ -6156,9 +6156,9 @@ void fn_801A6BDC(ShopTask* t) {
                         break;
                     }
                 } else {
-                    old = lbl_8030B7F4.s158a[(u8)t->w->xa] == (s16)t->w->item;
+                    old = lbl_8030B7F4.x1568.s158a[(u8)t->w->xa] == (s16)t->w->item;
                     if (!old && t->w->x9 != 0) {
-                        lbl_8030B7F4.s158a[t->w->xa] = t->w->item;
+                        lbl_8030B7F4.x1568.s158a[t->w->xa] = t->w->item;
                         t->w->xc[t->w->xa] = 1;
                         fn_801C08B4(0x16);
                     } else {
@@ -6167,7 +6167,7 @@ void fn_801A6BDC(ShopTask* t) {
                     }
                 }
                 fn_801C08B4(2);
-                fn_8021B1CC(lbl_8030B4D4 + 0x2dc, &lbl_8030B7F4.b1568);
+                fn_8021B1CC(lbl_8030B4D4 + 0x2dc, &lbl_8030B7F4.x1568.b1568);
                 fn_801C1E48();
                 fn_801C0FBC(t->w->item);
                 if (fn_801AACB0(t)) {
@@ -7291,7 +7291,7 @@ void fn_801AFD34(void* arg) {
     PanelTask_801AFBE8* t = arg;
     MenuPanel* p;
     CmpEq eq;
-    s16 id = lbl_8030B7F4.s158a[t->obj->h56];
+    s16 id = lbl_8030B7F4.x1568.s158a[t->obj->h56];
     s32 x;
     s16 y;
 
@@ -7323,7 +7323,7 @@ void fn_801B0014(void* arg) {
     PanelTask_801AFBE8* t = arg;
     MenuPanel* p;
     CmpEq eq;
-    s16 id = lbl_8030B7F4.s1580[t->obj->h56];
+    s16 id = lbl_8030B7F4.x1568.s1580[t->obj->h56];
     s32 x;
     s16 y;
 
