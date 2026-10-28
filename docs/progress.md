@@ -1504,3 +1504,40 @@ Still held back (11), with what blocks them:
 Lessons: an `(int, f32)` parameter pair can be written in either order and still match the callee, but the caller loads
 arguments left to right, so a load order fixes the prototype. When the original re-reads `t->work` for every access, a
 typed-work task view is the only cast-free form; where it reads the work once, task.h's `Task` and a typed local match.
+
+## Batch 13: EvObj header and 192 game functions of 0x408 bytes and up (2026-10-28)
+
+`include/game/evobj.h` is the one field-map object type (`EvObj`, with `EvExt`, `EvInfo`, `EvSub`, `EvHit`, `EvMode`);
+evobj.c includes it, and unit_800D81E8.c uses it for the player (`lbl_80347450`), the map-camera tasks fn_800D9BA0 and
+fn_800D9E00, and the new fn_800DCB78 (task work), fn_800F04C8 and fn_800F7D6C. `MapObj` in unit_800B2DA0.c is still
+its own copy (66 uses; the units disagree on a few field types such as `EvInfo` 0x24-0x30, signed in some tasks and
+unsigned or float in others). `Task` gained `f20` (0x20); `fn_801D68C4` takes an `s32` index (the original passes an
+`s16` without `clrlwi`). `Tex_8010B038`, `K06Pair` and `VertexTex` in unit_800D81E8.c were `NJS_TEXLIST` and `Vertex2D`.
+Merged: fn_800DCB78, fn_800F04C8, fn_800F7D6C.
+
+Agent wave: 16 Sonnet agents (x01-x16, 12 functions each in address order, 192 functions of 0x408-0x5E4 bytes): 70
+matched in isolation, 4 merged (fn_8005DEB8, fn_80072318, fn_80095DFC, fn_801C6F1C), 93 logged near. The agents'
+files are in `build/agents/x01`-`x16` (local, gitignored) with `near.txt` per folder. Agents x01 and x07 stopped after
+one function, so x01 and x07 are the least explored lists.
+
+Matched in isolation, not merged (66): fn_80026FEC, fn_800506B0, fn_80050DB0, fn_80051264, fn_800519F4, fn_8005259C, fn_800534B0, fn_80055558, fn_80055A38, fn_800565B0, fn_800576B0, fn_8005A7B8, fn_8005B648, fn_800601C0, fn_80065AB0, fn_8006B8A8, fn_8006C9E4, fn_8007578C, fn_8007EBBC, fn_8007F270, fn_8009B9B0, fn_8009DEF0, fn_8009ED04, fn_800A2D2C, fn_800ABFD4, fn_800B8028, fn_800B847C, fn_800BA820, fn_800BB574, fn_800C5EE8, fn_80106EE0, fn_801073B4, fn_80113084, fn_80117BE4, fn_8012ECF8, fn_80147184, fn_8014B09C, fn_8014EF34, fn_801545EC, fn_801590F4, fn_80159F28, fn_801649BC, fn_80173F30, fn_80179760, fn_8017A040, fn_8017B6F4, fn_801920AC, fn_801BCFD0, fn_801CDC68, fn_801DC62C, fn_801F8158, fn_801F88D4, fn_801FA630, fn_801FABDC, fn_801FB120, fn_801FB664, fn_801FC68C, fn_801FCAAC, fn_8020AF8C, fn_8020BEE8, fn_8020F3D4, fn_80215590, fn_8021F330, fn_80220074, fn_802297C4, fn_80229E54.
+Why: each needs the unit's own struct unified with the agent's (a task or object type per family), not just added:
+the effect task family in unit_800506B0.c (`Pawn`/`ActorTask`), the camp menu (`lbl_8034710C->holder->ctrl`) in
+unit_8015DC6C.c, EvObj-based map tasks in unit_800B2DA0.c/unit_8010E164.c (fn_800B8028, fn_800B847C, fn_800BA820,
+fn_800BB574, fn_800C5EE8, fn_80106EE0, fn_801073B4, fn_80113084, fn_80117BE4 need `MapObj` folded into `EvObj` with
+`EvInfo` split by effect type, `EvObj.ang` as a three-Angle struct, 0x260 as a per-kind pointer, and fields 0x188, 0x1AC,
+0x1B0, 0x1FA/B, 0x236/8, 0x258, 0x25C, 0x264-0x26C), script handlers in unit_801F5334.c.
+Rejected on the plain-C rule: fn_80055A38 (`(u8 *)... + 0xc`), fn_801920AC (`*(void **)` store), fn_801F8158, fn_801F88D4,
+fn_801FA630, fn_801FABDC, fn_801FB120, fn_801FB664, fn_801FC68C, fn_801FCAAC, fn_8020BEE8, fn_8020F3D4, fn_80215590 (a
+union over the script stream), fn_800ABFD4 (an empty `case 5:` that is a guess).
+Held for evidence: fn_8007578C (the original's wrapper fn_8007576C passes an `s16` to the `u8` parameter without
+`clrlwi`, so the two functions are probably in different files; with one prototype either the wrapper or the callee
+differs by a few lines).
+String-pool and template offsets of fn_8020AF8C, fn_802297C4 and fn_80229E54 can only be checked in a full build.
+
+Near misses (diff lines): fn_8000CFFC (180), fn_800576B0 (29), fn_8005E42C (4), fn_800696A8 (5), fn_8006C124 (42), fn_80084570 (325), fn_800743BC (36), fn_80095910 (50), fn_8008B9E0 (73), fn_80096814 (408), fn_80078EFC (-), fn_8008E6F4 (-), fn_8009BED8 (54), fn_800A2830 (405), fn_800A8A80 (~340), fn_800ADA60 (273), fn_800B09C0 (282), fn_800BD9E4 (35), fn_800BDF14 (8), fn_800C04D8 (238), fn_800C81F0 (111), fn_800CDA38 (222), fn_800E1A58 (~520), fn_800FE688 (31), fn_800F78C0 (70), fn_800FEAF4 (31), fn_80106428 (18), fn_8010699C (100), fn_80105800 (34), fn_8010D8C0 (137), fn_8010361C (23), fn_8010BBD8 (290), fn_800FFB24 (-), fn_8010E5BC (146), fn_80114C84 (30), fn_8011A2D4 (94), fn_8011A994 (22), fn_8011D958 (4), fn_8011E250 (58), fn_8012910C (17), fn_80129DD0 (172), fn_8012DB18 (453), fn_8012DFE0 (~44), fn_8013841C (~270), fn_80144E60 (~300), fn_80145844 (n/a), fn_801477A8 (6), fn_80157948 (~250), fn_8015ADCC (~205), fn_8015DC8C (8), fn_80170704 (~230), fn_80171C80 (102), fn_801739B8 (114), fn_80174518 (~190), fn_80175EE8 (22), fn_80177348 (30), fn_80179BA4 (100), fn_8017AB38 (10), fn_8017CD88 (162), fn_8017E5FC (108), fn_80181318 (121), fn_801818EC (3), fn_801825D8 (2), fn_80183D90 (18), fn_8018D250 (72), fn_8018EECC (128), fn_8019082C (208), fn_801913BC (72), fn_8019AE84 (187), fn_8019CCB8 (198), fn_8019D678 (4), fn_8019F930 (7), fn_801A3B30 (256), fn_801B1EA0 (61), fn_801B4F78 (2), fn_801BCAF4 (128), fn_801BDAC8 (417), fn_801C6714 (~110), fn_801C7D0C (115), fn_801DDF48 (513), fn_801F3148 (248), fn_801DEF3C (-), fn_80212130 (230), fn_80212C04 (330), fn_802159E0 (540), fn_80218DDC (313), fn_802193BC (211), fn_802205E0 (12), fn_80220B14 (12), fn_80223B88 (-), fn_8022BDD0 (~190), fn_8022C56C (95), fn_8022C9D4 (95).
+
+Lessons: `s32` is `long` in this tree and `int` locals change loop-entry checks (fn_801920AC, fn_8019D678); a one-case `switch`
+reproduces `cmpwi; beq; b`; `if (f)` on a float gives `fcmpu f, 0.0`; a recursive `inline` is expanded three or four
+levels deep (fn_8007578C, fn_8006C9E4, fn_8009DEF0); `SaveData.party` is loaded with `lbz` + `extsb`, so it is probably
+`u8 party[5]` (fn_801825D8, fn_801818EC, fn_80175EE8, fn_80177348 are 2-4 lines from matching with that change).
