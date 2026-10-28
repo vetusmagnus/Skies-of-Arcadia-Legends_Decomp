@@ -1896,3 +1896,37 @@ fn_800CE67C, fn_800CEDDC** (unit_800B2DA0.c), **fn_8013A8FC** (unit_8012F6C4.c),
   `Work_800EB58C` view of the same lbl_80346DF4 and a raw `u8 *lbl_80346DF0`); the agents' `Desc`/`Board`/`Obj50`/`Mark`
   records and `Cur_800ED360`'s x14/count/piece fields have to be folded into it first.
 - unit_801CBA60.c still calls `strstr` as `fn_8025ED74` with its own prototype; it can use string.h now.
+
+## Shared-type merge pass (2026-10-28, branch types-merge in build/wt-types, from 0598b91, not pushed)
+
+Ran `u1_fix.py` (NOHDR) over every unmerged agent file of the older batches (457 candidates in the wt-evobj, wt-small,
+wt-normal, wt-b15m, wt-t632 and wt-632 agent folders, `build/agents/run_all2.py` + `inv.py`): only 1 merged by itself, so the
+rest really need type work by hand. The rejections cluster as: unit_8015DC6C.c 52, unit_800D81E8.c 48, unit_801F5334.c 36,
+unit_800B2DA0.c 34, unit_8010E164.c 34, unit_80055E94.c 29, unit_800972AC.c 28, unit_8013D400.c 24, unit_80005B50.c 21,
+unit_80199B9C.c 20 (many of these files are near misses or older duplicates, not verified matches).
+
+Merged by hand (5,243 to 5,247; fdiff and `floatcheck.py` clean on both units, `main.dol` OK):
+- **fn_8014B6F8** (unit_8013D400.c), using Nick's 0x23C decision: `Ctx_8014D398.x23c` and `.xe8` are `void *`, `x1e4` is added,
+  the leader ship's record is `Leader` (with `LeaderRec`, `LeaderSub`), the camera node `CamNode` (two `CamPart`), and
+  fn_8014B6F8/fn_8014D398 read them into typed locals (`W4 *w4`, `Node_8014D398 *p`, `CamNode *p`); `Info` gains x40-x54.
+  `Task_8014B6F8`/`Ctx_8014B6F8`/`LeaderTask`/`LeaderCtx` are gone (one `Task_8014D398`/`Ctx_8014D398`).
+  The callee prototypes for fn_80152B58 etc. are declared with `CamPart *` in this unit (unit_8014F970.c defines them with its own views).
+- **fn_800EC488, fn_800ECC5C** (unit_800D81E8.c): one board work `Work_800ED360` (first, active/mode, `Board board` of 90 `Desc`
+  sprites at 0x10, `Obj50 base/cursor/slot[10]/cell[8][9]`, `Desc mark[8][9]`, `Mark marked[8][9]`), `Node_800ED360` has the work,
+  `lbl_80346DF0` is `Board *` (= `&work->board`), `lbl_80305C78` is a `Cur_800ED360` (x, y, x14, count, piece[10], cell, v).
+  `Work_800EB58C`, `Node_800EB58C`, `Tbl_800EB58C` and every `(*(T**)&lbl_80346DF4)` cast are gone; `Obj50` has `x`/`y`.
+- **fn_800EE51C** (unit_800D81E8.c): one `Game6E14` for lbl_80346E14 (the world map: area, height level, cursor clamp, `MapFile map`
+  at 0x44, `Pt8 pts[29]`, `Grid grid[3]`, `Obj50 o0..o4` at 0xC5C, `bank`/`b0`/`b1`/`b2` at 0xDEC-0xDF8). `Work_800EDB70`,
+  `Game6E14_800EEDD4` and their casts are gone; fn_800F04C8's tile bank is `b2` (0xDF8), not a second `bank`.
+
+Not done, with what a trial showed:
+- The `MapObj` to `EvObj` fold (unit_800B2DA0.c; 15 held functions: fn_800B8028, fn_800B847C, fn_800BA820, fn_800BB574, fn_800C5EE8,
+  fn_800D7190, fn_800D8924, fn_800D8E1C, fn_800D934C, fn_800DCF18, fn_800DD5B4, fn_80106EE0, fn_801073B4, fn_80113084, fn_80117BE4).
+  Renaming `MapObj` to `EvObj` and deleting the struct (trial in a scratch file) gives 500+ compile errors: `pos[3]` to `pos.x/y/z`
+  (about 40 uses), `save[3]` to `home`, `p1b8`(24 uses)/`p1bc`(10)/`p1c8`(30)/`p25c`/`p260` to `hit`/`coll`/`ext`/`mapMode`,
+  `pe4/pe8/pec` to `model/motion/shape`, `w44/s48/w4c` to `ang[3]`, `f1c` to `colour`, `x16e`, `b1ec`, `h1fc/h200`, and the
+  `Entry`/`Script`/`Cmd`/`MapSub`/`MapLst` views of `ext->info`/`items`. `MapSub.p10` (Cfg_800CDEF4: w0 >= 9, w4, w24) and
+  `EvInfo` (count at 0, flags 0x14, nearDist 0x24) are the same count-prefixed table with different views. Needs a sed-style
+  rewrite script plus per-function fdiff; `build/agents/cc.py FILE` lists the compile errors (Write-tool script, forward slashes).
+- unit_80005B50.c character views, `lbl_8034727C` `BtlWork`, unit_801F5334.c script commands, the unit_80055E94.c effect views: unchanged
+  from the lists above.
