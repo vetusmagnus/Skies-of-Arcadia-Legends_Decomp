@@ -462,7 +462,7 @@ extern Ent* lbl_80302E18[0x40];
 extern char lbl_802B0D00[];
 extern char lbl_802B0D20[];
 extern s32 fn_8009014C(u8* arr, u8* key, s32 n, s32 size);
-extern int fn_8025CB24(char* buf, const char* fmt, ...);
+extern int sprintf(char* buf, const char* fmt, ...);
 typedef struct Chr_8008C98C {
     u8 pad[0xae];
     s16 xae;
@@ -1757,7 +1757,7 @@ void fn_8008F9B8(u16 key, u8* src) {
     if (lbl_80311AD4[6] != 8) {
         idx = fn_8009014C(lbl_80347468, (u8*)&key, 0x40, 2);
         if (idx == -1) {
-            fn_8025CB24(msg1, lbl_802B0D00, (s32)(*(Cam**)&lbl_80347450)->x38, (s32)(*(Cam**)&lbl_80347450)->x40);
+            sprintf(msg1, lbl_802B0D00, (s32)(*(Cam**)&lbl_80347450)->x38, (s32)(*(Cam**)&lbl_80347450)->x40);
             fn_801DBE1C((void *)(msg1));
             return;
         }
@@ -1768,7 +1768,7 @@ void fn_8008F9B8(u16 key, u8* src) {
     } else {
         idx = fn_8009014C(lbl_80347468, (u8*)&key, 0x40, 2);
         if (idx == -1) {
-            fn_8025CB24(msg2, lbl_802B0D20, (s32)(*(Cam**)&lbl_80347450)->x38, (s32)(*(Cam**)&lbl_80347450)->x40);
+            sprintf(msg2, lbl_802B0D20, (s32)(*(Cam**)&lbl_80347450)->x38, (s32)(*(Cam**)&lbl_80347450)->x40);
             fn_801DBE1C((void *)(msg2));
             return;
         }

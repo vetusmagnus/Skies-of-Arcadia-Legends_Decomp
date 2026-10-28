@@ -1031,7 +1031,7 @@ typedef struct {
     u8 pad184[0x1FC - 0x184];
     s16 x1fc;         /* 0x1FC */
 } Ent_800CC3D4;
-extern int fn_8025ECC4(void);
+extern int rand(void);
 typedef struct {
     u8 pad0[0x38];
     f32 x38, x3c, x40;  /* 0x38 */
@@ -2345,7 +2345,7 @@ extern char lbl_803491AC[5];
 extern f32 lbl_8030A77C[6];
 extern char lbl_80305790[0x2CC];
 extern Ent_800C7F64 lbl_802E0F40[28];
-extern int fn_8025CB24(char *buf, const char *fmt, ...);
+extern int sprintf(char *buf, const char *fmt, ...);
 extern int strncmp(const char *a, const char *b, u32 n);
 extern void *fn_80109E7C(char *name, s32 a);
 extern void *fn_801CC2A0(char *name, void *cb, s32 a);
@@ -2714,7 +2714,7 @@ typedef struct Obj_800C7744 {
     Work_800C7744* work;
 } Obj_800C7744;
 typedef struct P114 { float r, base, range, a, b, c; } P114;
-#define RND (3.0517578125e-05f * fn_8025ECC4())
+#define RND (3.0517578125e-05f * rand())
 extern void fn_800CBE98(void);
 extern void fn_800CBBBC(void);
 extern void fn_800CB90C(void);
@@ -4657,7 +4657,7 @@ s32 fn_800CC3D4(Ent_800CC3D4* e, Table_800CC3D4* t) {
     p += e->x1fc;
     e->x180 = p->base;
     if (p->range != 0) {
-        e->x180 += (s32)((f32)p->range * (0.000030517578125f * (f32)fn_8025ECC4()));
+        e->x180 += (s32)((f32)p->range * (0.000030517578125f * (f32)rand()));
     }
     return r;
 }
@@ -6990,7 +6990,7 @@ void fn_800C7F64(void)
 
     lbl_80346D4C = 0;
     if (lbl_80347464 == 1 && (*(s32(*)[5])&lbl_80311AC0)[1] == 99) {
-        fn_8025CB24(buf1, lbl_803491AC, lbl_8034746C, lbl_802B1410);
+        sprintf(buf1, lbl_803491AC, lbl_8034746C, lbl_802B1410);
         (*(void *(*)[2])&lbl_80346D50)[0] = fn_80109E7C(buf1, 0x7fff);
         lbl_80346D4C = lbl_80346D4C + 1;
     }
@@ -7006,7 +7006,7 @@ void fn_800C7F64(void)
         for (i = 0; i < 6; i++) {
             for (j = 0; j < 7; j++) {
                 char *name = lbl_80305790 + i * 0x70 + j * 16;
-                fn_8025CB24(name, lbl_802B141C, 5 - i, j);
+                sprintf(name, lbl_802B141C, 5 - i, j);
                 sub = name + 4;
                 for (k = 0; lbl_802E0F40[k].name != 0; k++) {
                     if (strncmp(sub, lbl_802E0F40[k].name, 2) == 0) {
@@ -7018,7 +7018,7 @@ void fn_800C7F64(void)
                 arg.b = 0;
                 arg.c = i;
                 if (fn_800C8C54(p, &arg) != 0x4e) {
-                    fn_8025CB24(buf2, lbl_803491AC, lbl_8034746C, name);
+                    sprintf(buf2, lbl_803491AC, lbl_8034746C, name);
                     (*(void *(*)[6][7])&lbl_803056E8)[i][j] = fn_801CC2A0(buf2, ((void(*)(void))fn_800C81BC), 0);
                 } else {
                     (*(void *(*)[6][7])&lbl_803056E8)[i][j] = 0;
@@ -7153,7 +7153,7 @@ void fn_800CE2B4(void) {
             if (thr >= ratio) {
                 kind = 2;
             } else if (n >= 10) {
-                if (fn_8025ECC4() & 1) {
+                if (rand() & 1) {
                     kind = 0;
                 } else {
                     kind = 1;
@@ -7351,7 +7351,7 @@ void fn_800CD72C(Obj_800CD72C* o) {
             w->cnt = fn_801DDAB0(&lbl_803474EC, w->e4, w->p100, w->p100, sz);
             w->cur = (s16 *)fn_801DD984();
             if (w->cnt != 0 && w->cur != 0) {
-                *w->cur = (s16)((f32)(w->cnt->count - 1) * (0.000030517578f * (f32)fn_8025ECC4()));
+                *w->cur = (s16)((f32)(w->cnt->count - 1) * (0.000030517578f * (f32)rand()));
             }
         }
         w->s16e = 0;
@@ -7602,7 +7602,7 @@ void fn_800B4184(Work_800B4184* w, Emit_800B4184* o) {
             while (found == 0) {
                 p = o->p110;
                 cur = p;
-                n = (s32)((f32)(w->s1fc * 6) * (0.000030517578125f * (f32)fn_8025ECC4()));
+                n = (s32)((f32)(w->s1fc * 6) * (0.000030517578125f * (f32)rand()));
                 for (; n != 0; n--) {
                     if (cur->p7c == 0 || cur->p7c->p74 != 0) break;
                     cur = cur->p7c;
@@ -7612,7 +7612,7 @@ void fn_800B4184(Work_800B4184* w, Emit_800B4184* o) {
                     w->h22e--;
                     if (o->flags & 2) {
                         cur->flags |= 2;
-                        cur->f60 = o->f44 * (0.000030517578125f * (f32)fn_8025ECC4());
+                        cur->f60 = o->f44 * (0.000030517578125f * (f32)rand());
                     }
                     if (o->flags & 4) cur->flags |= 4;
                     if (o->flags & 8) cur->flags |= 8;

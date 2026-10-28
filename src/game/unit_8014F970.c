@@ -143,7 +143,7 @@ void fn_801539C4(void);
 void fn_80153730(void);
 void fn_8014F4E8(void *p);
 void fn_801DBE1C(const char *fmt, ...);
-void fn_8025CB24(void *p, ...);
+void sprintf(void *p, ...);
 void fn_80158690(s16 idx);
 void fn_80167690(void *p);
 void fn_80150A80(u8 *p);
@@ -326,7 +326,7 @@ typedef struct {
     Ent_801540D0 e534[8];
 } Base_801540D0;
 void fn_80216CB4(char *s);
-char *fn_8025F120(char *dst, const char *src);
+char *strcpy(char *dst, const char *src);
 typedef struct { s32 count; } Cnt;
 typedef struct { u8 pad0[4]; void *arg; void (*fn)(void *); } Cb;
 extern Cnt* lbl_803472A8;
@@ -1410,14 +1410,14 @@ void fn_80157510(Msg* a, s16 i) {
 void fn_80157530(s32 a, s32 b, s32 c) {
     if (lbl_80347008 == 0) {
         lbl_80347008 = (u32)lbl_80306C98;
-        fn_8025CB24(lbl_80306C98, a, b, c);
+        sprintf(lbl_80306C98, a, b, c);
     }
 }
 
 void fn_8015757C(s32 a, s32 b) {
     if (lbl_80347008 == 0) {
         lbl_80347008 = (u32)lbl_80306C98;
-        fn_8025CB24(lbl_80306C98, a, b);
+        sprintf(lbl_80306C98, a, b);
     }
 }
 
@@ -1840,7 +1840,7 @@ s32 fn_8015AAF0(s32 x) {
 
 void fn_8015C644(void) {
     u8 buf[0x20];
-    fn_8025CB24(buf, lbl_802B4104, lbl_8034746C, lbl_80311AC0.f4, lbl_80311AC0.f8);
+    sprintf(buf, lbl_802B4104, lbl_8034746C, lbl_80311AC0.f4, lbl_80311AC0.f8);
     if (fn_801CC62C(buf) == 1) {
         lbl_80347048 = fn_801CC3C4(buf);
     }
@@ -2290,7 +2290,7 @@ void fn_80155E60(s32 a, s32 b)
         buf[13] = b % 100 / 10 + '0';
         buf[14] = b % 10 + '0';
         fn_80216CB4(buf);
-        fn_8025F120(s->name, buf);
+        strcpy(s->name, buf);
         s->c = 1;
     }
 }
@@ -3446,7 +3446,7 @@ void fn_80153518(s32 n) {
         }
         lbl_80306758.f8 = 0;
         lbl_80306758.f0 = 0;
-        fn_8025F120((void *)(b), (void *)(lbl_802B3BCC));
+        strcpy((void *)(b), (void *)(lbl_802B3BCC));
         b[0xa] = n / 10000 + '0';
         b[0xb] = n % 10000 / 1000 + '0';
         b[0xc] = n % 1000 / 100 + '0';
@@ -3537,9 +3537,9 @@ void fn_80158DB4(Obj_8015887C *o)
     case 6:
     case 8:
         if ((s->h12 == 6 || s->h12 == 8) && s->f14 == 0) {
-            fn_8025CB24(s->buf, "");
+            sprintf(s->buf, "");
         } else {
-            fn_8025CB24(s->buf, "%d", s->f14);
+            sprintf(s->buf, "%d", s->f14);
         }
         if (s->f4 == 1) {
             if (s->f18 == 1) {
@@ -3558,11 +3558,11 @@ void fn_80158DB4(Obj_8015887C *o)
         }
         break;
     case 10:
-        fn_8025CB24(s->buf, "%d", s->f14);
+        sprintf(s->buf, "%d", s->f14);
         s->h1ee = 3;
         break;
     default:
-        fn_8025CB24(s->buf, "");
+        sprintf(s->buf, "");
         break;
     }
     s->f1e4 = s->f20 / (f32)s->f2c;

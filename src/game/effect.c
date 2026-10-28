@@ -240,7 +240,7 @@ extern void fn_80061F58(void*, int, int);
 extern void fn_80071CF0(Vec*, Vec*);
 extern void fn_80072130(void*);
 extern int fn_8007E264(f32* out, f32 x, f32 z);
-extern int fn_8025ECC4(void);
+extern int rand(void);
 extern void fn_80071F84(s32* out, Vec* a, Vec* b);
 extern s32 lbl_80346BC8;
 extern void fn_8006CEEC(void*, void*, int, s16);
@@ -735,12 +735,12 @@ void fn_80040DC4(Node* node)
             fn_8007E264(&h, w->pos.x, w->pos.z);
             if (w->pos.y < h) {
                 w->pos.y = s->size;
-                s->vel.x = 0.5f * (3.0517578125e-05f * fn_8025ECC4());
-                if (fn_8025ECC4() % 2) {
+                s->vel.x = 0.5f * (3.0517578125e-05f * rand());
+                if (rand() % 2) {
                     s->vel.x *= -1.0f;
                 }
-                s->vel.z = 0.5f * (3.0517578125e-05f * fn_8025ECC4());
-                if (fn_8025ECC4() % 2) {
+                s->vel.z = 0.5f * (3.0517578125e-05f * rand());
+                if (rand() % 2) {
                     s->vel.z *= -1.0f;
                 }
                 s->vel.y = 0.0f;
@@ -1259,20 +1259,20 @@ void fn_80041E64(Node* node)
         if (s->timer >= s->c->start) {
             for (i = 0; i < s->c->num; i++) {
                 if (s->c->spread != 0) {
-                    ofs = fn_8025ECC4() % s->c->spread;
+                    ofs = rand() % s->c->spread;
                 } else {
                     ofs = 0;
                 }
-                dx = s->c->x14c * (3.0517578125e-05f * fn_8025ECC4());
-                dy = s->c->x150 * (3.0517578125e-05f * fn_8025ECC4());
-                t = 3.0517578125e-05f * fn_8025ECC4();
-                sc = 3.0517578125e-05f * fn_8025ECC4();
-                ang = 3.0517578125e-05f * fn_8025ECC4();
+                dx = s->c->x14c * (3.0517578125e-05f * rand());
+                dy = s->c->x150 * (3.0517578125e-05f * rand());
+                t = 3.0517578125e-05f * rand();
+                sc = 3.0517578125e-05f * rand();
+                ang = 3.0517578125e-05f * rand();
                 if (sc < 0.8f) {
                     sc = 0.8f;
                 }
                 if (s->c->x3c == 8) {
-                    kind = fn_8025ECC4() % 4;
+                    kind = rand() % 4;
                 } else {
                     kind = s->c->x3c;
                 }
@@ -1398,15 +1398,15 @@ void fn_800422D0(Node* node)
                 s->size = s->sizeMax;
             }
             sign = 1.0f;
-            if (3.0517578125e-05f * fn_8025ECC4() >= 0.5f) {
+            if (3.0517578125e-05f * rand() >= 0.5f) {
                 sign *= -1.0f;
             }
-            w->pos.x += sign * (s->c->jitterX * (3.0517578125e-05f * fn_8025ECC4()));
+            w->pos.x += sign * (s->c->jitterX * (3.0517578125e-05f * rand()));
             w->pos.y += s->fall;
-            if (3.0517578125e-05f * fn_8025ECC4() >= 0.5f) {
+            if (3.0517578125e-05f * rand() >= 0.5f) {
                 sign *= -1.0f;
             }
-            w->pos.z += sign * (s->c->jitterZ * (3.0517578125e-05f * fn_8025ECC4()));
+            w->pos.z += sign * (s->c->jitterZ * (3.0517578125e-05f * rand()));
             flag = 0;
             s->fall += s->c->accel;
             s->frame = fn_800403AC(s->count, s->c->anim, s->c->animA, s->c->animB);
@@ -1733,7 +1733,7 @@ void fn_80042B10(Node* node)
             d->hdr = s->c.hdr;
             d->type = s->c.type;
             if (s->c.type & 0x80000) {
-                switch (fn_8025ECC4() % 4) {
+                switch (rand() % 4) {
                 case 0:
                     fn_80071CF0(&s->b, &d->vel0);
                     break;
@@ -1747,7 +1747,7 @@ void fn_80042B10(Node* node)
                     fn_80071CF0(&v08, &d->vel0);
                     break;
                 }
-            } else if (fn_8025ECC4() % 2) {
+            } else if (rand() % 2) {
                 fn_80071CF0(&s->b, &d->vel0);
             } else {
                 fn_80071CF0(&v38, &d->vel0);
@@ -1755,9 +1755,9 @@ void fn_80042B10(Node* node)
             d->vel0.x *= s->c.speed.x;
             d->vel0.y *= s->c.speed.y;
             d->vel0.z *= s->c.speed.z;
-            d->vel0.x *= 3.0517578125e-05f * fn_8025ECC4();
-            d->vel0.y *= 3.0517578125e-05f * fn_8025ECC4();
-            d->vel0.z *= 3.0517578125e-05f * fn_8025ECC4();
+            d->vel0.x *= 3.0517578125e-05f * rand();
+            d->vel0.y *= 3.0517578125e-05f * rand();
+            d->vel0.z *= 3.0517578125e-05f * rand();
             d->gravity = s->c.gravity;
             d->drag = s->c.drag;
             d->scale = s->c.scale;
@@ -1771,7 +1771,7 @@ void fn_80042B10(Node* node)
             if (s->c.delay == 0) {
                 d->start = 0;
             } else {
-                d->start = fn_8025ECC4() % s->c.delay;
+                d->start = rand() % s->c.delay;
             }
             d->life = s->c.life;
             d->alpha = 0xFF;
@@ -1799,7 +1799,7 @@ void fn_80042B10(Node* node)
                     break;
                 case 3:
                     d->flags |= 0x400000;
-                    switch (fn_8025ECC4() % 3) {
+                    switch (rand() % 3) {
                     case 0:
                         d->x98 = s->c.x40;
                         break;
@@ -2200,7 +2200,7 @@ void fn_80043C24(Node* node)
             node->state = 2;
             s->alpha = 255;
             s->alphaStep = 255 / s->c.fade;
-            s->frame = (w->tex->nbTexture - 1) * (3.0517578125e-05f * fn_8025ECC4());
+            s->frame = (w->tex->nbTexture - 1) * (3.0517578125e-05f * rand());
             fn_80040150(s->c.type, s->arg, s->c.id, &s->mtx);
             s->rot[0] = 182.04445f * s->c.rotDeg.x;
             s->rot[1] = 182.04445f * s->c.rotDeg.y;
@@ -2373,7 +2373,7 @@ void fn_80044178(Node* node)
         break;
     case 2:
         node->state = 3;
-        s->frame = (w->tex->nbTexture - 1) * (3.0517578125e-05f * fn_8025ECC4());
+        s->frame = (w->tex->nbTexture - 1) * (3.0517578125e-05f * rand());
         break;
     case 3:
         if (s->c.end >= 0 && s->timer >= s->c.end) {
@@ -2562,7 +2562,7 @@ void fn_800445D4(Node* node)
                 break;
             }
         }
-        s->frame = (w->tex->nbTexture - 1) * (3.0517578125e-05f * fn_8025ECC4());
+        s->frame = (w->tex->nbTexture - 1) * (3.0517578125e-05f * rand());
         break;
     case 3:
         if (s->c.end >= 0 && s->timer >= s->c.end) {
@@ -2581,15 +2581,15 @@ void fn_800445D4(Node* node)
                 s->c.size = s->c.sizeMax;
             }
             sign = 1.0f;
-            if (3.0517578125e-05f * fn_8025ECC4() >= 0.5f) {
+            if (3.0517578125e-05f * rand() >= 0.5f) {
                 sign *= -1.0f;
             }
-            w->pos.x += sign * (s->c.rangeX * (3.0517578125e-05f * fn_8025ECC4()));
+            w->pos.x += sign * (s->c.rangeX * (3.0517578125e-05f * rand()));
             w->pos.y += s->c.velY;
-            if (3.0517578125e-05f * fn_8025ECC4() >= 0.5f) {
+            if (3.0517578125e-05f * rand() >= 0.5f) {
                 sign *= -1.0f;
             }
-            w->pos.z += sign * (s->c.rangeZ * (3.0517578125e-05f * fn_8025ECC4()));
+            w->pos.z += sign * (s->c.rangeZ * (3.0517578125e-05f * rand()));
             s->c.velY += s->c.velYAcc;
             flag = 0;
             if (s->c.type & 0x20000000) {
@@ -5324,7 +5324,7 @@ void fn_80047CF0(Parts* parts, NJS_POINT3* pos, f32* dir, NJS_MATRIX m) {
             }
         }
         fn_80072130(e->out);
-        scale = 2.0f * (0.000030517578f * (f32)fn_8025ECC4());
+        scale = 2.0f * (0.000030517578f * (f32)rand());
         i = 3;
         while (i-- != 0) {
             e->out[i] = e->out[i] * scale;
@@ -6904,7 +6904,7 @@ void fn_8004CF14(Node_8004CF14* node)
             fn_801E17E0(s->buf);
         }
         for (k = 0; k < s->n; k++) {
-            if (fn_8025ECC4() % 4 == 0) {
+            if (rand() % 4 == 0) {
                 fn_800472DC(node, k, s->colmode, s->cmd);
             }
         }

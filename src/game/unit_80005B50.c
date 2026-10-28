@@ -761,7 +761,7 @@ typedef struct Wk_80017018 { u8 pad_00[0x34]; f32 x34, x38, x3c; u8 pad_40[0xc];
 typedef struct Tsk_80017018 { u8 pad_00[0x24]; Wk_80017018 *work; } Tsk_80017018;
 extern s16 fn_80020094(Wk_80017018 *w, s16 a, s16 b, s8 flag);
 extern s32 fn_800300C4(s16 i);
-extern s32 fn_8025ECC4(void);
+extern s32 rand(void);
 typedef struct SlotTable {
     s16 count;
     u8 pad2[0x404 - 2];
@@ -1151,7 +1151,7 @@ extern ModelCache* lbl_803473A0;
 extern int sprintf(char* s, const char* fmt, ...);
 extern void* memset(void* dst, int c, u32 n);
 extern int fn_8025EF88(const char* a, const char* b);
-extern char* fn_8025F120(char* d, const char* s);
+extern char* strcpy(char* d, const char* s);
 extern void* fn_801DB124(void* data);
 extern void fn_8006CF54(ModelCache* c);
 typedef struct Inner_80007640 { s32 x0; u8 pad[0xc - 4]; s32 xc; } Inner_80007640;
@@ -3223,7 +3223,7 @@ s32 fn_80017018(s8 idx) {
 
 s32 fn_80010F9C(s16 a, s16 b, s16 c, s16 d)
 {
-    s16 r = fn_8025ECC4() % 100;
+    s16 r = rand() % 100;
     if (r >= 90) {
         r = 100;
     }
@@ -3613,8 +3613,8 @@ s16 fn_800108EC(s32 a, s32 b, s32 unused, Fn108EC* c) {
     y = x;
     x *= 0.975f;
     y *= 0.05f;
-    x += y * (0.000030517578f * fn_8025ECC4());
-    if ((fn_8025ECC4() & 7) == 0) {
+    x += y * (0.000030517578f * rand());
+    if ((rand() & 7) == 0) {
         x += 1.0f;
     }
     if (b <= 5) {
@@ -4196,7 +4196,7 @@ void fn_8000C8AC(ModelSrc* src) {
             memcpy(buf, src->data, src->size);
             c->x8 = fn_801DB124(buf);
             fn_8006CF54(c);
-            fn_8025F120(c->name, name);
+            strcpy(c->name, name);
             c->x4 = 0;
         }
         return;
@@ -4218,7 +4218,7 @@ void fn_8000C8AC(ModelSrc* src) {
         memcpy(buf, src->data, src->size);
         n->x8 = fn_801DB124(buf);
         fn_8006CF54(n);
-        fn_8025F120(n->name, name);
+        strcpy(n->name, name);
         n->x4 = 0;
     }
 }

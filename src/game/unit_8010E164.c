@@ -164,7 +164,6 @@ typedef struct Fn80129CA8Inner {
     Fn80129CA8Mid *mid;
 } Fn80129CA8Inner;
 extern u8 lbl_802B3388[];
-extern void fn_8025F120(void *, void *);
 extern s32 fn_8025EF88(void *, const char *);
 extern void fn_8015757C(void *, u16);
 typedef struct Fn80129D40Inner {
@@ -1243,7 +1242,7 @@ typedef union Col_8011FC10 {
     u8 b[4];
 } Col_8011FC10;
 extern const u32 lbl_8034A030;
-extern s32 fn_8025ECC4(void);
+extern s32 rand(void);
 typedef struct Pt_8011FE2C {
     f32 x, y, z, w;
 } Pt_8011FE2C;
@@ -2484,7 +2483,7 @@ typedef struct Cur { u8 pad0[4]; s32 x4; s8 x8; u8 pad9[3]; } Cur;
 extern void fn_80219324(s32 i);
 extern void fn_80219378(void *p);
 extern void fn_80100150(Cur *c);
-extern int fn_8025CB24(char *, const char *, ...);
+extern int sprintf(char *, const char *, ...);
 extern void *fn_801CC67C(void *name);
 extern void fn_801CC600(void *h, s32 *a, s32 b);
 typedef struct Row_80125B60_80125B60 {
@@ -3178,7 +3177,7 @@ s32 fn_80129CA8(Fn80129CA8Inner *o) {
     char *base;
 
     base = (char *)lbl_802B3388;
-    fn_8025F120(fi, (char *)o->mid + 0x24);
+    strcpy((char *)fi, (char *)o->mid + 0x24);
     fi[8] = 0;
     if (fn_8025EF88(fi, base + 0x7c) == 0) {
         return 0;
@@ -5024,17 +5023,17 @@ void fn_8011FC10(Rec_8011FC10 *rec) {
         it = item;
         item++;
         if (rec->flags & 0x1000000) {
-            col.b[0] = fn_8025ECC4() % 127 + 128;
-            col.b[1] = fn_8025ECC4();
-            col.b[2] = fn_8025ECC4();
-            col.b[3] = fn_8025ECC4();
+            col.b[0] = rand() % 127 + 128;
+            col.b[1] = rand();
+            col.b[2] = rand();
+            col.b[3] = rand();
             part->x54 = col.u;
             col.b[0] = 0;
         }
         ox = part->cx;
         oy = part->cy;
         oz = part->cz;
-        t = 0.000030517578f * (f32)fn_8025ECC4();
+        t = 0.000030517578f * (f32)rand();
         part->x50 = 2.0f - t;
         h = 0.5 * part->x50;
         it->p[0].x = ox - h;
@@ -5055,7 +5054,7 @@ void fn_8011FC10(Rec_8011FC10 *rec) {
         it->p[3].col = col.u;
         q = (s32 *)part;
         for (k = 0; k < 3; k++) {
-            q[11] = fn_8025ECC4();
+            q[11] = rand();
             q++;
         }
         part->xc = 0.0f;
@@ -6961,10 +6960,10 @@ void fn_801213F0(O *o, A *a) {
     t = b->ent[idx].x10;
     o->x8 = s;
     if (t == 0) {
-        if (fn_8025ECC4() & 1) {
-            s = (s32)((f32)s + (20.0f * (3.0517578125e-05f * (f32)fn_8025ECC4()) + 10.0f));
+        if (rand() & 1) {
+            s = (s32)((f32)s + (20.0f * (3.0517578125e-05f * (f32)rand()) + 10.0f));
         } else {
-            s = (s32)((f32)s - (20.0f * (3.0517578125e-05f * (f32)fn_8025ECC4()) + 10.0f));
+            s = (s32)((f32)s - (20.0f * (3.0517578125e-05f * (f32)rand()) + 10.0f));
         }
     } else {
         o->flags |= 0x100;
@@ -7677,7 +7676,7 @@ void fn_80128F80(void) {
             break;
         }
     }
-    fn_8025CB24((char *)lbl_80305F60, lbl_802B339C, id);
+    sprintf((char *)lbl_80305F60, lbl_802B339C, id);
     lbl_80346ED8 = fn_801CC67C(lbl_80305F60);
     lbl_80346ED4 = 0;
     fn_801CC600(lbl_80346ED8, &lbl_80346ED4, lbl_80346ED0);

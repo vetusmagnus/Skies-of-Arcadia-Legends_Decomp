@@ -141,10 +141,10 @@ s16 CharSeTable[190] = {
 
 extern Task* fn_802268E8(void*, void*);
 extern void fn_80061F58(void*, int, int);
-extern int fn_8025CB24(char*, const char*, ...);
-extern char* fn_8025F120(char*, const char*);
-extern char* fn_8025F0B0(char*, const char*);
-extern int fn_8025ECC4(void);
+extern int sprintf(char*, const char*, ...);
+extern char* strcpy(char*, const char*);
+extern char* strcat(char*, const char*);
+extern int rand(void);
 extern void* fn_801CC1B4(char*);
 extern int fn_801CC1A4(void*);
 extern void* fn_801CC0A0(void*);
@@ -271,8 +271,8 @@ void StvSampLoadBlocking(void)
     char name[16];
     char path[32];
     s16 base = StvIndexFromBattle();
-    fn_8025CB24(name, "STV%02d.SAMP", (s16)(base + fn_8025ECC4() % 2));
-    fn_8025CB24(path, "/SOUND/%s", name);
+    sprintf(name, "STV%02d.SAMP", (s16)(base + rand() % 2));
+    sprintf(path, "/SOUND/%s", name);
     fn_80219378(path);
 }
 
@@ -499,8 +499,8 @@ s8 VoiceOpen(s16 act, s16 sub, s8 kind, ChrTask* t)
         return 0;
     }
     if (VoiceFileName(name, act, sub, t, kind) != 0) {
-        fn_8025F120(path, "/SOUND/");
-        fn_8025F0B0(path, name);
+        strcpy(path, "/SOUND/");
+        strcat(path, name);
         lbl_8030A10C.voice[slot].stream = fn_80215F14(2, 0x5622, 2, 0, 0, 0, path);
         if (lbl_8030A10C.voice[slot].stream != NULL) {
             lbl_8030A10C.voice[slot].owner = d->id;
@@ -634,7 +634,7 @@ s16 VoiceNoAct26(ChrTask* arg)
         r += 4;
         break;
     default:
-        r = r + 1 + fn_8025ECC4() % 3;
+        r = r + 1 + rand() % 3;
         break;
     }
     return r;
@@ -705,10 +705,10 @@ int VoiceFileName(char* out, s16 act, s16 sub, ChrTask* t, s8 kind)
     ChrInfo* info = t->work->info;
     s16 r;
 
-    fn_8025F120(ext, ".P04");
+    strcpy(ext, ".P04");
     switch (kind) {
     case 0:
-        fn_8025CB24(out, "KO%04dS%s", sub, ext);
+        sprintf(out, "KO%04dS%s", sub, ext);
         return 1;
     case 1:
         if (fn_80008AB4(t->work->res->x30, act, sub, 0x3B, 3, 2, info->x298) == 0) {
@@ -717,9 +717,9 @@ int VoiceFileName(char* out, s16 act, s16 sub, ChrTask* t, s8 kind)
         switch (act) {
         case 0x18:
             if (sub == 0x3D) {
-                fn_8025CB24(out, "%03dS%s", PartyVoice() * 100 + 461, ext);
+                sprintf(out, "%03dS%s", PartyVoice() * 100 + 461, ext);
             } else {
-                fn_8025CB24(out, "KO%04dS%s", sub, ext);
+                sprintf(out, "KO%04dS%s", sub, ext);
             }
             return 1;
         }
@@ -738,17 +738,17 @@ int VoiceFileName(char* out, s16 act, s16 sub, ChrTask* t, s8 kind)
             if (r < 0) {
                 return 0;
             }
-            fn_8025CB24(out, "B702%04dS%s", r, ext);
+            sprintf(out, "B702%04dS%s", r, ext);
             return 1;
         case 14:
-            fn_8025CB24(out, "B702%04dS%s", VoiceA(t), ext);
+            sprintf(out, "B702%04dS%s", VoiceA(t), ext);
             return 1;
         case 20:
             r = VoiceNoAct20(t);
             if (r < 0) {
                 return 0;
             }
-            fn_8025CB24(out, "%3dS%s", r, ext);
+            sprintf(out, "%3dS%s", r, ext);
             return 1;
         case 26:
         case 27:
@@ -758,13 +758,13 @@ int VoiceFileName(char* out, s16 act, s16 sub, ChrTask* t, s8 kind)
                 return 0;
             }
             if (r >= 5000) {
-                fn_8025CB24(out, "B702%dS%s", r, ext);
+                sprintf(out, "B702%dS%s", r, ext);
             } else {
-                fn_8025CB24(out, "%3dS%s", r, ext);
+                sprintf(out, "%3dS%s", r, ext);
             }
             return 1;
         case 30:
-            fn_8025CB24(out, "B702%04dS%s", VoiceB(t), ext);
+            sprintf(out, "B702%04dS%s", VoiceB(t), ext);
             return 1;
         }
         return 0;
@@ -773,21 +773,21 @@ int VoiceFileName(char* out, s16 act, s16 sub, ChrTask* t, s8 kind)
         if (r < 0) {
             return 0;
         }
-        fn_8025CB24(out, "%3dS%s", r, ext);
+        sprintf(out, "%3dS%s", r, ext);
         return 1;
     case 7:
         r = VoiceNoKind7(t);
         if (r < 0) {
             return 0;
         }
-        fn_8025CB24(out, "%3dS%s", r, ext);
+        sprintf(out, "%3dS%s", r, ext);
         return 1;
     case 8:
         r = VoiceNoKind8(t);
         if (r < 0) {
             return 0;
         }
-        fn_8025CB24(out, "%3dS%s", r, ext);
+        sprintf(out, "%3dS%s", r, ext);
         return 1;
     }
     return 0;
@@ -1012,7 +1012,7 @@ s16 StvIndexFromStage(void)
 void StvSampPath(char* buf)
 {
     s16 n = StvIndexFromStage();
-    fn_8025CB24(buf, "/SOUND/STV%02d.SAMP", (s16)(n + fn_8025ECC4() % 2));
+    sprintf(buf, "/SOUND/STV%02d.SAMP", (s16)(n + rand() % 2));
 }
 
 /* Task: state 1 opens /SOUND/<name[idx]>, state 2 waits for the read, registers it in the sound state and goes on to the next file. */
@@ -1023,7 +1023,7 @@ void SampLoadTask(SampTask* node)
     case 0:
         node->state = 1;
     case 1:
-        fn_8025CB24(work->path, "/SOUND/%s", work->name[work->idx]);
+        sprintf(work->path, "/SOUND/%s", work->name[work->idx]);
         work->handle = fn_801CC1B4(work->path);
         node->state = 2;
         break;
@@ -1032,7 +1032,7 @@ void SampLoadTask(SampTask* node)
             work->data = fn_801CC0A0(work->handle);
             lbl_8030A10C.sampData[work->idx] = work->data;
             lbl_8030A10C.sampSize[work->idx] = 0x20;
-            fn_8025F120(lbl_8030A10C.sampName[work->idx], work->path);
+            strcpy(lbl_8030A10C.sampName[work->idx], work->path);
             if (work->flags & 0x80000000) {
                 fn_80218D84(work->path, work->data, 0x20);
                 if ((work->flags & 0x40000000) && work->idx == 0) {
@@ -1066,7 +1066,7 @@ void SoundLoadCrSampDefault(void)
     s8 i;
     SampTask* node = (SampTask*)fn_802268E8(lbl_803475A8, SampLoadTask);
     fn_80061F58(&node->work, 0xac, 0);
-    fn_8025F120(node->work->name[0], "CR000.SAMP");
+    strcpy(node->work->name[0], "CR000.SAMP");
     node->work->flags |= 0x80000000;
     node->work->flags |= 0x40000000;
     fn_80073B48(buf);
@@ -1074,7 +1074,7 @@ void SoundLoadCrSampDefault(void)
         if (buf[i] < 0) break;
         if (buf[i] < 11) found |= 1;
     }
-    fn_8025F120(node->work->name[1], (found & 1) == 0 ? "CR101.SAMP" : "CR100.SAMP");
+    strcpy(node->work->name[1], (found & 1) == 0 ? "CR101.SAMP" : "CR100.SAMP");
 }
 
 /* Starts loading CRnnn.SAMP for `first` and, if second >= 0, `second`. */
@@ -1082,11 +1082,11 @@ void SoundLoadCrSamp(s8 first, s8 second)
 {
     SampTask* node = (SampTask*)fn_802268E8(lbl_803475A8, SampLoadTask);
     fn_80061F58(&node->work, 0xac, 0);
-    fn_8025CB24(node->work->name[0], "CR%03d.SAMP", first);
+    sprintf(node->work->name[0], "CR%03d.SAMP", first);
     lbl_8030A10C.flags |= 0x80000000;
     if (second >= 0) {
         node->work->flags |= 0x40000000;
-        fn_8025CB24(node->work->name[1], "CR%03d.SAMP", second);
+        sprintf(node->work->name[1], "CR%03d.SAMP", second);
     }
 }
 
@@ -1095,7 +1095,7 @@ void SoundLoadB7Samp(void)
 {
     SampTask* node = (SampTask*)fn_802268E8(lbl_803475A8, SampLoadTask);
     fn_80061F58(&node->work, 0xac, 0);
-    fn_8025F120(node->work->name[0], "B7000000.SAMP");
+    strcpy(node->work->name[0], "B7000000.SAMP");
     lbl_8030A10C.flags |= 0x80000000;
 }
 
@@ -1130,7 +1130,7 @@ void SoundLoadStageSamp(void)
     }
     node = (SampTask*)fn_802268E8(lbl_803475A8, SampLoadTask);
     fn_80061F58(&node->work, 0xac, 0);
-    fn_8025CB24(node->work->name[0], "STV%02d.SAMP", n);
+    sprintf(node->work->name[0], "STV%02d.SAMP", n);
     lbl_8030A10C.flags |= 0x80000000;
     node->work->flags |= 0x80000000;
 }

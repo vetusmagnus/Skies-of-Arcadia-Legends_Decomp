@@ -412,7 +412,7 @@ extern void fn_80055EB8(void);
 extern void fn_80055F0C(void);
 extern void fn_800565B0(void);
 extern void fn_80056B6C(void);
-extern int fn_8025ECC4(void);
+extern int rand(void);
 extern void fn_80057038(void);
 extern void fn_800576B0(void);
 extern void fn_80057BD0(void);
@@ -456,7 +456,7 @@ extern void fn_8004AFD8(void);
 extern void fn_8004C070(void);
 extern s8 fn_8000FA30(u8);
 extern void fn_8004C1E4(void);
-extern int fn_8025CB24(char*, const char*, ...);
+extern int sprintf(char*, const char*, ...);
 extern void fn_8000FC14(void);
 extern void fn_8004E7F0(void);
 extern void fn_800454A0(void);
@@ -1052,7 +1052,7 @@ int fn_8003DBAC(s32 n, char* buf)
         idx = n / 1000;
         n = (s16)(n % 1000);
         if (idx >= 3) idx = 0;
-        fn_8025CB24(buf, "M%c%03d.MLD", letters[idx], n);
+        sprintf(buf, "M%c%03d.MLD", letters[idx], n);
     } else {
         s16 a = n / 100000;
         s16 b;
@@ -1060,7 +1060,7 @@ int fn_8003DBAC(s32 n, char* buf)
         n = (s16)(n % 100000);
         b = n / 100;
         c = n % 100;
-        fn_8025CB24(buf, "E%02d%03d%02d.MLD", a, b, c);
+        sprintf(buf, "E%02d%03d%02d.MLD", a, b, c);
     }
     return 1;
 }
@@ -1196,11 +1196,11 @@ int fn_8003D2E4(Handler* h, TaskArg* arg)
         a = fn_80020E10(arg->res->x10->xc);
         b = fn_8000FA30(*res);
         if (obj->src % 10 == 0) {
-            fn_8025CB24(name, "E99%02d%02d0", a, b);
+            sprintf(name, "E99%02d%02d0", a, b);
             fn_80046BB0(name, &id);
             fn_80036520(id, &buf);
         } else if (b == 0x10 || b == 0x11) {
-            fn_8025CB24(name, "E99%02d%02d1", a, b);
+            sprintf(name, "E99%02d%02d1", a, b);
             fn_80046BB0(name, &id);
             fn_80036520(id, &buf);
         } else {
@@ -2020,14 +2020,14 @@ int fn_8003A370(Handler* h, TaskArg* arg)
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         for (i = 0; i < obj->x146; i++) {
-            if (obj->x16) off = fn_8025ECC4() % obj->x16; else off = 0;
-            dx = obj->x150 * (3.0517578125e-05f * fn_8025ECC4());
-            dy = obj->x154 * (3.0517578125e-05f * fn_8025ECC4());
-            spread = 3.0517578125e-05f * fn_8025ECC4();
-            scale = 3.0517578125e-05f * fn_8025ECC4();
-            angle = 3.0517578125e-05f * fn_8025ECC4();
+            if (obj->x16) off = rand() % obj->x16; else off = 0;
+            dx = obj->x150 * (3.0517578125e-05f * rand());
+            dy = obj->x154 * (3.0517578125e-05f * rand());
+            spread = 3.0517578125e-05f * rand();
+            scale = 3.0517578125e-05f * rand();
+            angle = 3.0517578125e-05f * rand();
             if (scale < 0.8f) scale = 0.8f;
-            if (obj->x40 == 8) kind = fn_8025ECC4() % 4; else kind = obj->x40;
+            if (obj->x40 == 8) kind = rand() % 4; else kind = obj->x40;
             angle = 360.0f * angle;
             for (j = 0; j < obj->x1e; j++) {
                 node = TaskNew(fn_80057038);

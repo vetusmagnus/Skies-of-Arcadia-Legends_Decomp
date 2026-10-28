@@ -189,7 +189,7 @@ typedef struct { s8 x0; u8 pad1[3]; s32 x4; s32 x8; } E12;
 extern E12 lbl_80302C08[12];
 extern void fn_800839D8(s32 a, void *p, s32 b);
 extern s32 lbl_80302C98[8];
-extern s32 fn_8025ECC4(void);
+extern s32 rand(void);
 extern s32 fn_80075DAC(f32 f1, f32 f2, void* w, u16 a, u32 flags, s32 k, s32 j);
 extern f32 lbl_80348A70;
 typedef struct Hdr { void* x0; } Hdr;
@@ -1175,7 +1175,7 @@ s32 fn_80089EC8(s32 a) {
             n++;
         }
     }
-    return lbl_80302C98[fn_8025ECC4() % n];
+    return lbl_80302C98[rand() % n];
 }
 
 s32 fn_80089F78(void) {
@@ -1210,7 +1210,7 @@ s32 fn_8008A08C(void) {
             n++;
         }
     }
-    return lbl_80302C98[fn_8025ECC4() % n];
+    return lbl_80302C98[rand() % n];
 }
 
 static inline s16 pick(Slot* t, s32 k, s32 j) {
@@ -2289,7 +2289,7 @@ int fn_800819D0(s16 a, s16 b)
     if ((int)lbl_80309730[b].b8 == 2) return 0;
     if ((bits & 2) == 0 && (bits & 0x800000) == 0) {
         if (chr->xba == 0) return 0;
-        if (fn_8025ECC4() % 100 >= chr->xb4) return 0;
+        if (rand() % 100 >= chr->xb4) return 0;
     }
     if (lbl_80309730[a].w0 == 7) {
         if ((lbl_80309DE4[b]->xae & 0x80) == 0) return 0;
@@ -2717,7 +2717,7 @@ static inline s32 PickRandomAlive(void) {
             n++;
         }
     }
-    return ((s32*)lbl_80302C98)[fn_8025ECC4() % n];
+    return ((s32*)lbl_80302C98)[rand() % n];
 }
 
 s32 fn_80088E4C(s32 i) {
@@ -2753,7 +2753,7 @@ static inline s32 RandomLivingAlly(void) {
             n++;
         }
     }
-    return lbl_80302C98[fn_8025ECC4() % n];
+    return lbl_80302C98[rand() % n];
 }
 
 s32 fn_80089074(void) {
@@ -2793,7 +2793,7 @@ s32 fn_800899C0(s32 a) {
         }
     }
     if (n != 0) {
-        return lbl_80302C98[fn_8025ECC4() % n];
+        return lbl_80302C98[rand() % n];
     }
     return fn_80089EC8(a);
 }
@@ -2824,7 +2824,7 @@ s32 fn_80089AA0(void) {
             n++;
         }
     }
-    return lbl_80302C98[fn_8025ECC4() % n];
+    return lbl_80302C98[rand() % n];
 }
 
 s32 fn_80089BA4(void) {
@@ -2853,7 +2853,7 @@ s32 fn_80089BA4(void) {
             n++;
         }
     }
-    return lbl_80302C98[fn_8025ECC4() % n];
+    return lbl_80302C98[rand() % n];
 }
 
 s32 fn_80089CA8(void) {
@@ -2882,7 +2882,7 @@ s32 fn_80089CA8(void) {
             n++;
         }
     }
-    return lbl_80302C98[fn_8025ECC4() % n];
+    return lbl_80302C98[rand() % n];
 }
 
 s32 fn_8008A174(s32 idx) {
@@ -2930,7 +2930,7 @@ s32 fn_80089184(void) {
         }
     }
     if (n != 0) {
-        return lbl_80302C98[fn_8025ECC4() % n];
+        return lbl_80302C98[rand() % n];
     }
     return RandomLivingAlly();
 }
@@ -2953,7 +2953,7 @@ s32 fn_800892AC(void) {
         }
     }
     if (n != 0) {
-        return lbl_80302C98[fn_8025ECC4() % n];
+        return lbl_80302C98[rand() % n];
     }
     return RandomLivingAlly();
 }
@@ -2976,7 +2976,7 @@ s32 fn_800893D4(void) {
         }
     }
     if (n != 0) {
-        return lbl_80302C98[fn_8025ECC4() % n];
+        return lbl_80302C98[rand() % n];
     }
     return RandomLivingAlly();
 }
@@ -2999,7 +2999,7 @@ s32 fn_800894FC(void) {
         }
     }
     if (n != 0) {
-        return lbl_80302C98[fn_8025ECC4() % n];
+        return lbl_80302C98[rand() % n];
     }
     return RandomLivingAlly();
 }
@@ -3022,7 +3022,7 @@ s32 fn_80089624(void) {
         }
     }
     if (n != 0) {
-        return lbl_80302C98[fn_8025ECC4() % n];
+        return lbl_80302C98[rand() % n];
     }
     return RandomLivingAlly();
 }
@@ -3045,7 +3045,7 @@ s32 fn_8008974C(void) {
         }
     }
     if (n != 0) {
-        return lbl_80302C98[fn_8025ECC4() % n];
+        return lbl_80302C98[rand() % n];
     }
     return RandomLivingAlly();
 }
@@ -3068,7 +3068,7 @@ s32 fn_80089874(void) {
         }
     }
     if (n != 0) {
-        return lbl_80302C98[fn_8025ECC4() % n];
+        return lbl_80302C98[rand() % n];
     }
     return RandomLivingAlly();
 }

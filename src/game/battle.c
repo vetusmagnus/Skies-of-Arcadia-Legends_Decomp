@@ -257,7 +257,7 @@ extern void fn_800324B8(u8, int);
 extern void fn_8003FA30(Unit*, u8);
 extern s16 fn_80020094(Wk*, s16, int, int);
 extern void fn_8003FB70(Tk*, int);
-extern int fn_8025ECC4(void);
+extern int rand(void);
 extern Ent2 lbl_80309730[12];
 extern void fn_80081EF4(s8, int);
 extern s32 fn_8007EB74(int);
@@ -275,10 +275,10 @@ extern void fn_800315FC(void);
 extern void fn_8006D080(void*, s32);
 extern void fn_8006C5A4(void);
 extern void fn_8006DBDC(void);
-extern int fn_8025CB24(char*, const char*, ...);
+extern int sprintf(char*, const char*, ...);
 extern void fn_801DBE1C(const char*, ...);
 extern s16 fn_80008274(s32);
-extern void fn_8025F120(char*, const char*);
+extern void strcpy(char*, const char*);
 extern void fn_80061048(char*);
 extern void fn_80046BB0(const char*, s32*);
 extern s32 fn_80009500(void*, s32, s32);
@@ -1550,7 +1550,7 @@ void fn_8002EB4C(int o, int arg) {
     }
     if (r < 0) pick = 3;
     while (pick < 0) {
-        k = fn_8025ECC4() % 2;
+        k = rand() % 2;
         if (fn_80020094(p->work, tbl[k], -1, 1) >= 0) pick = tbl[k];
     }
     fn_800214FC(o, pick, arg);
@@ -1905,23 +1905,23 @@ s32 fn_8002F80C(s8 mode, Tk* tab) {
             s16 type = info->type;
             s16 id = info->id;
             if (type < 4) {
-                fn_8025CB24(buf, "MA%03d.MLD", id);
+                sprintf(buf, "MA%03d.MLD", id);
             } else {
                 if (id < 0) {
                     fn_801DBE1C("incorrect load character No[%d]", id);
                 }
                 if (id < 128) {
-                    fn_8025CB24(buf, "MB%03d.MLD", id);
+                    sprintf(buf, "MB%03d.MLD", id);
                 } else {
-                    fn_8025CB24(buf, "MG%03d.MLD", fn_80008274(id) - 128);
+                    sprintf(buf, "MG%03d.MLD", fn_80008274(id) - 128);
                 }
             }
-            fn_8025F120(name1, buf);
-            fn_8025F120(name2, buf);
+            strcpy(name1, buf);
+            strcpy(name2, buf);
             fn_80061048(name1);
             fn_80046BB0(buf, &hash);
             if (NeedsAdd(tab, hash)) {
-                fn_8025CB24(buf, "%s0.STD", name1);
+                sprintf(buf, "%s0.STD", name1);
                 fn_8006E75C(lbl_80347398, buf, hash);
                 count++;
             }
@@ -1980,19 +1980,19 @@ s32 fn_8002FA00(s8 mode, s32 flag, Tk* tab) {
             type = info->type;
             id = info->id;
             if (type < 4) {
-                fn_8025CB24(buf, "MA%03d.MLD", id);
+                sprintf(buf, "MA%03d.MLD", id);
             } else {
                 if (id < 0) {
                     fn_801DBE1C("incorrect load character No[%d]", id);
                 }
                 if (id < 128) {
-                    fn_8025CB24(buf, "MB%03d.MLD", id);
+                    sprintf(buf, "MB%03d.MLD", id);
                 } else {
-                    fn_8025CB24(buf, "MG%03d.MLD", fn_80008274(id) - 128);
+                    sprintf(buf, "MG%03d.MLD", fn_80008274(id) - 128);
                 }
             }
-            fn_8025F120(name1, buf);
-            fn_8025F120(name2, buf);
+            strcpy(name1, buf);
+            strcpy(name2, buf);
             fn_80061048(name1);
             fn_80046BB0(buf, &hash);
             if (NeedsAdd(tab, hash)) {
@@ -2000,12 +2000,12 @@ s32 fn_8002FA00(s8 mode, s32 flag, Tk* tab) {
                     s16 cnt;
                     fn_80009500(lbl_80347398, hash, hash);
                     ((s32*)tab->work)[(s16)n + 1] = hash;
-                    fn_8025CB24(buf, "%s.STD", name1);
+                    sprintf(buf, "%s.STD", name1);
                     fn_8006E75C(lbl_80347398, buf, hash);
                     ((s32*)tab->work)[(s16)(n + 1) + 1] = hash;
                     n += 2;
                     if (mode < 3) {
-                        fn_8025CB24(buf, "%s0.STD", name1);
+                        sprintf(buf, "%s0.STD", name1);
                         fn_8006E75C(lbl_80347398, buf, hash);
                         ((s32*)tab->work)[(s16)n + 1] = hash;
                         n++;
@@ -2039,7 +2039,7 @@ void fn_8002FD58(void) {
             if (info->id == 2 && info->type < 4) {
                 s16 v = fn_80068348(i);
                 if (v >= 15 && v < 26) {
-                    fn_8025CB24(buf, "D05000%02X.MLK", v);
+                    sprintf(buf, "D05000%02X.MLK", v);
                     fn_8006E75C(lbl_80347398, buf, 0);
                 }
             }
@@ -2053,7 +2053,7 @@ void fn_8002FE10(void) {
     for (i = 4; i < 12; i++) {
         Tk* t = lbl_80309700[i];
         if (t != 0) {
-            fn_8025CB24(buf, lbl_802AD1D0, fn_80008274(t->work->id));
+            sprintf(buf, lbl_802AD1D0, fn_80008274(t->work->id));
             fn_8006E75C(lbl_80347398, buf, 0);
         }
     }
@@ -2186,14 +2186,14 @@ void fn_80030280(s32 id) {
                 s16 a = t->work->type;
                 b = t->work->id;
                 if (a < 4) {
-                    fn_8025CB24(buf, st + 0x78, b);
+                    sprintf(buf, st + 0x78, b);
                 } else {
                     if (b < 0) fn_801DBE1C(st + 0x84, b);
                     if (b < 0x80) {
-                        fn_8025CB24(buf, st + 0xa0, b);
+                        sprintf(buf, st + 0xa0, b);
                     } else {
                         c = fn_80008274(b);
-                        fn_8025CB24(buf, st + 0xac, c - 0x80);
+                        sprintf(buf, st + 0xac, c - 0x80);
                     }
                 }
                 fn_80046BB0(buf, &out);
@@ -2371,16 +2371,16 @@ void fn_800308A8(void) {
 
 static inline int Fmt(char* buf, s16 id, s16 kind) {
     if (kind < 4) {
-        fn_8025CB24(buf, "MA%03d.MLD", id);
+        sprintf(buf, "MA%03d.MLD", id);
     } else {
         if (id < 0) {
             fn_801DBE1C("incorrect load chara No[%d]", id);
         }
         if (id < 0x80) {
-            fn_8025CB24(buf, "MB%03d.MLD", id);
+            sprintf(buf, "MB%03d.MLD", id);
         } else {
             s16 n = fn_80008274(id);
-            fn_8025CB24(buf, "MG%03d.MLD", n - 0x80);
+            sprintf(buf, "MG%03d.MLD", n - 0x80);
         }
     }
     return 1;

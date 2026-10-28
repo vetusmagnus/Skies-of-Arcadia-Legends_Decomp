@@ -333,7 +333,7 @@ extern Ent_8016AD08* lbl_80347090;
 extern Ent_8016AD08* lbl_80347094;
 extern Ent_8016AD08* lbl_80347098;
 extern Ent_8016AD08* lbl_8034709C;
-extern int fn_8025CB24(char* buf, const char* fmt, ...);
+extern int sprintf(char* buf, const char* fmt, ...);
 extern void* fn_801DB244(void* p);
 extern void fn_8016B4F0(void);
 extern s32 fn_8016AEBC(void* self);
@@ -3362,7 +3362,7 @@ void fn_8016ADD4(s8 type) {
     char buf[0x20];
     s32 v = (type == 3) ? 2 : type;
 
-    fn_8025CB24(buf, "/field/sora0%d.mld", v);
+    sprintf(buf, "/field/sora0%d.mld", v);
     switch (type) {
     case 0:
         lbl_80347090 = fn_801DB244(buf);

@@ -125,7 +125,7 @@ void fn_8006AFD0(s16 i, void *a, void *b, s32 c);
 extern void fn_8006AC68(s16 i);
 extern void fn_800696A8(s32 a, s16 i, s32 b, s8 v);
 s16 fn_8006E924(char* path, char* name, Node** out, void* key);
-s32 fn_8025ECC4(void);
+s32 rand(void);
 s32 fn_801D6E38(s32 a);
 typedef struct U64FE0 {
     u8 pad0[6];
@@ -163,7 +163,7 @@ typedef struct O64FE0 {
 } O64FE0;
 extern f32 njSin(s32);
 f32 njCos(s32 a);
-char* fn_8025F0B0(char* d, const char* s);
+char* strcat(char* d, const char* s);
 void* fn_802AC730(void* d, s32 c, u32 n);
 typedef struct S6BEFC {
     u8 pad0[8];
@@ -190,7 +190,7 @@ extern char lbl_802B0678[];
 extern char lbl_802B068C[];
 extern void fn_8001C6CC(void *, s16, s16, char *);
 extern void fn_80061048(char *);
-extern s32 fn_8025CB24(char *, char *, ...);
+extern s32 sprintf(char *, char *, ...);
 extern void *fn_801CC1B4(char *);
 extern s32 fn_801CC1A4(void *);
 extern void *fn_801CC0A0(void *);
@@ -231,7 +231,7 @@ typedef struct O6DDBC {
     S6DDBC *s;
 } O6DDBC;
 extern char lbl_802B069C[];
-extern void fn_8025F120(char *, char *);
+extern void strcpy(char *, char *);
 extern u8 fn_80046BB0(char *, s32 *);
 extern u32 fn_80035C38(void *);
 extern s32 fn_8003DBAC(s32, char *);
@@ -328,7 +328,7 @@ typedef struct O5C328 {
     u8 pad1A[10];
     S5C328 *s;
 } O5C328;
-extern s32 fn_8025ECC4(void);
+extern s32 rand(void);
 extern void fn_80071CF0(V3 *, V3 *);
 typedef struct P5D47C {
     u8 pad0[0x10];
@@ -1454,7 +1454,7 @@ void fn_80071CBC(f32 *a, f32 *b) {
 }
 
 void fn_800608C8(f32* p) {
-    *p = (f32)(fn_8025ECC4() % 6) * 70.0f;
+    *p = (f32)(rand() % 6) * 70.0f;
     if (*p == 0.0f) {
         *p = 45.0f;
     }
@@ -1586,8 +1586,8 @@ void fn_8006AD44(s32 a, s16 i, s32 b, s8 v) {
 void fn_8006C860(char* a, char* b) {
     char buf[0x100];
     fn_802AC730(buf, 0, 0xff);
-    fn_8025F0B0(buf, a);
-    fn_8025F0B0(buf, b);
+    strcat(buf, a);
+    strcat(buf, b);
     fn_801CC62C(buf);
 }
 
@@ -1722,7 +1722,7 @@ void fn_8005C328(O5C328 *o) {
         case 0: {
             s8 idx;
             u->ff0 |= 0x40000000;
-            idx = fn_8025ECC4() % s->rec->count;
+            idx = rand() % s->rec->count;
             fn_80071CF0(&s->rec->vecs[idx], &s->target->work->pos);
             s->target->work->i2c = 182.04445f * s->rec->angs[idx];
             break;
@@ -1753,7 +1753,7 @@ void fn_8005D47C(O5D47C *o) {
         fn_80014AB8(1, o);
         o->state = 1;
         if (o->p->flags & 0x2000) {
-            o->b74 = fn_8025ECC4() % 3;
+            o->b74 = rand() % 3;
         }
     case 1:
         if (o->p->flags & 0x2000) {
@@ -2609,9 +2609,9 @@ void fn_8006BEFC(O6BEFC *o) {
     case 1:
         fn_8001C6CC(s->p94, s->s98, s->s9a, name);
         fn_80061048(name);
-        fn_8025CB24(buf, lbl_802B0678, name, s->s8c);
+        sprintf(buf, lbl_802B0678, name, s->s8c);
         if (fn_801CC62C(buf) == 0 && s->s8c == 0) {
-            fn_8025CB24(buf, lbl_802B068C, name);
+            sprintf(buf, lbl_802B068C, name);
         }
         if (fn_801CC62C(buf) == 0) {
             o->state = 5;
@@ -2672,29 +2672,29 @@ void fn_8006DDBC(O6DDBC *o) {
     case 1:
         if (s->p4[s->s8c].f0 > 0) {
             if (fn_8003DBAC(s->p4[s->s8c].f0, s->name) == 0) {
-                fn_8025F120(s->name, s->p4[s->s8c].f8);
+                strcpy(s->name, s->p4[s->s8c].f8);
             }
             switch (fn_80046BB0(s->name, &v)) {
             case 0:
             default:
-                fn_8025CB24(buf, lbl_802B069C);
+                sprintf(buf, lbl_802B069C);
                 break;
             case 1:
                 switch (v / 100000) {
                 case 99:
-                    fn_8025CB24(buf, lbl_802B069C);
+                    sprintf(buf, lbl_802B069C);
                     break;
                 default:
-                    fn_8025CB24(buf, "/BEFF/");
+                    sprintf(buf, "/BEFF/");
                     break;
                 }
                 break;
             case 2:
             case 3:
-                fn_8025CB24(buf, "/BEFF/");
+                sprintf(buf, "/BEFF/");
                 break;
             }
-            fn_8025CB24(buf2, "%s%s", buf, s->name);
+            sprintf(buf2, "%s%s", buf, s->name);
             s->p8 = fn_801CC1B4(buf2);
             s->s8c = s->s8c + 1;
             o->state = 2;
@@ -2731,7 +2731,7 @@ void fn_8006E00C(O6E00C *o) {
     case 1:
         if (s->p4[s->s8c].f0 > 0) {
             if (fn_8003DBAC(s->p4[s->s8c].f0, s->name) == 0) {
-                fn_8025F120(s->name, s->p4[s->s8c].f8);
+                strcpy(s->name, s->p4[s->s8c].f8);
             }
             x = fn_8022ABEC(s->name);
             if (x != 0xffffffff) {
@@ -2745,24 +2745,24 @@ void fn_8006E00C(O6E00C *o) {
             switch (fn_80046BB0(s->name, &v)) {
             case 0:
             default:
-                fn_8025CB24(buf, lbl_802B069C);
+                sprintf(buf, lbl_802B069C);
                 break;
             case 1:
                 switch (v / 100000) {
                 case 99:
-                    fn_8025CB24(buf, lbl_802B069C);
+                    sprintf(buf, lbl_802B069C);
                     break;
                 default:
-                    fn_8025CB24(buf, "/BEFF/");
+                    sprintf(buf, "/BEFF/");
                     break;
                 }
                 break;
             case 2:
             case 3:
-                fn_8025CB24(buf, "/BEFF/");
+                sprintf(buf, "/BEFF/");
                 break;
             }
-            fn_8025CB24(buf2, "%s%s", buf, s->name);
+            sprintf(buf2, "%s%s", buf, s->name);
             s->p8 = fn_801CC1B4(buf2);
             s->s8c = s->s8c + 1;
             o->state = 2;
@@ -2909,16 +2909,16 @@ void fn_8006EB88(char *a, char *b, Out6EB88 *out) {
     s32 v;
     s16 i;
     if (a[0] != '/') {
-        fn_8025F120(buf, "/");
-        fn_8025F0B0((void *)(buf), (void *)(a));
-        fn_8025F0B0((void *)(buf), (void *)(b));
+        strcpy(buf, "/");
+        strcat((void *)(buf), (void *)(a));
+        strcat((void *)(buf), (void *)(b));
     } else {
-        fn_8025CB24(buf, "%s%s", a, b);
+        sprintf(buf, "%s%s", a, b);
     }
     i = 0;
     if (iscr_6EB88((s8 *)b)) {
         void *found;
-        fn_8025CB24(buf2, "%s.MLD", b);
+        sprintf(buf2, "%s.MLD", b);
         found = crew_6EB88(buf2);
         if (found != 0) {
             out->f8 = fn_801DB124(found);
@@ -3226,7 +3226,7 @@ inline void AddName(char* name) {
             return;
         }
     }
-    fn_8025F120(recs[i].f8, name);
+    strcpy(recs[i].f8, name);
     recs[i].f0 = 9999999;
     recs[i].f4 = 0;
     recs[i].f18 = 0;
@@ -3249,7 +3249,7 @@ void fn_8006C5B4(void) {
 
     lbl_80347398->f0 = -1;
     c = fn_80020F68();
-    fn_8025CB24(buf, lbl_802B06A8, c);
+    sprintf(buf, lbl_802B06A8, c);
     AddName(buf);
     if (SetOnce()) {
         t = fn_802268E8(lbl_803475A8, fn_8006C124);
@@ -3289,7 +3289,7 @@ s16 fn_8006E924(char* path, char* name, Node** out, void* key) {
             n->x8 = (u32)fn_801DB124(key);
             fn_8006CF54((Out6EB88*)n);
         }
-        fn_8025F120((char*)n->name, name);
+        strcpy((char*)n->name, name);
         n->count = 1;
         *out = n;
         return n->count;
@@ -3315,7 +3315,7 @@ s16 fn_8006E924(char* path, char* name, Node** out, void* key) {
         m->x8 = (u32)fn_801DB124(key);
         fn_8006CF54((Out6EB88*)m);
     }
-    fn_8025F120((char*)m->name, name);
+    strcpy((char*)m->name, name);
     m->count = 1;
     *out = m;
     return m->count;
@@ -3917,21 +3917,21 @@ void fn_8006C8DC(char *buf, char *name)
     switch (fn_80046BB0(name, &v)) {
     case 0:
     default:
-        fn_8025CB24(buf, lbl_802B069C);
+        sprintf(buf, lbl_802B069C);
         break;
     case 1:
         switch (v / 100000) {
         case 99:
-            fn_8025CB24(buf, lbl_802B069C);
+            sprintf(buf, lbl_802B069C);
             break;
         default:
-            fn_8025CB24(buf, "/BEFF/");
+            sprintf(buf, "/BEFF/");
             break;
         }
         break;
     case 2:
     case 3:
-        fn_8025CB24(buf, "/BEFF/");
+        sprintf(buf, "/BEFF/");
         break;
     }
 }
@@ -4454,10 +4454,10 @@ void fn_80072E8C(s16 k, s16 b, s16 c, char *d) {
     case 0x19:
     case 0x1d:
     case 0x1e:
-        fn_8025CB24(d, lbl_802B0708, b, k);
+        sprintf(d, lbl_802B0708, b, k);
         break;
     default:
-        fn_8025CB24(d, lbl_802B0708, c, k);
+        sprintf(d, lbl_802B0708, c, k);
         break;
     }
 }
@@ -4468,18 +4468,18 @@ s16 fn_8006801C(O_8006801C *o, s32 n) {
     char c[0x20];
     s32 v;
     fn_80068190(a);
-    fn_8025F120(b, a);
-    fn_8025F120(c, a);
+    strcpy(b, a);
+    strcpy(c, a);
     fn_80061048(b);
     fn_80046BB0(a, &v);
     fn_80009500(lbl_80347398, v, v);
     o->tab->v[n] = v;
     n++;
-    fn_8025CB24(a, "%s.STD", b);
+    sprintf(a, "%s.STD", b);
     fn_8006E75C(lbl_80347398, a, v);
     o->tab->v[n] = v;
     n++;
-    fn_8025CB24(a, "%s0.STD", b);
+    sprintf(a, "%s0.STD", b);
     fn_8006E75C(lbl_80347398, a, v);
     o->tab->v[n] = v;
     n++;
@@ -4704,7 +4704,7 @@ s32 fn_80068348(s16 idx)
     r = lbl_80309DE4[idx]->xb6 - 0x16;
     if ((s16)r < 10 || (s16)r > 25) {
         r = 10;
-        fn_8025CB24(buf, base + 0x160, lbl_80309DE4[idx]->xb6);
+        sprintf(buf, base + 0x160, lbl_80309DE4[idx]->xb6);
         fn_8008F75C(base + 0x174, buf, base + 0x188, lbl_803489B0);
     }
     return r;

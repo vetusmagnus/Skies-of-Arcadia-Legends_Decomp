@@ -715,7 +715,7 @@ extern s32 lbl_803474DC;
 extern void fn_801DB2C8(Task *t);
 extern Task *fn_802267AC(void *parent, TaskFunc fn);
 extern u32 strlen(const char*);
-extern char* fn_8025F120(char*, const char*);
+extern char* strcpy(char*, const char*);
 extern const char lbl_802C46C0[];
 typedef struct Key_801DEBE4 {
     f32 a[3];
@@ -3319,7 +3319,7 @@ Task *fn_801DB818(void *parent, const char *name) {
         fn_801DBE1C("mldTaskLoadMldDataAll Malloc Error");
     }
     ((MldWork *)h->work)->name = (char *)h->work + 0x20;
-    fn_8025F120(((MldWork *)h->work)->name, name);
+    strcpy(((MldWork *)h->work)->name, name);
     ((MldWork *)h->work)->w00 = 0;
     ((MldWork *)h->work)->w10 = 0;
     ((MldWork *)h->work)->w14 = 0;

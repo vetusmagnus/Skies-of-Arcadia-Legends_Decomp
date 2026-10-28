@@ -82,7 +82,7 @@ typedef struct {
 extern BUnit* lbl_80309DE4[12];
 extern s16* lbl_80347390;
 extern s32 (*lbl_802DBC4C[])(void);
-extern s32 fn_8025ECC4(void);
+extern s32 rand(void);
 extern s8 lbl_80347334;
 extern void fn_8002D684(void* u);
 extern void fn_8002BA8C(s16 idx);
@@ -398,7 +398,7 @@ void fn_8002BA8C(s16 idx) {
         u8 c = base->e[i].chance;
         if (c == 0xff) continue;
         if (c <= 100) {
-            if (fn_8025ECC4() % 100 < c) {
+            if (rand() % 100 < c) {
                 lbl_80347390[idx * 2 - 1] = base->e[i].a;
                 lbl_80347390[idx * 2] = base->e[i].b;
                 break;
@@ -418,11 +418,11 @@ s32 fn_8002BBAC(void) {
 }
 
 s32 fn_8002BBB4(void) {
-    return fn_8025ECC4() % 5 == 0;
+    return rand() % 5 == 0;
 }
 
 s32 fn_8002BBFC(void) {
-    return fn_8025ECC4() % 10 == 0;
+    return rand() % 10 == 0;
 }
 
 s32 fn_8002BC44(void) {

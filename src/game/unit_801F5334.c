@@ -221,7 +221,7 @@ extern s32 fn_8020FF44(s32 id, s32 b);
 extern s32 fn_8020FDE0(s32 id, s32 b, s32 c, s32 d);
 extern Actor* fn_8015F1A0(u16 id);
 extern void* fn_801F4AE4(s16 id);
-extern int fn_8025CB24(char* buf, const char* fmt, ...);
+extern int sprintf(char* buf, const char* fmt, ...);
 extern s32 fn_8021026C(const char* name);
 typedef struct Vec3i { s32 x, y, z; } Vec3i;
 typedef struct Vec3f { f32 x, y, z; } Vec3f;
@@ -345,7 +345,7 @@ extern f32 lbl_80347514;
 extern u32 lbl_80347518;
 extern void fn_8015F654(void* p);
 extern char lbl_802D4D7C[];
-extern s32 fn_8025ECC4(void);
+extern s32 rand(void);
 extern void fn_801D995C(s32 n, f32 a, f32 b, f32 c);
 extern void fn_800D2554(f32 x, f32 y);
 extern void fn_800D25C4(u32 rgb, s32 n);
@@ -632,13 +632,13 @@ extern s32 fn_8025EF88(const char *a, const char *b);
 extern void fn_801D6CBC(s32 chan, Pat *p);
 extern void fn_801D6C3C(s32 chan);
 
-extern int fn_8025CB24(char* buf, const char* fmt, ...);
+extern int sprintf(char* buf, const char* fmt, ...);
 
 extern s32 fn_800CCCA4(u32 a, u32 b, u32 c);
 extern char *lbl_80346848;
 extern char lbl_8034C198;
-extern char *fn_8025F120(void *dst, const char *src);
-extern char *fn_8025F0B0(void *dst, const char *src);
+extern char *strcpy(void *dst, const char *src);
+extern char *strcat(void *dst, const char *src);
 extern void fn_80219378(void *p);
 void fn_801EF300(void);
 extern void fn_800C1A34(s32 a, s32 b, s32 c, s32 d);
@@ -2459,7 +2459,7 @@ s32 fn_8020CBA4(u32 flags, Scpt* s) {
         lbl_802F7848.x88 = *(u32*)&t;
         t = 0.005493164f * (f32)act->x4c;
         lbl_802F7848.x94 = *(u32*)&t;
-        fn_8025CB24(lbl_803146A8, "\h(\x81\x40)You received %s [1]!\c", fn_801F4AE4((s16)id));
+        sprintf(lbl_803146A8, "\h(\x81\x40)You received %s [1]!\c", fn_801F4AE4((s16)id));
         fn_8021026C(lbl_803146A8);
         fn_801EFF0C((s16)id);
         lbl_8030CEA0.stack[++lbl_8030CEA0.sp] = s->cur.f;
@@ -3635,7 +3635,7 @@ s32 fn_801FE21C(u16 flags, Scpt *st) {
         float *p = st->cur.f + 1;
         i = (*p == 3.4028235e38f) ? (p++, 0x7FFFFFFF) : (s32)fn_801F6120(&p);
         st->cur.f = p;
-        lbl_8030CEA0.x1584[i] = (s32)(9999.0f * (3.0517578e-05f * (f32)fn_8025ECC4()));
+        lbl_8030CEA0.x1584[i] = (s32)(9999.0f * (3.0517578e-05f * (f32)rand()));
     }
     if (flags & 8) {
         return 1;
@@ -5938,7 +5938,7 @@ s32 fn_8021067C(s32 id)
     char buf[20];
     float* p;
     s32 ret;
-    fn_8025CB24(buf, "M%05d", id);
+    sprintf(buf, "M%05d", id);
     p = find_event(buf);
     if (p == 0) {
         return 0;
@@ -5956,7 +5956,7 @@ u8* fn_80210550(s32 id)
     char buf[24];
     u8* r;
     if (lbl_8030CEA0.x1874 == 1) return 0;
-    fn_8025CB24(buf, "M%05d", id);
+    sprintf(buf, "M%05d", id);
     lbl_8030CEA0.x1874 = 1;
     r = find(buf);
     if (r == 0) return 0;
@@ -6060,9 +6060,9 @@ s16 fn_801FA1D0(u32 flags, Scpt *s)
         u8 *buf;
         s->cur.b = p4 + 4;
         buf = fn_801E1A2C(1, strlen(lbl_80346848) + strlen(name) + 5);
-        fn_8025F120(buf, lbl_80346848);
-        fn_8025F0B0(buf, name);
-        fn_8025F0B0(buf, &lbl_8034C198);
+        strcpy(buf, lbl_80346848);
+        strcat(buf, name);
+        strcat(buf, &lbl_8034C198);
         fn_80219378(buf);
         if (buf != 0) {
             fn_801E1784(buf);
@@ -6129,9 +6129,9 @@ s16 fn_801F7C18(u32 flags, Scpt *s)
         char *buf;
         s->cur.b = p4 + 4;
         buf = fn_801E1A2C(1, strlen(lbl_80346848) + strlen(name) + 5);
-        fn_8025F120(buf, lbl_80346848);
-        fn_8025F0B0(buf, name);
-        fn_8025F0B0(buf, &lbl_8034C198);
+        strcpy(buf, lbl_80346848);
+        strcat(buf, name);
+        strcat(buf, &lbl_8034C198);
         fn_80216CB4(buf);
         if (buf != 0) {
             fn_801E1784(buf);
@@ -6954,13 +6954,13 @@ s16 fn_801FA4C0(u16 flags, Scpt* c)
         p++;
         c->cur.f = p;
         b1 = fn_801E1A2C(1, strlen(lbl_80346848) + strlen(str) + 5);
-        fn_8025F120(b1, lbl_80346848);
-        fn_8025F0B0(b1, str);
-        fn_8025F0B0(b1, lbl_8034C1CC);
+        strcpy(b1, lbl_80346848);
+        strcat(b1, str);
+        strcat(b1, lbl_8034C1CC);
         b2 = fn_801E1A2C(1, strlen(lbl_80346848) + strlen(str) + 4);
-        fn_8025F120(b2, lbl_80346848);
-        fn_8025F0B0(b2, str);
-        fn_8025F0B0(b2, lbl_8034C1D4);
+        strcpy(b2, lbl_80346848);
+        strcat(b2, str);
+        strcat(b2, lbl_8034C1D4);
         fn_80218D80(b1, 0x42504d53, a);
         fn_80218D80(b2, 0x42534d53, a);
         if (b1 != 0) {
@@ -7784,7 +7784,7 @@ s32 fn_8021026C(const char *name)
     if (name == NULL) {
         return 0;
     }
-    fn_8025F120(lbl_80314738, name);
+    strcpy(lbl_80314738, name);
     w = fn_801E1A2C(1, 12);
     if (w == NULL) {
         return 0;

@@ -97,9 +97,9 @@ extern void Ui2DBegin(void);
 extern void *lbl_8034718C[2];
 extern u32 lbl_80347184[2];
 extern s32 CARDUnmount(s32 slot);
-extern s32 fn_8025CB24(char *, const char *, ...);
-extern void fn_8025F120(void *, const char *);
-extern void fn_8025F0B0(void *, const char *);
+extern s32 sprintf(char *, const char *, ...);
+extern void strcpy(void *, const char *);
+extern void strcat(void *, const char *);
 extern char lbl_802B69C0[];
 extern void *fn_801CC3C4(const char *path);
 extern s16 fn_800ED8C4(void *p);
@@ -2301,9 +2301,9 @@ void fn_801A2CC4(void) {
 void fn_801A39B4(u16 id, void *obj) {
     char buf[0x8];
 
-    fn_8025CB24(buf, ".%03d", id);
-    fn_8025F120(obj, "SA_LEGENDS");
-    fn_8025F0B0(obj, buf);
+    sprintf(buf, ".%03d", id);
+    strcpy(obj, "SA_LEGENDS");
+    strcat(obj, buf);
 }
 
 void fn_801A64E0(void *o) {
@@ -5132,30 +5132,30 @@ void fn_801B737C(ShopPart* t)
         ok = 0;
         switch (i) {
         case 0:
-            fn_8025F120((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
+            strcpy((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
             ok = 1;
             break;
         case 1:
             if ((*(Fl*)&lbl_80310B3C).f4 & 0x10000000) {
-                fn_8025F120((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
+                strcpy((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
                 ok = 1;
             }
             break;
         case 2:
             if ((*(Fl*)&lbl_80310B3C).f18 & 0x100) {
-                fn_8025F120((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
+                strcpy((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
                 ok = 1;
             }
             break;
         case 3:
             if ((*(Fl*)&lbl_80310B3C).f1c & 0x04000000) {
-                fn_8025F120((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
+                strcpy((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
                 ok = 1;
             }
             break;
         case 4:
             if ((*(Fl*)&lbl_80310B3C).f168 & 0x40000000) {
-                fn_8025F120((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
+                strcpy((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
                 ok = 1;
             }
             break;
@@ -5163,21 +5163,21 @@ void fn_801B737C(ShopPart* t)
             if (((*(Fl*)&lbl_80310B3C).f30 & 0x10000) || (*(St_801B737C*)&lbl_80310A1C).seen[5] > 0) {
                 ok = 1;
                 if ((*(St_801B737C*)&lbl_80310A1C).seen[5] > 1) {
-                    fn_8025F120((void *)(buf), lbl_802B8F70);
+                    strcpy((void *)(buf), lbl_802B8F70);
                 } else {
-                    fn_8025F120((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
+                    strcpy((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
                 }
             }
             break;
         case 6:
             if ((*(Fl*)&lbl_80310B3C).f170 & 0x80) {
-                fn_8025F120((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
+                strcpy((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
                 ok = 1;
             }
             break;
         case 7:
             if ((*(Fl*)&lbl_80310B3C).f30 & 0x1000000) {
-                fn_8025F120((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
+                strcpy((void *)(buf), (void *)(((char**)lbl_802EBF7C)[i]));
                 ok = 1;
             }
             break;
@@ -6510,7 +6510,7 @@ CardRec *fn_801A41EC(CardSaveData *p, s32 chan, const char *name) {
     rec->stamp.min = lbl_80308198.stamp.min;
     rec->stamp.sec = lbl_80308198.stamp.sec;
     rec->stamp.wday = lbl_80308198.stamp.wday;
-    fn_8025F120(rec->name, name);
+    strcpy(rec->name, name);
     lbl_803081A4.chan = chan;
     lbl_803081A4.w1c = 0;
     memcpy(p->stamp, &lbl_80308198, 10);
@@ -6633,17 +6633,17 @@ void fn_801B7274(s32 x, s32 y, s32 nx, s32 ny, s16 id) {
     char buf[32];
     switch ((s8)lbl_80310A1C[0x64 + id]) {
     case 0:
-        fn_8025F120(buf, lbl_802B8F94);
+        strcpy(buf, lbl_802B8F94);
         break;
     case 1:
     case 2:
-        fn_8025F120(buf, lbl_802EBF7C[id]);
+        strcpy(buf, lbl_802EBF7C[id]);
         break;
     case 3:
         if (id != 5) {
-            fn_8025F120(buf, lbl_802EBF7C[id]);
+            strcpy(buf, lbl_802EBF7C[id]);
         } else {
-            fn_8025F120(buf, lbl_802B8F70);
+            strcpy(buf, lbl_802B8F70);
         }
         break;
     }
@@ -6866,7 +6866,7 @@ void fn_801A2424(s32 n, s32 idx, char* buf, s32 len) {
     s32 lim;
     s32 i;
     if (strlen(s) < (lim = len - 4)) {
-        fn_8025CB24(buf, "#%d %s", n, s);
+        sprintf(buf, "#%d %s", n, s);
     } else {
         buf[0] = '#';
         buf[1] = n + '0';

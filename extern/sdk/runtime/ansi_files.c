@@ -9,7 +9,7 @@ extern int __read_console(__file_handle file, unsigned char* buff, size_t* count
                           __idle_proc idle_proc);
 extern int __write_console(__file_handle file, unsigned char* buff, size_t* count,
                            __idle_proc idle_proc);
-extern int __close_console(__file_handle file);
+extern int __close_file(__file_handle file);
 
 FILE __files[4] = {
     {0,
@@ -31,7 +31,7 @@ FILE __files[4] = {
      NULL,
      &__read_console,
      &__write_console,
-     &__close_console,
+     &__close_file,
      0,
      &__files[1]},
     {1,
@@ -53,7 +53,7 @@ FILE __files[4] = {
      NULL,
      &__read_console,
      &__write_console,
-     &__close_console,
+     &__close_file,
      0,
      &__files[2]},
     {2,
@@ -75,7 +75,7 @@ FILE __files[4] = {
      NULL,
      &__read_console,
      &__write_console,
-     &__close_console,
+     &__close_file,
      0,
      &__files[3]},
 };

@@ -145,6 +145,26 @@
   "dolphin/gx/GXTexture.c",
   "dolphin/gx/GXBump.c",
   "dolphin/card/CARDMount.c",
-  "dolphin/exi/EXIBios.c"
+  "dolphin/exi/EXIBios.c",
+  "runtime/global_destructor_chain.c",
+  "runtime/runtime.c",
+  "runtime/sys_alloc.c",
+  "runtime/abort_exit.c",
+  "runtime/alloc.c",
+  "runtime/ansi_files.c",
+  "runtime/ansi_fp.c",
+  "runtime/ctype.c",
+  "runtime/mbstring.c",
+  "runtime/mem_funcs.c",
+  "runtime/printf.c",
+  "runtime/qsort.c",
+  "runtime/rand.c",
+  "runtime/sscanf.c",
+  "runtime/string.c",
+  "runtime/strtoul.c",
+  "runtime/uart_console_io.c",
+  "runtime/e_pow.c",
+  "runtime/s_atan.c",
+  "runtime/s_ceil.c"
  ]
 }

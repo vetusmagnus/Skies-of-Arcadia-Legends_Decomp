@@ -605,7 +605,7 @@ typedef struct {
     s32 w58, w5c, w60, w64, w68, w6c, w70;
     f32 f74, f78;
 } P;
-extern s32 fn_8025ECC4(void);
+extern s32 rand(void);
 typedef struct {
     s32 mode;
     f32 *pts;
@@ -2441,8 +2441,8 @@ void fn_800AD588(P *src, P *dst) {
     dst->w0 = src->w0;
     dst->w68 = 0;
     dst->w6c = src->w6c;
-    dst->f24 += dst->f28 * (3.0517578125e-05f * (f32)fn_8025ECC4());
-    dst->f2c += dst->f30 * (3.0517578125e-05f * (f32)fn_8025ECC4());
+    dst->f24 += dst->f28 * (3.0517578125e-05f * (f32)rand());
+    dst->f2c += dst->f30 * (3.0517578125e-05f * (f32)rand());
 }
 
 void fn_800AF780(void) {

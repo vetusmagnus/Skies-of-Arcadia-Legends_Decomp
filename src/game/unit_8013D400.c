@@ -9,7 +9,7 @@ extern s32 lbl_80346F6C;
 extern s32 lbl_80346F68;
 extern s32 lbl_80346F64;
 extern s32 fn_801E4BBC(s32 n);
-extern s32 fn_8025ECC4(void);
+extern s32 rand(void);
 typedef struct {
     u8 pad0;
     s8 idx; /* 0x01 */
@@ -89,7 +89,7 @@ typedef struct Req_UNIT0000 { s8 x0; s8 x1; } Req_UNIT0000;
 typedef struct MapInfo { s32 map; s32 unk4; char room; } MapInfo;
 extern void fn_800FF908(void);
 extern void fn_801002D0(s32 a);
-extern int fn_8025CB24(char* buf, const char* fmt, ...);
+extern int sprintf(char* buf, const char* fmt, ...);
 extern MapInfo lbl_80311AC0;
 extern s32 lbl_80311AD4[11];
 extern s32 lbl_803472E4;
@@ -828,19 +828,19 @@ s32 fn_801431D0(void) {
 }
 
 s32 fn_80143274(void) {
-    return (fn_8025ECC4() & 1) ^ 1;
+    return (rand() & 1) ^ 1;
 }
 
 s32 fn_8014329C(void) {
-    return fn_8025ECC4() % 5 == 0;
+    return rand() % 5 == 0;
 }
 
 s32 fn_801432E4(void) {
-    return fn_8025ECC4() % 10 == 0;
+    return rand() % 10 == 0;
 }
 
 s32 fn_8014332C(void) {
-    return fn_8025ECC4() % 100 == 0;
+    return rand() % 100 == 0;
 }
 
 s32 fn_80143374(void) {
@@ -1073,7 +1073,7 @@ void fn_801457C4(s32 a, s32 b)
 s32 fn_80145D84(Obj7* dst, Obj24* a, Obj24* b)
 {
     s32 v = 0x50 - b->x24 + a->x24;
-    s32 r = fn_8025ECC4() % 100;
+    s32 r = rand() % 100;
     if (v >= r) {
         dst->x7 = 1;
         return 1;
@@ -1109,7 +1109,7 @@ void fn_80146FD4(Req_UNIT0000* r, s32 idx)
 void fn_80147E2C(s32 a)
 {
     fn_800FF908();
-    fn_8025CB24(lbl_802E5E68, lbl_802B3578, lbl_80311AC0.unk4, lbl_80311AC0.room);
+    sprintf(lbl_802E5E68, lbl_802B3578, lbl_80311AC0.unk4, lbl_80311AC0.room);
     fn_801002D0(a);
     lbl_803472E4 = 1;
     lbl_80311AD4[6] = 0xc;

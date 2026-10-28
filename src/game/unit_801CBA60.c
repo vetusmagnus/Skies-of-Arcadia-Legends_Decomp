@@ -77,7 +77,7 @@ extern FioReq* lbl_80347200;
 extern u32 strlen(const char*);
 extern void* fn_801E1BDC(s32 size);
 extern void fn_801DBE1C(const char*, ...);
-extern void fn_8025F120(char*, const char*);
+extern void strcpy(char*, const char*);
 extern u32 lbl_80310B3C[0x356];
 extern u8 lbl_80310A1C[0x120];
 s32 fn_801CB460(s32 c);
@@ -480,7 +480,7 @@ FioName* fn_801CC1B4(const char* name)
         fn_801DBE1C("Fio Auto Error (memory allocate): %s", name);
     }
     n->str = (char*)n + 8;
-    fn_8025F120(n->str, name);
+    strcpy(n->str, name);
     n->w4 = 0;
     req = fn_801E1BDC(0x34);
     if (req == 0) {
@@ -667,9 +667,9 @@ void fn_801CC434(char* path, char* dir, char* name) {
             if (path[i] == '/') break;
         }
         if (i < 0) {
-            fn_8025F120(name, path);
+            strcpy(name, path);
         } else {
-            fn_8025F120(name, &path[i + 1]);
+            strcpy(name, &path[i + 1]);
             fn_801E0D0C(name);
         }
     }

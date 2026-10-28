@@ -159,9 +159,9 @@ typedef struct Ref_80021AE0 { Rec_80021AE0* rec; void* out; } Ref_80021AE0;
 typedef struct Out { u8 pad[0x50]; } Out;
 extern Rec_80021AE0* fn_80074E2C(char* a, char* b, Out* out, s32 id, s32 kind);
 extern s32 fn_8006EAB4(Rec_80021AE0* r);
-extern char* fn_8025F120(char* dst, const char* src);
-extern char* fn_8025F0B0(char* dst, const char* src);
-extern int fn_8025CB24(char*, const char*, ...);
+extern char* strcpy(char* dst, const char* src);
+extern char* strcat(char* dst, const char* src);
+extern int sprintf(char*, const char*, ...);
 extern void fn_80061048(char* s);
 extern void* fn_801CC69C(char* name);
 extern void fn_801CC608(void* h, void* buf, s32 size);
@@ -599,15 +599,15 @@ void fn_80021AE0(char* path, char* name) {
         if (fn_8006EAB4(ref.rec) != 0) {
             char buf10[0x40];
             char buf50[0x80];
-            fn_8025F120(buf10, name);
+            strcpy(buf10, name);
             fn_80061048(buf10);
             if (path[0] != '/') {
-                fn_8025F120(buf50, "/");
-                fn_8025F0B0(buf50, path);
-                fn_8025F0B0(buf50, buf10);
-                fn_8025F0B0(buf50, ".STD");
+                strcpy(buf50, "/");
+                strcat(buf50, path);
+                strcat(buf50, buf10);
+                strcat(buf50, ".STD");
             } else {
-                fn_8025CB24(buf50, "%s%s.STD", path, buf10);
+                sprintf(buf50, "%s%s.STD", path, buf10);
             }
             std = fn_801E1C7C(0x20);
             h = fn_801CC69C(buf50);
@@ -626,7 +626,7 @@ void fn_80021AE0(char* path, char* name) {
             fn_80009860(&ref, std);
             fn_800091A4(std);
             ref.rec->std = std;
-            fn_8025F0B0(buf10, "0.STD");
+            strcat(buf10, "0.STD");
             fn_80009750(path, buf10, &ref.rec->std);
         } else {
             fn_80009860(&ref, ref.rec->std);

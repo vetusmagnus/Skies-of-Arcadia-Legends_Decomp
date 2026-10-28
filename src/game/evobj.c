@@ -217,7 +217,7 @@ extern void fn_801E9AE0(Task* task);
 extern void fn_801E9EA8(Task* task);
 extern void fn_801EA2DC(Task* task);
 extern void fn_801EB01C(Task* task);
-extern int fn_8025ECC4(void);
+extern int rand(void);
 extern void fn_801DD5E8(Angle* out, NJS_POINT3* p);
 extern void fn_801E5DF0(EvObj* obj);
 extern double sin(double);
@@ -639,29 +639,29 @@ void fn_801E9EA8(Task* task) {
     obj = task->work;
     switch (obj->state) {
     case 0:
-        scl = 0.5f * (3.0517578125e-05f * fn_8025ECC4()) + 0.01f;
-        ang = 0.017453289f * (fn_8025ECC4() % 360);
-        rad = 1.8f * (3.0517578125e-05f * fn_8025ECC4());
-        y = 5.0f * (3.0517578125e-05f * fn_8025ECC4()) + -3.0f;
+        scl = 0.5f * (3.0517578125e-05f * rand()) + 0.01f;
+        ang = 0.017453289f * (rand() % 360);
+        rad = 1.8f * (3.0517578125e-05f * rand());
+        y = 5.0f * (3.0517578125e-05f * rand()) + -3.0f;
         obj->scl.x = scl;
         obj->scl.y = scl;
         obj->scl.z = scl;
         obj->pos.x = lbl_803139B4[obj->point].x + rad * sin(ang);
         obj->pos.z = lbl_803139B4[obj->point].z + rad * cos(ang);
         if (obj->motionId == 0) {
-            obj->pos.y = (y + lbl_803139B4[obj->point].y) - 30.0f * (3.0517578125e-05f * fn_8025ECC4());
+            obj->pos.y = (y + lbl_803139B4[obj->point].y) - 30.0f * (3.0517578125e-05f * rand());
             obj->motionId = 1;
         } else {
             obj->pos.y = y + lbl_803139B4[obj->point].y;
         }
         obj->colour.a = 255.0f;
-        obj->pivotPos.y = 0.2f * (3.0517578125e-05f * fn_8025ECC4()) + 0.1f;
-        obj->x172 = fn_8025ECC4() % 8;
+        obj->pivotPos.y = 0.2f * (3.0517578125e-05f * rand()) + 0.1f;
+        obj->x172 = rand() % 8;
         obj->state++;
         break;
     case 1:
         obj->pos.y -= obj->pivotPos.y;
-        obj->colour.a -= (f32)(fn_8025ECC4() % 15 + 5);
+        obj->colour.a -= (f32)(rand() % 15 + 5);
         if (obj->colour.a <= 0.0f) {
             obj->colour.a = 0.0f;
             obj->state = 0;
@@ -1165,7 +1165,7 @@ inline u8 DirFilter(u8* src, u8* dst, u8 dir, u8 range) {
 inline u8 DirPick(u8* list, u8 n) {
     u8 r = 8;
     if (list != NULL) {
-        u32 i = (f32)(n + 1) * (3.0517578125e-05f * fn_8025ECC4());
+        u32 i = (f32)(n + 1) * (3.0517578125e-05f * rand());
         if (i < n) {
             r = list[i];
         } else {
@@ -1966,7 +1966,7 @@ u16 fn_801ECA2C(EvObj* obj, s32 force) {
         dist = fn_801C59F8(&obj->pos, &obj->home);
         if (obj->x1fc <= 0) {
             u8 m = 0;
-            if (3.0517578125e-05f * fn_8025ECC4() < 0.5f) {
+            if (3.0517578125e-05f * rand() < 0.5f) {
                 m = obj->x21c;
             }
             if (m) {
@@ -1976,7 +1976,7 @@ u16 fn_801ECA2C(EvObj* obj, s32 force) {
         }
         if (dist >= (f32)obj->ext->info->x2c && ObjNearTarget(obj)) {
             ret = ObjTurn(obj, ObjTurnTarget(obj), 0xB, 9);
-        } else if (obj->x1fe <= 0 && 3.0517578125e-05f * fn_8025ECC4() < 0.5f) {
+        } else if (obj->x1fe <= 0 && 3.0517578125e-05f * rand() < 0.5f) {
             obj->x1fe = 300;
             ret = ObjTurn(obj, ObjWalkTarget(obj), 0x10, 0xE);
         } else if (force != 0 || dist >= 16.0f) {
@@ -1996,7 +1996,7 @@ u16 fn_801ED074(EvObj* obj, s32 force) {
         dist = fn_801C59F8(&obj->pos, &obj->home);
         if (obj->x1fc <= 0) {
             u8 m = 0;
-            if (3.0517578125e-05f * fn_8025ECC4() < 0.5f) {
+            if (3.0517578125e-05f * rand() < 0.5f) {
                 m = obj->x21c;
             }
             if (m) {
@@ -2006,7 +2006,7 @@ u16 fn_801ED074(EvObj* obj, s32 force) {
         }
         if (dist >= 4.0f && ObjNearTarget(obj)) {
             ret = ObjTurn(obj, ObjTurnTarget(obj), 0xB, 9);
-        } else if (obj->x1fe <= 0 && 3.0517578125e-05f * fn_8025ECC4() < 0.5f) {
+        } else if (obj->x1fe <= 0 && 3.0517578125e-05f * rand() < 0.5f) {
             obj->x1fe = 300;
             ret = ObjTurn(obj, ObjWalkTarget(obj), 0x10, 0xE);
         } else if (force != 0 || dist >= 16.0f) {
@@ -2036,7 +2036,7 @@ u16 fn_801ED69C(EvObj* obj, s32 force) {
         }
         if (obj->x1fc <= 0) {
             u8 m = 0;
-            if (3.0517578125e-05f * fn_8025ECC4() < 0.5f) {
+            if (3.0517578125e-05f * rand() < 0.5f) {
                 m = obj->x21c;
             }
             if (m) {
@@ -2068,7 +2068,7 @@ u16 fn_801EDAC0(EvObj* obj, s32 force) {
         dist = fn_801C59F8(&obj->pos, &obj->home);
         if (obj->x1fc <= 0) {
             m = 0;
-            if (3.0517578125e-05f * fn_8025ECC4() < 0.5f) {
+            if (3.0517578125e-05f * rand() < 0.5f) {
                 m = obj->x21c;
             }
             if (m) {
@@ -2105,7 +2105,7 @@ u8 fn_801EDF24(EvObj* obj, u8 dir) {
         order[6] = 6;
         order[7] = 7;
         n = 8;
-        if (3.0517578125e-05f * fn_8025ECC4() < 0.9f) {
+        if (3.0517578125e-05f * rand() < 0.9f) {
             n = DirFilter(order, cand, dir, 1);
         }
         result = DirPick(cand, n);
@@ -2621,7 +2621,7 @@ static inline void ItemChance(s16 idx)
 {
     if (idx >= 0x1e0 && idx <= 0x1fd) {
         s8 chance = lbl_802D8A2C[idx - 0x1e0].chance;
-        if (chance != 0 && chance > fn_8025ECC4() % 100) {
+        if (chance != 0 && chance > rand() % 100) {
             fn_801EFC88(idx);
         }
     }
@@ -2659,7 +2659,7 @@ static inline void ItemChanceB(s16 idx)
 {
     if (idx >= 0xf0 && idx < 0x140) {
         s8 chance = lbl_802C7C34[idx - 0xf0].chance;
-        if (chance != 0 && chance > fn_8025ECC4() % 100) {
+        if (chance != 0 && chance > rand() % 100) {
             fn_801EFC88(idx);
         }
     }

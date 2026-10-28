@@ -1224,28 +1224,8 @@ int printf(const char* format, ...) {
     return -1;
   }
 
-  __begin_critical_region(files_access);
   va_start(l, format);
   ret = __pformatter(&__FileWrite, (void*)stdout, format, l);
-  va_end(l);
-  __end_critical_region(files_access);
-  return ret;
-}
-
-/**
- * @note Address: N/A
- * @note Size: 0xE0
- */
-int fprintf(FILE* file, const char* format, ...) {
-  int ret;
-  va_list l;
-
-  if (fwide(stdout, -1) >= 0) {
-    return -1;
-  }
-
-  va_start(l, format);
-  ret = __pformatter(&__FileWrite, file, format, l);
   va_end(l);
   return ret;
 }
@@ -1261,9 +1241,7 @@ size_t vprintf(const char* pFormat, va_list arg) {
     return -1;
   }
 
-  __begin_critical_region(files_access);
   ret = __pformatter(&__FileWrite, (void*)stdout, pFormat, arg);
-  __end_critical_region(files_access);
   return ret;
 }
 

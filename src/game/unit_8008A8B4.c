@@ -23,7 +23,7 @@ typedef struct Rec_8008AEDC {
     s16 x80;
 } Rec_8008AEDC;
 extern u8 lbl_80347340;
-s32 fn_8025ECC4(void);
+s32 rand(void);
 extern s32 fn_80078610(s8 idx);
 s32 fn_80078610(s8 idx);
 typedef struct Lim {
@@ -209,43 +209,43 @@ s32 fn_8008B174(void) {
 }
 
 s32 fn_8008B17C(void) {
-  s32 r = fn_8025ECC4() % 100;
+  s32 r = rand() % 100;
   return !(r > 0x5a);
 }
 
 s32 fn_8008B1D0(void) {
-  s32 r = fn_8025ECC4() % 100;
+  s32 r = rand() % 100;
   return !(r > 0x50);
 }
 
 s32 fn_8008B224(void) {
-  s32 r = fn_8025ECC4() % 100;
+  s32 r = rand() % 100;
   return !(r > 0x46);
 }
 
 s32 fn_8008B278(void) {
-  s32 r = fn_8025ECC4() % 100;
+  s32 r = rand() % 100;
   return !(r > 0x3c);
 }
 
 int fn_8008B2CC(void) {
-    return !(fn_8025ECC4() % 100 > 50);
+    return !(rand() % 100 > 50);
 }
 
 int fn_8008B320(void) {
-    return !(fn_8025ECC4() % 100 > 40);
+    return !(rand() % 100 > 40);
 }
 
 int fn_8008B374(void) {
-    return !(fn_8025ECC4() % 100 > 30);
+    return !(rand() % 100 > 30);
 }
 
 int fn_8008B3C8(void) {
-    return !(fn_8025ECC4() % 100 > 20);
+    return !(rand() % 100 > 20);
 }
 
 int fn_8008B41C(void) {
-    return !(fn_8025ECC4() % 100 > 10);
+    return !(rand() % 100 > 10);
 }
 
 s32 fn_8008A8E8(void) {

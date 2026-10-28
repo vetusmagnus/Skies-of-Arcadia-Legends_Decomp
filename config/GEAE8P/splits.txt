@@ -490,12 +490,9 @@ src/gx/GXDisplayList.c:
 	.bss        start:0x80318B18 end:0x80319038
 	.sbss       start:0x80347BD8 end:0x80347BE0
 
-runtime/errno.c:
-	.sbss       start:0x80347C10 end:0x80347C18
-
 src/gx/GXTransform.c:
 	.text       start:0x80251F8C end:0x80252530
-	.sdata2     start:0x8034C900 end:0x8034C90C
+	.sdata2     start:0x8034C900 end:0x8034C910
 
 dolphin/gx/GXPerf.c:
 	.text       start:0x80252530 end:0x80252D88
@@ -523,8 +520,50 @@ MetroTRK/mslsupp.c:
 runtime/__va_arg.c:
 	.text       start:0x8025A094 end:0x8025A15C
 
+runtime/global_destructor_chain.c:
+	.text       start:0x8025A15C end:0x8025A1A4
+	.dtors      start:0x802AC800 end:0x802AC804
+	.sbss       start:0x80347BE8 end:0x80347BF0
+
+runtime/runtime.c:
+	.text       start:0x8025A1A4 end:0x8025A880
+	.rodata     start:0x802DA0D0 end:0x802DA0E8
+
+runtime/sys_alloc.c:
+	.text       start:0x8025A880 end:0x8025A920
+	.sbss       start:0x80347BF0 end:0x80347BF8
+
+runtime/abort_exit.c:
+	.text       start:0x8025A920 end:0x8025A9EC
+	.bss        start:0x8031D210 end:0x8031D310
+	.sbss       start:0x80347BF8 end:0x80347C08
+
+runtime/alloc.c:
+	.text       start:0x8025A9EC end:0x8025AF54
+	.rodata     start:0x802DA0E8 end:0x802DA100
+	.bss        start:0x8031D310 end:0x8031D348
+	.sbss       start:0x80347C08 end:0x80347C10
+
+runtime/errno.c:
+	.sbss       start:0x80347C10 end:0x80347C18
+
+runtime/ansi_files.c:
+	.text       start:0x8025AF54 end:0x8025B05C
+	.data       start:0x802FBE40 end:0x802FBF80
+	.bss        start:0x8031D348 end:0x8031D648
+
+runtime/ansi_fp.c:
+	.text       start:0x8025B05C end:0x8025BC74
+	.rodata     start:0x802DA100 end:0x802DA1E0
+	.data       start:0x802FBF80 end:0x802FC0A8
+	.sdata2     start:0x8034C910 end:0x8034C918
+
 runtime/buffer_io.c:
 	.text       start:0x8025BC74 end:0x8025BD6C
+
+runtime/ctype.c:
+	.text       start:0x8025BD6C end:0x8025BD90
+	.data       start:0x802FC0A8 end:0x802FC3A8
 
 src/MSL_C/PPCEABI/bare/H/direct_io.c:
 	.text       start:0x8025BD90 end:0x8025C0BC
@@ -535,11 +574,48 @@ src/MSL_C/PPCEABI/bare/H/file_io.c:
 runtime/FILE_POS.c:
 	.text       start:0x8025C2B4 end:0x8025C580
 
+runtime/mbstring.c:
+	.text       start:0x8025C580 end:0x8025C6C4
+	.sdata2     start:0x8034C918 end:0x8034C920
+
 runtime/mem.c:
 	.text       start:0x8025C6C4 end:0x8025C834
 
+runtime/mem_funcs.c:
+	.text       start:0x8025C834 end:0x8025CB14
+
 runtime/misc_io.c:
 	.text       start:0x8025CB14 end:0x8025CB24
+
+runtime/printf.c:
+	.text       start:0x8025CB24 end:0x8025EB4C
+	.rodata     start:0x802DA1E0 end:0x802DA208
+	.data       start:0x802FC3A8 end:0x802FC5D8
+	.sdata      start:0x803469A0 end:0x803469A8
+	.sdata2     start:0x8034C920 end:0x8034C928
+
+runtime/qsort.c:
+	.text       start:0x8025EB4C end:0x8025ECBC
+
+runtime/rand.c:
+	.text       start:0x8025ECBC end:0x8025ECE4
+	.sdata      start:0x803469A8 end:0x803469B0
+
+runtime/sscanf.c:
+	.text       start:0x8025ECE4 end:0x8025ED74
+
+runtime/string.c:
+	.text       start:0x8025ED74 end:0x8025F1F4
+	.rodata     start:0x802DA208 end:0x802DA598
+	.sdata      start:0x803469B0 end:0x803469B8
+
+runtime/strtoul.c:
+	.text       start:0x8025F1F4 end:0x8025F71C
+	.data       start:0x802FC5D8 end:0x802FC620
+
+runtime/uart_console_io.c:
+	.text       start:0x8025F71C end:0x8025F7E0
+	.sbss       start:0x80347C18 end:0x80347C20
 
 runtime/wchar_io.c:
 	.text       start:0x8025F7E0 end:0x8025F868
@@ -555,6 +631,11 @@ runtime/e_atan2.c:
 runtime/e_fmod.c:
 	.text       start:0x8025FE08 end:0x80260144
 	.rodata     start:0x802DA598 end:0x802DA5A8
+
+runtime/e_pow.c:
+	.text       start:0x80260144 end:0x802609D0
+	.rodata     start:0x802DA5A8 end:0x802DA5D8
+	.sdata2     start:0x8034CA10 end:0x8034CB20
 
 runtime/e_rem_pio2.c:
 	.text       start:0x802609D0 end:0x80260D70
@@ -578,6 +659,15 @@ runtime/k_tan.c:
 	.text       start:0x80261D58 end:0x80261F6C
 	.rodata     start:0x802DA7B0 end:0x802DA818
 	.sdata2     start:0x8034CC38 end:0x8034CC70
+
+runtime/s_atan.c:
+	.text       start:0x80261F6C end:0x8026216C
+	.rodata     start:0x802DA818 end:0x802DA8B0
+	.sdata2     start:0x8034CC70 end:0x8034CC98
+
+runtime/s_ceil.c:
+	.text       start:0x8026216C end:0x802622B0
+	.sdata2     start:0x8034CC98 end:0x8034CCA8
 
 runtime/s_copysign.c:
 	.text       start:0x802622B0 end:0x802622D8

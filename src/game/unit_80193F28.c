@@ -29,7 +29,7 @@ extern s32 fn_801EE344(s16 a, s32 b);
 extern s8 lbl_802D7E4C[];
 extern u8 lbl_80310A1C[];
 extern u8 lbl_8030B4D4[];
-extern int fn_8025CB24(char*, const char*, ...);
+extern int sprintf(char*, const char*, ...);
 extern char lbl_802B4870[];
 extern char lbl_802B4880[];
 extern s32 fn_801E4BF4(s8 a);
@@ -535,9 +535,9 @@ s32 fn_801944D4(char* buf, s32 id)
     s32 mode = *(s32 *)(lbl_80307638.b + 0x70c);
     switch (mode) {
     case 0:
-        return (s8)fn_8025CB24(buf, lbl_802B4870, id);
+        return (s8)sprintf(buf, lbl_802B4870, id);
     case 1:
-        return (s8)fn_8025CB24(buf, lbl_802B4880, id);
+        return (s8)sprintf(buf, lbl_802B4880, id);
     }
     return (s32)buf;
 }
