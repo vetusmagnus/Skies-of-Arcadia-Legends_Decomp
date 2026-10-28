@@ -9,7 +9,7 @@ extern u32 lbl_802B0830[];
 extern s32 lbl_80347330;
 typedef struct { s8 pad[0x16]; u8 x16; u8 pad17[2]; u8 x19; u8 pad1a[0x30 - 0x1a]; } T30;
 typedef struct { s8 pad[0x13]; u8 x13; u8 pad14[0x24 - 0x14]; } T24c;
-typedef struct { s8 pad[0x17]; u8 x17; u8 pad18[0x24 - 0x18]; } T24;
+typedef struct { s8 pad[0x15]; s8 x15; s8 x16; u8 x17; u8 pad18[0x24 - 0x18]; } T24;
 extern T24 lbl_802AD440[];
 extern T24c lbl_802C7C34[];
 extern T30 lbl_802C4BF0[];
@@ -72,7 +72,10 @@ typedef struct Wk {
     s16 x2;
     u32 flags;
     struct Chr_UNIT0000* chr;
-    u8 padc[4];
+    s8 xc;
+    s8 xd;
+    s8 xe;
+    s8 xf;
     u32 x10;
     u8 pad14[0x37 - 0x14];
     s8 x37;
@@ -88,7 +91,8 @@ typedef struct Wk {
 } Wk;
 typedef struct Slot {
     void (*update)(struct Slot *);
-    u8 pad1[0x15];
+    u8 pad1[0x14];
+    u8 flags18;
     u8 state;
     u8 pad2[0x0a];
     union {
@@ -109,7 +113,9 @@ typedef struct Chr_UNIT0000 {
     s32 score;
     u8 pad2[0x4];
     u32 w1c;
-    u8 pad_20[0x74];
+    u8 pad_20[0x4];
+    s16 x24;
+    u8 pad_26[0x6e];
     s16 x94;
     u8 pad_96[0x16];
     s8 xac;
@@ -119,7 +125,10 @@ typedef struct Chr_UNIT0000 {
     s16 xb4;
     u8 padb6[4];
     s16 xba;
-    u8 padbc[0x110 - 0xbc];
+    u8 padbc[0x102 - 0xbc];
+    s16 x102;   /* first equipped item slot */
+    s16 x104;   /* second equipped item slot */
+    u8 pad106[0x110 - 0x106];
     Stat* p110;
 } Chr_UNIT0000;
 extern Chr_UNIT0000* lbl_80309DE4[12];
@@ -130,7 +139,7 @@ typedef struct Node { struct Node *next; u32 key; u32 key2; u8 flag; } Node;
 extern Node lbl_80309E14;
 s32 fn_8006C9AC(s32 a, s32 b);
 void fn_800763D0(s32 a, s32 b);
-typedef struct R16 { s32 w0; s8 x4; u8 pad5; s16 x6; u8 b8; u8 b9; u8 pad2[3]; u8 xd; u8 pade[2]; } R16;
+typedef struct R16 { s32 w0; s8 x4; u8 pad5; s16 x6; u8 b8; u8 b9; u8 pad2[3]; s8 xd; u8 pade[2]; } R16;
 extern R16 lbl_80309730[];
 extern s32 fn_8001FDD8();
 extern s32 fn_80078610(s8 idx);
@@ -287,8 +296,8 @@ typedef struct List {
     s8 x1;      /* selected page, 3..8 */
     s8 x2;      /* page availability bitmask */
     s8 x3;
-    u8 x4;
-    u8 x5;
+    s8 x4;      /* current sub-page */
+    s8 x5;      /* sub-page count */
     u8 x6;
     s8 x7;
     Ent e[8];   /* 0x8 */
@@ -415,7 +424,7 @@ int fn_80078478(s32 a);
 extern int fn_8007EBBC(int a, int b, u8 k, u32 st);
 extern int fn_8007F270(int a, int b, u8 k, u32 st);
 extern void fn_80082134(s16 v);
-extern int fn_8006D1C4(int v);
+extern int fn_8006D1C4(void);
 extern s16 fn_80010CBC(s32 id);
 typedef struct Blob { u32 w[16]; } Blob;
 typedef struct Req_8007DFC0 {
@@ -450,7 +459,7 @@ extern u8* lbl_80346C14;
 extern s32 lbl_80347338;
 extern void fn_8007C344(struct Task_8007BEB4 *);
 extern void fn_800794D8(void);
-extern void fn_8007A890(void);
+extern void fn_8007A890(struct Task_8007BEB4 *);
 typedef struct Slot_8007BEB4 { u8 pad0[8]; u32 x8; u32 flags; u8 pad10[0x24 - 0x10]; } Slot_8007BEB4;
 typedef struct Task_8007BEB4 { u8 pad0[0x18]; u8 flags; u8 state; u8 pad1a[0x24 - 0x1a]; List* work; } Task_8007BEB4;
 typedef struct ChrState_8007BEB4 { s32 x0; u8 pad4[0x1c]; } ChrState_8007BEB4;
@@ -472,7 +481,13 @@ typedef struct Msg {
     s32 x8;
     s32 xc;
 } Msg;
-extern void fn_80075060(Msg*, s16);
+typedef struct TNode {
+    u32 flags;
+    u8 pad4[0x2c - 0x4];
+    struct TNode* child;
+    struct TNode* next;
+} TNode;
+void fn_80075060(TNode* n, u32 mask, u8 op);
 typedef struct Slot_80077D40 {
     s16 id;
     s8 count;
@@ -500,18 +515,11 @@ typedef struct Wk_8007DEE0 { s32 x0; u8 pad4[0x4c - 4]; Pos* pos; u8 pad50[8]; }
 typedef struct Tk_8007DEE0 { u8 pad0[0x24]; Wk_8007DEE0* work; } Tk_8007DEE0;
 typedef struct Spawn { s16 i; s16 x2; s16 x4; s16 x6; } Spawn;
 typedef struct ArgDEE0 { u8 pad0[0xc]; Spawn* sp; } ArgDEE0;
-typedef struct Data {
-    u8 pad0[0xc];
-    s8 xc;
-    s8 xd;
-    s8 xe;
-    s8 xf;
-} Data;
 typedef struct BUnit {
     u8 pad0[0xac];
     u8 xac;
 } BUnit;
-extern void fn_80081350(Data* d, s16 id, s8 k, s8 x, s8 y);
+extern void fn_80081350(Wk* d, s16 id, s8 k, s8 x, s8 y);
 typedef struct Shape {
     u8 pad0[0xAC];
     s8 w;
@@ -668,8 +676,56 @@ typedef struct Flags_80310B3C { u8 pad[0x24]; u32 x24; } Flags_80310B3C;
 extern Flags_80310B3C lbl_80310B3C;
 extern void *fn_801F52AC(void);
 
-void fn_80075040(Msg* a, s16 i) {
-    fn_80075060(a, i);
+void fn_80075040(TNode* n, u32 mask, u8 op) {
+    fn_80075060(n, mask, op);
+}
+
+#define NODE_OP(n)                     \
+    switch (op) {                      \
+    case 0: (n)->flags |= mask; break; \
+    case 1: (n)->flags &= mask; break; \
+    case 2: (n)->flags ^= mask; break; \
+    }
+
+static inline void flag_walk3(TNode* n, u32 mask, u8 op) {
+    NODE_OP(n);
+    if (n->child) {
+        fn_80075060(n->child, mask, op);
+    }
+    if (n->next) {
+        fn_80075060(n->next, mask, op);
+    }
+}
+
+static inline void flag_walk2(TNode* n, u32 mask, u8 op) {
+    NODE_OP(n);
+    if (n->child) {
+        flag_walk3(n->child, mask, op);
+    }
+    if (n->next) {
+        flag_walk3(n->next, mask, op);
+    }
+}
+
+static inline void flag_walk1(TNode* n, u32 mask, u8 op) {
+    NODE_OP(n);
+    if (n->child) {
+        flag_walk2(n->child, mask, op);
+    }
+    if (n->next) {
+        flag_walk2(n->next, mask, op);
+    }
+}
+
+/* Applies mask to the flags of a node tree (0: set, 1: and, 2: toggle). */
+void fn_80075060(TNode* n, u32 mask, u8 op) {
+    NODE_OP(n);
+    if (n->child) {
+        flag_walk1(n->child, mask, op);
+    }
+    if (n->next) {
+        flag_walk1(n->next, mask, op);
+    }
 }
 
 extern void fn_8007578C(Msg*, s16);
@@ -735,7 +791,7 @@ s32 fn_8007833C(void) {
 }
 
 s32 fn_80078354(s32 i) {
-    return lbl_802AD440[i].pad[0x526];
+    return lbl_802AD440[i + 0x24].x16;
 }
 
 s32 fn_80078370(s32 i) {
@@ -1079,8 +1135,8 @@ void fn_80081134(s16 i, u32 v) {
     lbl_80302BF0[i] = 0;
 }
 
-void fn_8008210C(void) {
-    fn_80081FEC(lbl_80347334);
+s32 fn_8008210C(void) {
+    return fn_80081FEC(lbl_80347334);
 }
 
 extern s32 fn_8008571C(s16);
@@ -1584,12 +1640,12 @@ s32 fn_80081FEC(s16 k) {
             if (k < 4) {
                 return (s8)lbl_802C4BF0[j].pad[0x15];
             }
-            return (s8)lbl_802AD440[j].pad[0x16];
+            return (s8)lbl_802AD440[j].x16;
         }
     case 5:
         return (s8)lbl_802C7C34[lbl_80309174[k].x6].pad[-0x21ae];
     case 12:
-        return (s8)lbl_802AD440[lbl_80309174[k].x6].pad[0x526];
+        return (s8)lbl_802AD440[lbl_80309174[k].x6 + 0x24].x16;
     }
     return 0;
 }
@@ -2412,7 +2468,7 @@ void fn_80084C78(Slot* t)
     case 12:
         r = fn_8007FFE8(a, 0x16);
         if (r != 0) {
-            if (fn_8006D1C4(r) == 1) {
+            if (fn_8006D1C4() == 1) {
                 wk->flags |= 1;
                 lbl_80309700[a]->update = fn_80086C48;
                 lbl_80309700[a]->state = 0;
@@ -2889,7 +2945,7 @@ void fn_8007DEE0(ArgDEE0* a) {
     }
 }
 
-void fn_80081648(Data* d, s16 id) {
+void fn_80081648(Wk* d, s16 id) {
     s8 cx = d->xc;
     s8 cy = d->xd;
     s8 tx = d->xe;
@@ -4001,3 +4057,462 @@ void fn_80077228(s8 idx, Dst_80077228* d)
     d->x108 = b->x22;
     d->x110 = c;
 }
+extern void fn_8008178C(Wk* d, s8 a, s8 b, s32 id);
+extern void fn_8008066C(s32);
+extern void fn_80010474(s16);
+
+void fn_80087074(Slot* t)
+{
+    Wk* wk;
+    s32 a;
+    s32 c;
+    T24* e;
+    s16 k;
+    s32 p;
+    s32 q;
+    int i;
+    int j;
+    s16 m;
+    s8 kind;
+
+    wk = t->un.work;
+    a = wk->idx;
+    c = lbl_80309174[a].x4;
+
+    switch (t->state) {
+    case 0:
+        if (fn_8007FFE8(a, 0x16) != 0) {
+            fn_800811E4(a, 0);
+            if (lbl_80309174[a].x6 == 0x37 && (wk->x2 == 0x8a || wk->x2 == 0x8b)) {
+                t->state = 100;
+            } else {
+                t->state = 1;
+            }
+        }
+        break;
+    case 100:
+        if (wk->xc == 1) {
+            if (wk->xd == 1) {
+                p = 1;
+                q = 7;
+            } else {
+                p = 7;
+                q = 7;
+            }
+        } else {
+            if (wk->xd == 1) {
+                p = 1;
+                q = 1;
+            } else {
+                p = 7;
+                q = 1;
+            }
+        }
+        fn_8008178C(wk, p, q, a);
+        fn_800810FC(a);
+        t->state = 101;
+    case 101:
+        if (fn_8007FFE8(a, 4) != 0) {
+            fn_800811E4(a, 0);
+            fn_80081648(wk, a);
+            t->state = 1;
+        }
+        break;
+    case 1:
+        j = a;
+        if (fn_8007FFE8(a, 0) != 0 && fn_8007FAB0(j, c) != 0) {
+            k = lbl_80309174[a].x6;
+            if (lbl_80309174[a].x0 == 12) {
+                e = &lbl_802AD440[k + 0x24];
+                fn_80081168(a, 0xb);
+            } else {
+                e = &lbl_802AD440[k];
+                fn_80081168(a, 0xc);
+            }
+            if (e->x15) {
+                kind = e->x16;
+                lbl_80309DE4[a]->x10 |= 0x4000;
+                switch (kind) {
+                case 0:
+                case 4:
+                case 17:
+                    if (lbl_80309DE4[a]->x10 & 0x10) {
+                        lbl_80309DE4[a]->x10 |= 0x20;
+                    } else {
+                        lbl_80309DE4[a]->x10 |= 0x10;
+                    }
+                    break;
+                case 31:
+                case 32:
+                    if (lbl_80309DE4[a]->x10 & 0x4) {
+                        lbl_80309DE4[a]->x10 |= 0x8;
+                    } else {
+                        lbl_80309DE4[a]->x10 |= 0x4;
+                    }
+                    break;
+                case 5:
+                case 6:
+                case 9:
+                case 11:
+                case 12:
+                case 20:
+                case 21:
+                case 26:
+                    if (lbl_80309DE4[a]->x10 & 0x40) {
+                        lbl_80309DE4[a]->x10 |= 0x80;
+                    } else {
+                        lbl_80309DE4[a]->x10 |= 0x40;
+                    }
+                    break;
+                }
+            } else {
+                lbl_80309DE4[a]->x10 |= 0x8000;
+                if ((s8)fn_8008210C() == 0x2b || (s8)fn_8008210C() == 0x40) {
+                    c = lbl_80309174[a].x4;
+                    k = lbl_80309174[a].x6;
+                }
+                switch (k) {
+                case 0x2e:
+                case 0x41:
+                case 0x56:
+                    lbl_80309DE4[a]->x24 = 1;
+                    break;
+                case 0xd:
+                case 0x14:
+                case 0x25:
+                case 0x2f:
+                case 0x3f:
+                case 0x11e:
+                    lbl_80309DE4[a]->x10 |= 0x100;
+                    break;
+                case 9:
+                case 0x37:
+                    lbl_80309DE4[a]->x10 |= 0x2000;
+                    break;
+                case 0x12d:
+                    lbl_80309DE4[a]->x10 |= 0x20000;
+                    break;
+                default:
+                    switch (e->x16) {
+                    case 0x1f:
+                        if (lbl_80309DE4[a]->x10 & 0x200) {
+                            lbl_80309DE4[a]->x10 |= 0x400;
+                        } else {
+                            lbl_80309DE4[a]->x10 |= 0x200;
+                        }
+                        break;
+                    case 0x2c:
+                        if (lbl_80309DE4[a]->x10 & 0x800) {
+                            lbl_80309DE4[a]->x10 |= 0x1000;
+                        } else {
+                            lbl_80309DE4[a]->x10 |= 0x800;
+                        }
+                        break;
+                    case 0x3d:
+                    case 0x3e:
+                        lbl_80309700[a]->un.work->x37 = 1;
+                    case 0x25:
+                    case 0x26:
+                        fn_80081EF4(a, 0);
+                        break;
+                    }
+                    break;
+                }
+            }
+            lbl_80309730[a].x4 = c;
+            lbl_80309730[a].x6 = k;
+            t->state = 11;
+        }
+        break;
+    case 11:
+        j = a;
+        if (fn_8007FFE8(a, 0xb) != 0) {
+            fn_800811E4(a, 0);
+            t->state = 12;
+            m = lbl_80309174[a].x6;
+            if (lbl_80309174[a].x0 == 12) {
+                e = &lbl_802AD440[m + 0x24];
+            } else {
+                e = &lbl_802AD440[m];
+            }
+            switch (e->x16) {
+            case 0x3d:
+            case 0x3e:
+                for (i = 4; i < 12; i++) {
+                    if (j == lbl_80309730[i].x4) {
+                        lbl_80309730[i].x4 = i;
+                    }
+                    if (j == lbl_80309730[i].xd) {
+                        lbl_80309730[i].xd = i;
+                    }
+                }
+                fn_8008066C(j);
+                t->flags18 |= 0x40;
+                lbl_80309700[a] = 0;
+                lbl_80309DCC[a] = -2;
+                lbl_80347374 &= ~(1 << j);
+                break;
+            }
+        }
+        break;
+    case 12:
+        if (fn_8007FFE8(a, 0) != 0) {
+            m = lbl_80309174[a].x6;
+            if (lbl_80309174[a].x0 == 12) {
+                e = &lbl_802AD440[m + 0x24];
+            } else {
+                e = &lbl_802AD440[m];
+            }
+            if (a == c || e->x17 == 2) {
+                if (fn_8006D1C4() != 1) {
+                    break;
+                }
+            }
+            fn_80010474(a);
+            fn_800811E4(a, 0);
+            t->state = 13;
+        }
+        break;
+    case 13:
+        if (fn_8007FFE8(a, 0) != 0) {
+            wk->flags |= 1;
+            lbl_80309700[a]->update = fn_80087054;
+            lbl_80309700[a]->state = 0;
+            if ((s8)fn_8008210C() == 0x40) {
+                wk->flags |= 0x10;
+            }
+        }
+        break;
+    }
+}
+
+extern void fn_80079F74(List* w);
+extern void fn_80079C5C(void);
+extern void fn_80076584(s32 i);
+
+void fn_8007A890(Task_8007BEB4* t) {
+    List* w;
+    s32 mask;
+    s32 cur;
+    s32 n;
+    u32 f;
+    s8 sel;
+    s32 who;
+    Ent* e;
+
+    switch (t->state) {
+    case 0:
+        t->state = 1;
+        w = fn_801E1C7C(0x88);
+        t->work = w;
+        w->x1 = 9;
+        w->x4 = 0;
+        fn_80079F74(w);
+        w->x3 = -1;
+        w->x7 |= 1;
+        break;
+    case 1:
+        if (lbl_80346C10 == 0) {
+            fn_80023D14(t->work);
+            t->state = 2;
+            lbl_80346C10 = 1;
+            t->work->x4 = 0;
+        }
+        break;
+    case 2:
+        w = t->work;
+        if (lbl_8030A6D4[lbl_8034757C].flags & 1) {
+            cur = w->x1;
+            mask = w->x2;
+            n = cur;
+            do {
+                n--;
+                if (n < 9) {
+                    n = 14;
+                }
+            } while (!(mask & (1 << (n - 9))));
+            if (n != cur) {
+                w->x1 = n;
+                w->x4 = 0;
+                fn_80079F74(w);
+                w->x3 = -1;
+                w->x7 |= 1;
+                SePlay(0, 1, 0);
+            }
+        }
+        if (lbl_8030A6D4[lbl_8034757C].flags & 2) {
+            mask = w->x1;
+            cur = w->x2;
+            n = mask;
+            do {
+                n++;
+                if (n > 14) {
+                    n = 9;
+                }
+            } while (!(cur & (1 << (n - 9))));
+            if (n != mask) {
+                w->x1 = n;
+                w->x4 = 0;
+                fn_80079F74(w);
+                w->x3 = -1;
+                w->x7 |= 1;
+                SePlay(0, 1, 0);
+            }
+        }
+        f = lbl_8030A6D4[lbl_8034757C].x8;
+        if (f & 0x100) {
+            w->x3 = 0;
+            t->state = 3;
+            SePlay(0, 1, 2);
+        } else if (f & 0x200) {
+            lbl_80347318->state = 2;
+            t->state = 7;
+            SePlay(0, 1, 7);
+        } else {
+            if (lbl_8030A6D4[lbl_8034757C].flags & 8) {
+                w->x3 = w->count - 1;
+                t->state = 3;
+                SePlay(0, 1, 0);
+            }
+            if (lbl_8030A6D4[lbl_8034757C].flags & 4) {
+                w->x3 = 0;
+                t->state = 3;
+                SePlay(0, 1, 0);
+            }
+        }
+        break;
+    case 3:
+        w = t->work;
+        w->x6 = 0;
+        if (lbl_8030A6D4[lbl_8034757C].x8 & 0x200) {
+            t->state = 2;
+            w->x3 = -1;
+            SePlay(0, 1, 0);
+        }
+        if (w->x3 < 0) {
+            break;
+        }
+        if ((s8)w->count == 0) {
+            break;
+        }
+        f = lbl_8030A6D4[lbl_8034757C].flags;
+        if (f & 8) {
+            SePlay(0, 1, 0);
+            w->x6 = 1;
+            if (w->x3 == 0) {
+                t->state = 2;
+                w->x3 = -1;
+                w->x6 = 0;
+            }
+        } else if (f & 4) {
+            SePlay(0, 1, 0);
+            w->x6 = 2;
+            if (w->x3 == (s8)w->count - 1) {
+                t->state = 2;
+                w->x3 = -1;
+                w->x6 = 0;
+            }
+        } else {
+            s32 old = w->x4;
+            if (f & 1) {
+                w->x4--;
+                if (w->x4 < 0) {
+                    w->x4 = w->x5 - 1;
+                }
+                if (old != w->x4) {
+                    SePlay(0, 1, 0);
+                }
+                fn_80079F74(w);
+                w->x7 |= 1;
+                w->x3 = 0;
+            } else if (f & 2) {
+                w->x4++;
+                if (w->x4 >= w->x5) {
+                    w->x4 = 0;
+                }
+                if (old != w->x4) {
+                    SePlay(0, 1, 0);
+                }
+                fn_80079F74(w);
+                w->x3 = 0;
+                w->x7 |= 1;
+            } else {
+                f = lbl_8030A6D4[lbl_8034757C].x8;
+                if (f & 0x100) {
+                    sel = w->x3;
+                    who = lbl_80347330;
+                    e = &w->e[sel];
+                    if (e->on == 0) {
+                        break;
+                    }
+                    switch (w->x1) {
+                    case 10:
+                        if (lbl_803472FC == 0) {
+                            t->state = 4;
+                            lbl_803472FC = fn_802268E8(lbl_80347308, fn_80079C5C);
+                            SePlay(0, 1, 2);
+                        }
+                        break;
+                    case 11:
+                        if (w->e[sel].id == -1) {
+                            lbl_80309DE4[who]->x102 = -1;
+                        } else {
+                            lbl_80309DE4[who]->x102 = w->e[sel].type;
+                            SePlay(0, 1, 0x16);
+                        }
+                        sel = w->x3;
+                        fn_80079F74(w);
+                        w->x3 = sel;
+                        w->x7 |= 1;
+                        fn_80076584(who);
+                        lbl_80347318->state = 2;
+                        t->state = 7;
+                        break;
+                    case 12:
+                        if (w->e[sel].id == -1) {
+                            lbl_80309DE4[who]->x104 = -1;
+                        } else {
+                            lbl_80309DE4[who]->x104 = w->e[sel].type;
+                            SePlay(0, 1, 0x16);
+                        }
+                        sel = w->x3;
+                        fn_80079F74(w);
+                        w->x3 = sel;
+                        w->x7 |= 1;
+                        fn_80076584(who);
+                        lbl_80347318->state = 2;
+                        t->state = 7;
+                        break;
+                    case 9:
+                        fn_8007B958(t, who, e->type, 5);
+                        lbl_80309174[lbl_80347330].x0 = 5;
+                        SePlay(0, 1, 2);
+                        break;
+                    }
+                } else if (f & 0x400) {
+                    w->x7 |= 2;
+                    t->state = 6;
+                    SePlay(0, 1, 6);
+                }
+            }
+        }
+        break;
+    case 6:
+        if (lbl_8030A6D4[lbl_8034757C].x8 != 0) {
+            t->state = 3;
+            t->work->x7 &= ~2;
+            SePlay(0, 1, 7);
+        }
+        break;
+    case 7:
+        t->flags |= 0x40;
+        lbl_80347308 = 0;
+        fn_80023D04(t->work);
+        lbl_80346C10 = 0;
+        break;
+    case 4:
+    case 5:
+        break;
+    }
+}
+
