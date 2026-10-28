@@ -81,7 +81,7 @@ typedef struct {
 extern SpriteSystem menu_sprites;
 extern Vertex2D sprite_verts[4];
 
-Sprite* fn_801D68C4(void* bank, u16 index);
+Sprite* fn_801D68C4(void* bank, s32 index);
 s32 fn_80227810(NJS_TEXLIST* texlist);
 void fn_802275A4(NJS_TEXLIST* texlist, s32 a);
 f32 fn_801DBD9C(f32 z);

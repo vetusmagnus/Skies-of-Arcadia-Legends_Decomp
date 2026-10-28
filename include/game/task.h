@@ -15,7 +15,8 @@ struct Task {
     u8 pad0C[0x0C];
     u8 flags; /* 0x18: 0x40 delete, 0x10 deleted */
     u8 state; /* 0x19: 0 new, 0xFF dying */
-    u8 pad1A[0x0A];
+    u8 pad1A[0x06];
+    f32 f20;  /* 0x20 */
     void* work; /* 0x24 */
 };
 

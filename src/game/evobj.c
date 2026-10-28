@@ -5,6 +5,7 @@
 #include "game/camera_803119E0.h"
 #include "game/save_8030B7F4.h"
 #include "game/task.h"
+#include "game/evobj.h"
 #include <math.h>
 
 /* Story-flag event object (0x801E8CA4 - 0x801EA2DC): the event object task fn_801E8CA4 (waits for
@@ -21,47 +22,6 @@
  * walking direction in eighth turns) and fn_801EC854 the looping sound that fades with
  * distance. fn_801EA974 draws a debug line. Several of these are not matched yet. */
 
-typedef struct {
-    void* model;          /* 0x00 */
-    u32 pad4;
-    NJS_TEXLIST texlist;  /* 0x08 */
-} ModelFile;
-
-typedef struct {
-    u8 pad0[8];
-    ModelFile* body;    /* 0x08 */
-    ModelFile* extra;   /* 0x0C */
-    ModelFile* spark;   /* 0x10 */
-} ModelFiles;
-
-typedef struct {
-    s32 count;
-    void* items[1]; /* count entries */
-} ItemList;
-
-typedef struct {
-    u8 pad0[0x24];
-    u32 nearDist;  /* 0x24 */
-    u32 actDist;   /* 0x28 */
-    u32 x2c;       /* 0x2C */
-    u32 speed;     /* 0x30 */
-    u8 pad34[4];
-    s32 mode;      /* 0x38 */
-    u32 flag;      /* 0x3C story flag */
-} EvInfo;
-
-typedef struct {
-    u8 pad0[0x10];
-    EvInfo* info;          /* 0x10 */
-    ModelFiles* files;     /* 0x14 */
-    u8 pad18[4];
-    ItemList* items;       /* 0x1C */
-    NJS_TEXLIST* texlist;  /* 0x20 */
-    u8 pad24[0x44 - 0x24];
-    NJS_POINT3 target;     /* 0x44 */
-    NJS_POINT3 rot;        /* 0x50 */
-} EvExt;
-
 /* Only nbFrame is used here; see model.c for the field meanings. */
 typedef struct NJS_MOTION {
     void** mdata;
@@ -69,83 +29,6 @@ typedef struct NJS_MOTION {
     u16 type;
     u16 inp_fn;
 } NJS_MOTION;
-
-/* The game's model object (see model.c) with the fields these three tasks use. */
-typedef struct {
-    u8 pad0[4];
-    s32 kind;                /* 0x04 */
-    u8 pad8[0x1C - 0x08];
-    NJS_ARGB colour;         /* 0x1C */
-    u8 pad2C[0x38 - 0x2C];
-    NJS_POINT3 pos;          /* 0x38 */
-    Angle ang[3];            /* 0x44 */
-    NJS_POINT3 scl;          /* 0x50 */
-    NJS_POINT3 vel;          /* 0x5C */
-    Angle rotv[3];           /* 0x68 */
-    s16 x74;                 /* 0x74 */
-    u8 pad76[0xB4 - 0x76];
-    NJS_POINT3 pivotPos;     /* 0xB4 */
-    u8 padC0[0xE4 - 0xC0];
-    void* model;             /* 0xE4 */
-    NJS_MOTION* motion;      /* 0xE8 */
-    void* shape;             /* 0xEC */
-    u8 padF0[0x100 - 0xF0];
-    NJS_TEXLIST* texlist;    /* 0x100 */
-    NJS_POINT3 home;         /* 0x104 */
-    Angle tgt[3];            /* 0x110 */
-    u8 pad11C[0x164 - 0x11C];
-    f32 x164;                /* 0x164 */
-    s16 state;               /* 0x168 */
-    u8 pad16A[2];
-    s16 pivot;               /* 0x16C */
-    u8 pad16E[2];
-    u16 motionId;            /* 0x170 */
-    u16 x172;                /* 0x172 */
-    u8 pad174[2];
-    u16 id;                  /* 0x176 */
-    u8 pad178[8];
-    s32 x180;                /* 0x180 */
-    s32 hidden;              /* 0x184 */
-    u8 pad188[4];
-    f32 x18c;                /* 0x18C */
-    f32 speed;               /* 0x190 */
-    u8 pad194[4];
-    s32 x198;                /* 0x198 */
-    u8 pad19C[0x1BC - 0x19C];
-    void* x1bc;              /* 0x1BC */
-    u8 pad1C0[0x1C8 - 0x1C0];
-    EvExt* ext;              /* 0x1C8 */
-    u8 pad1CC[0x1EC - 0x1CC];
-    s8 x1ec;                 /* 0x1EC */
-    s8 x1ed;                 /* 0x1ED */
-    s8 x1ee;                 /* 0x1EE */
-    u8 pad1EF[0x1FC - 0x1EF];
-    s16 x1fc;                /* 0x1FC */
-    s16 x1fe;                /* 0x1FE */
-    s16 x200;                /* 0x200 */
-    s16 x202;                /* 0x202 */
-    s16 x204;                /* 0x204 */
-    s16 x206;                /* 0x206 */
-    s16 x208;                /* 0x208 */
-    s16 x20a;                /* 0x20A */
-    Angle x20c;              /* 0x20C */
-    u32 x210;                /* 0x210 */
-    u8 pad214[0x21C - 0x214];
-    u8 x21c;                 /* 0x21C */
-    u8 x21d;                 /* 0x21D */
-    u8 x21e;                 /* 0x21E */
-    u8 x21f;                 /* 0x21F */
-    u8 pad220[0x22C - 0x220];
-    u16 x22c;                /* 0x22C frame counter */
-    u16 x22e;                /* 0x22E colour key index */
-    u16 x230;                /* 0x230 */
-    u16 point;               /* 0x232 */
-    u8 pad234[0x23C - 0x234];
-    void* x23c;              /* 0x23C */
-    void* x240;              /* 0x240 */
-    u8 pad244[0x24C - 0x244];
-    NJS_POINT3 x24c;         /* 0x24C */
-} EvObj;
 
 typedef struct {
     NJS_POINT3 a; /* 0x00 */
