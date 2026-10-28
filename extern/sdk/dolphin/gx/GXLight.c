@@ -1,8 +1,9 @@
+#pragma fp_contract off
 #include "dolphin/gx.h"
 #include "dolphin/gx/GXPriv.h"
 
-extern float cosf(float x);
-extern float sqrtf(float x);
+#define SKIES_FLOAT_MATH_EXTERN
+#include <math.h>
 
 #define GX_LARGE_NUMBER 1.0e+18f;
 
@@ -183,19 +184,15 @@ void GXInitSpecularDir(GXLightObj *lt_obj, f32 nx, f32 ny, f32 nz) {
   vx = -nx;
   vy = -ny;
   vz = (-nz + 1.0F);
-  mag = vx * vx + vy * vy + vz * vz;
+  mag = 1.0f / sqrtf(vx * vx + vy * vy + vz * vz);
 
-  if (mag != 0.0f) {
-    mag = 1.0f / sqrtf(mag);
-  }
+  obj->nx = vx * mag;
+  obj->ny = vy * mag;
+  obj->nz = vz * mag;
 
-  obj->px = vx * mag;
-  obj->py = vy * mag;
-  obj->pz = vz * mag;
-
-  obj->nx = nx * -GX_LARGE_NUMBER;
-  obj->ny = ny * -GX_LARGE_NUMBER;
-  obj->nz = nz * -GX_LARGE_NUMBER;
+  obj->px = nx * -GX_LARGE_NUMBER;
+  obj->py = ny * -GX_LARGE_NUMBER;
+  obj->pz = nz * -GX_LARGE_NUMBER;
 }
 
 void GXInitSpecularDirHA(GXLightObj *lt_obj, f32 nx, f32 ny, f32 nz, f32 hx, f32 hy, f32 hz) {

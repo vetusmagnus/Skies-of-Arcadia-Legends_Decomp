@@ -26,10 +26,10 @@ extern void OSPanic(const char* file, int line, const char* msg, ...);
 extern void VIConfigure(const GXRenderModeObj* rm);
 extern void* VIGetNextFrameBuffer(void);
 extern void GXAbortFrame(void);
-extern void fn_8024DF5C(u16 token);
-extern u16 fn_8024E014(void);
-extern void fn_8024E020(void);
-extern f32 fn_8024EBE8(u16 efbHeight, u16 xfbHeight);
+extern void GXSetDrawSync(u16 token);
+extern u16 GXReadDrawSync(void);
+extern void GXDrawDone(void);
+extern f32 GXGetYScaleFactor(u16 efbHeight, u16 xfbHeight);
 extern void fn_80252D88(u32* a, u32* b, u32* c, u32* d);
 extern void GXSetGPMetric(s32 perf0, s32 perf1);
 extern void GXClearGPMetric(void);
@@ -70,7 +70,7 @@ static inline void GPSetFifoLimits(u32 hi, u32 lo) {
     GXFifoObj tmp;
     void* fb = VIGetNextFrameBuffer();
     GXFifoObj* cpu;
-    fn_8024E020();
+    GXDrawDone();
     cpu = GXGetCPUFifo();
     GXInitFifoBase(&tmp, fb, 0x10000);
     GXSetCPUFifo(&tmp);
@@ -90,7 +90,7 @@ static inline void GPSetRenderMode(void) {
     GXSetScissor(0, 0, lbl_803476C0->fbWidth, lbl_803476C0->efbHeight);
     GXSetDispCopySrc(0, 0, lbl_803476C0->fbWidth, lbl_803476C0->efbHeight);
     GXSetDispCopyDst(lbl_803476C0->fbWidth, lbl_803476C0->xfbHeight);
-    GXSetDispCopyYScale(fn_8024EBE8(lbl_803476C0->efbHeight, lbl_803476C0->xfbHeight));
+    GXSetDispCopyYScale(GXGetYScaleFactor(lbl_803476C0->efbHeight, lbl_803476C0->xfbHeight));
     GXSetCopyFilter(lbl_803476C0->aa, lbl_803476C0->sample_pattern, GX_TRUE, lbl_803476C0->vfilter);
 }
 
@@ -114,7 +114,7 @@ void fn_801D2414(void) {
 }
 
 void fn_801D23E0(void) {
-    fn_8024DF5C(0xFEEB);
+    GXSetDrawSync(0xFEEB);
     GXClearGPMetric();
     GXInvalidateVtxCache();
     GXInvalidateTexAll();
@@ -123,8 +123,8 @@ void fn_801D23E0(void) {
 void fn_801D22CC(void) {
     BOOL aborted = FALSE;
     lbl_80347600 = 0;
-    fn_8024DF5C(0xB00B);
-    while (fn_8024E014() != 0xB00B && !aborted) {
+    GXSetDrawSync(0xB00B);
+    while (GXReadDrawSync() != 0xB00B && !aborted) {
         if (lbl_80347600 >= 2) {
             if (lbl_803475AC != 0) {
                 OSReport("---------WARNING : ABORTING FRAME----------\n");

@@ -128,6 +128,11 @@ void GXPixModeSync(void) {
   __GXData->bpSentNot = 0;
 }
 
+void GXTexModeSync(void) {
+  GX_WRITE_RAS_REG(0x63000000);
+  __GXData->bpSentNot = 0;
+}
+
 void GXPokeAlphaMode(GXCompare func, u8 threshold) {
   u32 reg;
 
@@ -205,7 +210,7 @@ void GXPeekZ(u16 x, u16 y, u32 *z) {
 
   SET_REG_FIELD(addr, 10, 2, x);
   SET_REG_FIELD(addr, 10, 12, y);
-  SET_REG_FIELD(addr, 2, 22, 1);
+  SET_REG_FIELD(addr, 2, 22, 0);
   *z = *(u32 *)addr;
 }
 

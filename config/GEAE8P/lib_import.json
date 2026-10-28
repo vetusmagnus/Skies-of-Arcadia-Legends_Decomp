@@ -138,6 +138,11 @@
   "dolphin/ar/ar.c",
   "dolphin/ar/arq.c",
   "dolphin/dvd/dvdfs.c",
-  "dolphin/dvd/dvd.c"
+  "dolphin/dvd/dvd.c",
+  "dolphin/gx/GXMisc.c",
+  "dolphin/gx/GXFrameBuf.c",
+  "dolphin/gx/GXLight.c",
+  "dolphin/gx/GXTexture.c",
+  "dolphin/gx/GXBump.c"
  ]
 }

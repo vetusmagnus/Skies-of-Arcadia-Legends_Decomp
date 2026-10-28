@@ -604,6 +604,11 @@ config.libs += [
         "progress_category": "sdk",
         "src_dir": "extern/sdk",
         "objects": [
+            Object(Matching, "dolphin/gx/GXBump.c"),
+            Object(Matching, "dolphin/gx/GXTexture.c"),
+            Object(Matching, "dolphin/gx/GXLight.c"),
+            Object(Matching, "dolphin/gx/GXFrameBuf.c"),
+            Object(Matching, "dolphin/gx/GXMisc.c"),
             Object(Matching, "dolphin/gx/GXInit.c"),
             Object(Matching, "dolphin/gx/GXFifo.c"),
             Object(Matching, "dolphin/gx/GXAttr.c"),

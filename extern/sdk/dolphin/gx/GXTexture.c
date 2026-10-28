@@ -50,6 +50,7 @@ u8 GXTexImage3Ids[8] = {0x94, 0x95, 0x96, 0x97, 0xB4, 0xB5, 0xB6, 0xB7};
 u8 GXTexTlutIds[8] = {0x98, 0x99, 0x9A, 0x9B, 0xB8, 0xB9, 0xBA, 0xBB};
 
 static u8 GX2HWFiltConv[8] = {0x00, 0x04, 0x01, 0x05, 0x02, 0x06, 0x00, 0x00};
+static u8 HW2GXFiltConv[8] = {0x00, 0x02, 0x04, 0x00, 0x01, 0x03, 0x05, 0x00};
 
 #define GET_TILE_COUNT(a, b) (((a) + (1 << (b)) - 1) >> (b))
 
@@ -321,6 +322,25 @@ GXBool GXGetTexObjMipMap(const GXTexObj *to) {
   const __GXTexObjInt *t = (const __GXTexObjInt *)to;
 
   return (t->flags & 1) == 1;
+}
+
+void GXGetTexObjLODAll(const GXTexObj *to, GXTexFilter *min_filt, GXTexFilter *mag_filt, f32 *min_lod,
+                       f32 *max_lod, f32 *lod_bias, u8 *bias_clamp, u8 *do_edge_lod,
+                       GXAnisotropy *max_aniso) {
+  const __GXTexObjInt *t = (const __GXTexObjInt *)to;
+
+  *min_filt = HW2GXFiltConv[GET_REG_FIELD(t->mode0, 3, 5)];
+  *mag_filt = GET_REG_FIELD(t->mode0, 1, 4);
+  *min_lod = (f32)(u32)GET_REG_FIELD(t->mode1, 8, 0) / 16.0f;
+  *max_lod = (f32)(u32)GET_REG_FIELD(t->mode1, 8, 8) / 16.0f;
+  {
+    u32 b = GET_REG_FIELD(t->mode0, 8, 9);
+    s16 c = b;
+    *lod_bias = (f32)(s8)c / 32.0f;
+  }
+  *bias_clamp = GET_REG_FIELD(t->mode0, 1, 21);
+  *do_edge_lod = !GET_REG_FIELD(t->mode0, 1, 8);
+  *max_aniso = GET_REG_FIELD(t->mode0, 2, 19);
 }
 
 void GXLoadTexObjPreLoaded(GXTexObj *obj, GXTexRegion *region, GXTexMapID id) {

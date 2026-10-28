@@ -443,8 +443,31 @@ dolphin/gx/GXAttr.c:
 	.data       start:0x802FB6D0 end:0x802FB830
 	.sdata      start:0x80346948 end:0x80346958
 
+dolphin/gx/GXMisc.c:
+	.text       start:0x8024DDAC end:0x8024E3D8
+	.sbss       start:0x80347BC0 end:0x80347BD8
+
 dolphin/gx/GXGeometry.c:
 	.text       start:0x8024E3D8 end:0x8024E788
+
+dolphin/gx/GXFrameBuf.c:
+	.text       start:0x8024E788 end:0x8024F4A4
+	.data       start:0x802FB830 end:0x802FB920
+	.sdata2     start:0x8034C840 end:0x8034C850
+
+dolphin/gx/GXLight.c:
+	.text       start:0x8024F4A4 end:0x8024FBAC
+	.data       start:0x802FB920 end:0x802FB940
+	.sdata2     start:0x8034C850 end:0x8034C898
+
+dolphin/gx/GXTexture.c:
+	.text       start:0x8024FBAC end:0x80250D34
+	.data       start:0x802FB940 end:0x802FBB68
+	.sdata      start:0x80346958 end:0x803469A0
+	.sdata2     start:0x8034C898 end:0x8034C8D0
+
+dolphin/gx/GXBump.c:
+	.text       start:0x80250D34 end:0x802510AC
 
 dolphin/gx/GXTev.c:
 	.text       start:0x802510AC end:0x802517A8
