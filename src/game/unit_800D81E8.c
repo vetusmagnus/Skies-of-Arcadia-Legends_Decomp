@@ -1860,24 +1860,8 @@ typedef struct {
     f32 f20;
     Ent_8010427C* d;
 } Obj_8010427C;
-typedef struct Sub_80107904 {
-    u8 pad0[0x2];
-    s16 s2;
-    void *w4;
-    u8 pad8[0x8];
-    s16 s10;
-} Sub_80107904;
-typedef struct Obj_80107904 {
-    u8 pad0[0xE4];
-    void *pe4;
-    u8 pad_e8[0x100 - 0xE8];
-    void *p100;
-    u8 pad_104[0x1AC - 0x104];
-    void *p1ac;
-    Sub_80107904 *p1b0;
-} Obj_80107904;
-extern void *fn_801DDAB0(void *a, void *b, void *c, void *d, s16 *e);
-extern Sub_80107904 *fn_801DD984(void);
+extern void *fn_801DDAB0(void *a, void *b, void *c, void *d, EvPair *e);
+extern EvSlot *fn_801DD984(void);
 extern void fn_801DD95C(void *p);
 extern void fn_801DD9AC(void *a, void *b);
 extern void fn_801E5F1C(void *p, s32 n);
@@ -2363,7 +2347,7 @@ typedef struct {
     f32 x38, y3c, z40;   /* 0x38 */
     s32 a44, a48, a4c;   /* 0x44 */
     u8 pad50[0xEC - 0x50];
-    s32 wec;             /* 0xEC */
+    void* wec;           /* 0xEC */
     u8 pad_f0[0x100 - 0xF0];
     void* tex;           /* 0x100 */
     u8 pad104[0x180 - 0x104];
@@ -2379,7 +2363,7 @@ typedef struct {
     s32 w20c;            /* 0x20C */
     s32 w210;            /* 0x210 */
 } Work_80101E64;
-extern s32 fn_801C5D88(void* w, s32 a);
+extern void* fn_801C5D88(void* w, s32 a);
 extern void fn_801C5B44(void* w, void* p);
 extern void fn_801C5AB4(void* w, void* p);
 extern void fn_801E66E0(void* w);
@@ -3756,9 +3740,368 @@ void fn_8010108C(s32 a, s32 b, s32 c) {
     fn_80100E68((void*)0, a, b, c);
 }
 
-extern void fn_801073B4(Msg*, s16);
+extern void fn_801073B4(Task*);
 s32 fn_801010C4(void) {
     return lbl_80346E44;
+}
+
+s32 fn_80107904(EvObj *self, EvPair *v, u32 a, s32 b, void *c, void *d);
+extern s32 fn_801C5FC0(EvObj* e);
+extern void fn_801E5EA4(EvObj* e, s32 n);
+
+static inline void SpeedFromInfo(EvObj* e) {
+    f32 f = 0.0f;
+    if (fn_801C6068(e, 15) != 0) {
+        f = fn_801C5D04(e, 8);
+    }
+    e->speed = f;
+}
+
+static inline s32 HoldOf(EvObj* e) {
+    s32 v = 0;
+    if (fn_801C6068(e, 15) != 0) {
+        v = 0;
+        if (fn_801C602C(e, 10) != 0) {
+            s32 x = PathInfo(e)->x2c;
+            v = x < 0 ? 0 : x;
+        }
+    }
+    return v;
+}
+
+static inline void ResetHold(EvObj* e) {
+    if (e != NULL) {
+        if (e != NULL) {
+            e->x18c = 0.0f;
+            e->x198 = 0;
+            fn_801E5EA4(e, 0);
+        }
+        SpeedFromInfo(e);
+        e->x180 = HoldOf(e);
+    }
+}
+
+static inline void GetPair(EvObj* e, EvPair* out) {
+    if (out != NULL) {
+        if (fn_801C602C(e, 11) != 0 && fn_801C602C(e, 12) != 0) {
+            out->a = PathInfo(e)->speed;
+            out->b = PathInfo(e)->x34;
+        } else {
+            out->a = 0;
+            out->b = 0;
+        }
+    }
+}
+
+static inline s32 KindOff(EvObj* e) {
+    s32 v = 0;
+    if (fn_801C6068(e, 15) != 0) {
+        v = 0;
+        if (fn_801C602C(e, 14) != 0) {
+            v = PathInfo(e)->count - 14;
+        }
+    }
+    return v;
+}
+
+static inline s32 ModeOf(EvObj* e) {
+    s32 v = 0;
+    if (fn_801C6068(e, 15) != 0) {
+        v = 0;
+        if (fn_801C602C(e, 13) != 0) {
+            v = PathInfo(e)->mode;
+        }
+    }
+    return v;
+}
+
+static inline s32* PtsOf(EvObj* e) {
+    s32* v = NULL;
+    if (fn_801C6068(e, 15) != 0) {
+        v = NULL;
+        if (fn_801C602C(e, 14) != 0) {
+            v = PathInfo(e)->pts;
+        }
+    }
+    return v;
+}
+
+static inline s32 Setup(EvObj* e, NJS_TEXLIST* old) {
+    s32 r = 0;
+    if (e != NULL) {
+        EvPair pair;
+        GetPair(e, &pair);
+        r = fn_80107904(e, &pair, KindOff(e), ModeOf(e), PtsOf(e), old);
+    }
+    return r;
+}
+
+static inline s32 TurnOf(EvObj* e) {
+    s32 v = 0;
+    if (fn_801C6068(e, 15) != 0) {
+        v = 0;
+        switch (PathInfo(e)->actDist) {
+        case 0: break;
+        case 1: v = 2; break;
+        case 2: v = 3; break;
+        case 3: v = 4; break;
+        case 4: v = 1; break;
+        }
+    }
+    return v;
+}
+
+void fn_80106EE0(Task* t) {
+    EvObj* e;
+    if (t == NULL) return;
+    e = t->work;
+    if (e == NULL) return;
+    switch (t->state) {
+    case 0: {
+        NJS_TEXLIST* old = e->texlist;
+        NJS_TEXLIST* tl = NULL;
+        if (e != NULL) {
+            if (fn_801C5FC0(e) != 0) {
+                tl = e->ext->texlist;
+            } else {
+                tl = e->texlist;
+            }
+        }
+        e->texlist = tl;
+        if (fn_801C5FFC(e) != 0) {
+            fn_80227810(e->texlist);
+        }
+        t->state = (Setup(e, old) == 1) ? 1 : 5;
+        fn_8015ED90(t);
+        if (t->state == 5) break;
+        fn_8015C8B8(e, 4);
+        e->shape = fn_801C5D88(e, 1);
+        SpeedFromInfo(e);
+        e->x16e = TurnOf(e);
+    }
+    case 1:
+        ResetHold(e);
+        t->state = 2;
+    case 2: {
+        s32 n;
+        if (fn_8015E600(e) != 0) break;
+        n = e->x180;
+        if (n > 0) n--;
+        e->x180 = n;
+        if (n > 0) break;
+        if (0.000030517578125f * (f32)rand() < 0.5f) {
+            t->state = 3;
+        } else {
+            t->state = 1;
+        }
+        break;
+    }
+    case 3:
+        if (fn_8015E600(e) != 0) break;
+        fn_801E5E2C(e);
+        if (e->x198 == 1) {
+            t->state = 1;
+        }
+        break;
+    case 0xff:
+    case 4:
+        fn_8015EBF4(e);
+        if (e != NULL) {
+            if (e->x1b0 != NULL) {
+                e->x1b0->w4 = 0;
+                fn_801DD95C(e->x1b0);
+                e->x1b0 = NULL;
+            }
+            if (e->x1ac != NULL) {
+                fn_801DD9AC(lbl_803474EC, e->x1ac);
+                e->x1ac = NULL;
+            }
+        }
+        if (fn_801C5FFC(e) != 0) {
+            fn_802275A4(e->texlist, 0);
+        }
+        fn_80100B74(t);
+        break;
+    case 5:
+        fn_801E66E0(e);
+        break;
+    case 0xfe:
+        break;
+    }
+}
+
+static inline void SpeedFromInfo_73B4(EvObj* e) {
+    f32 f = 0.0f;
+    if (fn_801C6068(e, 14) != 0) {
+        f = fn_801C5D04(e, 8);
+    }
+    e->speed = f;
+}
+
+static inline void GetPair_73B4(EvObj* e, EvPair* out) {
+    if (out != NULL) {
+        if (fn_801C602C(e, 10) != 0 && fn_801C602C(e, 11) != 0) {
+            out->a = PathInfo(e)->x2c;
+            out->b = PathInfo(e)->speed;
+        } else {
+            out->a = 0;
+            out->b = 0;
+        }
+    }
+}
+
+static inline s32 KindOff_73B4(EvObj* e) {
+    s32 v = 0;
+    if (fn_801C6068(e, 14) != 0) {
+        v = 0;
+        if (fn_801C602C(e, 13) != 0) {
+            v = PathInfo(e)->count - 13;
+        }
+    }
+    return v;
+}
+
+static inline u32 X34Of(EvObj* e) {
+    u32 v = 0;
+    if (fn_801C6068(e, 14) != 0) {
+        v = 0;
+        if (fn_801C602C(e, 12) != 0) {
+            v = PathInfo(e)->x34;
+        }
+    }
+    return v;
+}
+
+static inline s32* TblOf(EvObj* e) {
+    s32* v = NULL;
+    if (fn_801C6068(e, 14) != 0) {
+        v = NULL;
+        if (fn_801C602C(e, 13) != 0) {
+            v = &PathInfo(e)->mode;
+        }
+    }
+    return v;
+}
+
+static inline s32 Setup_73B4(EvObj* e, NJS_TEXLIST* old) {
+    s32 r = 0;
+    if (e != NULL && old != NULL) {
+        EvPair pair;
+        GetPair_73B4(e, &pair);
+        r = fn_80107904(e, &pair, KindOff_73B4(e), X34Of(e), TblOf(e), old);
+    }
+    return r;
+}
+
+static inline s32 TurnOf_73B4(EvObj* e) {
+    s32 v = 0;
+    if (fn_801C6068(e, 14) != 0) {
+        v = 0;
+        switch (PathInfo(e)->actDist) {
+        case 0: break;
+        case 1: v = 2; break;
+        case 2: v = 3; break;
+        case 3: v = 4; break;
+        case 4: v = 1; break;
+        }
+    }
+    return v;
+}
+
+static inline s32 ExtFlags(EvObj* e) {
+    EvInfoPath* info = e->ext->info;
+    return info->count > 4 ? info->flags : 0;
+}
+
+void fn_801073B4(Task* t) {
+    EvObj* e;
+    if (t == NULL) return;
+    e = t->work;
+    if (e == NULL) return;
+    switch (t->state) {
+    case 0: {
+        NJS_TEXLIST* old = e->texlist;
+        NJS_TEXLIST* tl = NULL;
+        if (e != NULL) {
+            if (fn_801C5FC0(e) != 0) {
+                tl = e->ext->texlist;
+            } else {
+                tl = e->texlist;
+            }
+        }
+        e->texlist = tl;
+        if (fn_801C5FFC(e) != 0) {
+            fn_80227810(e->texlist);
+        }
+        t->state = (Setup_73B4(e, old) == 1) ? 1 : 3;
+        fn_8015ED90(t);
+        if (t->state == 3) break;
+        if (X34Of(e) == 0) {
+            fn_8015C8B8(e, 3);
+        } else {
+            fn_8015C8B8(e, 4);
+        }
+        e->shape = fn_801C5D88(e, 1);
+        SpeedFromInfo_73B4(e);
+        e->x16e = TurnOf_73B4(e);
+    }
+    case 1: {
+        EvInfoPath* info;
+        s32 v;
+        if (fn_8015E600(e) != 0) break;
+        fn_800D2924(e);
+        info = e->ext->info;
+        v = info->count > 3 ? info->x10 : 0;
+        if (v == 0) {
+            NJS_POINT3 p;
+            njCalcPoint(NULL, &e->pos, &p);
+            t->f20 = -100.0f + p.z;
+            if (t->f20 > -32.0f) {
+                t->f20 = -32.0f;
+            }
+        } else if (v >= 0x100) {
+            t->f20 = -240.0f - (f32)(v - 0x100);
+        } else if (v > 0) {
+            t->f20 = -200.0f;
+        }
+        if (!(ExtFlags(e) & 8)) {
+            fn_80296EEC(1, 3, 0);
+        }
+        if (X34Of(e) == 0) {
+            fn_801E5E54(e);
+        } else {
+            fn_801E5E2C(e);
+        }
+        if (!(ExtFlags(e) & 8)) {
+            fn_80296EEC(1, 3, 1);
+        }
+        break;
+    }
+    case 0xff:
+    case 2:
+        fn_8015EBF4(e);
+        if (e != NULL) {
+            if (e->x1b0 != NULL) {
+                e->x1b0->w4 = 0;
+                fn_801DD95C(e->x1b0);
+                e->x1b0 = NULL;
+            }
+            if (e->x1ac != NULL) {
+                fn_801DD9AC(lbl_803474EC, e->x1ac);
+                e->x1ac = NULL;
+            }
+        }
+        if (fn_801C5FFC(e) != 0) {
+            fn_802275A4(e->texlist, 0);
+        }
+        fn_80100B74(t);
+        break;
+    case 3:
+        fn_801E66E0(e);
+        break;
+    case 0xfe:
+        break;
+    }
 }
 
 void fn_80108C9C(void) {
@@ -3767,8 +4110,8 @@ void fn_80108C9C(void) {
 void fn_80108CA0(void) {
 }
 
-void fn_80108CA4(Msg* a, s16 i) {
-    fn_801073B4(a, i);
+void fn_80108CA4(Task* t) {
+    fn_801073B4(t);
 }
 
 typedef struct Node { u8 pad0[4]; void *x4; u8 pad8[0x28]; struct Node *next; } Node;
@@ -7027,49 +7370,49 @@ void fn_8010427C(Obj_8010427C* o) {
     }
 }
 
-static inline void Cleanup_80107904(Obj_80107904 *self)
+static inline void Cleanup_80107904(EvObj *self)
 {
     if (self != 0) {
-        if (self->p1b0 != 0) {
-            self->p1b0->w4 = 0;
-            fn_801DD95C(self->p1b0);
-            self->p1b0 = 0;
+        if (self->x1b0 != 0) {
+            self->x1b0->w4 = 0;
+            fn_801DD95C(self->x1b0);
+            self->x1b0 = 0;
         }
-        if (self->p1ac != 0) {
-            fn_801DD9AC(&(*(s32*)&lbl_803474EC), self->p1ac);
-            self->p1ac = 0;
+        if (self->x1ac != 0) {
+            fn_801DD9AC(&(*(s32*)&lbl_803474EC), self->x1ac);
+            self->x1ac = 0;
         }
     }
 }
 
-s32 fn_80107904(Obj_80107904 *self, s16 *v, u32 a, s16 b, void *c, void *d)
+s32 fn_80107904(EvObj *self, EvPair *v, u32 a, s32 b, void *c, void *d)
 {
     if (self != 0 && c != 0 && d != 0 && a != 0) {
-        if (self->p1ac == 0) {
-            if (v != 0 && v[0] == 0 && v[1] == 0) {
+        if (self->x1ac == 0) {
+            if (v != 0 && v->a == 0 && v->b == 0) {
                 v = 0;
             }
-            self->p1ac = fn_801DDAB0(&(*(s32*)&lbl_803474EC), self->pe4, d, self->p100, v);
-            if (self->p1ac == 0) {
+            self->x1ac = fn_801DDAB0(&(*(s32*)&lbl_803474EC), self->model, d, self->texlist, v);
+            if (self->x1ac == 0) {
                 Cleanup_80107904(self);
                 return 0;
             }
         }
-        if (self->p1b0 == 0) {
-            self->p1b0 = fn_801DD984();
-            if (self->p1b0 == 0) {
+        if (self->x1b0 == 0) {
+            self->x1b0 = fn_801DD984();
+            if (self->x1b0 == 0) {
                 Cleanup_80107904(self);
                 return 0;
             }
         }
-        if (self->p1b0->w4 == 0) {
-            self->p1b0->w4 = c;
-            if (self->p1b0->w4 == 0) {
+        if (self->x1b0->w4 == 0) {
+            self->x1b0->w4 = c;
+            if (self->x1b0->w4 == 0) {
                 Cleanup_80107904(self);
                 return 0;
             }
-            self->p1b0->s2 = a;
-            self->p1b0->s10 = b;
+            self->x1b0->h2 = a;
+            self->x1b0->h10 = b;
             fn_801E5F1C(self, 1);
             return 1;
         }

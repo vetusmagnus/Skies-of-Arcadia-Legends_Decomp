@@ -25,6 +25,18 @@ typedef struct {
     void* items[1]; /* count entries */
 } ItemList;
 
+typedef struct {
+    u8 pad0[2];
+    s16 h2;           /* 0x02 */
+    void* w4;         /* 0x04 */
+    u8 pad8[8];
+    s16 h10;          /* 0x10 */
+} EvSlot;
+
+typedef struct {
+    s16 a, b;
+} EvPair;
+
 /* One entry of a map object's script (EvObj.script). */
 typedef struct {
     s16 h0;
@@ -36,8 +48,8 @@ typedef struct {
     void* w14;
     f32 f18;
     f32 f1c;
-    s32 w20;
-    s32 w24;
+    void* w20;
+    EvSlot* w24;
     u8 pad28[4];
 } EvScriptEntry;
 
@@ -301,8 +313,8 @@ typedef struct {
     u8 pad194[4];
     s32 x198;                /* 0x198 */
     u8 pad19C[0x1AC - 0x19C];
-    s32 x1ac;                /* 0x1AC */
-    s32 x1b0;                /* 0x1B0 */
+    void* x1ac;              /* 0x1AC */
+    EvSlot* x1b0;            /* 0x1B0 */
     void* x1b4;              /* 0x1B4 */
     EvHit* hit;              /* 0x1B8 */
     EvColl* coll;            /* 0x1BC */
