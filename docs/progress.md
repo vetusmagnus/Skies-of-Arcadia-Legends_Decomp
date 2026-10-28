@@ -1844,26 +1844,52 @@ fn_800240EC** (unit_80020B50.c). What changed:
   name, `GS` (lbl_8030A10C) gains xc, the 9x9 party grid at 0x14, the f32 speed scale at 0xEC, x180 and x184.
   `fn_8001EBA4` and `fn_8001DE78` take `Task *` and read `ChrW(t)->st` (no register change).
 
-29 still wait (the merge input is the agents' files in build/wt-normal/build/agents/z*; `build/agents/pre.py` renames the
-agent's clashing typedefs to `NAME_ag` (local tools in build/wt-b15m/build/agents) so `u1_fix.py` can pair them, `hm/strip.py` drops an agent's copy of a unit inline):
+Fourth round, by hand (5,235 to 5,244): **fn_80087074, fn_80075060, fn_8007A890** (unit_80074D9C.c), **fn_800CA3C0,
+fn_800CE67C, fn_800CEDDC** (unit_800B2DA0.c), **fn_8013A8FC** (unit_8012F6C4.c), **fn_801A2D60** (unit_80199B9C.c) and
+**fn_8011E72C** (unit_8010E164.c). What changed:
+- unit_80074D9C.c: the move table entry `T24` has `x15`/`x16` (s8) and `x17`, so `lbl_802AD440[i + 0x24].x16` replaces the
+  `pad[0x526]` reads; `Data` is folded into `Wk` (`xc..xf`), `Slot` has `flags18`, the character record `x24`, `x102`/`x104`,
+  `R16.xd` is s8. `fn_8008210C` returns `fn_80081FEC`'s value (s32); its callers in fn_80087074 compare `(s8)fn_8008210C()`,
+  the same value cast fn_80081EF4 already uses on fn_80081FEC (a `s8` return would add an `extsb` to fn_8008210C).
+  `fn_8006D1C4` takes no arguments (as in every other unit). `fn_80075060` walks a `TNode` tree (its wrapper fn_80075040 passes
+  `TNode *, u32, u8`), the page list's `x4`/`x5` are s8.
+- unit_800B2DA0.c: the pickup task reads the player `MapObj`'s `pos[]`; `V3_800C6474` is `NJS_POINT3`; the wall probe's `Q`
+  has x/z, `Flags` the hit `Seg` and the record fields (the `A_800CE4E8`/`B_800CE4E8` views are gone); `fn_800D2924` takes
+  the `EvObj` (`hidden`, and `EvExt.x34`, new in evobj.h).
+- unit_8012F6C4.c: `fn_80135598` returns the battle menu record `Big` (lbl_803063F0: `order[4]`, the items, `Party party` at
+  0x238 with `mem[5]` at 0x298); every `fn_80135598() + 0x238/0x298` and `Sys_80137414` cast is gone. The pointer lists
+  passed to `fn_8012E4FC` are `void *[6]` (`Clear`/`Set` take `void **`; unit_8012ADB4.c's fn_8012E4FC takes `void **`).
+- unit_80199B9C.c: `E2c` has the slot summary fields and `SaveStamp`, `SaveWork` the scan counters (`h12`, `w14`, `f1c`,
+  `w250`; `p[17]`), `Task_801A343C` the parent/`Rec24`/`CardImage` fields (no more `R24()` macro or `+ 0x28` store),
+  `CardSaveData` the magic and header fields. fn_8025ED74 is `strstr`: `fn_801A388C(chan, const char *name, out)` finds the
+  file with `strstr(stat.fileName, name)`. `lbl_80347184` is s32.
+- unit_8010E164.c: the trail record `Sub` has its quad runs, spline points and vertex lists, `Ctx_8011DD9C` the position and
+  offset; `njGetTranslation` is declared (it was implicit), `fn_8011E72C` is `s32 (Ctx_8011DD9C *)`.
+- extern/sdk/libc/string.h gains MSL's `strcat` and `strstr`; unit_800D81E8.c drops its own `strcat` and its `u8` buffer.
+
+20 still wait (merge input: build/wt-normal/build/agents/z*; tools in build/wt-b15m/build/agents: `pre.py`, `u1_fix.py`,
+`ins.py` with `U=unit`, `hm/unins.py` to take a snippet out again, `try.py` with `U=unit` for variants):
+- fn_8014B6F8 (unit_8013D400.c): **decided by Nick (2026-10-28)**: evobj.h keeps 0x23C as the `s32` sound handle; in
+  unit_8013D400.c the leader ship's own record (`Ctx_8014D398`) types 0x23C as `void *`, `Task_8014B6F8`/`Ctx_8014B6F8` fold
+  into `Task_8014D398`/`Ctx_8014D398`, and fn_8014B6F8, fn_8014D1F4, fn_8014D398 read 0x23C into typed locals (`CamNode *` in
+  fn_8014B6F8, the 0x24-byte `Node_8014D398` in fn_8014D398), no casts or unions. The agent's `LeaderCtx`/`LeaderTask` views
+  (`x1e8->x24->x23c`) are one Leader record. Agent copy: build/wt-b15m/build/agents/pp/unit_8013D400/fn_8014B6F8.c.
+- fn_800D7190 (unit_800B2DA0.c): the same per-type-record question. The agent's `EvObj` adds `x158`, `flags188`, `hnd` (0x1B4),
+  `x25c` (a matrix for fn_80223628) and `EvInfo.count`/`x10`, `EvExt.x4`; but the unit's `MapObj` has 0x25C as `Script *` and
+  0x260 as `Cmd *`, and `Obj_800CB1D0` passes 0x1B8/0x23C/0x260 as other records. Fold `MapObj`/`Obj_800CB1D0`/
+  `Obj_800D6E1C`/`Obj_800C3518`/`Self_800C3428` into `EvObj` with Nick's rule (typed locals for the per-type fields).
 - unit_80005B50.c (fn_80019F0C, fn_8001A4F0, fn_8001AB60, fn_8001B1B0, fn_80018CBC, fn_800136DC, fn_80009874,
   fn_8000FC14): the remaining character views are `Top_80019D7C`, `ChrTask`, `Wrap8001FD7C` (all the character Task:
   fold them into `Task` + `ChrW`), `Item` lists at `Obj_80017B18.x30` (the agents pass it to fn_8001DE78; the unit has
   `u8 *x30`), the agents' `Tbl`/`Ent` for lbl_803097F0, `Slot24` (lbl_8030A6D4: agents have x4/x8/xc/x20) and
   `U_800121D8`/`W_800121D8`. fn_8000FC14 also needs `fn_8000F718` as `u32 (s8, s8, u8 *)` and `-str reuse,readonly`;
   fn_80009874 failed fdiff once merged.
-- fn_8014B6F8 (unit_8013D400.c): the three leader-ship task procs (fn_8014B6F8, fn_8014D1F4, fn_8014D398) each have their own
-  Task and work view; the work is the `EvObj`, and its 0x23C holds a different record per event (0x24-byte node in
-  fn_8014D398, 0x110-byte `CamNode` here) while evobj.h types 0x23C as an `s32` sound handle. Needs a decision on that field.
-- Two struct views of one record: `Work_800ED360`/`Game6E14` (fn_800EC488, fn_800ECC5C, fn_800EE51C; see below),
-  `Eff` (fn_8005F8D8), `Sub` (fn_8011E72C), `V3_800C6474` (fn_800CE67C, fn_800CEDDC), `SaveStamp` (fn_801A2D60),
-  `Task_8007BEB4` (fn_8007A890), `Clear` (fn_8013A8FC).
-- Raw byte pointers in the unit where the agent has a real type: `lbl_8034727C` in unit_8014F970.c (fn_8015B358; the agent's
-  `BtlWork` needs every `lbl_8034727C + off` access rewritten, and unit_8013D400.c allocates it), `lbl_80347450->pos`
-  (fn_800CA3C0), `lbl_802AD440[i]` (fn_80087074).
-- Prototype clashes: fn_80075060 (`TNode *`, `u32`, `u8`), fn_800A9708/fn_800AB280 (`fn_800A1B50`, `fn_8009D760`),
-  fn_8006FD6C (`TkRec` proc), fn_800D7190 (`fn_800D2924` takes a thin view, the agent passes `EvObj *`);
-  fn_8015184C and fn_8008CDA8 fail fdiff once merged.
-- fn_800EC488, fn_800ECC5C: the board's `Work_800ED360` (unit_800D81E8.c has a thin one plus a `Work_800EB58C` view of the same
-  lbl_80346DF4 and a raw `u8 *lbl_80346DF0`); the agents' `Desc`/`Board`/`Obj50`/`Mark` records and `Cur_800ED360`'s x14/count/piece
-  fields have to be folded into it first.
+- `Eff` (fn_8005F8D8, unit_80055E94.c), `TkRec` proc prototype (fn_8006FD6C).
+- fn_8015B358 (unit_8014F970.c): the agent's `BtlWork` for `lbl_8034727C` needs every `lbl_8034727C + off` access rewritten
+  (unit_8013D400.c allocates it). fn_8015184C fails fdiff once merged.
+- fn_800A9708/fn_800AB280 (unit_800972AC.c): `fn_800A1B50`, `fn_8009D760` prototypes. fn_8008CDA8 (unit_8008B4A0.c) fails
+  fdiff once merged.
+- fn_800EC488, fn_800ECC5C, fn_800EE51C (unit_800D81E8.c): the board's `Work_800ED360` (the unit has a thin one plus a
+  `Work_800EB58C` view of the same lbl_80346DF4 and a raw `u8 *lbl_80346DF0`); the agents' `Desc`/`Board`/`Obj50`/`Mark`
+  records and `Cur_800ED360`'s x14/count/piece fields have to be folded into it first.
+- unit_801CBA60.c still calls `strstr` as `fn_8025ED74` with its own prototype; it can use string.h now.
