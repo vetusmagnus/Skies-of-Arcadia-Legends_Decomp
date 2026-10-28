@@ -1,5 +1,7 @@
 #include "types.h"
 #include "game/work_8030CEA0.h"
+#include "game/gamedata.h"
+#include "game/save_8030B7F4.h"
 #include <dolphin/types.h>
 extern void fn_80136A28(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f);
 extern void fn_8013DA50(s32 a, s32 b);
@@ -137,14 +139,6 @@ typedef struct {
 } Rec5;
 extern Rec5 lbl_80308E90[8];
 extern u32 fn_8013FCF0(s32 a, s32 key, s32 n);
-typedef struct { u8 pad[0x2a]; s16 v; u8 pad2[4]; } E30;
-typedef struct { u8 pad[0x24]; } E24;
-typedef struct { s16 v; u8 pad[0x22]; } E24c;
-typedef struct { u8 pad[0x1c]; s16 v; u8 pad2[6]; } E24b;
-extern E30 lbl_802C4BF0[];
-extern E24 lbl_802D8A2C[];
-extern E24 lbl_802C7C34[];
-extern E24b lbl_802D8E64[];
 typedef struct {
     s8 kind;
     u8 pad1;
@@ -173,7 +167,10 @@ typedef struct Owner {
 } Owner;
 extern void fn_8014EE4C(void *,  s32 a,  s32 b,  s32 c,  s32 d);
 typedef struct {
-    u8 x0, x1, x2, x3;
+    u8 x0;
+    s8 x1;
+    u8 x2;
+    s8 x3;
     u8 x4, x5, x6, x7;
     s16 x8;
     s16 xa;
@@ -207,7 +204,7 @@ typedef struct {
 } Cfg;
 extern Cfg* lbl_803472A4;
 extern s32 fn_80145E0C(Slot_8014359C* s, s32 a);
-extern void fn_80145F50(Slot_8014359C* s, s32 a);
+extern s32 fn_80145F50(Slot_8014359C* s, s32 a);
 typedef struct {
     u8 pad[0x24];
     struct { u8 pad[0x23C]; void* x23c; } * x24;
@@ -918,6 +915,22 @@ s32 fn_80143374(void) {
 void fn_80144E5C(void) {
 }
 
+s32 fn_80145F50(Slot_8014359C *o, s32 a) {
+    s32 roll = rand() % 100;
+    s32 thr;
+
+    if (o->x1 == 0) {
+        thr = lbl_8030B7F4.chr[o->x3].s40;
+    } else {
+        thr = lbl_802D6934[o->x3].agile;
+    }
+    if (roll <= thr) {
+        o->x7 = 2;
+        return 1;
+    }
+    return 0;
+}
+
 void fn_801463E4(IdxArg* a) {
     if (a->idx == 0) {
         ((u8*)lbl_8034727C)[0x29] |= 0x40;
@@ -1411,16 +1424,16 @@ void fn_801462D0(Req_801462D0 *o) {
 
     switch (o->kind) {
     case 5:
-        d = lbl_802C4BF0[o->id].v;
+        d = lbl_802C4BF0[o->id].ship_power;
         break;
     case 1:
-        d = ((E24c *)((u8 *)lbl_802D8A2C - 0x4364))[o->id].v;
+        d = lbl_802D8A2C[o->id - 0x1E0].power;
         break;
     case 2:
-        d = ((E24c *)((u8 *)lbl_802C7C34 - 0x21a4))[o->id].v;
+        d = lbl_802C7C34[o->id - 0xF0].power;
         break;
     case 7:
-        d = lbl_802D8E64[o->id].v;
+        d = lbl_802D8E64[o->id].power;
         break;
     }
     p[0xe] += d;
@@ -1607,8 +1620,8 @@ void fn_80143734(Out_80143734* o, s32 idx) {
         o->f14 = 0x6b;
         break;
     case 5:
-        o->f9 = (*(u8(*)[])&lbl_802C4BF0)[o->fc * 0x30 + 0x11];
-        o->f14 = *(s16*)((*(u8(*)[])&lbl_802C4BF0) + o->fc * 0x30 + 0x26);
+        o->f9 = lbl_802C4BF0[o->fc].element;
+        o->f14 = lbl_802C4BF0[o->fc].ship_effect;
         break;
     default:
         o->f9 = 6;

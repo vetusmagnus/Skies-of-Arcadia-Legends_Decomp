@@ -1,4 +1,5 @@
 #include "types.h"
+#include "game/gamedata.h"
 extern u16 lbl_8030A2F4[18];
 extern char lbl_802EE634[];
 void *fn_801F4AE4(s16 idx);
@@ -31,13 +32,6 @@ typedef struct Info {
     s16 x12;
 } Info;
 extern s16 fn_801EE344(s16 id, s32 stat);
-/* The 0x24-byte accessory table (ids 400..439); the s8 at 0x12 is what this returns. */
-typedef struct {
-    u8 pad0[0x12];
-    s8 x12;
-    u8 pad13[0x24 - 0x13];
-} Acc_802D7E4C;
-extern Acc_802D7E4C lbl_802D7E4C[];
 
 void fn_801C09A4(void)
 {
@@ -160,5 +154,5 @@ s32 fn_801C16D0(s16 id) {
     if (fn_801F4C24(id) != 5) {
         return -1;
     }
-    return lbl_802D7E4C[id - 400].x12;
+    return lbl_802D7E4C[id - 400].type;
 }

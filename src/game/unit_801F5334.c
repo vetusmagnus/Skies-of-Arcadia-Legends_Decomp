@@ -3,6 +3,7 @@
 #include "ninja.h"
 #include "game/task.h"
 #include "game/util.h"
+#include "game/gamedata.h"
 #include <math.h>
 /* The head of a message a script command posts through fn_800CD0B8; the receiver sets kind (2 = done). */
 typedef struct EvHead {
@@ -691,11 +692,6 @@ typedef struct MapInfo {
     s32 area;       /* 0x04 */
     char room;      /* 0x08 */
 } MapInfo;
-/* A treasure chest's contents (lbl_802D59E8, indexed by the chest's number): an item id (0x200 and up is gold). */
-typedef struct TreasureEnt {
-    s32 item;
-    s32 count;
-} TreasureEnt;
 extern MapInfo lbl_80311AC0;
 /* void fn_801F452C(s32) in the unit */
 extern void fn_801DBE1C(const char* fmt, ...);
@@ -747,7 +743,7 @@ const u32 lbl_802D5940[42] = {
     0x0000000F, 0x0000019C, 0x00000010, 0x000001D7, 0x00000011, 0x000001FB,
     0x00000012, 0x00000209, 0x00000013, 0x00000236, 0x00000014, 0x00000000,
 };
-const TreasureEnt lbl_802D59E8[119] = {
+const ChestData lbl_802D59E8[119] = {
     {0xF0, 3},
     {0xF0, 3},
     {0xF4, 2},

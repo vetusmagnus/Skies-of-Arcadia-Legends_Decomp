@@ -4,15 +4,10 @@
 #include "game/task.h"
 #include "game/save_8030B7F4.h"
 #include "game/stat_8030B4D4.h"
+#include "game/gamedata.h"
 extern s16 lbl_803097F0[];
 extern u32 lbl_802B0830[];
 extern s32 lbl_80347330;
-typedef struct { s8 pad[0x16]; u8 x16; u8 pad17[2]; u8 x19; u8 pad1a[0x30 - 0x1a]; } T30;
-typedef struct { s8 pad[0x13]; u8 x13; u8 pad14[0x24 - 0x14]; } T24c;
-typedef struct { s8 pad[0x15]; s8 x15; s8 x16; u8 x17; u8 pad18[0x24 - 0x18]; } T24;
-extern T24 lbl_802AD440[];
-extern T24c lbl_802C7C34[];
-extern T30 lbl_802C4BF0[];
 extern void fn_8006B774(void* p);
 extern u8* fn_80021658(s32 i);
 extern s16 lbl_80302BF0[];
@@ -791,15 +786,15 @@ s32 fn_8007833C(void) {
 }
 
 s32 fn_80078354(s32 i) {
-    return lbl_802AD440[i + 0x24].x16;
+    return lbl_802AD440[i + 0x24].effect;
 }
 
 s32 fn_80078370(s32 i) {
-    return lbl_802C7C34[i].pad[-0x21ae];
+    return lbl_802C7C34[i - 0xF0].effect;
 }
 
 s32 fn_8007838C(s32 i) {
-    return lbl_802C4BF0[i].pad[0x15];
+    return lbl_802C4BF0[i].effect;
 }
 
 s32 fn_800785EC(u8* p) {
@@ -1638,14 +1633,14 @@ s32 fn_80081FEC(s16 k) {
         {
             s16 j = lbl_80309174[k].x6;
             if (k < 4) {
-                return (s8)lbl_802C4BF0[j].pad[0x15];
+                return (s8)lbl_802C4BF0[j].effect;
             }
-            return (s8)lbl_802AD440[j].x16;
+            return (s8)lbl_802AD440[j].effect;
         }
     case 5:
-        return (s8)lbl_802C7C34[lbl_80309174[k].x6].pad[-0x21ae];
+        return (s8)lbl_802C7C34[lbl_80309174[k].x6 - 0xF0].effect;
     case 12:
-        return (s8)lbl_802AD440[lbl_80309174[k].x6 + 0x24].x16;
+        return (s8)lbl_802AD440[lbl_80309174[k].x6 + 0x24].effect;
     }
     return 0;
 }
@@ -1750,7 +1745,7 @@ void fn_8007C194(List* l) {
     if (lbl_80346C0C == 2 || lbl_80346C0C == 5) {
         l->e[0].type = 0x3D;
         n = 1;
-        l->e[0].p = &(*(u8(*)[])&lbl_802C4BF0)[0xB70];
+        l->e[0].p = &lbl_802C4BF0[61];
         l->e[0].id = v;
         l->e[0].w = lbl_802F6918[0xF4 / 4];
         l->e[0].on = 1;
@@ -1758,7 +1753,7 @@ void fn_8007C194(List* l) {
     if (lbl_80346C0C == 3 || lbl_80346C0C == 5) {
         e = &l->e[n];
         e->type = 0x3C;
-        e->p = &(*(u8(*)[])&lbl_802C4BF0)[0xB40];
+        e->p = &lbl_802C4BF0[60];
         e->id = v;
         e->w = lbl_802F6918[0xF0 / 4];
         e->on = 1;
@@ -2489,17 +2484,17 @@ int fn_80078478(s32 a) {
         }
         return 3;
     case 12:
-        return lbl_802AD440[(s16)(lbl_80309174[a].x6 + 0x24)].x17;
+        return lbl_802AD440[(s16)(lbl_80309174[a].x6 + 0x24)].target;
     case 8:
         idx = lbl_80309174[a].x6 - 0x3C;
-        return lbl_802C4BF0[(s16)(idx + 0x3C)].x16;
+        return lbl_802C4BF0[(s16)(idx + 0x3C)].target;
     case 1:
     case 2:
         k = lbl_80309174[a].x6;
         if (a >= 4) {
-            return lbl_802AD440[k].x17;
+            return lbl_802AD440[k].target;
         }
-        v = lbl_802C4BF0[k].x16;
+        v = lbl_802C4BF0[k].target;
         if (lbl_80309DE4[a]->w1c & 0x00400000) {
             switch (v) {
             case 3:
@@ -2517,7 +2512,7 @@ int fn_80078478(s32 a) {
         }
         return (u8)v;
     case 5:
-        return lbl_802C7C34[lbl_80309174[a].x6 - 0xF0].x13;
+        return lbl_802C7C34[lbl_80309174[a].x6 - 0xF0].target;
     default:
         return 0;
     }
@@ -3448,7 +3443,7 @@ void fn_8007B958(Task_8007BEB4* t, s32 sel, s16 item, s32 kind) {
         break;
     case 1:
     case 2:
-        val = lbl_802C4BF0[item].x19;
+        val = (s8)lbl_802C4BF0[item].cost;
         break;
     case 5:
     default:
@@ -3958,18 +3953,6 @@ s32 fn_80088F64(void) {
     return best;
 }
 
-/* The 0x98-byte records at lbl_802C4860, one per character. */
-typedef struct Rec_802C4860 {
-    u8 pad0[0xd];
-    u8 xd;
-    u8 xe;
-    u8 padf[9];
-    s16 x18;
-    u8 pad1a[0x30 - 0x1a];
-    f32 x30;
-    u8 pad34[0x98 - 0x34];
-} Rec_802C4860;
-extern Rec_802C4860 lbl_802C4860[];
 
 /* The battle copy of a character, filled by fn_80077228. */
 typedef struct Dst_80077228 {
@@ -3979,14 +3962,14 @@ typedef struct Dst_80077228 {
     u8 xac; u8 xad; s16 xae; f32 xb0; s16 xb4; s16 xb6; u8 xb8; u8 xb9; s16 xba;
     s16 xbc[6]; s16 xc8[16]; s16 xe8[5]; s16 xf2[6];
     u8 xfe; u8 xff; u8 x100; u8 pad101; s16 x102; s16 x104; u8 x106; u8 pad107; s16 x108; s16 x10a; s16 x10c; u8 pad10e[2];
-    Rec_802C4860* x110;
+    CharParam* x110;
 } Dst_80077228;
 
 void fn_80077228(s8 idx, Dst_80077228* d)
 {
     StatRec* a = &lbl_8030B4D4.chr[idx];
     SaveChar* b = &lbl_8030B7F4.chr[idx];
-    Rec_802C4860* c = &lbl_802C4860[idx];
+    CharParam* c = &lbl_802C4860[idx];
     int i;
     s8 cd;
     u8 ce;
@@ -4034,10 +4017,10 @@ void fn_80077228(s8 idx, Dst_80077228* d)
         d->xa0[i] = 0;
         i++;
     } while (i < 6);
-    cd = c->xd;
-    ce = c->xe;
+    cd = c->width;
+    ce = c->depth;
     d->xac = cd;
-    ca = c->x18;
+    ca = c->moves;
     d->xad = ce;
     fv = c->x30;
     d->xae = ca;

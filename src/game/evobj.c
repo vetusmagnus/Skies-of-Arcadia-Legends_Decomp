@@ -6,6 +6,7 @@
 #include "game/save_8030B7F4.h"
 #include "game/task.h"
 #include "game/evobj.h"
+#include "game/gamedata.h"
 #include <math.h>
 
 /* Story-flag event object (0x801E8CA4 - 0x801EA2DC): the event object task fn_801E8CA4 (waits for
@@ -2024,40 +2025,6 @@ typedef struct Ent_801EE324 {
     u8 pad1;
     s16 val;                /* 0x02 */
 } Ent_801EE324;
-typedef struct { s8 stat; u8 pad; s16 val; } StatMod;
-typedef struct {
-    u8 pad0[0x11];
-    u8 f11;
-    u8 pad12[6];
-    s16 a18;
-    s16 a1a;
-    StatMod mod;
-} TblA;
-typedef struct {
-    u8 pad0[0x18];
-    StatMod mods[4];
-    u8 pad28[0];
-} TblB;
-typedef struct {
-    u8 pad0[0x14];
-    s16 a14;
-    s16 a16;
-    u8 pad18[2];
-    StatMod mods[1];
-    u8 pad1e[6];
-} TblC;
-typedef struct {
-    u8 pad0[0x12];
-    StatMod mods[4];
-    u8 pad22[6];
-} TblD;
-/* 0x28 */
-
-extern TblA lbl_802C5790[];
-extern TblB lbl_802C6190[];
-extern TblB lbl_802C6E10[];
-extern TblC lbl_802D7E4C[];
-extern TblD lbl_802D83EC[];
 extern s32 fn_801F4C24(void);
 typedef struct {
     u8 pad0[0x48];
@@ -2086,17 +2053,6 @@ extern void fn_8021B2B4(void);
 extern const char lbl_802C4848[];
 extern u8 lbl_80313B20[];
 extern void* lbl_803474D8;
-typedef struct Item {
-    u8 pad00[0x12];
-    s8 kind;
-    u8 flag;
-    u8 chance;
-    u8 pad15[7];
-    s16 amount;
-    u8 pad1e[6];
-} Item;
-extern Item lbl_802D8A2C[];
-extern Item lbl_802C7C34[];
 extern void fn_801EFC88(s16 idx);
 extern void fn_801EFFD8(s16 id);
 extern void fn_801EFFFC(s16 id);
@@ -2104,14 +2060,6 @@ extern void fn_801F28CC(int);
 void fn_801F11C8(int unused, int kind, int idx);
 int fn_801F0588(int who, int idx, s8 kind);
 int fn_801F039C(int a, s16 kind);
-typedef struct Ent_801F11C8 {
-    u8 pad0[0x15];
-    s8 b15;                 /* 0x15 */
-    u8 pad16[0x1C - 0x16];
-    s16 s1c;                /* 0x1C */
-    u8 pad1E[0x2A - 0x1E];
-    s16 s2a;                /* 0x2A */
-} Ent_801F11C8;
 typedef struct Big {
     u8 pad0[0x157C];
     s32 c;                  /* 0x157C */
@@ -2121,7 +2069,6 @@ typedef struct Sm {
     s16 cur;                /* 0x18 */
     s16 max;                /* 0x1A */
 } Sm;
-extern u8 lbl_802C4BF0[];
 typedef struct Entry {
     u8 f0; s8 f1; s8 f2; u8 pad3; s16 f4; s16 id; s16 f8; u8 padA[2]; void *p1c; void *p20;
 } Entry;
@@ -2160,8 +2107,8 @@ s16 fn_801EE344(s16 id, s32 stat) {
     case 0: {
         StatMod* m = &lbl_802C5790[id].mod;
         if (m->stat == stat) total = m->val;
-        if (stat == 0x10) total += lbl_802C5790[id].a18;
-        if (stat == 0x13) total += lbl_802C5790[id].a1a;
+        if (stat == 0x10) total += lbl_802C5790[id].attack;
+        if (stat == 0x13) total += lbl_802C5790[id].accuracy;
         break;
     }
     case 1: {
@@ -2183,14 +2130,14 @@ s16 fn_801EE344(s16 id, s32 stat) {
         break;
     }
     case 5: {
-        StatMod* m = lbl_802D7E4C[id - 0x190].mods;
+        StatMod* m = lbl_802D7E4C[id - 0x190].mod;
         do {
             if (m->stat == stat) total += m->val;
             i++;
             m++;
         } while (i < 1);
-        if (stat == 0x10) total += lbl_802D7E4C[id - 0x190].a14;
-        if (stat == 0x13) total += lbl_802D7E4C[id - 0x190].a16;
+        if (stat == 0x10) total += lbl_802D7E4C[id - 0x190].attack;
+        if (stat == 0x13) total += lbl_802D7E4C[id - 0x190].accuracy;
         break;
     }
     case 6: {
@@ -2480,13 +2427,13 @@ int fn_801F0284(int a, int who, int kind, int idx, int all)
         break;
     }
     case 1: {
-        Item *it = &lbl_802C7C34[idx - 0xf0];
-        fn_801F0588(who, idx, it->kind);
+        UseItemData *it = &lbl_802C7C34[idx - 0xf0];
+        fn_801F0588(who, idx, it->effect);
         break;
     }
     case 5: {
-        Item *it = &lbl_802D8A2C[idx - 0x1e0];
-        fn_801F039C(idx, (u8)it->kind);
+        ShipItemData *it = &lbl_802D8A2C[idx - 0x1e0];
+        fn_801F039C(idx, (u8)it->effect);
         break;
     }
     }
@@ -2496,7 +2443,7 @@ int fn_801F0284(int a, int who, int kind, int idx, int all)
 static inline void ItemChance(s16 idx)
 {
     if (idx >= 0x1e0 && idx <= 0x1fd) {
-        s8 chance = lbl_802D8A2C[idx - 0x1e0].chance;
+        s8 chance = lbl_802D8A2C[idx - 0x1e0].use_up;
         if (chance != 0 && chance > rand() % 100) {
             fn_801EFC88(idx);
         }
@@ -2505,13 +2452,13 @@ static inline void ItemChance(s16 idx)
 
 int fn_801F039C(int a, s16 kind)
 {
-    Item *it = &lbl_802D8A2C[a - 0x1e0];
+    ShipItemData *it = &lbl_802D8A2C[a - 0x1e0];
     SaveData *g = &lbl_8030B7F4;
     StatBlock *cfg = &lbl_8030B4D4;
 
     switch (kind) {
     case 0x64:
-        g->x1568.x157c += it->amount * 10;
+        g->x1568.x157c += it->power * 10;
         if (g->x1568.x157c > cfg->limit) {
             g->x1568.x157c = cfg->limit;
         }
@@ -2534,19 +2481,19 @@ int fn_801F039C(int a, s16 kind)
 static inline void ItemChanceB(s16 idx)
 {
     if (idx >= 0xf0 && idx < 0x140) {
-        s8 chance = lbl_802C7C34[idx - 0xf0].chance;
+        s8 chance = lbl_802C7C34[idx - 0xf0].use_up;
         if (chance != 0 && chance > rand() % 100) {
             fn_801EFC88(idx);
         }
     }
 }
 
-static inline void ApplyHp(SaveChar *c, Item *it)
+static inline void ApplyHp(SaveChar *c, UseItemData *it)
 {
-    switch (it->kind) {
+    switch (it->effect) {
     case 0x1f:
     case 0x32:
-        c->hp += it->amount;
+        c->hp += it->power;
         if (c->hp > c->hpMax) {
             c->hp = c->hpMax;
         }
@@ -2558,12 +2505,12 @@ static inline void ApplyHp(SaveChar *c, Item *it)
     }
 }
 
-static inline void ApplyMp(SaveChar *c, Item *it)
+static inline void ApplyMp(SaveChar *c, UseItemData *it)
 {
-    switch (it->kind) {
+    switch (it->effect) {
     case 0x30:
     case 0x32:
-        c->mp += it->amount;
+        c->mp += it->power;
         if (c->mp > c->mpMax) {
             c->mp = c->mpMax;
         }
@@ -2577,10 +2524,10 @@ static inline void ApplyMp(SaveChar *c, Item *it)
 
 int fn_801F0588(int who, int idx, s8 kind)
 {
-    Item *it = &lbl_802C7C34[idx - 0xf0];
+    UseItemData *it = &lbl_802C7C34[idx - 0xf0];
     SaveData *g = &lbl_8030B7F4;
     SaveChar *c = &g->chr[who];
-    int flag = it->flag;
+    int flag = it->target;
     int i;
 
     switch (kind) {
@@ -2629,50 +2576,50 @@ int fn_801F0588(int who, int idx, s8 kind)
         ItemChanceB(idx);
         break;
     case 0x36:
-        c->s3a += it->amount;
+        c->s3a += it->power;
         if (c->s3a > 999) {
             c->s3a = 999;
         }
         ItemChanceB(idx);
         break;
     case 0x37:
-        c->s3c += it->amount;
+        c->s3c += it->power;
         if (c->s3c > 999) {
             c->s3c = 999;
         }
         ItemChanceB(idx);
         break;
     case 0x38:
-        c->s3e += it->amount;
+        c->s3e += it->power;
         if (c->s3e > 999) {
             c->s3e = 999;
         }
         ItemChanceB(idx);
         break;
     case 0x39:
-        c->s40 += it->amount;
+        c->s40 += it->power;
         if (c->s40 > 999) {
             c->s40 = 999;
         }
         ItemChanceB(idx);
         break;
     case 0x3a:
-        c->s42 += it->amount;
+        c->s42 += it->power;
         if (c->s42 > 999) {
             c->s42 = 999;
         }
         ItemChanceB(idx);
         break;
     case 0x3b:
-        c->hpMax += it->amount;
+        c->hpMax += it->power;
         if (c->hpMax > 9999) {
             c->hpMax = 9999;
         }
         ItemChanceB(idx);
         break;
     case 0x3c:
-        c->mpMax += it->amount;
-        c->x28 += it->amount;
+        c->mpMax += it->power;
+        c->x28 += it->power;
         if (c->mpMax > 99) {
             c->mpMax = 99;
             c->x28 = 99.0f;
@@ -2718,12 +2665,12 @@ int fn_801F0588(int who, int idx, s8 kind)
 }
 
 void fn_801F11C8(int unused, int kind, int idx) {
-    Ent_801F11C8* e = (Ent_801F11C8*)(lbl_802C4BF0 + idx * 0x30);
+    SkillData* e = &lbl_802C4BF0[idx];
     if (kind == 6) {
         Big* big = (Big*)&lbl_8030B7F4;
         StatBlock* oth = &lbl_8030B4D4;
-        if (e->b15 == 0x1F) {
-            s32 t = big->c + e->s2a * 10;
+        if (e->effect == 0x1F) {
+            s32 t = big->c + e->ship_power * 10;
             big->c = t;
             if (t > oth->limit) {
                 big->c = oth->limit;
@@ -2733,8 +2680,8 @@ void fn_801F11C8(int unused, int kind, int idx) {
         }
     } else {
         Sm* sm = (Sm*)((u8*)&lbl_8030B7F4 + kind * 0x5C);
-        if (e->b15 == 0x1F) {
-            sm->cur = sm->cur + e->s1c;
+        if (e->effect == 0x1F) {
+            sm->cur = sm->cur + e->power;
             if (sm->cur > sm->max) {
                 sm->cur = sm->max;
             }
@@ -2865,7 +2812,7 @@ void fn_801F1590(Menu *m, Slot *arr, s32 n, s32 mode)
             switch (mode) {
             case 1:
                 if (id == *pa) e->f1 = -1;
-                e->f2 = lbl_802C5790[id].f11;
+                e->f2 = lbl_802C5790[id].owner;
                 break;
             case 2:
                 if (id == *pc) e->f1 = -1;

@@ -1972,3 +1972,77 @@ Still held, with the blocker found:
 - fn_80113084, fn_80117BE4 (unit_8010E164.c does not use `EvObj` at all; the agents use a nested `EvXform xf` (pos, ang, scl)
   and `memcpy` it as a unit, which needs `EvObj.pos/ang/scl` folded into one struct across evobj.c, unit_800B2DA0.c and
   unit_800D81E8.c).
+
+
+## One struct per game data table (2026-10-28, branch alx-tables in build/wt-alx, from types-merge 008f97e, not pushed)
+
+By hand, no agents. `include/game/gamedata.h` gives every fixed data table one record type, and every unit that read a
+table through its own view now uses it (5,247 to 5,256; fdiff and `floatcheck.py` clean on the 14 units that include
+the header or the save header, `main.dol` force-relinks OK). Record sizes and offsets were checked against the code that
+reads them; field signedness follows the loads (`lbz`+`extsb` or not), not a guess.
+
+| Table | Type | Records |
+|---|---|---|
+| lbl_802C4860 | `CharParam` (0x98) | 6 party members |
+| lbl_802C4BF0 | `SkillData` (0x30) | 36 spells, then 26 special moves |
+| lbl_802C5790 | `WeaponData` (0x20) | item ids 0-0x4F |
+| lbl_802C6190, lbl_802C6E10 | `GearData` (0x28, four `StatMod`s at 0x18) | armour 0x50-0x9F, accessories 0xA0-0xEF |
+| lbl_802C7A90 | `WeaponFx` (0x14) | 21 |
+| lbl_802C7C34 | `UseItemData` (0x24) | 0xF0-0x13F |
+| lbl_802C8774 | `KeyItemData` (0x16) | 0x140-0x18F |
+| lbl_802C8E54 | `PirateRank` (0x22) | 24 |
+| lbl_802C9184 | `SpCurve` (99 `SpStep`s) | 6 |
+| lbl_802AD440 | `EnemySkill` (0x24) | 36 spells, then 309 special moves |
+| lbl_802D4638 | `ExpBonus` (0x1C) | 3 |
+| lbl_802D59E8 | `ChestData` (8; defined in unit_801F5334.c) | 119 |
+| lbl_802D6740 | `ShipData` (0x64) | 5 |
+| lbl_802D6934 | `EnemyShipData` (0x78, four `ShipArm`s) | 45 |
+| lbl_802D7E4C | `CannonData` (0x24, `StatMod mod[1]` at 0x1A) | 0x190-0x1B7 |
+| lbl_802D83EC | `ShipGearData` (0x28) | 0x1B8-0x1DF |
+| lbl_802D8A2C | `ShipItemData` (0x24) | 0x1E0-0x1FD |
+| lbl_802D8E64 | `CrewData` (0x24) | 22 |
+| lbl_802EC0A0 | `ShopData` (0x68, .data) | 43 |
+
+What went away: unit_801F224C.c's `T0`-`T7` and `Rec_801F3E6C`, evobj.c's `TblA`-`TblD`, `Item` and `Ent_801F11C8`,
+the `T24`/`T24b`/`T24c`/`T30` views in unit_80055E94.c and unit_80074D9C.c (with `pad[-0x21ae]` and `(u8(*)[])` reads),
+`Rec_802C4860`, unit_8013D400.c's `E24`/`E24b`/`E24c`/`E30` and its `- 0x4364`/`- 0x21a4` and `* 0x30 + 0x26` byte views,
+unit_8012F6C4.c's `E24`, unit_80193F28.c's `u8`/`s8` arrays (`x * 0x24 - 0x382e`), `ItemTbl`, `Acc_802D7E4C`, `TblC`,
+`MenuEnt`, `Entry68`/`Row_801AB580` and `TreasureEnt`. fn_8021A5F0/fn_8021A608 take `CannonData *` instead of byte offsets.
+
+Types the code settled: `SkillData.cost` is `s8` (fn_80068640 extends it before the compare), so fn_8007B958 keeps an
+`(s8)` on its read into the `s8` local, the same as fn_80081FEC's existing ones; `SkillData.status_rate` and
+`EnemySkill.status_rate` are `u8` (fn_8006A3E4 then needs no casts); `EnemySkill.kind` is `u8`, `.param` `s16`;
+`CrewData.post` is `u8` (fn_80194C18 returns it as `s8` with an `extsb`); `CannonData.limit`/`.cost` are `s8`
+(fn_8021AE68 reads them into `s32` temps, like fn_8021A608). The usable and ship item records share their layout up to
+0x14 and at 0x1C, which is why evobj.c could read both through one `Item` view; they are two types now.
+
+Merged (9): **fn_80181F58, fn_801822A0, fn_80182A3C** (unit_8015DC6C.c, the camp item menu: all three use the unit's
+`CampKind` inline; fn_80182A3C takes its party member into an `s32` local), **fn_80145F50** (unit_8013D400.c: the flee
+roll, `EnemyShipData.agile` against the save data's `s40`; the unit now includes the save header, `Slot_8014359C.x1`/`x3`
+are `s8`, and the extern is `s32 (Slot_8014359C *, s32)`), **fn_8006A3E4** (unit_80055E94.c: the status hit roll;
+`ChrRec` gains `x40`/`x46`/`x48`, `stat[0x12]` at 0x74 (the old `x82` is `stat[7]`) and `x98`), **fn_8021A11C,
+fn_8021A2B0, fn_8021B4B4, fn_8021B91C** (unit_80219378.c: the crew/cannon/accessory stat bonus and the ship pick;
+`Src` has `level` at 0x01 and `acc[3]` at 0x22, the bonus is built from small range-check and `ModValue` inlines, the
+accessory loop indexes `&m[j]`; `Save1568` names `name[0x12]` at 0x02 in include/game/save_8030B7F4.h).
+
+Near misses, with what is left:
+- fn_8021A880, fn_8021A940, fn_8021A9C4, fn_8021AB60, fn_8021AC20, fn_8021ACE0, fn_8021ADA0 (unit_80219378.c, the ship
+  stat getters; docs/near/fn_8021A880.c): every instruction but the zero for `GetEnt`'s `NULL`, which the original copies
+  from the result's live zero (`mr r31, r3`) where this emits `li`. fn_8021AF94 inlines two of them, so it waits too.
+  The permuter found nothing in 10 minutes.
+- fn_8021B644 (unit_80219378.c, docs/near/fn_8021B644.c): 16 lines, the crew list's pointer and count swap registers in
+  the closing `fill`.
+- fn_80069DA0, fn_80068810 (unit_80055E94.c): the value stored to `work->x3c` is only set in one case and gets an `extsh`
+  at the store in the original; an uninitialised `s16` local doesn't. The only form that came close (2 lines) reuses the
+  `kind` parameter with an `(s16)` cast, not kept.
+- fn_80069150 (unit_80055E94.c) reads `UseItemData` 0x1E as one halfword (`lha`), where the other users read
+  `element`/`type` as two bytes; left out.
+- fn_80146000 and fn_80147184 (unit_8013D400.c) need the `lbl_8034727C` battle work typed first (`BtlWork`, see above).
+- The other table readers from the old agent folders (fn_800692D8, fn_80085064, fn_80143928, fn_8013E0BC ...) were near
+  misses in their own worktrees already; their diffs are register or scheduling only, not the tables.
+- `Src` in unit_80219378.c is the same record as `Save1568` (ship id, level, name, cannons at 0x18, accessories at
+  0x22); folding them means naming `Save1568`'s fields for every unit that includes the save header.
+
+Tools (local, build/wt-alx/build/agents): `ed.py FILE SPEC.py` (exact edits that keep CRLF), `ins2.py UNIT FN SNIP`
+(insert in address order, keeps CRLF), `rep.py UNIT FN VARIANTS IDX`, `try.py` (patched to restore CRLF files as they
+were), `own.py` (re-run old agent files in their own worktrees).

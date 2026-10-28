@@ -11,6 +11,7 @@
 extern void TextPrint(s32 x, s32 y, const char *str);
 #include "game/menu.h"
 #include "game/drawstate.h"
+#include "game/gamedata.h"
 #include <math.h>
 #include <stdlib.h>
 /* A menu panel (0x6C bytes, the object at a menu part task's 0x28/0x2C): its UiObj, the text it
@@ -943,16 +944,10 @@ typedef struct {
     MenuPanel* pan;  /* 0x28 */
 } Task2_801B6838;
 typedef struct {
-    u32 x0;
-    const char* label; /* 0x04 */
-    u8 pad[0x68 - 8];
-} Entry68;
-typedef struct {
     const char* label;
     u32 pad[3];
 } Entry10;
 extern void fn_801B66F8();
-extern Entry68 lbl_802EC0A0[];
 extern Entry10 lbl_802ED218[4];
 extern u8 lbl_803473BF;
 extern u16 lbl_803473BC;
@@ -1143,10 +1138,6 @@ typedef struct Task_801A6A88 {
     u8 pad0[0x24];
     Ctx_801A6A88 *ctx;
 } Task_801A6A88;
-typedef struct Row_801AB580 {
-    u8 pad0[8];
-    s16 e[0x30];
-} Row_801AB580;
 typedef struct Out_801AB580 {
     s8 flag;
     s8 type;
@@ -4235,16 +4226,16 @@ void fn_801A6A88(Task_801A6A88 *t, u16 idx, f32 off) {
 }
 
 void fn_801AB580(Self_801AB580 *self) {
-    Row_801AB580 *row = &(*(Row_801AB580(*)[])&lbl_802EC0A0)[lbl_803473BC];
+    ShopData *row = &lbl_802EC0A0[lbl_803473BC];
     u32 i = 0;
     u32 n = 0;
     for (; i < 0x30; i++) {
-        if (row->e[i] != -1) {
+        if (row->item[i] != -1) {
             s16 id;
             u8 flag;
-            self->buf->out[i].id = row->e[i];
-            self->buf->out[i].type = fn_801F4C24(row->e[i]);
-            id = (u16)row->e[i];
+            self->buf->out[i].id = row->item[i];
+            self->buf->out[i].type = fn_801F4C24(row->item[i]);
+            id = (u16)row->item[i];
             if (fn_801F477C(id) == 0) {
                 flag = 1;
             } else if (lbl_8030B7F4.w34c / fn_801F477C(id) == 0) {

@@ -1,4 +1,5 @@
 #include "types.h"
+#include "game/gamedata.h"
 extern void fn_801DBE1C(const char *fmt, ...);
 extern u8 lbl_8030B7F4[];
 extern void fn_801F2860(s16 v);
@@ -13,7 +14,6 @@ extern Camp80307638 lbl_80307638;
 extern u32 lbl_80347144;
 extern u8 lbl_802E98A0[];
 extern u32 lbl_802F7298[];
-extern u8 lbl_802D8E64[];
 extern u32 lbl_803473EC;
 extern s32 lbl_803467D0;
 void fn_801F4EA0(s32 a, s32 v);
@@ -26,7 +26,6 @@ extern void OSSetSoundMode(s32 mode);
 extern s8 lbl_80347148[4];
 extern u32 OSGetSoundMode(void);
 extern s32 fn_801EE344(s16 a, s32 b);
-extern s8 lbl_802D7E4C[];
 extern u8 lbl_80310A1C[];
 extern u8 lbl_8030B4D4[];
 extern int sprintf(char*, const char*, ...);
@@ -401,8 +400,8 @@ u32 fn_80194C38(s8 idx) {
     return lbl_802F7298[idx];
 }
 
-u8 *fn_80194C50(s8 idx) {
-    return lbl_802D8E64 + idx * 0x24;
+CrewData *fn_80194C50(s8 idx) {
+    return &lbl_802D8E64[idx];
 }
 
 void fn_80194C68(u8 *base, u32 i, u32 j, u32 v) {
@@ -489,7 +488,7 @@ s32 fn_80195184(s32 x) {
 
 s32 fn_801951C0(s32 x) {
     if (x >= 0x190 && x <= 0x1b7) {
-        return lbl_802D7E4C[x * 0x24 - 0x382e];
+        return lbl_802D7E4C[x - 0x190].type;
     }
     if (x >= 0x1b8 && x <= 0x1df) {
         return -1;
@@ -2002,7 +2001,7 @@ int fn_80194378(s8 i)
 
 s8 fn_80194C18(s8 idx)
 {
-    return lbl_802D8E64[idx * 0x24 + 0x11];
+    return lbl_802D8E64[idx].post;
 }
 
 /* story-flag bitset */

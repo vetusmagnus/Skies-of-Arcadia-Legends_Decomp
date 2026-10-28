@@ -4,6 +4,7 @@
 #include "game/stat_8030B4D4.h"
 #include "ninja.h"
 #include "game/drawstate.h"
+#include "game/gamedata.h"
 /* One declaration per global / prototype. Tk and Chr tables are read through raw offsets
    (same offsets and widths as the per-function struct views they replace). */
 typedef struct Lim { u8 pad_0[0x4];
@@ -77,9 +78,15 @@ typedef struct ChrRec {
     s32 x14;
     s32 x18;
     u32 bits;
-    u8 pad20[0x82 - 0x20];
-    s16 x82;
-    u8 pad_84[0x32];
+    u8 pad20[0x20];
+    s16 x40;
+    u8 pad42[4];
+    s16 x46;
+    s16 x48;
+    u8 pad4a[0x74 - 0x4a];
+    s16 stat[0x12];         /* 0x74 */
+    s16 x98;
+    u8 pad9a[0xb6 - 0x9a];
     s16 xb6;
     u8 pad_b8[0x46];
     s8 xfe;
@@ -1051,11 +1058,6 @@ typedef struct WorkRec_8006A114 {
     s16 x48;
     s16 x4a;
 } WorkRec_8006A114;
-typedef struct { s8 pad[0x18]; s8 x18; s8 x19;
- u8 pad_1a[0x2];
- s16 v;
- u8 pad_1e[0x12]; } T30;
-extern T30 lbl_802C4BF0[];
 extern s16 fn_80078354(s16);
 extern void fn_8021A1C4(s8 *buf);
 typedef struct { u8 pad[0x14]; s16 x14; s16 x16; } D_8005CBA4;
@@ -1220,10 +1222,6 @@ extern void fn_8007DEE0(void *a);
 extern char lbl_802B04C8[];
 extern const u8 lbl_803489B0[8];
 extern void fn_8008F75C(void *, void *, void *, const void *);
-typedef struct T24 { u8 pad[0x15]; u8 x15; u8 pad16[2]; s16 v; u8 pad2[0xA]; } T24;
-typedef struct T24b { u8 pad[0x1C]; s16 v; u8 pad2[0x6]; } T24b;
-extern T24 lbl_802AD440[];
-extern const T24b lbl_802C7C34[];
 extern s16 lbl_8034736A;
 extern s32 lbl_80346A90;
 extern u32 lbl_80347364;
@@ -2645,6 +2643,93 @@ void fn_80069CD8(void* a, s16 i, void* b, s8 v) {
     }
 }
 
+extern s32 fn_80010E68(s16, s16, s8, s8);
+
+void fn_8006A3E4(s16 a, s16 b, s32 kind, s8 c) {
+    ChrRec *B;
+    s16 r28;
+    s16 r27;
+    s8 r26;
+    ChrRec *A;
+    WorkRec *hw;
+    EnemySkill *row;
+    UseItemData *rc;
+    A = lbl_80309DE4[a];
+    B = lbl_80309DE4[b];
+    switch (kind) {
+    case 2:
+    case 6:
+        break;
+    case 1:
+        if (a < 4) {
+            SkillData *sk = &lbl_802C4BF0[lbl_80309174[a].x6];
+            r28 = A->stat[7];
+            r27 = B->x98;
+            r26 = sk->status_rate;
+        } else {
+            row = &lbl_802AD440[lbl_80309174[a].x6];
+            if (row->inflict < 0x10) {
+                r28 = A->stat[row->inflict + 6];
+            } else {
+                r28 = A->stat[row->inflict];
+            }
+            if (row->resist < 0x10) {
+                r27 = B->stat[row->resist + 6];
+            } else {
+                r27 = B->stat[row->resist];
+            }
+            r26 = row->status_rate;
+        }
+        break;
+    case 4:
+        r28 = 1;
+        r27 = 1;
+        rc = &lbl_802C7C34[lbl_80309174[a].x6 - 0xf0];
+        r26 = rc->status_rate;
+        break;
+    case 5:
+        row = &lbl_802AD440[(s16)(lbl_80309174[a].x6 + 0x24)];
+        if (row->inflict < 0x10) {
+            r28 = A->stat[row->inflict + 6];
+        } else {
+            r28 = A->stat[row->inflict];
+        }
+        if (row->resist < 0x10) {
+            r27 = B->stat[row->resist + 6];
+        } else {
+            r27 = B->stat[row->resist];
+        }
+        r26 = row->status_rate;
+        break;
+    }
+    hw = lbl_80309700[b]->work;
+    hw->x44 = -1;
+    if (lbl_80309DE4[b]->bits & 0x61d0) {
+        hw->x46 = -1;
+    } else if (fn_80010E68(r28, r27, B->x40, r26) == 1) {
+        hw->x44 = c;
+        hw->x46 = 3;
+    } else {
+        hw->x46 = -1;
+    }
+    if (lbl_80309DE4[b]->bits & 0x6950) {
+        hw->x48 = -1;
+    } else if (fn_80010E68(r28, r27, B->x46, r26) == 1) {
+        hw->x44 = c;
+        hw->x48 = 9;
+    } else {
+        hw->x48 = -1;
+    }
+    if (lbl_80309DE4[b]->bits & 0x6950) {
+        hw->x4a = -1;
+    } else if (fn_80010E68(r28, r27, B->x48, r26) == 1) {
+        hw->x44 = c;
+        hw->x4a = 0xb;
+    } else {
+        hw->x4a = -1;
+    }
+}
+
 void fn_8006A7DC(s32 a, s16 i, s32 b, s8 v) {
     ChrRec *c = lbl_80309DE4[i];
     if (c->bits & 0x6950) {
@@ -2654,7 +2739,7 @@ void fn_8006A7DC(s32 a, s16 i, s32 b, s8 v) {
         fn_800696A8(a, i, b, v);
     }
     if (v == lbl_80309700[i]->work->x44) {
-        c->x0c = lbl_80309DE4[(s16)a]->x82;
+        c->x0c = lbl_80309DE4[(s16)a]->stat[7];
     }
 }
 
@@ -2667,7 +2752,7 @@ void fn_8006A8A8(s32 a, s16 i, s32 b, s8 v) {
         fn_800696A8(a, i, b, v);
     }
     if (v == lbl_80309700[i]->work->x44) {
-        c->x0c = lbl_80309DE4[(s16)a]->x82;
+        c->x0c = lbl_80309DE4[(s16)a]->stat[7];
     }
 }
 
@@ -2680,7 +2765,7 @@ void fn_8006A974(s32 a, s16 i, s32 b, s8 v) {
         fn_800696A8(a, i, b, v);
     }
     if (v == lbl_80309700[i]->work->x44) {
-        c->x0c = lbl_80309DE4[(s16)a]->x82;
+        c->x0c = lbl_80309DE4[(s16)a]->stat[7];
     }
 }
 
@@ -5458,7 +5543,7 @@ int fn_8006EE54(int idx) {
         if (idx <= 3) return 2;
         break;
     case 2:
-        if ((s32)lbl_802C4BF0[(u8)lbl_80309174[idx].x6].x18 == 2) return 2;
+        if ((s32)lbl_802C4BF0[(u8)lbl_80309174[idx].x6].speed == 2) return 2;
         break;
     case 12: {
         switch ((u8)fn_80078354(lbl_80309174[idx].x6)) {
@@ -6194,8 +6279,8 @@ s32 fn_80068640(s16 a, s16 b) {
         return 0;
     }
     if (a <= 3) {
-        T30 *t = &lbl_802C4BF0[lbl_80309174[a].x6];
-        if (t->x19 > lbl_80347390->x8) {
+        SkillData *t = &lbl_802C4BF0[lbl_80309174[a].x6];
+        if (t->cost > lbl_80347390->x8) {
             lbl_80309730[b].x8 = 6;
             lbl_80309730[a].x8 = 6;
             return 0;
@@ -6233,19 +6318,19 @@ void fn_80069E4C(s16 a, s16 slot, int mode, s8 val) {
     switch (mode) {
     case 1:
         if (a < 4) {
-            const T30* t = lbl_802C4BF0 + lbl_80309174[a].x6;
-            v = t->v;
+            const SkillData* t = lbl_802C4BF0 + lbl_80309174[a].x6;
+            v = t->power;
         } else {
-            const T24* t = lbl_802AD440 + lbl_80309174[a].x6;
-            v = t->v;
+            const EnemySkill* t = lbl_802AD440 + lbl_80309174[a].x6;
+            v = t->param;
         }
         break;
     case 4:
         i = lbl_80309174[a].x6 - 0xF0;
-        {const T24b* t = lbl_802C7C34 + i; v = t->v;}
+        {const UseItemData* t = lbl_802C7C34 + i; v = t->power;}
         break;
     case 5:
-        {const T24* t = lbl_802AD440 + (s16)(lbl_80309174[a].x6 + 0x24); v = t->v;}
+        {const EnemySkill* t = lbl_802AD440 + (s16)(lbl_80309174[a].x6 + 0x24); v = t->param;}
         break;
     case 2:
     case 6:
@@ -6962,8 +7047,8 @@ void fn_80068E20(s16 a, s16 b) {
         id = a;
         k = lbl_80309174[id].x6 + 0x24;
         {
-            T24 *t = &lbl_802AD440[k];
-            v = t->v;
+            EnemySkill *t = &lbl_802AD440[k];
+            v = t->param;
         }
         for (j = 4; j <= 11; j++) {
             if (fn_80078610(j) != 0 && v != lbl_80309700[j]->work->x2) {
@@ -6984,9 +7069,9 @@ void fn_80068E20(s16 a, s16 b) {
 void fn_80068F68(s16 idx, s16 p2, void *unused, s8 v)
 {
     s16 k = lbl_80309174[idx].x6 + 0x24;
-    const T24 *t = &lbl_802AD440[k];
+    const EnemySkill *t = &lbl_802AD440[k];
     lbl_80309700[idx]->work->x44 = v;
-    lbl_80309700[idx]->work->x3c = t->v;
+    lbl_80309700[idx]->work->x3c = t->param;
     lbl_80309DE4[p2]->bits |= 0x01000000;
     lbl_80309DE4[p2]->bits |= 0x400;
     lbl_80309DE4[p2]->bits |= 0x00040000;
@@ -7010,21 +7095,21 @@ s32 fn_800683D8(s16 a, s16 b, s32 c, s8 d) {
         lbl_80309730[a].x8 = 1;
         k = lbl_80309174[a].x6;
         if (a < 4) {
-            T30 *r = &lbl_802C4BF0[k];
-            if (r->x18 == 0 && fn_80068640(a, b) == 0) {
+            SkillData *r = &lbl_802C4BF0[k];
+            if (r->speed == 0 && fn_80068640(a, b) == 0) {
                 return 0;
             }
         } else {
-            T24 *q = &lbl_802AD440[k];
-            s32 v = q->x15;
+            EnemySkill *q = &lbl_802AD440[k];
+            s32 v = q->kind;
             if (v == 1 && fn_80068640(a, b) == 0) {
                 return 0;
             }
         }
     }
     if (c == 5) {
-        T24 *q = &lbl_802AD440[lbl_80309174[a].x6 + 0x24];
-        s8 v = q->x15;
+        EnemySkill *q = &lbl_802AD440[lbl_80309174[a].x6 + 0x24];
+        s8 v = q->kind;
         if (v == 1 && fn_80068640(a, b) == 0) {
             return 0;
         }
