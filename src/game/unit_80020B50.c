@@ -2,7 +2,31 @@
 #include "ninja.h"
 #include "game/task.h"
 #include "game/save_8030B7F4.h"
+#include "game/sprite.h"
 #include <math.h>
+/* The argument block fn_80023D14 hands the task: a vertical list with a cursor. */
+typedef struct ListArg {
+    s8 count;   /* 0x00 */
+    s8 kind;    /* 0x01: which list (picks the sprites) */
+    u8 pad2;
+    s8 cursor;  /* 0x03 */
+    u8 pad4[2];
+    s8 input;   /* 0x06: 0 none, 1 up, 2 down */
+    u8 flags;   /* 0x07: 1 input pending, 2 x */
+} ListArg;
+typedef struct ListHolder {
+    ListArg* arg;
+} ListHolder;
+/* The task fn_80023D14 creates (a Task with its work typed and the sprite table after it). */
+typedef struct ListTask {
+    u8 pad0[0x18];
+    u8 flags;           /* 0x18 */
+    u8 state;           /* 0x19 */
+    u8 pad1A[6];
+    f32 f20;            /* 0x20 */
+    ListHolder* work;   /* 0x24 */
+    Sprite** tab;       /* 0x28 */
+} ListTask;
 /* The argument block fn_80022F1C hands the task (work points at a pointer to it). */
 typedef struct StArg {
     s8 x0;
@@ -227,7 +251,6 @@ extern T21 *lbl_80309E24[14];
 extern void* lbl_80347628;
 extern s32 lbl_80346B4C;
 extern s32 lbl_80346B98;
-extern void* fn_801D68C4(void* a, s32 b);
 typedef struct KindRec {
     u8 kind;          /* 0x00 */
     u8 pad1[0x23];
@@ -239,6 +262,29 @@ extern s32 lbl_80346ACC;
 extern s32 lbl_80347324;
 extern void* lbl_8034762C;
 extern void fn_8002356C(StArg* arg, void** tab, s8 a, s8 b);
+extern s8 lbl_80346AC0;
+extern s32 lbl_80346AD8;
+extern s32 lbl_80346AE4;
+extern s32 lbl_80346AEC;
+extern s32 lbl_80346AF0;
+extern f32 lbl_80346AF4;
+extern s8 lbl_80346AF8;
+extern s8 lbl_80346AF9;
+extern s16 lbl_80346AFA;
+extern s16 lbl_80346AFC;
+extern s16 lbl_80346AFE;
+extern s16 lbl_80346B00;
+extern s16 lbl_80346B02;
+extern s16 lbl_80346B04;
+extern s16 lbl_80346B06;
+extern s16 lbl_80346B08;
+extern s16 lbl_80346B0A;
+extern s16 lbl_80346B0C;
+extern s16 lbl_80346B0E;
+extern s16 lbl_80346B10;
+extern Sprite* fn_801D497C(Sprite* p);
+extern void fn_801D4954(Sprite* p);
+extern void fn_8002468C(ListTask* t);
 
 void fn_80020B50(Top *t, s16 *out1, s16 *out2) {
   Inner *i = t->mid->inner;
@@ -293,7 +339,7 @@ void fn_80023D04(void) {
     ((u8*)lbl_80346BA8)[0x19] = 2;
 }
 
-extern void fn_800240EC(void);
+void fn_800240EC(ListTask* t);
 void fn_80023D14(void *p) {
   lbl_80346BA8 = fn_802268E8(lbl_803475A8, fn_800240EC);
   ((Holder *)lbl_80346BA8)->ptr = fn_801E1C7C(4);
@@ -577,7 +623,6 @@ s32 fn_80021EB8(Tsk *t) {
     return 0;
 }
 
-extern void* fn_801D68C4(void* a, s32 b);
 extern void* lbl_8034762C;
 
 Obj* fn_80023FEC(s16 a) {
@@ -873,19 +918,6 @@ typedef struct RingHolder {
     RingMenu* menu;
 } RingHolder;
 
-typedef struct RingMdlSub {
-    u8 pad0[0x14];
-    u32 color;
-} RingMdlSub;
-
-typedef struct RingMdl {
-    u8 pad0[4];
-    RingMdlSub* sub;    /* 0x04 */
-    u8 pad8[0xC];
-    f32 x;              /* 0x14 */
-    f32 y;              /* 0x18 */
-} RingMdl;
-
 typedef struct RingTask {
     u8 pad0[0x18];
     u8 flags;           /* 0x18 */
@@ -893,7 +925,7 @@ typedef struct RingTask {
     u8 pad1a[6];
     f32 z;              /* 0x20 */
     RingHolder* holder; /* 0x24 */
-    RingMdl** mdl;      /* 0x28 */
+    Sprite** mdl;      /* 0x28 */
 } RingTask;
 
 extern void* lbl_80347628;
@@ -918,13 +950,13 @@ extern s32 lbl_80346B9C;
 extern s32 lbl_80347324;
 extern s32 lbl_8034733C;
 extern f32 lbl_80302A00[7];
-extern RingMdl* fn_801D497C(void* p);
-extern void fn_801D4954(RingMdl* m);
-extern void fn_801D5340(RingMdl* m, s32 c, s32 d, f32 z, f32 ang, f32 a, f32 b);
-extern void fn_800277F4(RingMdl** m, s32 n, f32* ang);
-extern void fn_80027484(RingMdl** m, s32 n, s32 step);
+extern Sprite* fn_801D497C(Sprite* p);
+extern void fn_801D4954(Sprite* m);
+extern void fn_801D5340(Sprite* m, s32 c, s32 d, f32 z, f32 ang, f32 a, f32 b);
+extern void fn_800277F4(Sprite** m, s32 n, f32* ang);
+extern void fn_80027484(Sprite** m, s32 n, s32 step);
 extern s32 fn_80026FEC(RingTask* o, s32* p);
-extern void fn_80026B20(RingTask* o, RingMdl** a, RingMdl** b, RingMdl** c, s32 dir);
+extern void fn_80026B20(RingTask* o, Sprite** a, Sprite** b, Sprite** c, s32 dir);
 
 #define RING_LOAD(n) fn_801D497C(fn_801D68C4(lbl_80347628, n))
 #define RING_Z(k) (0.001f * (k) + -1.2f)
@@ -941,9 +973,9 @@ void fn_80025624(RingTask* o)
     NJS_POINT3 q;
     NJS_POINT3 axis;
     NJS_MATRIX m;
-    RingMdl* sel;
-    RingMdl* next;
-    RingMdl* prev;
+    Sprite* sel;
+    Sprite* next;
+    Sprite* prev;
     RingMenu* menu;
     s32 i;
     s32 k;
@@ -1177,16 +1209,16 @@ void fn_80025624(RingTask* o)
                 lbl_80346B18 = 1.0f;
                 sel = o->mdl[7 + o->holder->menu->cursor];
                 if (o->holder->menu->lock != 0) {
-                    sel->sub->color = RingColor(0xff, 0xc8, 0xc8, 0xc8);
+                    sel->pieces->colour = RingColor(0xff, 0xc8, 0xc8, 0xc8);
                     fn_801D5340(sel, 0, 0, RING_Z(i + 2), 0.0f, 1.0f, 1.0f);
                     lbl_80346B30 = 0;
                 } else {
                     if (lbl_80346B30 >= 0 && lbl_80346B30 < 3) {
                         c = (3 - lbl_80346B30) * 0x15 + 0xc0;
-                        sel->sub->color = RingColor(0xff, c, c, 0xc0);
+                        sel->pieces->colour = RingColor(0xff, c, c, 0xc0);
                         fn_801D5340(sel, 0, 0, RING_Z(i + 2), 0.0f, 1.0f, 1.0f);
                     } else {
-                        sel->sub->color = RingColor(0xff, 0xc8, 0xc8, 0xc8);
+                        sel->pieces->colour = RingColor(0xff, 0xc8, 0xc8, 0xc8);
                         fn_801D5340(sel, 0, 0, RING_Z(i + 2), 0.0f, 1.0f, 1.0f);
                         lbl_80346B30 = 4;
                     }
@@ -1204,7 +1236,7 @@ void fn_80025624(RingTask* o)
                     a = 0.5f;
                 }
                 sel = prev;
-                sel->sub->color = RingColor(0xff, 0xc8, 0xc8, 0xc8);
+                sel->pieces->colour = RingColor(0xff, 0xc8, 0xc8, 0xc8);
                 fn_801D5340(sel, 0, 0, RING_Z(i + 2), 0.0f, a, fade);
             }
             if (o->holder->menu->cursor == -1 || o->holder->menu->avail[o->holder->menu->cursor] == 0) {
@@ -1280,7 +1312,7 @@ void fn_80025624(RingTask* o)
     }
 }
 
-void fn_80026B20(RingTask* o, RingMdl** a, RingMdl** b, RingMdl** c, s32 dir)
+void fn_80026B20(RingTask* o, Sprite** a, Sprite** b, Sprite** c, s32 dir)
 {
     RingMenu* menu = o->holder->menu;
 
@@ -1677,6 +1709,152 @@ void fn_80022F74(StTask* t)
         break;
     case 0xff:
         t->task.flags |= 0x40;
+        break;
+    }
+}
+
+void fn_800240EC(ListTask* t)
+{
+    switch (t->state) {
+    case 0:
+    case 0xfe:
+        lbl_80346AF0 = 0;
+        lbl_80346AEC = 0;
+        switch (t->work->arg->kind) {
+        case 0:
+            lbl_80346AC0 = 2;
+            t->tab = fn_801E1C7C(8);
+            t->tab[1] = fn_801D497C(fn_801D68C4(lbl_80347628, 0x2f));
+            lbl_80346B10 = 0x115;
+            lbl_80346B0E = 0x12a;
+            lbl_80346B0C = 0x144;
+            lbl_80346B0A = 0x12d;
+            lbl_80346B08 = 0x21c;
+            lbl_80346B06 = 0x12d;
+            break;
+        case 1:
+            lbl_80346AC0 = 2;
+            t->tab = fn_801E1C7C(8);
+            t->tab[1] = fn_801D497C(fn_801D68C4(lbl_80347628, 0x2f));
+            lbl_80346B10 = 0x115;
+            lbl_80346B0E = 0x12a;
+            lbl_80346B0C = 0x144;
+            lbl_80346B0A = 0x12d;
+            lbl_80346B08 = 0x21c;
+            lbl_80346B06 = 0x12d;
+            break;
+        case 2:
+            lbl_80346AC0 = 2;
+            t->tab = fn_801E1C7C(8);
+            t->tab[1] = fn_801D497C(fn_801D68C4(lbl_80347628, 0x2e));
+            lbl_80346B10 = 0x115;
+            lbl_80346B0E = 0x12a;
+            lbl_80346B0C = 0x144;
+            lbl_80346B0A = 0x12d;
+            lbl_80346B08 = 0x21c;
+            lbl_80346B06 = 0x12d;
+            break;
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+            lbl_80346AC0 = 7;
+            t->tab = fn_801E1C7C(0x1c);
+            t->tab[1] = fn_801D497C(fn_801D68C4(lbl_80347628, 0x3e));
+            t->tab[2] = fn_801D497C(fn_801D68C4(lbl_80347628, 0x3f));
+            t->tab[3] = fn_801D497C(fn_801D68C4(lbl_80347628, 0x40));
+            t->tab[4] = fn_801D497C(fn_801D68C4(lbl_80347628, 0x41));
+            t->tab[5] = fn_801D497C(fn_801D68C4(lbl_80347628, 0x42));
+            t->tab[6] = fn_801D497C(fn_801D68C4(lbl_80347628, 0x43));
+            lbl_80346B10 = 0x115;
+            lbl_80346B0E = 0x12a;
+            lbl_80346B0C = 0x144;
+            lbl_80346B0A = 0x12d;
+            lbl_80346B08 = 0x21c;
+            lbl_80346B06 = 0x12d;
+            lbl_80346B04 = 0x113;
+            lbl_80346B02 = 0x111;
+            lbl_80346B00 = 0x10e;
+            lbl_80346AFE = 0x10b;
+            break;
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+        case 13:
+        case 14:
+            lbl_80346AC0 = 5;
+            t->tab = fn_801E1C7C(0x14);
+            t->tab[1] = fn_801D497C(fn_801D68C4(lbl_80347628, 0x44));
+            t->tab[2] = fn_801D497C(fn_801D68C4(lbl_80347628, 0x45));
+            t->tab[3] = fn_801D497C(fn_801D68C4(lbl_80347628, 0x4b));
+            t->tab[4] = fn_801D497C(fn_801D68C4(lbl_80347628, 0x4c));
+            lbl_80346B10 = 0x115;
+            lbl_80346B0E = 0x12a;
+            lbl_80346B0C = 0x144;
+            lbl_80346B0A = 0x12d;
+            lbl_80346B08 = 0x21c;
+            lbl_80346B06 = 0x12d;
+            lbl_80346B04 = 0x113;
+            lbl_80346B02 = 0x111;
+            lbl_80346B00 = 0x10e;
+            lbl_80346AFE = 0x10b;
+            break;
+        }
+        lbl_80346AF8 = 1;
+        lbl_80346AF4 = 0.0f;
+        t->tab[0] = fn_801D497C(fn_801D68C4(lbl_80347628, 0x3b));
+        lbl_80346AFC = 0x20;
+        lbl_80346AFA = 0x18d;
+        lbl_80346AF9 = 0;
+        t->state = 1;
+        t->f20 = -1.3f;
+        break;
+    case 1:
+        if (lbl_80347324 != 0) {
+            break;
+        }
+        lbl_80346AD8 = 0;
+        lbl_80346AF0 = (t->work->arg->flags >> 1) & 1;
+        if (lbl_80346AF4 > 1.0 || 0.0 > lbl_80346AF4) {
+            lbl_80346AF8 *= -1;
+        }
+        lbl_80346AF4 = lbl_80346AF4 + lbl_80346AF8 / 15.0f;
+        if (t->work->arg->flags & 1) {
+            switch (t->work->arg->input) {
+            case 0:
+                lbl_80346AF9 = 0;
+                break;
+            case 1:
+                lbl_80346AF9 = -1;
+                t->work->arg->cursor--;
+                if (t->work->arg->cursor < 0) {
+                    t->work->arg->cursor = t->work->arg->count - 1;
+                }
+                break;
+            case 2:
+                lbl_80346AF9 = 1;
+                t->work->arg->cursor++;
+                if (t->work->arg->cursor >= t->work->arg->count) {
+                    t->work->arg->cursor = 0;
+                }
+                break;
+            }
+            fn_8002468C(t);
+        }
+        break;
+    case 2:
+        for (lbl_80346AE4 = 0; lbl_80346AE4 < lbl_80346AC0; lbl_80346AE4++) {
+            fn_801D4954(t->tab[lbl_80346AE4]);
+            t->tab[lbl_80346AE4] = NULL;
+        }
+        lbl_80346AC0 = 0;
+        t->state = 0xff;
+        break;
+    case 0xff:
+        t->flags |= 0x40;
         break;
     }
 }
