@@ -130,7 +130,7 @@ inline void ObjSetMotion(EvObj* w, u16 m) {
 }
 
 inline void EvDrawOverlay(EvObj* obj, s16 flag) {
-    f32 z = 0.0f / (f32)obj->ext->info->nearDist;
+    f32 z = 0.0f / (f32)EvMapInfo(obj)->nearDist;
     Obj20 o;
     Obj14 data = lbl_802C47A0;
 
@@ -176,14 +176,14 @@ void fn_801E8CA4(Task* task) {
         lbl_80347790 = 0;
         lbl_8034778C = 0;
         fn_80116020(0);
-        lbl_80347778 = obj->ext->info->mode;
+        lbl_80347778 = EvMapInfo(obj)->mode;
         lbl_80347784 = 0;
-        obj->point = obj->ext->info->flag - 0xAF0;
+        obj->point = EvMapInfo(obj)->flag - 0xAF0;
         obj->pivotPos.y = 0.5f;
         obj->state = 0;
         obj->x1fc = 0;
         lbl_8034777C = 300;
-        if (FlagTest(obj->ext->info->flag) != 0) {
+        if (FlagTest(EvMapInfo(obj)->flag) != 0) {
             task->state = 8;
         } else {
             task->state = 1;
@@ -226,7 +226,7 @@ void fn_801E8CA4(Task* task) {
         if (w != NULL) {
             f32 s = 0.0f;
             if (fn_801C6068(w, 15)) {
-                s = (f32)w->ext->info->speed;
+                s = (f32)EvMapInfo(w)->speed;
                 s *= 0.03f;
             }
             w->x164 = s;
@@ -239,7 +239,7 @@ void fn_801E8CA4(Task* task) {
         ((EvObj*)lbl_80347780->work)->x22c = 0;
         ((EvObj*)lbl_80347780->work)->x22e = 0;
         ((EvObj*)lbl_80347780->work)->x230 = 0;
-        ((EvObj*)lbl_80347780->work)->point = obj->ext->info->flag - 0xAF0;
+        ((EvObj*)lbl_80347780->work)->point = EvMapInfo(obj)->flag - 0xAF0;
         ((EvObj*)lbl_80347780->work)->id = obj->id;
 
         if (lbl_80310B3C[18] & 0x10) {
@@ -262,7 +262,7 @@ void fn_801E8CA4(Task* task) {
             w->x24c.z = obj->pos.z;
             ((EvObj*)t->work)->x202 = 0;
             obj->x20a = ((EvObj*)t->work)->motion->nbFrame;
-            ((EvObj*)t->work)->point = obj->ext->info->flag - 0xAF0;
+            ((EvObj*)t->work)->point = EvMapInfo(obj)->flag - 0xAF0;
         }
 
         obj->x210 = 0;
@@ -281,7 +281,7 @@ void fn_801E8CA4(Task* task) {
             w->x24c.x = obj->pos.x;
             w->x24c.y = obj->pos.y;
             w->x24c.z = obj->pos.z;
-            ((EvObj*)t->work)->point = obj->ext->info->flag - 0xAF0;
+            ((EvObj*)t->work)->point = EvMapInfo(obj)->flag - 0xAF0;
         }
         for (i = 0; i < 30; i++) {
             t = fn_801C6180(task, fn_801E9EA8);
@@ -298,7 +298,7 @@ void fn_801E8CA4(Task* task) {
             w->x24c.x = obj->pos.x;
             w->x24c.y = obj->pos.y;
             w->x24c.z = obj->pos.z;
-            ((EvObj*)t->work)->point = obj->ext->info->flag - 0xAF0;
+            ((EvObj*)t->work)->point = EvMapInfo(obj)->flag - 0xAF0;
         }
         break;
     default:
@@ -318,7 +318,7 @@ void fn_801E8CA4(Task* task) {
                 lbl_80347790 = 1;
                 if (obj->x1fc++ >= 15) {
                     fn_801EAA08(task);
-                    if (dist < (f32)obj->ext->info->nearDist && obj->x1ec == 0) {
+                    if (dist < (f32)EvMapInfo(obj)->nearDist && obj->x1ec == 0) {
                         s16 flag = 0;
                         if (lbl_80347794 == 8) {
                             flag = 1;
@@ -360,8 +360,8 @@ void fn_801E8CA4(Task* task) {
         if (obj->x1ed++ >= 45) {
             if ((obj->x1ec < 3 && (!(lbl_80310B3C[32] & 1) || obj->point == 0x11) &&
                  !(lbl_80310B3C[88] & 0x80000000) && (lbl_80310B3C[18] & 0x10) && lbl_80347408 == 0 &&
-                 dist <= (f32)obj->ext->info->actDist && busy == 0) ||
-                (lbl_80347778 != 0 && dist <= (f32)obj->ext->info->actDist)) {
+                 dist <= (f32)EvMapInfo(obj)->actDist && busy == 0) ||
+                (lbl_80347778 != 0 && dist <= (f32)EvMapInfo(obj)->actDist)) {
                 fn_801EC854(obj, dist);
             } else {
                 if (obj->x21e) {
@@ -375,14 +375,14 @@ void fn_801E8CA4(Task* task) {
             }
             obj->x1ed = 45;
         }
-        if (dist < (f32)obj->ext->info->nearDist || lbl_80347778 == 2) {
+        if (dist < (f32)EvMapInfo(obj)->nearDist || lbl_80347778 == 2) {
             fn_801EAF00(obj);
             fn_80116020(obj->x1ec);
         }
         if (obj->x1ec == 5) {
             u32 f;
             task->state = 0xFF;
-            f = obj->ext->info->flag;
+            f = EvMapInfo(obj)->flag;
             lbl_80310B3C[f >> 5] |= 1 << (f & 31);
         }
         if (lbl_80347778 == 2 && (lbl_80311A60.pad->x8 & 0x100) && lbl_80347784 < 2) {
@@ -477,7 +477,7 @@ void fn_801E9AE0(Task* self) {
     }
     if (lbl_8034779C == 1) {
         m->hidden = 1;
-        if (dist < (f32)m->ext->info->actDist) {
+        if (dist < (f32)EvMapInfo(m)->actDist) {
             self->flags |= 0x40;
         }
     } else {
@@ -492,7 +492,7 @@ void fn_801E9AE0(Task* self) {
             b2.y = m->x24c.y;
             b2.z = m->x24c.z;
             dist = fn_80290008(&a2, &b2);
-            if (dist < (f32)m->ext->info->nearDist || lbl_80347778 != 0) {
+            if (dist < (f32)EvMapInfo(m)->nearDist || lbl_80347778 != 0) {
                 fn_801E5DF0(m);
             }
         }
@@ -659,7 +659,8 @@ inline void ObjSetIdleMotion(EvObj* w, u16 m, f32 k) {
     if (w != NULL) {
         f32 s = 0.0f;
         if (fn_801C6068(w, 15)) {
-            s = (f32)w->ext->info->speed * k;
+            EvInfoMap* info = w->ext->info;
+            s = (f32)info->speed * k;
         }
         w->x164 = s;
         w->x172 = m;
@@ -963,10 +964,10 @@ inline s32 ObjNearTarget(EvObj* w) {
 
     if (w != NULL) {
         ok = has = 0;
-        if (fn_801C6068(w, 15) && 0.0f != (f32)w->ext->info->x2c) {
+        if (fn_801C6068(w, 15) && 0.0f != (f32)EvMapInfo(w)->x2c) {
             has = 1;
         }
-        if (has && fn_801C59F8(&w->pos, &w->ext->target) >= (f32)w->ext->info->x2c) {
+        if (has && fn_801C59F8(&w->pos, &w->ext->target) >= (f32)EvMapInfo(w)->x2c) {
             ok = 1;
         }
     }
@@ -1150,10 +1151,10 @@ inline s32 ObjAwayFromHome(EvObj* obj) {
     if (obj != NULL) {
         s32 check = 0;
         away = 0;
-        if (fn_801C6068(obj, 0xF) && 0.0f != obj->ext->info->x2c) {
+        if (fn_801C6068(obj, 0xF) && 0.0f != EvMapInfo(obj)->x2c) {
             check = 1;
         }
-        if (check && fn_801C59F8(&obj->pos, &obj->ext->target) >= obj->ext->info->x2c) {
+        if (check && fn_801C59F8(&obj->pos, &obj->ext->target) >= EvMapInfo(obj)->x2c) {
             away = 1;
         }
     }
@@ -1186,7 +1187,7 @@ void fn_801EA2DC(Task* task) {
                 lbl_80347794 = 9;
             }
         } else if (lbl_80347440 == 1) {
-            if (dist < (f32)obj->ext->info->nearDist && (lbl_80311A60.pad->x8 & 0x100) && lbl_803477A0 == 0 && obj->x1ec == 0) {
+            if (dist < (f32)EvMapInfo(obj)->nearDist && (lbl_80311A60.pad->x8 & 0x100) && lbl_803477A0 == 0 && obj->x1ec == 0) {
                 if (lbl_80347794 != 0) {
                     if (lbl_80347794 == 8) {
                         obj->x202 = 1;
@@ -1315,7 +1316,7 @@ void fn_801EAA08(Task* task) {
     obj->ang[0] = -(ang[0] + (s32)(182.04445f * obj->state));
     obj->ang[1] = ang[1] - 0x8000;
     if (lbl_80347778 != 2) {
-        if ((lbl_80311A60.pad->x8 & 0x100) && lbl_80347794 == 8 && obj->x202 != 1 && obj->x1ec == 0 && dist < (f32)obj->ext->info->nearDist) {
+        if ((lbl_80311A60.pad->x8 & 0x100) && lbl_80347794 == 8 && obj->x202 != 1 && obj->x1ec == 0 && dist < (f32)EvMapInfo(obj)->nearDist) {
             EvStart(obj);
         }
     } else if (lbl_80347784 == 2 && obj->x202 != 1 && obj->x1ec == 0) {
@@ -1366,7 +1367,7 @@ void fn_801EAA08(Task* task) {
             obj->state = 1;
         }
     }
-    if (dist < (f32)obj->ext->info->nearDist) {
+    if (dist < (f32)EvMapInfo(obj)->nearDist) {
         fn_801C5DEC(obj);
         fn_80222838(obj->coll);
         if (fn_80222E00(0x2800, obj->coll) != 0) {
@@ -1377,7 +1378,7 @@ void fn_801EAA08(Task* task) {
     } else {
         lbl_80347798 = 0;
     }
-    if (dist < (f32)obj->ext->info->nearDist || lbl_80347778 == 2) {
+    if (dist < (f32)EvMapInfo(obj)->nearDist || lbl_80347778 == 2) {
         if (obj != NULL) {
             fn_801E5DF0(obj);
         }
@@ -1427,7 +1428,7 @@ void fn_801EB01C(Task* task) {
     obj = task->work;
     dist = CamDist(obj);
     if (lbl_8034779C == 1) {
-        if (dist < (f32)obj->ext->info->nearDist || lbl_80347778 == 2) {
+        if (dist < (f32)EvMapInfo(obj)->nearDist || lbl_80347778 == 2) {
             VecFade(&lbl_803136A8.a);
         }
     }
@@ -1441,14 +1442,14 @@ void fn_801EB01C(Task* task) {
     }
     fn_801EBC5C(obj);
     fn_801E3874(obj, &lbl_8031384C[obj->point], lbl_803136E4[obj->point][1]);
-    if (dist < (f32)obj->ext->info->nearDist) {
+    if (dist < (f32)EvMapInfo(obj)->nearDist) {
         lbl_80347794 = fn_801EB330(obj, dist);
     }
     if (lbl_803477A0 != 0) {
         lbl_80347794 = 0;
     }
     far = 0;
-    if (dist > (f32)obj->ext->info->nearDist) {
+    if (dist > (f32)EvMapInfo(obj)->nearDist) {
         far = 1;
         ObjSetIdleMotion(obj, 11, 0.03f);
     } else {
@@ -1580,7 +1581,7 @@ s32 fn_801EB330(EvObj* obj, f32 dist) {
     if (lbl_80347798 != 0) {
         return 0;
     }
-    if (dist > (f32)obj->ext->info->nearDist) {
+    if (dist > (f32)EvMapInfo(obj)->nearDist) {
         return 0;
     }
     if (lbl_80347440 == 0 && lbl_80347778 != 2) {
@@ -1807,8 +1808,8 @@ void fn_801EBC5C(EvObj* obj) {
 }
 
 void fn_801EC854(EvObj* obj, s32 dist) {
-EvInfo* info; f32 p, d, nr, act; s16 v;
-    if (dist < (f32)obj->ext->info->nearDist) {
+f32 p, d, nr, act; s16 v;
+    if (dist < (f32)EvMapInfo(obj)->nearDist) {
         if (obj->x21e) {
             fn_80217830(obj->x23c);
             obj->x21e = 0;
@@ -1827,7 +1828,7 @@ EvInfo* info; f32 p, d, nr, act; s16 v;
             obj->x23c = SePlay(0, 1, 0x23);
             obj->x21e = 1;
         }
-        p = 100.0f - (dist - (f32)obj->ext->info->nearDist) * (100.0f / ((f32)obj->ext->info->actDist - (f32)obj->ext->info->nearDist));
+        p = 100.0f - (dist - (f32)EvMapInfo(obj)->nearDist) * (100.0f / ((f32)EvMapInfo(obj)->actDist - (f32)EvMapInfo(obj)->nearDist));
         v = 10 * (s32)(p / 10.0f);
         fn_802172C8(obj->x23c, (s8)(s32)(1.27 * v));
     }
@@ -1849,7 +1850,7 @@ u16 fn_801ECA2C(EvObj* obj, s32 force) {
                 return 6;
             }
         }
-        if (dist >= (f32)obj->ext->info->x2c && ObjNearTarget(obj)) {
+        if (dist >= (f32)EvMapInfo(obj)->x2c && ObjNearTarget(obj)) {
             ret = ObjTurn(obj, ObjTurnTarget(obj), 0xB, 9);
         } else if (obj->x1fe <= 0 && 3.0517578125e-05f * rand() < 0.5f) {
             obj->x1fe = 300;

@@ -8615,7 +8615,7 @@ void fn_800DCB78(Task* t)
         w->home.z = w->pos.z;
         fn_801E7E14(w->model, lbl_80346CE8 * 3, 0, 0);
         w->id = 0x2001;
-        w->ext->info->flags |= 1;
+        EvMapInfo(w)->flags |= 1;
         w->x2c = 0;
         t->f20 = -300.0f;
         t->state = 1;
@@ -8683,7 +8683,7 @@ static inline void Timer_800F7D6C(EvObj* e, s16 t) {
     if (e != NULL) {
         f32 f = 0.0f;
         if (fn_801C6068(e, 14) != 0) {
-            f = 0.01f * (f32)e->ext->info->speed;
+            f = 0.01f * (f32)EvMapInfo(e)->speed;
         }
         e->x164 = f;
         e->x172 = t;
@@ -8708,7 +8708,7 @@ s32 fn_800F7D6C(EvObj* e) {
         if (idx >= 0 && e != NULL) {
             e->x21c = idx;
         }
-        switch (e->ext->info->actDist) {
+        switch (EvMapInfo(e)->actDist) {
         case 0:
             StartAnim_800F7D6C(e);
             v = 2;
@@ -8812,7 +8812,7 @@ s32 fn_800EAE2C(EvObj* pl, EvObj* obj) {
     };
     NJS_POINT3 a;
     NJS_POINT3 b;
-    EvInfo* info;
+    EvInfoMap* info;
     f32 range;
     f32 dist;
 

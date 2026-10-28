@@ -4272,7 +4272,7 @@ void fn_800D6618(MapTask *t)
     EvObj *e = t->work;
     EvColl *s = e->coll;
     s32 ok;
-    EvInfo *q;
+    EvInfoMap *q;
     void *r;
     Ent_800D6618 ent;
 
@@ -4280,9 +4280,9 @@ void fn_800D6618(MapTask *t)
     case 0:
         ok = 0;
         if (e->ext != NULL) {
-            if (e->ext->info->count >= 9) {
-                if (e->ext->info->w4 >= 0) {
-                    e->x1b4 = fn_80225B74(0xffff, e->ext->info->w4);
+            if (EvMapInfo(e)->count >= 9) {
+                if (EvMapInfo(e)->w4 >= 0) {
+                    e->x1b4 = fn_80225B74(0xffff, EvMapInfo(e)->w4);
                 }
                 if (e->coll != NULL) {
                     e->coll->h16 = 0;
@@ -4297,7 +4297,7 @@ void fn_800D6618(MapTask *t)
         }
         break;
     case 1:
-        fn_800CCCA4(8, e->ext->info->nearDist, 0x50000);
+        fn_800CCCA4(8, EvMapInfo(e)->nearDist, 0x50000);
         t->state = 2;
     case 2:
         if (e->x1b4 != NULL) {
@@ -4337,7 +4337,7 @@ void fn_800D6618(MapTask *t)
         }
         break;
     case 3:
-        fn_800CCCA4(8, e->ext->info->nearDist, 0x40000);
+        fn_800CCCA4(8, EvMapInfo(e)->nearDist, 0x40000);
         t->state = 4;
     case 4:
         if (fn_8015F1F0(lbl_80347450) != 0) {
@@ -4351,7 +4351,7 @@ void fn_800D6618(MapTask *t)
             s->h14 = 0;
             s->p4->h16 = 0;
             s->p4 = NULL;
-            fn_800CD0B8(8, e->ext->info->nearDist, 0x50000, 0);
+            fn_800CD0B8(8, EvMapInfo(e)->nearDist, 0x50000, 0);
             t->state = 1;
         }
         break;
@@ -6516,7 +6516,7 @@ void fn_800CDEF4(Task_800CDEF4* t) {
         fn_800C35C4(a, i);
         a->motion = fn_801C5D88(a, i);
         a->shape = fn_801C5D88(a, i + 3);
-        d = a->ext->info->nearDist;
+        d = EvMapInfo(a)->nearDist;
         a->speed = 0.01f * (f32)d;
         fn_800C3518(a);
         t->state = 1;

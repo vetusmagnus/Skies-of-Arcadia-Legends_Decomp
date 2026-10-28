@@ -48,10 +48,22 @@ typedef struct {
     EvScriptEntry entries[1];
 } EvScript;
 
+/* The object's info record (EvExt.info) is a count-prefixed word table whose layout past the common head
+ * depends on the object kind; each kind has its own record and reads EvExt.info into a local of that type. */
+typedef struct {
+    s32 count;     /* 0x00 number of words present */
+    s32 w4;        /* 0x04 */
+    u8 pad8[8];
+    s32 w10;       /* 0x10 (count > 3) */
+    u32 flags;     /* 0x14 (count > 4) */
+} EvInfo;
+
+/* Story event and map object. */
 typedef struct {
     s32 count;     /* 0x00 */
     s32 w4;        /* 0x04 */
-    u8 pad8[0x14 - 8];
+    u8 pad8[8];
+    s32 w10;       /* 0x10 */
     u32 flags;     /* 0x14 */
     u8 pad18[0x24 - 0x18];
     u32 nearDist;  /* 0x24 */
@@ -61,11 +73,139 @@ typedef struct {
     u8 pad34[4];
     s32 mode;      /* 0x38 */
     u32 flag;      /* 0x3C story flag */
-} EvInfo;
+} EvInfoMap;
+
+/* Trail. */
+typedef struct {
+    s32 count;     /* 0x00 */
+    u8 pad4[0x14 - 4];
+    u32 flags;     /* 0x14 */
+    u32 x18;       /* 0x18 texture id / flags */
+    u8 pad1c[0x24 - 0x1c];
+    u32 nearDist;  /* 0x24 */
+    s32 actDist;   /* 0x28 */
+    s32 x2c;       /* 0x2C */
+    s32 speed;     /* 0x30 */
+    u8 pad34[0x4C - 0x34];
+    u32 x4c;       /* 0x4C */
+    u32 x50;       /* 0x50 */
+    u32 x54;       /* 0x54 trail mode */
+    u32 x58;       /* 0x58 */
+    u32 x5c, x60, x64;
+    NJS_POINT3 offA; /* 0x68 */
+    NJS_POINT3 offB; /* 0x74 */
+    u32 life;      /* 0x80 */
+    u32 total;     /* 0x84 */
+    u32 fadeIn;    /* 0x88 */
+    u32 seg;       /* 0x8C */
+    u32 x90;       /* 0x90 */
+    s32 scrollU;   /* 0x94 */
+    s32 scrollV;   /* 0x98 */
+} EvInfoTrail;
+
+/* Chunk-record effect. */
+typedef struct {
+    s32 count;     /* 0x00 */
+    u8 pad4[0x14 - 4];
+    u32 flags;     /* 0x14 */
+    u8 pad18[0x24 - 0x18];
+    u32 nearDist;  /* 0x24 */
+    s32 actDist;   /* 0x28 */
+    s32 x2c;       /* 0x2C */
+    s32 speed;     /* 0x30 */
+    s16 recs[1];   /* 0x34 chunk records (fn_800D51C0) */
+} EvInfoChunk;
+
+/* Sprite emitter (count 12 and up). */
+typedef struct {
+    s32 x00, x04, x08, x0c;  /* 0x00 */
+    u32 x10;       /* 0x10 */
+    s32 x14, x18, x1c, x20, x24, x28, x2c, x30; /* 0x14 */
+    f32 x34;       /* 0x34 */
+    NJS_POINT3 v38; /* 0x38 */
+    Angle a44[3];  /* 0x44 */
+    NJS_POINT3 v50; /* 0x50 */
+    NJS_POINT3 v5c; /* 0x5C */
+    s32 x68;       /* 0x68 */
+    s32 x6c;       /* 0x6C */
+} EvEmitSub;
+
+typedef struct {
+    s32 count;     /* 0x00 */
+    u8 pad4[0x20 - 4];
+    u32 x20;       /* 0x20 */
+    u8 pad24[0x4C - 0x24];
+    u32 x4c;       /* 0x4C */
+    u8 pad50[0x60 - 0x50];
+    u32 x60;       /* 0x60 */
+    u32 x64;       /* 0x64 */
+    u32 x68;       /* 0x68 */
+    u32 x6c;       /* 0x6C */
+    u32 x70;       /* 0x70 */
+    f32 x74;       /* 0x74 */
+    EvEmitSub sub; /* 0x78 */
+    u8 pad_e8[0x2F0 - 0xE8];
+    s32 x2f0, x2f4, x2f8, x2fc, x300; /* 0x2F0 */
+    f32 x304;      /* 0x304 */
+    f32 x308;      /* 0x308 */
+    u32 x30c, x310, x314; /* 0x30C */
+} EvInfoEmit;
+
+/* Fading model. */
+typedef struct {
+    s32 count;     /* 0x00 */
+    u8 pad4[0xC];
+    s32 w10;       /* 0x10 */
+    u32 flags;     /* 0x14 */
+    u8 pad18[0x24 - 0x18];
+    s32 nearDist;  /* 0x24 */
+    f32 actDistF;  /* 0x28 */
+    f32 x2cF;      /* 0x2C */
+    s32 spin[3];   /* 0x30 */
+    s32 flag;      /* 0x3C story flag */
+    f32 fadeNear;  /* 0x40 */
+    f32 fadeFar;   /* 0x44 */
+} EvInfoFade;
+
+/* Trigger box. */
+typedef struct {
+    s32 count;     /* 0x00 */
+    u8 pad4[0xC];
+    s32 w10;       /* 0x10 */
+    u8 pad14[0x24 - 0x14];
+    f32 speed;     /* 0x24 */
+    f32 actDistF;  /* 0x28 */
+    f32 x2cF;      /* 0x2C */
+    u32 w30;       /* 0x30 half-extent x/z */
+    u32 w34;       /* 0x34 */
+    u32 w38;       /* 0x38 */
+} EvInfoBox;
+
+/* Waypoint path. */
+typedef struct {
+    s32 count;     /* 0x00 */
+    u8 pad4[0x10 - 4];
+    s32 x10;       /* 0x10 */
+    u32 flags;     /* 0x14 */
+    u8 pad18[0x24 - 0x18];
+    u32 nearDist;  /* 0x24 */
+    u32 actDist;   /* 0x28 */
+    u32 x2c;       /* 0x2C */
+    s32 speed;     /* 0x30 */
+    u32 x34;       /* 0x34 */
+    s32 mode;      /* 0x38 */
+    s32 pts[1];    /* 0x3C waypoint table, 3 s32 per entry */
+    s32 x40;       /* 0x40 */
+    s32 x44;       /* 0x44 */
+    s32 x48;       /* 0x48 */
+    s32 x4c;       /* 0x4C */
+    s32 x50;       /* 0x50 */
+    s32 x54;       /* 0x54 */
+} EvInfoPath;
 
 typedef struct {
     u8 pad0[0x10];
-    EvInfo* info;          /* 0x10 */
+    void* info;            /* 0x10 per-kind record (EvInfo head, EvInfoMap, ...) */
     ModelFiles* files;     /* 0x14 */
     u8 pad18[4];
     ItemList* items;       /* 0x1C */
@@ -204,5 +344,10 @@ typedef struct {
     void* x25c;              /* 0x25C per-kind record (EvScript for map objects) */
     EvMode* mapMode;         /* 0x260 */
 } EvObj;
+
+/* The info record of story events and map objects. */
+static inline EvInfoMap* EvMapInfo(EvObj* e) {
+    return e->ext->info;
+}
 
 #endif
