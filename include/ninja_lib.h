@@ -179,12 +179,22 @@ typedef s32 (*NjGetVec)(f32* v);
 typedef s32 (*NjGetAng)(Angle* a);
 typedef s32 (*NjGetAng16)(s16* a);
 
+/* Key interpolator: (keys, key count, out value, frame). */
+typedef void (*NjInterp)(void* keys, s32 n, void* out, f32 frame);
+
 /* Motion playback state (lbl_80347E64). */
 typedef struct {
-    u8 pad_00[0x1c];
-    s32 count;          /* 0x1c */
+    u8 pad_00[0xc];
+    void** keys;        /* 0x0c per-channel key tables */
+    s32* nkeys;         /* 0x10 per-channel key counts */
+    f32 frame;          /* 0x14 */
+    u8 pad_18[4];
+    s32 count;          /* 0x1c current channel */
     u32 flags;          /* 0x20 */
-    u8 pad_24[0x10];
+    NjInterp interpPos;   /* 0x24 */
+    NjInterp interpRot;   /* 0x28 */
+    NjInterp interpScl;   /* 0x2c */
+    NjInterp interpRot16; /* 0x30 */
     NjGetVec getPos;    /* 0x34 */
     NjGetAng getRot;    /* 0x38 */
     NjGetVec getScale;  /* 0x3c */
@@ -224,6 +234,9 @@ s32 fn_80293DC0(Angle* p);
 s32 fn_80293D48(s16* p);
 s32 fn_80293CD8(f32* p);
 s32 fn_80293C68(u16* p);
+void fn_80294100(void* table, s32 count, u16* out, f32 t);
+void fn_80294170(void* table, s32 count, s16* out, f32 t);
+void fn_80294770(void* table, s32 count, f32* out, f32 t);
 void fn_80293C2C(void);
 s32 fn_802951C4(Angle* p);
 s32 fn_802951CC(f32* p);

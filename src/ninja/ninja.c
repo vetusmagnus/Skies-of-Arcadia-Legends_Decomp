@@ -1135,6 +1135,82 @@ void fn_802938C0(void (*cb)(NjObj*)) {
     lbl_80347E60 = cb;
 }
 
+s32 fn_80293C68(u16* out) {
+    void* k = lbl_80347E64->keys[lbl_80347E64->count];
+    if (k != 0) {
+        fn_80294100(k, lbl_80347E64->nkeys[lbl_80347E64->count], out, lbl_80347E64->frame);
+        lbl_80347E64->count++;
+        return 1;
+    }
+    lbl_80347E64->count++;
+    return 0;
+}
+
+s32 fn_80293CD8(f32* out) {
+    void* k = lbl_80347E64->keys[lbl_80347E64->count];
+    if (k != 0) {
+        fn_80294770(k, lbl_80347E64->nkeys[lbl_80347E64->count], out, lbl_80347E64->frame);
+        lbl_80347E64->count++;
+        return 1;
+    }
+    lbl_80347E64->count++;
+    return 0;
+}
+
+s32 fn_80293D48(s16* out) {
+    void* k = lbl_80347E64->keys[lbl_80347E64->count];
+    if (k != 0) {
+        lbl_80347E64->interpRot16(k, lbl_80347E64->nkeys[lbl_80347E64->count], out, lbl_80347E64->frame);
+        lbl_80347E64->count++;
+        return 1;
+    }
+    lbl_80347E64->count++;
+    return 0;
+}
+
+s32 fn_80293DC0(Angle* out) {
+    void* k = lbl_80347E64->keys[lbl_80347E64->count];
+    if (k != 0) {
+        lbl_80347E64->interpRot(k, lbl_80347E64->nkeys[lbl_80347E64->count], out, lbl_80347E64->frame);
+        lbl_80347E64->count++;
+        return 1;
+    }
+    lbl_80347E64->count++;
+    return 0;
+}
+
+s32 fn_80293E38(s16* out) {
+    void* k = lbl_80347E64->keys[lbl_80347E64->count];
+    if (k != 0) {
+        fn_80294170(k, lbl_80347E64->nkeys[lbl_80347E64->count], out, lbl_80347E64->frame);
+        lbl_80347E64->count++;
+        return 1;
+    }
+    lbl_80347E64->count++;
+    return 0;
+}
+
+s32 fn_80293EA8(f32* out) {
+    void* k = lbl_80347E64->keys[lbl_80347E64->count];
+    if (k != 0) {
+        lbl_80347E64->interpPos(k, lbl_80347E64->nkeys[lbl_80347E64->count], out, lbl_80347E64->frame);
+        lbl_80347E64->count++;
+        return 1;
+    }
+    lbl_80347E64->count++;
+    return 0;
+}
+
+void fn_80294170(void* table, s32 count, s16* out, f32 t) {
+    f32 frac;
+    s16* lo;
+    s16* hi;
+    s16 d;
+    fn_802938C8(table, 4, count, t, &lo, &hi, &frac);
+    d = hi[1] - lo[1];
+    *out = frac * d + lo[1];
+}
+
 void fn_80294210(void* table, s32 count, s16* out, f32 t) {
     f32 frac;
     s16* lo;
@@ -1735,6 +1811,30 @@ s32 fn_8029800C(u8 fmt) {
         return 1;
     }
     return 0;
+}
+
+void fn_80298144(NjTexRef* r) {
+    NjTexMem* m = r->mem;
+    if (m->refs <= 0) {
+        m->id = -1;
+        m->body.w00 = 0;
+        m->body.w04 = 0;
+        m->body.w08 = 0;
+        m->body.w0c = 0;
+        m->body.w10 = 0;
+        m->body.size = 0;
+        m->body.flags = 0;
+        m->body.data = 0;
+
+        lbl_80347EC4--;
+    }
+    if (r->refs <= 0) {
+        r->key = -1;
+        r->w00 = 0;
+        r->w04 = 0;
+        r->mem = 0;
+        r->w14 = 0;
+    }
 }
 
 s32 fn_802981B8(u32 id, u32 key) {
