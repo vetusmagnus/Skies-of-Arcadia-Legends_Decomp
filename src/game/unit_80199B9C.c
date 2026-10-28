@@ -96,7 +96,7 @@ extern void *fn_801A4DCC(void *a, u16 flag);
 extern void fn_801CBBAC(f32 f);
 extern void Ui2DBegin(void);
 extern void *lbl_8034718C[2];
-extern u32 lbl_80347184[2];
+extern s32 lbl_80347184[2];
 extern s32 CARDUnmount(s32 slot);
 extern void strcpy(void *, const char *);
 extern void strcat(void *, const char *);
@@ -185,7 +185,22 @@ typedef struct Pnl {
     Task task;
     MenuPanel* obj; /* 0x28 */
 } Pnl;
-typedef struct { s32 f0; u8 pad[0x28]; } E2c;
+/* Save time stamp. */
+typedef struct SaveStamp {
+    u16 year;
+    u8 month, day, hour, min, sec, wday;
+} SaveStamp;
+/* A save slot's summary, one per file (0x2C bytes). */
+typedef struct {
+    s32 f0;
+    u16 h4;          /* 0x04 */
+    u16 h6;          /* 0x06 */
+    u32 w8;          /* 0x08 */
+    s16 hc;          /* 0x0C */
+    u8 be, bf, b10, b11; /* 0x0E-0x11 */
+    SaveStamp stamp; /* 0x12 */
+    u8 pad[0x2c - 0x1a];
+} E2c;
 /* The save menu's work. */
 typedef struct SaveWork {
     u8 x0;
@@ -199,12 +214,16 @@ typedef struct SaveWork {
     u8 f9;           /* 0x09 */
     u8 padA[2];
     s32 fc;          /* 0x0C */
-    u8 pad10[8];
+    u8 pad10[2];
+    s16 h12;         /* 0x12 */
+    s32 w14;         /* 0x14 files found */
     f32 f18;         /* 0x18 */
-    u8 pad1c[4];
+    f32 f1c;         /* 0x1C scan progress */
     E2c ent[10];     /* 0x20 */
     u8 pad_[0x20c - 0x20 - 10 * 0x2c];
-    Pnl* p[19];      /* 0x20C */
+    Pnl* p[17];      /* 0x20C */
+    s32 w250;        /* 0x250 scan done */
+    u8 pad254[4];
     void* f258;      /* 0x258 */
     s32 st[8];       /* 0x25C */
 } SaveWork;
@@ -269,20 +288,32 @@ typedef struct Self_801A1834 {
     Ctx_801A1834 *ctx;
 } Self_801A1834;
 extern void* fn_802267AC(void* a, void *);
-extern void fn_801A2D60(void);
-typedef struct Task_801A343C {
-    u8 pad00[0x24];
-    void* p24;
-} Task_801A343C;
+/* The card scan task's record (0x24 bytes). */
 typedef struct Rec24 {
-    u8 pad00[0xC];
+    u8 pad00[4];
+    s32 w04;         /* 0x04 blocks per file */
+    s32 w08;         /* 0x08 free file slots */
     s32 w0c;
     s32 w10;
-    u8 pad14;
+    u8 b14;          /* 0x14 file index */
     u8 b15;
-    s16 h16;
-    s16 h18;
+    u16 h16;
+    u16 h18;
+    u8 b1a;
+    u8 b1b;
 } Rec24;
+/* The card scan task (fn_801A2D60, started by fn_801A343C). */
+typedef struct Task_801A343C {
+    u8 pad00[0x8];
+    SaveTask* parent; /* 0x08 */
+    u8 pad0c[0x18 - 0xc];
+    u8 flags;         /* 0x18 */
+    u8 state;         /* 0x19 */
+    u8 pad1a[0x24 - 0x1a];
+    Rec24* p24;
+    struct CardImage* buf; /* 0x28 */
+} Task_801A343C;
+void fn_801A2D60(Task_801A343C* t);
 typedef struct Actor24 {
     u8 pad00;
     u8 b01;
@@ -295,8 +326,7 @@ typedef struct Actor24 {
     s32 w250;
 } Actor24;
 #define A24(p) ((Actor24 *)((Task_801A343C *)(p))->p24)
-extern s32 fn_801A388C(s32 chan, s32 a, s32* out);
-#define R24(p) ((Rec24 *)((Task_801A343C *)(p))->p24)
+extern s32 fn_801A388C(s32 chan, const char *name, s32* out);
 extern const char lbl_802B4978[];
 extern const char lbl_8034B6A0[6];
 extern void fn_80252E5C(void* p);
@@ -610,7 +640,7 @@ typedef struct Self_801A1FBC {
 } Self_801A1FBC;
 extern s32 SpriteObjDrawScaled(SpriteObjScaled* obj);
 typedef struct CardStat {
-    u8 fileName[0x20];
+    char fileName[0x20];
     u32 length;
     u32 time;
     u32 gameName;     /* 0x28 */
@@ -625,7 +655,7 @@ typedef struct CardStat {
 } CardStat;
 extern CardStat lbl_803080F8;
 extern s32 CARDGetStatus(s32 chan, s32 fileNo, CardStat* stat);
-extern u32 fn_8025ED74(CardStat* stat, s32 a);
+extern char *strstr(const char *str, const char *pat);
 typedef struct Misc {
     u8 pad00[4];
     u32 x4;
@@ -652,7 +682,7 @@ typedef struct Save {
     u8 pad171c[0x31ea - 0x171c];
     s16 x31ea;
 } Save;
-extern u8 lbl_802EBDD0[0x10];
+extern char lbl_802EBDD0[0x10];
 extern Misc lbl_80311AC0;
 extern Flt lbl_8030A794;
 extern void* fn_801E1A74(s32 a, s32 size);
@@ -1853,11 +1883,6 @@ extern void fn_801A2CC4(void);
 extern s32 fn_80248DCC(s32 chan, void *work, void (*cb)(void), s32 f);
 extern s32 CARDGetResultCode(s32 chan);
 extern s32 CARDCheckExAsync(s32 chan, s32 *xfer, void *cb);
-/* Save time stamp. */
-typedef struct SaveStamp {
-    u16 year;
-    u8 month, day, hour, min, sec, wday;
-} SaveStamp;
 typedef struct CardStampBuf {
     SaveStamp stamp;
     u8 pad8[4];
@@ -1871,10 +1896,24 @@ typedef struct CardRec {
     SaveStamp stamp;
 } CardRec;
 typedef struct CardSaveData {
-    u8 pad0[0x31f2];
+    char magic[0x10];  /* 0x00 lbl_802EBDD0 */
+    u8 pad10[0x1b - 0x10];
+    s8 b1b;            /* 0x1B */
+    u8 pad1c[0x338 - 0x1c];
+    u8 b338, b339, b33a, b33b; /* 0x338 */
+    u8 pad33c[0x31e8 - 0x33c];
+    u16 x31e8;
+    u16 x31ea;
+    u32 x31ec;
+    u8 pad31f0[2];
     u8 stamp[10];
     u32 sum;
 } CardSaveData;
+/* The 0x6000-byte card file image. */
+typedef struct CardImage {
+    u8 hdr[0x1440];
+    CardSaveData save;
+} CardImage;
 extern CardStampBuf lbl_80308198;
 extern CardRec lbl_803081A4;
 extern void *memcpy(void *, const void *, u32);
@@ -2652,18 +2691,18 @@ void* fn_801A343C(Task_801A343C* a)
 {
     Task_801A343C* o = fn_802267AC(a, fn_801A2D60);
     o->p24 = fn_801E1C7C(0x24);
-    *(s32*)((u8*)o + 0x28) = 0;
-    R24(o)->w10 = A24(a)->b04;
-    R24(o)->b15 = 7;
+    o->buf = NULL;
+    o->p24->w10 = A24(a)->b04;
+    o->p24->b15 = 7;
     A24(a)->h12 = 7;
-    R24(o)->w0c = 0;
+    o->p24->w0c = 0;
     A24(a)->w14 = 0;
     A24(a)->w250 = 0;
-    R24(o)->h16 = 0;
+    o->p24->h16 = 0;
     if (A24(a)->b01 == 0) {
-        R24(o)->h18 = R24(o)->b15 + 1;
+        o->p24->h18 = o->p24->b15 + 1;
     } else {
-        R24(o)->h18 = R24(o)->b15 + 3;
+        o->p24->h18 = o->p24->b15 + 3;
     }
     return o;
 }
@@ -3336,7 +3375,7 @@ void fn_801A1FBC(Self_801A1FBC* o) {
     }
 }
 
-s32 fn_801A388C(s32 chan, s32 a, s32* out) {
+s32 fn_801A388C(s32 chan, const char *name, s32* out) {
     s32 i;
     s32 ret;
     s32 cont;
@@ -3356,7 +3395,7 @@ s32 fn_801A388C(s32 chan, s32 a, s32* out) {
         case 0:
             if (lbl_803080F8.gameName != 0x47454145) break;
             if (lbl_803080F8.company != 0x3850) break;
-            if (fn_8025ED74(&lbl_803080F8, a) == 0) break;
+            if (strstr(lbl_803080F8.fileName, name) == NULL) break;
             if (out != NULL) {
                 *out = (lbl_803080F8.iconAddr == -1 || lbl_803080F8.commentAddr == -1) != 0;
             }
@@ -8030,3 +8069,190 @@ void fn_8019C424(Task *t)
         }
     }
 }
+typedef struct CARDFileInfo {
+    s32 chan;
+    s32 fileNo;
+    s32 offset;
+    s32 length;
+    u16 iBlock;
+    u16 pad;
+} CARDFileInfo;
+
+extern char lbl_80308178[0x20];
+extern s32 fn_801A2500(s32 chan, s32 *out);
+extern s32 CARDFreeBlocks(s32 chan, s32 *bytes, s32 *files);
+extern s32 CARDOpen(s32 chan, const char *name, CARDFileInfo *info);
+extern s32 CARDRead(CARDFileInfo *info, void *buf, s32 len, s32 ofs);
+extern s32 CARDClose(CARDFileInfo *info);
+extern int strcmp(const char *, const char *);
+
+static inline u32 CardSum(const void *p) {
+    const u32 *q;
+    u32 sum;
+    s32 i;
+    if (p == NULL) {
+        sum = 0;
+    } else {
+        q = p;
+        sum = 0;
+        for (i = 3199; i != 0; i--) {
+            sum ^= *q++;
+        }
+    }
+    return sum;
+}
+
+/* Scans a memory card's save files (the task fn_801A343C starts), filling the save menu's
+ * slot summaries. */
+void fn_801A2D60(Task_801A343C* t) {
+    s32 code;
+    s32 flag;
+    s32 files;
+    s32 bytes;
+    char num[8];
+    CARDFileInfo info;
+    CardSaveData* save;
+    SaveTask* par;
+    s32* st;
+    s32 chan;
+    s32 n;
+
+    chan = t->p24->w10;
+    par = t->parent;
+    st = &par->w->st[chan];
+    if (t->state > 0xfe && lbl_80347184[chan] == 0) {
+        *st = 1;
+        t->state = 4;
+    }
+    switch (t->state) {
+    case 0:
+    case 0xfe:
+        lbl_803475D0 = 1;
+        t->p24->b14 = 0;
+        if (fn_801A2500(t->p24->w10, &code) == 0) {
+            *st = fn_801A6A04(code);
+            t->p24->w08 = 0;
+            t->state = 4;
+            break;
+        }
+        t->p24->w0c = 0;
+        par->w->w14 = 0;
+        {
+            s32 c = t->p24->w10;
+            s32 r;
+            do {
+                r = CARDFreeBlocks(c, &bytes, &files);
+            } while (r == -1);
+            if (r == 0) {
+                if (files <= 0) {
+                    n = 0;
+                } else {
+                    n = bytes / 0x6000;
+                    if (n > 7) {
+                        n = 7;
+                    }
+                }
+            } else {
+                n = 0;
+            }
+        }
+        t->p24->w08 = n;
+        *st = 0;
+        t->state = 1;
+        break;
+    case 1:
+        sprintf(num, lbl_8034B6A0, t->p24->b14);
+        strcpy(lbl_80308178, lbl_802B4978);
+        strcat(lbl_80308178, num);
+        code = fn_801A388C(t->p24->w10, lbl_80308178, &flag);
+        if (code == 0) {
+            if (flag != 0) {
+                par->w->ent[t->p24->b14].f0 = 2;
+                t->p24->w0c++;
+                goto next;
+            }
+            t->p24->w0c++;
+            t->state = 2;
+            break;
+        }
+        if (code == -4) {
+            if (t->p24->w08 > 0) {
+                par->w->ent[t->p24->b14].f0 = 0;
+                t->p24->w0c++;
+                t->p24->w08--;
+            } else {
+                par->w->ent[t->p24->b14].f0 = 3;
+            }
+        next:
+            t->p24->b14++;
+            t->p24->h16++;
+            if (t->p24->b14 >= t->p24->b15) {
+                t->p24->b1a = 0;
+                t->p24->b1b = 0;
+                t->state = 4;
+            }
+            break;
+        }
+        *st = fn_801A6A04(code);
+        t->state = 4;
+        break;
+    case 2:
+        t->p24->w04 = 3;
+        par->w->ent[t->p24->b14].f0 = 1;
+        t->buf = fn_801E1C7C(0x6000);
+        do {
+            code = CARDOpen(t->p24->w10, lbl_80308178, &info);
+        } while (code == -1);
+        if (code == 0) {
+            do {
+                code = CARDRead(&info, t->buf, t->p24->w04 << 13, 0);
+            } while (code == -1);
+            CARDClose(&info);
+        }
+        if (code != 0) {
+            t->p24->w0c = 0;
+            par->w->w14 = 0;
+            t->state = 4;
+            *st = 1;
+            break;
+        }
+        t->state = 3;
+        break;
+    case 3:
+        save = &t->buf->save;
+        if (save->sum != CardSum(save)) {
+            par->w->ent[t->p24->b14].f0 = 2;
+        } else if (strcmp(save->magic, lbl_802EBDD0) != 0) {
+            par->w->ent[t->p24->b14].f0 = 4;
+        } else {
+            par->w->ent[t->p24->b14].f0 = 1;
+            par->w->ent[t->p24->b14].h4 = save->x31ea;
+            par->w->ent[t->p24->b14].h6 = save->x31e8;
+            par->w->ent[t->p24->b14].w8 = save->x31ec;
+            par->w->ent[t->p24->b14].hc = save->b1b;
+            par->w->ent[t->p24->b14].be = save->b338;
+            par->w->ent[t->p24->b14].bf = save->b339;
+            par->w->ent[t->p24->b14].b10 = save->b33a;
+            par->w->ent[t->p24->b14].b11 = save->b33b;
+            memcpy(&par->w->ent[t->p24->b14].stamp, save->stamp, 8);
+        }
+        fn_801E17E0(t->buf);
+        t->buf = NULL;
+        t->state = 1;
+        goto next;
+    case 4:
+        CardRelease(t->p24->w10);
+        par->w->w14 = t->p24->w0c;
+        par->w->w250 = 1;
+        lbl_803475D0 = 0;
+    case 0xff:
+        if (t->buf != NULL) {
+            fn_801E17E0(t->buf);
+            t->buf = NULL;
+        }
+        t->flags |= 0x40;
+        return;
+    }
+    par->w->f1c = (f32)t->p24->h16 / (f32)t->p24->h18;
+}
+

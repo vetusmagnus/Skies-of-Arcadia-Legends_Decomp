@@ -511,7 +511,6 @@ void fn_801F7B04(s32 a);
 extern char lbl_802B23B8[];
 void GXInvalidateTexAll(void);
 void fn_801CC434(const void* p, s32 zero, void* out);
-void strcat(void *a, void *b);
 s32 fn_80109E7C(void *a, u16 b);
 typedef struct K06Obj_8010085C K06Obj_8010085C;
 typedef struct K06Sub_8010085C {
@@ -3356,14 +3355,14 @@ void fn_801002D0(char *name) {
 }
 
 s32 fn_80100424(void *p) {
-    u8 buf1[0x20];
+    char buf1[0x20];
     char buf2[0x40];
 
     GXInvalidateTexAll();
     strcpy(buf2, (char *)lbl_8034746C);
     fn_801CC434(p, 0, buf1);
     strcat(buf2, buf1);
-    if (fn_8025EF88((char *)buf1, lbl_802B23B8) == 0) {
+    if (fn_8025EF88(buf1, lbl_802B23B8) == 0) {
         return 0;
     }
     if (fn_80109404(buf1) != 0) {
