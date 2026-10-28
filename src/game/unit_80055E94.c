@@ -238,32 +238,73 @@ extern u32 fn_80035C38(void *);
 extern s32 fn_8003DBAC(s32, char *);
 int fn_8025EF88(char* a, const char* b);
 void fn_80015554(void);
+typedef struct { f32 x, y, z; } V3;
+/* Model table entry of a battle character record. */
+typedef struct Rec18 {
+    u32 flags;          /* 0x00 */
+    u8 pad4[4];
+    u32 flags8;         /* 0x08 */
+    u8 padc[0x18 - 0xC];
+} Rec18;
+/* Battle character record (character task work +0x4C). */
 typedef struct U5C188 {
-    u8 id;
+    u8 id;              /* 0x000 */
     u8 pad1[5];
-    s16 kind;
+    s16 kind;           /* 0x006 */
     u8 pad_8[0xa];
-    s16 state;
+    s16 state;          /* 0x012 */
     u8 pad_14[0x3c];
-    u32 f50;
-    u8 pad_54[0x90];
-    s16 xe4;
-    u8 pad_e6[0x6];
-    u32 xec;
-    u32 ff0;
+    u32 f50;            /* 0x050 */
+    u8 pad_54[0x5c - 0x54];
+    void *p5c;          /* 0x05C */
+    void *p60;          /* 0x060 */
+    u8 pad64[4];
+    f32 f68;            /* 0x068 */
+    f32 f6c;            /* 0x06C */
+    s32 x70;            /* 0x070 */
+    u8 a74[0x10];       /* 0x074 */
+    u8 a84[0xdc - 0x84]; /* 0x084 */
+    Rec18 *tbl;         /* 0x0DC */
+    u8 pad_e0[4];
+    s16 xe4;            /* 0x0E4 */
+    u8 pad_e6[2];
+    s16 xe8;            /* 0x0E8 */
+    s16 xea;            /* 0x0EA */
+    u32 xec;            /* 0x0EC */
+    u32 ff0;            /* 0x0F0 */
     u8 pad_f4[0x40];
-    s32 x134;
-    s16 x138;
-    u8 pad_13a[0xbe];
-    s16 x1f8;
-    u8 pad_1fa[0xa];
-    s16 s204;
+    s32 x134;           /* 0x134 */
+    s16 x138;           /* 0x138 */
+    u8 pad_13a[0x154 - 0x13a];
+    void *p154;         /* 0x154 */
+    u8 pad158[0x164 - 0x158];
+    f32 f164;           /* 0x164 */
+    u8 pad168[0x1f4 - 0x168];
+    void *x1f4;         /* 0x1F4 */
+    s16 x1f8;           /* 0x1F8 */
+    u8 pad_1fa[2];
+    NJS_MATRIX *x1fc;   /* 0x1FC */
+    u8 pad200[4];
+    s16 s204;           /* 0x204 */
 } U5C188;
+typedef struct M5D8F8 {
+    void *model;
+} M5D8F8;
+/* Work of a battle character task. */
 typedef struct W5C188 {
-    u8 pad_0[0x10];
-    struct P_80065F1C* x10;
-    u8 pad_14[0x38];
-    U5C188 *u;
+    M5D8F8 *mdl;        /* 0x00 */
+    u8 pad4[4];
+    NJS_TEXLIST *tex;   /* 0x08 */
+    u8 padc[4];
+    struct P_80065F1C* x10; /* 0x10 */
+    u8 pad14[0x1c - 0x14];
+    V3 pos;             /* 0x1C */
+    u32 rot[3];         /* 0x28 */
+    f32 scl[3];         /* 0x34 */
+    u8 pad40[4];
+    u8 b44;             /* 0x44 */
+    u8 pad45[0x4c - 0x45];
+    U5C188 *u;          /* 0x4C */
 } W5C188;
 typedef struct T5C188 {
     u8 pad0[0x24];
@@ -291,7 +332,6 @@ typedef struct O5C188 {
 extern s16 fn_8001FDD8(W5C188 *, s16, s16);
 extern s32 fn_80014C90(u8, s32);
 extern void fn_80075F2C(T5C188 *);
-typedef struct { f32 x, y, z; } V3;
 typedef struct U5C328 {
     u8 pad0[0xf0];
     u32 ff0;
@@ -397,7 +437,7 @@ typedef struct G800624FC {
     s16 x8c;
     s16 x8e;
     s16 x90;
-    u8 pad_92[0x2];
+    s16 x92;
 } G800624FC;
 typedef struct S800624FC {
     void *p0;
@@ -448,19 +488,23 @@ extern void fn_8007D32C(void);
 extern f32 njSin(s32 a);
 extern f32 njCos(s32 a);
 extern void njTranslate(NJS_MATRIX m, f32 x, f32 y, f32 z);
+/* Light effect work (fn_8006B8A8): kind, flags, light number, position and colours. */
 typedef struct Eff {
-    u8 pad0[4];
-    u32 x4;
-    s16 x8;
-    u8 padA[6];
-    f32 x10;
-    u8 pad14[0x30 - 0x14];
-    f32 x30;
-    f32 x34;
-    f32 x38;
-    u8 pad3c[0x48 - 0x3C];
-    f32 x48;
-    f32 x4c;
+    s8 kind;            /* 0x00 */
+    u8 pad1[3];
+    u32 x4;             /* 0x04 */
+    s16 x8;             /* 0x08 light number */
+    u8 padA[2];
+    V3 pos;             /* 0x0C */
+    u8 pad18[0x30 - 0x18];
+    f32 x30;            /* 0x30 */
+    f32 x34;            /* 0x34 */
+    f32 x38;            /* 0x38 */
+    f32 x3c;            /* 0x3C */
+    f32 x40;            /* 0x40 */
+    f32 x44;            /* 0x44 */
+    f32 x48;            /* 0x48 */
+    f32 x4c;            /* 0x4C */
     u8 pad50[0x64 - 0x50];
 } Eff;
 typedef struct Wk_8006B46C {
@@ -504,36 +548,8 @@ extern s16 fn_8022DFFC(V5BF30 *);
 extern void fn_8022E18C(V5BF30 *, s32, f32 *);
 extern void fn_80012078(V5BF30 *);
 extern void fn_80012020(V5BF30 *);
-typedef struct U5D8F8 {
-    u8 pad0[0x5c];
-    void *p5c;
-    void *p60;
-    u8 pad64[4];
-    f32 f68;
-    u8 pad6c[0x74 - 0x6c];
-    u8 a74[0x10];
-    u8 a84[0x154 - 0x84];
-    void *p154;
-} U5D8F8;
-typedef struct W5D8F8 {
-    u8 pad0[8];
-    NJS_TEXLIST *tex;
-    u8 padc[0x1c - 0xc];
-    f32 px, py, pz;
-    s32 rx, ry, rz;
-    f32 sx, sy, sz;
-    u8 pad40[0x4c - 0x40];
-    U5D8F8 *u;
-} W5D8F8;
-typedef struct M5D8F8 {
-    void *model;
-} M5D8F8;
-typedef struct T5D8F8 {
-    u8 pad0[0x24];
-    W5D8F8 *work;
-} T5D8F8;
 typedef struct O5D8F8 {
-    T5D8F8 *t;
+    T5C188 *t;
     s8 kind;
     u8 mode;
     u8 pad6[2];
@@ -548,11 +564,11 @@ extern void fn_80032AD8(void *, s32, s32, s32);
 extern void njScale(NJS_MATRIX m, f32 x, f32 y, f32 z);
 extern s32 fn_8002F52C(void);
 extern void fn_8002F4BC(void *, f32, void *);
-extern void fn_80035468(void *, void *, void *, s32, f32);
-extern void fn_80035228(void *, void *, s32, f32);
-extern void fn_800353F4(void *, void *, void *, s32, f32);
-extern void fn_8003529C(void *, void *, f32, s32);
-extern void fn_80035380(void *, void *, s32, f32);
+extern void fn_80035468(void *, void *, void *, f32, u8);
+extern void fn_80035228(void *, void *, f32, u8);
+extern void fn_800353F4(void *, void *, void *, f32, u8);
+extern void fn_8003529C(void *, void *, f32, u8);
+extern void fn_80035380(void *, void *, f32, u8);
 typedef struct Q62F70 {
     u8 pad0[4];
     s32 f4;
@@ -807,18 +823,6 @@ extern void fn_80074968(void *, void *);
 extern void fn_80073D3C(void *, s32, s32, void *);
 extern void fn_80014D1C(Nd *, s32);
 extern s32 fn_8001BCC8(s32, Nd *);
-typedef struct Un_80061FCC {
-    u8 pad0[0xf0];
-    u32 ff0;
-} Un_80061FCC;
-typedef struct Wk_80061FCC {
-    u8 pad0[0x4c];
-    Un_80061FCC *unit;
-} Wk_80061FCC;
-typedef struct Nd_80061FCC {
-    u8 pad0[0x24];
-    Wk_80061FCC *wk;
-} Nd_80061FCC;
 typedef struct Tb_80061FCC {
     u8 pad0[0x10];
     s16 s10;
@@ -831,13 +835,7 @@ typedef struct S_80061FCC {
     f32 f8;
     s16 c;
 } S_80061FCC;
-typedef struct G_80061FCC {
-    u8 pad0[0x6c];
-    f32 f6c;
-    u8 pad70[0x92 - 0x70];
-    s16 s92;
-} G_80061FCC;
-extern Nd_80061FCC *fn_80021658(s32);
+extern T5C188 *fn_80021658(s8);
 typedef struct Un_8005C480 {
     u8 id;
     u8 pad1[5];
@@ -932,7 +930,13 @@ extern void fn_802872C4(s32);
 extern void fn_80287274(s32, s32);
 extern void fn_8028B870(s32);
 extern void fn_8028B820(s32, s32);
-extern void fn_8006C9E4(void *, s32, s16 *, s32 *);
+/* Node of a model tree (child at 0x2C, sibling at 0x30). */
+typedef struct MdlNode {
+    u8 pad0[0x2C];
+    struct MdlNode* child;   /* 0x2C */
+    struct MdlNode* sibling; /* 0x30 */
+} MdlNode;
+void fn_8006C9E4(MdlNode* n, u16 target, u16* count, MdlNode** out);
 typedef struct Motion {
     void* data;
     u32 nbFrame;
@@ -1179,7 +1183,7 @@ extern u32 lbl_80347364;
 void fn_80217380(s32 a);
 typedef struct P_80065F1C { u8 pad0[0x30]; s32 x30; } P_80065F1C;
 extern void fn_80008308(void *o, s32 v);
-extern void fn_80065AB0(void *o, s16 v);
+void fn_80065AB0(T5C188 *o, s16 v);
 typedef struct Src_80064C00 {
     u8 pad0[0x14];
     f32 x14;
@@ -1410,6 +1414,15 @@ typedef struct A_80056B6C {
     f32 f28;
     f32 f2c;
 } A_80056B6C;
+/* fn_8003484C's draw request: the object, two motions, the frame, alpha and scale. */
+typedef struct {
+    void* obj;          /* 0x00 */
+    Motion* a;          /* 0x04 */
+    Motion* b;          /* 0x08 */
+    f32 f;              /* 0x0C */
+    f32 alpha;          /* 0x10 */
+    f32 sx, sy, sz;     /* 0x14 */
+} Disp;
 typedef struct W_80056B6C {
     u8 pad0[0xc];
     Motion* tex;
@@ -1424,17 +1437,13 @@ typedef struct W_80056B6C {
     u8 pad52[6];
     f32 f58;
     u8 pad5c[4];
-    struct W_80056B6C* x60;
-    Motion* x64;
-    Motion* x68;
-    f32 f6c;
-    f32 f70;
-    u8 pad74[0x8c - 0x74];
+    Disp x60;
+    u8 pad80[0x8c - 0x80];
     A_80056B6C* a;
 } W_80056B6C;
 extern s32 fn_80227068(s32);
 s32 fn_8006CEEC(Ctx_8006CEEC *c, Motion **out, u32 idx, s32 slot);
-extern void fn_8003484C(void*);
+extern void fn_8003484C(Disp*);
 
 static inline s32 Btn(void)
 {
@@ -1502,10 +1511,10 @@ void fn_80056B6C(Task* o)
                     }
                 }
             }
-            w->x64 = w->tex;
-            fn_8006CEEC(w->x10->x8, &w->x68, 1, w->s16_);
-            w->x60 = w;
-            w->f6c = w->f4c;
+            w->x60.a = w->tex;
+            fn_8006CEEC(w->x10->x8, &w->x60.b, 1, w->s16_);
+            w->x60.obj = w;
+            w->x60.f = w->f4c;
             fn_8002FEB0(fn_8003484C, &w->x60, 0);
         }
         if (w->cnt >= w->a->s16_) {
@@ -1513,7 +1522,7 @@ void fn_80056B6C(Task* o)
                 lbl_8030A10C.f6c &= ~0x40000000;
                 o->state = 0xfa;
             }
-            w->f70 = w->f58;
+            w->x60.alpha = w->f58;
         }
         break;
     case 0xf9:
@@ -1722,6 +1731,154 @@ typedef struct Sub_8005BBC4 {
 } Sub_8005BBC4;
 
 
+/* Command of the fade-in effect task fn_8005B648. */
+typedef struct {
+    u8 pad0[8];
+    s32 src;            /* 0x08 */
+    u8 padc[4];
+    u32 flags;          /* 0x10 */
+    u8 pad14[4];
+    s16 s18;            /* 0x18 */
+    s16 s1a;            /* 0x1A */
+    u8 pad1c[2];
+    s16 s1e;            /* 0x1E */
+    f32 f20;            /* 0x20 */
+    f32 f24;            /* 0x24 */
+    f32 f28;            /* 0x28 */
+    f32 f2c;            /* 0x2C */
+    f32 f30;            /* 0x30 */
+    f32 f34;            /* 0x34 */
+    f32 f38;            /* 0x38 */
+} Cmd_8005B648;
+
+typedef struct W_8005B648 {
+    void* x0;
+    u8 pad4[0x28 - 4];
+    s32 ang[3];         /* 0x28 */
+    u8 pad34[0x50 - 0x34];
+    s16 cnt;            /* 0x50 */
+    u8 pad52[6];
+    f32 step;           /* 0x58 */
+    Disp d1;            /* 0x5C */
+    u8 pad7C[0x88 - 0x7C];
+    Disp d2;            /* 0x88 */
+    u8 padA8[0xB4 - 0xA8];
+    Cmd_8005B648* a;    /* 0xB4 */
+} W_8005B648;
+
+void fn_8005B648(Task* o)
+{
+    W_8005B648* w = o->work;
+    W_8005B648* s = NULL;
+
+    if (w->x0 != NULL) {
+        s = w;
+    }
+    switch (o->state) {
+    case 0:
+        if (w->a->src != 0) {
+            fn_8006D954(w->a->src);
+        } else {
+            fn_8006D954(1);
+        }
+        if (s != NULL) {
+            s->ang[0] = 182.04445f * w->a->f30;
+            s->ang[1] = 182.04445f * w->a->f34;
+            s->ang[2] = 182.04445f * w->a->f38;
+        }
+        o->state = 1;
+        if (fn_800553B4() == 0) {
+            o->state = 3;
+            return;
+        }
+    case 1:
+        if (w->cnt != w->a->s18) {
+            break;
+        }
+        if (fn_800553B4() == 0) {
+            o->state = 3;
+            return;
+        }
+        lbl_8030A10C.f6c |= 0x40000000;
+        w->d1.a = NULL;
+        w->d1.obj = s;
+        w->d1.alpha = 0.0f;
+        w->d1.sx = 1.0f;
+        w->d1.sy = 1.0f;
+        w->d1.sz = 1.0f;
+        fn_8002FEB0(fn_8003484C, &w->d1, 0);
+        w->d2.a = NULL;
+        w->d2.obj = s;
+        w->d2.alpha = w->a->f2c;
+        if (w->d2.alpha < -1.0f) {
+            w->d2.alpha = -1.0f;
+        }
+        if (w->d2.alpha > 0.0f) {
+            w->d2.alpha = 0.0f;
+        }
+        w->d2.sx = 1.0f + w->a->f20;
+        w->d2.sy = 1.0f + w->a->f24;
+        w->d2.sz = 1.0f;
+        o->state = 2;
+        if (w->a->s1e != 0) {
+            w->step = w->a->f28;
+        } else {
+            w->step = w->a->f2c;
+        }
+        break;
+    case 2:
+        if (w->cnt == w->a->s1e && w->a->s1e != 0) {
+            lbl_8030A10C.f6c &= ~0x40000000;
+        }
+        if (w->cnt >= w->a->s18) {
+            fn_8002FEB0(fn_8003484C, &w->d2, 0x80000000);
+            if (lbl_8030A10C.f6c & 0x40000000) {
+                fn_8002FEB0(fn_8003484C, &w->d1, 0);
+            }
+        }
+        if (w->cnt >= w->a->s1a + (s16)(-1.0f * (1.0f / w->step))) {
+            lbl_8030A10C.f6c &= ~0x40000000;
+            o->state = 4;
+        }
+        if (w->cnt >= w->a->s1a) {
+            w->d2.alpha += w->step;
+            if (w->d2.alpha < -1.0f) {
+                w->d2.alpha = -1.0f;
+            }
+            if (w->d2.alpha > 0.0f) {
+                w->d2.alpha = 0.0f;
+            }
+        }
+        break;
+    case 0xF9:
+        lbl_8030A10C.f6c &= ~0x40000000;
+    case 4:
+        fn_80226DC4();
+    case 3:
+        if (w->a->src != 0) {
+            fn_8006D8DC(w->a->src);
+        } else {
+            fn_8006D8DC(1);
+        }
+        if (w->a->flags & 0x8000) {
+            lbl_8030A10C.f6c |= 0x800;
+        }
+        o->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    case 5:
+        fn_80226DC4();
+        if (w->a->flags & 0x8000) {
+            lbl_8030A10C.f6c |= 0x800;
+        }
+        o->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    w->cnt++;
+    fn_80037FD8(w->a, &o->state);
+}
+
 void fn_8005BBC4(EvMotTask* t)
 {
     EvMotWork* w;
@@ -1837,6 +1994,144 @@ s32 fn_80065490(void) {
     return 1;
 }
 
+extern void fn_80065498(T5C188*, T5C188*);
+extern int fn_80018B80(f32*);
+extern void fn_80018C94(void);
+extern void fn_80018AFC(void*, void*, void*);
+extern void fn_800657A0(T5C188*, s16);
+extern void fn_80035140(void* a, u8 b);
+extern void fn_800351B4(void*, void*, f32, u8);
+extern void njMultiMatrix(NJS_MATRIX m, NJS_MATRIX src);
+
+static inline s32 TypeA(s16 t)
+{
+    switch (t) {
+    case 0x1A:
+    case 0x1B:
+    case 0x1C:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+static inline s32 TypeB(s16 t)
+{
+    switch (t) {
+    case 4:
+    case 5:
+    case 8:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+void fn_80065AB0(T5C188* o, s16 idx)
+{
+    U5C188* tob;
+    T5C188* t;
+    W5C188* d;
+    U5C188* ob;
+    W5C188* td;
+    f32 f;
+    V3 pos;
+    u32 rot[3];
+
+    d = o->work;
+    ob = d->u;
+    t = fn_80021658(lbl_80346BD8->x90);
+    tob = t->work->u;
+    td = t->work;
+
+    if (lbl_80346BD8->x8e & 3) {
+        if (tob->x1f4 != NULL) {
+            fn_80299040(tob->x1f4);
+        } else {
+            fn_80299040(d->tex);
+        }
+    } else {
+        fn_80299040(d->tex);
+    }
+    ob->xea = idx;
+    if (tob->f164 < 0.0f && !(lbl_80346BD8->f7c & 0x10000000)) {
+        ob->f164 = tob->f164;
+    } else {
+        ob->f164 = lbl_80346BD8->f6c;
+    }
+    f = ob->f164;
+    if (!(lbl_80346BD8->f7c & 0x2000000)) {
+        fn_80071CF0(&td->pos, &pos);
+    } else {
+        fn_80071CF0(&d->pos, &pos);
+    }
+    if (TypeA(ob->kind) == 1) {
+        fn_800614FC(td->rot, d->rot);
+    } else if (ob->kind != 6 && ob->kind != 0x13 && TypeB(ob->kind) != 1) {
+        fn_80065498(o, t);
+    }
+    fn_800614FC(d->rot, rot);
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    if (fn_80018B80(&ob->f164)) {
+        if (ob->x1fc != NULL) {
+            njMultiMatrix(NULL, *ob->x1fc);
+        } else {
+            njTranslate(NULL, pos.x, pos.y, pos.z);
+            njRotateXYZ(NULL, rot[0], rot[1], rot[2]);
+            njTranslate(NULL, 0.0f, lbl_80346BD8->x20, 0.0f);
+            njRotateY(NULL, 182.04445f * lbl_80346BD8->ang[1]);
+            njTranslate(NULL, lbl_80346BD8->v8[0], lbl_80346BD8->v8[1], lbl_80346BD8->v8[2]);
+            njRotateXYZ(NULL, 182.04445f * lbl_80346BD8->v[0], 182.04445f * lbl_80346BD8->v[1], 182.04445f * lbl_80346BD8->v[2]);
+            njRotateZ(NULL, 182.04445f * lbl_80346BD8->f50);
+        }
+        njScale(NULL, d->scl[0], d->scl[1], d->scl[2]);
+        if (ob->xec & 0x80000000) {
+            if (ob->p60 != NULL) {
+                if (f > -1.0f) {
+                    fn_80035468(ob->p154, ob->a74, ob->a84, ob->f68, d->b44);
+                }
+            } else if ((ob->tbl[idx].flags8 & 0x200000) || (ob->tbl[ob->xe8].flags8 & 0x200000)) {
+                if (f > -1.0f) {
+                    fn_800351B4(ob->p154, ob->a74, ob->f68, d->b44);
+                }
+            } else {
+                if (f > -1.0f) {
+                    fn_80035228(ob->p154, ob->a74, ob->f68, d->b44);
+                }
+            }
+            ob->f68 = ob->f68 + ob->f6c;
+            if (ob->f68 > 1.0f) {
+                ob->f68 = 1.0f;
+            }
+        } else if (ob->p5c != NULL) {
+            if (ob->p60 != NULL) {
+                if (f > -1.0f) {
+                    fn_800353F4(ob->p154, ob->p5c, ob->p60, ob->f68, d->b44);
+                }
+            } else {
+                if (f > -1.0f) {
+                    fn_80035380(ob->p154, ob->p5c, ob->f68, d->b44);
+                }
+                if (ob->xec & 0x2000000) {
+                    fn_80018AFC(o, ob, d);
+                }
+            }
+            fn_800657A0(o, idx);
+        } else {
+            fn_80035140(ob->p154, d->b44);
+            ob->x70 = 1;
+        }
+        fn_80018C94();
+    }
+    njPopMatrixEx();
+    if (ob->x70 != 0 && (ob->xec & 1)) {
+        ob->xec &= ~1;
+        fn_80075F2C(o);
+    }
+}
+
 void fn_800688C4(void *a, s16 idx, void *b, s8 v) {
     TkRec *p = lbl_80309700[idx];
     p->work->x44 = v;
@@ -1936,6 +2231,121 @@ void *fn_8006B6F4(s16 idx) {
         return 0;
     }
     return lbl_80309E88[idx].f0;
+}
+
+extern void fn_800341B0(V3*, u8, u8);
+extern void fn_8028708C(s32, f32, f32, f32);
+extern void fn_8028703C(s32, f32, f32, f32);
+extern void fn_80286FEC(s32, f32, f32);
+extern void fn_80287124(s32, f32, f32, f32);
+extern void fn_802871D8(f32, f32, f32);
+extern void fn_8028B63C(s32, f32, f32, f32);
+extern void fn_8028B6D4(s32, f32, f32, f32);
+extern void fn_8028B784(f32, f32, f32);
+
+#define CLAMP3(a, b, c)    \
+    if ((a) < 0.0f) {      \
+        (a) = 0.0f;        \
+    }                      \
+    if ((b) < 0.0f) {      \
+        (b) = 0.0f;        \
+    }                      \
+    if ((c) < 0.0f) {      \
+        (c) = 0.0f;        \
+    }                      \
+    if ((a) > 1.0f) {      \
+        (a) = 1.0f;        \
+    }                      \
+    if ((b) > 1.0f) {      \
+        (b) = 1.0f;        \
+    }                      \
+    if ((c) > 1.0f) {      \
+        (c) = 1.0f;        \
+    }
+
+void fn_8006B8A8(Eff* e)
+{
+    V3 v;
+    f32 px;
+    f32 py;
+    f32 pz;
+    f32 r;
+    f32 g;
+    f32 b;
+    s32 n;
+
+    switch (e->kind) {
+    case 4:
+        if (e->x4 & 0x40000000) {
+            fn_80287274(e->x8 + 1, 1);
+            fn_8028B820(e->x8 + 1, 1);
+            if (e->x8 == 0) {
+                if (e->x4 & 0x20000000) {
+                    fn_80071CF0(&e->pos, &v);
+                    v.y += 30.0f;
+                    fn_800341B0(&v, 0, 4);
+                    v.z = 0.0f;
+                    v.x = 0.0f;
+                    v.y = 30.0f;
+                    fn_800341B0(&v, 0, 4);
+                }
+                px = e->pos.x;
+                py = e->pos.y;
+                pz = e->pos.z;
+                fn_8028708C(1, px, py, pz);
+                r = e->x30;
+                b = e->x38;
+                g = e->x34;
+                CLAMP3(r, g, b)
+                fn_80287124(1, r, g, b);
+                r = e->x3c;
+                b = e->x44;
+                g = e->x40;
+                CLAMP3(r, g, b)
+                fn_802871D8(r, g, b);
+                fn_8028B63C(1, px, py, pz);
+                r = e->x30;
+                b = e->x38;
+                g = e->x34;
+                CLAMP3(r, g, b)
+                fn_8028B6D4(1, r, g, b);
+                r = e->x3c;
+                b = e->x44;
+                g = e->x40;
+                CLAMP3(r, g, b)
+                fn_8028B784(r, g, b);
+            } else {
+                if (e->x4 & 0x20000000) {
+                    fn_800341B0(&e->pos, 0, 4);
+                }
+                fn_8028703C(e->x8 + 1, e->pos.x, e->pos.y, e->pos.z);
+                r = e->x4c;
+                fn_80286FEC(e->x8 + 1, e->x48, 8.0f * r);
+                r = e->x30;
+                n = e->x8 + 1;
+                b = e->x38;
+                g = e->x34;
+                CLAMP3(r, g, b)
+                fn_80287124(n, r, g, b);
+            }
+        } else {
+            fn_80287274(e->x8 + 1, 0);
+            fn_8028B820(e->x8 + 1, 0);
+        }
+        break;
+    case 3:
+        r = e->x3c;
+        b = e->x44;
+        g = e->x40;
+        CLAMP3(r, g, b)
+        fn_802871D8(r, g, b);
+        r = e->x3c;
+        b = e->x44;
+        g = e->x40;
+        CLAMP3(r, g, b)
+        fn_8028B784(r, g, b);
+        break;
+    }
 }
 
 void fn_8006C5A4(void) {
@@ -2776,7 +3186,7 @@ void fn_8006B46C(Task* t) {
         e->x30 = 0.1f;
         e->x34 = 0.5f;
         e->x38 = 0.3f;
-        e->x10 = 60.0f;
+        e->pos.y = 60.0f;
         e->x48 = 80.0f;
         e->x4c = 300.0f;
         t->state = 1;
@@ -2860,9 +3270,9 @@ void fn_8005BF30(O5BF30 *o) {
 }
 
 void fn_8005D8F8(O5D8F8 *o) {
-    W5D8F8 *w;
-    T5D8F8 *t;
-    U5D8F8 *u;
+    W5C188 *w;
+    T5C188 *t;
+    U5C188 *u;
     u8 mode;
     M5D8F8 *m;
     f32 scale;
@@ -2873,7 +3283,7 @@ void fn_8005D8F8(O5D8F8 *o) {
         u = w->u;
         fn_80299040(w->tex);
         scale = u->f68;
-        m = *(M5D8F8 **)t->work;
+        m = t->work->mdl;
         DrawStateDefault2D(&ds);
         if (!(o->flags & 0x8000)) {
             fn_8007E678(u->p154, &ds);
@@ -2892,27 +3302,27 @@ void fn_8005D8F8(O5D8F8 *o) {
         fn_80286EE8();
         fn_8028B498();
         if (DrawStatePush(&ds) != 0) {
-            njTranslate(0, w->px, w->py, w->pz);
-            njRotateXYZ(0, w->rx, w->ry, w->rz);
-            njScale(0, w->sx, w->sy, w->sz);
+            njTranslate(0, w->pos.x, w->pos.y, w->pos.z);
+            njRotateXYZ(0, w->rot[0], w->rot[1], w->rot[2]);
+            njScale(0, w->scl[0], w->scl[1], w->scl[2]);
             if (fn_8002F52C() != 0) {
                 fn_8002F4BC(m, scale, u->p5c);
             } else {
                 switch (o->kind) {
                 case 0:
-                    fn_80035468(m, u->a74, u->a84, mode, scale);
+                    fn_80035468(m, u->a74, u->a84, scale, mode);
                     break;
                 case 1:
-                    fn_80035228(m, u->a74, mode, scale);
+                    fn_80035228(m, u->a74, scale, mode);
                     break;
                 case 2:
-                    fn_800353F4(m, u->p5c, u->p60, mode, scale);
+                    fn_800353F4(m, u->p5c, u->p60, scale, mode);
                     break;
                 case 4:
                     fn_8003529C(m, u->p5c, scale, mode);
                     break;
                 case 3:
-                    fn_80035380(m, u->p5c, mode, scale);
+                    fn_80035380(m, u->p5c, scale, mode);
                     break;
                 }
             }
@@ -3684,12 +4094,12 @@ void fn_8005F640(O *o) {
 
 void fn_80061FCC(Task *o) {
     S_80061FCC *s;
-    Un_80061FCC *u;
-    if ((*(G_80061FCC **)&lbl_80346BD8) == 0) {
+    U5C188 *u;
+    if (lbl_80346BD8 == 0) {
         o->state = 0xfa;
     } else {
         s = o->work;
-        u = fn_80021658((s8)(*(G_80061FCC **)&lbl_80346BD8)->s92)->wk->unit;
+        u = fn_80021658(lbl_80346BD8->x92)->work->u;
     }
     switch (o->state) {
     case 0:
@@ -3731,14 +4141,14 @@ void fn_80061FCC(Task *o) {
         break;
     case 3:
         if (s->tab->s10 == 0) {
-            (*(G_80061FCC **)&lbl_80346BD8)->f6c = (*(G_80061FCC **)&lbl_80346BD8)->f6c - s->f8;
-            if ((*(G_80061FCC **)&lbl_80346BD8)->f6c <= -1.0f) {
-                (*(G_80061FCC **)&lbl_80346BD8)->f6c = -1.0f;
+            lbl_80346BD8->f6c = lbl_80346BD8->f6c - s->f8;
+            if (lbl_80346BD8->f6c <= -1.0f) {
+                lbl_80346BD8->f6c = -1.0f;
             }
         } else {
-            (*(G_80061FCC **)&lbl_80346BD8)->f6c = (*(G_80061FCC **)&lbl_80346BD8)->f6c + s->f8;
-            if ((*(G_80061FCC **)&lbl_80346BD8)->f6c >= 0.0f) {
-                (*(G_80061FCC **)&lbl_80346BD8)->f6c = 0.0f;
+            lbl_80346BD8->f6c = lbl_80346BD8->f6c + s->f8;
+            if (lbl_80346BD8->f6c >= 0.0f) {
+                lbl_80346BD8->f6c = 0.0f;
             }
         }
         if (s->c >= s->tab->s14) {
@@ -4218,13 +4628,31 @@ void fn_8006B71C(void)
     fn_8028B820(0, 0);
 }
 
-s32 fn_8006C9AC(void *p, s32 x)
+/* Finds the target-th node (pre-order) of a model tree. */
+MdlNode* fn_8006C9AC(MdlNode* root, u16 target)
 {
-    s16 a = 0;
-    s32 b = 0;
+    u16 count = 0;
+    MdlNode* found = NULL;
 
-    fn_8006C9E4(p, x, &a, &b);
-    return b;
+    fn_8006C9E4(root, target, &count, &found);
+    return found;
+}
+
+inline void fn_8006C9E4(MdlNode* n, u16 target, u16* count, MdlNode** out)
+{
+    if (target == *count) {
+        if (*out == NULL) {
+            *out = n;
+        }
+        return;
+    }
+    (*count)++;
+    if (n->child != NULL) {
+        fn_8006C9E4(n->child, target, count, out);
+    }
+    if (n->sibling != NULL) {
+        fn_8006C9E4(n->sibling, target, count, out);
+    }
 }
 
 s32 fn_8006CEEC(Ctx_8006CEEC *c, Motion **out, u32 idx, s32 slot)
