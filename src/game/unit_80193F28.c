@@ -2092,7 +2092,7 @@ s32 fn_80194490(void) {
     return r;
 }
 
-void fn_80195EA4(Req *o, s8 a, s32 b, u8 c, s8 mode) {
+void fn_80195EA4(Req *o, s8 a, s32 b, s32 c, s8 mode) {
     o->a = a;
     o->b = b;
     o->d = c;
