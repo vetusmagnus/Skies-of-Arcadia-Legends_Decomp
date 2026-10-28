@@ -1941,3 +1941,34 @@ Not done, with what a trial showed:
   the compiler's 'not a member' errors.
 - unit_80005B50.c character views, `lbl_8034727C` `BtlWork`, unit_801F5334.c script commands, the unit_80055E94.c effect views: unchanged
   from the lists above.
+
+### Per-kind EvInfo (2026-10-28, branch evinfo in build/wt-evinfo, from evfold d515d02, not pushed)
+
+`EvExt.info` is a `void *`; `EvInfo` keeps the common head (`count`, `w4`, `w10`, `flags`) and each object kind has its own
+record in include/game/evobj.h: `EvInfoMap` (story event / map object: `nearDist`, `actDist`, `x2c`, `speed`, `mode`, `flag`),
+`EvInfoTrail`, `EvInfoChunk`, `EvInfoEmit` (with `EvEmitSub`), `EvInfoFade`, `EvInfoBox`, `EvInfoPath`. Each has a
+`static inline` accessor (`EvMapInfo(e)`, `TrailInfo(e)`, `ChunkInfo`, `EmitInfo`, `FadeInfo`, `BoxInfo`, `PathInfo`) that
+returns the typed pointer; a function that read `e->ext->info` once uses a typed local (`info = e->ext->info`).
+evobj.c's ten `nearDist` reads (and the `actDist`/`x2c`/`speed`/`flag` ones) go through `EvMapInfo(obj)->`: a typed local per
+function added 100 to 500 diff lines (the original reloads `ext->info` at every use), the accessor leaves every matched function
+matched; four near misses (fn_801ECA2C, fn_801ED074, fn_801ED69C, fn_801EDAC0) got 15 to 20 lines worse because
+ObjNearTarget/ObjAwayFromHome inline the accessor (a block-local typed `info` in those two inlines was worse still). A
+block-local `EvInfoMap* info = w->ext->info;` inside the branch is fine for ObjSetIdleMotion (fn_801EB01C stays at 9).
+Header additions: `EvExt.x04`, `EvObj.res` (`EvColl*`, 0x1C0), `EvColl.w8`, `EvSlot`/`EvPair`, `EvObj.x1ac` `void *`, `x1b0`
+`EvSlot *` (`EvScriptEntry.w20/w24` follow).
+
+Merged (5,254 of 7,117, main.dol SHA OK after a forced relink): fn_800D8924, fn_800D8E1C, fn_800D934C, fn_800DCF18,
+fn_800DD5B4, fn_80106EE0, fn_801073B4 (unit_800D81E8.c: `FlagTest` moved up, `FlagBit` is the raw bit test the new code
+uses, `fn_80107904` takes the `EvObj` and an `EvPair *` with an `s32` third argument, `fn_8015F218` takes `void *`,
+`fn_801C5D88` returns `void *`, `fn_80108CA4` is `void (Task *)`). Tools (local, build/wt-evinfo/build/agents): snip.py FN KIND
+[old=new..] cuts an agent file down to a snippet over the new header, uniq.py renames clashing static inlines, ins.py (keeps CRLF).
+
+Still held, with the blocker found:
+- fn_800B8028, fn_800B847C (caller fn_800B88F8 uses its own `Work_800B88F8`/`Obj_800B88F8` with `link->cnt` for `ext->info`
+  and a macro-built node chain; fold into `EvObj` and `EvInfoTrail` (needs `x48`, `x90` as `s32`, `EvObj.flags` at 0x18)),
+  fn_800BA820 and fn_800BB574 (callers use `W_800BBA70`/`Buf_800BBA70`/`W_800BBD4C` and block-scope externs), fn_800C5EE8
+  (`void *p` prototype and a `sub` view at its caller, line 4748), fn_800D7190 (the unit's `Hnd` needs the agent's `pos`,
+  `frame`, `motion` fields; offsets are in the agent file's asm, not in the header).
+- fn_80113084, fn_80117BE4 (unit_8010E164.c does not use `EvObj` at all; the agents use a nested `EvXform xf` (pos, ang, scl)
+  and `memcpy` it as a unit, which needs `EvObj.pos/ang/scl` folded into one struct across evobj.c, unit_800B2DA0.c and
+  unit_800D81E8.c).
