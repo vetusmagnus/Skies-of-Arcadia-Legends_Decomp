@@ -1661,3 +1661,59 @@ Paused after pass 3 (matching new functions comes first for now). Still open fro
 (unit_800B2DA0.c, unit_800D81E8.c, unit_8010E164.c; the 9 functions and the fields it needs are listed under Batch 13
 above; not started, and it would also unblock fn_800D42B8), the camp unit's fn_801920AC and fn_801649BC, the
 unit_80055E94 character fold above, and whether unit_801F5334.c keeps its `ScptCur`/`Scpt` unions.
+
+## Batch 14: never-tried functions of 976 bytes and up (2026-10-28)
+
+15 Sonnet 5.5 agents (y01-y15, 14 functions each in address order, 209 functions from 0x3D0 up that no earlier batch
+had touched), no retries and no merge agents. The agents wrote against the units' own types where they could, but most
+stopped after one to three of their functions: the big state machines (0x600-0x1400 bytes) ate the budget. 33 matched in
+isolation (fdiff and `floatcheck.py` re-run over every one), 38 near misses logged, about 120 functions never reached.
+**10 are in the unit files** (5,145 to 5,155 of 7,117), every function of every touched unit passes fdiff and the float
+check, `main.dol` force-relinks to the `build.sha1` SHA-1: fn_8001F3F0, fn_80026B20, fn_80052ECC, fn_8018B278,
+fn_8018C00C, fn_801D3EB4, fn_80214270 (u1_fix folded them in) and, by hand with their real prototypes, fn_8000F2A0
+(fn_8000F6F8 is now `(HNode *, u8, s32, s32, s32)`; the old `void f(void)` call was a placeholder),
+fn_8022E964 and fn_8022F6B8 (`fn_8022E8F8` takes an `s32`).
+
+Matched in isolation, not merged (23; the agents' files are in `build/agents/y*/` of the machine that ran the batch):
+
+- Field-map `EvObj` family, blocked by the one `EvInfo`: fn_800D8924, fn_800D8E1C, fn_800D934C, fn_800DCF18,
+  fn_800DD5B4. `EvInfo` is a count-prefixed word table with a different layout per task class (`count` at 0, `w10`,
+  float `actDistF`/`x2cF`/`fadeNear`/`fadeFar` at 0x28-0x44), and the header's `u32 actDist`/`speed`/`mode`/`flag`
+  disagree. Needs `EvObj.res` (0x1C0), `EvExt.x04`, `EvHit.x24`, and a `HitRes` for fn_80222224's result.
+- unit_80055E94.c effect tasks: fn_80057038, fn_800586F4, fn_80058E20, fn_80059D6C. The unit's `PartWork`/`Eff` views
+  disagree with the agents' (`fn_80061ABC` takes the work's `f30`/`f34` as floats, `fn_80040150` takes a `Task *` where
+  the agent has `s->cmd->flags`).
+- unit_800972AC.c: fn_800AB934, fn_800AC728, fn_800B0278. The unit's `Work` is an anonymous typedef and its `P` puts
+  w34/w38 where fn_800AC728 writes w3c/w40; `lbl_80303634` (wave block, `Quad *pts`) is untyped in the unit.
+- fn_800B7900 (`Node` tag clash in unit_800B2DA0.c), fn_80131A04 (`lbl_80346F48->x28[]` is untyped in unit_8012F6C4.c),
+  fn_8016DBAC (the unit passes a `u32[2]` where it takes `s32 *`; `Wrap` is declared two ways), fn_8018C8B4 (`Self_8018C8B4`
+  view of the camp panel), fn_801900F8 (a second `CampWork`), fn_801BC490 (unit_80199B9C.c: fails fdiff once merged).
+- Script commands fn_802023BC, fn_80202DEC, fn_802034B0, fn_80203FFC (unit_801F5334.c): the camera-path block needs typed
+  `f32 **` arrays in `Scpt` (`lbl_8030CEA0` indexes 0..6, three more `PathNode[8]` before `path[]`).
+
+Near misses (diff lines): fn_8005E9D4 (4, the range check's second compare is `cmpw r0,r4; blt` instead of
+`cmpw r4,r0; bgt`), fn_8001CAA8 (2, two dead `b end`), fn_8002468C (10), fn_80055F0C (9), fn_80059788 (20, string pool
+order only), fn_800544C4 (49, one `psq_lx` u8 load), fn_8011513C (8, `fadds f31,f31,f4` coalescing), fn_800C9E40 (8,
+the `bge; b; fmr` min-clamp), fn_800BF194 (51), fn_8014A1FC (67), fn_80105DD0 (32), fn_80185C00 (71), fn_8016D12C (69,
+FPR numbers), fn_8012B47C (92), fn_80085CE0 (33), fn_800EDFA8 (50, registers), fn_800ACBC8 (46), fn_80087844 (68),
+fn_801C1728 (48), fn_800F7438 (67), fn_800E0C58, fn_800D4984, fn_800D2E60, fn_800DA010, fn_800E1E9C, fn_80120C64 and
+fn_80121B24 (144 each, three rotated callee-saved registers), fn_8008EC.. none. Larger: fn_8000610C, fn_8000E968,
+fn_8014996C, fn_801654BC, fn_8017F9D8, fn_8018F434, fn_801231F8, fn_80139AA4, fn_801264C4, fn_8012705C, fn_80124CE4,
+fn_80221328, fn_8022D384, fn_80211504, fn_800794D8, fn_80079F74, fn_800AFCC0, fn_801D2A64, fn_8019A374, fn_80190C58,
+fn_800F5064, fn_800F5704.
+
+Never reached (about 120, all 0x500 bytes and up): y01 fn_8000A3FC, fn_8000AE08, fn_8000C19C, fn_8000FC14, fn_800125A8,
+fn_80012F58, fn_800136DC, fn_80018CBC, fn_80019F0C, fn_8001A4F0, fn_8001AB60; y03 fn_8005F8D8 to fn_80077428 (12);
+y04 fn_8007A890, fn_8007CAB0, fn_80080710, fn_80086308, fn_80087074, fn_80087F6C, fn_8008CDA8, fn_80091CBC,
+fn_80092878, fn_800939A4; y05 all of fn_800998F4 to fn_800AB280 (13); y06 fn_800B1108 to fn_800B8CB8 (8); y07 11;
+y09 11; y10 11; y11 fn_80133BE0, fn_801377C0, fn_80138E80, fn_8013ED9C, fn_80143928; y12 12; y13 fn_80169608,
+fn_80182DF4, fn_80186F58, fn_80188A18, fn_8018A2D8 (calls TextPrint with two arguments); y14 fn_80193138, fn_80195F9C,
+fn_8019C424, fn_801A038C, fn_801B9B48, fn_801BECA8, fn_801BFC84; y15 fn_8020C390, fn_8021C62C, fn_8021DC68. The full
+per-agent lists are `list.txt` minus the matched and near ones.
+
+Lessons: a `static inline` helper per recursion level reproduces the inlined tree walkers (fn_8000F2A0, fn_8022E964); a
+`u16` parameter instead of a `u32` copied to a `u16` local fixes callee-saved numbering; write `301 + i * 24` at each use
+instead of an induction variable; an empty `case 5: break;` gives the original's compare tree for a 0/1/2/0xFF/3/4 task
+switch; `in = (a >= lo && a < hi) ? 1 : 0; if (!in)` gives the `neg/or/srwi` range flag; a hoisted unrolled copy loop
+is the 8x-versus-2x unroll count. Agents given 14 functions of 0x500-0x1400 bytes stop after two or three: this tier needs
+about 6 functions per agent.
