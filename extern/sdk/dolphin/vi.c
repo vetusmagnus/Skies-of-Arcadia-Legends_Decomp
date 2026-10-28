@@ -84,10 +84,6 @@ static u16 taps[26] = {496, 476, 430, 372, 297, 219, 142, 70, 12, 226, 203, 192,
 // forward declaring statics
 static u32 getCurrentFieldEvenOdd();
 
-static void getEncoderType(void) {
-  // UNUSED FUNCTION
-}
-
 static int cntlzd(u64 bit) {
   u32 hi, lo;
   int value;
@@ -950,15 +946,7 @@ void VISetNextFrameBuffer(void* fb) {
   OSRestoreInterrupts(enabled);
 }
 
-void* VIGetNextFrameBuffer() {
-  // UNUSED FUNCTION
-}
-
-void* VIGetCurrentFrameBuffer(void) { return (void*)CurrBufAddr; }
-
-void VISetNextRightFrameBuffer(void* fb) {
-  // UNUSED FUNCTION
-}
+void* VIGetNextFrameBuffer(void) { return (void*)CurrBufAddr; }
 
 void VISetBlack(BOOL isBlack) {
   int interrupt;
@@ -970,10 +958,6 @@ void VISetBlack(BOOL isBlack) {
   setVerticalRegs(HorVer.adjDispPosY, HorVer.dispSizeY, tm->equ, tm->acv, tm->prbOdd, tm->prbEven,
                   tm->psbOdd, tm->psbEven, HorVer.isBlack);
   OSRestoreInterrupts(interrupt);
-}
-
-void VISet3D(void) {
-  // UNUSED FUNCTION
 }
 
 u32 VIGetRetraceCount(void) { return retraceCount; }
@@ -1048,14 +1032,4 @@ u32 VIGetTvFormat(void) {
 
   OSRestoreInterrupts(interrupt);
   return fmt;
-}
-
-u32 VIGetDTVStatus(void) {
-  u32 stat;
-  int interrupt;
-
-  interrupt = OSDisableInterrupts();
-  stat = (__VIRegs[VI_DTV_STAT] & 3);
-  OSRestoreInterrupts(interrupt);
-  return (stat & 1);
 }

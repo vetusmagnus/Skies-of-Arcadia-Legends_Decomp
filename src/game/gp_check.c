@@ -3,7 +3,7 @@
  * the graphics processor hang check: a pre-retrace callback (fn_801D1DE0) counts frames stuck at the
  * FIFO high watermark, fn_801D20D8 reports the GP state, fn_801D1ED4 reinitialises GX on a fresh FIFO
  * and fn_801D22CC waits for a draw-sync token, aborting the frame after two retraces.
- * The file name is the one fn_801D1C04 passes to fn_801DBA70.
+ * The file name is the one fn_801D1C04 passes to OSPanic.
  *
  * Built with -str reuse,readonly -inline noauto,deferred (configure.py): the functions are written
  * from the highest address down, so that the strings, the local array initialisers and the floats
@@ -22,7 +22,7 @@ extern void* lbl_803476B0;
 extern void* lbl_803476B4;
 extern GXRenderModeObj lbl_80313550;
 
-extern void fn_801DBA70(const char* file, s32 line, const char* msg, ...);
+extern void OSPanic(const char* file, int line, const char* msg, ...);
 extern void VIConfigure(const GXRenderModeObj* rm);
 extern void* VIGetNextFrameBuffer(void);
 extern void GXAbortFrame(void);
@@ -239,7 +239,7 @@ void fn_801D1C04(void) {
         break;
     default:
         lbl_803476C0 = 0;
-        fn_801DBA70("gp_check.c", 0x28b, "Invalid TV Format.");
+        OSPanic("gp_check.c", 0x28b, "Invalid TV Format.");
         break;
     }
     GXAdjustForOverscan(lbl_803476C0, &lbl_80313550, 0, 0);

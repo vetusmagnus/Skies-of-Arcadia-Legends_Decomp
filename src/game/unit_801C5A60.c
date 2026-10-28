@@ -89,7 +89,7 @@ typedef struct AkFio {
     u8 pad88[0x18];
 } AkFio;
 extern void* fn_801E1C7C(s32 size);
-extern void fn_801DBA70(const char* file, s32 line, const char* msg, ...);
+extern void OSPanic(const char* file, int line, const char* msg, ...);
 extern s32 fn_8023A4B0(s32 h);
 extern s32 fn_8023A7A4(s32 h, void* out);
 typedef struct Rect8 {
@@ -587,7 +587,7 @@ AkFio* fn_801C63EC(s32 h)
     AkFio* f = fn_801E1C7C(0xa0);
     s32 id;
     if (f == 0) {
-        fn_801DBA70("akFIO.c", 0x425, 0);
+        OSPanic("akFIO.c", 0x425, 0);
     }
     id = fn_8023A4B0(h);
     if (id == -1) {
@@ -600,7 +600,7 @@ AkFio* fn_801C63EC(s32 h)
     f->w70 = 0;
     f->buf = fn_801E1C7C(0x1000);
     if (f->buf == 0) {
-        fn_801DBA70("akFIO.c", 0x447, 0);
+        OSPanic("akFIO.c", 0x447, 0);
     }
     f->w54 = 0;
     f->b5c = 1;
@@ -942,7 +942,7 @@ s32 fn_801C6C7C(AkRd* f) {
 
     if (f->state == 2) {
         f->state = 0;
-        fn_801DBA70("akFIO.c", 0x1db, "akFioRead() : Invalid FileOpenMode");
+        OSPanic("akFIO.c", 0x1db, "akFioRead() : Invalid FileOpenMode");
         return f->state;
     }
     if (f->mode == 0) {

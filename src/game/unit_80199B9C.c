@@ -678,7 +678,7 @@ typedef struct Hdr_801A49E0 {
 } Hdr_801A49E0;
 extern char lbl_802B49C4[];
 extern char lbl_802B49D0[];
-extern void fn_801DBA70(const char* file, s32 line, const char* msg, ...);
+extern void OSPanic(const char* file, int line, const char* msg, ...);
 typedef struct Node {
     u8 pad00[0x24];
     u8* a;       /* 0x24 */
@@ -3308,7 +3308,7 @@ void* fn_801A456C(void) {
 void fn_801A49E0(Hdr_801A49E0* h) {
     u16 i;
     if (h->magic != 0x20AF30) {
-        fn_801DBA70(lbl_802B49C4, 0x161, lbl_802B49D0);
+        OSPanic(lbl_802B49C4, 0x161, lbl_802B49D0);
     }
     h->table = (Pair_801A49E0*)((u32)h->table + (u32)h);
     for (i = 0; i < h->count; i++) {
