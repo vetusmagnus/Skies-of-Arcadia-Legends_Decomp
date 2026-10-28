@@ -22,14 +22,6 @@
  * walking direction in eighth turns) and fn_801EC854 the looping sound that fades with
  * distance. fn_801EA974 draws a debug line. Several of these are not matched yet. */
 
-/* Only nbFrame is used here; see model.c for the field meanings. */
-typedef struct NJS_MOTION {
-    void** mdata;
-    u32 nbFrame;
-    u16 type;
-    u16 inp_fn;
-} NJS_MOTION;
-
 typedef struct {
     NJS_POINT3 a; /* 0x00 */
     NJS_POINT3 b; /* 0x0C */

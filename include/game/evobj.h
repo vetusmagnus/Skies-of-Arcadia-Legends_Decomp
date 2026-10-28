@@ -7,8 +7,6 @@
 /* The game's field-map model object (see model.c and evobj.c): the player (lbl_80347450), the work of
  * the story-event, map-object and sparkle tasks and of the field camera tasks. Only the fields the
  * decompiled code uses are named. */
-struct NJS_MOTION;
-
 typedef struct {
     void* model;          /* 0x00 */
     u32 pad4;
@@ -27,8 +25,33 @@ typedef struct {
     void* items[1]; /* count entries */
 } ItemList;
 
+/* One entry of a map object's script (EvObj.script). */
 typedef struct {
-    u8 pad0[0x14];
+    s16 h0;
+    s16 h2;
+    f32 f4;
+    NJS_TEXLIST* w8;
+    void* wc;
+    NJS_MOTION* motion;
+    void* w14;
+    f32 f18;
+    f32 f1c;
+    s32 w20;
+    s32 w24;
+    u8 pad28[4];
+} EvScriptEntry;
+
+typedef struct {
+    s16 h0;
+    s16 h2;
+    u8 pad4[0x14];
+    EvScriptEntry entries[1];
+} EvScript;
+
+typedef struct {
+    s32 count;     /* 0x00 */
+    s32 w4;        /* 0x04 */
+    u8 pad8[0x14 - 8];
     u32 flags;     /* 0x14 */
     u8 pad18[0x24 - 0x18];
     u32 nearDist;  /* 0x24 */
@@ -64,7 +87,9 @@ typedef struct {
 } EvMode;
 
 typedef struct {
-    u8 pad0[0x28];
+    u8 pad0[0x24];
+    u16 h24;      /* 0x24 */
+    u8 pad26[2];
     u16 x28;      /* 0x28 */
     u16 id;       /* 0x2A */
     s16 x2c;      /* 0x2C */
@@ -72,8 +97,14 @@ typedef struct {
 } EvHit;
 
 /* The object's collision record (0x1BC), refreshed by fn_80222838. */
-typedef struct {
-    u8 pad0[0x18];
+typedef struct EvColl {
+    s32 (*cb)(struct EvColl *, struct EvColl *); /* 0x00 */
+    struct EvColl *p4;       /* 0x04 */
+    u8 pad8[0x10 - 8];
+    u16 mask10;              /* 0x10 */
+    u16 id12;                /* 0x12 */
+    s16 h14;                 /* 0x14 */
+    u16 h16;                 /* 0x16 */
     f32* pos;                /* 0x18 */
     u8 pad1c[4];
     u32* ang;                /* 0x20 */
@@ -99,7 +130,7 @@ typedef struct {
     NJS_POINT3 pivotPos;     /* 0xB4 */
     u8 padC0[0xE4 - 0xC0];
     void* model;             /* 0xE4 */
-    struct NJS_MOTION* motion; /* 0xE8 */
+    NJS_MOTION* motion;      /* 0xE8 */
     void* shape;             /* 0xEC */
     u8 padF0[0x100 - 0xF0];
     NJS_TEXLIST* texlist;    /* 0x100 */
@@ -111,7 +142,7 @@ typedef struct {
     u8 b16a;                 /* 0x16A */
     u8 b16b;                 /* 0x16B */
     s16 pivot;               /* 0x16C */
-    u8 pad16E[2];
+    s16 x16e;                /* 0x16E */
     u16 motionId;            /* 0x170 */
     u16 x172;                /* 0x172 */
     u8 pad174[2];
@@ -126,10 +157,14 @@ typedef struct {
     f32 speed;               /* 0x190 */
     u8 pad194[4];
     s32 x198;                /* 0x198 */
-    u8 pad19C[0x1B8 - 0x19C];
+    u8 pad19C[0x1AC - 0x19C];
+    s32 x1ac;                /* 0x1AC */
+    s32 x1b0;                /* 0x1B0 */
+    void* x1b4;              /* 0x1B4 */
     EvHit* hit;              /* 0x1B8 */
     EvColl* coll;            /* 0x1BC */
-    u8 pad1C0[0x1C8 - 0x1C0];
+    u8 pad1C0[4];
+    void* x1c4;              /* 0x1C4 */
     EvExt* ext;              /* 0x1C8 */
     u8 pad1CC[0x1D8 - 0x1CC];
     EvSub* sub;              /* 0x1D8 */
@@ -162,9 +197,11 @@ typedef struct {
     u8 pad234[0x23C - 0x234];
     s32 x23c;                /* 0x23C sound handle */
     s32 x240;                /* 0x240 sound handle */
-    u8 pad244[0x24C - 0x244];
+    u8 pad244[0x248 - 0x244];
+    void* x248;              /* 0x248 */
     NJS_POINT3 x24c;         /* 0x24C */
-    u8 pad258[0x260 - 0x258];
+    u8 pad258[4];
+    EvScript* script;        /* 0x25C */
     EvMode* mapMode;         /* 0x260 */
 } EvObj;
 

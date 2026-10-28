@@ -7,14 +7,6 @@
  * of a chunk object tree (fn_801E8360, fn_801E81AC, fn_801E84C0) and shifting chunk UVs per
  * object tree (fn_801E85BC .. fn_801E89D0). */
 
-/* Ninja NJS_MOTION: type is the channel mask, inp_fn the layout (low 4 bits) and flags. */
-typedef struct NJS_MOTION {
-    void** mdata;
-    u32 nbFrame;
-    u16 type;
-    u16 inp_fn;
-} NJS_MOTION;
-
 typedef struct { s32 frame; f32 v[3]; } KeyVec;
 typedef struct { s32 frame; s32 val; } KeyInt;
 

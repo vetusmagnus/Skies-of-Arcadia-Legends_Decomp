@@ -15,13 +15,6 @@ typedef struct NJS_OBJECT {
 
 /* type: which channels the motion has (1 pos, 2 ang, 4 scl).
  * inp_fn: low nibble = channel count per node, bits 6+ = interpolation kind. */
-typedef struct NJS_MOTION {
-    void** mdata;
-    u32 nbFrame;
-    u16 type;
-    u16 inp_fn;
-} NJS_MOTION;
-
 /* Motion key: frame number plus three floats or three angles. */
 typedef struct {
     u32 keyframe;

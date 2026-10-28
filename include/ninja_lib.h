@@ -43,13 +43,7 @@ typedef struct NjObj {
 
 typedef s32 (*NjModelCb)(NjModel*);
 
-/* Motion data and a two-motion blend (Ninja's NJS_MOTION / NJS_MOTION_LINK). */
-typedef struct {
-    void* mdata;
-    u32 nbFrame;
-    u16 type;
-    u16 inp_fn;
-} NJS_MOTION;
+/* A two-motion blend (Ninja's NJS_MOTION_LINK; NJS_MOTION is in ninja.h). */
 
 typedef struct {
     NJS_MOTION* motion[2];

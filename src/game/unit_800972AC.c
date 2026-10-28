@@ -827,10 +827,6 @@ typedef struct {
     f32 fb0;     /* 0xB0 */
 } Ent;
 extern Cfg* lbl_80346C7C;
-typedef struct NJS_MOTION {
-    u8 pad0[4];
-    u32 nbFrame;
-} NJS_MOTION;
 typedef struct {
     s32 size;
     u8 pad4[0x14];

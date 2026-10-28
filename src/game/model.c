@@ -5,14 +5,6 @@
 /* Game model objects: draw state setup, transform, motion playback and draw
  * (fn_801E4C2C .. fn_801E7600). */
 
-/* Only nbFrame is used here; see motion.c for the field meanings. */
-typedef struct NJS_MOTION {
-    void** mdata;
-    u32 nbFrame;
-    u16 type;
-    u16 inp_fn;
-} NJS_MOTION;
-
 typedef struct {
     f32 x, y;
 } NJS_POINT2;
