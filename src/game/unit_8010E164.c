@@ -3173,11 +3173,11 @@ void fn_80129BD4(void) {
 }
 
 s32 fn_80129CA8(Fn80129CA8Inner *o) {
-    u8 fi[0x38];
+    char fi[0x38];
     char *base;
 
     base = (char *)lbl_802B3388;
-    strcpy((char *)fi, (char *)o->mid + 0x24);
+    strcpy(fi, (char *)o->mid + 0x24);
     fi[8] = 0;
     if (fn_8025EF88(fi, base + 0x7c) == 0) {
         return 0;

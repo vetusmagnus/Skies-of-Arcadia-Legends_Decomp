@@ -2910,8 +2910,8 @@ void fn_8006EB88(char *a, char *b, Out6EB88 *out) {
     s16 i;
     if (a[0] != '/') {
         strcpy(buf, "/");
-        strcat((void *)(buf), (void *)(a));
-        strcat((void *)(buf), (void *)(b));
+        strcat(buf, a);
+        strcat(buf, b);
     } else {
         sprintf(buf, "%s%s", a, b);
     }

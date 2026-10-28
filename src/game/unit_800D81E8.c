@@ -500,7 +500,7 @@ extern s32 lbl_80346E30;
 extern K06Rec *lbl_80346E34;
 void *memcpy(void *dst, const void *src, u32 n);
 extern char lbl_802B2348[];
-extern u8 lbl_80305CF0[];
+extern char lbl_80305CF0[];
 extern s32 lbl_80311AD4[];
 extern s32 lbl_80347464;
 void fn_800FF908(void);
@@ -898,7 +898,7 @@ extern s32 lbl_8030A764[6];
 extern s32 lbl_80347470;
 extern s32 lbl_803475D4;
 extern f32 lbl_80347488;
-extern u8 lbl_80305CF0[0x20];
+extern char lbl_80305CF0[0x20];
 extern void fn_801DBE1C(const char* fmt, ...);
 extern void fn_800FF908(void);
 extern void fn_801F7B04(s32 a);
@@ -3181,7 +3181,7 @@ void fn_801002D0(char *name) {
     if (name == 0) {
         fn_801DBE1C(lbl_802B2348, name);
     }
-    strcpy((char *)lbl_80305CF0, name);
+    strcpy(lbl_80305CF0, name);
     fn_800FF908();
     if (lbl_80347464 == 1 && lbl_80311AC0.w4 == 0x63) {
         idx = 0;
@@ -3194,10 +3194,10 @@ void fn_801002D0(char *name) {
 
 s32 fn_80100424(void *p) {
     u8 buf1[0x20];
-    u8 buf2[0x40];
+    char buf2[0x40];
 
     GXInvalidateTexAll();
-    strcpy((char *)buf2, (char *)lbl_8034746C);
+    strcpy(buf2, (char *)lbl_8034746C);
     fn_801CC434(p, 0, buf1);
     strcat(buf2, buf1);
     if (fn_8025EF88((char *)buf1, lbl_802B23B8) == 0) {
@@ -4240,7 +4240,7 @@ void fn_800FFA18(void)
     if ("me002z.sct" == 0) {
         fn_801DBE1C("Warp Name Is Illegal!! %s", "me002z.sct");
     }
-    strcpy((char *)lbl_80305CF0, "me002z.sct");
+    strcpy(lbl_80305CF0, "me002z.sct");
     fn_800FF908();
     if (lbl_80347464 == 1 && lbl_80311AC0.w4 == 99) {
         v = 0;
@@ -4262,7 +4262,7 @@ void fn_80100178(u8 *p) {
     if (p == 0) {
         fn_801DBE1C(lbl_802B2348, p);
     }
-    strcpy((char *)lbl_80305CF0, (char *)p);
+    strcpy(lbl_80305CF0, (char *)p);
     fn_800FF908();
     if (lbl_80347464 == 1 && lbl_80311AC0.w4 == 0x63) {
         idx = 0;
@@ -7508,7 +7508,7 @@ void fn_80100270(void *arg) {
     if (arg == 0) {
         fn_801DBE1C(lbl_802B2348, arg);
     }
-    strcpy((char *)lbl_80305CF0, arg);
+    strcpy(lbl_80305CF0, arg);
     lbl_80311AD4[6] = 15;
 }
 
@@ -7679,7 +7679,7 @@ void *fn_80109F90(char *name, u16 id) {
     if (fn_801CC62C(name) == 0) {
         sprintf(path, "%stest.mld", lbl_8034746C);
     } else {
-        strcpy((char *)path, name);
+        strcpy(path, name);
     }
     p = fn_80109F90_load(path, id);
     fn_80109F90_find(name)->ptr = (u32)p;
