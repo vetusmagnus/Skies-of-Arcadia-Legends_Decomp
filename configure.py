@@ -191,10 +191,10 @@ config.reconfig_deps = []
 # It runs before anything compiles, so a hit stops the build.
 game_src = sorted(
     str(p)
-    for d in ("src/game", "include/game")
+    for d in ("src/game", "include/game", "src/ninja")
     for p in Path(d).rglob("*")
     if p.suffix in (".c", ".cpp", ".h", ".hpp", ".inc")
-) + ["include/ninja.h"]
+) + ["include/ninja.h", "include/ninja_lib.h"]
 config.custom_build_rules = [
     {
         "name": "check_game_src",
@@ -425,6 +425,17 @@ config.libs = [
             Object(NonMatching, "game/unit_8022D34C.c"),
         ],
     ),
+    # Sega's Ninja graphics library, compiled like the game (docs/ninja.md). One unit for the whole
+    # region until the real file boundaries show up.
+    {
+        "lib": "ninja",
+        "mw_version": "GC/1.3.2",
+        "cflags": cflags_game,
+        "progress_category": "ninja",
+        "objects": [
+            Object(NonMatching, "ninja/ninja.c"),
+        ],
+    },
 ]
 
 

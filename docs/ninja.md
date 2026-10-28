@@ -4,7 +4,8 @@ Sega Ninja library (GameCube)
 `0x80286EE8`–`0x802AC7E0` (~150 KB, 452 functions), the last part of `.text`, is Sega's **Ninja**
 graphics library in its GameCube form, built on GX. There's no decomp or symbol map of GC Ninja to
 match against, so functions are named here by behavior, using Ninja's public API (Dreamcast
-documentation, Sonic Adventure PC symbols). Nothing in this region builds from C yet.
+documentation, Sonic Adventure PC symbols). The region is one NonMatching unit, `src/ninja/ninja.c`
+(shared types in `include/ninja_lib.h`); see "Matching status" below.
 
 Evidence that it's Ninja
 ------------------------
@@ -101,3 +102,81 @@ Where things are
   projection matrix at `0x80346400` and the GX loads in `0x8029C8A0`–`0x8029CC2C`.
 - **Model drawing:** the two renderers at `0x80286EE8` and `0x8028B498`, and the display-list
   path at `0x802A8AE4`.
+
+Matching status
+---------------
+
+133 of 452 functions match byte for byte (`src/ninja/ninja.c`, objdiff and `tools/match/fdiff.py`
+plus `floatcheck.py` agree; main.dol still hashes OK). The unit covers the whole region
+(`0x80286EE8`-`0x802AC7DC`) because no real file boundary has turned up: the `.sdata2` pool is
+contiguous in text order, so the data gives no edge, and no edge has been checked against
+padding yet. Add a split only when evidence shows one (padding, a data pool edge, a known Ninja file
+layout).
+
+**Compiler.** The library builds with the game's flags (GC/1.3.2, `-O4,p`, `-inline noauto`).
+`-O1` makes `njSin`/`njCos`/`njTan` match but breaks about half of the other functions, so that is
+a coincidence of one conversion pattern, not the library's setting.
+
+**Source forms that matched.**
+- A null matrix argument means the current matrix: `m ? m : (lbl_80347F70 = 5, lbl_80347EB4)`
+  as a ternary. `if (!m) m = ...` gives a different branch shape (`bne` instead of `beq; b`).
+- Ninja matrices are `Float[16]` but the SDK takes `Mtx`, so the PSMTX/PSVEC routines are declared
+  in `ninja_lib.h` with flat `f32*` pointers.
+- Rotation helpers read `Angle` as `a * 9.58737801e-05f` (the pool constant is `0x38C90FD8`, not
+  the nearest decimal of 2*pi/65536: `floatcheck.py` caught the first guess).
+- Self-recursive `inline` functions unroll four levels (the node-tree walkers).
+- The 16-byte-stride vertex loops copy the strip's index list with `do { } while (--n)`.
+
+**Types.** `NjObj` (evalflags, model, pos, rot, scl, child, sibling, qw/radius) is the node the
+motion walkers and the model drawers share; `rot` is `Angle[3]` or the quaternion xyz.
+`lbl_80344DE0` / `lbl_80345350` are two light tables (8 entries of 0x60 bytes, accumulators at
++0x30C and +0x318).
+
+### Near misses (same instructions, different order or registers)
+
+Logged, not integrated as matches. Functions marked * are in the unit as NonMatching.
+- Conversion store order: `njSin*`, `njCos*`, `njTan*` (2 lines each: `stw r3` before `stw r0`
+  for the int-to-float magic). ~15 source forms tried.
+- `njInitMatrix*` (the limit is stored before the base), `fn_802928F4*`, `fn_80292A00*`,
+  `fn_80297504*` (register order).
+- **GX immediate-mode FIFO writers (about 30 functions, the biggest blocker).** The original
+  hoists several separate copies of the FIFO address (`lis rN,0xcc01` then `mr` copies, one per
+  store after the second) and reloads the shared 0.0f/1.0f constants before every store. Every form
+  tried compiles to one shared register: SDK `GXPosition*` inlines, `GXWGFifo` direct, a fixed
+  address `volatile` union, `(volatile T*)0xCC008000` macros, inline helpers with 1/3/7 arguments,
+  local pointer variables. Affected: `fn_8028A056`-`fn_8028A8C0`, `fn_80290ED4`, `fn_80291064`,
+  `fn_802911CC`, `fn_80296918`, `fn_8029DCD0`, the strip drawers `fn_8029DEDC`-`fn_802A2E18`
+  (`fn_8029EE78`, `fn_8029F2A8`, `fn_8029F528` are 4 lines off, `fn_8029F9F8`, `fn_8029FB54`,
+  `fn_8029FCB0`, `fn_802A018C` 2 lines), `fn_802A5738`, `fn_802A58DC`, `fn_802AAE5C`, `fn_802AB608`,
+  `fn_802AB8FC`, `fn_802ABB9C` (also the `rotlwi 8` colour swap).
+- Register allocation or scheduling only: `fn_80286EE8`, `fn_8028B498`, `fn_80288C68`,
+  `fn_8028F884`, `fn_8028FD98`, `fn_8028FEA4`, `fn_802904E8`, `fn_802907D0`, `fn_80290918`,
+  `fn_80291700` (Bezier), `fn_802917C8` (Catmull-Rom), `fn_80291888`, `fn_802918DC`, `fn_80291978`,
+  `fn_80291A5C`, `fn_802915C8`, `fn_802938C8`, `fn_802939C4`, `fn_80293B34`, `fn_80293B4C`,
+  `fn_80293C2C`, `fn_80293F20`, `fn_802947D4`, `fn_80296090`, `fn_802960A8`, `fn_80296EEC`,
+  `fn_80297804`, `fn_80297DC8`, `fn_8029800C`, `fn_802982F0`, `fn_802986C8`, `fn_80298700`,
+  `fn_80298BCC`, `fn_80298BF8`, `fn_80299040`, `fn_80299500`, `fn_8029D0F4`, `fn_802A0668`,
+  `fn_802A0B38`, `fn_802A0C90`, `njColorBlendingMode`, `fn_802AB340`, `fn_802AB460`, `fn_802AC160`.
+- Large walkers close in structure but not allocation: `fn_80287610`, `fn_80287D98`, `fn_80289228`,
+  `fn_80289390`, `fn_802873BC`, `fn_802A93CC`, `fn_80296424`, `fn_802AC31C`.
+- Not attempted: paired-single code (`fn_802A5B48`, `fn_802A5D20`, `fn_802A21C4`), the 2.9 KB
+  `fn_802AA2F0`, `fn_8029B248` (5.7 KB), `fn_8028BE90`, `fn_8028DD5C`, `fn_80287F00`, `fn_802A6398`,
+  `fn_8028CF20` and the other functions over 3,000 bytes.
+
+### Matched in isolation, not merged
+
+About 60 functions matched on their own but declare shared globals or types differently from the merged
+unit, so they are waiting for one type per structure: the GX/texture state at `0x803457A8` (11:
+`fn_80296C58`, `fn_8029A4EC`, `fn_8029A698`, `fn_8029AA14`, `fn_8029AB44`, `fn_8029AE38`,
+`fn_8029CBD0`, `fn_8029CF04`, `fn_8029D010`, `fn_8029D698`, `fn_8029D8B0`, `fn_8029DA24`,
+`fn_80296ED4`, `fn_80296FA0`, `fn_802979B8`, `fn_80298ED0`), the texture slot tables at
+`0x80347ECC`/`0x80347ED4` (`fn_802981B8`, `fn_80298210`, `fn_80298C78`, `fn_80297BD8`,
+`fn_80297CC0`), the light tables (`fn_802872C4`, `fn_802872D4`, `fn_8028B870`, `fn_80292D88`,
+`fn_80292FBC`, `fn_802931F0`, `fn_80293424`, `fn_80293544`), the model-callback prototypes
+(`fn_80287C14`, `fn_802890A4`, `fn_80292C74`, `fn_80292EA8`, `fn_802930DC`, `fn_80293310`,
+`fn_8028AA60`, `fn_802AB23C`), the motion state (`fn_802951D4`, `fn_8029557C`, `fn_80295738`,
+`fn_80296130`, `fn_802947CC`, `fn_802956F0`, `fn_802960FC`, `fn_802A907C`, `fn_802A98D8`,
+`fn_802AA110`) and a few single prototype clashes (`fn_80291428`, `fn_8028BA48`, `fn_802974B4`,
+`fn_80299744`, `fn_8029B248` callers, `fn_8029CB1C`, `fn_802AC710`, `fn_8029EFD0`, `fn_8029F400`,
+`fn_8029873C`, `fn_8029959C`). The two 4-level inline walkers (`fn_802A907C`, `fn_802A98D8`) carry
+a stub caller to force the out-of-line copy and need the real callers matched first.
