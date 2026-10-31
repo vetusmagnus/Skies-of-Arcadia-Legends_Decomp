@@ -18,10 +18,22 @@ extern f64 modf(f64 x, f64* ip);
 
 /* ---- Models and nodes ---- */
 
+/* 2D point (Ninja's NJS_POINT2), used by the quad-overlap tests. */
+typedef struct {
+    f32 x, y;
+} NJS_POINT2;
+
+/* Capsule (segment p0-p1 with radius r), the second argument of fn_8028DD5C and fn_802904E8. */
+typedef struct {
+    NJS_POINT3 p0;
+    NJS_POINT3 p1;
+    f32 r;
+} NjCapsule;
+
 /* Chunk model (Ninja's NJS_CNK_MODEL): vertex and polygon chunk lists, bounding sphere. */
 typedef struct {
     u32* vlist;
-    u32* plist;
+    s16* plist; /* polygon chunk stream (s16 words) */
     NJS_POINT3 center;
     f32 r;
 } NjModel;
@@ -71,9 +83,9 @@ s32 fn_802A7FA0(NjModel* m);
 s32 fn_8028AB48(NjModel* m);
 s32 fn_80288C68(NjModel* m);
 s32 fn_80287D98(u32* vlist, void* base);
-void fn_80287F00(u32* plist, s32 n, void* base);
+void fn_80287F00(s16* plist, s32 n, void* base);
 s32 fn_80289228(u32* vlist, void* base);
-void fn_80289390(u32* plist, s32 n, void* base);
+void fn_80289390(s16* plist, s32 n, void* base);
 extern void* lbl_80347EFC;
 extern s32 lbl_80347E18;
 extern s32 lbl_80347E20;
@@ -84,17 +96,20 @@ void fn_8029638C(NjObj* obj, NJS_MOTION* mot, NJS_MOTION* shape, NjModelCb cb, f
 
 /* ---- Lights ---- */
 
+extern GXColor lbl_80347E28; /* renderer-2 material colour (fn_8028A058) */
+extern GXColor lbl_80347F00; /* copy clear colour (fn_80296C00) */
+
 /* One light of a light table (0x60 bytes). */
 typedef struct {
     s32 w00;
-    u32 mask;        /* 0x04 GX light mask bit */
+    GXLightID mask;  /* 0x04 GX light mask bit (compared signed) */
     s32 type;        /* 0x08 1 = on */
     s32 kind;        /* 0x0c */
     NJS_POINT3 pos;  /* 0x10 */
     NJS_POINT3 vec;  /* 0x1c */
     NJS_POINT3 vpos; /* 0x28 pos in view space */
     NJS_POINT3 vvec; /* 0x34 */
-    u8 col[4];       /* 0x40 */
+    GXColor col;     /* 0x40 */
     f32 f44, f48, f4c, f50;
     s32 s54;
     f32 f58;
@@ -103,7 +118,7 @@ typedef struct {
 
 /* GXSetChanCtrl light mask, diffuse and attenuation functions. */
 typedef struct {
-    u32 mask;
+    s32 mask; /* compared signed (cmpwi) */
     s32 diff_fn;
     s32 attn_fn;
 } NjChanCtrl;
@@ -115,9 +130,12 @@ typedef struct {
     NjLight light[8]; /* 0x008 */
     s32 f308;
     NjChanCtrl chan[2]; /* 0x30c: GX_COLOR0, GX_ALPHA0 */
+    u8 pad_324[0x18];
+    GXColor amb; /* 0x33c ambient scale (r, g, b), set by fn_802871D8 */
 } NjLightTbl;
 extern NjLightTbl lbl_80344DE0;
 extern NjLightTbl lbl_80345350;
+extern GXLightObj lbl_80344BE0[8];
 
 /* ---- Matrix stack ---- */
 
@@ -218,6 +236,12 @@ void fn_802936E4(NJ_KEY* src, NJS_MOTION* mot, NJ_KEYDST* dst, f32 f);
 void fn_8028B880(NJ_KEY* c, NJS_POINT3* target, NJS_POINT3* up);
 void fn_802992F8(s32 fov);
 void fn_8028BA48(Angle a);
+s32 fn_8028BBCC(NJS_POINT3* amin, NJS_POINT3* amax, NJS_POINT3* bmin, NJS_POINT3* bmax);
+s32 fn_8028BC64(NJS_POINT3* qa, NJS_POINT3* qb);
+s32 fn_8028BE90(NJS_POINT3* qa, NJS_POINT3* qb);
+s32 fn_8028CF20(NJS_POINT2* a, NJS_POINT2* b);
+void fn_80290428(NJS_POINT3* pts, NJS_POINT3* min, NJS_POINT3* max);
+void fn_802904E8(NjCapsule* c, NJS_POINT3* min, NJS_POINT3* max);
 extern NJS_POINT3 lbl_802DAB18;
 extern f32 lbl_80347E70;
 void fn_802956F0(NJS_MOTION* mot, f32 frame);
@@ -263,6 +287,7 @@ typedef struct {
 typedef struct {
     u32* table; /* table[1] is an index into the lbl_80347E80 table */
     u16 count;
+    u16 key; /* 0x06 index into the shape-key tables */
 } NjCacheRec;
 typedef struct {
     NjCacheRec* rec;
@@ -278,7 +303,7 @@ typedef struct {
     s32 idx;
 } NjCacheCtx;
 typedef struct {
-    u32 w0;
+    u16** keys; /* per-node shape-key streams (u16 count, u16 type, data) */
     u16 idx; /* 0x04 index into lbl_80347E84 */
     u16 h6;
 } NjCacheIdx;
@@ -383,7 +408,7 @@ extern u32 lbl_80347EF0;
 extern f32 lbl_80347F30;
 extern f32 lbl_80347F34;
 f32 fn_80291978(f64 x);
-void fn_802974E4(f32 x);
+f32 fn_802974E4(f32 x);
 extern u32 lbl_803005A0[8];
 extern u32 lbl_80300710[8];
 extern s32 lbl_80347E50;
@@ -418,8 +443,8 @@ s32 fn_802994B8(void* dst, const void* src, u32 n, s32 unused);
 extern s32 lbl_80347EC0;
 s32 fn_80299744(s32* a, s32* b);
 void fn_802979B8(void);
-void fn_80298544(void);
-void fn_8029833C(s32 a, s32 b);
+void fn_80298544(NjTexRef* refs, s32 n);
+void fn_8029833C(NjTexMem* m, s32 n);
 void* fn_802AC710(void* dst, const void* src, u32 n);
 extern u8 lbl_80345BC0[0x800];
 extern f32 lbl_80346400[4][4];
@@ -445,15 +470,43 @@ s32 fn_802976F8();
 extern s32 lbl_80347F7C;
 extern s32 lbl_80347F78;
 extern s32 lbl_80347EE0;
-extern f32 lbl_80300760[];
-extern f32 lbl_80300794[];
+
+/* Environment-map light state of a model renderer (lbl_80300760, lbl_80300794, lbl_80346620,
+ * lbl_80346658; 0x34 bytes): a light direction and two parameter sets, then the current vertex chunk
+ * the model callbacks found. */
+typedef struct {
+    f32 dir[3]; /* 0x00 */
+    f32 f0c;    /* 0x0c */
+    f32 f10;    /* 0x10 */
+    f32 f14;    /* 0x14 */
+    f32 f18[3]; /* 0x18 */
+    f32 f24;    /* 0x24 */
+    s32 n;      /* 0x28 vertex count */
+    u32* data;  /* 0x2c vertex data */
+    void* dst;  /* 0x30 slot in the vertex buffer */
+} NjEnvState;
+extern NjEnvState lbl_80300760;
+extern NjEnvState lbl_80300794;
+extern NjEnvState lbl_80346620;
+extern NjEnvState lbl_80346658;
+extern GXLightObj lbl_803465A0;
+extern GXLightObj lbl_803465E0;
+void fn_80299FC8(s32 hasAlpha);
+void fn_8029A298(s32 hasAlpha);
+void fn_8029D8B0(NjLightTbl* lt, s16 kind, s32 n, s32 enable);
+void fn_8029DA24(s16 kind, s32 type, s32 mode);
+void fn_802A6398(s16* plist, s32 n, u32* data);
+void fn_802A7894(s16* plist, s32 n, u32* data);
+void fn_802A81B4(s16* plist, s32 n, u32* data);
 
 /* ---- NGDL display-list models ---- */
 
 extern s32 lbl_80347FB4;
 extern s32 lbl_80347FB8;
 typedef struct {
-    u8 pad0[0xC];
+    u8* base;    /* 0x00 motion data cursor (bytes) */
+    u32 stride;  /* 0x04 channel count * 4 */
+    u32 step;    /* 0x08 2 * stride */
     void** arrA;
     void** arrB;
     f32 t;
@@ -462,6 +515,28 @@ typedef struct {
     u32 flags;
 } NgCtx;
 extern NgCtx* lbl_80347FBC;
+
+/* NGDL display-list model: header, then NGGD blocks found by byte offset from the header
+ * (0xFFFFFFFF = none). */
+typedef struct {
+    void* data;
+    u32 size;
+    u32 w8;
+    u32 wC;
+} NgDl;
+typedef struct {
+    u32 magic; /* 'NGGD' */
+    u32 w4;
+    u32 w8;
+    u32 wC;
+    NgDl dl;
+} NgGd;
+typedef struct {
+    u32 magic; /* 'NGDL' */
+    u32 w4;
+    u32 off[2];
+} NgDlHdr;
+void fn_8029CA58(void);
 void fn_802A93CC(void* a, void* b, void* c, void* d, u32* src, u32** dst, f32 t);
 void fn_802A9C20(void* a, void* b, f32 t1, f32 t2, f32 t3, void* c, void* d, void* e, void* f, void* g, void* h,
                  u32* src, u32** dst);
@@ -475,7 +550,7 @@ extern s32 lbl_80347FC8;
 extern s32 lbl_80347FCC;
 s32 fn_802AB2C4(NjModel* m);
 s32 fn_802AC31C(NjModel* m);
-s32 fn_802AB340(u32* list);
+void fn_802AB340(s16* list);
 extern s32 lbl_80346A5C;
 
 #endif

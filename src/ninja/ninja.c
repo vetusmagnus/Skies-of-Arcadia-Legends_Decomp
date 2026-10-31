@@ -127,7 +127,8 @@ void fn_80287B38(NjObj* obj) {
 }
 
 s32 fn_80287C14(NjModel* m) {
-    u32* p;
+    u32* v;
+    s16* p;
     void* base;
     if ((_nj_control_3d_flag_ & 0x100) && m->r > 0.0f) {
         if (fn_80288C68(m)) {
@@ -135,9 +136,9 @@ s32 fn_80287C14(NjModel* m) {
         }
     }
     base = lbl_80347EFC;
-    p = m->vlist;
-    if (p) {
-        lbl_80347E18 = fn_80287D98(p, base);
+    v = m->vlist;
+    if (v) {
+        lbl_80347E18 = fn_80287D98(v, base);
     }
     p = m->plist;
     if (p) {
@@ -310,7 +311,7 @@ void fn_80288FC8(NjObj* obj) {
 }
 
 s32 fn_802890A4(NjModel* m) {
-    u32* p;
+    s16* p;
     void* base;
     if ((_nj_control_3d_flag_ & 0x100) && m->r > 0.0f) {
         if (fn_80288C68(m)) {
@@ -1899,8 +1900,8 @@ static inline s32 read_tex(NjTexRef* r, void* dst) {
     return 1;
 }
 
-void fn_802974E4(f32 x) {
-    fn_80291978(x);
+f32 fn_802974E4(f32 x) {
+    return fn_80291978(x);
 }
 
 void fn_80297504(int a, f32* s, f32* c) {
@@ -2035,8 +2036,8 @@ void fn_80297DB4(Rec6* p, s32 a, s32 b, s32 c, s32 d) {
     p->f4 = b;
 }
 
-s32 fn_8029800C(u8 fmt) {
-    switch (fmt) {
+s32 fn_8029800C(u32 fmt) {
+    switch ((u8)fmt) {
     case 8:
     case 9:
     case 10:
@@ -2208,8 +2209,8 @@ void fn_80299058(void) {
     fn_802979B8();
 }
 
-void fn_80299078(s32 a, s32 b, s32 c, s32 d) {
-    fn_80298544();
+void fn_80299078(NjTexRef* a, s32 b, NjTexMem* c, s32 d) {
+    fn_80298544(a, b);
     fn_8029833C(c, d);
 }
 
@@ -2304,7 +2305,7 @@ void fn_80299BD8(s32 flag) {
     GXSetTevAlphaOp(GX_TEVSTAGE4, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
 }
 
-void fn_80299FC8(void) {
+void fn_80299FC8(s32 hasAlpha) {
     GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);
     GXSetTexCoordGen2(1, 1, 5, 0x3C, 0, 0x7D);
     GXSetNumTexGens(2);
@@ -2341,7 +2342,7 @@ void fn_8029A1C8(s32 hasAlpha) {
     GXSetTevAlphaOp(0, 0, 0, 0, 1, 0);
 }
 
-void fn_8029A298(void) {
+void fn_8029A298(s32 hasAlpha) {
     GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);
     GXSetTexCoordGen2(1, 1, 5, 0x3C, 0, 0x7D);
     GXSetNumTexGens(2);
@@ -2945,7 +2946,8 @@ void fn_8029D698(u32 attr, s16* p, u8* c0, u8* c1, u8* c2) {
     set_blend(attr);
 }
 
-void fn_8029D8B0(NjLightTbl* lt, s32 unused, u8 type, s32 enable) {
+void fn_8029D8B0(NjLightTbl* lt, s16 kind, s32 n, s32 enable) {
+    u8 type = n;
     GXSetNumChans(1);
     switch (type) {
     case 0x22:
@@ -2967,7 +2969,7 @@ void fn_8029D8B0(NjLightTbl* lt, s32 unused, u8 type, s32 enable) {
     }
 }
 
-void fn_8029DA24(void* unused, u8 type, s32 mode) {
+void fn_8029DA24(s16 kind, s32 type, s32 mode) {
     s32 enable;
     s32 twoSided;
     s32 mask;
@@ -2992,7 +2994,7 @@ void fn_8029DA24(void* unused, u8 type, s32 mode) {
         GXSetNumChans(1);
         break;
     }
-    switch (type) {
+    switch ((u8)type) {
     case 0x29:
     case 0x2B:
         GXSetChanCtrl(0, enable, 0, 0, mask, 2, 2);
@@ -3025,21 +3027,21 @@ void fn_8029DA24(void* unused, u8 type, s32 mode) {
 }
 
 void fn_802A20DC(f32 a, f32 b, f32 c) {
-    lbl_80300760[6] = a;
-    lbl_80300760[7] = b;
-    lbl_80300760[8] = c;
+    lbl_80300760.f18[0] = a;
+    lbl_80300760.f18[1] = b;
+    lbl_80300760.f18[2] = c;
 }
 
 void fn_802A20F4(f32 a, f32 b) {
-    lbl_80300760[3] = -a;
-    lbl_80300760[4] = b;
+    lbl_80300760.f0c = -a;
+    lbl_80300760.f10 = b;
 }
 
 void fn_802A210C(f32 x, f32 y, f32 z) {
     f64 dx = x, dy = y, dz = z;
-    lbl_80300760[0] = x;
-    lbl_80300760[1] = y;
-    lbl_80300760[2] = z;
+    lbl_80300760.dir[0] = x;
+    lbl_80300760.dir[1] = y;
+    lbl_80300760.dir[2] = z;
     GXInitLightPos(&lbl_80346560, 1048576.0f * -(f32)dx, 1048576.0f * -(f32)dy, 1048576.0f * -(f32)dz);
     GXInitSpecularDir(&lbl_80346520, x, y, z);
 }
@@ -3049,14 +3051,88 @@ void fn_802A5EF8(s32 count, NJS_POINT3* dst, NJS_POINT3* src) {
 }
 
 void fn_802A7598(f32 a, f32 b, f32 c) {
-    lbl_80300794[6] = a;
-    lbl_80300794[7] = b;
-    lbl_80300794[8] = c;
+    lbl_80300794.f18[0] = a;
+    lbl_80300794.f18[1] = b;
+    lbl_80300794.f18[2] = c;
 }
 
 void fn_802A75B0(f32 a, f32 b) {
-    lbl_80300794[3] = -a;
-    lbl_80300794[4] = b;
+    lbl_80300794.f0c = -a;
+    lbl_80300794.f10 = b;
+}
+
+void fn_802A75C8(f32 x, f32 y, f32 z) {
+    f64 a = x, b = y, c = z;
+    lbl_80300794.dir[0] = x;
+    lbl_80300794.dir[1] = y;
+    lbl_80300794.dir[2] = z;
+    GXInitLightPos(&lbl_803465E0, 1048576.0f * -(f32)a, 1048576.0f * -(f32)b, 1048576.0f * -(f32)c);
+    GXInitSpecularDir(&lbl_803465A0, x, y, z);
+}
+
+void fn_802A7D74(u32 flags, s32 unused1, u8* amb, s32 unused2, u8* mat) {
+    GXColor a;
+    GXColor c;
+    s32 i;
+    u32 r, g, bl;
+    NjLightTbl* t;
+
+    switch (flags & 0xf) {
+    case 1:
+        c.a = mat[3];
+        c.r = mat[0];
+        c.g = mat[1];
+        c.b = mat[2];
+        GXSetChanMatColor(GX_COLOR0A0, c);
+        break;
+    case 2:
+        c.a = mat[3];
+        c.r = 0xff;
+        c.g = 0xff;
+        c.b = 0xff;
+        GXSetChanMatColor(GX_COLOR0A0, c);
+        break;
+    case 4:
+        break;
+    }
+    switch (flags & 0xf00) {
+    case 0x100:
+        a.r = amb[0];
+        a.g = amb[1];
+        a.b = amb[2];
+        a.a = amb[3];
+        break;
+    case 0x300:
+        a.r = 0;
+        a.g = 0;
+        a.b = 0;
+        a.a = 0xff;
+        break;
+    case 0x200:
+    default:
+        r = amb[0] * lbl_80344DE0.amb.r;
+        g = amb[1] * lbl_80344DE0.amb.g;
+        bl = amb[2] * lbl_80344DE0.amb.b;
+        a.r = r >> 8;
+        a.g = g >> 8;
+        a.b = bl >> 8;
+        a.a = 0xff;
+        break;
+    }
+    GXSetChanAmbColor(GX_COLOR0A0, a);
+    t = &lbl_80344DE0;
+    if (t->dirty) {
+        t->dirty = 0;
+        for (i = 0; i < 8; i++) {
+            if (t->light[i].mask) {
+                GXInitLightColor(&lbl_80344BE0[i], t->light[i].col);
+                GXInitLightPos(&lbl_80344BE0[i], t->light[i].vpos.x, t->light[i].vpos.y, t->light[i].vpos.z);
+                GXInitLightDistAttn(&lbl_80344BE0[i], t->light[i].f48, t->light[i].f50, t->light[i].s54);
+                GXInitLightSpot(&lbl_80344BE0[i], t->light[i].f58, t->light[i].s5c);
+                GXLoadLightObjImm(&lbl_80344BE0[i], t->light[i].mask);
+            }
+        }
+    }
 }
 
 s32 fn_802A8ADC(void) { return lbl_80346A50; }
