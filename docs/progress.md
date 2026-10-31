@@ -2158,3 +2158,24 @@ fn_80168908/fn_801705B8 conflicts: `fn_802172C8` and `fn_80171B64` need differen
 
 Duplicated shared types the agents flagged: the Camp family (unit_8015DC6C.c / unit_80193F28.c), Big/Party/Member (unit_8012F6C4.c /
 unit_8013D400.c), ShopTask (unit_80199B9C.c / unit_801C09A4.c), Card types, `fn_80135598` returning `Big *`, `EvObj` now 0x270 bytes.
+
+## Library pass: Ninja and the SDK/TRK leftovers (2026-10-31, branch libpass in build/wt-lib, from a9e35d4, not pushed)
+
+15 Opus agents in the first wave (10 Ninja groups, one FIFO study, 4 SDK groups), 6 in the second (at most 8 at once).
+5,471 to 5,591 of 7,117; `main.dol` SHA OK.
+
+Linked: MetroTRK support, mutex_TRK, mem_TRK (GC/1.3, `n &= 3`), serpoll, nubinit, dispatch, msg, dolphin_trk_glue
+(GC/1.3), targsupp.s and the old-revision dolphin_trk.c with `__TRK_reset` in .init; CARDStatEx.c (CARDSetStatus moves
+to the end of CARDStat.c), AmcExi2Stubs.c, odenotstub.c, __start.c (`__start.h` has no `Debug_BBA` and declares the
+rom-copy/bss-init tables), __mem.c, OSLink.c (only `__OSModuleInit`), OSMemory.c from `OSGetPhysicalMemSize`,
+dvdfatal.c (old revision), PadClamp.c, quat.c (C_QUATAdd/Multiply/Inverse before Slerp give the `.sdata2` order),
+a new tpl.c (TPLGet, TPLReleasePalette and a named, ref-counted resource cache) and Skies' own OSAlloc.c (GC/1.3,
+`-inline deferred -str reuse,readonly`; the game unit now starts at 0x80005D98; its four statics sit after the game's
+zero-initialised .sbss, so they are defined with the surrounding small data and declared `extern` in the file).
+TRK headers: `TRKFramingState.receiveState` is `u8`, `TRKResetBuffer` takes `u8`, `WriteUART1(s8)`/`WriteUARTFlush`.
+
+Left in the SDK range: msgbuf.c (4 functions: the original calls TRKAppendBuffer where 1.3.2 inlines it; only padding
+the callee stops the inlining), DebuggerDriver.c (DBWrite frame 0x78 vs 0x70, DBQueryData inline depth), GXReadXfRasMetric
+(diff 8, load order). Ninja: +34 (including the nine asm routines in `ninja_asm.c`), header types folded into
+`ninja_lib.h` (NjEnvState, light colour/ambient, NgCtx cursor, NJS_POINT2, NjCapsule); details and the remaining
+blockers in docs/ninja.md "Library pass".

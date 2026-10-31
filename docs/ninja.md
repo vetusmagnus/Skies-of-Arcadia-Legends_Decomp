@@ -106,9 +106,9 @@ Where things are
 Matching status
 ---------------
 
-211 of 452 functions match byte for byte (`src/ninja/ninja.c`, objdiff and `tools/match/fdiff.py`
+245 of 451 functions match byte for byte (`src/ninja/ninja.c`, objdiff and `tools/match/fdiff.py`
 plus `floatcheck.py` agree; main.dol still hashes OK). The unit covers the whole region
-(`0x80286EE8`-`0x802AC7DC`) because no real file boundary has turned up: the `.sdata2` pool is
+(`0x80286EE8`-`0x802AC75C`) because no real file boundary has turned up: the `.sdata2` pool is
 contiguous in text order, so the data gives no edge, and no edge has been checked against
 padding yet. Add a split only when evidence shows one (padding, a data pool edge, a known Ninja file
 layout).
@@ -152,6 +152,27 @@ a coincidence of one conversion pattern, not the library's setting.
   code) and `lbl_80346500` is a lone `NjTexBody`.
 - `NjGxState` (`lbl_803457A8`, 0x50 bytes): state words, the blend mode at +0x22, a mode at
   +0x2A and the current texlist at +0x44.
+
+
+### Library pass (2026-10-31)
+
+- `OSReport` at `0x802AC75C` is not Ninja: it is the game's strong override of the SDK's weak `OSReport`, and it
+  matches only with GC/1.2.5n, so it is its own unit (`src/ninja/osreport.c`) and `ninja.c` ends at `0x802AC75C`.
+- Nine routines are hand-written assembly in the original (paired-single colour quantizers that set GQR1,
+  `ps_madd`/`ps_sum0` vertex transforms with `dcbt`, a `dcbz` memory copy whose `bne; blr` a compiler would fold):
+  `src/ninja/ninja_asm.c`, included at the end of `ninja.c` and kept out of the plain-C check like extern/.
+- The per-use register copies behind the FIFO blocker are not specific to the FIFO: the same "first two uses share,
+  later uses get an `mr`/`fmr` copy" shape shows up for a zero constant (`fn_8029833C`, `fn_80298544` remainder
+  loops), a float constant (0.025f in `fn_8028DD5C`, `fn_8028CF20`) and a data address (`&lbl_80346620` in
+  `fn_802873BC`). About 115 more variants (every GC compiler, `-g`/`-sym`, every `-opt` switch, file-scope
+  optimizer pragmas, inline and wrapper forms) all merge the copies, so this looks like a compiler build we don't
+  have rather than a source form. `-O1` matches only njSin/njCos/njTan (checked over the whole unit: no file
+  boundary there). A ready test case for other compilers is two FIFO drawers, fn_8029681C and fn_8028A0F4.
+- Still needing a pointer cast (not merged): fn_802A9040 / fn_802A8F48 (the NgCtx cursor advances by bytes but
+  feeds pointer arrays), fn_802A7894, fn_802AC31C, fn_80287610, fn_80287F00, fn_80289390 (an `lhz` strip size read
+  from an `s16` stream), fn_802A93CC / fn_802A9C20 / fn_80293AF4 (generic key tables), fn_8029CB1C (flat matrix
+  passed as `Mtx`).
+- Agent notes per function: `build/agents/j01`-`j11/NOTES.md` on the machine that ran the pass.
 
 ### Near misses (same instructions, different order or registers)
 
