@@ -8,6 +8,10 @@ vu16 __MEMRegs[64] AT_ADDRESS(0xCC004000);
 
 extern OSErrorHandler __OSErrorTable[EXCEPTION_MAX];
 
+u32 OSGetPhysicalMemSize() {
+    return *(u32*)(OSPhysicalToCached(0x0028));
+}
+
 u32 OSGetConsoleSimulatedMemSize() {
     return *(u32*)(OSPhysicalToCached(0x00F0));
 }
@@ -174,10 +178,6 @@ static OSResetFunctionInfo ResetFunctionInfo = {
     OnReset,
     0x7F,
 };
-
-inline u32 OSGetPhysicalMemSize() {
-    return *(u32*)(OSPhysicalToCached(0x0028));
-}
 
 void __OSInitMemoryProtection() {
     u32 padding[8];

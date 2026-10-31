@@ -240,7 +240,7 @@ dolphin/os/OSLink.c:
 	.text       start:0x80235DE0 end:0x80235DF8
 
 src/dolphin/os/OSMemory.c:
-	.text       start:0x80235E04 end:0x802360F0
+	.text       start:0x80235DF8 end:0x802360F0
 	.data       start:0x802FA8E8 end:0x802FA8F8
 
 dolphin/os/OSMutex.c:
@@ -576,7 +576,9 @@ MetroTRK/targsupp.s:
 	.text       start:0x80259480 end:0x802594A0
 
 MetroTRK/dolphin_trk.c:
+	.init       start:0x80005330 end:0x80005434
 	.text       start:0x802594A0 end:0x802595E0
+	.data       start:0x802FBDE0 end:0x802FBE20
 	.bss        start:0x8031AFD0 end:0x8031AFD8
 
 MetroTRK/mpc_7xx_603e.c:
