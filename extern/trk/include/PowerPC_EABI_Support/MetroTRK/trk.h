@@ -31,7 +31,14 @@ int GetTRKConnected(void);
 
 DSError TRKGetFreeBuffer(int*, MessageBuffer**);
 void OutputData(void* data, int length);
-void TRKResetBuffer(MessageBuffer* msg, BOOL keepData);
+void TRKResetBuffer(MessageBuffer* msg, u8 keepData);
+DSError TRKReadBuffer(MessageBuffer* msg, void* data, size_t length);
+DSError TRKAppendBuffer(MessageBuffer* msg, const void* data, size_t length);
+DSError TRKReadBuffer1_ui8(MessageBuffer* buffer, u8* data);
+DSError TRKStandardACK(MessageBuffer* msg, u8 commandID, u8 replyError);
+DSError TRKDoCPUType(MessageBuffer*);
+DSError TRKDoFlushCache(MessageBuffer*);
+DSError TRKDoUnsupported(MessageBuffer*);
 
 DSError TRKReadBuffer1_ui64(MessageBuffer* buffer, u64* data);
 DSError TRKAppendBuffer1_ui64(MessageBuffer* buffer, const u64 data);
@@ -160,6 +167,10 @@ DSError TRKInitializeIntDrivenUART(u32, u32, u32, void*);
 int TRKPollUART();
 UARTError TRKReadUARTN(void*, u32);
 UARTError TRKWriteUARTN(const void* bytes, u32 length);
+UARTError TRKReadUARTPoll(s8* c);
+UARTError TRKWriteUART1(s8 c);
+UARTError TRKWriteUARTFlush(void);
+void* TRK_memset(void* dst, int val, size_t n);
 void usr_put_initialize();
 void TRKTargetSetInputPendingPtr(void*);
 void SetUseSerialIO(u8);

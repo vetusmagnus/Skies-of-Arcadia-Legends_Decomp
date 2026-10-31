@@ -55,7 +55,7 @@ void TRK_fill_mem(void* dst, int val, size_t n)
 
 		WRITE_BYTE(dst, 1);
 
-		n %= 4;
+		n &= 3;
 	}
 
 	if (n)

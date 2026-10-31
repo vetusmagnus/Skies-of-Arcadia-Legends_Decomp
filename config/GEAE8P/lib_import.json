@@ -172,6 +172,12 @@
   "MetroTRK/notify.c",
   "MetroTRK/targimpl.c",
   "MetroTRK/dolphin_trk.c",
-  "MetroTRK/main_TRK.c"
+  "MetroTRK/main_TRK.c",
+  "MetroTRK/dispatch.c",
+  "MetroTRK/nubinit.c",
+  "MetroTRK/serpoll.c",
+  "MetroTRK/support.c",
+  "MetroTRK/mutex_TRK.c",
+  "MetroTRK/mem_TRK.c"
  ]
 }

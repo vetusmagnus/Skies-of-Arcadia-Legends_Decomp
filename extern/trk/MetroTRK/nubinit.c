@@ -6,14 +6,34 @@ BOOL gTRKBigEndian;
  * @note Address: 0x800BB6FC
  * @note Size: 0x14C
  */
+static inline BOOL TRKInitializeEndian(void)
+{
+	u8 bendian[4];
+	BOOL result = FALSE;
+	gTRKBigEndian = TRUE;
+
+	bendian[0] = 0x12;
+	bendian[1] = 0x34;
+	bendian[2] = 0x56;
+	bendian[3] = 0x78;
+
+	if (*(u32*)bendian == 0x12345678) {
+		gTRKBigEndian = TRUE;
+	} else if (*(u32*)bendian == 0x78563412) {
+		gTRKBigEndian = FALSE;
+	} else {
+		result = TRUE;
+	}
+	return result;
+}
+
 DSError TRKInitializeNub(void)
 {
-	DSError ret;
+	int ret;
 	DSError uartErr;
 
 	ret = TRKInitializeEndian();
 
-	MWTRACE(1, "Initialize NUB\n");
 	if (ret == DS_NoError) {
 		usr_put_initialize();
 	}
@@ -26,20 +46,18 @@ DSError TRKInitializeNub(void)
 	if (ret == DS_NoError) {
 		ret = TRKInitializeDispatcher();
 	}
-	InitializeProgramEndTrap();
 	if (ret == DS_NoError) {
-		ret = TRKInitializeSerialHandler();
-	}
-	if (ret == DS_NoError) {
-		ret = TRKInitializeTarget();
-	}
-	if (ret == DS_NoError) {
-
 		uartErr = TRKInitializeIntDrivenUART(0x0000e100, 1, 0, &gTRKInputPendingPtr);
 		TRKTargetSetInputPendingPtr(gTRKInputPendingPtr);
 		if (uartErr != DS_NoError) {
 			ret = uartErr;
 		}
+	}
+	if (ret == DS_NoError) {
+		ret = TRKInitializeSerialHandler();
+	}
+	if (ret == DS_NoError) {
+		ret = TRKInitializeTarget();
 	}
 	return ret;
 }
@@ -60,31 +78,7 @@ DSError TRKTerminateNub(void)
  */
 void TRKNubWelcome(void)
 {
-	TRK_board_display("MetroTRK for GAMECUBE v2.0");
+	TRK_board_display("MetroTRK for GAMECUBE v0.10");
 	return;
 }
 
-/**
- * @note Address: N/A
- * @note Size: 0x70
- */
-BOOL TRKInitializeEndian(void)
-{
-	u8 bendian[4];
-	BOOL result   = FALSE;
-	gTRKBigEndian = TRUE;
-
-	bendian[0] = 0x12;
-	bendian[1] = 0x34;
-	bendian[2] = 0x56;
-	bendian[3] = 0x78;
-
-	if (*(u32*)bendian == 0x12345678) {
-		gTRKBigEndian = TRUE;
-	} else if (*(u32*)bendian == 0x78563412) {
-		gTRKBigEndian = FALSE;
-	} else {
-		result = TRUE;
-	}
-	return result;
-}
