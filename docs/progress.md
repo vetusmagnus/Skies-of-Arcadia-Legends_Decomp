@@ -2174,8 +2174,9 @@ a new tpl.c (TPLGet, TPLReleasePalette and a named, ref-counted resource cache) 
 zero-initialised .sbss, so they are defined with the surrounding small data and declared `extern` in the file).
 TRK headers: `TRKFramingState.receiveState` is `u8`, `TRKResetBuffer` takes `u8`, `WriteUART1(s8)`/`WriteUARTFlush`.
 
-Left in the SDK range: msgbuf.c (4 functions: the original calls TRKAppendBuffer where 1.3.2 inlines it; only padding
-the callee stops the inlining), DebuggerDriver.c (DBWrite frame 0x78 vs 0x70, DBQueryData inline depth), GXReadXfRasMetric
-(diff 8, load order). Ninja: +34 (including the nine asm routines in `ninja_asm.c`), header types folded into
+Follow-up: msgbuf.c links with GC/1.3 (its auto-inline limit is about half of 1.3.2's, so TRKAppendBuffer stays a call
+once it has `pos`/`src` locals) and DebuggerDriver.c (db + `-inline deferred`) links once its mailbox helpers check
+`if (!DBGEXISelect(4)) return FALSE;` (5,624 of 7,117). Left in the SDK range: only GXReadXfRasMetric (diff 8: 1.2.5n
+schedules the high counter load first; ~80 variants over two passes). Ninja: +34 (including the nine asm routines in `ninja_asm.c`), header types folded into
 `ninja_lib.h` (NjEnvState, light colour/ambient, NgCtx cursor, NJS_POINT2, NjCapsule); details and the remaining
 blockers in docs/ninja.md "Library pass".

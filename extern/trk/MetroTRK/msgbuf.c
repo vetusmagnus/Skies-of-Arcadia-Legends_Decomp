@@ -2,14 +2,6 @@
 
 MessageBuffer gTRKMsgBufs[3];
 
-/**
- * @note Address: N/A
- * @note Size: 0x8
- */
-void TRKSetBufferUsed(MessageBuffer* msg, BOOL state)
-{
-	msg->isInUse = state;
-}
 
 /**
  * @note Address: 0x800BC054
@@ -21,7 +13,7 @@ DSError TRKInitializeMessageBuffers(void)
 	for (i = 0; i < 3; i++) {
 		TRKInitializeMutex(&gTRKMsgBufs[i]);
 		TRKAcquireMutex(&gTRKMsgBufs[i]);
-		TRKSetBufferUsed(&gTRKMsgBufs[i], FALSE);
+		gTRKMsgBufs[i].isInUse = FALSE;
 		TRKReleaseMutex(&gTRKMsgBufs[i]);
 	}
 
@@ -46,7 +38,7 @@ DSError TRKGetFreeBuffer(int* msgID, MessageBuffer** outMsg)
 		TRKAcquireMutex(buf);
 		if (!buf->isInUse) {
 			TRKResetBuffer(buf, TRUE);
-			TRKSetBufferUsed(buf, TRUE);
+			buf->isInUse = TRUE;
 			error   = DS_NoError;
 			*outMsg = buf;
 			*msgID  = i;
@@ -86,7 +78,7 @@ void TRKReleaseBuffer(int idx)
 	if (idx != -1 && idx >= 0 && idx < 3) {
 		msg = &gTRKMsgBufs[idx];
 		TRKAcquireMutex(msg);
-		TRKSetBufferUsed(msg, FALSE);
+		msg->isInUse = FALSE;
 		TRKReleaseMutex(msg);
 	}
 }
@@ -95,7 +87,7 @@ void TRKReleaseBuffer(int idx)
  * @note Address: 0x800BBEBC
  * @note Size: 0x40
  */
-void TRKResetBuffer(MessageBuffer* msg, BOOL keepData)
+void TRKResetBuffer(MessageBuffer* msg, u8 keepData)
 {
 	msg->length   = 0;
 	msg->position = 0;
@@ -133,32 +125,30 @@ DSError TRKSetBufferPosition(MessageBuffer* msg, u32 pos)
  */
 DSError TRKAppendBuffer(MessageBuffer* msg, const void* data, size_t length)
 {
-	DSError error = DS_NoError; // r31
+	DSError error = DS_NoError;
 	u32 bytesLeft;
+	u32 pos;
+	const u8* src;
 
-	// Return if no bytes to append
 	if (length == 0) {
 		return DS_NoError;
 	}
 
-	bytesLeft = 0x880 - msg->position;
+	pos       = msg->position;
+	bytesLeft = 0x880 - pos;
 
-	// If there isn't enough space left in the buffer, change the number
-	// of bytes to append to the remaning number of bytes
 	if (bytesLeft < length) {
 		error  = DS_MessageBufferOverflow;
 		length = bytesLeft;
 	}
 
+	src = (const u8*)data;
 	if (length == 1) {
-		// If the length of bytes to append is 1, just copy the byte over
-		msg->data[msg->position] = ((u8*)data)[0];
+		msg->data[pos] = src[0];
 	} else {
-		// Otherwise, use memcpy
-		TRK_memcpy(msg->data + msg->position, data, length);
+		TRK_memcpy(msg->data + pos, src, length);
 	}
 
-	// Update the position and length
 	msg->position += length;
 	msg->length = msg->position;
 
@@ -195,11 +185,24 @@ DSError TRKReadBuffer(MessageBuffer* msg, void* data, size_t length)
 
 /**
  * @note Address: N/A
- * @note Size: 0xC8
  */
-void TRKAppendBuffer1_ui16(void)
+DSError TRKAppendBuffer1_ui16(MessageBuffer* buffer, const u16 data)
 {
-	// UNUSED FUNCTION
+	u8* bigEndianData;
+	u8* byteData;
+	u8 swapBuffer[sizeof(data)];
+
+	if (gTRKBigEndian) {
+		bigEndianData = (u8*)&data;
+	} else {
+		byteData      = (u8*)&data;
+		bigEndianData = swapBuffer;
+
+		bigEndianData[0] = byteData[1];
+		bigEndianData[1] = byteData[0];
+	}
+
+	return TRKAppendBuffer(buffer, (const void*)bigEndianData, sizeof(data));
 }
 
 /**
@@ -256,15 +259,6 @@ DSError TRKAppendBuffer1_ui64(MessageBuffer* buffer, const u64 data)
 }
 
 /**
- * @note Address: N/A
- * @note Size: 0x128
- */
-void TRKAppendBuffer1_ui128(void)
-{
-	// UNUSED FUNCTION
-}
-
-/**
  * @note Address: 0x800BBBF8
  * @note Size: 0x68
  */
@@ -278,15 +272,6 @@ DSError TRKAppendBuffer_ui8(MessageBuffer* buffer, const u8* data, int count)
 	}
 
 	return err;
-}
-
-/**
- * @note Address: N/A
- * @note Size: 0xEC
- */
-void TRKAppendBuffer_ui16(void)
-{
-	// UNUSED FUNCTION
 }
 
 /**
@@ -307,24 +292,6 @@ DSError TRKAppendBuffer_ui32(MessageBuffer* buffer, const u32* data, int count)
 
 /**
  * @note Address: N/A
- * @note Size: 0x124
- */
-void TRKAppendBuffer_ui64(void)
-{
-	// UNUSED FUNCTION
-}
-
-/**
- * @note Address: N/A
- * @note Size: 0x154
- */
-void TRKAppendBuffer_ui128(void)
-{
-	// UNUSED FUNCTION
-}
-
-/**
- * @note Address: N/A
  * @note Size: 0x80
  */
 DSError TRKReadBuffer1_ui8(MessageBuffer* buffer, u8* data)
@@ -334,11 +301,31 @@ DSError TRKReadBuffer1_ui8(MessageBuffer* buffer, u8* data)
 
 /**
  * @note Address: N/A
- * @note Size: 0xB8
  */
-void TRKReadBuffer1_ui16(void)
+DSError TRKReadBuffer1_ui16(MessageBuffer* buffer, u16* data)
 {
-	// UNUSED FUNCTION
+	DSError err;
+
+	u8* bigEndianData;
+	u8* byteData;
+	u8 swapBuffer[sizeof(*data)];
+
+	if (gTRKBigEndian) {
+		bigEndianData = (u8*)data;
+	} else {
+		bigEndianData = swapBuffer;
+	}
+
+	err = TRKReadBuffer(buffer, (void*)bigEndianData, sizeof(*data));
+
+	if (!gTRKBigEndian && err == DS_NoError) {
+		byteData = (u8*)data;
+
+		byteData[0] = bigEndianData[1];
+		byteData[1] = bigEndianData[0];
+	}
+
+	return err;
 }
 
 /**
@@ -411,15 +398,6 @@ DSError TRKReadBuffer1_ui64(MessageBuffer* buffer, u64* data)
 }
 
 /**
- * @note Address: N/A
- * @note Size: 0x128
- */
-void TRKReadBuffer1_ui128(MessageBuffer* buffer, u8* p2, int p3)
-{
-	// UNUSED FUNCTION
-}
-
-/**
  * @note Address: 0x800BB97C
  * @note Size: 0x98
  */
@@ -436,15 +414,6 @@ DSError TRKReadBuffer_ui8(MessageBuffer* buffer, u8* data, int count)
 }
 
 /**
- * @note Address: N/A
- * @note Size: 0xE0
- */
-void TRKReadBuffer_ui16(MessageBuffer* buffer, u8* p2, int p3)
-{
-	// UNUSED FUNCTION
-}
-
-/**
  * @note Address: 0x800BB88C
  * @note Size: 0xF0
  */
@@ -458,22 +427,4 @@ DSError TRKReadBuffer_ui32(MessageBuffer* buffer, u32* data, int count)
 	}
 
 	return err;
-}
-
-/**
- * @note Address: N/A
- * @note Size: 0x110
- */
-void TRKReadBuffer_ui64(MessageBuffer* buffer, u8* p2, int p3)
-{
-	// UNUSED FUNCTION
-}
-
-/**
- * @note Address: N/A
- * @note Size: 0x150
- */
-void TRKReadBuffer_ui128(MessageBuffer* buffer, u8* p2, int p3)
-{
-	// UNUSED FUNCTION
 }
