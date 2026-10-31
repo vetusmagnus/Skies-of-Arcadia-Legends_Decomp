@@ -434,6 +434,8 @@ config.libs = [
         "progress_category": "ninja",
         "objects": [
             Object(NonMatching, "ninja/ninja.c"),
+            # The game's strong OSReport (overrides the SDK's weak one); built with the SDK compiler.
+            Object(Matching, "ninja/osreport.c", mw_version="GC/1.2.5n"),
         ],
     },
 ]
