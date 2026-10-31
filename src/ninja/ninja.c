@@ -1,8 +1,9 @@
 /* Sega Ninja (GameCube) library: matrix stack, motion/keyframe playback, model chunk walkers and
  * GX drawing. The file name is ours; Ninja's real file boundaries aren't known (docs/ninja.md), so
- * this holds every function matched so far from the 0x80286EE8-0x802AC7E0 region in address order. */
+ * this holds every function matched so far from the 0x80286EE8-0x802AC75C region in address order. */
 
 #include "ninja_lib.h"
+#include <ctype.h>
 
 void fn_80286FEC(s32 n, f32 x, f32 y) {
     if (n == 0) return;
@@ -2044,6 +2045,35 @@ s32 fn_8029800C(u8 fmt) {
     return 0;
 }
 
+static inline void str_upper(char* s) {
+    while (*s) {
+        *s = toupper(*s);
+        s++;
+    }
+}
+
+void fn_80298034(char* dst, char* name, char* ext) {
+    char buf[8];
+    s32 len = strlen(name);
+    if (len > 4) {
+        strcpy(buf, &name[len - 4]);
+        str_upper(buf);
+    } else {
+        buf[0] = 0;
+    }
+    if (buf[0] == '.') {
+        if (strcmp(buf, ext) != 0) {
+            strcpy(dst, name);
+            strcat(dst, ext);
+        } else {
+            strcpy(dst, name);
+        }
+    } else {
+        strcpy(dst, name);
+        strcat(dst, ext);
+    }
+}
+
 void fn_80298144(NjTexRef* r) {
     NjTexMem* m = r->mem;
     if (m->refs <= 0) {
@@ -2183,6 +2213,18 @@ void fn_80299078(s32 a, s32 b, s32 c, s32 d) {
     fn_8029833C(c, d);
 }
 
+void njClipZ(f32 near, f32 far) {
+    if (near > -1.0f) near = -1.0f;
+    if (far > -1.0f) far = -1.0f;
+    lbl_80345850[1] = -near;
+    lbl_80345850[0] = -far;
+    C_MTXFrustum(lbl_80346400, lbl_80345850[1] * (lbl_80345850[5] * lbl_80345878[5]),
+                 lbl_80345850[1] * (lbl_80345850[4] * lbl_80345878[5]),
+                 lbl_80345850[1] * (lbl_80345850[3] * lbl_80345878[4]),
+                 lbl_80345850[1] * (lbl_80345850[2] * lbl_80345878[4]), lbl_80345850[1], lbl_80345850[0]);
+    lbl_80347F6C = 2;
+}
+
 s32 fn_802994B0(void) {
     return 0;
 }
@@ -2212,6 +2254,54 @@ s32 fn_80299744(s32* a, s32* b) {
 
 void* fn_80299758(s32 i) {
     return &lbl_80345BC0[i << 4];
+}
+
+void fn_80299BD8(s32 flag) {
+    if (lbl_803457A8.mode == 1) {
+        flag = 0;
+    }
+    GXSetNumTevStages(5);
+    GXSetTevOrder(GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR0A0);
+    GXSetTevOrder(GX_TEVSTAGE1, GX_TEXCOORD_NULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+    GXSetTevOrder(GX_TEVSTAGE2, GX_TEXCOORD_NULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+    GXSetTevOrder(GX_TEVSTAGE3, GX_TEXCOORD_NULL, GX_TEXMAP_NULL, GX_COLOR_NULL);
+    GXSetTevOrder(GX_TEVSTAGE4, GX_TEXCOORD_NULL, GX_TEXMAP_NULL, GX_COLOR_NULL);
+    GXSetTevColorIn(GX_TEVSTAGE0, GX_CC_ZERO, GX_CC_TEXC, GX_CC_RASC, GX_CC_ZERO);
+    GXSetTevColorOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_2, GX_TRUE, GX_TEVPREV);
+    GXSetTevColorIn(GX_TEVSTAGE1, GX_CC_RASC, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO);
+    GXSetTevColorOp(GX_TEVSTAGE1, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_2, GX_FALSE, GX_TEVREG0);
+    GXSetTevColorIn(GX_TEVSTAGE2, GX_CC_RASC, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO);
+    GXSetTevColorOp(GX_TEVSTAGE2, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_2, GX_TRUE, GX_TEVREG1);
+    GXSetTevColorIn(GX_TEVSTAGE3, GX_CC_C1, GX_CC_ZERO, GX_CC_ZERO, GX_CC_C0);
+    GXSetTevColorOp(GX_TEVSTAGE3, GX_TEV_SUB, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVREG0);
+    GXSetTevColorIn(GX_TEVSTAGE4, GX_CC_C0, GX_CC_ZERO, GX_CC_ZERO, GX_CC_CPREV);
+    GXSetTevColorOp(GX_TEVSTAGE4, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+    if (flag) {
+        GXSetTevAlphaIn(GX_TEVSTAGE0, GX_CA_ZERO, GX_CA_TEXA, GX_CA_RASA, GX_CA_ZERO);
+        GXSetTevAlphaIn(GX_TEVSTAGE1, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV);
+        GXSetTevAlphaOp(GX_TEVSTAGE1, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+        GXSetTevAlphaIn(GX_TEVSTAGE2, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV);
+        GXSetTevAlphaOp(GX_TEVSTAGE2, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+        GXSetTevAlphaIn(GX_TEVSTAGE3, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV);
+        GXSetTevAlphaOp(GX_TEVSTAGE3, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+        GXSetTevAlphaIn(GX_TEVSTAGE4, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV);
+        GXSetTevAlphaOp(GX_TEVSTAGE4, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+        GXSetZCompLoc(lbl_80347F50);
+        GXSetAlphaCompare(lbl_80346A38, lbl_80347F54, lbl_80347F58, lbl_80346A3C, lbl_80347F5C);
+    } else {
+        GXSetTevAlphaIn(GX_TEVSTAGE0, GX_CA_KONST, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO);
+        GXSetZCompLoc(lbl_80346A40);
+        GXSetAlphaCompare(lbl_80346A44, lbl_80347F5D, lbl_80347F60, lbl_80346A48, lbl_80347F64);
+    }
+    GXSetTevAlphaOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+    GXSetTevAlphaIn(GX_TEVSTAGE1, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV);
+    GXSetTevAlphaOp(GX_TEVSTAGE1, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+    GXSetTevAlphaIn(GX_TEVSTAGE2, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV);
+    GXSetTevAlphaOp(GX_TEVSTAGE2, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+    GXSetTevAlphaIn(GX_TEVSTAGE3, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV);
+    GXSetTevAlphaOp(GX_TEVSTAGE3, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+    GXSetTevAlphaIn(GX_TEVSTAGE4, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV);
+    GXSetTevAlphaOp(GX_TEVSTAGE4, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
 }
 
 void fn_80299FC8(void) {
