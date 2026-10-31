@@ -829,6 +829,78 @@ typedef Game6E14 K06B;
 typedef Game6E14 Cfg;
 extern f32 lbl_802E3EF0[3][29][2];
 extern u32 lbl_80310B3C[0x356];
+extern Sprite* fn_801D68C4(void* bank, s32 index);
+typedef struct ResStat_800E88FC {           /* 0x6E */
+    s16 h0;      /* 0x00 */
+    s16 h2;      /* 0x02 */
+    u8 pad4[4];
+    u8 b8;       /* 0x08 */
+    u8 b9[99];   /* 0x09 */
+    u8 b6c;      /* 0x6C */
+    u8 b6d;      /* 0x6D */
+} ResStat_800E88FC;
+typedef struct Ctx3594_800E88FC {
+    u32 w0;              /* 0x00 */
+    s32 state;           /* 0x04 */
+    u32 w8;              /* 0x08 */
+    s32 count;           /* 0x0C */
+    s32 w10;             /* 0x10 */
+    s32 w14;             /* 0x14 */
+    s32 total;           /* 0x18 */
+    s32 w1c;             /* 0x1C */
+    s32 w20;             /* 0x20 */
+    s32 cur;             /* 0x24 */
+    struct { s16 h; u8 pad[2]; } h28[3]; /* 0x28 */
+    s8 b34[4];           /* 0x34 */
+    s8 b38[4];           /* 0x38 */
+    u8 pad3c[4];
+    s32 timer;           /* 0x40 */
+    s32 w44;             /* 0x44 */
+    s32 w48;             /* 0x48 */
+    f32 fade;            /* 0x4C */
+    u8 pad50[0x170];
+    ResRow row[4];       /* 0x1C0 */
+    ResMem mem[4];       /* 0x2C8 */
+    u8 pad318[0x58];
+    ResSpr spr[22];      /* 0x370 */
+    ResPanel obj[22];    /* 0x580 */
+    ResStat_800E88FC stat[4];     /* 0xEC8 */
+    u8 pad1080[0x470];
+    s16 evIdx;           /* 0x14F0 */
+    s16 h14f2;           /* 0x14F2 */
+    u8 pad14f4[0x44];
+    ResEv ev[16];        /* 0x1538 */
+    u8 sub[0x14];        /* 0x15F8 */
+    s32 active;          /* 0x160C */
+} Ctx3594_800E88FC;
+extern void fn_801D4F0C(Sprite* s, s32 a, s32 b, s32 c, f32 f1, f32 f2, f32 f3, f32 f4);
+extern char lbl_802B1B34[];
+extern SkillData lbl_802C4BF0[];
+extern void fn_800EA4A8(ResSpr* spr);
+/* A map creature (the EvObj layout, with the fields this one uses). */
+typedef struct Mob {
+    u8 pad0[0x38];
+    NJS_POINT3 pos;     /* 0x38 */
+    Angle ang[3];       /* 0x44 */
+    NJS_POINT3 scl;     /* 0x50 */
+    NJS_POINT3 vel;     /* 0x5C */
+    Angle rotv[3];      /* 0x68 */
+    u8 pad74[0x104 - 0x74];
+    NJS_POINT3 home;    /* 0x104 */
+    Angle tgt[3];       /* 0x110 */
+    u8 pad11C[0x190 - 0x11c];
+    f32 speed;          /* 0x190 */
+} Mob;
+/* The message window's work (MessageWindowDraw passes it). */
+typedef struct MsgWin {
+    u8 pad0[0x10];
+    s16 x;      /* 0x10 */
+    s16 y;      /* 0x12 */
+    u8 pad14[0x1c - 0x14];
+    s16 row;    /* 0x1C cursor row */
+    u8 pad1e[0x32 - 0x1e];
+    s16 base;   /* 0x32 */
+} MsgWin;
 
 static inline s32 FlagTest(s32 n)
 {
@@ -10529,4 +10601,208 @@ void fn_800F1780(Task* t)
     case 0xFE:
         break;
     }
+}
+
+void fn_800E88FC(s16 row, s32 a, s32 b, s32 idx, f32 z) {
+    char buf[24];
+    u32 cols[6] = { 0x20, 0x21, 0x23, 0x22, 0x24, 0x25 };
+    f32 z0 = TextGetZ();
+    s16 x;
+    s16 y;
+    s16 i;
+    Sprite* s;
+    ResPanel* p;
+    s32 e;
+
+    TextPushColor();
+    TextSetColor(0xFF160800);
+    fn_800EA4A8(&lbl_80346DCC->spr[idx]);
+    p = &lbl_80346DCC->obj[idx];
+    UiObjUpdate(&p->o);
+    x = p->o.x;
+    y = p->o.y;
+    s = fn_801D68C4(&lbl_80346DCC->sub, 9);
+    s->x = x + 0x148;
+    s->y = 0x58 + row * 64 + y;
+    fn_801D4F0C(s, 0, 0, 1, z, 0.0f, 1.0f, 1.0f);
+    z += 0.05f * s->count;
+    s = fn_801D68C4(&lbl_80346DCC->sub, 0x16);
+    s->x = x + 0x148;
+    s->y = 0x58 + row * 64 + y;
+    fn_801D4F0C(s, 0, 0, 1, z, 0.0f, 1.0f, 1.0f);
+    z += 0.05f * s->count;
+    for (i = 0; i < 2; i++) {
+        e = (i != 0) ? b : a;
+        if (e >= 0) {
+            s = fn_801D68C4(&lbl_80346DCC->sub, cols[lbl_802C4BF0[e].element]);
+            s->x = x + 0x158;
+            s->y = 0x5e + (row * 64 + i * 24) + y;
+            fn_801D4F0C(s, 0, 0, 1, z, 0.0f, 1.0f, 1.0f);
+            z += 0.05f * s->count;
+            TextSetZ(z);
+            strcpy(buf, lbl_802C4BF0[e].name);
+            strcat(buf, lbl_802B1B34);
+            TextPrint(x + 0x170, 0x5e + (row * 64 + i * 24) + y, buf);
+            z += 1.25f;
+        }
+    }
+    TextSetZ(z0);
+    TextPopColor(1);
+}
+
+void fn_800E9044(s16 kind, s16 p, s32 a, s32 b, s32 c, s32 d, s32 q, f32 z) {
+    s32 vals[4];
+    s16 pos[4][2] = { { 416, 94 }, { 548, 94 }, { 416, 118 }, { 548, 118 } };
+    f32 z0;
+    ResPanel* obj;
+    Sprite* sp;
+    s16 sx;
+    s16 sy;
+    s16 pp;
+    s16 j;
+
+    vals[0] = a;
+    vals[1] = b;
+    vals[2] = c;
+    vals[3] = d;
+    z0 = TextGetZ();
+    TextPushColor();
+    TextSetColor(0xFF160800);
+    fn_800EA4A8(&lbl_80346DCC->spr[q]);
+    obj = &lbl_80346DCC->obj[q];
+    UiObjUpdate(&obj->o);
+    sx = obj->o.x;
+    sy = obj->o.y;
+    sp = fn_801D68C4(lbl_80346DCC->sub, 9);
+    pp = p << 6;
+    sp->x = sx + 0x148;
+    sp->y = 0x58 + pp + sy;
+    fn_801D4F0C(sp, 0, 0, 1, z, 0.0f, 1.0f, 1.0f);
+    z = 0.05f * sp->count + z;
+    switch (kind) {
+    case 2:
+        sp = fn_801D68C4(lbl_80346DCC->sub, 0xD);
+        break;
+    case 3:
+        sp = fn_801D68C4(lbl_80346DCC->sub, 0xE);
+        break;
+    case 4:
+        sp = fn_801D68C4(lbl_80346DCC->sub, 0xC);
+        break;
+    default:
+        sp = fn_801D68C4(lbl_80346DCC->sub, 0xC);
+        break;
+    }
+    sp->x = sx + 0x148;
+    sp->y = 0x58 + pp + sy;
+    fn_801D4F0C(sp, 0, 0, 1, z, 0.0f, 1.0f, 1.0f);
+    z = 0.05f * sp->count + z;
+    TextSetZ(z);
+    for (j = 0; j < 4; j++) {
+        if (vals[j] >= 0) {
+            pos[j][0] += sx;
+            pos[j][1] += pp + sy;
+            if (vals[j] < 1000) {
+                TextPrint(pos[j][0], pos[j][1], "+");
+            }
+            TextPrintNumber(pos[j][0] + 2, pos[j][1], vals[j], 0xC004);
+        }
+    }
+    TextSetZ(z += 10.0f);
+    TextSetColor(0xFF16FF00);
+    for (j = 0; j < 4; j++) {
+        if (vals[j] > 0) {
+            pos[j][0] -= 1;
+            pos[j][1] -= 1;
+            if (vals[j] < 1000) {
+                TextPrint(pos[j][0], pos[j][1], "+");
+            }
+            TextPrintNumber(pos[j][0] + 2, pos[j][1], vals[j], 0xC004);
+        }
+    }
+    TextSetZ(z0);
+    TextPopColor(1);
+}
+
+/* The turn speed toward tgt[1]: -step, 0 or step (ObjTurnVel in evobj.c with a given step). */
+static inline s32 TurnStep(Mob* e, s32 step)
+{
+    s32 v = 0;
+    if (e != NULL) {
+        s16 d = e->tgt[1] - e->ang[1];
+        if (d < 0) {
+            v = -step;
+        } else if (d > 0) {
+            v = step;
+        }
+    }
+    return v;
+}
+
+/* Stops e and starts turning it to yaw a at step per frame (ObjTurnSet in evobj.c); the yaw is
+   wrapped to 16 bits first. Hands back the speed in out and halves it. */
+void fn_800F1DB4(Mob* e, s16 a, s32 step, f32* out)
+{
+    if (e == NULL) {
+        return;
+    }
+    e->rotv[0] = 0;
+    e->rotv[1] = 0;
+    e->rotv[2] = 0;
+    e->vel.x = 0.0f;
+    e->vel.y = 0.0f;
+    e->vel.z = 0.0f;
+    {
+        s16 y = e->ang[1];
+        e->ang[1] = y;
+    }
+    e->tgt[0] = e->ang[0];
+    e->tgt[1] = e->ang[1];
+    e->tgt[2] = e->ang[2];
+    e->tgt[1] = a;
+    e->rotv[1] = TurnStep(e, step);
+    if (out != NULL) {
+        *out = e->speed;
+    }
+    e->speed *= 0.5f;
+}
+
+/* The highlight band behind the selected row. */
+void fn_8010C404(MsgWin *w, f32 alpha) {
+    Quad v[4];
+    u32 col;
+    u32 a, c, t0, t1, t2, t3;
+    f32 z;
+
+    njColorBlendingMode(0, 8);
+    njColorBlendingMode(1, 8);
+    if (alpha == 0.0f) {
+        col = 0;
+    } else {
+        a = 255.0f * alpha;
+        c = 64.0f * alpha;
+        t0 = a > 255 ? 255 : a;
+        t1 = c > 255 ? 255 : c;
+        t2 = c > 255 ? 255 : c;
+        t3 = c > 255 ? 255 : c;
+        col = (t0 << 24) | (t1 << 16) | (t2 << 8) | t3;
+    }
+    z = fn_801DBD9C(-1.021f);
+    v[0].x = w->x;
+    v[0].y = w->y + w->base + w->row * 0x18;
+    v[0].z = z;
+    v[0].colour = col;
+    v[1].x = w->x;
+    v[1].y = 24.0f + v[0].y;
+    v[1].z = z;
+    v[1].colour = col;
+    v[2].x = w->x + 0x240;
+    v[2].y = v[0].y;
+    v[2].z = z;
+    v[2].colour = col;
+    v[3].x = v[2].x;
+    v[3].y = v[1].y;
+    v[3].z = z;
+    v[3].colour = col;
+    fn_80290ED4(v, 4, 1);
 }

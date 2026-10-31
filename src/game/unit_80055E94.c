@@ -1486,6 +1486,7 @@ extern s16 fn_8001552C(U5C188 *);
 extern s16 fn_8002188C(U5C188 *);
 extern void fn_800208F4(s16 *, s16 *, T5C188 *);
 extern s16 fn_800670E4(W5C188 *, s16, s16, s32);
+extern s32 fn_801F52AC(void);
 
 void fn_80055E94(u8 *p) {
     p[0x18] |= 0x40;
@@ -8092,4 +8093,65 @@ s32 fn_8006721C(T5C188 *o) {
         u->xec &= ~0x8000;
     }
     return 0;
+}
+
+/* The midpoint of a and b: the larger one minus half the distance. */
+static inline void Mid(f32 a, f32 b, f32* o)
+{
+    f32 d = fabs((b - a) / 2.0f);
+    if (b > a) {
+        *o = b - d;
+    } else {
+        *o = a - d;
+    }
+}
+void fn_80061450(NJS_POINT3* a, NJS_POINT3* b, NJS_POINT3* out)
+{
+    Mid(a->x, b->x, &out->x);
+    Mid(a->y, b->y, &out->y);
+    Mid(a->z, b->z, &out->z);
+}
+
+void fn_8006AE20(s16 a, s16 slot, int mode, s8 val) {
+    s16 v;
+    int i;
+    switch (mode) {
+    case 1:
+        if (a < 4) {
+            const SkillData *t = lbl_802C4BF0 + lbl_80309174[a].x6;
+            v = t->power;
+        } else {
+            const EnemySkill *t = lbl_802AD440 + lbl_80309174[a].x6;
+            v = t->param;
+        }
+        break;
+    case 3:
+        {
+            s32 n = fn_801F52AC();
+            v = lbl_80347390->x6 * ((n >> 8) & 0xff) * 10;
+        }
+        break;
+    case 4:
+        i = lbl_80309174[a].x6 - 0xF0;
+        {
+            const UseItemData *t = lbl_802C7C34 + i;
+            v = t->power;
+        }
+        break;
+    case 5:
+        {
+            s16 k = lbl_80309174[a].x6 + 0x24;
+            const EnemySkill *t = lbl_802AD440 + k;
+            v = t->param;
+        }
+        break;
+    case 2:
+    case 6:
+    default:
+        break;
+    }
+    lbl_80309174[slot].x8 = 1;
+    lbl_80309730[slot].x8 = 1;
+    lbl_80309700[slot]->work->x3c = v;
+    lbl_80309700[slot]->work->x44 = val;
 }

@@ -280,6 +280,10 @@ typedef struct EvInfo {
     s32 flags;     /* 0x14 */
 } EvInfo;
 extern s16 lbl_80347548;
+extern s32 lbl_8030B454[32];
+extern s32 lbl_803474C8;
+extern s32 lbl_803474CC[2];
+extern s32 lbl_803474D4;
 
 void fn_801C5A60(NJS_MATRIX m, NJS_POINT3 *p, NJS_POINT3 *out)
 {
@@ -1329,4 +1333,46 @@ s32 fn_801C5E94(EvObj* obj) {
         }
     }
     return res;
+}
+
+s32 fn_801C6BC8(Node* n) {
+    if (n->kind != 4) {
+        if (n->kind == 0) {
+            return n->kind;
+        }
+        if (n->kind == 1) {
+            n->kind = 0;
+            OSPanic("akFIO.c", 0x285, "akFioReadASync() : Invalid FileOpenMode");
+        }
+        if (n->kind == 2) {
+            Node* p;
+            n->kind = 3;
+            if ((p = lbl_803471C8) == NULL) {
+                lbl_803471C8 = n;
+            } else {
+                while (p->next != NULL) {
+                    if (p == n) {
+                        goto end;
+                    }
+                    p = p->next;
+                }
+                p->next = n;
+            }
+        }
+    end:
+        return n->kind;
+    }
+    return n->kind;
+}
+
+void fn_801C8B18(void)
+{
+    int i;
+    for (i = 0; i < 32; i++) {
+        lbl_8030B454[i] = 0;
+    }
+    lbl_803474C8 = 0;
+    lbl_803474D4 = 1;
+    lbl_803474CC[0] = 0;
+    lbl_803474CC[1] = 0;
 }

@@ -824,3 +824,15 @@ void fn_801D0ED4(void* a, s32 b, u32 c) {
         fn_802A8E50(a, b, c);
     }
 }
+
+void fn_801D1A40(void) {
+    s32 i;
+    f32* p;
+    lbl_80347270 = 0;
+    lbl_80347274 = 0;
+    memset(lbl_80308CF0, 0, 0x100);
+    p = lbl_80308CE0;
+    for (i = 4; i > 0; i--) {
+        *p++ = 0.0f;
+    }
+}

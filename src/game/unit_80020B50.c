@@ -300,6 +300,10 @@ extern s32 lbl_80346B78;
 extern Item36 lbl_802C7C34[];
 extern Item48 lbl_802C4BF0[];
 extern Rec28B90 *fn_800786C0(void);
+/* Takes the task, a command and its argument (fn_80020250 extends the command as s16). */
+extern s32 fn_80020250(T21 *t, s16 cmd, s32 arg);
+extern void fn_801D5340(Sprite* m, s32 c, s32 d, f32 z, f32 ang, f32 a, f32 b);
+extern void fn_800277F4(Sprite** m, s32 n, f32* ang);
 
 void fn_80020B50(Top *t, s16 *out1, s16 *out2) {
   Inner *i = t->mid->inner;
@@ -1989,5 +1993,60 @@ s32 fn_80028B90(void)
         }
     default:
         return 1;
+    }
+}
+
+static inline T21 *F2(s8 id)
+{
+    T21 *r = Find21(id);
+    if (r != NULL) return r;
+    return Find21(0);
+}
+
+/* Passes cmd/arg to fn_80020250 for the task of kind id (or kind 0's when there is none). */
+s32 fn_800214FC(s8 id, s16 cmd, s32 arg)
+{
+    return fn_80020250(F2(id), cmd, arg);
+}
+
+void fn_80027484(Sprite** objs, s32 count, s32 mode)
+{
+    f32 buf[8];
+    s32 i;
+    switch (mode) {
+    case 0:
+        break;
+    case 1:
+        for (i = 0; i < count; i++) {
+            fn_801D4954(objs[i]);
+            objs[i] = 0;
+            objs[i] = fn_801D497C(fn_801D68C4(lbl_80347628, 0x13));
+        }
+        fn_800277F4(objs, count, buf);
+        for (i = 0; i < 7; i++) {
+            fn_801D5340(objs[i], 0, 0, 0.001f * i + -1.2f, 0.0f, 1.0f, 1.0f);
+        }
+        fn_801D5340(objs[20], 0, 0, -1.1880001f, 0.0f, 1.0f, 1.0f);
+        fn_801D5340(objs[21], 0, 0, -1.1880001f, 0.0f, 1.0f, 1.0f);
+        fn_801D5340(objs[19], 0, 0, 0.001f * i + -1.2f, 0.0f, 1.0f, 1.0f);
+        fn_801D5340(objs[18], 0, 0, 0.001f * (i + 1) + -1.2f, 0.0f, 1.0f, 1.0f);
+        break;
+    case 2:
+        for (i = 0; i < count; i++) {
+            fn_801D4954(objs[i]);
+            objs[i] = 0;
+            objs[i] = fn_801D497C(fn_801D68C4(lbl_80347628, 0x14));
+        }
+        fn_800277F4(objs, count, buf);
+        for (i = 0; i < 7; i++) {
+            fn_801D5340(objs[i], 0, 0, 0.001f * i + -1.2f, 0.0f, 1.0f, 1.0f);
+        }
+        fn_801D5340(objs[20], 0, 0, -1.1880001f, 0.0f, 1.0f, 1.0f);
+        fn_801D5340(objs[21], 0, 0, -1.1880001f, 0.0f, 1.0f, 1.0f);
+        fn_801D5340(objs[19], 0, 0, 0.001f * i + -1.2f, 0.0f, 1.0f, 1.0f);
+        fn_801D5340(objs[18], 0, 0, 0.001f * (i + 1) + -1.2f, 0.0f, 1.0f, 1.0f);
+        break;
+    case 3:
+        break;
     }
 }

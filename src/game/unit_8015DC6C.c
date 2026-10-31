@@ -2432,6 +2432,10 @@ typedef struct Self_8018C00C {
 } Self_8018C00C;
 extern s32 fn_80194ECC(void);
 extern void fn_80194F3C(void);
+extern SaveData lbl_8030B7F4;
+void fn_80189900(struct Dst_80189958* p, s8 a4, s8 a5, s32 a6, s8 a7);
+extern void fn_80179554(void);
+extern void fn_80179388(void);
 
 s32 fn_8015DC6C(Obj_8015DC6C* self, Src* src)
 {
@@ -11116,4 +11120,210 @@ void fn_8017DF14(void)
     obj = &camp_work.pnl[0x60]->win->obj;
     fn_80199BB8(obj, 632.0f, 480.0f);
     fn_80199BAC(obj, 632.0f, 480.0f);
+}
+
+void fn_80170DCC(void)
+{
+    UiObj *obj;
+    s32 i;
+    CampCtrl *ctl;
+    s32 j;
+
+    ctl = lbl_8034710C->holder->ctrl;
+    for (i = 0; i < 4; i++) {
+        if (ctl->cur[0].mask & (1 << i)) {
+            if (i == ctl->cur[0].sel) {
+                obj = &camp_work.pnl[0x1f + i]->win->obj;
+                UiObjMoveTo(obj, 6, -1, -8.0f, 125.0f);
+                UiObjSetCommand(obj, 0xf, i + 2);
+            } else {
+                obj = &camp_work.pnl[0x1f + i]->win->obj;
+                UiObjMoveTo(obj, 6, -1, -348.0f, (i + 1) * 64 + 61);
+                UiObjSetCommand(obj, 0xf, i + 2);
+            }
+        }
+    }
+    switch (ctl->cur[4].sel) {
+    case 0:
+        for (j = 0; j < 4; j++) {
+            obj = &camp_work.pnl[0x23 + j]->win->obj;
+            if (j == 3) {
+                UiObjMoveTo(obj, 6, 5, 668.0f, 381.0f);
+                UiObjSetCommand(obj, 0xf, 6);
+            } else {
+                UiObjMoveTo(obj, 6, 5, 668.0f, j * 64 + 61);
+                UiObjSetCommand(obj, 0xf, j + 1);
+            }
+        }
+        if (lbl_8030B7F4.party[ctl->cur[2].sel] == 0 && fn_80193F78() != 0) {
+            obj = &camp_work.pnl[0x32]->win->obj;
+            UiObjMoveTo(obj, 6, 5, 668.0f, 317.0f);
+            UiObjSetCommand(obj, 0xf, 5);
+        }
+        break;
+    case 1:
+        for (i = 0; i < 5; i++) {
+            obj = &camp_work.pnl[0x27 + i]->win->obj;
+            if (i == 4) {
+                UiObjMoveTo(obj, 6, 5, 668.0f, 381.0f);
+                UiObjSetCommand(obj, 0xf, 6);
+            } else {
+                UiObjMoveTo(obj, 6, 5, 668.0f, i * 64 + 61);
+                UiObjSetCommand(obj, 0xf, i + 1);
+            }
+        }
+        break;
+    case 2:
+        for (i = 0; i < 6; i++) {
+            obj = &camp_work.pnl[0x2c + i]->win->obj;
+            UiObjMoveTo(obj, 6, 5, 668.0f, i * 64 + 61);
+            UiObjSetCommand(obj, 0xf, i + 1);
+        }
+        break;
+    }
+}
+
+void fn_8017567C(void)
+{
+    s32 i;
+    CampCtrl *m = lbl_80307638;
+
+    CampMenuHideAllPanels();
+    camp_work.pnl[lbl_80307638[1].cur[0].sel]->win->x0 = 1;
+    for (i = 0; i < camp_work.count; i++) {
+        camp_work.pnl[i]->win->x0 = 1;
+    }
+    camp_work.pnl[m[3].cur[0].sel + 0x1f]->win->x0 = 1;
+    camp_work.pnl[0x68]->win->x0 = 1;
+    camp_work.pnl[0x69]->win->x0 = 1;
+    camp_work.pnl[0x5a]->win->x0 = 1;
+    camp_work.pnl[0x5b]->win->x0 = 1;
+    camp_work.pnl[0x5c]->win->x0 = 1;
+    camp_work.pnl[0x60]->win->x0 = 1;
+}
+
+void fn_80175DC4(void) {
+    CampCtrl *c;
+    UiObj *w;
+    CampWork *cw;
+    Sprite *s;
+    s32 who;
+
+    cw = &camp_work;
+    c = lbl_8034710C->holder->ctrl;
+    w = &cw->pnl[0x41]->win->obj;
+    who = lbl_8030B7F4.party[lbl_80307638[1].cur[0].sel];
+    if (fn_80195CD0(who, lbl_80307638[8].cur[0].sel + 1, 3, c->cur[4].sel) > 1) {
+        s = fn_801D68C4(lbl_803470F0, 0x62);
+        s->x = 24.0f + w->rect[0];
+        s->y = 156.0f + w->rect[1];
+        fn_801D4F0C(s, 0, 0, 1, -3100.0f, 0.0f, 1.0f, cw->f358);
+        s = fn_801D68C4(lbl_803470F0, 0x63);
+        s->x = 272.0f + w->rect[0];
+        s->y = 156.0f + w->rect[1];
+        fn_801D4F0C(s, 0, 0, 1, -3100.0f, 0.0f, 1.0f, cw->f358);
+    }
+}
+
+void fn_80178BC8(void) {
+    CampReq req;
+    CampCtrl* m;
+    s8* party;
+    s32 j;
+    s32 idx;
+    s32 i;
+    s32 who;
+    CampCtrl* c;
+    UiObj* o;
+
+    m = lbl_80307638;
+    c = lbl_8034710C->holder->ctrl;
+    party = lbl_8030B7F4.party;
+    idx = c->cur[2].sel;
+    m[1].cur[0].sel = idx;
+    who = party[idx];
+    o = &camp_work.pnl[idx]->win->obj;
+    fn_80199BB8(o, -348.0f, 61.0f);
+    fn_80199BAC(o, -348.0f, 61.0f);
+    UiObjSetRaised(o);
+    for (i = 0; i < 7; i++) {
+        s32 n = i + 0x3a;
+        o = &camp_work.pnl[n]->win->obj;
+        fn_80199BB8(o, 668.0f, 204.0f);
+        fn_80199BAC(o, 668.0f, 204.0f);
+    }
+    fn_80179554();
+    fn_80179388();
+    for (j = 0; j < 7; j++) {
+        fn_80189900(camp_work.pnl[j + 0x3a]->win->xbc, who, j - 1, 1, 0);
+    }
+    who = party[m[1].cur[0].sel];
+    fn_80195EA4(&req, who, c->cur[1].sel, c->cur[4].sel, 1);
+    fn_801954D0(req.e[c->cur[0].sel].x10);
+}
+
+void fn_8017C510(void) {
+    s32 i;
+    UiObj* o;
+    CampCtrl* scr4 = &lbl_80307638[4];
+    CampCtrl* scr11 = &lbl_80307638[11];
+    CampCtrl* c = lbl_8034710C->holder->ctrl;
+
+    CampMenuHideAllPanels();
+    camp_work.pnl[4]->win->x0 = 1;
+    camp_work.pnl[0x78 + scr4->cur[0].sel]->win->x0 = 1;
+    camp_work.pnl[0x70]->win->x0 = 1;
+    camp_work.pnl[0x71]->win->x0 = 1;
+    camp_work.pnl[0x74]->win->x0 = 1;
+    camp_work.pnl[0x72]->win->x0 = 1;
+    camp_work.pnl[0x73]->win->x0 = 1;
+    camp_work.pnl[0x75]->win->x0 = 1;
+    c->cur[2].sel = scr4->cur[2].sel;
+    if (fn_80195D8C(scr11->cur[0].sel, scr11->cur[2].sel + 6, 4, c->cur[4].sel) <= 0) {
+        camp_work.pnl[0x71]->win->x0 = 0;
+        camp_work.pnl[0x73]->win->x0 = 0;
+    }
+    for (i = 0; i < 7; i++) {
+        camp_work.pnl[0x4f + i]->win->x0 = 0;
+        o = &camp_work.pnl[0x4f + i]->win->obj;
+        fn_80199BA4(o, 0);
+        fn_80199B9C(o, 1.0f);
+    }
+    camp_work.pnl[0x4f]->win->x0 = 1;
+    camp_work.pnl[0x54]->win->x0 = 1;
+    camp_work.pnl[0x60]->win->x0 = 1;
+    camp_work.pnl[0x65]->win->x0 = 0;
+}
+
+void fn_801847F0(void) {
+    CampCtrl* c;
+    s32 i;
+    UiObj* o;
+    c = lbl_8034710C->holder->ctrl;
+    for (i = 0; i < camp_work.count; i++) {
+        o = &camp_work.pnl[i]->win->obj;
+        UiObjMoveTo(o, 6, -1, -8.0f, i * 64 + 61);
+        if (c->cur[0].sel == i) UiObjSetCommand(o, 10, i);
+        else UiObjSetCommand(o, 15, i);
+    }
+    if (fn_801953B8()) {
+        o = &camp_work.pnl[4]->win->obj;
+        UiObjMoveTo(o, 6, 4, -8.0f, 317.0f);
+        if (c->cur[0].sel == 4) UiObjSetCommand(o, 10, 4);
+        else UiObjSetCommand(o, 15, 4);
+        o = &camp_work.pnl[0x6c + c->cur[1].sel]->win->obj;
+        UiObjMoveTo(o, 6, -1, 328.0f, 317.0f);
+        UiObjSetCommand(o, 15, 4);
+    }
+    for (i = 0; i < camp_work.count; i++) {
+        o = &camp_work.pnl[c->cur[4].sel + (i * 5 + 6)]->win->obj;
+        UiObjMoveTo(o, 6, 4, 328.0f, i * 64 + 61);
+        UiObjSetCommand(o, 15, i);
+    }
+    if (fn_80194CB8() == 1) {
+        o = &camp_work.pnl[5]->win->obj;
+        UiObjMoveTo(o, 6, 4, -8.0f, 381.0f);
+        if (c->cur[0].sel == 5) UiObjSetCommand(o, 10, 5);
+        else UiObjSetCommand(o, 15, 5);
+    }
 }

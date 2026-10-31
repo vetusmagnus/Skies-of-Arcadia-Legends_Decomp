@@ -275,6 +275,11 @@ typedef struct {
     Sys *x24;
     void **x28;
 } Holder_8012D0F4;
+typedef struct HolderD_8012F61C {
+    u8 pad[0x24];
+    SysD *x24;
+    Spr **x28;
+} HolderD_8012F61C;
 
 s32 fn_8012ADB4(void) { return lbl_80346F10->x24->x14; }
 
@@ -1001,4 +1006,22 @@ void fn_8012D0F4(void) {
         (*(Holder_8012D0F4 **)&lbl_80346F20)->x24->b5 = 1;
         break;
     }
+}
+
+/* Draws sprite 0 of lbl_80346F30 at (16, 386), 100 higher when its mode x2 is 1. */
+void fn_8012F61C(void)
+{
+    Req r;
+    s8 up;
+    r.obj = lbl_80346F30->x28[0];
+    up = lbl_80346F30->x24->x2 == 1;
+    r.obj->f14 = 16.0f;
+    r.obj->f18 = up * -100 + 386;
+    r.x = -1.1f;
+    r.y = 1.0f;
+    r.z0 = 0;
+    r.z1 = 0;
+    r.one = 1.0f;
+    r.w = 1.0f;
+    fn_8012A9A8(&r);
 }

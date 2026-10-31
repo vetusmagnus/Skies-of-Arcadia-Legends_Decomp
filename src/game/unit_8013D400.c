@@ -807,6 +807,100 @@ typedef struct Obj_8014F770 {
     s16 x9c;
     s16 x9e;
 } Obj_8014F770;
+typedef struct Model2C {
+    u8 pad0[0x14];
+    u32 x14;
+    u32 x18;
+    u32 x1c;
+} Model2C;
+typedef struct ResHdr {
+    u8 pad0[0x2c];
+    Model2C *x2c;
+} ResHdr;
+typedef struct GeffEntry {
+    void *fn;
+    u32 pad;
+} GeffEntry;
+typedef struct Geff {
+    u32 flags;
+    void *x4;
+    s32 x8;
+    s16 xc;
+    s16 xe;
+    s32 x10;
+    s16 x14;
+    s16 x16;
+    s16 x18;
+    u8 pad1a[4];
+    s16 x1e;
+    u8 pad20[0x48 - 0x20];
+    u32 x48;
+    u32 x4c;
+    u32 x50;
+    u8 pad54[0x6c - 0x54];
+    s32 x6c;
+    s32 x70;
+    s32 x74;
+    u8 pad78[0x84 - 0x78];
+    ResHdr *x84;
+    ResHdr *x88;
+    ResHdr *x8c;
+    s32 x90;
+    s32 x94;
+    u8 pad98[0xd8 - 0x98];
+    s32 xd8;
+    u8 padDC[4];
+    s32 xe0;
+    u8 padE4[0x124 - 0xe4];
+    s32 x124;
+    u8 pad128[4];
+    s32 x12c;
+    u8 pad130[0x170 - 0x130];
+    s32 x170;
+    u8 pad174[4];
+    s32 x178;
+    s32 x17c;
+    s32 x180;
+    u8 pad184[0x19c - 0x184];
+    f32 x19c;
+    u8 pad1a0[0x1a4 - 0x1a0];
+    u8 x1a4[0xbc];
+    void *handlers[47];
+    s32 x31c;
+} Geff;
+typedef struct Sub1b8 {
+    u8 pad0[0x2a];
+    u16 x2a;
+} Sub1b8;
+typedef struct Sub1c8 {
+    u8 pad0[0x20];
+    void *x20;
+    char name[1];
+} Sub1c8;
+typedef struct Owner_801493EC {
+    u8 pad0[0xe4];
+    void *xe4;
+    u8 padE8[0x17a - 0xe8];
+    u16 x17a;
+    u8 pad17c[0x1b8 - 0x17c];
+    Sub1b8 *x1b8;
+    u8 pad1bc[0x1c8 - 0x1bc];
+    Sub1c8 *x1c8;
+    u8 pad1cc[0x1d8 - 0x1cc];
+    Geff *x1d8;
+} Owner_801493EC;
+typedef struct Parent_801493EC {
+    u8 pad0[0x24];
+    Owner_801493EC *x24;
+} Parent_801493EC;
+extern const GeffEntry lbl_802B4118[47];
+extern void *fn_801E1A2C(s32 a, u32 size);
+extern s32 fn_800DE554(s32 id);
+extern s16 fn_800DE5EC(s32 id);
+extern s16 fn_800DE598(s32 id);
+extern s32 fn_800E0C38(s32 id);
+extern void *fn_801C8930(void *h);
+extern void *fn_80167244(void *a, u32 mask);
 
 void fn_8013D400(s32 a, s32 b) {
     fn_80136A28(a, b, 3, -1, -1, -1);
@@ -2967,4 +3061,94 @@ void fn_8014F770(Obj_8014F770 *p)
         prev = cur;
         q++;
     }
+}
+
+s32 fn_801493EC(Parent_801493EC *self) {
+    Owner_801493EC *o = self->x24;
+    Geff *g;
+    int i;
+    u32 id;
+
+    if (o->x1d8 != NULL) {
+        fn_801DBE1C("ERROR:sb_geff_scptTskInit twice call!! #%d (%s)", o->x17a, o->x1c8->name);
+    }
+    if (o->x1d8 == NULL) {
+        o->x1d8 = fn_801E1A2C(1, 0x320);
+        if (o->x1d8 == NULL) {
+            return 0;
+        }
+    }
+    g = o->x1d8;
+    g->x4 = self;
+    for (i = 0; i < 47; i++) {
+        g->handlers[i] = lbl_802B4118[i].fn;
+    }
+    g->x31c = 0;
+    g->x8 = 0;
+    g->x90 = 0;
+    g->x18 = -1;
+    g->flags &= ~0x100;
+    g->flags &= ~0x8;
+    g->flags &= ~0x2;
+    g->flags &= ~0x80;
+    g->x178 = 0;
+    g->x180 = 0;
+    g->x17c = 0;
+    if (o->x1c8 != NULL) {
+        id = o->x17a;
+        if ((id >= 3000 && id <= 3999) || (id >= 0xc3b4 && id <= 0xc737) ||
+            fn_8025EF88("man", o->x1c8->name) == 0) {
+            g->flags |= 0x80;
+            g->x19c = 1.0f;
+        }
+    }
+    g->x1e = -1;
+    g->x6c = 0;
+    g->x70 = 1;
+    g->x74 = 0;
+    if (o->x1c8->x20 != NULL) {
+        fn_80227810(o->x1c8->x20);
+    }
+    if (o->x1b8 != NULL) {
+        id = o->x1b8->x2a;
+        if (id == 0xffff) {
+            id = o->x17a;
+        }
+    } else {
+        id = o->x17a;
+    }
+    g->x10 = fn_800DE554(id);
+    g->x14 = fn_800DE5EC(id);
+    g->x16 = fn_800DE598(id);
+    g->xe = 0;
+    if (fn_800E0C38(id) != 0) {
+        g->flags |= 0x40;
+    } else {
+        g->flags &= ~0x40;
+    }
+    if (g->flags & 0x40) {
+        s32 v = 0;
+        if (g->x10 == 1) {
+            v = 3;
+        }
+        g->xe = v;
+    }
+    g->flags |= 0x10;
+    g->x84 = fn_80167244(fn_801C8930(o->xe4), 0xff0000);
+    g->x88 = fn_80167244(fn_801C8930(o->xe4), 0xff00);
+    g->x8c = fn_80167244(fn_801C8930(o->xe4), 0xff);
+    g->xe0 = 0;
+    g->x12c = 0;
+    g->x94 = 0;
+    g->x124 = 0;
+    g->x170 = 0;
+    g->xd8 = 0;
+    g->xc = 0;
+    fn_801E0FD4(g->x1a4, 0xbc);
+    if (g->x84 != NULL && g->x84->x2c != NULL) {
+        g->x48 = g->x84->x2c->x14;
+        g->x4c = g->x84->x2c->x18;
+        g->x50 = g->x84->x2c->x1c;
+    }
+    return 1;
 }

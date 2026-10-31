@@ -76,7 +76,9 @@ typedef struct {
 } Sys_80309E5C;
 extern Sys_80309E5C lbl_80309E5C;
 extern Task* lbl_80347394;
-typedef struct ChrRec { u8 pad0[0x1c]; u32 bits; } ChrRec;
+typedef struct ChrRec { u8 pad_0[0x14];
+ s32 x14;
+ s32 x18; u32 bits; } ChrRec;
 extern ChrRec* lbl_80309DE4[];
 extern s32 fn_8000F718(void* p, s32 a, s32 b);
 typedef struct HNode {
@@ -251,6 +253,16 @@ typedef struct AnimPlay {
     f32 time;
     f32 out[3];
 } AnimPlay;
+int fn_8003DE8C(s16 type, s16 id, s16 wtype, s16 wid);
+typedef struct WorkRec {
+    s16 x0;
+    s16 x2;
+} WorkRec;
+typedef struct TkRec {
+    u8 pad_0[0x24];
+    WorkRec *work;
+} TkRec;
+extern TkRec *lbl_80309700[12];
 
 inline ChrWork* ChrW(Task* t)
 {
@@ -5467,4 +5479,48 @@ s32 fn_80011984(AnimPlay* a) {
         a->idx++;
     }
     return ret;
+}
+
+s16 fn_800089F0(Ent_80008800* t, s16 a, s16 b, s16* lo, s16* hi, s16 start) {
+    Ent_80008800* e = &t[start];
+    s32 found = 0;
+    s16 i = start;
+
+    *lo = start;
+    for (;;) {
+        if (e->x0 < 0) {
+            *hi = i;
+            break;
+        }
+        if (fn_8003DE8C(e->xc->x0, e->xc->x4, a, b)) {
+            if (found == 0) {
+                *lo = i;
+                found = 1;
+            }
+        } else if (found == 1) {
+            *hi = i;
+            return i;
+        }
+        e++;
+        i++;
+    }
+    if (found) {
+        return i;
+    }
+    return 0;
+}
+
+void fn_80010474(s16 i) {
+    s16 v = lbl_80309DE4[i]->x18;
+
+    if (fn_80008274(lbl_80309700[i]->work->x2) == 0xc6) {
+        v /= 2;
+    } else {
+        v /= 4;
+    }
+    if (v >= lbl_80309DE4[i]->x14) {
+        lbl_80309DE4[i]->bits |= 0x8000;
+    } else {
+        lbl_80309DE4[i]->bits &= ~0x8000;
+    }
 }

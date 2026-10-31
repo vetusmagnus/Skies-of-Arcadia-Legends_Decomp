@@ -1123,3 +1123,37 @@ void fn_801CE6D0(NJS_TEXLIST *tex, s16 id, VertexTex *v, s32 n, s32 a, u32 flags
         }
     }
 }
+
+s32 fn_801CB460(s32 type) {
+    switch (type) {
+    case 0x40:
+    case 0x49:
+        return 1;
+    case 0x41:
+    case 0x42:
+        return 3;
+    case 0x43:
+        return 4;
+    case 0x44:
+    case 0x45:
+        return 6;
+    case 0x46:
+        return 3;
+    case 0x47:
+    case 0x48:
+    case 0x4a:
+    case 0x4b:
+        return 5;
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 0xff:
+        return 0x80000000;
+    case 8:
+        return 0x80000001;
+    }
+    return 0;
+}

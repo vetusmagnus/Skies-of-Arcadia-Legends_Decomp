@@ -257,7 +257,8 @@ extern s32 fn_801E4BBC(s8 n);
 extern void fn_8021AF94(s32 *a, void *b, s8 *list);
 extern void fn_8021B3B4(void);
 extern void fn_801EFF0C(s16 id);
-typedef struct Ent { u8 pad[0x20]; f32 key; } Ent;
+typedef struct Ent { u8 pad_0[0x1c];
+ u32 flags; f32 key; } Ent;
 extern Ent *lbl_80315530[];
 extern s32 lbl_803477F0;
 typedef struct { u8 pad0[0x54]; u32 stream; u8 pad58[8]; void *buf; u8 pad64[0x80 - 0x64]; } Stream_803148C0;
@@ -810,6 +811,10 @@ extern s32 fn_801A2670(s32 idx, s32 *out);
 struct Xf_80224F28;
 void fn_8022445C(Slot *g, Seg *segs, s32 count);
 s32 fn_80225330(Slot *o, NJS_POINT3 *p, Cmp *res);
+extern s32 fn_8021A2B0(Src* a, void* b, s32 code);
+extern Ent* lbl_80309DE4[];
+extern void fn_8021E94C(u32* out, s32 a, s32 b);
+extern void fn_801DD5E8(Angle* out, NJS_POINT3* p);
 
 void fn_80219378(s32 a)
 {
@@ -4621,4 +4626,119 @@ Ctx802281DC *fn_80227E84(u32 id)
         }
     }
     return 0;
+}
+
+static inline s32 Min(s32 a, s32 b)
+{
+    return (a < b) ? a : b;
+}
+
+static inline s32 ShipHpCalc(ShipData* e, Src* p, void* q)
+{
+    s32 v = e->hp_max;
+    v += fn_8021A2B0(p, q, 0);
+    v += p->level * e->hp_up;
+    return Min(v, 999999);
+}
+
+/* The zero of res, GetEnt's e and InRange's r are one value copied (li / mr r31 / mr r0) only
+ * when the body is an inline of its own. */
+static inline s32 ShipHp(Src* p, void* q)
+{
+    s32 res = 0;
+    if (p != NULL && q != NULL) {
+        ShipData* e = GetEnt(p->id);
+        if (e != NULL) {
+            res = ShipHpCalc(e, p, q);
+        }
+    }
+    return res;
+}
+
+/* A ship's max HP: base plus fn_8021A2B0's bonus plus level * hp_up, capped at 999999. */
+s32 fn_8021ADA0(Src* p, void* q)
+{
+    return ShipHp(p, q);
+}
+
+void fn_8021EB44(u32* out, s16 idx, s32 a, u32 alpha)
+{
+    Ent* e = lbl_80309DE4[idx];
+    s16 n = 0;
+    u32 col[6];
+    s32 i;
+    u32 sh;
+    if (e->flags & 0x10) {
+        fn_8021E94C(out, a, alpha);
+        return;
+    }
+    col[0] = 0;
+    if (e->flags & 4) {
+        n++;
+        col[n] = 0xFF00;
+    }
+    if (e->flags & 8) {
+        n++;
+        col[n] = 0xFFFF00;
+    }
+    if (e->flags & 0x40) {
+        n++;
+        col[n] = 0x64FF;
+    }
+    if (e->flags & 1) {
+        n++;
+        col[n] = 0xFF00FF;
+    }
+    sh = alpha << 24;
+    for (i = 0; i <= n; i++) {
+        col[i] |= sh;
+    }
+    if (n == 1) {
+        out[0] = col[1];
+        out[1] = col[1];
+        out[2] = col[1];
+        out[3] = col[1];
+    } else if (n == 2) {
+        out[0] = col[1];
+        out[1] = col[1];
+        out[2] = col[2];
+        out[3] = col[2];
+    } else if (n == 3) {
+        out[0] = col[1];
+        out[1] = col[2];
+        out[2] = col[3];
+        out[3] = col[0];
+    } else if (n == 4) {
+        out[0] = col[1];
+        out[1] = col[2];
+        out[2] = col[3];
+        out[3] = col[4];
+    } else {
+        out[0] = col[0];
+        out[1] = col[0];
+        out[2] = col[0];
+        out[3] = col[0];
+    }
+}
+
+static inline u16 AngNeg(s32 a) {
+    return -a;
+}
+
+s32 fn_8022BAA0(Angle* ang, NJS_POINT3* a, NJS_POINT3* b, NJS_POINT3* v) {
+    NJS_POINT3 d;
+    s32 r;
+
+    d.x = a->x - b->x;
+    d.y = a->y - b->y;
+    d.z = a->z - b->z;
+    fn_801DD5E8(ang, &d);
+    if (ang[0] < 0) {
+        ang[0] = 0;
+    }
+    if (ang[1] < 0) {
+        ang[1] = 0;
+    }
+    r = fn_801DD078(v, &d);
+    return 0 <= r ? AngNeg(r) : 0;
 }

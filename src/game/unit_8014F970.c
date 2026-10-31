@@ -1208,6 +1208,30 @@ extern void fn_80156584(void);
 extern void fn_8015983C(s32 on, s32 who, SeqRec *rec, s32 flag);
 extern void fn_80159F28(s32 who);
 extern void fn_8015A36C(s32 who);
+typedef struct Vec_8015D124 {
+    f32 x;
+    f32 y;
+    f32 z;
+} Vec_8015D124;
+typedef struct A_8015D124 {
+    u8 pad[0x50];
+    Vec_8015D124 pos;
+    u8 pad2[0x168 - 0x5c];
+    s16 mode;
+} A_8015D124;
+typedef struct S_8015D124 {
+    u8 pad[8];
+    A_8015D124* a;
+} S_8015D124;
+typedef struct Obj_8015D124 {
+    u8 pad[0x1d8];
+    S_8015D124* s;
+} Obj_8015D124;
+typedef struct St_8015D124 {
+    u8 pad[0x1c];
+    Vec_8015D124 v;
+    u32 cnt;
+} St_8015D124;
 
 void fn_8014F970(u8 *self) {
     fn_80153270(self + 0x95c);
@@ -4435,4 +4459,57 @@ s32 fn_8015BB58(s32 t)
         }
     }
     return r;
+}
+
+s32 fn_8015D124(Obj_8015D124* o, St_8015D124* st)
+{
+    A_8015D124* a = o->s->a;
+    f32 inv;
+    f32 x;
+    f32 y;
+    f32 z;
+
+    switch (a->mode) {
+    case 0:
+        if (st->cnt <= 1) {
+            x = st->v.x;
+            y = st->v.y;
+            z = st->v.z;
+            a->pos.z = z;
+            a->pos.y = y;
+            a->pos.x = x;
+            return 0;
+        }
+        x = st->v.x - a->pos.x;
+        y = st->v.y - a->pos.y;
+        z = st->v.z - a->pos.z;
+        inv = 1.0f / st->cnt;
+        st->v.x = x * inv;
+        st->v.y = y * inv;
+        st->v.z = z * inv;
+        a->mode = 1;
+    case 1:
+        {
+            f32 px;
+            f32 py;
+            f32 pz;
+            f32 vx;
+            f32 vy;
+            f32 vz;
+            px = a->pos.x;
+            vx = st->v.x;
+            py = a->pos.y;
+            vy = st->v.y;
+            pz = a->pos.z;
+            vz = st->v.z;
+            a->pos.z = pz + vz;
+            a->pos.y = py + vy;
+            a->pos.x = px + vx;
+        }
+        if (st->cnt <= 1) {
+            return 0;
+        }
+        st->cnt--;
+    }
+    return 1;
 }

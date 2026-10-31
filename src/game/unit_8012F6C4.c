@@ -1911,3 +1911,59 @@ void fn_8013A8FC(s32 lim) {
     fn_8012E424(bits);
 }
 
+static inline void Rec5Clear(s32 i) {
+    if (i >= -4 && i < 4) {
+        lbl_80308E90[i + 4].a[0] = -1;
+        lbl_80308E90[i + 4].a[1] = -1;
+        lbl_80308E90[i + 4].a[2] = -1;
+        lbl_80308E90[i + 4].a[3] = -1;
+        lbl_80308E90[i + 4].a[4] = -1;
+    }
+}
+
+static inline void Rec5Copy(s32 from, s32 to, s32 d) {
+    if (from >= 0 && from < 4 && to >= -4 && to < 0) {
+        s32 s = from + 4;
+        s32 t = to + 4;
+        lbl_80308E90[t] = lbl_80308E90[s];
+        if (lbl_80308E90[t].a[4] != -1) {
+            lbl_80308E90[t].a[4] += d;
+        }
+    }
+}
+
+static inline s32 MemberKind(s32 v) {
+    s32 ok;
+    s32 kind;
+    Party *arr;
+    arr = &fn_80135598()->party;
+    kind = 4;
+    ok = 0;
+    if (arr != 0 && v >= 0 && v < 5 && arr->mem[v].b14 >= 0) {
+        ok = 1;
+    }
+    if (ok != 0) {
+        kind = arr->mem[v].b14;
+    }
+    return kind;
+}
+
+void fn_80136848(s32 x, s32 y) {
+    s32 d;
+    s32 kind;
+
+    if (x >= 0 && x < 4 && y >= -4 && y < 0) {
+        if (lbl_80308E90[x + 4].a[0] != 4) {
+            Rec5Clear(y);
+            return;
+        }
+        kind = MemberKind(lbl_80308E90[x + 4].a[2]);
+        d = y - x;
+        if (lbl_80308E90[x + 4].a[4] == -1 || lbl_80308E90[x + 4].a[4] - d < 0 ||
+            (kind != 1 && kind != 2)) {
+            Rec5Clear(y);
+        } else {
+            Rec5Copy(x, y, d);
+        }
+    }
+}

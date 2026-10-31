@@ -670,6 +670,9 @@ void* fn_801E1A74(s32 count, s32 size);
 typedef struct Flags_80310B3C { u8 pad[0x24]; u32 x24; } Flags_80310B3C;
 extern Flags_80310B3C lbl_80310B3C;
 extern void *fn_801F52AC(void);
+extern s32 fn_801F4C24(s16 id);
+extern s8 fn_801F452C(s16 id);
+void fn_80078AD4(char* src);
 
 void fn_80075040(TNode* n, u32 mask, u8 op) {
     fn_80075060(n, mask, op);
@@ -4167,3 +4170,93 @@ void fn_8007A890(Task_8007BEB4* t) {
     }
 }
 
+static inline s8 WeaponOwner(s16 id)
+{
+    return lbl_802C5790[id].owner;
+}
+
+static inline s8 ArmourOwners(s16 idx)
+{
+    return lbl_802C6190[idx].owners;
+}
+
+static inline s8 AccOwners(s16 idx)
+{
+    return lbl_802C6E10[idx].owners;
+}
+
+s32 fn_80077E60(s32 p, s16 id) {
+    Chr_UNIT0000* c;
+    s32 i;
+    s32 j;
+    s32 kind;
+    s32 rem;
+    s32 base;
+    s8 cnt;
+
+    base = lbl_8030B7F4.party[p];
+    rem = 5 - base;
+    kind = fn_801F4C24(id);
+    cnt = fn_801F452C(id);
+    switch (kind) {
+    case 0:
+        if (base == WeaponOwner(id)) {
+            return 1;
+        }
+        break;
+    case 1:
+        if ((1 << rem) & ArmourOwners(id - 0x50)) {
+            for (i = 0; i < 4; i++) {
+                c = lbl_80309DE4[i];
+                if (c != 0 && id == c->x102 && p != i) {
+                    cnt--;
+                    if (cnt <= 0) {
+                        return 0;
+                    }
+                }
+            }
+            return 1;
+        }
+        break;
+    case 2:
+        if ((1 << rem) & AccOwners(id - 0xa0)) {
+            for (j = 0; j < 4; j++) {
+                c = lbl_80309DE4[j];
+                if (c != 0 && id == c->x104 && p != j) {
+                    cnt--;
+                    if (cnt <= 0) {
+                        return 0;
+                    }
+                }
+            }
+            return 1;
+        }
+        break;
+    }
+    return 0;
+}
+
+void fn_80078A20(s32 a, s32 b, s32 kind) {
+    char* s;
+    switch (kind) {
+    case 11:
+        s = lbl_802AD440[b + 0x24].name;
+        break;
+    case 12:
+        if (a <= 3) {
+            s = lbl_802C4BF0[b].name;
+            lbl_80347320[0xa] = 1;
+        } else {
+            s = lbl_802AD440[b].name;
+        }
+        break;
+    case 13:
+    default:
+        if (a <= 3) {
+            lbl_80347320[0xa] = 1;
+        }
+        s = lbl_802C7C34[b].name;
+        break;
+    }
+    fn_80078AD4(s);
+}

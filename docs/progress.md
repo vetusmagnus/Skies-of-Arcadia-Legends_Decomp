@@ -2097,3 +2097,44 @@ on the held list because the only matching form needs a value cast:
   the negative `fn_801CB460` result, which wants a `u16` source rather than a cast.
 Both agent files are in the Batch 16 list above. Real type fixes from those branches stay (`SkillData.cost` is `s8`, etc.).
 `EvMapInfo(obj)->nearDist` stays an accessor in evobj.c (a typed local per function cost 100 to 500 diff lines).
+
+
+## Opus pass over the logged near misses, wave 1 (2026-10-29, branch nearopus in build/wt-near, from afc9970, not pushed)
+
+437 of the 690 logged game near misses (80 to 996 bytes, smallest first; the list came from every `fn_XXXXXXXX (N` / `near:`
+entry in this file and docs/near/, minus functions already in src) went to 32 Opus agents (n01-n32, 7-30 functions each, about 10
+variants per function, no merge agents), 20 at a time because of the concurrent-agent cap. A session restart killed 20 of them
+mid-run, so the 214 functions they had not finished were re-dealt to 20 more Opus agents (r01-r20; seven of those were stopped
+once by the weekly usage limit and resumed). Brief: `build/agents/NBRIEF.md` (no call-site casts, no value casts, no unions, fix
+the real types). The list is `build/near/list.txt` (size, name; smallest first), `build/near/wave2.txt` is what is left.
+
+Result: 203 functions match in isolation (fdiff and `floatcheck.py` re-run by the coordinating session, `build/agents/nverify.py`;
+list in `build/agents/nverify.txt`). A handful keep an `(f32)int` conversion that the asm really does in a float division
+(fn_80152284, fn_800C0368, fn_80017430, fn_8005C73C) and were not merged. **40 are in the unit files** (5,279 to 5,319 of 7,117,
+every function of every touched unit clean except the known stale fn_801BE608, `main.dol` SHA OK): through `u1_fix.py`
+(`build/agents/nmap.py` maps verified files to units, `nrun.py TAG` runs the fold over every unit).
+
+**163 match in isolation but did not fold** (`build/near/held.txt`, agent files in `build/agents/n*/` and `r*/`, newest folder
+wins). The agents' reports name the true types; the common causes were:
+- `fn_80135598` returns the unit_8012F6C4 `Big *` (`s8 order[4]` at 0, `Item items[4]` at 0x1c6, `Party party` at 0x238; also the
+  `Stock` view with `InvEnt use[0x50]` at 0xe and `ship[0x50]` at 0x14e), not `u8 *`; `Item.b0e` is `s8`. About 12 functions
+  (fn_8013D430, fn_801447A0, fn_8013F8F8, fn_80146000, fn_8013FB48, fn_80138114, fn_80145E0C, ...) wait on this.
+- Camp types (`CampCtrl`/`CampWork`/`CampPnl`/`CampWin`, unit_8015DC6C) and `lbl_8034710C` as `CampTask *` with `holder->ctrl`.
+- `lbl_802C4BF0` (SkillData) and `lbl_802B4118` live in `.rodata`: declare them `const`; the unit's pointers into them must be const.
+- Prototypes: `fn_80021658(s8)`, `fn_801952D0 s8 (u32)`, `fn_80078478` returns `u8`, `fn_8001FDD8` returns `s16`, `fn_80298FE4(s32)`,
+  `fn_802978F4 s32 (NJS_TEXLIST *)`, `fn_80195EA4 (CampReq *, s8, s32, s32, s8)`, `fn_80171B64(s32, s8)`, `qsort`/`strcmp`/`rand`/`sprintf`
+  by their real names, comparators `int (const void *, const void *)`.
+- `int` vs `s32` loop counters and parameters change allocation/unrolling (`int i` in fn_8008C21C, fn_801F35A0, fn_8012A634, fn_801D9D2C).
+- Own-`.data`/`.bss` pooling: fn_80096570, fn_800D0970, fn_800D1B5C, fn_80097720, fn_80217554, fn_8022DCC4, fn_801C8DF0 need the
+  unit to define its `.data`/`.bss` objects in C (first-use order).
+- Decisions for Nick: fn_800E9044 only matches with `TextSetZ(z += 10.0f)` (z unused afterwards); fn_80168908 only matches as an
+  implicit-int `s32 f(void)` without a return; fn_800EAAAC's local-array initialiser offset only comes right inside its unit;
+  fn_80192B04 matches only with a `goto done` in the find loop (kept as `.goto.c`); fn_802126C8 and fn_8006E4CC still carry casts.
+
+Near misses (about 230 more, `<FN>.near.c` in the agent folders, diff lines in the agent reports): the largest recurring
+blockers are the ship stat getters fn_8021A880/A940/A9C4/AB60/AC20/ACE0 (the original copies the result's zero into `e`/`r` with `mr`
+instead of `li`, 4 lines each), r30/r31-style callee-saved colouring swaps that no declaration order changes, `lbzu` forms that need a
+walked pointer (fn_8008A280, fn_8008571C, fn_8007FFE8), and `fn_80010340`/`fn_8021D8D8`-style two-register swaps.
+
+Wave 2 (not started): the 253 remaining logged near misses of 1,000 bytes and up (`build/near/wave2.txt`, fn_800E6E58 to
+fn_801AD1D4), then the near misses never logged in a file list. Per-agent budget in wave 1 was 7-30 functions; for the big ones use 3-7.

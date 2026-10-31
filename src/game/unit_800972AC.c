@@ -1241,6 +1241,29 @@ extern struct { u8 pad[0x88]; u32 flags; } lbl_80310B3C;
 extern Pos_8009CBBC* lbl_80347450;
 extern u32 fn_80218DC4(void);
 extern void sndSeqSetMidiCtrl(u32 id, u8 ch, s32 ctrl, s32 val);
+typedef struct Sprite {
+    u8 pad0[8];
+    s16 idx;       /* 0x08 texture index */
+    s16 x0;        /* 0x0a */
+    s16 x1;        /* 0x0c */
+    s16 y0;        /* 0x0e */
+    s16 y1;        /* 0x10 */
+    u16 mode;      /* 0x12 */
+    s32 shade;     /* 0x14 scale the colour by the alpha byte */
+    s32 hasCol;    /* 0x18 */
+    u8 colA[4];    /* 0x1c colour of vertices 0 and 3 */
+    u8 colB[4];    /* 0x20 colour of vertices 1 and 2 */
+    s16 ox;        /* 0x24 texture scroll */
+    s16 oy;        /* 0x26 */
+    NJS_TEXLIST* tex; /* 0x28 */
+} Sprite;
+typedef struct Quad {
+    void* pos;
+    u8* col;
+    s16* uv;
+    s32 n;
+} Quad;
+extern void fn_80035518(void* tex, s32 id, Quad* src, s32 textured, s32 flags);
 
 void fn_800972AC(void)
 {
@@ -3762,6 +3785,84 @@ void fn_8009CBBC(void) {
                 v = 1.0f - ((p > q) ? p : q);
             }
             sndSeqSetMidiCtrl(id, i + 10, 7, (s32)(127.0f * v));
+        }
+    }
+}
+
+void fn_800A2264(Sprite* o, void* pos, s32 flags, s32 mode) {
+    Quad q;
+    u8 col[16];
+    s16 uv[8];
+    s32 i;
+    Quad* qp = &q;
+    s16 idx;
+
+    q.pos = pos;
+    q.col = col;
+    q.uv = uv;
+    q.n = 4;
+    for (i = 0; i < 4; i++) {
+        u8 a;
+        if (i == 0 || i == 3) {
+            a = o->colA[0];
+        } else {
+            a = o->colB[0];
+        }
+        if (o->mode == 1 && (i == 0 || i == 1)) {
+            a = 0;
+        }
+        q.col[i * 4] = a;
+        if (o->hasCol == 1) {
+            if (i == 0 || i == 3) {
+                q.col[i * 4 + 1] = o->colA[1];
+                q.col[i * 4 + 2] = o->colA[2];
+                q.col[i * 4 + 3] = o->colA[3];
+            } else {
+                q.col[i * 4 + 1] = o->colB[1];
+                q.col[i * 4 + 2] = o->colB[2];
+                q.col[i * 4 + 3] = o->colB[3];
+            }
+        } else {
+            q.col[i * 4 + 3] = 255;
+            q.col[i * 4 + 2] = 255;
+            q.col[i * 4 + 1] = 255;
+        }
+        if (o->shade == 1) {
+            f32 k = 0.003921569f * a;
+            q.col[i * 4 + 1] = k * q.col[i * 4 + 1];
+            q.col[i * 4 + 2] = k * q.col[i * 4 + 2];
+            q.col[i * 4 + 3] = k * q.col[i * 4 + 3];
+        }
+    }
+    if (o->tex != 0) {
+        idx = o->idx;
+        if (o->tex->nbTexture <= idx) {
+            idx = o->tex->nbTexture - 1;
+        }
+        fn_80299040(o->tex);
+        fn_80298FE4(idx);
+        if (o->ox < -0x100) o->ox = 255;
+        if (o->ox > 255) o->ox = -0x100;
+        if (o->oy < -0x100) o->oy = 255;
+        if (o->oy > 255) o->oy = -0x100;
+        q.uv[0] = o->x0 + o->ox;
+        q.uv[1] = o->y0 - o->oy;
+        q.uv[2] = o->x1 + o->ox;
+        q.uv[3] = o->y0 - o->oy;
+        q.uv[4] = o->x1 + o->ox;
+        q.uv[5] = o->y1 - o->oy;
+        q.uv[6] = o->x0 + o->ox;
+        q.uv[7] = o->y1 - o->oy;
+    }
+    {
+        s32 f = 0x84000;
+        if (mode == 1) {
+            f = flags | 0x80000;
+        }
+        if (o->tex != 0) {
+            fn_80035518(o->tex, idx, qp, 1, f);
+        } else {
+            fn_80035518(o->tex, idx, qp, 0, f);
         }
     }
 }

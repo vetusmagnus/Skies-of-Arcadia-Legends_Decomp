@@ -12,6 +12,7 @@ u32 fn_801F4C24(s16 id);
 s8 fn_801EFCC4(s16 id, s32 n);
 extern const s8 lbl_802D4600[24];
 s32 fn_801E4BBC(s8 i);
+s32 fn_801F4A60(s16 id);
 
 s32 fn_801F2508(void *a, void *b)
 {
@@ -285,4 +286,48 @@ u16 fn_801F477C(s16 id)
     default:
         return 0;
     }
+}
+
+s8 fn_801F452C(s16 id) {
+    s8 n = fn_801F4A60(id);
+    InvEnt *tbl;
+    InvEnt *e;
+    s32 i;
+
+    switch (fn_801F4C24(id)) {
+    case 0:
+        tbl = lbl_8030B7F4.s354;
+        break;
+    case 1:
+        tbl = lbl_8030B7F4.s494;
+        break;
+    case 2:
+        tbl = lbl_8030B7F4.s5d4;
+        break;
+    case 3:
+        tbl = lbl_8030B7F4.s714;
+        break;
+    case 4:
+        tbl = lbl_8030B7F4.s854;
+        break;
+    case 5:
+        tbl = lbl_8030B7F4.sa0c;
+        break;
+    case 6:
+        tbl = lbl_8030B7F4.saac;
+        break;
+    case 7:
+        tbl = lbl_8030B7F4.s994;
+        break;
+    }
+    e = tbl;
+    i = 0;
+    do {
+        if (id == e->id) {
+            return tbl[i].cnt;
+        }
+        i++;
+        e++;
+    } while (i < n);
+    return 0;
 }

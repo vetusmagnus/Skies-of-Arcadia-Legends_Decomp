@@ -5,6 +5,7 @@
 #include "game/drawstate.h"
 #include "game/evobj.h"
 #include "game/task.h"
+#include <dolphin/os/OSFastCast.h>
 typedef struct Ent_UNIT0000 {
     u8 pad[0x1C];
     u32 x1c;
@@ -625,6 +626,35 @@ typedef struct Work_8008F138_8008F138 {
 extern void fn_8008E6F4(Task* t);
 extern void fn_80061F58(void* dst, s32 size, s32 a);
 extern MdlNode* fn_8006C9AC(MdlNode* root, u16 target);
+/* The body the resource points at (0x154: its model root). */
+typedef struct Chr_8008F084 {
+    u8 pad0[0x154];
+    s32 x154;
+} Chr_8008F084;
+/* fn_8008E3BC's 0x100-byte work. */
+typedef struct Work_8008F084 {
+    TaskArg* arg;   /* 0x00 */
+    void* obj;      /* 0x04 */
+    s32 x8;         /* 0x08 */
+    u8 padc[4];
+    u32 x10;        /* 0x10 */
+    u8 pad14[0x3c - 0x14];
+    f32 x3c, x40, x44;
+    u8 pad48[4];
+    u8 x4c;
+} Work_8008F084;
+/* The pad state behind lbl_80311A60[0] (Pad_80311A60 in unit_8010E164.c has
+   other fields of it). */
+typedef struct Pad_80090DBC {
+    u32 buttons;     /* 0x00 */
+    u8 pad4[0x10 - 0x4];
+    u16 trig_l;      /* 0x10 */
+    u16 trig_r;      /* 0x12 */
+    u8 pad14[0x18 - 0x14];
+    s16 stick;       /* 0x18 */
+} Pad_80090DBC;
+extern Pad_80090DBC *lbl_80311A60[];
+extern s32 lbl_80346C40;
 
 u32 fn_8008B55C(void* a0, Ent_UNIT0000* e) {
     return (e->x1c >> 9) & 1;
@@ -2686,4 +2716,90 @@ int fn_8008F138(Handler* h, TaskArg_8008F138* arg)
         return 0;
     }
     return 1;
+}
+
+int fn_8008F084(Handler* h, TaskArg* arg)
+{
+    TaskRes* res;
+    Chr_8008F084* c;
+    Task* t;
+    Work_8008F084* w;
+    void* obj;
+
+    res = arg->res;
+    obj = h->obj;
+    c = res->x4c;
+    if (fn_8003DCF4(obj, c)) {
+        t = fn_8003DB34(fn_8008E3BC);
+        fn_80061F58(&t->work, 0x100, 0);
+        w = t->work;
+        w->arg = arg;
+        w->obj = obj;
+        w->x8 = c->x154;
+        w->x10 = res->x8;
+        w->x3c = res->x34;
+        w->x40 = res->x38;
+        w->x44 = res->x3c;
+        w->x4c = res->x44;
+    } else {
+        return 0;
+    }
+    return 1;
+}
+
+static inline f32 AbsF(f32 v) {
+    if (v < 0.0f) {
+        v = -v;
+    }
+    return v;
+}
+
+static inline f32 MinF(f32 a, f32 b) {
+    return (a < b) ? a : b;
+}
+
+f32 fn_80090598(f32 x, s32 cx, f32 z, s32 cz) {
+    f32 dx;
+    f32 dz;
+    f32 d;
+
+    dx = AbsF(x - cx);
+    dz = AbsF(z - cz);
+    dx = MinF(dx, 16800.0f - dx);
+    dz = MinF(dz, 14400.0f - dz);
+    d = 1.0f + fn_80291A5C(dx * dx + dz * dz);
+    return 1000000.0f / (d * d);
+}
+
+s32 fn_80090DBC(s32 a)
+{
+    Pad_80090DBC *p = lbl_80311A60[0];
+    s32 r = 0;
+    f32 v;
+
+    if ((p->buttons & 0x40) && (p->buttons & 0x20)) {
+        lbl_80346C40 = 1;
+        r = 0x10000;
+    }
+    if (lbl_80346C40 != 0) {
+        if (p->trig_r == 0 && p->trig_l == 0) {
+            lbl_80346C40 = 0;
+        }
+    } else {
+        v = 0.0f;
+        if (p->stick != 0) {
+            v = __OSs16tof32(&p->stick) / -44.0f;
+        } else if (p->trig_r != 0) {
+            v = __OSu16tof32(&p->trig_r) / 150.0f;
+        } else if (p->trig_l != 0) {
+            v = __OSu16tof32(&p->trig_l) / -150.0f;
+        }
+        if (v) {
+            r = 512.0f * v;
+            if (a != 0 && (lbl_80310B3C.x84 & 0x10000000)) {
+                r *= -1.0f;
+            }
+        }
+    }
+    return r;
 }

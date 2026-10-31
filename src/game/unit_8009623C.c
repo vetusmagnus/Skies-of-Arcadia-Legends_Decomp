@@ -98,6 +98,149 @@ extern void fn_80097388(Obj*);
 extern void fn_800974CC(Obj*);
 extern void fn_80095220(void* cam, f32* a, u32* b);
 extern void fn_801DD334(f32* a, f32* b, u32* c);
+typedef struct Tpl {
+    s16 x0;
+    s16 x2;
+    f32 x4;
+    f32 x8;
+    f32 xc;
+    s32 x10;
+    s32 x14;
+    s32 x18;
+    f32 x1c;
+    f32 x20;
+    f32 x24;
+    u8 pad28[0x40 - 0x28];
+} Tpl;
+struct Obj12;
+typedef struct Sub_80096570 {
+    s32 (*fn_80096570)(void *, struct Obj12 *);   /* 0x00 */
+    u8 pad4[0x10 - 4];
+    s16 x10;
+    s16 x12;
+    s16 flags;          /* 0x14 */
+    u8 pad16[2];
+    void* x18;
+} Sub_80096570;
+typedef struct Res {
+    u8 pad0[0x10];
+    s16 x10;
+    s16 x12;
+} Res;
+typedef struct Obj_80096570 {
+    s16 kind;       /* 0x00 */
+    s16 s2;
+    s16 s4;
+    s16 s6;
+    u8 pad8[2];
+    s16 sa;
+    u8 padc[0x64 - 0xC];
+    f32 v64[3];     /* 0x64 */
+    u8 pad70[0xDC - 0x70];
+    f32 fdc;
+    u32 fe0;
+    s16 fe4;
+    u8 pade6[0xEC - 0xE6];
+    s32 xec;
+    u8 padf0[0x108 - 0xF0];
+    Sub_80096570* sub;       /* 0x108 */
+    u8 pad10c[0x110 - 0x10C];
+    s32 w110;
+    u8 pad114[0x11C - 0x114];
+    s32 w11c;
+    u8 pad120[0x128 - 0x120];
+    Res* res;       /* 0x128 */
+    Tpl tpl;        /* 0x12C */
+    u8 b16c;
+} Obj_80096570;
+typedef struct Node {
+    u8 pad0[0x19];
+    u8 state;
+} Node;
+typedef struct Vec { f32 x; f32 y; f32 z; } Vec;
+typedef struct Sphere { Vec c; f32 r; } Sphere;
+typedef struct Capsule { Vec a; Vec b; f32 r; } Capsule;
+extern s16 lbl_80346C3C;
+extern Sphere lbl_802DFFD8;
+extern Capsule lbl_802DFFE8;
+extern Tpl lbl_8031191C;
+extern char lbl_8030A5D4[0x100];
+extern Res* fn_80222128(Sphere* p);
+extern Sub_80096570* fn_80222010(Capsule* p);
+extern void fn_802229F8(Sub_80096570* s);
+extern void fn_80222838(Sub_80096570* s);
+struct Obj12;
+extern s32 fn_80097608(void *unused, struct Obj12 *p);
+extern void fn_80096230();
+extern void fn_80095910();
+extern void fn_800C52F0();
+extern void fn_800C5108();
+extern void fn_800C4F1C();
+extern void fn_800C4B18();
+extern void fn_800C47BC();
+extern void fn_800C43A0();
+extern void fn_800C40EC();
+extern void fn_800C3C78();
+extern void fn_800C3A50();
+extern void fn_800C3648();
+extern void fn_800953E4();
+extern void fn_800C56AC();
+extern void fn_8009623C();
+extern void fn_80095DFC();
+extern void fn_800C540C();
+extern void fn_800C51BC();
+extern void fn_800C5014();
+extern void fn_800C4B90();
+extern void fn_800C48C4();
+extern void fn_800C4584();
+extern void fn_800C41D0();
+extern void fn_800C3F80();
+extern void fn_800C3B58();
+extern void fn_800C381C();
+extern void fn_8009564C();
+extern void fn_800C5940();
+Sphere lbl_802DFFD8 = { { 0.0f, 0.0f, 0.0f }, 4.0f };
+Capsule lbl_802DFFE8 = { { 0.0f, -20.0f, 0.0f }, { 0.0f, 5.0f, 0.0f }, 5.0f };
+void (*lbl_802E0004[16])() = {
+    fn_80096230,
+    fn_80095910,
+    fn_800C52F0,
+    fn_800C5108,
+    fn_800C4F1C,
+    fn_800C4B18,
+    fn_800C47BC,
+    fn_800C43A0,
+    fn_800C40EC,
+    fn_800C3C78,
+    fn_800C3A50,
+    fn_800C3648,
+    fn_800953E4,
+    fn_800C56AC,
+    fn_80096230,
+    fn_80096230,
+};
+void (*lbl_802E0044[16])() = {
+    fn_8009623C,
+    fn_80095DFC,
+    fn_800C540C,
+    fn_800C51BC,
+    fn_800C5014,
+    fn_800C4B90,
+    fn_800C48C4,
+    fn_800C4584,
+    fn_800C41D0,
+    fn_800C3F80,
+    fn_800C3B58,
+    fn_800C381C,
+    fn_8009564C,
+    fn_800C5940,
+    fn_8009623C,
+    0,
+};
+Ctrl lbl_802E0084 = {
+    0xFF, 0, 0, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+    0, 0, 0, { 0 }, 0.0f, 0.0f, 0.0f, 0, 1, 0.0f, 0, 1, 0.0f, 0, 0, 0.0f,
+};
 
 void fn_8009623C(Obj_8009623C *o)
 {
@@ -326,4 +469,84 @@ void fn_80096260(Obj* o, Ctrl_80096260* c) {
     }
     o->s12c = 0;
     lbl_802E0044[o->kind](o, c);
+}
+
+static inline void SetFields(Obj_80096570* o, s16 a, s16 b) {
+    o->s4 = a;
+    o->s6 = b;
+    o->fdc = 0.5f;
+    o->fe0 = 0x100;
+    o->fe4 = 0x78;
+}
+
+void fn_80096570(Node* node, Obj_80096570* o) {
+    o->res = fn_80222128(&lbl_802DFFD8);
+    o->res->x10 = 0x2800;
+    o->res->x12 = 2;
+    o->sub = fn_80222010(&lbl_802DFFE8);
+    o->sub->x10 = 0x2800;
+    o->sub->x12 = 2;
+    o->sub->x18 = o->v64;
+    o->sub->fn_80096570 = fn_80097608;
+    fn_802229F8(o->sub);
+    fn_80222838(o->sub);
+    o->xec = 0;
+    if (lbl_80346C3C == 1) {
+        switch (o->kind) {
+        case 1:
+            break;
+        case 0:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+        case 13:
+        case 14:
+            if (o->sub != NULL) {
+                o->sub->flags |= 0x8000;
+            }
+            break;
+        case 7:
+            o->w11c = 0;
+            o->w110 = 0;
+            o->s4 = 0;
+            if (o->sub != NULL) {
+                o->sub->flags |= 0x8000;
+            }
+            break;
+        }
+        node->state = 2;
+    } else {
+        o->sub->flags = 0x8000;
+        o->tpl = lbl_8031191C;
+        o->tpl.x0 = 3;
+        o->tpl.x2 = 2;
+        o->tpl.x24 = 0.0f;
+        o->tpl.x1c = 0.0f;
+        o->tpl.x20 = 0.0f;
+        o->tpl.xc = 0.0f;
+        o->tpl.x18 = 0;
+        o->tpl.x14 = 0;
+        o->tpl.x10 = 0;
+        o->tpl.x4 = 0.0f;
+        o->tpl.x8 = 0.0f;
+        SetFields(o, 0, 0);
+        o->s2 = 0;
+        o->kind = 0;
+        o->sa = 0;
+        if (lbl_8030A5D4[0] == 0) {
+            lbl_802E0084.b0 = 0xE;
+            lbl_802E0084.flags = 0;
+            lbl_802E0084.b1 = 0;
+        }
+        node->state = 1;
+    }
+    o->b16c = 0;
+    lbl_80346C3C = 2;
 }

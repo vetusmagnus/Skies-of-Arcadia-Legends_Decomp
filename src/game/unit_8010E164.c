@@ -10,7 +10,24 @@
 #include "string.h"
 extern void fn_80117748();
 extern void fn_80114C84(void *a, void *b, void *c, void *d, void *e, void *f);
-extern void fn_80114A44(void);
+/* a wall segment: two end points */
+typedef struct Seg {
+    NJS_POINT3 a;
+    NJS_POINT3 b;
+} Seg;
+typedef struct Flags {
+    Seg seg;        /* 0x00 hit wall segment (written by fn_801150DC/fn_8011510C) */
+    u8 pad18[0x24 - 0x18];
+    u16 h24;
+    u8 pad26[0x28 - 0x26];
+    s32 w28;
+    s16 h2c;
+    s16 h2e;
+    u16 h30;
+} Flags;
+/* 0 when the hit (id) is a wall of kind 1/3/30, or of kind 5/7 within 150 below, at a height y
+   of at most 150; 1 otherwise. Same kind table as fn_800CF554. */
+s32 fn_80114A44(s32 id, NJS_POINT3* p, f32 y, Flags* info);
 extern f32 lbl_80349E00;
 extern f32 lbl_80349E04;
 /* Only the flags halfword at 0x24 is used here. */
@@ -2586,6 +2603,53 @@ typedef struct Eff_8012048C {
 } Eff_8012048C;
 extern void fn_8011FFF0(f32 *pos, f32 *v, Elem *el, f32 t, void *w);
 extern f32 fn_8011A994(int i, int n, int k, s32 k2, f32 t);
+extern f32 njScalor(f32 *v);
+typedef struct Vtx {
+    f32 x;
+    f32 y;
+    f32 z;
+    f32 u;
+    f32 v;
+    s32 col;
+} Vtx;
+typedef struct Out_8011B624 {
+    u32 flags;
+    s32 x4;
+    u32 x8;
+    u32 xc;
+    f32 x10;
+    f32 x14;
+    f32 x18;
+    f32 x1c;
+    f32 x20;
+    s16 x24;
+    s16 x26;
+    f32 x28;
+    f32 x2c;
+    f32 x30;
+    f32 x34;
+    Vtx vtx[4];
+} Out_8011B624;
+extern f32 lbl_80347F28;
+/* The 0x270-byte model object (EvObj in game/evobj.h, which stops at 0x264; the task work is
+ * allocated and copied as 0x270 bytes). */
+typedef struct Obj_80126354 {
+    u8 pad0[0x38];
+    NJS_POINT3 pos;     /* 0x38 */
+    Angle ang[3];       /* 0x44 */
+    u8 pad50[0xE8 - 0x50];
+    NJS_MOTION* motion; /* 0xE8 */
+    u8 padEC[0x18C - 0xEC];
+    f32 x18c;           /* 0x18C */
+    u8 pad190[0x270 - 0x190];
+} Obj_80126354;
+/* The object's world matrix and its pivot matrix. */
+typedef struct MtxPair_80126354 {
+    NJS_MATRIX m0;
+    NJS_MATRIX m1;
+} MtxPair_80126354;
+extern void fn_80156CC4(Obj_80126354 *e, Obj_80126354 *out);
+extern void fn_801566B4(s32 a, NJS_MATRIX m0, NJS_MATRIX m1);
 
 void fn_8010E164(u8 *obj) {
     if (obj[0x19] == 0xff) {
@@ -8195,3 +8259,119 @@ s32 fn_8011E72C(Ctx_8011DD9C* c) {
     return 1;
 }
 
+/* 0 when the hit (id) is a wall of kind 1/3/30, or of kind 5/7 within 150 below, at a height y
+   of at most 150; 1 otherwise. Same kind table as fn_800CF554. */
+s32 fn_80114A44(s32 id, NJS_POINT3* p, f32 y, Flags* info)
+{
+    s32 r;
+    if (id != 0) {
+        r = 1;
+        if (150.0f >= y && (info->h24 & 0x8000)) {
+            switch ((info->h24 >> 8) & 0x7F) {
+            case 1:
+            case 3:
+            case 30:
+                r = 0;
+                break;
+            case 5:
+            case 7:
+                if (-150.0f <= y) {
+                    r = 0;
+                }
+                break;
+            }
+        }
+        return r;
+    }
+    return 0;
+}
+
+int fn_80117088(PosBlk *a, PosBlk *b, f32 x, f32 y, f32 z, void *p) {
+    NJS_MATRIX m;
+    NJS_POINT3 v;
+    PosBlk tmp;
+    f32 len;
+    f32 ang;
+
+    v.x = b->pos.x - a->pos.x;
+    v.y = b->pos.y - a->pos.y;
+    v.z = b->pos.z - a->pos.z;
+    len = njScalor(&v.x);
+    v.z = 0.8f * len;
+    v.x = 0.0f;
+    v.y = 0.0f;
+    MemCopy(&tmp, b, 0x24);
+    {
+        f32 d = 0.005493164f * b->ang;
+        ang = x + d;
+        y += d;
+    }
+    while (fabsf(y - ang) >= fabsf(z)) {
+        njUnitMatrix(m);
+        njRotateY(m, 182.04445f * ang);
+        njCalcPoint(m, &v, &tmp.pos);
+        tmp.pos.x = tmp.pos.x + a->pos.x;
+        tmp.pos.y = tmp.pos.y + a->pos.y;
+        tmp.pos.z = tmp.pos.z + a->pos.z;
+        if (fn_80116B84(3, &tmp, lbl_8030A35C, p) == 0) {
+            b->pos.x = tmp.pos.x;
+            b->pos.y = tmp.pos.y;
+            b->pos.z = tmp.pos.z;
+            return 1;
+        }
+        ang += z;
+    }
+    return 0;
+}
+
+void fn_8011B624(Out_8011B624* o) {
+    f32 u;
+    f32 v;
+
+    u = lbl_80345878[10] / 1024.0f;
+    v = lbl_80345878[11] / 512.0f;
+    o->x20 = lbl_80347F28 + o->x20;
+    o->vtx[0].x = 0.0f;
+    o->vtx[0].y = 0.0f;
+    o->vtx[0].z = o->x20;
+    o->vtx[0].u = 0.0f;
+    o->vtx[0].v = 0.0f;
+    o->vtx[0].col = -1;
+    o->vtx[1].x = 0.0f;
+    o->vtx[1].y = lbl_80345878[11];
+    o->vtx[1].z = o->x20;
+    o->vtx[1].u = 0.0f;
+    o->vtx[1].v = v;
+    o->vtx[1].col = -1;
+    o->vtx[2].x = lbl_80345878[10];
+    o->vtx[2].y = 0.0f;
+    o->vtx[2].z = o->x20;
+    o->vtx[2].u = u;
+    o->vtx[2].v = 0.0f;
+    o->vtx[2].col = -1;
+    o->vtx[3].x = lbl_80345878[10];
+    o->vtx[3].y = lbl_80345878[11];
+    o->vtx[3].z = o->x20;
+    o->vtx[3].u = u;
+    o->vtx[3].v = v;
+    o->vtx[3].col = -1;
+}
+
+void fn_80126354(Obj_80126354 *e, MtxPair_80126354 *mp) {
+    Obj_80126354 a;
+    Obj_80126354 b;
+
+    njUnitMatrix(mp->m1);
+    fn_80156C6C(mp->m1, e);
+    if (e->motion != 0) {
+        fn_80156CC4(e, &a);
+        fn_80156C6C(mp->m1, &a);
+    }
+    njUnitMatrix(mp->m0);
+    fn_80156C6C(mp->m0, e);
+    if (e->motion != 0) {
+        fn_80156CC4(e, &b);
+        fn_80156C6C(mp->m0, &b);
+    }
+    fn_801566B4(1, mp->m0, mp->m1);
+}
