@@ -408,6 +408,7 @@ extern u32 lbl_80347EF0;
 extern f32 lbl_80347F30;
 extern f32 lbl_80347F34;
 f32 fn_80291978(f64 x);
+extern f64 lbl_8034D3B8;
 f32 fn_802974E4(f32 x);
 extern u32 lbl_803005A0[8];
 extern u32 lbl_80300710[8];

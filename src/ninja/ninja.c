@@ -3407,3 +3407,5 @@ void fn_802AC730(void* dst, u8 c, s32 n) {
         memset(dst, c, n);
     }
 }
+
+#include "src/ninja/ninja_asm.c"

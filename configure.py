@@ -194,6 +194,8 @@ game_src = sorted(
     for d in ("src/game", "include/game", "src/ninja")
     for p in Path(d).rglob("*")
     if p.suffix in (".c", ".cpp", ".h", ".hpp", ".inc")
+    # Hand-written asm in the original Ninja library (docs/ninja.md), checked like extern/.
+    and p.as_posix() != "src/ninja/ninja_asm.c"
 ) + ["include/ninja.h", "include/ninja_lib.h"]
 config.custom_build_rules = [
     {
