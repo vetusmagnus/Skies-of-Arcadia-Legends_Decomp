@@ -5,7 +5,6 @@
 #include "game/task.h"
 #include <string.h>
 #define PTR(p, off) (*(void**)((u8*)(p) + (off)))
-extern void* fn_80005B9C(void* heap);
 extern void fn_8007E13C(void* a);
 extern void fn_8007E118(void* a);
 extern void fn_8007DFC0(void* a);
@@ -1251,11 +1250,6 @@ typedef struct {
 typedef struct Slot24 { u32 flags; u8 pad[0x20]; } Slot24;
 /* ADD: lbl_8030A6D4 entries (0x24 bytes) */
 extern Slot24 lbl_8030A6D4[];
-typedef struct HeapBlock {
-    struct HeapBlock* prev; /* 0x0 */
-    struct HeapBlock* next; /* 0x4 */
-    u32 size;               /* 0x8 */
-} HeapBlock;
 extern void fn_80061048(char* s);
 extern void fn_80035FC0(char* name, void* slot, s32 flag);
 typedef struct CE8Pos {
@@ -1324,14 +1318,6 @@ extern void fn_80032BBC(s8, s32);
 extern void fn_80032B6C(s8, s32);
 extern s16 fn_8001D41C(s16* cur, s16* other);
 extern void fn_80053F38(s8, s32);
-
-void* OSAllocFromHeapClear(void* heap, u32 size) {
-    void* p = fn_80005B9C(heap);
-    if (p != 0) {
-        memset(p, 0, size);
-    }
-    return p;
-}
 
 typedef struct {
     u32 keyframe;
@@ -5035,43 +5021,6 @@ s32 fn_8001F3F0(Task* t, NJS_POINT3* out)
         break;
     }
     return 1;
-}
-
-HeapBlock* fn_80005CEC(HeapBlock* head, HeapBlock* b) {
-    HeapBlock* prev = NULL;
-    HeapBlock* cur = head;
-    while (cur != NULL) {
-        if ((u32)b <= (u32)cur) {
-            break;
-        }
-        prev = cur;
-        cur = cur->next;
-    }
-    b->next = cur;
-    b->prev = prev;
-    if (cur != NULL) {
-        cur->prev = b;
-        if ((u8*)b + b->size == (u8*)cur) {
-            b->size += cur->size;
-            cur = cur->next;
-            b->next = cur;
-            if (cur != NULL) {
-                cur->prev = b;
-            }
-        }
-    }
-    if (prev != NULL) {
-        prev->next = b;
-        if ((u8*)prev + prev->size == (u8*)b) {
-            prev->size += b->size;
-            prev->next = cur;
-            if (cur != NULL) {
-                cur->prev = prev;
-            }
-        }
-        return head;
-    }
-    return b;
 }
 
 s32 fn_800090F8(s32 packed, s16* p) {

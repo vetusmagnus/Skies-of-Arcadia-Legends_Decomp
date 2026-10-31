@@ -11,8 +11,13 @@ Sections:
 	.sdata2     type:rodata align:32
 	.sbss2      type:bss align:32
 
+dolphin/os/OSAlloc.c:
+	.text       start:0x80005600 end:0x80005D98
+	.rodata     start:0x802AC820 end:0x802ACBC0
+	.sdata      start:0x80346720 end:0x80346728
+
 game/unit_80005B50.c:
-	.text       start:0x80005B50 end:0x80020B50
+	.text       start:0x80005D98 end:0x80020B50
 
 game/unit_80020B50.c:
 	.text       start:0x80020B50 end:0x8002A034
@@ -303,6 +308,10 @@ dolphin/mtx/mtx44.c:
 dolphin/mtx/vec.c:
 	.text       start:0x802393A4 end:0x802394C4
 	.sdata2     start:0x8034C7E0 end:0x8034C7E8
+
+dolphin/mtx/quat.c:
+	.text       start:0x802394C4 end:0x80239638
+	.sdata2     start:0x8034C7E8 end:0x8034C7F8
 
 dolphin/dvd/dvdlow.c:
 	.text       start:0x80239638 end:0x8023A478
