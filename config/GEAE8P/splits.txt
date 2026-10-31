@@ -533,6 +533,9 @@ MetroTRK/nubinit.c:
 	.rodata     start:0x802D9FC0 end:0x802D9FDC
 	.bss        start:0x80319070 end:0x80319074
 
+MetroTRK/msg.c:
+	.text       start:0x802537EC end:0x802539C8
+
 MetroTRK/serpoll.c:
 	.text       start:0x802543F4 end:0x802547C0
 	.bss        start:0x8031AA28 end:0x8031AA40

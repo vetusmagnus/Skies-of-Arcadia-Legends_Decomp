@@ -104,7 +104,7 @@ int WriteUARTFlush(void)
 	return done;
 }
 
-int WriteUART1(u8 data)
+int WriteUART1(s8 data)
 {
 	write_buf[write_pos++] = data;
 	return 0;

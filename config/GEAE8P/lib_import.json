@@ -188,6 +188,7 @@
   "dolphin/tpl/tpl.c",
   "dolphin/pad/PadClamp.c",
   "dolphin/dvd/dvdfatal.c",
-  "runtime/__mem.c"
+  "runtime/__mem.c",
+  "MetroTRK/msg.c"
  ]
 }
