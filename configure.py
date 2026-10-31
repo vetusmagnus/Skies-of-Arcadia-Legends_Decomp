@@ -534,6 +534,8 @@ config.libs += [
         "progress_category": "sdk",
         "src_dir": "extern/sdk",
         "objects": [
+            Object(Matching, "dolphin/odenotstub/odenotstub.c"),
+            Object(Matching, "dolphin/amcstubs/AmcExi2Stubs.c"),
             Object(Matching, "dolphin/db.c"),
         ],
     },
@@ -594,6 +596,7 @@ config.libs += [
         "progress_category": "sdk",
         "src_dir": "extern/sdk",
         "objects": [
+            Object(Matching, "dolphin/card/CARDStatEx.c"),
             Object(Matching, "dolphin/card/CARDMount.c"),
             Object(Matching, "dolphin/card/CARDBios.c"),
             Object(Matching, "dolphin/card/CARDUnlock.c"),
@@ -638,6 +641,7 @@ config.libs += [
         "progress_category": "sdk",
         "src_dir": "extern/trk",
         "objects": [
+            Object(Matching, "MetroTRK/dolphin_trk_glue.c", mw_version="GC/1.3"),
             Object(Matching, "MetroTRK/mem_TRK.c", mw_version="GC/1.3"),
             Object(Matching, "MetroTRK/mutex_TRK.c"),
             Object(Matching, "MetroTRK/support.c"),

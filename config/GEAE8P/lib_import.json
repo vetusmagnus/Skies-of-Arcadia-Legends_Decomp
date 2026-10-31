@@ -178,6 +178,10 @@
   "MetroTRK/serpoll.c",
   "MetroTRK/support.c",
   "MetroTRK/mutex_TRK.c",
-  "MetroTRK/mem_TRK.c"
+  "MetroTRK/mem_TRK.c",
+  "dolphin/amcstubs/AmcExi2Stubs.c",
+  "dolphin/odenotstub/odenotstub.c",
+  "dolphin/card/CARDStatEx.c",
+  "MetroTRK/dolphin_trk_glue.c"
  ]
 }

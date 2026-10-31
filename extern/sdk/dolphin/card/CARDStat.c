@@ -5,6 +5,8 @@
 
 #include <dolphin/CARDPriv.h>
 
+void __CARDSyncCallback(s32 chan, s32 result);
+
 static void UpdateIconOffsets(CARDDir* ent, CARDStat* stat) {
   u32 offset;
   BOOL iconTlut;
@@ -145,4 +147,13 @@ s32 CARDSetStatusAsync(s32 chan, s32 fileNo, CARDStat* stat, CARDCallback callba
     __CARDPutControlBlock(card, result);
   }
   return result;
+}
+
+s32 CARDSetStatus(s32 chan, s32 fileNo, CARDStat* stat) {
+  s32 result = CARDSetStatusAsync(chan, fileNo, stat, __CARDSyncCallback);
+  if (result < 0) {
+    return result;
+  }
+
+  return __CARDSync(chan);
 }
