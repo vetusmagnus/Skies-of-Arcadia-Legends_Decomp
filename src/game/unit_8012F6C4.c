@@ -30,7 +30,6 @@ typedef struct {
 } Holder_8013360C;
 extern Holder_8012FF48 *lbl_80346F40;
 extern Holder_8013360C *lbl_80346F58;
-extern void* lbl_80346F48;
 extern void* lbl_80346F50;
 extern void* lbl_803475A8;
 extern u8 lbl_80305FC0[];
@@ -327,6 +326,7 @@ typedef struct Mgr {
     u8 pad0[0x24];
     Inner *inner;
 } Mgr;
+extern Mgr *lbl_80346F48;
 typedef struct Pad_8013A794 {
     u8 pad0[0x8];
     u32 x8; /* buttons held */
@@ -1550,8 +1550,8 @@ void fn_80131658(Cell *cell)
     s8 b = cell->y;
     s8 c = cell->a;
 
-    (*(Mgr **)&lbl_80346F48)->inner->grid[a][b][c] = cell->b;
-    (*(Mgr **)&lbl_80346F48)->inner->sel[a][b] = cell->c;
+    lbl_80346F48->inner->grid[a][b][c] = cell->b;
+    lbl_80346F48->inner->sel[a][b] = cell->c;
 }
 
 s32 fn_8013A794(s32 a, s32 b, s32 cur, s32 d) {

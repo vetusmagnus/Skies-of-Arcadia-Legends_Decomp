@@ -101,7 +101,7 @@ extern char lbl_802B4104[];
 extern const char lbl_802B3F24[];
 extern s32 lbl_80347024;
 extern u32 lbl_80347008;
-extern u32 lbl_8034702C;
+extern void *lbl_8034702C;
 extern u8 lbl_80306C98[];
 extern E12 lbl_80306B14[];
 extern E12 lbl_80308F98[];
@@ -392,7 +392,9 @@ void fn_8021C62C(Sub_8015887C *s, NJS_TEXLIST *tex, s32 b);
 void fn_80159610(Sub_8015887C *s);
 typedef struct { u8 pad[0x19]; u8 b19; } Ent_80158A80;
 extern Ent_80158A80* lbl_80306D98[8];
-extern void* lbl_80347028;
+typedef struct { u8 pad[0x20]; NJS_TEXLIST *texlist; } S80158B7Cb;
+typedef struct { u8 pad[0x4]; S80158B7Cb *p4; } S80158B7Ca;
+extern S80158B7Ca *lbl_80347028;
 extern NJS_TEXLIST *lbl_80347030;
 void fn_8012F744(void);
 void fn_8022642C(void);
@@ -957,7 +959,7 @@ typedef struct {
 } Obj_80159610;
 extern u32 lbl_802E6F00[5];
 extern f32 fn_801DBD9C(f32 z);
-extern void fn_8021EDE0(void *t, s32 a);
+extern void fn_8021EDE0(void *t, s16 a);
 extern s32 fn_8021EE1C(void *t, u32 a);
 extern void fn_80291064(Vtx_80159610 *v, s32 n, s32 mode);
 extern char lbl_802B3BD8[];
@@ -3751,6 +3753,7 @@ void fn_80159610(Sub_8015887C *o_)
     f32 y0, y1, x0, x1, z;
     s32 i;
     u32 col;
+    u8 tex;
 
     DrawStateDefault2D(&ds);
     if (DrawStatePush(&ds) != 0) {
@@ -3768,7 +3771,7 @@ void fn_80159610(Sub_8015887C *o_)
             fn_8021EDE0(o->p74, o->h72);
         } else {
             fn_80299040(lbl_80347034);
-            fn_8021EDE0(lbl_80347034, (s16)fn_8021EE1C(lbl_80347034, lbl_802E6F00[2]));
+            fn_8021EDE0(lbl_80347034, fn_8021EE1C(lbl_80347034, lbl_802E6F00[2]));
         }
         z = fn_801DBD9C(-2.0f);
         col = o->alpha | 0xffffff00;
@@ -3794,7 +3797,8 @@ void fn_80159610(Sub_8015887C *o_)
         }
         fn_80291064(v, 4, 1);
         fn_80299040(lbl_80347034);
-        fn_8021EDE0(lbl_80347034, (u8)fn_8021EE1C(lbl_80347034, lbl_802E6F00[3]));
+        tex = fn_8021EE1C(lbl_80347034, lbl_802E6F00[3]);
+        fn_8021EDE0(lbl_80347034, tex);
         z = fn_801DBD9C(-1.5f);
         col = o->alpha | 0xdcdcdc00;
         v[1].v = 1.0f;
@@ -4139,16 +4143,14 @@ s32 fn_80150800(Obj_80150800 *o)
     return changed;
 }
 
-typedef struct { u8 pad[0x20]; NJS_TEXLIST *texlist; } S80158B7Cb;
-typedef struct { u8 pad[0x4]; S80158B7Cb *p4; } S80158B7Ca;
 extern S80158B7Ca *fn_801DB244(char *name);
 extern char lbl_802B3F8C[];
 
 void fn_80158B7C(void) {
     s32 i;
 
-    lbl_8034702C = (u32)(lbl_80347028 = fn_801DB244(lbl_802B3F8C));
-    lbl_80347034 = lbl_80347030 = ((S80158B7Ca *)lbl_80347028)->p4->texlist;
+    lbl_8034702C = lbl_80347028 = fn_801DB244(lbl_802B3F8C);
+    lbl_80347034 = lbl_80347030 = lbl_80347028->p4->texlist;
     fn_80227810(lbl_80347030);
     for (i = 0; i < 8; i++) {
         lbl_80306DB8[i] = 0;

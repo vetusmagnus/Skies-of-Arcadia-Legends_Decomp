@@ -6768,17 +6768,17 @@ s32 fn_80160424(f32 x, Spl *sp, void *b, void *c) {
     n = sp->count - 1;
     k = 0;
     for (i = 0; i < n; i++) {
-        if (x <= (f32)sp->x8[i]) {
+        if (x <= sp->x8[i]) {
             break;
         }
         k++;
-        x -= (f32)sp->x8[i];
+        x -= sp->x8[i];
     }
     if (k >= n) {
         return -1;
     }
-    x = fn_80212A78(c, x, (f32)sp->x8[k]);
-    fn_80213178(x, (f32)sp->x8[k], sp->xc[k], sp->x10[k].a, sp->x10[k].b, sp->xc[k + 1], b);
+    x = fn_80212A78(c, x, sp->x8[k]);
+    fn_80213178(x, sp->x8[k], sp->xc[k], sp->x10[k].a, sp->x10[k].b, sp->xc[k + 1], b);
     return k;
 }
 
@@ -8544,7 +8544,7 @@ void fn_80178D2C(s32 unused, s8 mode) {
 }
 
 void fn_8016C4C8(s8 mode) {
-    lbl_803470B0 = ((Obj_8016C4C8*)fn_802268E8((void *)(lbl_803475A8), (void *)((void*)fn_8016C204)));
+    lbl_803470B0 = fn_802268E8(lbl_803475A8, fn_8016C204);
     lbl_803470B0->sub = fn_801E1C7C(0x50);
     fn_8016C61C();
     if (lbl_803470B0 != 0) {

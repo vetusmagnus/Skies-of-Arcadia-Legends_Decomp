@@ -391,7 +391,7 @@ extern u32 lbl_802DFF1C[0x2e];
 extern Ent* lbl_80302E18[0x40];
 extern char lbl_802B0D00[];
 extern char lbl_802B0D20[];
-extern s32 fn_8009014C(u8* arr, u8* key, s32 n, s32 size);
+extern s32 fn_8009014C(u8* arr, const void* key, s32 n, s32 size);
 extern int sprintf(char* buf, const char* fmt, ...);
 typedef struct Pt {
     f32 x;       /* 0x00 */
@@ -1532,7 +1532,7 @@ void fn_8008D3B0(Slot* o) {
     }
 }
 
-s32 fn_8009014C(u8* arr, u8* key, s32 n, s32 size) {
+s32 fn_8009014C(u8* arr, const void* key, s32 n, s32 size) {
     s32 i;
     u8* p;
     switch (size) {
@@ -2095,12 +2095,16 @@ void fn_8008F9B8(u16 key, u8* src) {
     int idx;
     int i;
     u8* dst;
+    s32 x;
+    s32 z;
 
     if (lbl_80311AD4[6] != 8) {
-        idx = fn_8009014C(lbl_80347468, (u8*)&key, 0x40, 2);
+        idx = fn_8009014C(lbl_80347468, &key, 0x40, 2);
         if (idx == -1) {
-            sprintf(msg1, lbl_802B0D00, (s32)lbl_80347450->pos.x, (s32)lbl_80347450->pos.z);
-            fn_801DBE1C((void *)(msg1));
+            x = lbl_80347450->pos.x;
+            z = lbl_80347450->pos.z;
+            sprintf(msg1, lbl_802B0D00, x, z);
+            fn_801DBE1C(msg1);
             return;
         }
         dst = &lbl_80347468[idx * 0x2e + 0x80];
@@ -2108,10 +2112,12 @@ void fn_8008F9B8(u16 key, u8* src) {
             *dst++ = src[lbl_802DFF1C[i]];
         }
     } else {
-        idx = fn_8009014C(lbl_80347468, (u8*)&key, 0x40, 2);
+        idx = fn_8009014C(lbl_80347468, &key, 0x40, 2);
         if (idx == -1) {
-            sprintf(msg2, lbl_802B0D20, (s32)lbl_80347450->pos.x, (s32)lbl_80347450->pos.z);
-            fn_801DBE1C((void *)(msg2));
+            x = lbl_80347450->pos.x;
+            z = lbl_80347450->pos.z;
+            sprintf(msg2, lbl_802B0D20, x, z);
+            fn_801DBE1C(msg2);
             return;
         }
         ((s16*)lbl_80347468)[idx] = 0;

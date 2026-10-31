@@ -3991,8 +3991,8 @@ void fn_800624FC(O800624FC *o) {
     switch (o->state) {
     case 0:
         o->state = 1;
-        s->f4 = (lbl_80346BD8->base[1] + lbl_80346BD8->v8[1]) / (f32)s->s0e;
-        s->f8 = (lbl_80346BD8->base[1] + lbl_80346BD8->v8[1]) / (f32)(s->s10 - s->s0e);
+        s->f4 = (lbl_80346BD8->base[1] + lbl_80346BD8->v8[1]) / s->s0e;
+        s->f8 = (lbl_80346BD8->base[1] + lbl_80346BD8->v8[1]) / (s->s10 - s->s0e);
     case 1:
         lbl_80346BD8->x20 = lbl_80346BD8->x20 - s->f4;
         if (lbl_80346BD8->x20 + lbl_80346BD8->v8[1] <= 0.0f) {
@@ -6242,7 +6242,7 @@ void fn_80062E94(O62E94 *o) {
     case 0:
         o->state = 1;
         lbl_80346BD8->x88 = 0;
-        s->f4 = (lbl_80346BD8->base[1] - lbl_80346BD8->x20) / (f32)s->s8;
+        s->f4 = (lbl_80346BD8->base[1] - lbl_80346BD8->x20) / s->s8;
     case 1:
         lbl_80346BD8->x20 = lbl_80346BD8->x20 + s->f4;
         if (lbl_80346BD8->x20 >= lbl_80346BD8->base[1]) {

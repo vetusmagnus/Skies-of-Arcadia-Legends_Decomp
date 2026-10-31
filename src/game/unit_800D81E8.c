@@ -214,6 +214,9 @@ typedef struct {
     s32 f18;
     u32 f1c;
     s32 f20;
+    u8 pad24[4];
+    u32 f28;
+    u32 f2c;
 } Opt_80100BF8;
 typedef struct {
     u8 pad0[4];
@@ -247,7 +250,7 @@ extern u32 fn_8008F980(void);
 extern s32 fn_800C355C(void* p, Inf_80100BF8* inf, s32 a);
 extern void fn_80222C80(Inf_80100BF8* inf, Data_80100BF8* d);
 extern void fn_80129814(Task_80100BF8* t);
-Task_80100BF8* fn_80100BF8(Task_80100BF8* o, u32 id, u32 infw);
+Task_80100BF8* fn_80100BF8(Task_80100BF8* o, u32 id, Inf_80100BF8* inf);
 extern s32 fog_enabled;
 typedef struct Cnt_8010B038 {
     s32 count;
@@ -1268,11 +1271,11 @@ typedef struct Entry {
     void *ptr;         /* 0x04 the loaded data */
     void *p8;          /* 0x08 */
     char name[0x20];   /* 0x0C */
-    void *owner;       /* 0x2C */
+    s32 owner;         /* 0x2C */
     struct Entry *next; /* 0x30 */
 } Entry;
 extern Entry *lbl_80347460;
-extern Entry * fn_801096FC(void *owner, s32 id, void *ptr, const char *name);
+extern Entry * fn_801096FC(s32 owner, s32 id, void *ptr, const char *name);
 extern void fn_801CC434(const void* p, s32 zero, void* out);
 extern s32 fn_8025EF88(const char *a, const char *b);
 extern s32 fn_801E1098(void* a, void* b);
@@ -2029,17 +2032,6 @@ typedef struct Pad_8010D280 {
 } Pad_8010D280;
 extern s8 fn_8010B258(Obj_8010D280 *o, void *p);
 typedef struct {
-    u8 pad0[0x28];
-    u32 f28;
-    u32 f2c;
-} Tbl_801032C8;
-typedef struct {
-    u8 pad0[0x10];
-    Tbl_801032C8* t;
-    u8 pad14[0x48 - 0x14];
-    f32 f48;
-} P1c8_801032C8;
-typedef struct {
     u8 pad0[0x38];
     f32 p38;
     f32 p3c;
@@ -2054,7 +2046,7 @@ typedef struct {
     u8 pad170[0x178 - 0x170];
     u16 f178;
     u8 pad17a[0x1c8 - 0x17a];
-    P1c8_801032C8* p1c8;
+    Inf_80100BF8* p1c8;
     u8 pad1cc[0x22c - 0x1cc];
     s16 f22c;
     u8 pad22e[0x24c - 0x22e];
@@ -4667,7 +4659,7 @@ s32 fn_801092C0(s32 id, void **out) {
 }
 
 void fn_801097F8(s32 a, void *b, const char *c) {
-    fn_801096FC((void *)1, a, b, c);
+    fn_801096FC(1, a, b, c);
 }
 
 void fn_80109A4C(void) {
@@ -4912,7 +4904,7 @@ s32 fn_8010038C(void) {
     return 1;
 }
 
-void* fn_80100E10(void* a, u32 unused, u32 b, u32 c) {
+void* fn_80100E10(void* a, void (*unused)(Task*), u32 b, Inf_80100BF8* c) {
     void* r;
     r = fn_801C6180(a);
     if (r != 0) {
@@ -5930,7 +5922,7 @@ void fn_800E178C(Ui178C* ui, EvObj* t)
         ui->x = 0.0f;
     }
     ui->y = 0.0f;
-    t->x258 = t->x258 + (f32)ui->step / 15.0f;
+    t->x258 = t->x258 + ui->step / 15.0f;
     if (t->x258 > 1.0f) {
         t->x258 = 1.0f;
     } else if (t->x258 < 0.0f) {
@@ -6779,7 +6771,7 @@ void fn_80108CC4(Task *t) {
     }
 }
 
-Entry *fn_801096FC(void *owner, s32 id, void *ptr, const char *name) {
+Entry *fn_801096FC(s32 owner, s32 id, void *ptr, const char *name) {
     Entry *e;
     for (e = lbl_80347460; e != 0; e = e->next) {
         if ((e->id == id && id != 0x7fff) || (e->ptr == ptr && e->ptr != 0)) {
@@ -8642,9 +8634,8 @@ s8 fn_8010D280(Obj_8010D280 *o)
     return ret;
 }
 
-Task_80100BF8* fn_80100BF8(Task_80100BF8* o, u32 id, u32 infw) {
+Task_80100BF8* fn_80100BF8(Task_80100BF8* o, u32 id, Inf_80100BF8* inf) {
     Data_80100BF8* d = o->d;
-    Inf_80100BF8* inf = (Inf_80100BF8*)infw;
     Opt_80100BF8* p;
     if (inf->f3c == 0) {
         d->f1c8 = inf;
@@ -8711,7 +8702,7 @@ static inline void Setup_801032C8(Ent_801032C8* e) {
         e->v60 = z;
         e->v64 = z;
         if (fn_801C6068(e, 12) != 0) {
-            z = -(f32)e->p1c8->t->f2c / 100.0f;
+            z = -(f32)e->p1c8->f10->f2c / 100.0f;
         }
         e->v60 = z;
         fn_80103140((void *)e, (void *)&e->p38);
@@ -8723,7 +8714,7 @@ static inline void Setup_801032C8(Ent_801032C8* e) {
                 lo = 0.0f;
                 hi = e->p1c8->f48;
                 if (e != 0 && fn_801C6068(e, 12) != 0) {
-                    lo = (f32)e->p1c8->t->f28;
+                    lo = (f32)e->p1c8->f10->f28;
                 }
                 v = hi - lo;
             }
@@ -8741,7 +8732,7 @@ Task* fn_801032C8(Task* o, s32 a, s32 b) {
     Ent_801032C8* e;
     Task* t = 0;
     if (o != 0 && Ent_801032C8Of(o) != 0 && fn_801C60A4(Ent_801032C8Of(o)) != 0 && a >= 0 && b > 0) {
-        t = fn_80100E10(o, (u32)fn_801034BC, Ent_801032C8Of(o)->f178, (u32)Ent_801032C8Of(o)->p1c8);
+        t = fn_80100E10(o, fn_801034BC, Ent_801032C8Of(o)->f178, Ent_801032C8Of(o)->p1c8);
         if (t != 0) {
             if (Ent_801032C8Of(t) == 0) {
                 fn_80100B74(t);
@@ -9084,20 +9075,20 @@ void fn_800E2D0C(s32 mode, f32 a, f32 b, f32 c, EvObj *e, f32 *ox, f32 *oy)
     f32 fy = (f32)(t + r);
 
     if (mode == 0) {
-        *ox = fx + a / (f32)(n > 12 ? cfg->u34 : 0);
-        *oy = fy + c / (f32)(MarkInfo(e)->n > 12 ? MarkInfo(e)->u34 : 0);
+        *ox = fx + a / (n > 12 ? cfg->u34 : 0);
+        *oy = fy + c / (MarkInfo(e)->n > 12 ? MarkInfo(e)->u34 : 0);
     } else if (mode == 1) {
-        *ox = fx + a / (f32)(n > 12 ? cfg->u34 : 0);
-        *oy = fy - b / (f32)(MarkInfo(e)->n > 12 ? MarkInfo(e)->u34 : 0);
+        *ox = fx + a / (n > 12 ? cfg->u34 : 0);
+        *oy = fy - b / (MarkInfo(e)->n > 12 ? MarkInfo(e)->u34 : 0);
     } else if (mode == 2) {
-        *ox = fx + c / (f32)(n > 12 ? cfg->u34 : 0);
-        *oy = fy - b / (f32)(MarkInfo(e)->n > 12 ? MarkInfo(e)->u34 : 0);
+        *ox = fx + c / (n > 12 ? cfg->u34 : 0);
+        *oy = fy - b / (MarkInfo(e)->n > 12 ? MarkInfo(e)->u34 : 0);
     } else if (mode == 3) {
-        *ox = fx - c / (f32)(n > 12 ? cfg->u34 : 0);
-        *oy = fy - b / (f32)(MarkInfo(e)->n > 12 ? MarkInfo(e)->u34 : 0);
+        *ox = fx - c / (n > 12 ? cfg->u34 : 0);
+        *oy = fy - b / (MarkInfo(e)->n > 12 ? MarkInfo(e)->u34 : 0);
     } else if (mode == 4) {
-        *ox = fx - c / (f32)(n > 12 ? cfg->u34 : 0);
-        *oy = fy - b / (f32)(MarkInfo(e)->n > 12 ? MarkInfo(e)->u34 : 0);
+        *ox = fx - c / (n > 12 ? cfg->u34 : 0);
+        *oy = fy - b / (MarkInfo(e)->n > 12 ? MarkInfo(e)->u34 : 0);
     }
 }
 

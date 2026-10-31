@@ -2129,7 +2129,9 @@ s32 fn_801A28AC(s32 obj) {
 }
 
 void fn_801A2D20(SaveTask *t, u32 a, u32 b) {
-    t->w->f1c = (f32)a / (f32)b;
+    f32 done = a;
+    f32 total = b;
+    t->w->f1c = done / total;
 }
 
 void fn_801A37C4(void) {

@@ -1898,6 +1898,7 @@ void fn_8004335C(Node* node)
     Work_8004335C* w = node->work;
     MPart_8004335C* d = w->part;
     DrawState st;
+    Angle a;
 
     switch (node->state) {
     case 0:
@@ -1947,9 +1948,12 @@ void fn_8004335C(Node* node)
             }
             fn_80071CF0(&d->pos, &d->mesh.meshes->pos);
             if (d->spin != 0) {
-                d->mesh.meshes->ang.x += (s32)(182.04445f * (10.0f * d->vel.x));
-                d->mesh.meshes->ang.y += (s32)(182.04445f * (10.0f * d->vel.y));
-                d->mesh.meshes->ang.z += (s32)(182.04445f * (10.0f * d->vel.z));
+                a = 182.04445f * (10.0f * d->vel.x);
+                d->mesh.meshes->ang.x += a;
+                a = 182.04445f * (10.0f * d->vel.y);
+                d->mesh.meshes->ang.y += a;
+                a = 182.04445f * (10.0f * d->vel.z);
+                d->mesh.meshes->ang.z += a;
             }
             fn_80299040(d->texlist);
             DrawStateDefault2D(&st);
@@ -3960,6 +3964,7 @@ typedef struct {
 void fn_800617A8(NJS_POINT3* out, Line* l, NJS_POINT3* p, f32 a, f32 b);
 void fn_80033CF8(Seg* seg);
 f32 njSin(Angle a);
+/* fn_80047CF0 indexes a mesh piece's pos/vel as arrays (Mesh has them as NJS_POINT3). */
 typedef struct {
     u8 pad0[0xC];
     f32 a[3];   /* 0x0C */
@@ -3971,16 +3976,6 @@ typedef struct {
     u32 count;
     Part_80047CF0* parts;
 } Parts;
-typedef struct {
-    void* a;
-    void* b;
-    void* c;
-    u8 pad[0x3C - 0xC];
-} Item;
-typedef struct {
-    u32 count;
-    Item* items;
-} Pool;
 extern s32 fn_8022E734(u8 kind, void* p, void* a, void* b, s32 f1, s32 f2, s32 f3);
 typedef struct {
     u32 count;
@@ -4002,10 +3997,6 @@ typedef struct {
     s32 count;
     void* parts;
 } ModelParts_800481F4;
-typedef struct {
-    u32 count;
-    void* parts;
-} ModelParts_800482E0;
 typedef struct ModelNode_800482E0 ModelNode_800482E0;
 void njMultiMatrix(NJS_MATRIX m, NJS_MATRIX n);
 void* fn_801E1A74(s32 count, s32 size);
@@ -4784,7 +4775,7 @@ typedef struct {
 typedef struct {
     s16 timer;              /* 0x00 */
     s16 count;              /* 0x02 */
-    u8 pad4[0x10 - 4];
+    f32 dir[3];             /* 0x04 */
     f32 grav;               /* 0x10 */
     s16 fade;               /* 0x14 */
     s16 end;                /* 0x16 */
@@ -4797,14 +4788,14 @@ typedef struct {
     u8 cmd[1];              /* 0x34 */
 } Sub_8004CF14;
 typedef struct {
-    s32 x0;
+    ModelNode_800482E0* x0;
     u8 pad4[4];
     void* x8;
     u8 padc[0x10];
     Vec_8004A40C v;                  /* 0x1C */
     s32 a, b, c;            /* 0x28 */
-    u8 q[1];                /* 0x34 */
-    u8 pad35[0x4C - 0x35];
+    NJS_POINT3 q;           /* 0x34 */
+    u8 pad40[0x4C - 0x40];
     Sub_8004CF14* sub;               /* 0x4C */
     s32 x50;
     s32 x54;
@@ -5005,11 +4996,11 @@ extern void fn_80032FC4(Vec_8004A40C*, Vec_8004A40C*, void*, void*);
 void fn_80047214(u32 flags);
 void fn_8004754C(Line* l, f32 a1, f32 a2);
 void fn_80047CF0(Parts* parts, NJS_POINT3* pos, f32* dir, NJS_MATRIX m);
-void fn_80047EDC(Pool* pool);
+void fn_80047EDC(MeshSet* pool);
 s32 fn_80047F9C(void* p);
 s16 fn_80048040(ModelParts_80048040* parts, ModelNode_80048040* node, u32* index);
 void fn_800481F4(ModelParts_800481F4* parts, ModelNode_800481F4* node, s32* index);
-s32 fn_800482E0(ModelParts_800482E0* parts, ModelNode_800482E0* node, NJS_POINT3* pos, Angle* rot, NJS_POINT3* scl, NJS_MATRIX mtx);
+s32 fn_800482E0(MeshSet* parts, ModelNode_800482E0* node, NJS_POINT3* pos, Angle* rot, NJS_POINT3* scl, NJS_MATRIX mtx);
 void fn_800483EC(T800483EC* a, s32* out);
 int fn_80048B08(N80048B08* node, f32* out, s16 idx);
 void fn_80048C40(W80048C40* src, f32* mat, s16 a, f32 f1, NJS_POINT3* pt, s16 b, s16 c, s32 d, Q16* q, f32 f2);
@@ -5422,19 +5413,19 @@ void fn_80047CF0(Parts* parts, NJS_POINT3* pos, f32* dir, NJS_MATRIX m) {
     }
 }
 
-void fn_80047EDC(Pool* pool) {
-    if (pool && pool->items) {
-        Item* it = pool->items;
+void fn_80047EDC(MeshSet* pool) {
+    if (pool && pool->meshes) {
+        Mesh* it = pool->meshes;
         u32 i = 0;
         while (i < pool->count) {
-            if (it->a) fn_801E17E0(it->a);
-            if (it->b) fn_801E17E0(it->b);
-            if (it->c) fn_801E17E0(it->c);
+            if (it->verts) fn_801E17E0(it->verts);
+            if (it->cols) fn_801E17E0(it->cols);
+            if (it->uvs) fn_801E17E0(it->uvs);
             memset(it, 0, 0x3C);
             it++;
             i++;
         }
-        fn_801E17E0(pool->items);
+        fn_801E17E0(pool->meshes);
         memset(pool, 0, 8);
     }
 }
@@ -5527,15 +5518,15 @@ void fn_800481F4(ModelParts_800481F4* parts, ModelNode_800481F4* node, s32* inde
     njPopMatrixEx();
 }
 
-s32 fn_800482E0(ModelParts_800482E0* parts, ModelNode_800482E0* node, NJS_POINT3* pos, Angle* rot, NJS_POINT3* scl,
+s32 fn_800482E0(MeshSet* parts, ModelNode_800482E0* node, NJS_POINT3* pos, Angle* rot, NJS_POINT3* scl,
                 NJS_MATRIX mtx) {
     u32 index;
     void* mem;
     parts->count = 0;
     fn_800483EC((T800483EC*)node, (s32*)parts);
-    parts->parts = 0;
+    parts->meshes = 0;
     mem = fn_801E1A74(parts->count, 0x3c);
-    parts->parts = mem;
+    parts->meshes = mem;
     if (mem == 0) {
         while (1) {
         }
@@ -6968,6 +6959,7 @@ void fn_8004CF14(Node_8004CF14* node)
     Mesh* p;
     s16 k;
     f32 g;
+    Angle a;
 
     switch (node->state) {
     case 0:
@@ -6983,8 +6975,8 @@ void fn_8004CF14(Node_8004CF14* node)
         rot[0] = (s32)(182.04445f * w->a);
         rot[1] = (s32)(182.04445f * w->b);
         rot[2] = (s32)(182.04445f * w->c);
-        fn_800482E0((ModelParts_800482E0*)&s->mesh, (ModelNode_800482E0*)w->x0, (NJS_POINT3*)&w->v, rot, (NJS_POINT3*)&w->q, (f32*)s->buf);
-        fn_80047CF0((Parts*)&s->mesh, (NJS_POINT3*)&w->v, (f32*)(&s->count + 1), (f32*)s->buf);
+        fn_800482E0(&s->mesh, w->x0, &w->v, rot, &w->q, s->buf);
+        fn_80047CF0((Parts*)&s->mesh, &w->v, s->dir, s->buf);
         if (s->buf != NULL) {
             fn_801E17E0(s->buf);
         }
@@ -7016,9 +7008,12 @@ void fn_8004CF14(Node_8004CF14* node)
                 p->pos.x += p->vel.x;
                 p->pos.y += p->vel.y;
                 p->pos.z += p->vel.z;
-                p->ang.x += (s32)(182.04445f * (10.0f * p->vel.x));
-                p->ang.y += (s32)(182.04445f * (10.0f * p->vel.y));
-                p->ang.z += (s32)(182.04445f * (10.0f * p->vel.z));
+                a = 182.04445f * (10.0f * p->vel.x);
+                p->ang.x += a;
+                a = 182.04445f * (10.0f * p->vel.y);
+                p->ang.y += a;
+                a = 182.04445f * (10.0f * p->vel.z);
+                p->ang.z += a;
             }
         } else {
             for (; i < s->mesh.count; i++, p++) {
@@ -7037,7 +7032,7 @@ void fn_8004CF14(Node_8004CF14* node)
     case 0xF9:
     case 0xFA:
         fn_8006D8DC(s->src);
-        fn_80047EDC((Pool*)&s->mesh);
+        fn_80047EDC(&s->mesh);
         fn_801E17E0(s);
         node->flags |= 0x40;
         lbl_8030A10C.count--;

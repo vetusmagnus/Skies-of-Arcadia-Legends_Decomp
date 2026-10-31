@@ -2138,3 +2138,23 @@ walked pointer (fn_8008A280, fn_8008571C, fn_8007FFE8), and `fn_80010340`/`fn_80
 
 Wave 2 (not started): the 253 remaining logged near misses of 1,000 bytes and up (`build/near/wave2.txt`, fn_800E6E58 to
 fn_801AD1D4), then the near misses never logged in a file list. Per-agent budget in wave 1 was 7-30 functions; for the big ones use 3-7.
+
+### Wave 1 hand-merge of the held-back matches (2026-10-31, same branch)
+
+15 Opus agents (one per unit group, `build/agents/NMERGE.md`) folded 152 of the 163 held-back matches into the units by fixing the
+units' real types (no unions, no view structs, new fields into padding), then 3 more removed every cast the merge had brought in
+(48 lines; value casts became typed locals/assignments, pointer casts became real member types, the `fmt + 0xNN` string offsets became
+a `StrPool_8013D400` struct). 5,471 of 7,117; every touched unit fdiff and floatcheck clean (fn_801BE608 is the known stale one),
+`main.dol` SHA OK. Nick accepted the three questionable forms (`TextSetZ(z += 10.0f)` in fn_800E9044, implicit-int
+`fn_80168908`, the `goto done` find loop of fn_80192B04). Of those fn_800E9044 and fn_80168908 are in; fn_80192B04 was not merged
+(its agent file `build/agents/r10/fn_80192B04.goto.c` belongs in unit_8015DC6C.c).
+
+Still held (11): fn_80085064 and fn_801C2CF4 (need `lbl_802C4BF0`/`lbl_802D7E4C` declared `const`, which means `const` on the pointers
+into them in evobj.c, unit_80055E94.c, unit_800D81E8.c, unit_801F224C.c, unit_80219378.c first), fn_8004E474 (effect.c: `fn_8001D944`
+takes `s8` here and `int` in fn_8004B7C4, probably two original TUs), fn_800B0900/fn_800B0F54/fn_800D0970/fn_801A4070 (reach `.bss`/`.data`
+through one pooled base: the unit needs its own `.bss`/`.data` split in config), fn_800C35C4 (`ModelFiles` is really `{count, items[]}`),
+fn_801F35A0 (needs the save-data party block 0x328..0xb53 as one 0x82C-byte type plus a backup at 0xC48 in `save_8030B7F4.h`),
+fn_80168908/fn_801705B8 conflicts: `fn_802172C8` and `fn_80171B64` need different first-parameter types in different callers (probably separate TUs).
+
+Duplicated shared types the agents flagged: the Camp family (unit_8015DC6C.c / unit_80193F28.c), Big/Party/Member (unit_8012F6C4.c /
+unit_8013D400.c), ShopTask (unit_80199B9C.c / unit_801C09A4.c), Card types, `fn_80135598` returning `Big *`, `EvObj` now 0x270 bytes.

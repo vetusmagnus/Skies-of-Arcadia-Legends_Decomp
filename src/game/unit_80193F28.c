@@ -171,56 +171,7 @@ typedef struct {
     u32 xc;
     s32 x10, x14, x18, x1c, x20, x24, x28;
 } Ent2c;
-typedef struct CampSub {
-    s32 x0;
-    s32 x4;
-    u8 pad8[4];
-    f32 xc, x10, x14, x18, x1c, x20, x24, x28, x2c, x30, x34, x38, x3c, x40;
-    s32 x44;
-    u8 x48, x49;
-    s16 x4a, x4c, x4e;
-    u8 pad50[0x74 - 0x50];
-    u8 x74[0xbc - 0x74];
-    void *xbc;
-} CampSub;
-typedef struct CampObj {
-    u8 pad[0x24];
-    CampSub *sub;
-} CampObj;
-typedef struct { u8 pad[0x10]; CampObj *objs[1]; } CampWork_80199508;
 extern void fn_80191A04(void *p, s32 a);
-typedef struct Sub1c_80199678 {
-    s32 x0, x4, x8, xc;
-    s32 x10;
-    u8 x14;
-    u8 x15[3];
-    s32 x18;
-} Sub1c_80199678;
-typedef struct Body_80199678 {
-    s32 x0;
-    s32 x4;
-    u8 pad08[4];
-    f32 xc, x10, x14, x18, x1c, x20, x24, x28, x2c, x30, x34, x38, x3c, x40;
-    s32 x44;
-    u8 x48, x49;
-    s16 x4a, x4c, x4e;
-    u8 pad50[0x74 - 0x50];
-    u8 x74[0xbc - 0x74];
-    void* xbc;
-} Body_80199678;
-typedef struct Node_80199678 {
-    u8 pad[0x24];
-    Body_80199678* body;
-} Node_80199678;
-typedef struct CampWork_80199678 {
-    u8 *p0;
-    u8 *p4;
-    u8 *p8;
-    u8 b0c;
-    u8 pad0d[3];
-    Node_80199678 *objs[0xd0];
-    u8 pad350[0x10];
-} CampWork_80199678;
 typedef struct Sub1c_80197270 {
     s32 x0, x4, x8, xc;
     u8 x10[4];
@@ -702,8 +653,8 @@ s32 fn_80194DA0(void) {
     }
 }
 
-void fn_8019520C(s32 idx, Dst *d) {
-    SaveChar *c = &lbl_8030B7F4.chr[(s8)idx];
+void fn_8019520C(s8 idx, Dst *d) {
+    SaveChar *c = &lbl_8030B7F4.chr[idx];
     s8 t = c->xf;
 
     switch (t) {
@@ -1734,16 +1685,16 @@ void fn_80199508(void)
 {
     s32 i;
     for (i = 0; i < 8; i++) {
-        CampObj *obj = ((CampObj *)fn_802268E8(lbl_8034710C, fn_8018E82C));
+        Node *obj = fn_802268E8(lbl_8034710C, fn_8018E82C);
         void *buf;
-        CampSub *s;
-        obj->sub = fn_801E1C7C(0xc0);
-        obj->sub->x0 = 0;
+        Body *s;
+        obj->body = fn_801E1C7C(0xc0);
+        obj->body->x0 = 0;
         buf = fn_801E1C7C(0xc);
-        obj->sub->xbc = buf;
+        obj->body->xbc = buf;
         fn_8018E81C(buf, 5, i);
-        fn_80191A04(obj->sub->x74, 5);
-        s = obj->sub;
+        fn_80191A04(obj->body->x74, 5);
+        s = obj->body;
         s->x14 = 0.0f;
         s->x18 = 256.0f;
         s->xc = 0.0f;
@@ -1764,19 +1715,19 @@ void fn_80199508(void)
         s->x40 = 1.0f;
         s->x44 = 0;
         s->x49 = 0;
-        (*(CampWork_80199508*)&camp_work).objs[i + 0x7a] = obj;
-        obj->sub->x4 = i + 0x7a;
+        camp_work.objs[i + 0x7a] = obj;
+        obj->body->x4 = i + 0x7a;
     }
 }
 
 void fn_80199678(void) {
-    Body_80199678* b;
-    Node_80199678* n;
+    Body* b;
+    Node* n;
     void* pos;
     void* t;
     s32 i;
     for (i = 0; i < 12; i++) {
-        n = ((Node_80199678*)fn_802268E8(lbl_8034710C, fn_8018E82C));
+        n = fn_802268E8(lbl_8034710C, fn_8018E82C);
         n->body = fn_801E1C7C(0xc0);
         n->body->x0 = 0;
         t = fn_801E1C7C(0xc);
@@ -1785,39 +1736,39 @@ void fn_80199678(void) {
         switch (i) {
         case 0:
         case 2:
-            fn_8018E81C((void *)(t), 1, -1);
-            fn_80191A04((void *)(pos), 3);
+            fn_8018E81C(t, 1, -1);
+            fn_80191A04(pos, 3);
             break;
         case 1:
         case 3:
-            fn_8018E81C((void *)(t), 2, -1);
-            fn_80191A04((void *)(pos), 4);
+            fn_8018E81C(t, 2, -1);
+            fn_80191A04(pos, 4);
             break;
         case 4:
         case 5:
-            fn_8018E81C((void *)(t), 7, -1);
-            fn_80191A04((void *)(pos), 7);
+            fn_8018E81C(t, 7, -1);
+            fn_80191A04(pos, 7);
             break;
         case 6:
         case 7:
-            fn_8018E81C((void *)(t), 8, -1);
-            fn_80191A04((void *)(pos), 8);
+            fn_8018E81C(t, 8, -1);
+            fn_80191A04(pos, 8);
             break;
         case 8:
-            fn_8018E81C((void *)(t), 9, -1);
-            fn_80191A04((void *)(pos), 9);
+            fn_8018E81C(t, 9, -1);
+            fn_80191A04(pos, 9);
             break;
         case 9:
-            fn_8018E81C((void *)(t), 0xa, -1);
-            fn_80191A04((void *)(pos), 0xa);
+            fn_8018E81C(t, 0xa, -1);
+            fn_80191A04(pos, 0xa);
             break;
         case 10:
-            fn_8018E81C((void *)(t), 0xd, -1);
-            fn_80191A04((void *)(pos), 0xd);
+            fn_8018E81C(t, 0xd, -1);
+            fn_80191A04(pos, 0xd);
             break;
         case 11:
-            fn_8018E81C((void *)(t), 0xe, -1);
-            fn_80191A04((void *)(pos), 0xe);
+            fn_8018E81C(t, 0xe, -1);
+            fn_80191A04(pos, 0xe);
             break;
         }
         b = n->body;
@@ -1841,7 +1792,7 @@ void fn_80199678(void) {
         b->x40 = 1.0f;
         b->x44 = 0;
         b->x49 = 0;
-        (*(CampWork_80199678*)&camp_work).objs[0x6c + i] = n;
+        camp_work.objs[0x6c + i] = n;
         n->body->x4 = 0x6c + i;
     }
 }

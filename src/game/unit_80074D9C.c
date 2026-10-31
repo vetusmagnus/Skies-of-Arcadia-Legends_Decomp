@@ -226,7 +226,7 @@ extern void njSetMatrix(NJS_MATRIX dst, NJS_MATRIX src);
 extern void njInvertMatrix(NJS_MATRIX m);
 extern void njMultiMatrix(NJS_MATRIX m, NJS_MATRIX src);
 extern void fn_80291C44(NJS_MATRIX m);
-void *fn_8006C9AC(s32 a, s32 b);
+void *fn_8006C9AC(void *root, s32 target);
 void fn_800763D0(f32 *a, void *b);
 typedef struct R16 { s32 w0; s8 x4; u8 pad5; s16 x6; u8 b8; u8 b9; u8 pad2[3]; s8 xd; u8 pade[2]; } R16;
 extern R16 lbl_80309730[];
@@ -481,6 +481,12 @@ typedef struct {
     u8 pad0[0x34];
     u32 flags;
 } Obj74D9C;
+/* The located chunk: its owner object, then the chunk data from +8. */
+typedef struct Loc74E2C {
+    Obj74D9C *obj;
+    s32 x4;
+    s32 data[1];
+} Loc74E2C;
 typedef struct Out74E2C {
     Obj74D9C *f0;
     u8 pad4[4];
@@ -499,7 +505,7 @@ typedef struct Out74E2C {
 } Out74E2C;
 extern void *memset(void *, int, unsigned long);
 extern s32 fn_8006EA90(void *, void *, Rec74E2C **);
-extern void fn_8006CF28(Sub74E2C *, s32 **, s32);
+extern void fn_8006CF28(Sub74E2C *, Loc74E2C **, s32);
 extern void fn_80074394(void *, s16 *);
 extern void fn_80074968(void *, u32 *);
 void fn_80074D9C(Name74D9C *n, Obj74D9C *o);
@@ -626,7 +632,7 @@ typedef struct TNode {
 } TNode;
 void fn_80075060(TNode* n, u32 mask, u8 op);
 typedef struct Rec_8007DEE0 {
-    s32 x0;
+    void* x0;
     u8 pad4[0x4c - 4];
 } Rec_8007DEE0;
 typedef struct Ent_8007E13C_8007DEE0 { Rec_8007DEE0* recs; Src8* src; u8 pad8[4]; u8 count; u8 pad0d[7]; } Ent_8007E13C_8007DEE0;
@@ -886,7 +892,7 @@ void fn_80076344(f32 *key) {
   }
 }
 
-void fn_8007638C(f32 *a, s32 b, s32 c) {
+void fn_8007638C(f32 *a, void *b, s32 c) {
   void *x = fn_8006C9AC(b, c);
   fn_800763D0(a, x);
 }
@@ -2223,7 +2229,7 @@ void fn_80074D9C(Name74D9C *n, Obj74D9C *o) {
 
 Rec74E2C *fn_80074E2C(void *a, void *b, Out74E2C *out, s16 id, u8 kind) {
     Rec74E2C *rec;
-    s32 *loc;
+    Loc74E2C *loc;
     s32 r;
     memset(out, 0, 0x4c);
     out->f16 = id;
@@ -2239,8 +2245,8 @@ Rec74E2C *fn_80074E2C(void *a, void *b, Out74E2C *out, s16 id, u8 kind) {
     }
     fn_8006CF28(rec->f8, &loc, id);
     if (loc != 0) {
-        out->f0 = (Obj74D9C *)*loc;
-        out->f8 = loc + 2;
+        out->f0 = loc->obj;
+        out->f8 = loc->data;
         fn_80074394(out->f0, &out->f14);
     }
     if (out->f8 != 0) {
@@ -2972,7 +2978,7 @@ void fn_8007DFC0(Cmd_8007DFC0* c) {
         n = fn_802268E8(lbl_803475A8, (void*)fn_800300C4(4));
         fn_80061F58(&n->work, 0x58, 0);
         w = n->work;
-        w->x0 = fn_8006C9AC(*(s32*)((u8*)t->tab[t->idx].recs + r->a * 0x4c), r->b & 0xFFFF);
+        w->x0 = fn_8006C9AC(t->tab[t->idx].recs[r->a].x0, r->b & 0xFFFF);
         fn_80061F58(&w->x4c, 0x4c, 0);
         w->x4c->x0c = r->data;
         w->x4c->x4 = -1;
@@ -4173,7 +4179,7 @@ void fn_800763D0(f32 *a, void *b) {
     }
 }
 
-s32 fn_80076478(f32 *key, s32 a, s32 b, u8 flag)
+s32 fn_80076478(f32 *key, void *a, s32 b, u8 flag)
 {
     void *mat;
     Node *head;

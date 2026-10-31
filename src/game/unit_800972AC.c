@@ -1500,8 +1500,8 @@ void fn_800A363C(void) {
     lbl_80346CF0 = 0;
 }
 
-s32 fn_800A3E90(u32 id) {
-    Task *it = fn_8010A164((u16)id);
+s32 fn_800A3E90(u16 id) {
+    Task *it = fn_8010A164(id);
     if (it == NULL) {
         return 0;
     }
@@ -2809,15 +2809,17 @@ void fn_800991AC(Particle* e, s32 n) {
     f32 t8;
     f32 nr;
     f32 sg;
+    f32 at;
     f32 zero = 0.0f;
 
     for (i = 0; i < n; i++, e++) {
         if (e->delay > 0) {
             e->delay--;
         } else if (e->used != 0) {
-            ia = (s32)(10430.381f * (f32)atan2(e->v[1], e->v[0]));
+            at = atan2(e->v[1], e->v[0]);
+            ia = 10430.381f * at;
             ang = ia;
-            r = e->v[0] / njCos((s32)ang);
+            r = e->v[0] / njCos(ang);
             r *= 1.0f + e->fb0;
             d = r - c0;
             t = (c4 - (f32)fabs(d)) / c4;
@@ -2838,8 +2840,8 @@ void fn_800991AC(Particle* e, s32 n) {
                 nr = r;
             }
             ang += c1 * t2;
-            e->v[0] = nr * njCos((s32)ang);
-            e->v[1] = nr * njSin((s32)ang);
+            e->v[0] = nr * njCos(ang);
+            e->v[1] = nr * njSin(ang);
             sg = (f32)fabs(zero);
             if (c3 < zero) {
                 sg = -sg;
@@ -3293,6 +3295,7 @@ void fn_800AE000(Task* o) {
             Item_800AE000* a;
             Item_800AE000* b;
             u32 x, y, z;
+            s32 cnt;
             fn_80097294(7);
             fn_800970D8(w->x17a, 0, f);
             fn_800970B4(w->x17a, 1, f);
@@ -3301,8 +3304,9 @@ void fn_800AE000(Task* o) {
             x = a->w4;
             b = t->count > 1 ? t->items[1] : 0;
             y = b->w4;
-            z = (s32)TimerInfo(p)->count > 9 ? TimerInfo(p)->x28 : 0;
-            w->x24c.x = (f32)z;
+            cnt = TimerInfo(p)->count;
+            z = cnt > 9 ? TimerInfo(p)->x28 : 0;
+            w->x24c.x = z;
             {
                 f32 m = x > y ? (f32)x * f : (f32)y * f;
                 w->x24c.x += m;

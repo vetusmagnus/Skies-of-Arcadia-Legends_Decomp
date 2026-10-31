@@ -6331,7 +6331,7 @@ void fn_801115EC(EvObj *o)
                 o->x1e0 = 0.0f;
             }
         }
-        o->pivotAng[2] = (s32)(182.04445f * o->x1e0);
+        o->pivotAng[2] = 182.04445f * o->x1e0;
         o->pivot = 1;
     } else {
         o->pivot = 0;
@@ -6742,11 +6742,13 @@ void fn_80113934(EvObj *o) {
 s32 fn_8010E270(EvObj *o, Angle base) {
     f32 a;
     s32 ang;
+    Angle turn;
     f32 yy = -lbl_80311A60[0]->y;
     f32 xx = lbl_80311A60[0]->x;
 
-    a = (f32)atan2(yy, xx);
-    ang = (u16)(o->ang[1] - base - 0x4000 - (s32)(10430.381f * a));
+    a = atan2(yy, xx);
+    turn = 10430.381f * a;
+    ang = (o->ang[1] - base - 0x4000 - turn) & 0xFFFF;
     if (fn_80291A5C((f32)lbl_80311A60[0]->x * (f32)lbl_80311A60[0]->x
                     + (f32)-lbl_80311A60[0]->y * (f32)-lbl_80311A60[0]->y) > 10.0f) {
         if (ang < 0x2000 || ang >= 0x10000 - 0x2000) {

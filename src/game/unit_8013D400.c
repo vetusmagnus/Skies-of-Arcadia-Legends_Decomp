@@ -222,7 +222,33 @@ extern int sprintf(char* buf, const char* fmt, ...);
 extern MapInfo lbl_80311AC0;
 extern s32 lbl_80311AD4[11];
 extern s32 lbl_803472E4;
-extern char lbl_802B3578[];
+/* The unit's message pool in .rodata (the unit does not own its .rodata): one string literal per
+   field, each 4-aligned as the compiler laid the pool out. */
+typedef struct StrPool_8013D400 {
+    char sct[0x10];           /* "me%03d%c.sct" */
+    char shipInfo[0x24];      /* "ShipIs Not Found In sbGetInfo %d" */
+    char camPath[0x1C];       /* "Camera Path Is Not Found %d" */
+    char croot[0xC];          /* "sb_croot" */
+    char notCamPath[0x18];    /* "Not Camera Path %d - %s" */
+    char camMotion[0x24];     /* "Camera Path Motion Is Nothing %d" */
+    char path[0x18];          /* "Path Is Not Found %d" */
+    char ship[0x18];          /* "Ship Is Not Found %d" */
+    char btArea[0x24];        /* "sbBT Error : Set Area is Over !!" */
+    char curScene[0x38];      /* "sbSetCurrentScene Error : Scene Table Is Nothing !! %d" */
+    char enemyStart[0x44];    /* "SbCommandEnemy Error : sbSceneTableStart function does not exist !!" */
+    char enemyPhase[0x28];    /* "SbCommandEnemy Error : phase over !!" */
+    char enemyDup[0x34];      /* "Duplicate Scene !! in SbCommandEnemy  %d area %d" */
+    char gunKind[0x30];       /* "Gun Kind Error in SbCommandEnemy  %d area %d" */
+    char sceneStart[0x40];    /* "SbScene Error : sbSceneTableStart function does not exist !!" */
+    char scenePhase[0x20];    /* "SbScene Error : phase over !!" */
+    char sceneDup[0x2C];      /* "Duplicate Scene !! in SbScene  %d area %d" */
+    char endStart[0x40];      /* "sbSceneTableEnd  Error : sbSceneTableStart is Not alival !! %d" */
+    char endIncomplete[0x34]; /* "sbSceneTableEnd  Error : Table Set incomplete !! %d" */
+    char startEnd[0x40];      /* "sbSceneTableStart Error : sbSceneTableEnd is Not alival !! %d" */
+    char startOver[0x34];     /* "sbSceneTableStart Error : Scene Number Over !! %d" */
+    char startDup[0x34];      /* "sbSceneTableStart Error : Scene Duplicate Set !! %d" */
+} StrPool_8013D400;
+extern const StrPool_8013D400 lbl_802B3578;
 extern u32 lbl_80346F74;
 extern s32 lbl_8034728C;
 extern s32 lbl_80347294;
@@ -1351,7 +1377,7 @@ void fn_80146FD4(Req_UNIT0000* r, s32 idx)
 void fn_80147E2C(s32 a)
 {
     fn_800FF908();
-    sprintf(lbl_802E5E68, lbl_802B3578, lbl_80311AC0.unk4, lbl_80311AC0.room);
+    sprintf(lbl_802E5E68, lbl_802B3578.sct, lbl_80311AC0.unk4, lbl_80311AC0.room);
     fn_801002D0(a);
     lbl_803472E4 = 1;
     lbl_80311AD4[6] = 0xc;
@@ -1637,9 +1663,9 @@ void fn_8014359C(In* in, s32 a, s32 b)
     d->x8 = in->xc;
     d->xa = in->x14;
     if ((*(Ent_8014359C**)&lbl_8034727C)[b].mode == 2)
-        mode = (s32)lbl_803472A4->f3c;
+        mode = lbl_803472A4->f3c;
     else
-        mode = (s32)lbl_803472A4->f40;
+        mode = lbl_803472A4->f40;
     switch (in->x5) {
     case 1:
         if (mode & 1) {
@@ -1865,23 +1891,23 @@ void fn_80144A7C(Party* p, s32 which) {
 }
 
 void fn_80148790(s32 n, s32 mode, s32 kind, s32 a, s32 b) {
-    char* fmt;
+    const StrPool_8013D400* msg;
     s32 rem;
 
-    fmt = lbl_802B3578;
+    msg = &lbl_802B3578;
     if (lbl_803472C4 == -1) {
-        fn_801DBE1C(fmt + 0x124);
+        fn_801DBE1C(msg->enemyStart);
     }
     rem = n % lbl_803472D0;
     if ((u32)n >= lbl_80347298) {
-        fn_801DBE1C(fmt + 0x168);
+        fn_801DBE1C(msg->enemyPhase);
     }
     if (lbl_80308F98[lbl_803472C4].items[n].f48 != -1) {
-        fn_801DBE1C(fmt + 0x190, lbl_803472C4, n);
+        fn_801DBE1C(msg->enemyDup, lbl_803472C4, n);
     }
     if (mode == 0) {
         if (kind < 0) {
-            fn_801DBE1C(fmt + 0x1c4, lbl_803472C4, n);
+            fn_801DBE1C(msg->gunKind, lbl_803472C4, n);
         }
         if (kind == 1) {
             if (b < 0) {
@@ -2052,7 +2078,7 @@ void fn_80147EAC(s32 id)
             }
         }
         if (found == -1) {
-            fn_801DBE1C((void *)(lbl_802B3588), id);
+            fn_801DBE1C(lbl_802B3588, id);
         }
         e = &fn_8013558C()[found];
         lbl_8030CEA0.x160c = 0;
@@ -2097,9 +2123,9 @@ void fn_80143FA4(u8* s, s32 idx, s32 slot) {
         (*(G_80143FA4**)&lbl_8034727C)->b.rows[idx].f2 += neg;
     }
     if ((*(G_80143FA4**)&lbl_8034727C)->ents[slot].f2c == 1) {
-        v = (s32)lbl_803472A4->f34;
+        v = lbl_803472A4->f34;
     } else {
-        v = (s32)lbl_803472A4->f38;
+        v = lbl_803472A4->f38;
     }
     switch ((s8)s[5]) {
     case 1:
@@ -2581,17 +2607,17 @@ s32 fn_80148024(s32 side, s32 id)
 
 void fn_80148228(s32 ship, s32 path)
 {
-    char* fmt = lbl_802B3578;
+    const StrPool_8013D400* msg = &lbl_802B3578;
 
     if (path != 0x7fffffff) {
         if ((lbl_803472A0->cam->path = fn_801094C8(path)) == NULL) {
-            fn_801DBE1C(fmt + 0x34, path);
+            fn_801DBE1C(msg->camPath, path);
         }
-        if (fn_8025EF88(lbl_803472A0->cam->path->model->node->name, fmt + 0x50) != 0) {
-            fn_801DBE1C(fmt + 0x5c, path, lbl_803472A0->cam->path->model->node->name);
+        if (fn_8025EF88(lbl_803472A0->cam->path->model->node->name, msg->croot) != 0) {
+            fn_801DBE1C(msg->notCamPath, path, lbl_803472A0->cam->path->model->node->name);
         }
         if (lbl_803472A0->cam->path->model->motion == NULL) {
-            fn_801DBE1C(fmt + 0x74, path);
+            fn_801DBE1C(msg->camMotion, path);
         }
     } else {
         lbl_803472A0->cam->path = NULL;
@@ -3797,17 +3823,17 @@ extern s32 lbl_803472C8;
 
 void fn_80148CAC(s32 id)
 {
-    char* fmt = lbl_802B3578;
+    const StrPool_8013D400* msg = &lbl_802B3578;
     s32 i;
 
     if (lbl_803472C4 != -1) {
-        fn_801DBE1C(fmt + 0x2f4, id);
+        fn_801DBE1C(msg->startEnd, id);
     }
     if (id < 0 || id >= 32) {
-        fn_801DBE1C(fmt + 0x334, id);
+        fn_801DBE1C(msg->startOver, id);
     }
     if (lbl_80308F98[id].items != NULL) {
-        fn_801DBE1C(fmt + 0x368, id);
+        fn_801DBE1C(msg->startDup, id);
     }
     lbl_803472C4 = id;
     lbl_80308F98[id].items = fn_801E1A74(1, 0x160);
@@ -3849,22 +3875,20 @@ void fn_801497CC(Model_80148228 *obj)
 
 extern void fn_801570BC(s32 id, Model_80148228* model);
 
-/* The messages are the unit's string pool from lbl_802B3578 (the unit does not own its .rodata),
-   reached through the pool base like the neighbouring fn_80148228. */
 void fn_8014836C(u16 ship, s32 path)
 {
-    char* fmt = lbl_802B3578;
+    const StrPool_8013D400* msg = &lbl_802B3578;
     Path_80148228* p;
     Path_80148228* s;
 
     p = fn_801094C8(path);
     if (p == NULL) {
-        fn_801DBE1C(fmt + 0x98, ship);
+        fn_801DBE1C(msg->path, ship);
     }
     if (ship != 0xfffe) {
         s = fn_801094C8(ship);
         if (s == NULL) {
-            fn_801DBE1C(fmt + 0xb0, ship);
+            fn_801DBE1C(msg->ship, ship);
         }
         s->model->ctl->path = p;
         fn_801570BC(ship, p->model);
@@ -3872,7 +3896,7 @@ void fn_8014836C(u16 ship, s32 path)
         lbl_803472A0->cam->path = p;
         lbl_803472A0->cam->ship = NULL;
         if (lbl_803472A0->cam->path->model->motion == NULL) {
-            fn_801DBE1C(fmt + 0x74, path);
+            fn_801DBE1C(msg->camMotion, path);
         }
     }
 }

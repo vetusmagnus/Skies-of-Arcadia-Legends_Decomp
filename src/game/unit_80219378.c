@@ -975,12 +975,13 @@ s32 fn_8021A2B0(Save1568* a, void* crew, s32 stat)
     return r;
 }
 
-void fn_8021EDE0(NJS_TEXLIST *p, s32 n)
+void fn_8021EDE0(NJS_TEXLIST *p, s16 n)
 {
-    if (p->nbTexture <= (u16)n) {
-        n = (s16)(p->nbTexture - 1);
+    u16 k = n;
+    if (p->nbTexture <= k) {
+        n = p->nbTexture - 1;
     }
-    fn_80298FE4((s16)n);
+    fn_80298FE4(n);
 }
 
 extern void* lbl_802F89A8[];
