@@ -1,5 +1,9 @@
 #include "string.h"
 
+__declspec(section ".init") void* memcpy(void* dst, const void* src, size_t n);
+__declspec(section ".init") void __fill_mem(void* dst, int val, size_t n);
+__declspec(section ".init") void* memset(void* str, int c, size_t n);
+
 void* memcpy(void* dst, const void* src, size_t n) {
   const char* p;
   char* q;
@@ -68,7 +72,7 @@ void __fill_mem(void* dst, int val, size_t n) {
 
     cpd = ((unsigned char*)(lpd + 1)) - 1;
 
-    n &= (unsigned char)3;
+    n &= 3;
   }
 
   if (n)

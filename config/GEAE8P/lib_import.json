@@ -182,6 +182,12 @@
   "dolphin/amcstubs/AmcExi2Stubs.c",
   "dolphin/odenotstub/odenotstub.c",
   "dolphin/card/CARDStatEx.c",
-  "MetroTRK/dolphin_trk_glue.c"
+  "MetroTRK/dolphin_trk_glue.c",
+  "dolphin/os/__start.c",
+  "dolphin/os/OSLink.c",
+  "dolphin/tpl/tpl.c",
+  "dolphin/pad/PadClamp.c",
+  "dolphin/dvd/dvdfatal.c",
+  "runtime/__mem.c"
  ]
 }

@@ -236,6 +236,9 @@ dolphin/os/OSInterrupt.c:
 	.data       start:0x802FA8B8 end:0x802FA8E8
 	.sbss       start:0x80347930 end:0x80347948
 
+dolphin/os/OSLink.c:
+	.text       start:0x80235DE0 end:0x80235DF8
+
 src/dolphin/os/OSMemory.c:
 	.text       start:0x80235E04 end:0x802360F0
 	.data       start:0x802FA8E8 end:0x802FA8F8
@@ -272,6 +275,9 @@ dolphin/os/OSThread.c:
 dolphin/os/OSTime.c:
 	.text       start:0x80238504 end:0x80238980
 	.data       start:0x802FA8F8 end:0x802FA958
+
+dolphin/os/__start.c:
+	.init       start:0x80003100 end:0x80003354
 
 dolphin/os/__ppc_eabi_init.cpp:
 	.init       start:0x80003354 end:0x800033A8
@@ -328,6 +334,10 @@ dolphin/dvd/dvderror.c:
 dolphin/dvd/dvdidutils.c:
 	.text       start:0x8023D6F0 end:0x8023D7E8
 
+dolphin/dvd/dvdfatal.c:
+	.text       start:0x8023D7E8 end:0x8023D818
+	.sbss       start:0x80347A48 end:0x80347A50
+
 dolphin/dvd/fstload.c:
 	.text       start:0x8023D818 end:0x8023DA58
 	.data       start:0x802FAC70 end:0x802FACE0
@@ -341,6 +351,11 @@ dolphin/vi.c:
 	.bss        start:0x803181C8 end:0x80318310
 	.sdata      start:0x803468D8 end:0x803468E8
 	.sbss       start:0x80347A60 end:0x80347AB8
+
+dolphin/pad/PadClamp.c:
+	.text       start:0x8023F91C end:0x8023FBD0
+	.rodata     start:0x802D9FB0 end:0x802D9FC0
+	.sdata2     start:0x8034C7F8 end:0x8034C818
 
 src/dolphin/pad/Pad.c:
 	.text       start:0x8023FBD0 end:0x802416A0
@@ -500,6 +515,11 @@ src/gx/GXTransform.c:
 dolphin/gx/GXPerf.c:
 	.text       start:0x80252530 end:0x80252D88
 	.data       start:0x802FBC00 end:0x802FBCF0
+
+dolphin/tpl/tpl.c:
+	.text       start:0x80252E4C end:0x8025334C
+	.bss        start:0x80319038 end:0x80319048
+	.sbss       start:0x80347BE0 end:0x80347BE8
 
 MetroTRK/mainloop.c:
 	.text       start:0x8025334C end:0x80253444
@@ -941,3 +961,6 @@ musyx/runtime/Chorus/chorus_fx.c:
 
 ninja/ninja.c:
 	.text       start:0x80286EE8 end:0x802AC7DC
+
+runtime/__mem.c:
+	.init       start:0x80005434 end:0x80005570

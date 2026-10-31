@@ -450,6 +450,10 @@ config.libs += [
         "progress_category": "sdk",
         "src_dir": "extern/sdk",
         "objects": [
+            Object(Matching, "dolphin/pad/PadClamp.c", extra_cflags=["-fp_contract", "off"]),
+            Object(Matching, "dolphin/tpl/tpl.c"),
+            Object(Matching, "dolphin/os/OSLink.c"),
+            Object(Matching, "dolphin/os/__start.c"),
             Object(Matching, "dolphin/ar/arq.c"),
             Object(Matching, "dolphin/ar/ar.c"),
             Object(Matching, "dolphin/ai.c"),
@@ -546,6 +550,7 @@ config.libs += [
         "progress_category": "sdk",
         "src_dir": "extern/sdk",
         "objects": [
+            Object(Matching, "dolphin/dvd/dvdfatal.c"),
             Object(Matching, "dolphin/dvd/dvd.c"),
             Object(Matching, "dolphin/dvd/dvdfs.c"),
             Object(Matching, "dolphin/dvd/dvdlow.c"),
@@ -671,6 +676,7 @@ config.libs += [
         "progress_category": "sdk",
         "src_dir": "extern/sdk",
         "objects": [
+            Object(Matching, "runtime/__mem.c"),
             Object(Matching, "runtime/s_ceil.c"),
             Object(Matching, "runtime/s_atan.c"),
             Object(Matching, "runtime/e_pow.c"),
