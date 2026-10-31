@@ -1325,7 +1325,7 @@ extern void fn_80032B6C(s8, s32);
 extern s16 fn_8001D41C(s16* cur, s16* other);
 extern void fn_80053F38(s8, s32);
 
-void* fn_80005B50(void* heap, u32 size) {
+void* OSAllocFromHeapClear(void* heap, u32 size) {
     void* p = fn_80005B9C(heap);
     if (p != 0) {
         memset(p, 0, size);

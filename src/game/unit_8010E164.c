@@ -1930,7 +1930,7 @@ typedef struct Obj_8011DD9C {
 } Obj_8011DD9C;
 extern void *lbl_80346720;
 extern f32 lbl_80349FF8;
-extern void *fn_80005B50(void *a, s32 n);
+extern void *OSAllocFromHeapClear(void *a, s32 n);
 extern void fn_80005AD8(void *a, void *b);
 extern s32 fn_8011E72C(Ctx_8011DD9C *c);
 extern void fn_8020F154(s32 a, s32 b);
@@ -7412,7 +7412,7 @@ void fn_8011DD9C(Obj_8011DD9C *self) {
     switch (self->state) {
     case 0:
         if ((*(void **)&lbl_80346EB8) == 0) {
-            (*(void **)&lbl_80346EB8) = fn_80005B50(lbl_80346720, 2000);
+            (*(void **)&lbl_80346EB8) = OSAllocFromHeapClear(lbl_80346720, 2000);
             lbl_80346EBC = 0;
         }
         self->b1b = 0xfa;

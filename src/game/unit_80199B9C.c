@@ -375,7 +375,7 @@ typedef struct Actor24 {
 extern s32 fn_801A388C(s32 chan, const char *name, s32* out);
 extern const char lbl_802B4978[];
 extern const char lbl_8034B6A0[6];
-extern void fn_80252E5C(void* p);
+extern void TPLReleasePalette(void* p);
 extern void* lbl_8034716C;
 extern void* lbl_80347168;
 extern void* fn_801E1A74(s32 size, s32 n);
@@ -2695,11 +2695,11 @@ void fn_801A473C(void)
         }
     }
     if (lbl_8034716C) {
-        fn_80252E5C(&lbl_8034716C);
+        TPLReleasePalette(&lbl_8034716C);
         lbl_8034716C = 0;
     }
     if (lbl_80347168) {
-        fn_80252E5C(&lbl_80347168);
+        TPLReleasePalette(&lbl_80347168);
         lbl_80347168 = 0;
     }
 }

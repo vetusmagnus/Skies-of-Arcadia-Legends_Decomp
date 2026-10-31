@@ -831,9 +831,9 @@ void fn_8021A044(void *p) {
     fn_80005AD8(lbl_80346720, p);
 }
 
-extern void fn_80005B50(void *p, void *q);
+extern void OSAllocFromHeapClear(void *p, void *q);
 void fn_8021A06C(void *p) {
-    fn_80005B50(lbl_80346720, p);
+    OSAllocFromHeapClear(lbl_80346720, p);
 }
 
 s32 fn_8021A094(void) {

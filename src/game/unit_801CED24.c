@@ -17,7 +17,7 @@ extern u8* lbl_8034725C;     /* the flush pointer into the draw buffer */
 extern u8* lbl_80347264;     /* the draw buffer (lbl_80347218 bytes from heap lbl_803476A4) */
 extern void* lbl_803476A4;
 extern void* lbl_80347260;   /* a 0x4000-byte block from the same heap */
-extern void* fn_80005B50(void* heap, s32 size);
+extern void* OSAllocFromHeapClear(void* heap, s32 size);
 extern void fn_80005AD8(void* heap, void* p);
 extern s32 lbl_80347218;
 extern s32 lbl_8034720C;
@@ -324,8 +324,8 @@ void fn_801D1434(void)
     s32 i;
 
     lbl_80347218 = 0x16FE00;
-    if ((lbl_80347260 = fn_80005B50(lbl_803476A4, 0x4000)) != 0) {
-        if ((lbl_80347264 = fn_80005B50(lbl_803476A4, lbl_80347218)) != 0) {
+    if ((lbl_80347260 = OSAllocFromHeapClear(lbl_803476A4, 0x4000)) != 0) {
+        if ((lbl_80347264 = OSAllocFromHeapClear(lbl_803476A4, lbl_80347218)) != 0) {
             lbl_80347208 = 1;
         } else {
             lbl_80347208 = 0;

@@ -22,7 +22,7 @@ extern void* memcpy(void* dst, const void* src, u32 n);
 extern void* memset(void* dst, s32 c, u32 n);
 extern void DCStoreRange(void* p, u32 n);
 extern s32 fn_8025CC04(char* buf, const char* fmt, va_list ap);
-extern void* fn_80005B50(void* heap, s32 size);
+extern void* OSAllocFromHeapClear(void* heap, s32 size);
 extern void fn_80005AD8(void* heap, void* p);
 extern s32 strlen(const char* s);
 
@@ -382,7 +382,7 @@ TextNode* TextNodeNewN(const char* str, s16 n) {
     if (count == 0) {
         return NULL;
     }
-    node = fn_80005B50(heap_main, ((count + 1) / 2) * 4 + 0x34);
+    node = OSAllocFromHeapClear(heap_main, ((count + 1) / 2) * 4 + 0x34);
     if (node == NULL) {
         return NULL;
     }
@@ -400,7 +400,7 @@ TextNode* TextNodeNew(const char* str) {
     if (count == 0) {
         return NULL;
     }
-    node = fn_80005B50(heap_main, ((count + 1) / 2) * 4 + 0x34);
+    node = OSAllocFromHeapClear(heap_main, ((count + 1) / 2) * 4 + 0x34);
     if (node == NULL) {
         return NULL;
     }
@@ -720,8 +720,8 @@ void FontInit(void) {
     u32 tmp;
     glyph_ring_pos = 0;
     font_state = 0;
-    font_file = fn_80005B50(heap_main, 0x13020);
-    glyph_ring = fn_80005B50(heap_main, 0x24000);
+    font_file = OSAllocFromHeapClear(heap_main, 0x13020);
+    glyph_ring = OSAllocFromHeapClear(heap_main, 0x24000);
     font_encode = OSGetFontEncode();
     if (font_encode == 1) {
         size = 0x90EE4;
@@ -730,8 +730,8 @@ void FontInit(void) {
         size = 0x10120;
         tmp = 0x3000;
     }
-    sdk_font = fn_80005B50(heap_font, size);
-    tmp = (u32)fn_80005B50(heap_font, tmp);
+    sdk_font = OSAllocFromHeapClear(heap_font, size);
+    tmp = (u32)OSAllocFromHeapClear(heap_font, tmp);
     fn_80234F3C(sdk_font, (void*)tmp);
     fn_80005AD8(heap_font, (void*)tmp);
     TextResetInline();
