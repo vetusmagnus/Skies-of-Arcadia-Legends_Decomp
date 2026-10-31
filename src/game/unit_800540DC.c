@@ -1,20 +1,23 @@
 #include "types.h"
 typedef struct { f32 x, y, z; } V3;
-typedef struct U800540DC { s8 id; u8 pad1[3]; s8 x4; u8 pad5[0x15c - 5]; f32 x15c; } U800540DC;
-typedef struct W800540DC { u8 pad[0x1c]; V3 pos; u8 pad28[0x4c - 0x28]; U800540DC* u; } W800540DC;
-typedef struct Tk800540DC { u8 pad[0x24]; W800540DC* work; } Tk800540DC;
-typedef struct Par800540DC { u8 pad[0x74]; Tk800540DC* child; } Par800540DC;
-extern Tk800540DC* fn_80021658(u8);
-extern void fn_80071CF0(V3* src, V3* dst);
-extern void fn_80071F84(s32* out, V3* a, V3* b);
-extern f32 fn_80071E9C(V3*, V3*);
-extern f32 njSin(s32);
+/* The battle unit (task work +0x4C). */
 typedef struct U54B74 {
-    u8 pad0[6];
-    s16 s6;
-    u8 pad8[0xec - 8];
-    u32 fec;
-    u32 ff0;
+    s8 id;          /* 0x00 */
+    u8 pad1[3];
+    s8 x4;          /* 0x04 */
+    u8 pad5;
+    s16 s6;         /* 0x06 */
+    u8 pad8[0x50 - 8];
+    u32 f50;        /* 0x50 */
+    u8 pad54[0x5a - 0x54];
+    u8 b5a;         /* 0x5A */
+    u8 pad5b[0xec - 0x5b];
+    u32 fec;        /* 0xEC */
+    u32 ff0;        /* 0xF0 */
+    u8 padf4[0x15c - 0xf4];
+    f32 x15c;       /* 0x15C */
+    u8 pad160[4];
+    f32 f164;       /* 0x164 */
 } U54B74;
 typedef struct D54B74 {
     u8 pad0[0x10];
@@ -23,14 +26,22 @@ typedef struct D54B74 {
 } D54B74;
 typedef struct W54B74 {
     u8 pad0[0x10];
-    D54B74 *d10;
-    u8 pad14[0x4c - 0x14];
-    U54B74 *u;
+    D54B74 *d10;    /* 0x10 */
+    u8 pad14[0x1c - 0x14];
+    V3 pos;         /* 0x1C */
+    u8 pad28[0x4c - 0x28];
+    U54B74 *u;      /* 0x4C */
 } W54B74;
 typedef struct P54B74 {
     u8 pad0[0x24];
-    W54B74 *work;
+    W54B74 *work;   /* 0x24 */
 } P54B74;
+typedef struct Par800540DC { u8 pad[0x74]; P54B74* child; } Par800540DC;
+extern P54B74* fn_80021658(s8);
+extern void fn_80071CF0(V3* src, V3* dst);
+extern void fn_80071F84(s32* out, V3* a, V3* b);
+extern f32 fn_80071E9C(V3*, V3*);
+extern f32 njSin(s32);
 typedef struct T54B74 {
     u8 pad0[0x10];
     u32 f10;
@@ -49,65 +60,60 @@ typedef struct S54B74 {
     U54B74 *pc;
     E54B74 *tab;
 } S54B74;
+/* The parameter record of the unit-effect command (fn_800541E0). */
+typedef struct Tab541E0 {
+    u8 pad0[6];
+    s16 s6;
+    u8 pad8[8];
+    u32 flags;
+    s16 s14;
+    s16 s16;
+    s16 s18;
+    s16 s1a;
+    u8 pad1c[4];
+    s16 s20;
+    s16 s22;
+} Tab541E0;
+typedef struct S541E0 {
+    s16 cnt;
+    s16 ids[8];
+    s8 n12;
+    u8 pad13;
+    s8 b14;
+    u8 pad15[3];
+    P54B74 *p;
+    u8 pad1c[4];
+    Tab541E0 *tab;
+} S541E0;
+/* A battle script command task; s is the command's own record. */
 typedef struct O54B74 {
     u8 pad0[0x18];
     u8 flags;
     u8 state;
     u8 pad1A[10];
-    S54B74 *s;
+    void *s;
 } O54B74;
 typedef struct H54B74 {
-    u8 pad[0x1c4];
+    u8 pad0[0xc];
+    s32 xc;
+    u8 pad10[0x180 - 0x10];
+    s32 x180;
+    u8 pad184[0x1c4 - 0x184];
     s32 count;
+    u8 pad1c8[4];
+    u32 f1cc;
 } H54B74;
 extern H54B74 lbl_8030A10C;
 extern void fn_80037FD8(E54B74 *, u8 *);
 extern P54B74 *fn_8001E05C(P54B74 *);
 extern s32 fn_80075FF0(P54B74 *, s32, s32);
 extern void fn_80008C00(P54B74 *, s32, s32, s32, s32, u32);
-typedef struct { s8 id; } Obj4C;
-typedef struct { u8 pad[0x4c]; Obj4C *p4c; } Obj24;
-typedef struct { u8 pad[0x24]; Obj24 *p24; } Task;
+extern u8 fn_8001D628(P54B74 *, s16 *, s8, s8, s32, s8);
+extern void fn_8001D14C(U54B74 *);
+extern void fn_800085EC(P54B74 *t, s16 a, s16 b, s32 c, s32 d);
+extern void fn_80020B8C(P54B74 *, s32, s32, s32);
 extern void fn_8001D288(void *a, s32 id, f32 x, f32 y);
-extern void fn_8001D200(Task *t, void *v);
-typedef struct E54B74_80054DD8 {
-    u8 pad0[0x14];
-    s16 a14[10];
-    s16 a28[10];
-} E54B74_80054DD8;
-typedef struct S54B74_80054DD8 {
-    s16 cnt;
-    s16 s2;
-    P54B74 *p4;
-    P54B74 *p8;
-    U54B74 *pc;
-    E54B74_80054DD8 *tab;
-} S54B74_80054DD8;
-typedef struct O54B74_80054DD8 {
-    u8 pad0[0x18];
-    u8 flags;
-    u8 state;
-    u8 pad1A[10];
-    S54B74_80054DD8 *s;
-} O54B74_80054DD8;
-typedef struct Un {
-    u8 id;
-    u8 pad1[0x4f];
-    u32 f50;
-    u8 pad54[0xec - 0x54];
-    u32 fec;
-    u32 ff0;
-    u8 padf4[0x164 - 0xf4];
-    f32 f164;
-} Un;
-typedef struct Wk {
-    u8 pad0[0x4c];
-    Un *unit;
-} Wk;
-typedef struct Nd {
-    u8 pad0[0x24];
-    Wk *wk;
-} Nd;
+extern void fn_8001D200(P54B74 *t, void *v);
 typedef struct Ad {
     u8 pad0[0x10];
     u32 f10;
@@ -119,7 +125,7 @@ typedef struct Ad {
 typedef struct S {
     s16 cnt;
     u8 pad2[2];
-    Nd *p;
+    P54B74 *p;
     f32 f8;
     f32 fc;
     u8 id;
@@ -130,28 +136,17 @@ typedef struct Ow {
     u8 pad0[0x4c];
     S *s;
 } Ow;
-typedef struct O {
-    u8 pad0[0x18];
-    u8 flags;
-    u8 state;
-    u8 pad1a[10];
-    Ow *w;
-} O;
-typedef struct H {
-    u8 pad[0x1c4];
-    s32 count;
-} H;
 extern void *lbl_80347394;
 extern s32 fn_80021728(s8);
 extern s32 fn_8006D1C4(void);
-extern void fn_8001DCA0(Un *);
-extern void fn_80018700(s32);
+extern void fn_8001DCA0(U54B74 *);
+extern void fn_80018700(s8);
 extern void fn_801E17E0(S *);
 
 f32 fn_800540DC(Par800540DC* t) {
-    W800540DC* w;
-    U800540DC* v;
-    U800540DC* u;
+    W54B74* w;
+    U54B74* v;
+    U54B74* u;
     s32 ang[3];
     V3 a;
     V3 b;
@@ -174,6 +169,80 @@ f32 fn_800540DC(Par800540DC* t) {
         return njSin(ang[0]) * fn_80071E9C(&a, &b);
     }
     return 0.0f;
+}
+
+void fn_800541E0(O54B74 *o) {
+    s32 flag = 0;
+    S541E0 *s = o->s;
+    U54B74 *u = s->p->work->u;
+    s16 i;
+    P54B74 *t;
+    switch (o->state) {
+    case 0:
+        u->fec |= 0x80000;
+        u->fec |= 0x40000;
+        s->b14 = u->x4;
+        if (s->tab->flags & 0x4000) {
+            flag = 1;
+        }
+        s->n12 = fn_8001D628(s->p, s->ids, s->tab->s20, s->tab->s22, 0, flag);
+        o->state = 2;
+        break;
+    case 2:
+        if (s->tab->s14 < s->tab->s16) {
+            if (s->cnt < s->tab->s14) {
+                break;
+            }
+            t = fn_80021658(s->b14);
+            fn_800085EC(t, s->tab->s18, s->tab->s1a, lbl_8030A10C.xc, lbl_8030A10C.x180);
+            o->state = 3;
+        } else {
+            o->state = 3;
+        }
+    case 3:
+        if (s->cnt == s->tab->s16) {
+            for (i = 0; i < s->n12; i++) {
+                t = fn_80021658(s->ids[i]);
+                if (!(s->tab->flags & 0x8000)) {
+                    fn_800085EC(t, s->tab->s18, s->tab->s1a + 100, lbl_8030A10C.xc, lbl_8030A10C.x180);
+                }
+                u->b5a = s->ids[i];
+                u->fec |= 0x80;
+                fn_80020B8C(s->p, s->tab->s18, s->tab->s1a, 1);
+                u->fec &= ~0x80;
+            }
+            o->state = 0xfa;
+        }
+        break;
+    case 5:
+        if (lbl_8030A10C.f1cc & 0x20) {
+            o->state = 3;
+            s->cnt = s->tab->s16;
+        }
+        break;
+    case 0xfa:
+        fn_8001D14C(u);
+        o->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    s->cnt++;
+    if (s->tab->s6 & 0x2000) {
+        switch (o->state) {
+        case 2:
+        case 3:
+            break;
+        default:
+            lbl_8030A10C.f1cc |= 0x10;
+        }
+        if ((lbl_8030A10C.f1cc & 0x80) && !(lbl_8030A10C.f1cc & 0x20)) {
+            switch (o->state) {
+            case 2:
+            case 3:
+                o->state = 5;
+            }
+        }
+    }
 }
 
 void fn_80054B74(O54B74 *o) {
@@ -236,14 +305,14 @@ void fn_80054B74(O54B74 *o) {
     fn_80037FD8(s->tab, &o->state);
 }
 
-void fn_8005535C(void *a, void *v, Task *t, f32 x)
+void fn_8005535C(void *a, void *v, P54B74 *t, f32 x)
 {
-    fn_8001D288(a, t->p24->p4c->id, x, 0.0f);
+    fn_8001D288(a, t->work->u->id, x, 0.0f);
     fn_8001D200(t, v);
 }
 
-void fn_80054DD8(O54B74_80054DD8 *o) {
-    S54B74_80054DD8 *s = o->s;
+void fn_80054DD8(O54B74 *o) {
+    S54B74 *s = o->s;
     s16 i;
     switch (o->state) {
     case 0:
@@ -300,16 +369,17 @@ void fn_80054DD8(O54B74_80054DD8 *o) {
         return;
     }
     s->cnt = s->cnt + 1;
-    fn_80037FD8((void *)(s->tab), (void *)(&o->state));
+    fn_80037FD8(s->tab, &o->state);
 }
 
-void fn_80055058(O *o) {
-    S *s = o->w->s;
-    Un *u;
-    Un *u2;
+void fn_80055058(O54B74 *o) {
+    Ow *w = o->s;
+    S *s = w->s;
+    U54B74 *u;
+    U54B74 *u2;
     switch (o->state) {
     case 0:
-        u = s->p->wk->unit;
+        u = s->p->work->u;
         u->fec |= 0x40000;
         s->id = u->id;
         o->state = 1;
@@ -318,7 +388,7 @@ void fn_80055058(O *o) {
             o->state = 0xfa;
             return;
         }
-        u = s->p->wk->unit;
+        u = s->p->work->u;
         if (s->cnt == s->a->s14) {
             s->fc = -1.0f / (f32)(s->a->s16 - s->a->s14);
             u->fec |= 0x20000000;
@@ -334,7 +404,7 @@ void fn_80055058(O *o) {
             o->state = 0xfa;
             return;
         }
-        u = s->p->wk->unit;
+        u = s->p->work->u;
         if (s->cnt >= s->a->s16) {
             o->state = 4;
             u->f164 = -1.0f;
@@ -352,7 +422,7 @@ void fn_80055058(O *o) {
         o->state = 0xfa;
     case 0xfa:
         if (fn_80021728(s->id) != 0) {
-            u = s->p->wk->unit;
+            u = s->p->work->u;
             if (lbl_80347394 != 0) {
                 u->f164 = 0.0f;
                 u->fec &= ~0x20000000;
@@ -370,7 +440,7 @@ void fn_80055058(O *o) {
         return;
     case 5:
         if (fn_8006D1C4() != 0) {
-            u2 = s->p->wk->unit;
+            u2 = s->p->work->u;
             fn_8001DCA0(u2);
             fn_80018700(u2->id);
             u2->fec |= 0x400000;

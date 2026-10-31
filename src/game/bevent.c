@@ -3,6 +3,7 @@
  * (fn_8002BBAC .. fn_8002BC44, table lbl_802DBC4C) and the defeat handler fn_8002BC4C. The unit
  * array lbl_80309DE4 is typed as in battle.c; types used by one function are local to it. */
 #include "types.h"
+#include <math.h>
 #include "ninja.h"
 #include "game/drawstate.h"
 #include <dolphin/os/OSFastCast.h>
@@ -293,6 +294,51 @@ extern s32 lbl_80346744;
 
 extern f32 fn_801DBD9C(f32 z);
 extern void fn_80290ED4(VertexCol* v, s32 count, s32 flag);
+
+extern void fn_8028A058(u32 color, s32 a, f32 width);
+extern void fn_80289B70(f32 z, f32* pts, s32 n);
+extern void fn_8028A054(void);
+
+/* Draws the link from (x0, y0) to (x1, y1): a triangle when it is wide, else a 1-pixel line. */
+void fn_8002B200(s16 x0, s16 y0, s16 x1, s16 y1, s32 sel) {
+    DrawState s;
+    VertexCol v[3];
+    f32 pts[4];
+    u32 col;
+    u32 flag;
+    f32 z;
+    DrawStateDefault2D(&s);
+    s.blend_src = 8;
+    s.blend_dst = 10;
+    col = sel == 0 ? 0x32FF32 : 0xFF9632;
+    col |= lbl_80346740 << 24;
+    flag = fn_801E4FBC(col);
+    z = fn_801DBD9C(-1.0f);
+    if (fabsf(x0 - x1) > 16.0f) {
+        v[0].x = x0;
+        v[0].y = y0;
+        v[0].z = z;
+        v[0].colour = col;
+        v[1].x = x1;
+        v[1].y = y1;
+        v[1].z = z;
+        v[1].colour = col;
+        v[2].x = v[0].x;
+        v[2].y = v[0].y - 16.0f;
+        v[2].z = z;
+        v[2].colour = col;
+        fn_80290ED4(v, 3, flag);
+    } else {
+        pts[0] = x0;
+        pts[1] = y0;
+        pts[2] = x1;
+        pts[3] = y1;
+        fn_8028A058(col, flag, 1.0f);
+        fn_80289B70(z, pts, 2);
+        fn_8028A054();
+    }
+    DrawStatePop(0);
+}
 
 typedef struct {
     s16 x0, y0, x1, y1;

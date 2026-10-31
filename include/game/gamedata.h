@@ -288,7 +288,7 @@ typedef struct ShipItemData {
     char name[17];
     u8 use_mask;            /* 0x11 */
     s8 effect;              /* 0x12 */
-    u8 turns;               /* 0x13 */
+    s8 turns;               /* 0x13 */
     u8 use_up;              /* 0x14 */
     u8 pad15;
     u16 price;              /* 0x16 */

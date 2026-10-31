@@ -365,32 +365,38 @@ typedef struct {
     s16 h12;
     u8 pad14[0x5e];
     s16 h72;
-    s32 f74;
+    NJS_TEXLIST *f74;
     u8 pad78[0x10];
     f32 f88;
     f32 f8c;
     u8 pad90[8];
-    s32 f98;
+    NJS_TEXLIST *f98;
     u8 pad9c[0x14c];
     f32 f1e8;
     s16 h1ec;
     u8 pad1ee[0xe];
     s16 h1fc;
 } Sub_8015887C;
-typedef struct { u8 pad[0x24]; Sub_8015887C *s; } Obj_8015887C;
-extern s32 lbl_80347034;
+typedef struct {
+    u8 pad0[0x18];
+    u8 flags;          /* 0x18 */
+    u8 state;          /* 0x19 */
+    u8 pad1a[0x24 - 0x1a];
+    Sub_8015887C *s;   /* 0x24 */
+} Obj_8015887C;
+extern NJS_TEXLIST *lbl_80347034;
 s32 fn_80159020(void *o);
 void fn_80158DB4(Obj_8015887C *o);
 void fn_80158BE8(Obj_8015887C *o);
-void fn_8021C62C(Sub_8015887C *s, s32 a, s32 b);
+void fn_8021C62C(Sub_8015887C *s, NJS_TEXLIST *tex, s32 b);
 void fn_80159610(Sub_8015887C *s);
 typedef struct { u8 pad[0x19]; u8 b19; } Ent_80158A80;
 extern Ent_80158A80* lbl_80306D98[8];
 extern void* lbl_80347028;
-extern s32 lbl_80347030;
+extern NJS_TEXLIST *lbl_80347030;
 void fn_8012F744(void);
 void fn_8022642C(void);
-void fn_802275A4(s32 a, s32 b);
+void fn_802275A4(NJS_TEXLIST *texlist, s32 a);
 typedef struct { u8 pad0[0x10]; s32 f10; } Q;
 typedef struct {
     s32 x0;
@@ -433,23 +439,23 @@ typedef struct {
     u8 pad0b[0x94 - 0xc];
     s32 f94;
     u8 pad98[0xd8 - 0x98];
-    s32 fd8;
+    NJS_TEXLIST *fd8;
     void *fdc;
     s32 fe0;
     u8 pade4[0x124 - 0xe4];
-    s32 f124;
+    NJS_TEXLIST *f124;
     void *f128;
     s32 f12c;
     u8 pad130[0x170 - 0x130];
-    s32 f170;
+    NJS_TEXLIST *f170;
     void *f174;
 } S_8015D54C;
 typedef struct { u8 pad[0x17a]; u16 h17a; u8 pad2[0x1d8 - 0x17c]; S_8015D54C *s; } Obj_8015D54C;
 typedef struct { u8 pad[0x1c]; s32 kind; u32 arg; } St_8015D54C;
 extern char lbl_802B42C8[];
 void *fn_80167604(Obj_8015D54C *o, u32 arg);
-s32 fn_80167578(A_8015D54C *a, u32 arg);
-void fn_80227810(s32 h);
+NJS_TEXLIST *fn_80167578(A_8015D54C *a, u32 arg);
+s32 fn_80227810(NJS_TEXLIST *texlist);
 typedef struct {
     u8 pad0[8];
     u32 f8;
@@ -753,7 +759,7 @@ typedef struct {
 extern void *lbl_803475A8;
 extern Node *fn_802268E8(void *, void *);
 extern void *fn_801E1C7C(s32);
-extern void fn_801589BC(void);
+void fn_801589BC(Obj_8015887C *t);
 extern void fn_801580A4(s32 *out, f32 *v);
 typedef struct {
     f32 pos[3];
@@ -849,7 +855,9 @@ typedef struct {
 typedef struct {
     u8 pad0[0xe8];
     Anim_80157EA8 *anim;
-    u8 padec[0x1c8 - 0xec];
+    u8 padec[0x18c - 0xec];
+    f32 frame;     /* 0x18c */
+    u8 pad190[0x1c8 - 0x190];
     Part_80157EA8 *part;
 } Obj_80157EA8;
 typedef struct {
@@ -1133,6 +1141,23 @@ struct Pose {
     f32 tx, ty, tz;
     s32 rx, ry, rz;
 };
+
+/* Defined ahead of the file's other .rodata users: its three initializers are read through the
+ * section base, and in the original they start that base (lbl_802B3F00 + 0). */
+void fn_80156CC4(Obj_80157EA8 *o, struct Pose *p)
+{
+    f32 off[3] = { 0.0f, 0.0f, 0.0f };
+    f32 pos[3] = { 0.0f, 0.0f, 0.0f };
+    s32 ang[3] = { 1, 1, 1 };
+
+    fn_801E78C8(o->anim, pos, ang, off, o->frame);
+    p->tx = pos[0];
+    p->ty = pos[1];
+    p->tz = pos[2];
+    p->rx = ang[0];
+    p->ry = ang[1];
+    p->rz = ang[2];
+}
 typedef struct Flags { u32 w; } Flags;
 typedef struct Owner_8015C8F4 { u8 pad[0x1d8]; Flags *fl; } Owner_8015C8F4;
 typedef struct Arg_8015C8F4 { u8 pad[0x1c]; u32 on; } Arg_8015C8F4;
@@ -2541,6 +2566,34 @@ void fn_8015887C(Obj_8015887C *o)
     }
 }
 
+void fn_801589BC(Obj_8015887C *t)
+{
+    Sub_8015887C *w = t->s;
+
+    switch (t->state) {
+    case 0:
+        if (w->f74 != NULL) {
+            fn_80227810(w->f74);
+        }
+        t->state = 1;
+    case 1:
+        fn_8015887C(t);
+        break;
+    case 2:
+        if (w->f74 != NULL) {
+            fn_802275A4(w->f74, 1);
+        }
+        t->state = 3;
+    case 3:
+        {
+            s16 i = w->h10;
+            t->flags |= 0x40;
+            lbl_80306D98[i] = NULL;
+        }
+        break;
+    }
+}
+
 void fn_80158A80(void)
 {
     s32 i;
@@ -3714,8 +3767,8 @@ void fn_80159610(Sub_8015887C *o_)
             fn_80299040(o->p74);
             fn_8021EDE0(o->p74, o->h72);
         } else {
-            fn_80299040((void *)lbl_80347034);
-            fn_8021EDE0((void *)lbl_80347034, (s16)fn_8021EE1C((void *)lbl_80347034, lbl_802E6F00[2]));
+            fn_80299040(lbl_80347034);
+            fn_8021EDE0(lbl_80347034, (s16)fn_8021EE1C(lbl_80347034, lbl_802E6F00[2]));
         }
         z = fn_801DBD9C(-2.0f);
         col = o->alpha | 0xffffff00;
@@ -3740,8 +3793,8 @@ void fn_80159610(Sub_8015887C *o_)
             v[i].colour = col;
         }
         fn_80291064(v, 4, 1);
-        fn_80299040((void *)lbl_80347034);
-        fn_8021EDE0((void *)lbl_80347034, (u8)fn_8021EE1C((void *)lbl_80347034, lbl_802E6F00[3]));
+        fn_80299040(lbl_80347034);
+        fn_8021EDE0(lbl_80347034, (u8)fn_8021EE1C(lbl_80347034, lbl_802E6F00[3]));
         z = fn_801DBD9C(-1.5f);
         col = o->alpha | 0xdcdcdc00;
         v[1].v = 1.0f;
@@ -4086,7 +4139,7 @@ s32 fn_80150800(Obj_80150800 *o)
     return changed;
 }
 
-typedef struct { u8 pad[0x20]; void *texlist; } S80158B7Cb;
+typedef struct { u8 pad[0x20]; NJS_TEXLIST *texlist; } S80158B7Cb;
 typedef struct { u8 pad[0x4]; S80158B7Cb *p4; } S80158B7Ca;
 extern S80158B7Ca *fn_801DB244(char *name);
 extern char lbl_802B3F8C[];
@@ -4095,7 +4148,7 @@ void fn_80158B7C(void) {
     s32 i;
 
     lbl_8034702C = (u32)(lbl_80347028 = fn_801DB244(lbl_802B3F8C));
-    lbl_80347034 = lbl_80347030 = (s32)((S80158B7Ca *)lbl_80347028)->p4->texlist;
+    lbl_80347034 = lbl_80347030 = ((S80158B7Ca *)lbl_80347028)->p4->texlist;
     fn_80227810(lbl_80347030);
     for (i = 0; i < 8; i++) {
         lbl_80306DB8[i] = 0;

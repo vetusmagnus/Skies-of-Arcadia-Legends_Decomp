@@ -5,6 +5,7 @@
 #include "game/stat_8030B4D4.h"
 #include "ninja.h"
 #include <dolphin/os.h>
+#include <dolphin/gx.h>
 #include "game/text.h"
 #include "game/menu.h"
 #include "game/gamedata.h"
@@ -12,13 +13,12 @@ extern void fn_802193BC(s32 a, s32 b);
 extern s32 fn_801D168C(void);
 extern void fn_801D150C(s32 v);
 extern s32 fn_80219B7C(void);
-typedef struct Obj_UNIT0000 { u8 pad[4]; u32 count; } Obj_UNIT0000;
 extern void fn_80298FE4(s32 v);
 typedef void (*VoidFn)(void);
 typedef struct Node_UNIT0000 {
-    void *w0;
+    void (*w0)(void *);                   /* the update function */
     struct Node_UNIT0000 *next;
-    void *w8;
+    struct Node_UNIT0000 *w8;             /* the parent */
     u32 wc;
     u32 w10;
     s32 w14;
@@ -26,8 +26,9 @@ typedef struct Node_UNIT0000 {
     u8 pad19[2];
     u8 b1b;
     u8 pad1c[4];
-    f32 f20;
-    u8 pad24[0x1c];
+    f32 f20;                              /* the draw-order key */
+    void *kids[6];                        /* 0x24: work blocks, freed with the task */
+    u8 pad3c[4];
 } Node_UNIT0000;
 typedef struct Blk_UNIT0000 {
     Node_UNIT0000 *head;
@@ -115,7 +116,7 @@ extern Node_UNIT0000 *lbl_80347590;
 extern Node_UNIT0000 *lbl_80347594;
 extern Node_UNIT0000 *lbl_80347598;
 extern Node_UNIT0000 *lbl_803475A8;
-extern void fn_80226984(void *p);
+extern void fn_80226984(void);
 typedef int s32_80227E74;
 extern s32_80227E74 lbl_803477FC;
 typedef unsigned long u32_8022823C;
@@ -190,9 +191,9 @@ extern s16 lbl_80347528;
 s16 fn_80225E58(Slot *tbl, s16 n, u32 key);
 typedef struct Sub802281DC { s32 a; s32 b[8]; u8 pad[0x44 - 0x24]; s32 z44; } Sub802281DC;
 typedef struct Ctx802281DC { s32 a0; s32 a4; s32 a8; Sub802281DC *sub; s32 a10; s32 a14; } Ctx802281DC;
-typedef struct C2 { u8 pad[0x20]; void *p20; } C2;
+typedef struct C2 { u8 pad[0x20]; NJS_TEXLIST *p20; } C2;
 typedef struct C1 { u8 pad[4]; C2 *p4; } C1;
-typedef struct Z { u8 pad[8]; u32 f8; } Z;
+typedef struct Z { u8 pad[8]; NJS_TEXLIST texlist; } Z;
 typedef struct Y { u8 pad[4]; Z *p4; } Y;
 typedef struct EntA { u8 pad[0x14]; Y *y; u8 pad18[0x68 - 0x18]; } EntA;
 typedef struct TblRoot { u8 pad[4]; EntA *p4; } TblRoot;
@@ -201,12 +202,12 @@ extern C0 *lbl_8034784C;
 extern f32 lbl_8034C640;
 extern f32 lbl_8034C65C;
 extern void fn_801D5DD8(void *a, s32 b, s32 c, void *p, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
-typedef struct TexInner { u8 pad[0x20]; void *list; } TexInner;
+typedef struct TexInner { u8 pad[0x20]; NJS_TEXLIST *list; } TexInner;
 typedef struct TexRoot { u8 pad[4]; TexInner *inner; } TexRoot;
 typedef struct Spr { u8 pad[0x14]; f32 f14; u8 pad18[0x50 - 0x18]; } Spr;
 typedef struct Obj8 { s32 pad0; s32 a4; s32 a8; } Obj8;
 extern TexRoot *lbl_80347854;
-extern void fn_802275A4(void *list, s32 a);
+s32 fn_802275A4(NJS_TEXLIST *texlist, s32 mode);
 extern void fn_801CBBF8(void);
 typedef struct Flags8 { u8 pad[8]; u32 f8; } Flags8;
 typedef struct Ref { Flags8 *p; u8 pad[0x18 - 4]; } Ref;
@@ -251,15 +252,13 @@ typedef struct Anim {
 } Anim;
 extern s32 fn_801E7B2C(void* o, f32 frame, void* a, void* b);
 extern u32 strlen(const char *s);
-typedef struct NameEnt { char *name; u8 pad4[8]; } NameEnt;
-typedef struct NameList { NameEnt *ents; u32 count; } NameList;
 extern s32 fn_801E4BBC(s8 n);
 extern void fn_8021AF94(s32 *a, void *b, s8 *list);
 extern void fn_8021B3B4(void);
 extern void fn_801EFF0C(s16 id);
 typedef struct Ent { u8 pad_0[0x1c];
- u32 flags; f32 key; } Ent;
-extern Ent *lbl_80315530[];
+ u32 flags; } Ent;
+extern Node_UNIT0000 *lbl_80315530[];
 extern s32 lbl_803477F0;
 typedef struct { u8 pad0[0x54]; u32 stream; u8 pad58[8]; void *buf; u8 pad64[0x80 - 0x64]; } Stream_803148C0;
 typedef struct { void *buf; u8 pad4[0xc]; s32 group; u8 pad14[0x3c - 0x14]; } Group_803148C0;
@@ -377,9 +376,8 @@ typedef struct Sys_UNIT0000 { s32 f0; s16 f4; s16 f6; f32 f8; f32 fc; u8 p10[4];
 typedef struct Slot_80219998 { u8 pad_00[0x38]; u8 x38; u8 pad39[3]; } Slot_80219998;
 extern Slot_80219998 lbl_80315120[];
 typedef struct { s16 x0; s16 x2; s8 x4; s8 x5; } Out;
-typedef struct { s8 id; s8 level; u8 pad2[0x16]; s16 ids[5]; s16 acc[3]; } Src;
-s32 fn_8021A6E8(Src* a, void* b, CannonData* c);
-s32 fn_8021A620(Src* a, void* b, CannonData* c);
+s32 fn_8021A6E8(Save1568* a, void* b, CannonData* c);
+s32 fn_8021A620(Save1568* a, void* b, CannonData* c);
 typedef struct { Vec pos; f32 r; } Sphere_80221AAC;
 typedef struct { Vec b; Vec a; f32 r; } Capsule_80221AAC;
 typedef struct {
@@ -397,7 +395,7 @@ typedef struct {
     } v;
     f32 x64[3];
 } Shape;
-void fn_80221E24(f32* out, f32* a);
+void fn_80221E24(f32* out, f32* p, Shape* s);
 void fn_80220B14(f32* out, f32* a, f32* b);
 void fn_80221D04(f32* out, f32* a, f32* b);
 void fn_80221AAC(f32* out, Sphere_80221AAC* a, Capsule_80221AAC* b);
@@ -811,7 +809,7 @@ extern s32 fn_801A2670(s32 idx, s32 *out);
 struct Xf_80224F28;
 void fn_8022445C(Slot *g, Seg *segs, s32 count);
 s32 fn_80225330(Slot *o, NJS_POINT3 *p, Cmp *res);
-extern s32 fn_8021A2B0(Src* a, void* b, s32 code);
+extern s32 fn_8021A2B0(Save1568* a, void* b, s32 code);
 extern Ent* lbl_80309DE4[];
 extern void fn_8021E94C(u32* out, s32 a, s32 b);
 extern void fn_801DD5E8(Angle* out, NJS_POINT3* p);
@@ -967,20 +965,20 @@ static inline s32 CrewSum(s8* crew, s32 stat)
     return sum;
 }
 
-s32 fn_8021A2B0(Src* a, void* crew, s32 stat)
+s32 fn_8021A2B0(Save1568* a, void* crew, s32 stat)
 {
     s32 r = 0;
     if (a != NULL && crew != NULL && StatValid(stat)) {
-        r = CannonSum(a->ids, stat) + GearSum(a->acc, stat);
+        r = CannonSum(a->s1580, stat) + GearSum(a->s158a, stat);
         r += CrewSum(crew, stat);
     }
     return r;
 }
 
-void fn_8021EDE0(Obj_UNIT0000 *p, s32 n)
+void fn_8021EDE0(NJS_TEXLIST *p, s32 n)
 {
-    if (p->count <= (u16)n) {
-        n = (s16)(p->count - 1);
+    if (p->nbTexture <= (u16)n) {
+        n = (s16)(p->nbTexture - 1);
     }
     fn_80298FE4((s16)n);
 }
@@ -1325,7 +1323,7 @@ void fn_80226268(void *p) {
         for (;;) {}
     }
     lbl_80347588 = p;
-    fn_80226984(p);
+    fn_80226984();
 }
 
 void fn_80226298(void *p) {
@@ -1353,6 +1351,57 @@ void fn_80226334(void *p) {
     lbl_80347590 = p;
     lbl_80347594 = p;
     lbl_80347598 = p;
+}
+
+/* Run the task list: tasks with a negative draw key are sorted into lbl_80315530 and run by
+ * fn_80226984; deleted tasks (0x40) are unlinked and freed along with their work blocks. */
+void fn_8022642C(void) {
+    Node_UNIT0000 *node;
+    Blk_UNIT0000 *l = &lbl_80311A78;
+    s32 i;
+    s32 n;
+    s32 j;
+    f32 y;
+    void **kid;
+    s32 k;
+
+    node = &l->sentinel;
+    lbl_803477F0 = 0;
+    l->head = node;
+    while ((node = node->next) != 0) {
+        if (node->w8 != 0 && (node->w8->b18 & 0x20)) node->b18 |= 0x20;
+        if (!(node->b18 & 0x40)) {
+            l->cur = node;
+            if (node->w14 <= lbl_803477F4) {
+                y = node->f20;
+                if (y < 0.0f && lbl_803477F0 >= 0) {
+                    n = lbl_803477F0;
+                    for (i = 0; i < n && y >= lbl_80315530[i]->f20; i++) {
+                    }
+                    for (j = n; j > i; j--) lbl_80315530[j] = lbl_80315530[j - 1];
+                    lbl_80315530[i] = node;
+                    lbl_803477F0 = lbl_803477F0 + 1;
+                } else {
+                    node->b18 |= 8;
+                    node->w0(node);
+                }
+            }
+            lbl_80311A78.head = node;
+        } else if (node->b18 & 0x10) {
+            node->b18 &= ~0x10;
+        } else {
+            if (node->w10 == 0) {
+                kid = node->kids;
+                for (k = 6; k > 0; k--, kid++) {
+                    if (*kid != 0) fn_801E17E0(*kid);
+                }
+            }
+            lbl_80311A78.head->next = node->next;
+            fn_801E17E0(node);
+            node = lbl_80311A78.head;
+        }
+    }
+    if (lbl_803477F0 > 0) fn_80226984();
 }
 
 void fn_80227E74(void) {
@@ -1838,16 +1887,16 @@ void fn_80223324(Anim* a) {
     }
 }
 
-s32 fn_8021EE1C(NameList *l, char *s) {
+s32 fn_8021EE1C(NJS_TEXLIST *l, char *s) {
     s32 i;
     s16 j;
     s16 len;
-    if (l == 0 || l->ents == 0 || l->count == 0) {
+    if (l == 0 || l->textures == 0 || l->nbTexture == 0) {
         return -1;
     }
     len = strlen(s);
-    for (i = 0; i < l->count; i++) {
-        char *n = l->ents[i].name;
+    for (i = 0; i < l->nbTexture; i++) {
+        char *n = l->textures[i].filename;
         j = 0;
         while (j < len) {
             if (n[j] != s[j]) break;
@@ -1889,11 +1938,11 @@ void fn_8021B1CC(s32 *a, void *b) {
     fn_8021AF94(a, b, list);
 }
 
-void fn_80226AE8(Ent *e) {
+void fn_80226AE8(Node_UNIT0000 *e) {
     s32 i;
     s32 j;
     s32 n = lbl_803477F0;
-    for (i = 0; i < n && e->key >= lbl_80315530[i]->key; i++) {
+    for (i = 0; i < n && e->f20 >= lbl_80315530[i]->f20; i++) {
     }
     for (j = n; j > i; j--) {
         lbl_80315530[j] = lbl_80315530[j - 1];
@@ -2150,12 +2199,12 @@ s32 fn_80219998(const u8 *path)
 static inline s32 valid_slot(s32 i) { return i >= 0 && i < 5; }
 static inline s32 valid_id(s32 i) { return i >= 0x190 && i <= 0x1b7; }
 
-void fn_8021AE68(Out* out, Src* src, void* b, s32 slot)
+void fn_8021AE68(Out* out, Save1568* src, void* b, s32 slot)
 {
     s32 id;
     CannonData* t;
     if (out == 0) return;
-    if (src == 0 || !valid_slot(slot) || !valid_id(id = src->ids[slot])) {
+    if (src == 0 || !valid_slot(slot) || !valid_id(id = src->s1580[slot])) {
         if (out != 0) {
             out->x0 = 0;
             out->x2 = 0;
@@ -2179,11 +2228,31 @@ void fn_8021AE68(Out* out, Src* src, void* b, s32 slot)
     }
 }
 
+void fn_80221E24(f32* out, f32* p, Shape* s)
+{
+    switch (s->type) {
+    case 0:
+        break;
+    case 1:
+        fn_80220B14(out, s->v.alt.x14, p);
+        out[0] *= -1.0f;
+        out[1] *= -1.0f;
+        out[2] *= -1.0f;
+        break;
+    case 2:
+        fn_802205E0(out, s->v.alt.u.x20, p);
+        out[0] *= -1.0f;
+        out[1] *= -1.0f;
+        out[2] *= -1.0f;
+        break;
+    }
+}
+
 void fn_80221EDC(f32* out, Shape* a, Shape* b)
 {
     switch (a->type) {
     case 0:
-        fn_80221E24(out, a->x64);
+        fn_80221E24(out, a->x64, b);
         break;
     case 1:
         switch (b->type) {
@@ -2217,9 +2286,9 @@ void fn_80221EDC(f32* out, Shape* a, Shape* b)
     }
 }
 
-extern s32 fn_8021A2B0(Src* a, void* b, s32 code);
+extern s32 fn_8021A2B0(Save1568* a, void* b, s32 code);
 
-s32 fn_8021A620(Src* a, void* b, CannonData* c)
+s32 fn_8021A620(Save1568* a, void* b, CannonData* c)
 {
     s32 ret = 0;
     if (c != NULL) {
@@ -2252,9 +2321,9 @@ s32 fn_8021A620(Src* a, void* b, CannonData* c)
     return ret;
 }
 
-extern s32 fn_8021A2B0(Src* a, void* b, s32 code);
+extern s32 fn_8021A2B0(Save1568* a, void* b, s32 code);
 
-s32 fn_8021A6E8(Src* a, void* b, CannonData* c)
+s32 fn_8021A6E8(Save1568* a, void* b, CannonData* c)
 {
     s32 ret = 0;
     if (c != NULL) {
@@ -2634,7 +2703,7 @@ void fn_80229D74(void) {
         lbl_8034784C->p35c = 0;
     }
     for (i = 0; i < 5; i++) {
-        fn_802275A4(&lbl_8034784C->p358->p4[i].y->p4->f8, 1);
+        fn_802275A4(&lbl_8034784C->p358->p4[i].y->p4->texlist, 1);
     }
     fn_801E17E0(lbl_8034784C->p358);
     lbl_8034784C->p358 = 0;
@@ -3218,6 +3287,94 @@ void fn_8022807C(void)
     }
 }
 
+extern s32 fn_801E1098(void* a, void* b);
+extern void fn_801E0D0C(char* s);
+extern s32 fn_802978F4(NJS_TEXLIST* tl);
+
+static inline s32 FreeBlk(char* name) {
+    Blk* b = lbl_80347804;
+    Blk** pp = &lbl_80347804;
+    while (b != NULL) {
+        if (fn_801E1098(b, name) == 0) {
+            break;
+        }
+        pp = &b->next;
+        b = b->next;
+    }
+    if (b == NULL) {
+        return 0;
+    }
+    *pp = b->next;
+    fn_80005AD8(heap_main, b);
+    return 1;
+}
+
+s32 fn_802275A4(NJS_TEXLIST* texlist, s32 mode) {
+    NJS_TEXLIST tl;
+    char name[32];
+    u32 i;
+    s32 ret;
+    if (texlist == NULL || texlist->nbTexture == 0 || texlist->textures == NULL ||
+        texlist->textures->texaddr == NULL) {
+        return -1;
+    }
+    tl.nbTexture = 1;
+    ret = 1;
+    for (i = 0; i < texlist->nbTexture; i++) {
+        s32 n;
+        char* s;
+        NjTexRef* t;
+        s32 done;
+        tl.textures = &texlist->textures[i];
+        s = texlist->textures[i].filename;
+        if (s == NULL) {
+            continue;
+        }
+        n = 0;
+        while (*s != '.' && *s != '\0' && n < 32) {
+            name[n] = *s;
+            n++;
+            s++;
+        }
+        name[n] = '\0';
+        fn_801E0D0C(name);
+        t = tl.textures->texaddr;
+        if (t == NULL || t->mem == NULL) {
+            continue;
+        }
+        done = 0;
+        if (mode == 0) {
+            if (t->refs > 1) {
+                t->refs--;
+                t->mem->refs--;
+            } else {
+                if (FreeBlk(name) == 1) {
+                    lbl_80347800--;
+                }
+                done = 1;
+            }
+        } else {
+            if (FreeBlk(name) == 1) {
+                t->refs = 1;
+                t->mem->refs = 1;
+                lbl_80347800--;
+                done = 1;
+            }
+        }
+        if (done == 0) {
+            continue;
+        }
+        if (fn_802978F4(&tl) == -1) {
+            ret = -1;
+        } else {
+            tl.textures->filename = NULL;
+            tl.textures->attr = 0;
+            tl.textures->texaddr = NULL;
+        }
+    }
+    return ret;
+}
+
 /* Create a task running fn, linked right after parent a (a child inherits a's w14, depth + 1). */
 void *fn_802267AC(void *a, void *fn)
 {
@@ -3514,6 +3671,28 @@ static inline Ctx802281DC *FindEnt(void) {
     return 0;
 }
 
+extern NJS_TEXLIST lbl_80347568;
+extern void fn_80298ED0(s32 n);
+extern void fn_801D22CC(void);
+
+/* Copy the frame buffer into lbl_80347568's first texture. */
+void fn_80226D14(void) {
+    void *data = lbl_80347568.textures[0].texaddr->mem->body.data;
+    fn_80299040(&lbl_80347568);
+    fn_80298ED0(0);
+    DCInvalidateRange(data, 0x100000);
+    fn_801D22CC();
+    GXSetTexCopySrc(0, 0, screen_width, screen_height);
+    {
+        NjTexMem *m = lbl_80347568.textures[0].texaddr->mem;
+        u16 fmt = m->body.w00;
+        GXSetTexCopyDst(m->body.w0c, m->body.w10, fmt, GX_FALSE);
+    }
+    GXCopyTex(data, GX_TRUE);
+    GXPixModeSync();
+    GXInvalidateTexAll();
+}
+
 void fn_80226DC4(void) {
     Ctx802281DC *e = FindEnt();
     if (e != 0) {
@@ -3570,13 +3749,13 @@ static inline ShipData* GetEnt(s32 idx)
     }
     return e;
 }
-s32 fn_8021A2B0(Src* a, void* b, s32 code);
+s32 fn_8021A2B0(Save1568* a, void* b, s32 code);
 
-s32 fn_8021A7B0(Src* p, void* q)
+s32 fn_8021A7B0(Save1568* p, void* q)
 {
     s32 r = 0;
     if (p != NULL && q != NULL) {
-        ShipData* e = GetEnt(p->id);
+        ShipData* e = GetEnt(p->b1568);
         if (e != NULL) {
             r = e->value;
             r += fn_8021A2B0(p, q, 7);
@@ -3624,6 +3803,134 @@ void fn_8021B91C(s32 ship) {
     }
 }
 
+static inline int in5(s32 v)
+{
+    return v >= 0 && v < 5;
+}
+
+static inline int in3(s32 v)
+{
+    return v >= 0 && v < 3;
+}
+
+static inline int inrange(s32 v, s32 lo, s32 hi)
+{
+    return v >= lo && v <= hi;
+}
+
+static inline ShipData *GetPreset(s32 idx)
+{
+    ShipData *p = 0;
+    if (in5(idx)) {
+        p = &lbl_802D6740[idx];
+    }
+    return p;
+}
+
+static inline void SetEquipA(Save1568 *d, s32 i, s16 v)
+{
+    if (d != 0 && in5(i) && inrange(v, 0x190, 0x1b7)) {
+        lbl_8030B7F4.x1568.s1580[i] = v;
+        fn_801EFF0C(v);
+    }
+}
+
+/* The original stores the accessories into s1580 too, not s158a. */
+static inline void SetEquipB(Save1568 *d, s32 i, s16 v)
+{
+    if (d != 0 && in3(i) && inrange(v, 0x1b8, 0x1df)) {
+        lbl_8030B7F4.x1568.s1580[i] = v;
+        fn_801EFF0C(v);
+    }
+}
+
+static inline void CopyName(Save1568 *d, ShipData *src)
+{
+    if (d != 0 && src != 0) {
+        MemCopy(d->name, src->name, 0x11);
+        lbl_8030B7F4.x1568.name[0x10] = 0;
+    }
+}
+
+static inline void CopyEquipA(Save1568 *d, ShipData *src)
+{
+    s32 i;
+    if (d != 0 && src != 0) {
+        for (i = 0; i < 5; i++) {
+            SetEquipA(d, i, src->cannon[i]);
+        }
+    }
+}
+
+static inline void CopyEquipB(Save1568 *d, ShipData *src)
+{
+    s32 i;
+    if (d != 0 && src != 0) {
+        for (i = 0; i < 3; i++) {
+            SetEquipB(d, i, src->acc[i]);
+        }
+    }
+}
+
+static inline void BuildList(s8 *list)
+{
+    s32 k;
+    s8 *p;
+    s32 n;
+
+    if (list != 0) {
+        p = list;
+        k = 0;
+        n = k;
+        for (; k < 0x16 && n < 0x16; k++) {
+            if (fn_801E4BBC(k) != 0) {
+                *p = k;
+                n++;
+                p++;
+            }
+        }
+        for (k = n; k < 0x16; k++) {
+            list[k] = -1;
+        }
+    }
+}
+
+void fn_8021BAEC(s32 idx)
+{
+    ShipData *src;
+    Save1568 *d;
+    s8 list[0x16];
+
+    if (in5(idx)) {
+        src = GetPreset(idx);
+        d = &lbl_8030B7F4.x1568;
+        lbl_8030B7F4.x1568.x1569 = 0;
+        d->b1568 = idx;
+        CopyName(d, src);
+        CopyEquipA(d, src);
+        CopyEquipB(d, src);
+        fn_8021B3B4();
+        BuildList(list);
+        fn_8021AF94(&lbl_8030B4D4.limit, d, list);
+    }
+}
+
+void fn_8021BED0(void) {
+    int i;
+    lbl_8030B7F4.x1568.b1568 = -1;
+    lbl_8030B7F4.x1568.x1569 = 0;
+    lbl_8030B7F4.x1568.x157c = 0;
+    for (i = 0; i < 0x11; i++) {
+        lbl_8030B7F4.x1568.name[i] = 0;
+    }
+    for (i = 0; i < 5; i++) {
+        lbl_8030B7F4.x1568.s1580[i] = -1;
+    }
+    for (i = 0; i < 3; i++) {
+        lbl_8030B7F4.x1568.s158a[i] = -1;
+    }
+}
+
 static inline s32 InRange6(s32 v)
 {
     s32 r = 0;
@@ -3634,13 +3941,13 @@ static inline s32 InRange6(s32 v)
 }
 
 
-s32 fn_8021A2B0(Src* a, void* b, s32 code);
+s32 fn_8021A2B0(Save1568* a, void* b, s32 code);
 
-s32 fn_8021AA48(Src* p, void* q, s32 k)
+s32 fn_8021AA48(Save1568* p, void* q, s32 k)
 {
     s32 r = 0;
     if (p != NULL && q != NULL) {
-        ShipData* e = GetEnt(p->id);
+        ShipData* e = GetEnt(p->b1568);
         if (e != NULL && InRange6(k)) {
             s32 code;
             r = e->elem_def[k];
@@ -3983,7 +4290,7 @@ void fn_80222964(Node *n)
 
 typedef struct Wk_8021BF80 {
     void *x0;
-    NameList *x4;
+    NJS_TEXLIST *x4;
     s32 x8;
     u8 padc[0x48 - 0xc];
     f32 x48;
@@ -4002,7 +4309,7 @@ typedef struct Owner_8021BF80 {
     void *x1f4;
 } Owner_8021BF80;
 extern char *lbl_802F8968[];
-void fn_8021BF80(Owner_8021BF80 *o, NameList *arg, s32 val, s16 count, s16 extra, f32 scale) {
+void fn_8021BF80(Owner_8021BF80 *o, NJS_TEXLIST *arg, s32 val, s16 count, s16 extra, f32 scale) {
     Task_8021BF80 *node;
     s32 div;
     s16 n;
@@ -4028,6 +4335,85 @@ void fn_8021BF80(Owner_8021BF80 *o, NameList *arg, s32 val, s16 count, s16 extra
         n--;
         div = 1;
     }
+}
+
+typedef struct {
+    f32 x, y, z, u, v;
+    u32 colour;
+} VertexTex;
+
+extern void fn_80291064(VertexTex* v, s32 count, s32 mode);
+
+/* fn_8021EDE0 inlined: select texture n of the list, clamped to the last one. */
+static inline void SetTexture(NJS_TEXLIST* t, s16 n)
+{
+    u16 m = n;
+    if (t->nbTexture <= m) {
+        n = t->nbTexture - 1;
+    }
+    fn_80298FE4(n);
+}
+
+void fn_8021D648(f32 z, s16 x, s16 y, s16 mode, NJS_TEXLIST* tex, s32 blend, u32 alpha)
+{
+    DrawState st;
+    VertexTex v[4];
+    f32 zz;
+    f32 u0, v0;
+    f32 u1, v1;
+    s16 h, w;
+
+    DrawStateDefault2D(&st);
+    if (DrawStatePush(&st) == 0) {
+        return;
+    }
+    fn_80299040(tex);
+    SetTexture(tex, fn_8021EE1C(tex, lbl_802F8968[1]));
+    if (blend != 0) {
+        st.blend_src = 8;
+        st.blend_dst = 10;
+    }
+    if (mode == 0) {
+        u0 = 0.454902f;
+        v0 = 0.75294125f;
+        w = 0x18;
+        h = 0x10;
+        y += 2;
+    } else {
+        v0 = 0.53333336f;
+        w = 0x15;
+        u0 = 0.5019608f;
+        h = 0xd;
+        y += 5;
+    }
+    alpha = (alpha << 24) | 0x14dcfa;
+    zz = fn_801DBD9C(z - 2.0f);
+    v[0].x = x;
+    v[0].y = y;
+    v[0].u = u0;
+    v[0].v = v0;
+    v[0].z = zz;
+    v[0].colour = alpha;
+    v[1].x = x;
+    v[1].y = y + h;
+    v[1].u = u0;
+    v[1].v = v1 = 0.003921569f * (h * 4) + v0;
+    v[1].z = zz;
+    v[1].colour = alpha;
+    v[2].x = x + w;
+    v[2].y = y;
+    v[2].u = u1 = 0.003921569f * (w * 4) + u0;
+    v[2].v = v0;
+    v[2].z = zz;
+    v[2].colour = alpha;
+    v[3].x = x + w;
+    v[3].y = y + h;
+    v[3].u = u1;
+    v[3].v = v1;
+    v[3].z = zz;
+    v[3].colour = alpha;
+    fn_80291064(v, 4, 1);
+    DrawStatePop(0);
 }
 
 typedef struct Line3_80221AAC { Vec o; Vec d; } Line3_80221AAC;
@@ -4230,6 +4616,112 @@ void fn_8021F330(Task *t) {
             }
         } else {
             DrawBlock(w, &ds, z);
+        }
+    }
+}
+
+void fn_8021F8A8(Task *t) {
+    Block *w = t->work;
+    HostEnt *e = &w->host->ents[w->sc];
+    s32 ret = 0;
+
+    switch (t->state) {
+    case 0:
+        if (w->tex == 0 || w->w8 == -1) {
+            w->host->flags &= ~0x10000000;
+            t->state = 4;
+            break;
+        } else {
+            Pt p;
+            s16 r[4];
+            p.y = 0x18;
+            p.x = 0x18;
+            r[1] = 0;
+            r[0] = 0;
+            r[3] = 0xc0;
+            r[2] = 0xc0;
+            fn_8021EF80(w, &p, r, 0);
+            w->spr.x = 12.0f + e->x;
+            w->spr.y = 12.0f + e->y;
+            w->spr.sx = 1.0f;
+            w->spr.sy = 1.0f;
+            w->cnt = w->s4e;
+            w->f40 = 1.0f;
+            w->f44 = 0.0f;
+            w->timer = 0x1e;
+            t->f20 = w->f48;
+            w->spr.z = 0.0f;
+            if (w->cnt == 0) {
+                t->state = 1;
+            } else {
+                t->state = 2;
+                w->cnt--;
+                break;
+            }
+        }
+        /* fall through */
+    case 1:
+        w->host->flags |= 0x01000000;
+        w->timer--;
+        if (w->timer <= 0) {
+            t->state = 3;
+        }
+        w->f44 += 30.0f;
+        if (w->f44 >= 360.0f) {
+            w->f44 -= 360.0f;
+        }
+        {
+            Angle ang = 182.04445f * w->f44;
+            f32 s = njSin(ang);
+            f32 k = 5.0f / (0x1e - w->timer) * s;
+            k = 1.0f + k;
+            w->spr.sx = k;
+            w->spr.sy = k;
+        }
+        ret = 1;
+        break;
+    case 2:
+        w->host->flags |= 0x01000000;
+        w->spr.sx = 1.0f;
+        w->spr.sy = 1.0f;
+        w->cnt--;
+        if (w->cnt <= 0) {
+            t->state = 1;
+        }
+        ret = 1;
+        break;
+    case 3:
+        w->host->flags |= 0x01000000;
+        w->timer--;
+        if (w->timer < 0) {
+            w->host->flags &= ~0x01000000;
+            w->host->flags |= 0x00200000;
+            w->host->s1fc = 0x1e;
+            t->state = 4;
+        }
+        ret = 1;
+        break;
+    case 4:
+        t->state = 5;
+        break;
+    case 5:
+        t->flags |= 0x40;
+        break;
+    }
+    if (ret == 1) {
+        DrawState ds;
+        f32 z;
+        w->spr.x = 12.0f + e->x;
+        w->spr.y = 12.0f + e->y;
+        DrawStateDefault2D(&ds);
+        ds.colour.a = w->f40;
+        ds.colour.r = 1.0f;
+        ds.colour.g = 1.0f;
+        ds.colour.b = 1.0f;
+        z = 0.01f + w->f48 - 0.001 * w->s4e;
+        if (DrawStatePush(&ds)) {
+            fn_80005D98(&w->spr, 0, 0x22, fn_801DBD9C(z));
+            DrawStatePop(0);
         }
     }
 }
@@ -4633,21 +5125,21 @@ static inline s32 Min(s32 a, s32 b)
     return (a < b) ? a : b;
 }
 
-static inline s32 ShipHpCalc(ShipData* e, Src* p, void* q)
+static inline s32 ShipHpCalc(ShipData* e, Save1568* p, void* q)
 {
     s32 v = e->hp_max;
     v += fn_8021A2B0(p, q, 0);
-    v += p->level * e->hp_up;
+    v += p->x1569 * e->hp_up;
     return Min(v, 999999);
 }
 
 /* The zero of res, GetEnt's e and InRange's r are one value copied (li / mr r31 / mr r0) only
  * when the body is an inline of its own. */
-static inline s32 ShipHp(Src* p, void* q)
+static inline s32 ShipHp(Save1568* p, void* q)
 {
     s32 res = 0;
     if (p != NULL && q != NULL) {
-        ShipData* e = GetEnt(p->id);
+        ShipData* e = GetEnt(p->b1568);
         if (e != NULL) {
             res = ShipHpCalc(e, p, q);
         }
@@ -4656,9 +5148,15 @@ static inline s32 ShipHp(Src* p, void* q)
 }
 
 /* A ship's max HP: base plus fn_8021A2B0's bonus plus level * hp_up, capped at 999999. */
-s32 fn_8021ADA0(Src* p, void* q)
+s32 fn_8021ADA0(Save1568* p, void* q)
 {
     return ShipHp(p, q);
+}
+
+void fn_8021B3B4(void) {
+    s8 buf[22];
+    fill(buf);
+    lbl_8030B7F4.x1568.x157c = fn_8021ADA0(&lbl_8030B7F4.x1568, buf);
 }
 
 void fn_8021EB44(u32* out, s16 idx, s32 a, u32 alpha)

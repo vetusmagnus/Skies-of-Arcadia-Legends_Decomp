@@ -23,7 +23,8 @@ typedef struct SaveChar {
     s16 x22;
     u8 pad24[4];
     f32 x28;
-    u8 pad2c[0xe];
+    u8 stat[8];             /* 0x2c: copied to the battle menu's party view (fn_80135290) */
+    u8 pad34[6];
     s16 s3a;
     s16 s3c;
     s16 s3e;
@@ -37,7 +38,7 @@ typedef struct { s16 id; s8 cnt; u8 pad; } InvEnt;
 /* The block at 0x1568 of the save data; the field names give the offset in SaveData. */
 typedef struct Save1568 {
     s8 b1568;                   /* 0x00 */
-    u8 x1569;                   /* 0x01 */
+    s8 x1569;                   /* 0x01: the ship's level */
     char name[0x12];            /* 0x02: the ship's name */
     s32 x157c;                  /* 0x14 */
     s16 s1580[5];               /* 0x18 */
@@ -52,7 +53,7 @@ typedef struct SaveData {
     s8 x32e;
     s8 x32f;
     s8 x330;
-    u8 pad331[0x344 - 0x331];
+    char x331[0x344 - 0x331];   /* a string (fn_80193FAC) */
     s16 x344;
     s16 x346;
     s16 x348;                   /* clamped to 0..255 */

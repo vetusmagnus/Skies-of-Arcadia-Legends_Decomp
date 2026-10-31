@@ -2050,3 +2050,24 @@ void fn_80027484(Sprite** objs, s32 count, s32 mode)
         break;
     }
 }
+
+extern void fn_8000FBA8(T21* t);
+
+/* Removes t from the character task table, shifting the later entries down. */
+void fn_80020D50(T21* t) {
+    s8 i;
+    s8 j;
+
+    fn_8000FBA8(t);
+    for (i = 0; i < 14; i++) {
+        if (lbl_80309E24[i] == t) {
+            lbl_80309E24[i] = NULL;
+            for (j = i; j < 11; j++) {
+                lbl_80309E24[j] = lbl_80309E24[j + 1];
+            }
+            if (i < 12) {
+                lbl_80309E24[j] = NULL;
+            }
+        }
+    }
+}

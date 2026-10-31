@@ -30,7 +30,7 @@ typedef struct MenuPartWork {
     u8 b0;            /* 0x00 */
     u8 pad1[3];
     s16 h4;           /* 0x04 */
-    s16 h6;           /* 0x06 */
+    u16 h6;           /* 0x06: the layout index (fn_801B02F4) */
     s32 w8;           /* 0x08 */
     s32 wc;           /* 0x0C */
     s32 w10;          /* 0x10 */
@@ -43,7 +43,7 @@ typedef struct MenuPartWork {
 extern u8 lbl_8030741C[];
 extern u32 lbl_80347180;
 extern u8 lbl_8034717C[2];
-extern u8 lbl_803081CC[];
+
 extern u32 lbl_802B6810[];
 void UiSpritesFree(void);
 void UiSpritesLoad(void* p);
@@ -191,6 +191,47 @@ typedef struct SaveStamp {
     u16 year;
     u8 month, day, hour, min, sec, wday;
 } SaveStamp;
+typedef struct CardStampBuf {
+    SaveStamp stamp;
+    u8 pad8[4];
+} CardStampBuf;
+typedef struct CardSaveData {
+    char magic[0x10];  /* 0x00 lbl_802EBDD0 */
+    u8 pad10[0x1b - 0x10];
+    s8 b1b;            /* 0x1B */
+    u8 pad1c[0x338 - 0x1c];
+    u8 b338, b339, b33a, b33b; /* 0x338 */
+    u8 pad33c[0x31e8 - 0x33c];
+    u16 x31e8;
+    u16 x31ea;
+    u32 x31ec;
+    u8 pad31f0[2];
+    u8 stamp[10];
+    u32 sum;           /* 0x31FC: fn_801A4684 of the words before it */
+} CardSaveData;
+/* The 0x6000-byte card file image. */
+typedef struct CardImage {
+    u8 hdr[0x1440];
+    CardSaveData save;
+} CardImage;
+/* The open card file (lbl_803081A4): its image, name and slot. */
+typedef struct CardRec {
+    CardImage *buf;
+    char name[0x10];
+    s32 w14;
+    s32 chan;
+    s32 w1c;
+    SaveStamp stamp;
+} CardRec;
+/* A card slot's transfer progress (lbl_803081CC, one per slot). */
+typedef struct CardXfer {
+    u8 pad0[0xc];
+    u32 done;        /* 0x0C */
+    u32 total;       /* 0x10 */
+    u32 busy;        /* 0x14 */
+    u8 pad18[0x50 - 0x18];
+} CardXfer;
+extern CardXfer lbl_803081CC[2];
 /* A save slot's summary, one per file (0x2C bytes). */
 typedef struct {
     s32 f0;
@@ -213,7 +254,8 @@ typedef struct SaveWork {
     u8 f7;           /* 0x07 */
     u8 pad8;
     u8 f9;           /* 0x09 */
-    u8 padA[2];
+    u8 fa;           /* 0x0A */
+    u8 padB;
     s32 fc;          /* 0x0C */
     u8 pad10[2];
     s16 h12;         /* 0x12 */
@@ -225,8 +267,11 @@ typedef struct SaveWork {
     Pnl* p[17];      /* 0x20C */
     s32 w250;        /* 0x250 scan done */
     u8 pad254[4];
-    void* f258;      /* 0x258 */
-    s32 st[8];       /* 0x25C */
+    CardRec* f258;   /* 0x258 */
+    s32 st[2];       /* 0x25C: per slot */
+    s32 w264;        /* 0x264 card bytes transferred (fn_801A4070) */
+    s32 w268;        /* 0x268 */
+    u8 pad26c[0x10];
 } SaveWork;
 typedef struct SaveTask {
     u8 pad[0x19];
@@ -622,12 +667,7 @@ typedef struct Self_801A1494 {
     u8 pad1a[0x24 - 0x1a];
     Ctx_801A1494* ctx;
 } Self_801A1494;
-typedef struct Sv {
-    u8 pad00[0x14];
-    u32 x14;
-    u8 pad18[0x64 - 0x18];
-    u32 x64;
-} Sv;
+
 extern void fn_801A64E0(void* o);
 typedef struct Ctx_801A1FBC {
     u8 pad00[6];
@@ -652,8 +692,8 @@ typedef struct CardStat {
     u16 iconFormat;
     u16 iconSpeed;
     u32 commentAddr;  /* 0x38 */
-    u8 rest[0x1c];
-} CardStat;
+    u8 rest[0x30];
+} CardStat;           /* 0x6C */
 extern CardStat lbl_803080F8;
 extern s32 CARDGetStatus(s32 chan, s32 fileNo, CardStat* stat);
 extern char *strstr(const char *str, const char *pat);
@@ -834,7 +874,7 @@ typedef struct {
     MenuPanel* pan;      /* 0x28 */
     s32 f2C;
 } Task2_801B0470;
-extern void fn_801B02F4(void);
+void fn_801B02F4(ShopPart* t);
 extern const char* lbl_802EBF60[7];
 void fn_801B0B9C(ShopPart* t);
 typedef struct {
@@ -1051,34 +1091,15 @@ typedef struct Self_8019EE4C {
     u8 pad1a[0xa];
     Ctx_8019EE4C *ctx;
 } Self_8019EE4C;
-typedef struct Holder_8019F730 {
-    u8 pad0[0x28];
-    MenuPanel* ui;
-} Holder_8019F730;
-typedef struct Ctx_8019F730 {
-    u8 pad0[1];
-    u8 b1;
-    u8 pad2[7];
-    u8 b9;
-    u8 pad9[0x206];
-    Holder_8019F730 *p210;
-    u8 pad214[0xc];
-    Holder_8019F730 *p220;
-    Holder_8019F730 *p224;
-    u8 pad228[0x30];
-    void *p258;
-} Ctx_8019F730;
-typedef struct Self_8019F730 {
-    u8 pad0[0x19];
-    u8 state19;
-    u8 pad1a[0xa];
-    Ctx_8019F730 *ctx;
-} Self_8019F730;
 extern s32 lbl_803475D0;
 extern s32 lbl_803475E0;
-extern s32 fn_801A4070(void *o);
-extern void fn_801A4060(void *o);
-extern void fn_801A41C0(void *o);
+s32 fn_801A4070(SaveTask *t);
+void fn_801A4060(SaveTask *t);
+void fn_801A41C0(CardRec *rec);
+extern s32 fn_801A3A10(u8 slot, SaveTask *t);
+void fn_801A2D20(SaveTask *t, u32 a, u32 b);
+u32 fn_801A4684(void *buf, u32 size);
+extern void fn_801A4354(CardSaveData *p);
 typedef struct Holder_801A0214 {
     u8 pad0[0x28];
     MenuPanel* ui;
@@ -1100,19 +1121,10 @@ typedef struct Self_801A0214 {
     u8 pad1a[0xa];
     Ctx_801A0214 *ctx;
 } Self_801A0214;
-typedef struct Ctx_801A54AC {
-    u8 pad0[7];
-    u8 b7;
-    u8 pad8[0x10];
-    f32 f18;
-} Ctx_801A54AC;
-typedef struct Parent_801A54AC {
-    u8 pad0[0x24];
-    Ctx_801A54AC *ctx;
-} Parent_801A54AC;
+/* A save menu file panel task: its parent is the save menu task. */
 typedef struct Task_801A54AC {
     u8 pad0[8];
-    Parent_801A54AC *parent;
+    SaveTask *parent;
     u8 pad0c[0xc];
     u8 flags;
     u8 state;
@@ -1121,7 +1133,10 @@ typedef struct Task_801A54AC {
     MenuPanel *pan;
 } Task_801A54AC;
 extern LayoutPart lbl_802B4B9C[6];
-extern void fn_801A5600(void *t);
+void fn_801A5600(Task_801A54AC *t);
+extern void fn_801A58A0(Task_801A54AC *t, E2c *e);
+extern char lbl_802EBE08[];
+extern LayoutPart lbl_802B4C14[];
 #define TextPrintNumber TextPrintNumber_hdr
 #undef TextPrintNumber
 typedef struct Holder_801A6A88 {
@@ -1833,7 +1848,7 @@ extern const u32 lbl_8034BAC0[];
 extern u8 lbl_803473BE;
 extern s32 fn_801A3B30(SaveTask* t, s32* out);
 extern s32 MenuPlaySe(s16 se);
-typedef struct { u8 pad[0x14]; u32 f14; u8 pad18[0x50 - 0x18]; } Tab;
+
 extern s32 fn_801C09F8(s32 a, s32 b);
 extern void fn_801A20AC(SaveTask* t);
 typedef struct St_801B737C { u8 pad[0x64]; s8 seen[8]; } St_801B737C;
@@ -1874,37 +1889,6 @@ extern void fn_801A2CC4(void);
 extern s32 fn_80248DCC(s32 chan, void *work, void (*cb)(void), s32 f);
 extern s32 CARDGetResultCode(s32 chan);
 extern s32 CARDCheckExAsync(s32 chan, s32 *xfer, void *cb);
-typedef struct CardStampBuf {
-    SaveStamp stamp;
-    u8 pad8[4];
-} CardStampBuf;
-typedef struct CardRec {
-    void *buf;
-    char name[0x10];
-    s32 w14;
-    s32 chan;
-    s32 w1c;
-    SaveStamp stamp;
-} CardRec;
-typedef struct CardSaveData {
-    char magic[0x10];  /* 0x00 lbl_802EBDD0 */
-    u8 pad10[0x1b - 0x10];
-    s8 b1b;            /* 0x1B */
-    u8 pad1c[0x338 - 0x1c];
-    u8 b338, b339, b33a, b33b; /* 0x338 */
-    u8 pad33c[0x31e8 - 0x33c];
-    u16 x31e8;
-    u16 x31ea;
-    u32 x31ec;
-    u8 pad31f0[2];
-    u8 stamp[10];
-    u32 sum;
-} CardSaveData;
-/* The 0x6000-byte card file image. */
-typedef struct CardImage {
-    u8 hdr[0x1440];
-    CardSaveData save;
-} CardImage;
 extern CardStampBuf lbl_80308198;
 extern CardRec lbl_803081A4;
 extern void *memcpy(void *, const void *, u32);
@@ -2144,8 +2128,8 @@ s32 fn_801A28AC(s32 obj) {
     return fn_801A6A04(r);
 }
 
-void fn_801A2D20(u8 *obj, u32 a, u32 b) {
-    *(f32 *)(*(u8 **)(obj + 0x24) + 0x1c) = (f32)a / (f32)b;
+void fn_801A2D20(SaveTask *t, u32 a, u32 b) {
+    t->w->f1c = (f32)a / (f32)b;
 }
 
 void fn_801A37C4(void) {
@@ -2154,21 +2138,21 @@ void fn_801A37C4(void) {
     lbl_8034717C[0] = 0;
 }
 
-void fn_801A4060(void* obj) {
-    *(u32*)(*(u8**)((u8*)obj + 0x24) + 0x268) = 0;
+void fn_801A4060(SaveTask* t) {
+    t->w->w268 = 0;
 }
 
-void fn_801A41C0(void* obj) {
-    void* p = *(void**)obj;
+void fn_801A41C0(CardRec* rec) {
+    CardImage* p = rec->buf;
     if (p != 0) {
         fn_801E17E0(p);
     }
 }
 
 void fn_801A471C(s32 idx) {
-    u8* p = lbl_803081CC + idx * 0x50;
-    *(u32*)(p + 0xC) = 0;
-    *(u32*)(p + 0x10) = 0;
+    CardXfer* p = &lbl_803081CC[idx];
+    p->done = 0;
+    p->total = 0;
 }
 
 extern void *lbl_80346720;
@@ -3324,7 +3308,7 @@ void fn_801A1494(Self_801A1494* o) {
     } else if (f & 0x400) {
         o->state = 0x1e;
     }
-    if (((Sv *)lbl_803081CC)->x14 == 0 && ((Sv *)lbl_803081CC)->x64 == 0) {
+    if (lbl_803081CC[0].busy == 0 && lbl_803081CC[1].busy == 0) {
         o->ctx->slot[0] = fn_801A28AC(0);
         o->ctx->slot[1] = fn_801A28AC(1);
         o->ctx->x3 = o->ctx->x2;
@@ -3650,6 +3634,38 @@ void fn_801AFAA4(PanelTask_801AFAA4* t) {
         break;
     case 0xFF:
         MenuDummy();
+        t->flags |= 0x40;
+        break;
+    }
+}
+
+void fn_801B02F4(ShopPart* t) {
+    void (*cb)(void* t);
+    f32 z;
+    switch (t->state) {
+    case 0:
+    case 0xFE:
+        if (t->flag->b0 == 1) {
+            return;
+        }
+        UiObjUpdate(&t->obj->o);
+        UiObjCalcRect(&t->obj->o);
+        UiLayoutDrawPart(&menu_sprites.texlist8, lbl_802B77FC, 1, t->obj->o.rect, t->obj->o.z, t->obj->o.alpha,
+                         1.0f, t->flag->h6);
+        UiLayoutDraw(&menu_sprites.texlist8, lbl_802B7894[t->flag->h6].parts, lbl_802B7894[t->flag->h6].count,
+                     t->obj->o.rect, t->obj->o.z, t->obj->o.alpha, 1.0f);
+        UiLayoutDraw(&menu_sprites.texlist8, lbl_802B77AC, 1, &t->obj->o.rect[2], t->obj->o.z, 1.0f, 1.0f);
+        cb = t->flag->cb;
+        if (cb != 0) {
+            z = TextGetZ();
+            TextPushColor();
+            cb(t);
+            TextPopColor(1);
+            TextSetZ(z);
+        }
+        break;
+    case 0xFF:
+        MenuDummy(t);
         t->flags |= 0x40;
         break;
     }
@@ -4120,33 +4136,87 @@ void fn_8019EE4C(Self_8019EE4C *self) {
     }
 }
 
-void fn_8019F730(Self_8019F730 *self) {
+void fn_8019F44C(SaveTask* t) {
+    s32 a = 0;
+    s32 b = 0;
+    s32 r;
+    CardSaveData* p;
+    u32 sum;
+    r = fn_801A3A10(t->w->sel, t);
+    fn_801A2D20(t, lbl_803081CC[t->w->sel].done, lbl_803081CC[t->w->sel].total);
+    if (r == 0) {
+        p = &t->w->f258->buf->save;
+        sum = fn_801A4684(p, 0x31fc);
+        if (sum != p->sum) {
+            a = 1;
+            b = 1;
+            t->w->st[t->w->sel] = 3;
+        } else {
+            fn_801A4354(p);
+            t->w->fa = 1;
+            t->w->fc = 10;
+            fn_801A64B4(t, 0x10);
+            MenuPlaySe(0xd);
+            UiObjMoveToX(&t->w->p[5]->obj->o, 6, 5, -240.0f);
+            UiObjSetCommand(&t->w->p[5]->obj->o, 0x1a, 2);
+            UiObjMoveToX(&t->w->p[6]->obj->o, 6, 5, -240.0f);
+            UiObjSetCommand(&t->w->p[6]->obj->o, 0x1a, 0);
+            fn_801A41C0(t->w->f258);
+            t->w->f258 = NULL;
+            t->state = 0x13;
+        }
+    } else if (r != -1) {
+        a = 1;
+        b = 0;
+        t->w->st[t->w->sel] = fn_801A6A04(r);
+    }
+    if (a != 0) {
+        if (b != 0) t->w->ent[t->w->f7].f0 = 2;
+        t->w->f9 = 0;
+        fn_801A41C0(t->w->f258);
+        t->w->f258 = NULL;
+        fn_801A64B4(t, 0x28);
+        MenuPlaySe(3);
+        UiObjMoveToXIfChanged(&t->w->p[1]->obj->o, 6, 4, -330.0f);
+        UiObjSetCommand(&t->w->p[1]->obj->o, 0xf, 0);
+        UiObjMoveToX(&t->w->p[5]->obj->o, 6, 5, -240.0f);
+        UiObjSetCommand(&t->w->p[5]->obj->o, 0x1a, 2);
+        UiObjMoveToX(&t->w->p[6]->obj->o, 6, 5, -240.0f);
+        UiObjSetCommand(&t->w->p[6]->obj->o, 0x1a, 0);
+        fn_801A4DCC(t, 1);
+        lbl_803475D0 = 0;
+        lbl_803475E0 = 0;
+        t->state = 0x17;
+    }
+}
+
+void fn_8019F730(SaveTask *self) {
     if (fn_801A6554(self) != 0) {
         return;
     }
-    if (self->ctx->b1 == 1) {
+    if (self->w->f1 == 1) {
         if (fn_801A4070(self) == 0) {
-            self->ctx->b9 = 0;
-            fn_801A41C0(self->ctx->p258);
-            self->ctx->p258 = 0;
+            self->w->f9 = 0;
+            fn_801A41C0(self->w->f258);
+            self->w->f258 = 0;
             fn_801A64B4(self, 0x28);
             MenuPlaySe(3);
-            UiObjMoveToXIfChanged(&self->ctx->p210->ui->o, 6, 4, -330.0f);
-            UiObjSetCommand(&self->ctx->p210->ui->o, 0xf, 0);
-            UiObjMoveToX(&self->ctx->p220->ui->o, 6, 5, -240.0f);
-            UiObjSetCommand(&self->ctx->p220->ui->o, 0x1a, 2);
-            UiObjMoveToX(&self->ctx->p224->ui->o, 6, 5, -240.0f);
-            UiObjSetCommand(&self->ctx->p224->ui->o, 0x1a, 0);
+            UiObjMoveToXIfChanged(&self->w->p[1]->obj->o, 6, 4, -330.0f);
+            UiObjSetCommand(&self->w->p[1]->obj->o, 0xf, 0);
+            UiObjMoveToX(&self->w->p[5]->obj->o, 6, 5, -240.0f);
+            UiObjSetCommand(&self->w->p[5]->obj->o, 0x1a, 2);
+            UiObjMoveToX(&self->w->p[6]->obj->o, 6, 5, -240.0f);
+            UiObjSetCommand(&self->w->p[6]->obj->o, 0x1a, 0);
             fn_801A4DCC(self, 1);
             lbl_803475D0 = 0;
             lbl_803475E0 = 0;
-            self->state19 = 0x17;
+            self->state = 0x17;
         } else {
-            self->state19 = 0x12;
+            self->state = 0x12;
         }
     } else {
         fn_801A4060(self);
-        self->state19 = 0x14;
+        self->state = 0x14;
     }
 }
 
@@ -4182,7 +4252,7 @@ void fn_801A0214(Self_801A0214 *self) {
 }
 
 void fn_801A54AC(Task_801A54AC *t) {
-    Parent_801A54AC *parent = t->parent;
+    SaveTask *parent = t->parent;
     f32 z;
     switch (t->state) {
     case 0:
@@ -4192,12 +4262,12 @@ void fn_801A54AC(Task_801A54AC *t) {
         }
         UiObjUpdate(&t->pan->o);
         if (-132.0f < t->pan->o.y && t->pan->o.y < 370.0f) {
-            if (UiObjIsBusy(&t->pan->o) == 0 && t->pan->h54 == parent->ctx->b7) {
+            if (UiObjIsBusy(&t->pan->o) == 0 && t->pan->h54 == parent->w->f7) {
                 t->pan->o.alpha = 1.0f;
             } else {
                 t->pan->o.alpha = 0.5f;
             }
-            UiLayoutDraw(&menu_sprites.texlist8, lbl_802B4B9C, 6, &t->pan->o.x, t->pan->o.z, t->pan->o.alpha * t->parent->ctx->f18, 1.0f);
+            UiLayoutDraw(&menu_sprites.texlist8, lbl_802B4B9C, 6, &t->pan->o.x, t->pan->o.z, t->pan->o.alpha * t->parent->w->f18, 1.0f);
             TextPushColor();
             z = TextGetZ();
             fn_801A5600(t);
@@ -4207,6 +4277,36 @@ void fn_801A54AC(Task_801A54AC *t) {
         break;
     case 0xFF:
         t->flags |= 0x40;
+        break;
+    }
+}
+
+void fn_801A5600(Task_801A54AC *t) {
+    E2c *e;
+    SaveTask *w;
+    char *s = lbl_802EBE08;
+    w = t->parent;
+    e = &w->w->ent[t->pan->h54];
+    TextSetZ(-27.5f + t->pan->o.z);
+    TextSetColor(0xff201008);
+    UiLayoutDrawPart(&menu_sprites.texlist8, lbl_802B4C14, 1, &t->pan->o.x, t->pan->o.z, t->pan->o.alpha * t->parent->w->f18, 1.0f, t->pan->h54);
+    switch (e->f0) {
+    case 0:
+        if (w->w->f1 == 0) TextPrint(8.0f + t->pan->o.x, 27.0f + t->pan->o.y, s + 0x38);
+        else TextPrint(8.0f + t->pan->o.x, 27.0f + t->pan->o.y, s + 0x8c);
+        break;
+    case 1:
+        fn_801A58A0(t, e);
+        break;
+    case 2:
+        TextPrint(8.0f + t->pan->o.x, 27.0f + t->pan->o.y, s + 0x44);
+        break;
+    case 3:
+        if (w->w->f1 == 0) TextPrint(8.0f + t->pan->o.x, 27.0f + t->pan->o.y, s + 0x5c);
+        else TextPrint(8.0f + t->pan->o.x, 27.0f + t->pan->o.y, s + 0x8c);
+        break;
+    case 4:
+        TextPrint(8.0f + t->pan->o.x, 27.0f + t->pan->o.y, s + 0x74);
         break;
     }
 }
@@ -5189,7 +5289,7 @@ void fn_801A11B0(SaveTask* t) {
     s32 arg;
     if (t->w->f18 != 1.0f) fn_801A4DCC((void *)(t), 1);
     if (fn_801A6554((void *)(t)) != 0) return;
-    if (((Tab*)lbl_803081CC)[0].f14 == 0 && ((Tab*)lbl_803081CC)[1].f14 == 0) {
+    if (lbl_803081CC[0].busy == 0 && lbl_803081CC[1].busy == 0) {
         t->w->st[0] = fn_801A28AC(0);
         t->w->st[1] = fn_801A28AC(1);
         t->w->f3 = t->w->cnt;
@@ -6652,7 +6752,7 @@ CardRec *fn_801A41EC(CardSaveData *p, s32 chan, const char *name) {
         return NULL;
     }
     memset(rec->buf, 0, 0x6000);
-    memcpy((u8 *)rec->buf + 0x1440, p, 0x3200);
+    memcpy(&rec->buf->save, p, 0x3200);
     return rec;
 }
 
@@ -6966,8 +7066,9 @@ void fn_801A372C(void) {
     Unmount(1);
 }
 
-u32 fn_801A4684(u32 *p, u32 size)
+u32 fn_801A4684(void *buf, u32 size)
 {
+    u32 *p = buf;
     u32 sum;
     u32 i;
 
@@ -8246,4 +8347,3 @@ void fn_801A2D60(Task_801A343C* t) {
     }
     par->w->f1c = (f32)t->p24->h16 / (f32)t->p24->h18;
 }
-

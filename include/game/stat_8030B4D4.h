@@ -28,7 +28,7 @@ typedef struct {
     StatRec chr[6];
     s16 x2d0;
     s16 x2d2;
-    u8 x2d4;
+    s8 x2d4;                /* party size (signed: fn_801C0D34 extsb's it) */
     s8 x2d5[5];
     u8 pad2da[2];
     s32 limit;

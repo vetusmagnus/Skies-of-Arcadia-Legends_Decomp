@@ -54,7 +54,34 @@ typedef struct {
     s32 src;            /* 0x08 */
     u8 pad0c[0x4];
 } CmdHead;
-typedef struct { u8 pad[0x18]; Vec pos; } Model;
+typedef struct { s16 u, v; } UV;
+typedef struct { u8 a, r, g, b; } Col;
+/* Vertex formats built by fn_80047A68 for fn_801CE6D0 (textured) and fn_801CE1A4. */
+typedef struct {
+    NJS_POINT3 pos;
+    f32 u, v;
+    Col col;
+} TexVert;
+typedef struct {
+    NJS_POINT3 pos;
+    Col col;
+} ColVert;
+/* Flying mesh piece drawn by fn_80047A68 (0x3C bytes). */
+typedef struct {
+    NJS_POINT3* verts;  /* 0x00 */
+    Col* cols;          /* 0x04 */
+    UV* uvs;            /* 0x08 */
+    u32 count;          /* 0x0C */
+    void* tex;          /* 0x10 */
+    u8 pad14[4];
+    Vec pos;            /* 0x18 */
+    Vec vel;            /* 0x24 */
+    Vec ang;            /* 0x30 */
+} Mesh;
+typedef struct {
+    u32 count;
+    Mesh* meshes;       /* 0x04 */
+} MeshSet;
 /* Particle (fn_80043730), spawned by fn_80042B10 and fn_80040508. */
 typedef struct {
     s16 timer;          /* 0x000 */
@@ -78,8 +105,7 @@ typedef struct {
     s16 maxBounces;     /* 0x04C */
     u8 pad4e[2];
     f32 x50;            /* 0x050 */
-    u8 x54[4];          /* 0x054 */
-    Model* model;       /* 0x058 */
+    MeshSet mesh;       /* 0x054 */
     u8 pad5c[0x98 - 0x5C];
     f32 x98;            /* 0x098 */
     f32 x9c;            /* 0x09C */
@@ -264,7 +290,7 @@ extern void fn_8001D14C(void*);
 extern void* memcpy(void*, const void*, unsigned long);
 extern void fn_8005A7B8(void*);
 extern void fn_80018C94(void);
-extern void fn_80047A68(void*, f32);
+extern void fn_80047A68(MeshSet* set, f32 t);
 extern void fn_800331B0(u32*);
 extern void fn_80061C80(Vec* out, void* rot, f32 a, f32 ang, f32 radius);
 extern void fn_80048C40(struct W80048C40* src, f32* mat, s16 a, f32 f1, NJS_POINT3* pt, s16 b, s16 c, s32 d, struct Q16* q, f32 f2);
@@ -1829,14 +1855,7 @@ void fn_80042B10(Node* node)
     fn_80037FD8(&s->c, &node->state);
 }
 
-typedef struct {
-    u8 pad[0x18];
-    Vec pos;            /* 0x18 */
-    u8 pad24[0x30 - 0x24];
-    Vec ang;            /* 0x30 */
-} Model_8004335C;
-
-/* Model_8004335C particle (fn_8004335C). */
+/* Mesh particle (fn_8004335C). */
 typedef struct {
     s16 timer;          /* 0x00 */
     s16 start;          /* 0x02 */
@@ -1856,8 +1875,7 @@ typedef struct {
     s16 bounces;        /* 0x46 */
     s16 maxBounces;     /* 0x48 */
     u8 pad4a[2];
-    u8 x4c[4];          /* 0x4C */
-    Model_8004335C* model;       /* 0x50 */
+    MeshSet mesh;       /* 0x4C */
     u8 pad54[0xCC - 0x54];
     s16 count;          /* 0xCC */
     u8 padce[2];
@@ -1927,16 +1945,16 @@ void fn_8004335C(Node* node)
                     d->bounces++;
                 }
             }
-            fn_80071CF0(&d->pos, &d->model->pos);
+            fn_80071CF0(&d->pos, &d->mesh.meshes->pos);
             if (d->spin != 0) {
-                d->model->ang.x += (s32)(182.04445f * (10.0f * d->vel.x));
-                d->model->ang.y += (s32)(182.04445f * (10.0f * d->vel.y));
-                d->model->ang.z += (s32)(182.04445f * (10.0f * d->vel.z));
+                d->mesh.meshes->ang.x += (s32)(182.04445f * (10.0f * d->vel.x));
+                d->mesh.meshes->ang.y += (s32)(182.04445f * (10.0f * d->vel.y));
+                d->mesh.meshes->ang.z += (s32)(182.04445f * (10.0f * d->vel.z));
             }
             fn_80299040(d->texlist);
             DrawStateDefault2D(&st);
             if (DrawStatePush(&st) != 0) {
-                fn_80047A68(d->x4c, (-255.0f + d->alpha) / 255.0f);
+                fn_80047A68(&d->mesh, (-255.0f + d->alpha) / 255.0f);
                 fn_80018C94();
             }
         }
@@ -2024,11 +2042,11 @@ void fn_80043730(Node* node)
                     d->bounces++;
                 }
             }
-            fn_80071CF0(&d->pos, &d->model->pos);
+            fn_80071CF0(&d->pos, &d->mesh.meshes->pos);
             fn_80299040(w->texlist);
             DrawStateDefault2D(&st);
             if (DrawStatePush(&st) != 0) {
-                fn_80047A68(d->x54, (-255.0f + d->alpha) / 255.0f);
+                fn_80047A68(&d->mesh, (-255.0f + d->alpha) / 255.0f);
                 fn_80018C94();
             }
         } else {
@@ -3495,8 +3513,6 @@ void fn_80045CD8(Node* node)
 
 typedef struct { u8 c[4]; } Col4;
 
-typedef struct { s16 u, v; } UV;
-
 typedef struct {
     s16 x0, y0, x1, y1; /* 0x00 */
     s16 id;             /* 0x08 */
@@ -4766,12 +4782,6 @@ typedef struct {
     s32 count;
 } ObjStats_8004C070;
 typedef struct {
-    u8 pad0[0x18];
-    f32 x18, x1c, x20;      /* 0x18 */
-    f32 vx, vy, vz;         /* 0x24 */
-    f32 c0, c1, c2;         /* 0x30 */
-} P;
-typedef struct {
     s16 timer;              /* 0x00 */
     s16 count;              /* 0x02 */
     u8 pad4[0x10 - 4];
@@ -4780,8 +4790,7 @@ typedef struct {
     s16 end;                /* 0x16 */
     f32 alpha;              /* 0x18 */
     f32 step;               /* 0x1C */
-    u32 n;                  /* 0x20 */
-    P* p;                   /* 0x24 */
+    MeshSet mesh;           /* 0x20 */
     void* buf;              /* 0x28 */
     s32 src;                /* 0x2C */
     s32 colmode;            /* 0x30 */
@@ -5288,6 +5297,83 @@ void fn_8004754C(Line* l, f32 a1, f32 a2) {
             fn_80033CF8(&seg);
         }
         fn_80018C94();
+    }
+}
+
+extern void fn_801CE6D0(s32 a, void* tex, void* buf, u32 count, s32 b, s32 c);
+extern void fn_801CE1A4(void* buf, u32 count, s32 b, s32 c);
+
+/* Draws every mesh piece of set at alpha 255 * (1 + t), textured when it has UVs. */
+void fn_80047A68(MeshSet* set, f32 t) {
+    Mesh* m;
+    u32 k;
+    f32 a;
+    TexVert* out;
+    s8 i;
+    u32 j;
+    NJS_POINT3* v;
+    Col* c;
+    UV* uv;
+    TexVert* o;
+    ColVert* cout;
+    ColVert* co;
+
+    if (set->meshes != 0) {
+        m = set->meshes;
+        for (k = 0; k < set->count; m++, k++) {
+            if (m->count != 0) {
+                a = 255.0f * (1.0f + t);
+                {
+                    u8 alpha = a;
+                    for (i = 0; i < m->count; i++) {
+                        m->cols[i].a = alpha;
+                    }
+                }
+                njPushMatrixEx();
+                fn_80286EE8();
+                fn_8028B498();
+                njTranslate(0, m->pos.x, m->pos.y, m->pos.z);
+                njRotateXYZ(0, m->ang.x, m->ang.y, m->ang.z);
+                if (m->uvs != 0) {
+                    out = fn_801E1C7C(m->count * sizeof(TexVert));
+                    v = m->verts;
+                    c = m->cols;
+                    o = out;
+                    uv = m->uvs;
+                    for (j = 0; j < m->count; j++) {
+                        o->pos.x = v->x;
+                        o->pos.y = v->y;
+                        o->pos.z = v->z;
+                        v++;
+                        o->u = 0.003921569f * uv->u;
+                        o->v = 0.003921569f * uv->v;
+                        uv++;
+                        o->col = *c;
+                        c++;
+                        o++;
+                    }
+                    fn_801CE6D0(0, m->tex, out, m->count, 1, 0);
+                    fn_801E17E0(out);
+                } else {
+                    cout = fn_801E1C7C(m->count << 4);
+                    co = cout;
+                    v = m->verts;
+                    c = m->cols;
+                    for (j = 0; j < m->count; j++) {
+                        co->pos.x = v->x;
+                        co->pos.y = v->y;
+                        co->pos.z = v->z;
+                        v++;
+                        co->col = *c;
+                        c++;
+                        co++;
+                    }
+                    fn_801CE1A4(cout, m->count, 1, 0);
+                    fn_801E17E0(cout);
+                }
+                njPopMatrixEx();
+            }
+        }
     }
 }
 
@@ -6879,7 +6965,7 @@ void fn_8004CF14(Node_8004CF14* node)
     DrawState st;
     Angle rot[3];
     u32 i;
-    P* p;
+    Mesh* p;
     s16 k;
     f32 g;
 
@@ -6897,12 +6983,12 @@ void fn_8004CF14(Node_8004CF14* node)
         rot[0] = (s32)(182.04445f * w->a);
         rot[1] = (s32)(182.04445f * w->b);
         rot[2] = (s32)(182.04445f * w->c);
-        fn_800482E0((ModelParts_800482E0*)&s->n, (ModelNode_800482E0*)w->x0, (NJS_POINT3*)&w->v, rot, (NJS_POINT3*)&w->q, (f32*)s->buf);
-        fn_80047CF0((Parts*)&s->n, (NJS_POINT3*)&w->v, (f32*)(&s->count + 1), (f32*)s->buf);
+        fn_800482E0((ModelParts_800482E0*)&s->mesh, (ModelNode_800482E0*)w->x0, (NJS_POINT3*)&w->v, rot, (NJS_POINT3*)&w->q, (f32*)s->buf);
+        fn_80047CF0((Parts*)&s->mesh, (NJS_POINT3*)&w->v, (f32*)(&s->count + 1), (f32*)s->buf);
         if (s->buf != NULL) {
             fn_801E17E0(s->buf);
         }
-        for (k = 0; k < s->n; k++) {
+        for (k = 0; k < s->mesh.count; k++) {
             if (rand() % 4 == 0) {
                 fn_800472DC(node, k, s->colmode, s->cmd);
             }
@@ -6922,36 +7008,36 @@ void fn_8004CF14(Node_8004CF14* node)
         }
         fn_80299040(w->x8);
         g = s->grav;
-        p = s->p;
+        p = s->mesh.meshes;
         i = 0;
         if (s->colmode != 0) {
-            for (; i < s->n; i++, p++) {
-                p->vy += g;
-                p->x18 += p->vx;
-                p->x1c += p->vy;
-                p->x20 += p->vz;
-                p->c0 += (s32)(182.04445f * (10.0f * p->vx));
-                p->c1 += (s32)(182.04445f * (10.0f * p->vy));
-                p->c2 += (s32)(182.04445f * (10.0f * p->vz));
+            for (; i < s->mesh.count; i++, p++) {
+                p->vel.y += g;
+                p->pos.x += p->vel.x;
+                p->pos.y += p->vel.y;
+                p->pos.z += p->vel.z;
+                p->ang.x += (s32)(182.04445f * (10.0f * p->vel.x));
+                p->ang.y += (s32)(182.04445f * (10.0f * p->vel.y));
+                p->ang.z += (s32)(182.04445f * (10.0f * p->vel.z));
             }
         } else {
-            for (; i < s->n; i++, p++) {
-                p->vy += g;
-                p->x18 += p->vx;
-                p->x1c += p->vy;
-                p->x20 += p->vz;
+            for (; i < s->mesh.count; i++, p++) {
+                p->vel.y += g;
+                p->pos.x += p->vel.x;
+                p->pos.y += p->vel.y;
+                p->pos.z += p->vel.z;
             }
         }
         DrawStateDefault2D(&st);
         if (DrawStatePush(&st) != 0) {
-            fn_80047A68(&s->n, s->alpha);
+            fn_80047A68(&s->mesh, s->alpha);
             fn_80018C94();
         }
         break;
     case 0xF9:
     case 0xFA:
         fn_8006D8DC(s->src);
-        fn_80047EDC((Pool*)&s->n);
+        fn_80047EDC((Pool*)&s->mesh);
         fn_801E17E0(s);
         node->flags |= 0x40;
         lbl_8030A10C.count--;

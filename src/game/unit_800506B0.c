@@ -94,10 +94,18 @@ typedef struct Pawn {
     s16 count;          /* 0x10C */
     s16 step;           /* 0x10E */
     s16 kind;           /* 0x110 */
-    s16 kind2;          u8 pad_12c[0x60];
-          s8 idA;
-          s8 idB;
-          u8 pad_18e[0x2];
+    s16 kind2;          /* 0x112 */
+    NJS_POINT3 v114;    /* 0x114 */
+    NJS_POINT3 v120;    /* 0x120 */
+    NJS_POINT3 v12c;    /* 0x12C */
+    NJS_POINT3 v138;    /* 0x138 */
+    NJS_POINT3 v144;    /* 0x144 */
+    NJS_POINT3 v150;    /* 0x150 */
+    NJS_POINT3 v15c;    /* 0x15C */
+    NJS_POINT3 v168;    /* 0x168 */
+    s8 idA;             /* 0x174 */
+    s8 idB;             /* 0x175 */
+    u8 pad176[0x2];
     Move *mv;           /* 0x178 */
 } Pawn;
 typedef struct CamHold {
@@ -952,6 +960,109 @@ static inline s32 InBand(s16 v)
     default:
         return 0;
     }
+}
+
+extern void fn_800120D0(Angle *rot);
+extern void fn_80061ABC(NJS_POINT3 *out, NJS_POINT3 *a, NJS_POINT3 *b, f32 f, f32 g);
+extern void fn_80291700(NJS_POINT3 *a, NJS_POINT3 *b, s32 c, f32 t);
+extern void fn_80048DF0(NJS_MATRIX m, NJS_POINT3 *v, Angle *r, s32 a);
+extern void njInvertMatrix(NJS_MATRIX m);
+extern void fn_80061518(NJS_POINT3 *in, NJS_POINT3 *out, NJS_MATRIX m);
+
+/* Camera move to the child's position: snaps when already there, else eases pos/at over 15
+ * frames along two control points each, then follows the child (state 3). */
+void fn_800521C4(Pawn *o)
+{
+    ActTask *t;
+    BtlUnit *un;
+    t = o->child;
+    un = o->child->work->unit;
+    switch (o->step) {
+    case 0:
+        if (o->frame >= o->mv->start) {
+            s16 i;
+            fn_80014AB8(1, o);
+            fn_80012130(&o->pos);
+            fn_80012100(&o->at);
+            fn_800120D0(o->rot);
+            fn_80071CF0(&o->pos, &o->v8c);
+            fn_80071CF0(&o->pos, &o->v114);
+            fn_8001D288(&o->v98, t->work->unit->id, 0.0f, 0.0f);
+            fn_8001D200(t, &o->v100);
+            for (i = 0; i < 3; i++) {
+                if ((&o->pos.x)[i] != (&o->v98.x)[i] || (&o->at.x)[i] != (&o->v100.x)[i]) {
+                    break;
+                }
+            }
+            if (i == 3) {
+                o->fd8 = 0.0f;
+                o->step = 2;
+                o->count = 5;
+            } else {
+                o->step = 1;
+                fn_80071CF0(&o->v98, &o->v138);
+                fn_80061ABC(&o->v120, &o->v8c, &o->v98, 0.0f, 60.0f);
+                fn_80061ABC(&o->v12c, &o->v8c, &o->v98, 0.0f, 120.0f);
+                fn_80071CF0(&o->at, &o->v8c);
+                fn_80071CF0(&o->at, &o->v144);
+                fn_80071CF0(&o->v100, &o->v168);
+                fn_80061ABC(&o->v150, &o->v8c, &o->v100, 0.0f, 60.0f);
+                fn_80061ABC(&o->v15c, &o->v8c, &o->v100, 0.0f, 120.0f);
+                o->count = 15;
+                o->mv->s20 = 15;
+            }
+            if (!(o->mv->flags & 0x10000000)) {
+                fn_80032B4C();
+            }
+            o->fd8 = 0.0f;
+        }
+        if (o->step != 1) {
+            break;
+        }
+    case 1:
+        if (o->count != 0) {
+            fn_80291700(&o->v144, &o->at, 0, o->fd8);
+            fn_80291700(&o->v114, &o->pos, 0, o->fd8);
+            o->fd8 += 0.06666667f;
+            o->count = o->count - 1;
+        } else {
+            NJS_POINT3 tmp;
+            NJS_MATRIX m;
+            fn_80048DF0(m, &t->work->pos, &t->work->ang28, 0);
+            njInvertMatrix(m);
+            fn_80061518(&o->pos, &tmp, m);
+            if (tmp.x >= 0.0f) {
+                o->fdc = -2.0f;
+            } else {
+                o->fdc = 2.0f;
+            }
+            fn_80071CF0(&o->v98, &o->pos);
+            fn_80071CF0(&o->v100, &o->at);
+            o->fd8 = 0.0f;
+            un->flags &= ~0x02000000;
+            o->step = 3;
+        }
+        fn_80071F84(o->rot, &o->at, &o->pos);
+        fn_80032B4C();
+        break;
+    case 2:
+        fn_80032B4C();
+        if (o->count != 0) {
+            fn_8001D288(&o->pos, t->work->unit->id, o->fd8, 0.0f);
+            fn_8001D200(t, &o->at);
+            fn_80071F84(o->rot, &o->at, &o->pos);
+            o->count = o->count - 1;
+            break;
+        }
+        un->flags &= ~0x02000000;
+        o->step = 3;
+    case 3:
+        fn_8001D288(&o->pos, t->work->unit->id, o->fd8, 0.0f);
+        fn_8001D200(t, &o->at);
+        fn_80071F84(o->rot, &o->at, &o->pos);
+        break;
+    }
+    fn_80011370(un->id, -1);
 }
 
 void fn_8005259C(Pawn *p)

@@ -13,11 +13,12 @@ extern void fn_801CF248(void);
 extern s32 lbl_80347208;
 extern s32 lbl_80347210;
 extern s32 lbl_80347258;
-extern s32 lbl_8034725C;
-extern s32 lbl_80347264;
-extern u32 lbl_803476A4;
-extern u32 lbl_80347260;
-extern void fn_80005AD8(u32 a, u32 b);
+extern u8* lbl_8034725C;     /* the flush pointer into the draw buffer */
+extern u8* lbl_80347264;     /* the draw buffer (lbl_80347218 bytes from heap lbl_803476A4) */
+extern void* lbl_803476A4;
+extern void* lbl_80347260;   /* a 0x4000-byte block from the same heap */
+extern void* fn_80005B50(void* heap, s32 size);
+extern void fn_80005AD8(void* heap, void* p);
 extern s32 lbl_80347218;
 extern s32 lbl_8034720C;
 extern s32 lbl_80347214;
@@ -242,7 +243,7 @@ void fn_801D0B48(s32 v) {
 void fn_801D0B50(s32 delta)
 {
     s32 cur;
-    s32 sum;
+    u8* sum;
     s32 hi;
 
     if (lbl_80347208 == 0) {
@@ -277,8 +278,8 @@ s32 fn_801D0B88(void) {
     return r;
 }
 
-s32 fn_801D0BA8(void) {
-    s32 r = 0;
+u8* fn_801D0BA8(void) {
+    u8* r = 0;
 
     if (lbl_80347208 != 0) {
         r = lbl_8034725C;
@@ -312,6 +313,35 @@ void fn_801D1420(void) {
 void fn_801D142C(u8 v)
 {
     lbl_80346820 = v;
+}
+
+extern s16 lbl_80347256;
+extern s16 lbl_80347254;
+extern s32 lbl_80347250;
+
+void fn_801D1434(void)
+{
+    s32 i;
+
+    lbl_80347218 = 0x16FE00;
+    if ((lbl_80347260 = fn_80005B50(lbl_803476A4, 0x4000)) != 0) {
+        if ((lbl_80347264 = fn_80005B50(lbl_803476A4, lbl_80347218)) != 0) {
+            lbl_80347208 = 1;
+        } else {
+            lbl_80347208 = 0;
+        }
+    }
+    lbl_80347256 = 0;
+    lbl_80347254 = 0;
+    lbl_80347250 = 10;
+    for (i = 0; i < sizeof(lbl_80308CB8) / sizeof(lbl_80308CB8[0]); i++) {
+        lbl_80308CB8[i] = 0;
+    }
+    lbl_80347210 = 0;
+    lbl_80347220 = 0;
+    lbl_80347224 = 0;
+    lbl_80346820 = 0x80;
+    lbl_8034720C = 0;
 }
 
 extern u32 lbl_80347268;
@@ -435,7 +465,6 @@ void fn_801CF218(s32 a, s32 b) {
 
 void fn_801D0680(void);
 u32 fn_801D0AB4(u32 x);
-extern s16 lbl_80347256;
 extern s32 lbl_8034721C;
 extern s32 lbl_80346A50;
 extern void fn_801D075C(void);
@@ -481,7 +510,7 @@ static inline void DrawBufFlush(void* p, u32 len, s32 mode)
 static inline void DrawBufFlushPending(s32 mode)
 {
     u32 len = lbl_80347218 - lbl_80347258;
-    void* p = (void*)lbl_8034725C;
+    void* p = lbl_8034725C;
     if (lbl_803475D8 != 0) {
         p = 0;
     }
@@ -664,7 +693,7 @@ void fn_801CF248(void)
         }
     } else if (lbl_80347214 != 0) {
         if (DRAWBUF_PENDING()) {
-            tex = (void*)lbl_8034725C;
+            tex = lbl_8034725C;
             len = lbl_80347218 - lbl_80347258;
             DRAWBUF_FLUSH(1);
             DrawStateApplyFog();
@@ -700,7 +729,7 @@ void fn_801CF248(void)
             if (f & 0x100) {
                 if (DRAWBUF_PENDING()) {
                     len = lbl_80347218 - lbl_80347258;
-                    tex = (void*)lbl_8034725C;
+                    tex = lbl_8034725C;
                     DRAWBUF_FLUSH(2);
                     DrawStateApplyFog();
                 }

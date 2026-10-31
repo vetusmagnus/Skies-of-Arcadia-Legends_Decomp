@@ -16,9 +16,9 @@ typedef struct {
     f32 f24;
     f32 f28;
     f32 f2c;
-    s32 x30;
+    u32 x30;                 /* colour */
     f32 f34;
-    s32 x38;
+    u32 x38;                 /* colour */
     f32 f3c;
     f32 f40;
     s8 x44;
@@ -944,6 +944,75 @@ Spr* fn_8012BC48(s8 n) {
         fn_801D68C4(lbl_80346F04, 0x21);
         break;
     }
+}
+
+static inline s16 ToS16(f32 x) {
+    return x;
+}
+void fn_8012BD34(void) {
+    SysA *q = lbl_80346F10->x24;
+    f32 f4 = q->f24;
+    f32 f5 = q->f2c;
+    f32 f6 = q->f28;
+    f32 f3 = q->f1c;
+    s32 r5 = q->x20;
+    f32 f7, f8;
+    if (f6 > f4) f6 = f4;
+    if (f6 < 0.0f) f6 = 0.0f;
+    if (f5 > f4) f5 = f4;
+    if (f5 < 0.0f) f5 = 0.0f;
+    f7 = q->f34;
+    f8 = q->f3c;
+    if (q->x14 == 1) {
+        switch (q->x18) {
+        case 0:
+            f3 = (f5 - f6) / 30.0f;
+            q->f1c = f3;
+            f7 = 500.0f * (f6 / f4);
+            f8 = 0.0f;
+            lbl_80346F10->x24->x18 = 1;
+            break;
+        case 1:
+            r5++;
+            if (r5 > 30.0f) {
+                q->x18 = 2;
+                f6 = f5;
+                r5 = 0;
+                f3 = 0.0f;
+            }
+            f6 += f3;
+            f7 = 500.0f * (f6 / f4);
+            f8 = 0.0f;
+            break;
+        case 2:
+            q->x14 = 0;
+            break;
+        }
+        if (f3 >= 0.0f) {
+            if (f5 < f6) f6 = f5;
+        } else {
+            if (f5 > f6) f6 = f5;
+        }
+    } else {
+        f7 = 500.0f * (f5 / f4);
+        f8 = 500.0f * ((f6 - f5) / f4);
+    }
+    lbl_80346F10->x24->f24 = f4;
+    lbl_80346F10->x24->f2c = f5;
+    lbl_80346F10->x24->f28 = f6;
+    lbl_80346F10->x24->x20 = r5;
+    if (f7 - ToS16(f7) >= 0.5f) {
+        lbl_80346F10->x24->f34 = 1.0f + ToS16(f7);
+    } else {
+        lbl_80346F10->x24->f34 = ToS16(f7);
+    }
+    if (f8 - ToS16(f8) > 0.5f) {
+        lbl_80346F10->x24->f3c = 1.0f + ToS16(f8);
+    } else {
+        lbl_80346F10->x24->f3c = ToS16(f8);
+    }
+    lbl_80346F10->x24->x30 = 0xff20e820;
+    lbl_80346F10->x24->x38 = 0xffe82020;
 }
 
 void fn_8012D0F4(void) {

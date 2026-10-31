@@ -201,10 +201,25 @@ typedef struct ChrInfo {
     u8 pad297;
     void* x298;         /* 0x298 voice data */
 } ChrInfo;
+/* Event-target object referenced by an id record (x0 type, x4 id, x10 result). */
+typedef struct Key {
+    s16 x0;
+    s16 x2;
+    s16 x4;
+    u8 pad6[0x10 - 6];
+    s16 x10;
+} Key;
+/* 0x10-byte id record; lists end at a negative x0. */
+typedef struct Ent_80008800 {
+    s16 x0;
+    s16 x2;
+    u8 pad4[8];
+    Key* xc;
+} Ent_80008800;
 typedef struct Obj_80017B18 {
     u8 pad0[0xc];
     char xc[0x24];      /* 0x0c name */
-    u8 *x30;
+    Ent_80008800 *x30;
 } Obj_80017B18;
 typedef struct ChrWork {
     void* x0;           /* 0x00 model */
@@ -538,7 +553,7 @@ extern u32 fn_800153E0(s32, s16);
 extern s16 fn_800760EC(void*, s16, s16);
 extern s8 fn_8002EEFC(Tk_8001CED0*, u32*);
 extern s8 fn_80030AE8(u32, Unit_8001CED0*);
-extern s16 fn_80009030(void*, s16, s16, int, int);
+extern s16 fn_80009030(Ent_80008800* list, s16 p1, s16 p2, s16 c, s16 d);
 extern void fn_800312F0(Tk_8001CED0*, s16, s16, s8);
 extern void fn_80031254(Tk_8001CED0*);
 typedef struct {
@@ -959,23 +974,7 @@ typedef struct Node_80008800 {
     struct Node_80008800* x8;
     struct Node_80008800* xc;
 } Node_80008800;
-typedef struct { s16 x0; u8 pad2[2]; s16 x4; } Key;
-typedef struct { s16 x0; u8 pad2[0xa]; Key* xc; } Ent_80008800;
 extern s16 fn_800089F0(Ent_80008800* t, s16 a, s16 b, s16* lo, s16* hi, s16 start);
-typedef struct {
-    u32 keyframe;
-    f32 key[3];
-} NJS_MKEY_F_80006C00;
-typedef struct {
-    void** mdata;
-    void** keys;
-    void** counts;
-    f32 frame;
-    u32 nbFrame;
-    s32 unk14;
-    f32* matrix;
-    s32 unk1C;
-} MotionState_80006C00;
 typedef struct Vec3_8001E3D8 { f32 x, y, z; } Vec3_8001E3D8;
 typedef struct Joint { u8 pad[8]; u8 data[0x34 - 8]; } Joint;
 typedef struct Model { u8 pad[0x154]; Joint* joints; } Model;
@@ -1063,7 +1062,7 @@ typedef struct F163A4Task {
     F163A4Work* wk;
 } F163A4Task;
 extern void fn_8001E6DC(V3* out, s8 v);
-extern s32 fn_80018398(V3* v, s32 a);
+extern s8 fn_80018398(V3* v, s32 a);
 extern s32 fn_8001D944(s8 id, void* t);
 typedef struct Node_800102C8 {
     u8 pad[0x24];
@@ -1338,11 +1337,16 @@ typedef struct {
     u32 keyframe;
     f32 key[3];
 } NJS_MKEY_F;
+/* Ninja motion node data with one to four channels: key arrays, then key counts. */
+typedef struct { void* p[1]; u32 nb[1]; } NJS_MDATA1;
+typedef struct { void* p[2]; u32 nb[2]; } NJS_MDATA2;
+typedef struct { void* p[3]; u32 nb[3]; } NJS_MDATA3;
+typedef struct { void* p[4]; u32 nb[4]; } NJS_MDATA4;
 typedef void (*MotionInterpFn)(void* keys, u32 i, u32 nbKeys, void* out);
 typedef struct {
-    void** mdata;  /* 0x00 current node's channel data */
+    void* mdata;   /* 0x00 current node's NJS_MDATAn */
     void** keys;   /* 0x04 key array pointers for the node */
-    void** counts; /* 0x08 key counts for the node */
+    u32* counts;   /* 0x08 key counts for the node */
     f32 frame;     /* 0x0C */
     u32 nbFrame;   /* 0x10 */
     s32 unk14;
@@ -1350,6 +1354,95 @@ typedef struct {
     s32 unk1C;
 } MotionState;
 extern MotionState lbl_80316940;
+extern u16 lbl_8034789A;
+extern u16 lbl_8034789C;
+extern MotionInterpFn lbl_80346730[2];
+
+/* Steps the motion cursor past the current node's NJS_MDATAn, then applies the extra matrix. */
+void fn_80006CE0(void) {
+    switch (lbl_8034789C) {
+    case 1: {
+        NJS_MDATA1* m = lbl_80316940.mdata;
+        lbl_80316940.mdata = m + 1;
+        break;
+    }
+    case 2: {
+        NJS_MDATA2* m = lbl_80316940.mdata;
+        lbl_80316940.mdata = m + 1;
+        break;
+    }
+    case 3: {
+        NJS_MDATA3* m = lbl_80316940.mdata;
+        lbl_80316940.mdata = m + 1;
+        break;
+    }
+    case 4: {
+        NJS_MDATA4* m = lbl_80316940.mdata;
+        lbl_80316940.mdata = m + 1;
+        break;
+    }
+    }
+    if (lbl_80316940.matrix != 0) {
+        njMultiMatrix(0, lbl_80316940.matrix);
+    }
+}
+
+s32 fn_80006F1C(s32* out, s32 type) {
+    NJS_MKEY_F* keys;
+    u32 count;
+    u32 lo;
+    u32 hi;
+    u32 f;
+    s32 idx = lbl_8034789A & 1;
+    switch (lbl_8034789C) {
+    case 1: {
+        NJS_MDATA1* m = lbl_80316940.mdata;
+        lbl_80316940.keys = m->p;
+        lbl_80316940.counts = m->nb;
+        break;
+    }
+    case 2: {
+        NJS_MDATA2* m = lbl_80316940.mdata;
+        lbl_80316940.keys = m->p;
+        lbl_80316940.counts = m->nb;
+        break;
+    }
+    case 3: {
+        NJS_MDATA3* m = lbl_80316940.mdata;
+        lbl_80316940.keys = m->p;
+        lbl_80316940.counts = m->nb;
+        break;
+    }
+    case 4: {
+        NJS_MDATA4* m = lbl_80316940.mdata;
+        lbl_80316940.keys = m->p;
+        lbl_80316940.counts = m->nb;
+        break;
+    }
+    }
+    lo = 0;
+    keys = lbl_80316940.keys[idx];
+    count = lbl_80316940.counts[idx];
+    hi = count;
+    f = lbl_80316940.frame;
+    while (hi - lo > 1) {
+        u32 mid = (lo + hi) >> 1;
+        if (f >= keys[mid].keyframe) {
+            lo = mid;
+        } else {
+            hi = mid;
+        }
+    }
+    if (keys != NULL) {
+        lbl_80346730[type](keys, lo, count, out);
+        return 1;
+    }
+    out[0] = 0;
+    out[1] = 0;
+    out[2] = 0;
+    return 0;
+}
+
 void fn_800068C4(NJS_MKEY_F* keys, u32 i, u32 nbKeys, f32* out) {
     NJS_MKEY_F* k1 = &keys[i];
     f32 div[2] = {1.0f, 1.0f};
@@ -3185,21 +3278,22 @@ void fn_8001D200(Task* t, f32* v) {
     v[2] = v[2] + FLD(w, 0x24, f32);
 }
 
-s32 fn_8001DDE0(Task* t, u8* list) {
-    u8* p;
-    void* d = FLD(t->work, 0x4c, void*);
+s32 fn_8001DDE0(Task* t, Ent_80008800* list) {
+    Ent_80008800* p;
+    ChrWork* w = t->work;
+    ChrInfo* d = w->st;
     if (list) {
-        for (p = list;; p += 0x10) {
-            s16 lo = FLD(p, 0, s16);
-            s16 hi = FLD(p, 2, s16);
-            void* obj;
+        for (p = list;; p++) {
+            s16 lo = p->x0;
+            s16 hi = p->x2;
+            Key* obj;
             if (lo < 0) {
                 break;
             }
             if ((((s32)hi << 16) | lo) == 0x30032) {
-                obj = FLD(p, 0xc, void*);
+                obj = p->xc;
                 if (fn_8003DCF4(obj, d)) {
-                    return FLD(obj, 0x10, s16);
+                    return obj->x10;
                 }
             }
         }
@@ -3927,10 +4021,10 @@ Node_80008800* fn_80008800(Ent_80008800* t)
     return 0;
 }
 
-void fn_80006C00(NJS_MKEY_F_80006C00* keys, u32 i, u32 nbKeys, f32* out) {
+void fn_80006C00(NJS_MKEY_F* keys, u32 i, u32 nbKeys, f32* out) {
     f32 div[2] = {1.0f, 1.0f};
-    NJS_MKEY_F_80006C00* k1 = &keys[i];
-    NJS_MKEY_F_80006C00* k2 = &keys[(i + 1) % nbKeys];
+    NJS_MKEY_F* k1 = &keys[i];
+    NJS_MKEY_F* k2 = &keys[(i + 1) % nbKeys];
     f32 t;
     f32 u;
 
@@ -4116,7 +4210,7 @@ s32 fn_800163A4(F163A4Task* t, s8 flag, s8 mode, s16 want, s16 cols, s16 rows) {
     f32 x0;
     s8 j;
     s8 i;
-    s32 id;
+    s8 id;
     s32 sel;
     if (u->x0 == want) {
         return 0;
@@ -4134,7 +4228,7 @@ s32 fn_800163A4(F163A4Task* t, s8 flag, s8 mode, s16 want, s16 cols, s16 rows) {
     for (i = 0; i < rows; i++) {
         for (j = 0; j < cols; j++) {
             id = fn_80018398(&v, 1);
-            if ((s8)id >= 0 && (s8)id < 12 && (s8)id == want) {
+            if (id >= 0 && id < 12 && id == want) {
                 return 1;
             }
             v.x = v.x + step;
@@ -5523,4 +5617,152 @@ void fn_80010474(s16 i) {
     } else {
         lbl_80309DE4[i]->bits &= ~0x8000;
     }
+}
+
+static inline u32 MakeId(s16 lo, s16 hi) {
+    return (hi << 16) | lo;
+}
+s32 fn_80008F08(Ent_80008800* list, s16 p1, s16 p2, s16 c, s16 d, s8 mode, Ent_80008800** out) {
+    s32 found;
+    s16 i;
+    s16 lo;
+    s16 hi;
+    Key* pt;
+    found = 0;
+    if (list != NULL) {
+        i = 0;
+        while (1) {
+            lo = list[i].x0;
+            hi = list[i].x2;
+            if (lo < 0) break;
+            pt = list[i].xc;
+            switch (mode) {
+            case 0:
+                if (fn_8003DE8C(pt->x0, pt->x4, p1, p2)) found = 1;
+                break;
+            case 1:
+                if (MakeId(lo, hi) == MakeId(c, d)) found = 1;
+                break;
+            case 2:
+                if (fn_8003DE8C(pt->x0, pt->x4, p1, p2)) {
+                    if (MakeId(lo, hi) == MakeId(c, d)) found = 1;
+                }
+                break;
+            }
+            if (found) {
+                *out = &list[i];
+                return 1;
+            }
+            i++;
+        }
+    }
+    return 0;
+}
+
+s16 fn_80009030(Ent_80008800* list, s16 p1, s16 p2, s16 c, s16 d) {
+    Ent_80008800* e;
+    u32 key;
+    s16 count;
+    s32 useKey;
+    s32 v;
+    count = 0;
+    useKey = 0;
+    if (c >= 0 && d >= 0) {
+        useKey = 1;
+    }
+    if (list != NULL) {
+        key = (d << 16) | c;
+        e = list;
+        while (1) {
+            s16 lo = e->x0;
+            s16 hi = e->x2;
+            if (lo < 0) break;
+            if (fn_8003DE8C(e->xc->x0, e->xc->x4, p1, p2)) {
+                v = (hi << 16) | lo;
+                switch (v) {
+                case 0x30041:
+                    break;
+                default:
+                    if (!useKey || v == key) count++;
+                    break;
+                }
+            }
+            e++;
+        }
+    }
+    return count;
+}
+
+static inline Task* FindOr0(s8 id) {
+    Task* o = Find(id);
+    if (o != NULL) {
+        return o;
+    }
+    return Find(0);
+}
+
+/* Collects into out (-1 terminated) the ids of the characters standing on a w x h grid of
+ * 15-unit cells centred on center, the task's target or the task itself; returns the count. */
+s8 fn_8001D628(Task* t, s16* out, s8 w, s8 h, V3* center, s8 flag)
+{
+    ChrWork* tw = t->work;
+    ChrInfo* u = tw->st;
+    s8 cnt = 1;
+    f32 x0;
+    V3 pos;
+    s8 v;
+    Task* o;
+    s8 i;
+    s8 j;
+    s16 id;
+    s8 k;
+    int ok;
+
+    if (center == NULL) {
+        if (flag == 0) {
+            id = u->target;
+            out[0] = id;
+            tw = t->work;
+            o = FindOr0(tw->st->target);
+            if (o != NULL) {
+                ChrWork* ow = o->work;
+                fn_80071CF0(&ow->pos, &pos);
+            }
+        } else {
+            tw = t->work;
+            fn_80071CF0(&tw->pos, &pos);
+            id = u->id;
+            cnt = 0;
+        }
+    } else {
+        id = u->id;
+        fn_80071CF0(center, &pos);
+        cnt = 0;
+    }
+    pos.x -= 15.0f * (w / 2);
+    pos.z -= 15.0f * (h / 2);
+    x0 = pos.x;
+    for (j = 0; j < h; j++) {
+        for (i = 0; i < w; i++) {
+            v = fn_80018398(&pos, 0);
+            if (v >= 0 && v != id && v < 12 && fn_8001D944(v, t)) {
+                ok = 1;
+                for (k = 0; k < cnt; k++) {
+                    if (v == out[k]) {
+                        ok = 0;
+                        break;
+                    }
+                }
+                if (ok) {
+                    out[cnt] = v;
+                    cnt++;
+                }
+            }
+            pos.x += 15.0f;
+        }
+        pos.x = x0;
+        pos.z += 15.0f;
+    }
+    out[cnt] = -1;
+    return cnt;
 }

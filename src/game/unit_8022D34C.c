@@ -44,7 +44,8 @@ typedef struct Rng {
     f32 dz;
 } Rng;
 typedef struct { u8 pad[4]; void* x4; } Src;
-typedef struct { s16 x0; s16 x2; s16 x4; u8 pad6[2]; s16* x8; } Out;
+/* fn_802301A0's view of a 0x20..0x37 track: kind, key count, id, then x8 points at the keys (lbl_802F9360[kind - 0x20] floats each) after the four header halfwords. */
+typedef struct { s16 x0; s16 x2; s16 x4; u8 pad6[2]; void* x8; } Out;
 extern s32 fn_80230D10(u8 id, Src* s, s16** out);
 extern void fn_80230BD4(u8 id, void *node, u32 **out, u16 idx);
 #define STEP(n)                  \
@@ -336,6 +337,28 @@ void fn_8022F6B8(Node *n, s32 mask)
     if (n->next != NULL) {
         F6B8_Lvl1(n->next, mask);
     }
+}
+
+s32 fn_802301A0(Src* src, Out* out);
+
+/* Key idx of the first 0x20..0x37 track of src, as a point. */
+s32 fn_802300F0(NJS_POINT3 *dst, Src *src, s16 idx) {
+    Out o;
+    u8 kind;
+    f32 *v;
+    if (fn_802301A0(src, &o) == 0) {
+        return 0;
+    }
+    if (o.x2 <= idx) {
+        return 0;
+    }
+    kind = o.x0;
+    v = o.x8;
+    v += lbl_802F9360[kind - 0x20] * idx;
+    dst->x = v[0];
+    dst->y = v[1];
+    dst->z = v[2];
+    return 1;
 }
 
 s16 *fn_802307EC(void *p, s16 *v, s16 *res) {
