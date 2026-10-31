@@ -189,6 +189,7 @@
   "dolphin/pad/PadClamp.c",
   "dolphin/dvd/dvdfatal.c",
   "runtime/__mem.c",
-  "MetroTRK/msg.c"
+  "MetroTRK/msg.c",
+  "dolphin/odemuexi2/DebuggerDriver.c"
  ]
 }

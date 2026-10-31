@@ -544,6 +544,7 @@ config.libs += [
         "progress_category": "sdk",
         "src_dir": "extern/sdk",
         "objects": [
+            Object(Matching, "dolphin/odemuexi2/DebuggerDriver.c", extra_cflags=["-inline", "deferred"]),
             Object(Matching, "dolphin/odenotstub/odenotstub.c"),
             Object(Matching, "dolphin/amcstubs/AmcExi2Stubs.c"),
             Object(Matching, "dolphin/db.c"),
