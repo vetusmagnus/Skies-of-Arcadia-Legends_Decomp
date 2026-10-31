@@ -17,6 +17,51 @@ void fn_80286FEC(s32 n, f32 x, f32 y) {
 }
 
 
+void fn_8028703C(s32 n, f32 x, f32 y, f32 z) {
+    if (n == 0) return;
+    n--;
+    lbl_80344DE0.light[n].mask = lbl_803005A0[n];
+    lbl_80344DE0.light[n].type = 1;
+    lbl_80344DE0.light[n].kind = 3;
+    lbl_80344DE0.light[n].pos.x = x;
+    lbl_80344DE0.light[n].pos.y = y;
+    lbl_80344DE0.light[n].pos.z = z;
+}
+
+void fn_8028708C(s32 n, f32 x, f32 y, f32 z) {
+    if (n == 0) return;
+    n--;
+    lbl_80344DE0.light[n].mask = lbl_803005A0[n];
+    lbl_80344DE0.light[n].type = 1;
+    lbl_80344DE0.light[n].kind = 0;
+    lbl_80344DE0.light[n].pos.x = -x * 1048576.0f;
+    lbl_80344DE0.light[n].pos.y = -y * 1048576.0f;
+    lbl_80344DE0.light[n].pos.z = -z * 1048576.0f;
+    lbl_80344DE0.light[n].f44 = 0.0f;
+    lbl_80344DE0.light[n].f48 = 1048576.0f;
+    lbl_80344DE0.light[n].f4c = 1.0f;
+    lbl_80344DE0.light[n].f50 = 0.999999f;
+    lbl_80344DE0.light[n].s54 = 3;
+    lbl_80344DE0.light[n].f58 = 0.0f;
+    lbl_80344DE0.light[n].s5c = 0;
+}
+
+void fn_80287274(s32 n, s32 t) {
+    if (n != 0) {
+        n--;
+        lbl_80344DE0.light[n].type = t;
+    } else {
+        lbl_80344DE0.light[0].type = t;
+        lbl_80344DE0.light[1].type = t;
+        lbl_80344DE0.light[2].type = t;
+        lbl_80344DE0.light[3].type = t;
+        lbl_80344DE0.light[4].type = t;
+        lbl_80344DE0.light[5].type = t;
+        lbl_80344DE0.light[6].type = t;
+        lbl_80344DE0.light[7].type = t;
+    }
+}
+
 void fn_802872C4(s32 x) {
     lbl_80344DE0.f04 = x;
 }
@@ -135,6 +180,27 @@ void fn_80288C28(s32 n, f32 a, f32 b) {
     lbl_80345828[0] = -b;
 }
 
+s32 fn_80288C68(NjModel* m) {
+    NJS_POINT3 p;
+    f32 zr;
+    f32 r;
+    njCalcPoint(0, &m->center, &p);
+    p.z = -p.z;
+    r = m->r;
+    if (lbl_80347EA4) {
+        if (p.z + r <= lbl_80345828[1]) return 1;
+        if (p.z - r > lbl_80345828[0]) return 1;
+    } else {
+        if (p.z + r <= lbl_80345850[1]) return 1;
+        if (p.z - r > lbl_80345850[0]) return 1;
+    }
+    zr = p.z + r;
+    if (lbl_80345878[0] * (p.x - r) > lbl_80345850[2] * zr) return 1;
+    if (lbl_80345878[0] * (p.x + r) < lbl_80345850[3] * zr) return 1;
+    if (-lbl_80345878[1] * (-p.y - r) > lbl_80345850[4] * zr) return 1;
+    return -lbl_80345878[1] * (-p.y + r) < lbl_80345850[5] * zr;
+}
+
 void fn_80288DE4(NjObj* obj, NjModelCb cb) {
     do {
         u32 flags = obj->evalflags;
@@ -200,6 +266,17 @@ void njSetConstantAttr(u32 and_attr, u32 or_attr) {
 
 void njControl3D(u32 flag) {
     _nj_control_3d_flag_ = flag;
+}
+
+void fn_80288F90(void* p) {
+    lbl_80347EFC = p;
+    _nj_control_3d_flag_ = 0;
+    _nj_constant_attr_and_ = -1;
+    _nj_constant_attr_or_ = 0;
+    _nj_constant_material_.a = 255.0f;
+    _nj_constant_material_.r = 0.0f;
+    _nj_constant_material_.g = 0.0f;
+    _nj_constant_material_.b = 0.0f;
 }
 
 void fn_80288FC8(NjObj* obj) {
@@ -355,6 +432,51 @@ void fn_8028B59C(s32 n, f32 x, f32 y) {
     lbl_80345350.light[n].s5c = 0;
 }
 
+void fn_8028B5EC(s32 n, f32 x, f32 y, f32 z) {
+    if (n == 0) return;
+    n--;
+    lbl_80345350.light[n].mask = lbl_80300710[n];
+    lbl_80345350.light[n].type = 1;
+    lbl_80345350.light[n].kind = 3;
+    lbl_80345350.light[n].pos.x = x;
+    lbl_80345350.light[n].pos.y = y;
+    lbl_80345350.light[n].pos.z = z;
+}
+
+void fn_8028B63C(s32 n, f32 x, f32 y, f32 z) {
+    if (n == 0) return;
+    n--;
+    lbl_80345350.light[n].mask = lbl_80300710[n];
+    lbl_80345350.light[n].type = 1;
+    lbl_80345350.light[n].kind = 0;
+    lbl_80345350.light[n].pos.x = 1048576.0f * -x;
+    lbl_80345350.light[n].pos.y = 1048576.0f * -y;
+    lbl_80345350.light[n].pos.z = 1048576.0f * -z;
+    lbl_80345350.light[n].f44 = 0.0f;
+    lbl_80345350.light[n].f48 = 1048576.0f;
+    lbl_80345350.light[n].f4c = 1.0f;
+    lbl_80345350.light[n].f50 = 0.99999f;
+    lbl_80345350.light[n].s54 = 3;
+    lbl_80345350.light[n].f58 = 0.0f;
+    lbl_80345350.light[n].s5c = 0;
+}
+
+void fn_8028B820(s32 n, s32 v) {
+    if (n) {
+        n--;
+        lbl_80345350.light[n].type = v;
+    } else {
+        lbl_80345350.light[0].type = v;
+        lbl_80345350.light[1].type = v;
+        lbl_80345350.light[2].type = v;
+        lbl_80345350.light[3].type = v;
+        lbl_80345350.light[4].type = v;
+        lbl_80345350.light[5].type = v;
+        lbl_80345350.light[6].type = v;
+        lbl_80345350.light[7].type = v;
+    }
+}
+
 void fn_8028B870(s32 x) {
     lbl_80345350.f04 = x;
 }
@@ -384,6 +506,57 @@ void fn_8028BB90(NjState* s) {
     s->s1c = 1;
 }
 
+s32 fn_8028BBCC(NJS_POINT3* amin, NJS_POINT3* amax, NJS_POINT3* bmin, NJS_POINT3* bmax) {
+    if (amax->x < bmin->x) return 0;
+    if (amin->x > bmax->x) return 0;
+    if (amax->y < bmin->y) return 0;
+    if (amin->y > bmax->y) return 0;
+    if (amax->z < bmin->z) return 0;
+    if (amin->z > bmax->z) return 0;
+    return 1;
+}
+
+s32 fn_8028F95C(f32* a, f32* b) {
+    f32 dx, dy, dz, r;
+    dx = b[0] - a[0];
+    dy = b[1] - a[1];
+    dz = b[2] - a[2];
+    r = a[3] + b[3];
+    if (dx * dx + dy * dy + dz * dz <= r * r) return 1;
+    return 0;
+}
+
+f32 fn_80290008(f32* a, f32* b) {
+    f32 x, y, z, d;
+    f32 dx = a[0] - b[0];
+    f32 dy = a[1] - b[1];
+    f32 dz = a[2] - b[2];
+    x = dx * dx;
+    y = dy * dy;
+    z = dz * dz;
+    d = x + y + z;
+    if (d < 0.025f) return 0.0f;
+    return sqrtf(d);
+}
+
+void fn_80290428(NJS_POINT3* p, NJS_POINT3* lo, NJS_POINT3* hi) {
+    s32 i;
+    lo->x = p[0].x;
+    lo->y = p[0].y;
+    lo->z = p[0].z;
+    hi->x = p[0].x;
+    hi->y = p[0].y;
+    hi->z = p[0].z;
+    for (i = 1; i < 8; i++) {
+        if (p[i].x < lo->x) lo->x = p[i].x;
+        if (p[i].y < lo->y) lo->y = p[i].y;
+        if (p[i].z < lo->z) lo->z = p[i].z;
+        if (p[i].x > hi->x) hi->x = p[i].x;
+        if (p[i].y > hi->y) hi->y = p[i].y;
+        if (p[i].z > hi->z) hi->z = p[i].z;
+    }
+}
+
 void fn_80290708(f32* v, f32* lo, f32* hi) {
     lo[0] = v[0] - v[3];
     lo[1] = v[1] - v[3];
@@ -393,8 +566,21 @@ void fn_80290708(f32* v, f32* lo, f32* hi) {
     hi[2] = v[2] + v[3];
 }
 
+s32 fn_8029076C(f32* a, f32* b) {
+    f32 la = a[3] * a[3] + a[4] * a[4] + a[5] * a[5];
+    f32 d = a[3] * b[3] + a[4] * b[4] + a[5] * b[5];
+    f32 lb = b[3] * b[3] + b[4] * b[4] + b[5] * b[5];
+    return (f32)fabs(d * d / (la * lb)) > 0.975f;
+}
+
 void fn_80290E98(u32 x) {
     lbl_80347E48 = (x << 8) | (x >> 24);
+}
+
+void fn_802913E8(s32 n, u32 x) {
+    fn_80298FE4(n);
+    lbl_80347E58 = __rlwinm(x, 8, 0, 31);
+    lbl_80347E50 = 1;
 }
 
 void fn_80291424(void) {
@@ -448,6 +634,11 @@ f32 fn_802918DC(f32 x) {
 
 f32 njSin(Angle a) {
     return sin(a * ANG_RAD);
+}
+
+f32 fn_80291978(f64 x) {
+    f32 r = (x < 0.0) ? -sqrtf(-x) : sqrtf(x);
+    return 1.0f / r;
 }
 
 f32 fn_80291A5C(f64 x) {
@@ -726,7 +917,7 @@ void fn_802927CC(Angle* ang, f32* q) {
 }
 
 void fn_802928F4(NJS_POINT3* src, NJS_POINT3* dst) {
-    calc_vector(NULL, src, dst);
+    PSMTXMultVecSR(lbl_80347EB4, src, dst);
 }
 
 s32 njPopMatrixEx(void) {
@@ -1568,6 +1759,21 @@ void fn_80296130(NjObj* obj) {
     } while (obj != 0);
 }
 
+void fn_8029638C(NjObj* obj, NJS_MOTION* mot, NJS_MOTION* shape, NjModelCb cb, f32 frame, f32 sframe) {
+    lbl_80347E90 = mot;
+    if (mot) {
+        fn_802956F0(mot, frame);
+    }
+    lbl_80346A18->drawModel = cb;
+    if (!shape) {
+        fn_80295738(obj);
+    } else {
+        fn_80296090(0);
+        fn_802960A8(shape, sframe);
+        fn_80296130(obj);
+    }
+}
+
 void fn_802968B8(void) {
 }
 
@@ -1685,20 +1891,20 @@ void fn_802974B4(NJS_MATRIX m) {
 void fn_802974E0(void) {
 }
 
-void fn_802974E4(void) {
-    fn_80291978();
-}
-
-void fn_80297504(Angle a, f32* s, f32* c) {
-    *s = njSin(a);
-    *c = njCos(a);
-}
-
 static inline s32 read_tex(NjTexRef* r, void* dst) {
     if (fn_8029954C(dst, &r->mem->body)) {
         return -1;
     }
     return 1;
+}
+
+void fn_802974E4(f32 x) {
+    fn_80291978(x);
+}
+
+void fn_80297504(int a, f32* s, f32* c) {
+    *s = njSin(a);
+    *c = njCos(a);
 }
 
 void fn_802979B8(void) {
@@ -2460,6 +2666,25 @@ void fn_8029C93C(void) {
     }
 }
 
+void fn_8029C9B0(s32 kind) {
+    f32 m[3][4];
+    f32 o[4][4];
+    f32 w, h;
+    switch (kind) {
+    case 0:
+        break;
+    case 1:
+        PSMTXCopy(lbl_80347EB4, m[0]);
+        w = 0.5f * lbl_80345878[10];
+        h = 0.5f * lbl_80345878[11];
+        C_MTXOrtho(o, h, -h, -w, w, lbl_80345850[1], lbl_80345850[0]);
+        PSMTXConcat(o[0], m[0], m[0]);
+        PSMTXConcat(lbl_80346440[0], m[0], m[0]);
+        GXLoadTexMtxImm(m, 30, 1);
+        break;
+    }
+}
+
 void fn_8029CB74(void) {
     GXSetProjection(lbl_803463C0, 1);
     lbl_80347F6C = 0;
@@ -2718,6 +2943,15 @@ void fn_802A20DC(f32 a, f32 b, f32 c) {
 void fn_802A20F4(f32 a, f32 b) {
     lbl_80300760[3] = -a;
     lbl_80300760[4] = b;
+}
+
+void fn_802A210C(f32 x, f32 y, f32 z) {
+    f64 dx = x, dy = y, dz = z;
+    lbl_80300760[0] = x;
+    lbl_80300760[1] = y;
+    lbl_80300760[2] = z;
+    GXInitLightPos(&lbl_80346560, 1048576.0f * -(f32)dx, 1048576.0f * -(f32)dy, 1048576.0f * -(f32)dz);
+    GXInitSpecularDir(&lbl_80346520, x, y, z);
 }
 
 void fn_802A5EF8(s32 count, NJS_POINT3* dst, NJS_POINT3* src) {

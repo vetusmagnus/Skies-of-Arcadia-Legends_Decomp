@@ -140,7 +140,7 @@ void njTranslateEx(NJS_POINT3*);
 void njRotateEx(Angle*, s32);
 void njScaleEx(NJS_POINT3*);
 void njSetMatrix(NJS_MATRIX md, NJS_MATRIX ms);
-void fn_80297504(Angle a, f32* s, f32* c);
+void fn_80297504(int a, f32* s, f32* c);
 void fn_802394C4(void);
 
 void PSMTXConcat(const f32* a, const f32* b, f32* ab);
@@ -251,7 +251,7 @@ void fn_802954EC(NjObj* obj);
 void fn_8029518C(NjObj* obj);
 extern int lbl_80347E78;
 extern u16 lbl_80347E7C;
-extern u32 lbl_80347E90;
+extern NJS_MOTION* lbl_80347E90;
 
 /* Per-node cached keys for the vertex-motion streams (lbl_80347E84 / lbl_80347E88). */
 typedef struct {
@@ -382,7 +382,15 @@ extern u32 lbl_80347EF4;
 extern u32 lbl_80347EF0;
 extern f32 lbl_80347F30;
 extern f32 lbl_80347F34;
-void fn_80291978(void);
+f32 fn_80291978(f64 x);
+void fn_802974E4(f32 x);
+extern u32 lbl_803005A0[8];
+extern u32 lbl_80300710[8];
+extern s32 lbl_80347E50;
+extern u32 lbl_80347E58;
+extern f32 lbl_80346440[3][4];
+extern GXLightObj lbl_80346520;
+extern GXLightObj lbl_80346560;
 void fn_8029CB74(void);
 void fn_8029B248(s32 kind, s32 flag);
 void fn_8029CB1C(void);
