@@ -424,6 +424,9 @@ config.libs = [
             Object(NonMatching, "game/unit_8013D400.c"),
             Object(NonMatching, "game/unit_8014F970.c"),
             Object(NonMatching, "game/unit_8015DC6C.c"),
+            # Starts at the 0x8034ADE0 .sdata2 block, which repeats -5850.0f, 1.0f, 272.0f, 328.0f, 668.0f,
+            # -348.0f and 189.0f from the 0x8034AD90 block of the file before.
+            Object(NonMatching, "game/unit_801719D0.c"),
             Object(NonMatching, "game/unit_80193F28.c"),
             Object(NonMatching, "game/unit_80199B9C.c"),
             # Batch 4: 56-88 byte functions, one unit per agent run and gap (guessed ranges).

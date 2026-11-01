@@ -132,7 +132,10 @@ game/unit_8014F970.c:
 	.text       start:0x8014F970 end:0x8015DC6C
 
 game/unit_8015DC6C.c:
-	.text       start:0x8015DC6C end:0x80193F28
+	.text       start:0x8015DC6C end:0x801719D0
+
+game/unit_801719D0.c:
+	.text       start:0x801719D0 end:0x80193F28
 
 game/unit_80193F28.c:
 	.text       start:0x80193F28 end:0x80199B9C
