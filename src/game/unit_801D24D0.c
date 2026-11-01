@@ -1287,6 +1287,38 @@ void fn_801D89D4(Anim* o, u32 n, s32 flag, f32 a0, f32 a1, f32 a2, f32 a3, f32 b
     o->flags = 1;
 }
 
+void fn_801D9728(s32 idx, s32 flag, f32 a, f32 b, f32 c, f32 d, f32 e, f32 f, f32 g, f32 h) {
+    Light *r = &lbl_8030E830[idx + 3];
+    s32 on = 0;
+    if (flag == 0x7fffffff || flag == 1) on = 1;
+    r->mode = on != 0;
+    r->dir.x = (a != 3.4028235e38f) ? a : 0.0f;
+    r->dir.y = (b != 3.4028235e38f) ? b : 0.0f;
+    r->dir.z = (c != 3.4028235e38f) ? c : 0.0f;
+    r->a = (d != 3.4028235e38f) ? d : 2.0f;
+    r->b = (e != 3.4028235e38f) ? e : 10.0f;
+    r->c.x = (f != 3.4028235e38f) ? f : 1.0f;
+    r->c.y = (g != 3.4028235e38f) ? g : 1.0f;
+    r->c.z = (h != 3.4028235e38f) ? h : 1.0f;
+    memcpy(&lbl_8030E830[idx + 8], r, 0x28);
+}
+
+void fn_801D9864(s32 mode, f32 a, f32 b, f32 c, f32 d, f32 e, f32 f) {
+    Light *l = &lbl_8030E830[3];
+    s32 on = 0;
+    if (mode == 0x7FFFFFFF || mode == 1) {
+        on = 1;
+    }
+    l->mode = on != 0;
+    l->dir.x = a = (a != 3.4028235e38f) ? a : 1.0f;
+    l->dir.y = b = (b != 3.4028235e38f) ? b : 1.0f;
+    l->dir.z = c = (c != 3.4028235e38f) ? c : 1.0f;
+    l->c.x = d = (d != 3.4028235e38f) ? d : 1.0f;
+    l->c.y = e = (e != 3.4028235e38f) ? e : 1.0f;
+    l->c.z = f = (f != 3.4028235e38f) ? f : 1.0f;
+    memcpy(&lbl_8030E830[8], &lbl_8030E830[3], 0x28);
+}
+
 void fn_801D995C(s32 a, f32 f1, f32 f2, f32 f3) {
     Light *c = &lbl_8030E830[2];
     s32 flag = 0;
