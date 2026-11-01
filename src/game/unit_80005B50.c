@@ -2994,6 +2994,42 @@ s32 fn_80020060(ChrAnim* p);
 s32 fn_80017018(s8 idx);
 extern void fn_8001712C(s8 k, void *p);
 
+extern s32 fn_80060B98(void*, void*, void*, f32*);
+
+s32 fn_80018178(void* a, void* b, void* c, s8* list) {
+    s32 cnt;
+    s8 i;
+    s8 v;
+    s8 j;
+    s8 k;
+    f32 pos[3];
+    cnt = 0;
+    for (i = 0; i < 14; i++) {
+        list[i] = -1;
+    }
+    for (i = 0; i < 9; i++) {
+        for (j = 0; j < 9; j++) {
+            v = lbl_8030A10C.x14[j][i];
+            if (v >= 0) {
+                pos[0] = 15.0f * j + 7.5f - 67.5f;
+                pos[2] = 15.0f * i + 7.5f - 67.5f;
+                pos[1] = 0.0f;
+                if (fn_80060B98(a, b, c, pos) != 0) {
+                    for (k = 0; k < 14; k++) {
+                        if (list[k] < 0) {
+                            list[k] = v;
+                            cnt++;
+                            break;
+                        }
+                        if (v == list[k]) break;
+                    }
+                }
+            }
+        }
+    }
+    return cnt;
+}
+
 void fn_80018700(s8 id) {
     s16 i;
     s16 j;
@@ -7129,5 +7165,33 @@ s32 fn_80007528(ArcPack* pk) {
         }
     }
     return 1;
+}
+
+int fn_8001BCC8(s16 id) {
+    int ret = 0;
+    int r;
+    if (lbl_8034733C == 7) {
+        Task* o = Find(id);
+        ChrWork* w;
+        o = o ? o : Find(0);
+        w = o->work;
+        if (!(w->st->xf0 & 0x8000)) {
+            r = 1;
+            goto done;
+        }
+    }
+    {
+        s16 b;
+        s16 a;
+        fn_8001D41C(&a, &b);
+        if (a == id) {
+            r = 1;
+        } else {
+            r = 0;
+        }
+    }
+done:
+    if (r) ret = 1;
+    return ret;
 }
 
