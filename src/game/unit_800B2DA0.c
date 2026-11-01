@@ -316,8 +316,8 @@ typedef struct Out {
     u32 w8c;
 } Out;
 extern u32 fn_800A1AE8(void *s, s32 a);
-extern u32 fn_800A1ABC(void *s, s32 a);
-extern s32 fn_800A10A8(u32 a, u32 b, u32 c);
+extern void *fn_800A1ABC(void *s, s32 a);
+extern s32 fn_800A10A8(void *a, u32 b, u32 c);
 typedef struct X_800BD904 {
     u8 pad0[0x6c];
     u32 w6c;
@@ -340,7 +340,7 @@ typedef struct Actor_800BD904 {
 typedef struct Rec_UNIT0000 {
     u32 w0;
     u32 w4;
-    u32 w8;
+    void* w8;
     u32 wc;
     u32 w10;
     u32 w14;
@@ -2494,7 +2494,9 @@ typedef struct Work_800BA564 {
 } Work_800BA564;
 typedef struct Emit {
     u32 flags;
-    s32 w4, w8, wc, w10, w14;
+    s32 w4;
+    void* w8;
+    s32 wc, w10, w14;
     u8 pad18[0x34 - 0x18];
     s32 w34;
     u8 pad38[0xf8 - 0x38];
@@ -2508,7 +2510,7 @@ extern void fn_800A1948(void* a, void* b, s32 flags);
 extern void njRotateEx(void* ang, s32 order);
 extern void fn_800A13D8(s32, void*);
 extern void fn_800A1690(s32, void*);
-extern s32 fn_800A10C4(s32 base, s32 i, s32 n);
+extern s32 fn_800A10C4(void *base, s32 i, s32 n);
 extern void fn_801DBE1C(const char* fmt, ...);
 typedef struct Src {
     u8 pad0[0x78];
@@ -3437,7 +3439,7 @@ typedef struct Emit_800BE6EC {
     f32 x20;            /* 0x20 */
     f32 x24;            /* 0x24 */
     s32 x28;            /* 0x28 */
-    u32 x2c;            /* 0x2C */
+    void* x2c;          /* 0x2C */
     f32 x30;            /* 0x30 */
     f32 x34;            /* 0x34 */
     u8 pad38[0x60 - 0x38];
