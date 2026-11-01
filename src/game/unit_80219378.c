@@ -447,7 +447,7 @@ typedef struct {
     f32 x, y;           /* 0x00 */
     f32 z;              /* 0x08 */
     f32 sx, sy;         /* 0x0C */
-    u32 colour;         /* 0x14 */
+    s32 ang;            /* 0x14 */
     void *tex;          /* 0x18 */
     Box *data;          /* 0x1C */
 } BlockSpr;
@@ -1049,6 +1049,68 @@ void fn_8021EDE0(NJS_TEXLIST *p, s16 n)
 }
 
 extern void* lbl_802F89A8[];
+void fn_8021EEF4(DrawState *ds, f32 v, s16 kind);
+extern void fn_80005D98(BlockSpr *obj, s32 a, s32 b, f32 z);
+extern u32 lbl_8034702C;
+
+void fn_8021F0EC(BlockTask* o)
+{
+    DrawState st;
+    f32 z;
+    Block* e = o->task.work;
+    s32 draw = 0;
+    BlockFx* c = o->fx;
+    if (lbl_8034702C == 0 && o->task.state <= 1) {
+        o->task.state = 2;
+    }
+    switch (o->task.state) {
+    case 0:
+        if (e->tex == 0 || e->w8 == 0xFFFFFFFF) {
+            o->task.state = 2;
+            break;
+        }
+        e->timer = c->e;
+        o->task.f20 = e->f48;
+        o->task.state = 1;
+        /* fall through */
+    case 1:
+        switch (c->d) {
+        case 1:
+            e->spr.sx += c->a;
+            e->spr.sy += c->b;
+            break;
+        case 0:
+            break;
+        }
+        e->f40 = e->timer * (c->c / c->e);
+        if (e->f40 <= 0.0f) {
+            e->f40 = 0.0f;
+        }
+        e->timer--;
+        if (e->timer <= 0) {
+            o->task.state = 2;
+        }
+        draw = 1;
+        break;
+    case 2:
+        o->task.state = 3;
+        break;
+    case 3:
+        o->task.flags |= 0x40;
+        break;
+    }
+    if (draw == 1) {
+        DrawStateDefault2D(&st);
+        e->spr.ang = 182.04445f * e->f44;
+        fn_8021EEF4(&st, e->f40, e->kind);
+        z = 0.01f + e->f48 - 0.001 * e->s4e;
+        if (DrawStatePush(&st)) {
+            fn_80005D98(&e->spr, 0, 0x23, fn_801DBD9C(z));
+            DrawStatePop(0);
+        }
+    }
+}
+
 void* fn_802205C8(s16 i)
 {
     return lbl_802F89A8[i];
@@ -5005,7 +5067,7 @@ void fn_80226120(void)
     fn_8022642C();
 }
 
-extern void fn_8021F0EC(Task *t);
+void fn_8021F0EC(BlockTask *t);
 extern void fn_80005D98(BlockSpr *obj, s32 a, s32 b, f32 z);
 extern u32 lbl_8034702C;
 extern f32 njSin(Angle a);
@@ -5351,7 +5413,7 @@ void fn_80220074(Task *t) {
         w->spr.x = e->x + (f32)(w->spr.data->a.x / 2);
         w->spr.y = e->y + (f32)(w->spr.data->a.y / 2);
         DrawStateDefault2D(&ds);
-        w->spr.colour = (s32)(182.04445f * w->f44);
+        w->spr.ang = 182.04445f * w->f44;
         ds.colour.a = w->f40;
         ds.colour.r = 1.0f;
         ds.colour.g = 1.0f;
