@@ -1156,6 +1156,112 @@ void fn_80146480(IdxArg* a) {
     }
 }
 
+void fn_80147184(Slot_8014359C *c) {
+    Party *f;
+    s16 *flags;
+    s32 k;
+
+    if (c->x1 == 0) {
+        f = lbl_8034727C->x20;
+        flags = &lbl_8034727C->flag[0];
+    } else {
+        f = lbl_8034727C->x24;
+        flags = &lbl_8034727C->flag[1];
+    }
+    if (*flags & 4) {
+        c->x7 = 0;
+        return;
+    }
+    switch (c->x0) {
+    case 2:
+        break;
+    case 5:
+        if (f->x54 > 0) {
+            c->x7 = 0;
+            return;
+        }
+        if (f->x50 > lbl_802C4BF0[c->x8].ship_turns) {
+            c->x7 = 0;
+            return;
+        }
+        if (f->x50 == 0) {
+            f->x1e = f->x1c / 2;
+            f->x1c = f->x1c + f->x1e;
+            f->mem[0].x18 = f->mem[0].x16 / 2;
+            f->mem[0].x16 = f->mem[0].x16 + f->mem[0].x18;
+            f->mem[1].x18 = f->mem[1].x16 / 2;
+            f->mem[1].x16 = f->mem[1].x16 + f->mem[1].x18;
+            f->mem[2].x18 = f->mem[2].x16 / 2;
+            f->mem[2].x16 = f->mem[2].x16 + f->mem[2].x18;
+            f->mem[3].x18 = f->mem[3].x16 / 2;
+            f->mem[3].x16 = f->mem[3].x16 + f->mem[3].x18;
+            f->mem[4].x18 = f->mem[4].x16 / 2;
+            f->mem[4].x16 = f->mem[4].x16 + f->mem[4].x18;
+        }
+        f->x50 = lbl_802C4BF0[c->x8].ship_turns;
+        *flags |= 1;
+        c->x7 = 1;
+        break;
+    case 1:
+        k = c->x8 - 0x1e0;
+        if (f->x54 > 0) {
+            c->x7 = 0;
+            return;
+        }
+        if (f->x50 > lbl_802D8A2C[k].turns) {
+            c->x7 = 0;
+            return;
+        }
+        if (f->x50 == 0) {
+            f->x1e = f->x1c / 2;
+            f->x1c = f->x1c + f->x1e;
+            f->mem[0].x18 = f->mem[0].x16 / 2;
+            f->mem[0].x16 = f->mem[0].x16 + f->mem[0].x18;
+            f->mem[1].x18 = f->mem[1].x16 / 2;
+            f->mem[1].x16 = f->mem[1].x16 + f->mem[1].x18;
+            f->mem[2].x18 = f->mem[2].x16 / 2;
+            f->mem[2].x16 = f->mem[2].x16 + f->mem[2].x18;
+            f->mem[3].x18 = f->mem[3].x16 / 2;
+            f->mem[3].x16 = f->mem[3].x16 + f->mem[3].x18;
+            f->mem[4].x18 = f->mem[4].x16 / 2;
+            f->mem[4].x16 = f->mem[4].x16 + f->mem[4].x18;
+        }
+        f->x50 = lbl_802D8A2C[k].turns;
+        *flags |= 1;
+        c->x7 = 1;
+        break;
+    case 7:
+        if (f->x54 > 0) {
+            c->x7 = 0;
+            return;
+        }
+        if (f->x50 > lbl_802D8E64[c->x8].turns) {
+            c->x7 = 0;
+            return;
+        }
+        if (f->x50 == 0) {
+            f->x1e = f->x1c / 2;
+            f->x1c = f->x1c + f->x1e;
+            f->mem[0].x18 = f->mem[0].x16 / 2;
+            f->mem[0].x16 = f->mem[0].x16 + f->mem[0].x18;
+            f->mem[1].x18 = f->mem[1].x16 / 2;
+            f->mem[1].x16 = f->mem[1].x16 + f->mem[1].x18;
+            f->mem[2].x18 = f->mem[2].x16 / 2;
+            f->mem[2].x16 = f->mem[2].x16 + f->mem[2].x18;
+            f->mem[3].x18 = f->mem[3].x16 / 2;
+            f->mem[3].x16 = f->mem[3].x16 + f->mem[3].x18;
+            f->mem[4].x18 = f->mem[4].x16 / 2;
+            f->mem[4].x16 = f->mem[4].x16 + f->mem[4].x18;
+        }
+        f->x50 = lbl_802D8E64[c->x8].turns;
+        *flags |= 1;
+        c->x7 = 1;
+        break;
+    default:
+        break;
+    }
+}
+
 void fn_80147CC4(void) {
 }
 
