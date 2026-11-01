@@ -2930,6 +2930,86 @@ s32 fn_80015880(s8 a, f32 f, NJS_POINT3* b, NJS_POINT3* c) {
 void fn_80017320(void) {
 }
 
+extern int fn_800214FC(s8, s16, s8);
+static inline s8 PartyChrId(s8 s)
+{
+    s8 i;
+    for (i = 0; i < 12; i++) {
+        if (lbl_80309E24[i] != NULL) {
+            ChrWork* w = lbl_80309E24[i]->work;
+            if (s == fn_80020E10(w->x10->xc)) {
+                return w->st->id;
+            }
+        }
+    }
+    return -1;
+}
+static inline int ChrBits(s8 i, u32 mask)
+{
+    if (i < 12) {
+        return lbl_80309DE4[i]->bits & mask;
+    }
+    return 0;
+}
+static inline int PartyCanAct(void)
+{
+    s8 s;
+    s8 idx;
+    for (s = 0; s < 6; s++) {
+        idx = PartyChrId(s);
+        if (idx >= 0 && ChrBits(idx, 0xcd80) != 0) {
+            return 0;
+        }
+    }
+    return 1;
+}
+void fn_80017430(s8 sel)
+{
+    ChrInfo* u;
+    f32 ratio;
+    s8 c;
+    s8 idx;
+    s8 s;
+    int f;
+    s16 hp;
+    s16 max;
+
+    f = PartyCanAct();
+    for (s = 0; s < 6; s++) {
+        idx = PartyChrId(s);
+        if (idx >= 0) {
+            Task* t = fn_80021658(idx);
+            ChrWork* w = t->work;
+            u = w->st;
+            u->target = u->id;
+            if (idx != sel) {
+                u->xf0 |= 0x8000;
+            } else {
+                u->xf0 |= 0x20;
+            }
+            if (u->xec & 0x100) {
+                fn_800214FC(idx, 0xf, idx);
+            } else {
+                if (f != 0) {
+                    hp = lbl_80309DE4[idx]->x14;
+                    max = lbl_80309DE4[idx]->x18;
+                    ratio = (f32)hp / max;
+                    if (ratio >= 0.75f) {
+                        c = 1;
+                    } else {
+                        c = 0;
+                    }
+                } else if (ChrBits(idx, 0x8000) != 0) {
+                    c = 2;
+                } else {
+                    c = 0;
+                }
+                fn_800214FC(idx, c + 0x1a, idx);
+            }
+        }
+    }
+}
+
 void fn_80017778(void) {
     s8 i;
     for (i = 0; i < 14; i++) {
