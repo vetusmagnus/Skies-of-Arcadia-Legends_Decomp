@@ -69,7 +69,7 @@ typedef struct {
     s32 x18;
     f32 x1c;
     int cur;
-    int pad24;
+    void* x24;
     Ent_BB28* tbl;
 } Sys_80309E5C;
 extern Sys_80309E5C lbl_80309E5C;
@@ -292,8 +292,11 @@ typedef struct Key {
     s16 x0;
     s16 x2;
     s16 x4;
-    u8 pad6[0x10 - 6];
+    u8 pad6[2];
+    u32 x8;
+    u8 padc[0x10 - 0xc];
     s16 x10;
+    u8 pad12[0x18 - 0x12];
 } Key;
 /* 0x10-byte id record; lists end at a negative x0. */
 struct Ent_80008800 {
@@ -901,8 +904,7 @@ typedef struct Wk1E_8001E238 {
     Dat1E *d;
 } Wk1E_8001E238;
 typedef struct Tk1E_8001E238 { u8 pad00[0x24]; Wk1E_8001E238 *work; } Tk1E_8001E238;
-typedef struct Wk_80014BA8 { u8 pad[0x4c]; u8* x4c; } Wk_80014BA8;
-extern void fn_8002923C(s8 id, u16 mask, s32 c);
+extern void fn_8002923C(s16 id, u16 mask, s32 c);
 typedef struct Fn108EC {
     u8 pad0[0x1c];
     u32 flags;
@@ -1271,6 +1273,50 @@ void fn_8000BF48(Owner_8000BF48* ow) {
         sub->x8 = s->x4;
         sub->x18 = s->x14;
     }
+}
+
+typedef struct LoadRec {
+    s16 kind;
+    u8 pad2[0xa];
+    u8 *data;
+} LoadRec;
+typedef struct LoadHdr {
+    u32 count;
+    LoadRec recs[1];
+} LoadHdr;
+extern void fn_8000C19C(LoadRec *r);
+
+void fn_8000C7C0(s32 mode, LoadHdr *h) {
+    u32 n;
+    u8 i;
+    LoadRec *recs;
+    u8 *p;
+    {
+        /* the records' data follows the (count + 1) record headers */
+        void *v = h->recs;
+        p = v;
+    }
+    recs = h->recs;
+    n = h->count;
+    p += (n + 1) * 16;
+    for (i = 0; i < n; i++) {
+        recs[i].data = p;
+        switch (recs[i].kind) {
+        case 0: p += 0x4c; break;
+        case 1: p += 0xd0; break;
+        case 2: p += 0x44; break;
+        case 3: p += 0x8; break;
+        case 4: p += 0x18; break;
+        case 6: p += 0x10; break;
+        case 7: p += 0x14; break;
+        case 8: p += 0x14; break;
+        case 9: p += 0xc; break;
+        case 10: p += 0x18; break;
+        case 11: p += 0x18; break;
+        }
+    }
+    if (mode == 1) lbl_80309E5C.x24 = p;
+    fn_8000C19C(recs);
 }
 
 void fn_8000C9F8(void** out1, void** out2) {
@@ -2300,6 +2346,59 @@ s32 fn_80014EC4(ChrInfo* u)
         return 1;
     }
     return 1;
+}
+
+void fn_80015138(u8 flag) {
+    s8 start;
+    s32 stop;
+    s8 i;
+    ChrInfo* u;
+    u16 m;
+    s8 end;
+    u32 b;
+    if (flag != 0) {
+        start = 4;
+        stop = 12;
+    } else {
+        start = 0;
+        stop = 4;
+    }
+    i = start;
+    end = stop;
+    for (; i < end; i++) {
+        Task* t = fn_800215EC(i);
+        if (t == 0) {
+            continue;
+        }
+        u = ChrW(t)->st;
+        m = 0;
+        b = lbl_80309DE4[(s8)u->id]->bits;
+        u->x44 &= 0x44E80;
+        u->x44 &= ~(b & 0x44E80);
+        if (u->x44 & 0x80) {
+            m |= 0x1;
+        }
+        if (u->x44 & 0x200) {
+            m |= 0x20;
+        }
+        if (u->x44 & 0x400) {
+            m |= 0x8;
+        }
+        if (u->x44 & 0x800) {
+            m |= 0x10;
+        }
+        if (u->x44 & 0x4000) {
+            m |= 0x4;
+        }
+        if (u->x44 & 0x40000) {
+            m |= 0x100;
+        }
+        if (m != 0) {
+            fn_80032BBC(u->id, 1);
+            fn_80032B6C(u->id, 8);
+            fn_8002923C(u->id, m, 1);
+        }
+    }
 }
 
 s32 fn_800153A0(Pair* p) {
@@ -3640,6 +3739,27 @@ static inline Task* FindChr(s8 key) {
     }
     return 0;
 }
+static inline s32 KeyFind(Key* p) {
+    s32 i = 0;
+    for (;;) {
+        if (p->x2 == 3) break;
+        if (p->x2 == 0) return i;
+        p++;
+        i++;
+    }
+    return -1;
+}
+
+void fn_8001C410(Task* t) {
+    ChrWork* w = t->work;
+    Key* base = w->x10->x30->xc;
+    s16 i = KeyFind(base);
+    if (!(base[i].x8 & 0x40000)) {
+        return;
+    }
+    w->x44 = 4;
+}
+
 void fn_8001C474(Task* t) {
     ChrInfo* u = ChrW(t)->st;
     s32 flag = 0;
@@ -5954,9 +6074,8 @@ void fn_80014BA8(void) {
     for (i = 0; i < 12; i++) {
         Task* t = fn_800215EC(i);
         if (t != 0) {
-            Wk_80014BA8* w = t->work;
-            u8 id = *w->x4c;
-            u32 fl = lbl_80309DE4[(s8)*w->x4c]->bits;
+            ChrInfo* u = ChrW(t)->st;
+            u32 fl = lbl_80309DE4[(s8)u->id]->bits;
             u16 m = 0;
             if (!(fl & 0x80)) m |= 0x1;
             if (!(fl & 0x200)) m |= 0x20;
@@ -5965,7 +6084,7 @@ void fn_80014BA8(void) {
             if (!(fl & 0x4000)) m |= 0x4;
             if (!(fl & 0x40000)) m |= 0x100;
             if (m != 0) {
-                fn_8002923C(id, m, 0);
+                fn_8002923C(u->id, m, 0);
             }
         }
     }
