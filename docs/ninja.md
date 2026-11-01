@@ -174,6 +174,7 @@ Owner-approved exception (2026-11-01): pointer casts are allowed where the origi
 (an unsigned field of the s16 chunk stream, a row of a byte-strided motion key table, a byte offset in an NGDL
 header), each with a comment naming the field. That merged fn_802A1374, fn_802A7894, fn_802AB340, fn_80293AF4,
 fn_80293C2C, fn_80294100, fn_80294770 and fn_802A8AE4; NjMotState got its mdata/size/stride/nbFrame fields.
+Later the same day: fn_802A9040, the NGDL twin of fn_80293C2C (duplicate group 125), written the same way.
 Game code stays cast-free.
 
 ### Library pass (2026-10-31)
@@ -190,8 +191,8 @@ Game code stays cast-free.
   optimizer pragmas, inline and wrapper forms) all merge the copies, so this looks like a compiler build we don't
   have rather than a source form. `-O1` matches only njSin/njCos/njTan (checked over the whole unit: no file
   boundary there). A ready test case for other compilers is two FIFO drawers, fn_8029681C and fn_8028A0F4.
-- Still needing a pointer cast (not merged): fn_802A9040 / fn_802A8F48 (the NgCtx cursor advances by bytes but
-  feeds pointer arrays), fn_802A7894, fn_802AC31C, fn_80287610, fn_80287F00, fn_80289390 (an `lhz` strip size read
+- Still needing a pointer cast (not merged): fn_802A8F48 (the NgCtx cursor advances by bytes but
+  feeds pointer arrays; fn_802A9040 is merged under the stream-cast rule), fn_802A7894, fn_802AC31C, fn_80287610, fn_80287F00, fn_80289390 (an `lhz` strip size read
   from an `s16` stream), fn_802A93CC / fn_802A9C20 / fn_80293AF4 (generic key tables), fn_8029CB1C (flat matrix
   passed as `Mtx`).
 - Agent notes per function: `build/agents/j01`-`j11/NOTES.md` on the machine that ran the pass.
@@ -228,6 +229,10 @@ Logged, not integrated as matches. Functions marked * are in the unit as NonMatc
     an inline function, `register` pointers, pointer parameters per write and per call, nested
     `POS2`+`POS1` helpers, inlines defined after use, indexed and pointer loops. Test files are in
     `build/agents/fifo/` (local).
+- Ambient colour setters `fn_802871D8` / `fn_8028B784` (duplicate group 74, one per light table):
+  instructions exact, but the original scales each argument in its own register (`fmuls f1,f1,f4`) where
+  MWCC picks a fresh one (24 lines, registers only). Plain, `*=`-in-condition, temp, inline-helper and
+  macro forms all give the same diff; no GC compiler from 1.0 to 3.0a5.2 matches it.
 - Register allocation or scheduling only: `fn_80286EE8`, `fn_8028B498`, `fn_80288C68`,
   `fn_8028F884`, `fn_8028FD98`, `fn_8028FEA4`, `fn_802904E8`, `fn_802907D0`, `fn_80290918`,
   `fn_80291700` (Bezier), `fn_802917C8` (Catmull-Rom), `fn_80291888`, `fn_802918DC`, `fn_80291978`,
