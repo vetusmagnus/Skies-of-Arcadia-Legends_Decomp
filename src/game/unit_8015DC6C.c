@@ -630,7 +630,8 @@ typedef struct {
 } Obj4;
 extern void* lbl_803470DC;
 extern void* lbl_803470D8;
-extern void* lbl_803470E4;
+extern Obj4* lbl_803470E4;
+extern Obj4* lbl_803470D0;
 extern void* lbl_803470E0;
 void fn_801D6944(void* p);
 void fn_801E17E0(void* p);
@@ -948,7 +949,7 @@ extern s32 fn_801E48A8(void* h);
 extern void* fn_801E4984(void* h, s32 i);
 extern void MemCopy(void* dst, const void* src, s32 size);
 extern void* fn_801E1584(void* h, s32 size);
-extern void** fn_801DB124(void* p);
+extern Obj4* fn_801DB124(void* p);
 extern void fn_801D6998(void* dst, void* src);
 typedef struct {
     f32 x0;            /* 0x00 */
@@ -5401,6 +5402,50 @@ void fn_80185864(void) {
     }
 }
 
+extern const s32 lbl_802B4450[];
+extern const s32 lbl_802B447C[];
+extern void fn_801D4C54(Sprite* s, f32 a, f32 b, f32 c, f32 d, s32 e, s32 f, s32 g);
+extern void fn_801D5A50(Sprite* s, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6, s32 a, s32 b, void* c);
+extern void fn_801BCFAC(Sprite* s, s32 id);
+extern void fn_801B71E8(s16 a, s32 b, s16 c);
+extern void fn_801B7274(s16 a, s32 b, s16 c, s32 d, s16 e);
+extern void fn_800DDE98(f32 f, f32 f2, s16 a, s32 b, s16 c, s32 d, void* e, s32 g);
+void fn_801863E8(s16 dx, s32 b, s32 mode) {
+    s32 arr[11] = {0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0};
+    s32 idx[6] = {0, 2, 3, 8, 9, 10};
+    Sprite* s;
+    f32 y;
+    f32 z;
+    s32 i;
+    s32 ix;
+    y = -4090.0f;
+    z = TextGetZ();
+    TextPushColor();
+    TextSetColor(0xff201008);
+    for (i = 0; i < 6; i++) {
+        s = fn_801D68C4(lbl_803470DC, idx[i]);
+        ix = s->x;
+        s->x = ix + dx;
+        if (arr[idx[i]] == 0) {
+            if (mode > 1 || (mode <= 1 && idx[i] != 9 && idx[i] != 10)) {
+                fn_801D4C54(s, y, 0.0f, 1.0f, 1.0f, 0, 0, 1);
+            }
+        } else {
+            fn_801BCFAC(s, 0x5d);
+            fn_801D5A50(s, 1.0f, 1.0f, y, 0.0f, 1.0f, 1.0f, 0, 0, lbl_803470E4->x4->x20);
+        }
+        ix = s->x;
+        s->x = ix - dx;
+        y += 0.010000001f;
+    }
+    fn_801B71E8(dx + 0x134, 0xc1, b);
+    fn_801B7274(dx + 0x14e, 0x8a, dx + 0x203, 0xa9, b);
+    fn_800DDE98(1.0f, y, dx + 0x2a, 0xa1, dx + 0x12a, 0x1a1, lbl_803470D0->x4->x20, 0);
+    TextSetZ(-27.5f);
+    TextPopColor(1);
+    TextSetZ(z);
+}
+
 void fn_80186E20(Rec_80186E20* r, u8 c, s8 b, u8 a, f32 v)
 {
     r->a = a;
@@ -6609,7 +6654,7 @@ void fn_80186348(void)
         lbl_803470D8 = 0;
     }
     if (lbl_803470E4 != 0) {
-        fn_802275A4(((Obj4*)lbl_803470E4)->x4->x20, 0);
+        fn_802275A4(lbl_803470E4->x4->x20, 0);
         fn_801E17E0(lbl_803470E4);
         lbl_803470E4 = 0;
     }
@@ -7795,7 +7840,7 @@ void fn_801866B4(void) {
     MemCopy(buf, src, a);
     lbl_803470E0 = fn_801E1584(lbl_803470E0, b - a);
     lbl_803470E4 = fn_801DB124(buf);
-    fn_80227810(*(void**)((u8*)((void**)lbl_803470E4)[1] + 0x20));
+    fn_80227810(lbl_803470E4->x4->x20);
     lbl_803470DC = fn_801E1C7C(0x14);
     s0 = fn_801E4984(lbl_803470E0, 0);
     fn_801D6998(lbl_803470DC, s0);
