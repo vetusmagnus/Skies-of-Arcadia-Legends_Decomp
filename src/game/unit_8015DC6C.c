@@ -4086,6 +4086,47 @@ void fn_8017C6BC(void)
     fn_801954D0(0);
 }
 
+typedef struct Win_8017DCB4 { s32 hide; u8 pad4[4]; UiObj obj; u8 pad_[0xbc - 8 - sizeof(UiObj)]; } Win_8017DCB4;
+typedef struct Pnl_8017DCB4 { u8 pad[0x24]; Win_8017DCB4* in; } Pnl_8017DCB4;
+typedef struct CampW_8017DCB4 { u8 pad[0xc]; s8 count; u8 pad1[3]; Pnl_8017DCB4* pnl[0xcf]; } CampW_8017DCB4;
+
+void fn_8017DCB4(void) {
+    UiObj* o;
+    s32 i;
+    UiObj* a;
+    f32 y;
+
+    a = &camp_work.pnl[lbl_80307638[1].cur[0].sel]->win->obj;
+    fn_80199BB8(a, -8.0f, 61.0f);
+    fn_80199BAC(a, -8.0f, 61.0f);
+    o = &camp_work.pnl[0x78 + lbl_80307638[4].cur[0].sel]->win->obj;
+    fn_80199BB8(o, -8.0f, 125.0f);
+    fn_80199BAC(o, -8.0f, 125.0f);
+    o = &camp_work.pnl[0x6e]->win->obj;
+    fn_80199BB8(o, -348.0f, 189.0f);
+    fn_80199BAC(o, -348.0f, 189.0f);
+    o = &camp_work.pnl[0x6f]->win->obj;
+    fn_80199BB8(o, -348.0f, 253.0f);
+    fn_80199BAC(o, -348.0f, 253.0f);
+    for (i = 0; i < 5; i++) {
+        o = &camp_work.pnl[0x7a + i]->win->obj;
+        UiObjSetLowered(o);
+        y = i * 64 + 61;
+        fn_80199BB8(o, 668.0f, y);
+        fn_80199BAC(o, 668.0f, y);
+    }
+    for (i = 5; i < 8; i++) {
+        o = &camp_work.pnl[0x7a + i]->win->obj;
+        UiObjSetLowered(o);
+        y = (i - 5) * 64 + 61;
+        fn_80199BB8(o, 668.0f, y);
+        fn_80199BAC(o, 668.0f, y);
+    }
+    o = &camp_work.pnl[0x60]->win->obj;
+    fn_80199BB8(o, 632.0f, 480.0f);
+    fn_80199BAC(o, 632.0f, 480.0f);
+}
+
 s32 fn_8018126C(void) {
     CampReq req;
     s32 off = lbl_80307638[1].cur[0].sel;
@@ -4475,6 +4516,55 @@ void fn_801825D8(void) {
 
 extern void fn_801854B8(void);
 static inline UiObj* PnlObj(s32 i) { return &camp_work.pnl[i]->win->obj; }
+
+typedef struct Win_80184A78 { s32 hide; u8 pad4[4]; UiObj obj; u8 pad_[0xbc - 8 - sizeof(UiObj)]; } Win_80184A78;
+typedef struct Pnl_80184A78 { u8 pad[0x24]; Win_80184A78* in; } Pnl_80184A78;
+typedef struct CampW_80184A78 { u8 pad[0xc]; s8 count; u8 pad1[3]; Pnl_80184A78* pnl[0xcf]; } CampW_80184A78;
+
+
+void fn_80184A78(void) {
+    UiObj* p;
+    s32 i;
+    s32 k;
+    UiObj* o;
+    f32 y;
+
+    for (i = 0; i < camp_work.count; i++) {
+        o = &camp_work.pnl[i]->win->obj;
+        y = i * 64 + 61;
+        UiObjSetLowered(o);
+        fn_80199BB8(o, -348.0f, y);
+        fn_80199BAC(o, -348.0f, y);
+    }
+    if (fn_801953B8() != 0) {
+        p = &camp_work.pnl[4]->win->obj;
+        UiObjSetLowered(p);
+        fn_80199BB8(p, -348.0f, 317.0f);
+        fn_80199BAC(p, -348.0f, 317.0f);
+        p = &camp_work.pnl[0x6c]->win->obj;
+        UiObjSetRaised(p);
+        fn_80199BB8(p, 668.0f, 317.0f);
+        fn_80199BAC(p, 668.0f, 317.0f);
+        p = &camp_work.pnl[0x6d]->win->obj;
+        UiObjSetRaised(p);
+        fn_80199BB8(p, 668.0f, 317.0f);
+        fn_80199BAC(p, 668.0f, 317.0f);
+    }
+    for (i = 0; i < camp_work.count; i++) {
+        for (k = 0; k < 5; k++) {
+            p = &camp_work.pnl[i * 5 + 6 + k]->win->obj;
+            y = i * 64 + 61;
+            UiObjSetRaised(p);
+            fn_80199BB8(p, 668.0f, y);
+            fn_80199BAC(p, 668.0f, y);
+        }
+    }
+    if (fn_80194CB8() == 1) {
+        o = &camp_work.pnl[5]->win->obj;
+        fn_80199BB8(o, -348.0f, 381.0f);
+        fn_80199BAC(o, -348.0f, 381.0f);
+    }
+}
 
 s32 fn_801852F8(void) {
     CampCtrl* c;
