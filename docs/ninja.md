@@ -397,6 +397,12 @@ Logged, not integrated as matches. Functions marked * are in the unit as NonMatc
   `fn_80291458` (Bezier point via `pow` and the binomial `fn_802915C8`; 52 lines with the first `pow` result
   in an `f64` temp, which gives the right instruction count). None responds to declaration order or the
   approved optimizer pragmas.
+- Inline-argument copies (2026-11-01): `fn_802A1160` (35 lines) and the NGDL recorder start `fn_802A8D64`
+  both look like a body inlined from a helper, and in both the original keeps a register copy of each value
+  passed in (`mr r10,r4` for the vertex base; `mr r27,r3` for the buffer and `mr r28,r9` for the NGGD block)
+  where 1.3.2nj coalesces the parameter with its argument. Written as `static inline` helpers, the rest of the
+  code lines up, so this may be a second compiler-side difference like the copy pattern rather than a source
+  form. Not investigated in the compiler yet.
 - `fn_80286EE8` / `fn_8028B498` (light update, duplicate group 40): 23 lines: the walker/base copy of the table
   address goes the other way and `base + 0x30c` isn't hoisted; best form in `docs/near/fn_80286EE8.c`.
 - Register allocation or scheduling only: `fn_80288C68`,
