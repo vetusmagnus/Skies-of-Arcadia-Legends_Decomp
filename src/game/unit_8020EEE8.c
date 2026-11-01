@@ -1659,7 +1659,7 @@ void fn_80210338(void)
     }
 }
 
-s32 fn_802114AC(s32 a, s32 b)
+s32 fn_802114AC(s32 a, u8* b)
 {
     Slot8 *arr = lbl_8030CEA0.x14;
     Slot8 *q = arr;

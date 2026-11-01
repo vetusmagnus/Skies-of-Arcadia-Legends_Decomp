@@ -910,6 +910,40 @@ void fn_801F5334(s8 n) {
     }
 }
 
+/* A string argument: its byte length (padded to words), then the characters. */
+static inline u8* StrText(void* p)
+{
+    u8* b = p;
+    return b + 4;
+}
+
+static inline void* StrSkip(void* p)
+{
+    u32* w = p;
+    return w + ((*w >> 2) + 1);
+}
+
+s32 fn_802114AC(s32 id, u8 *name);
+extern const char lbl_802D4720[];
+
+s32 fn_801F57F8(u32 flags, Scpt *cmd)
+{
+    if (flags & 1) {
+        f32* p;
+        s32 id;
+        u8* name;
+        p = cmd->cur.f + 1;
+        id = ReadInt(&p);
+        name = StrText(p);
+        p = StrSkip(p);
+        cmd->cur.f = p;
+        if (fn_802114AC(id, name) == 0) {
+            fn_801DBE1C(lbl_802D4720);
+        }
+    }
+    return 0;
+}
+
 s32 fn_801F58B0(void) {
     return 1;
 }
@@ -7819,8 +7853,6 @@ typedef struct Cmd { u8 pad_00[0x1c]; float *cur; } Cmd;
 /* One running script command (unit_801F5334.c); its argument stream mixes floats, ints and
  * length-prefixed strings, so the cursor is kept as a float pointer and the string helpers
  * take it as void*. */
-s32 fn_802114AC(s32 id, u8 *name);
-extern const char lbl_802D4720[];
 typedef struct Track {
     u32 kind;       /* 0x00 */
     u8 pad04[0x14];
@@ -7884,43 +7916,6 @@ s32 fn_80207554(u32 flags, Scpt *c) {
     }
     return 0;
 }
-
-#ifdef NONMATCHING
-/* A string argument: its byte length (padded to words), then the characters. */
-static inline u8* StrText(void* p)
-{
-    u8* b = p;
-    return b + 4;
-}
-
-static inline void* StrSkip(void* p)
-{
-    u32* w = p;
-    return w + ((*w >> 2) + 1);
-}
-#endif
-
-/* Matches, but it passes the name pointer to fn_802114AC, which unit_8020EEE8 defines with an s32
- * second parameter (stored in Slot8.b); kept here until that slot gets its real type. */
-#ifdef NONMATCHING
-s32 fn_801F57F8(u32 flags, Scpt *cmd)
-{
-    if (flags & 1) {
-        f32* p;
-        s32 id;
-        u8* name;
-        p = cmd->cur.f + 1;
-        id = ReadInt(&p);
-        name = StrText(p);
-        p = StrSkip(p);
-        cmd->cur.f = p;
-        if (fn_802114AC(id, name) == 0) {
-            fn_801DBE1C(lbl_802D4720);
-        }
-    }
-    return 0;
-}
-#endif
 
 #ifdef NONMATCHING
 s32 fn_8020527C(u32 flags, Script* s)

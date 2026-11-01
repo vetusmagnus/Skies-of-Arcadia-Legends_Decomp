@@ -6,7 +6,7 @@
 /* lbl_8030CEA0: the 0x1920-byte work area shared by the event/script, shop and camera code. */
 typedef struct {
     s32 a;
-    u32 b;
+    u8* b;          /* name */
 } Slot8;
 
 /* One entry of the loaded archive's directory: data offset (low two bits are flags) and name. */
