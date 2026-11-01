@@ -116,7 +116,9 @@ typedef struct HNode {
 } HNode;
 extern void fn_8000F6F8(HNode* n, u8 kind, s32 a, s32 b, s32 c);
 typedef struct Entry16 {
-    u8 pad[8];
+    u8 pad[4];
+    s8 x4;              /* 0x4: partner slot */
+    u8 pad5[3];
     s8 mode;
     u8 b9;
     u8 pad2[6];
@@ -415,7 +417,9 @@ typedef struct SysSub {
     u8 pad4[0x38 - 4];
 } SysSub;
 typedef struct SysObj {
-    u8 pad0[0x5a];
+    u8 pad0[0x50];
+    Task* owner;        /* 0x50: the character it belongs to */
+    u8 pad54[0x5a - 0x54];
     s16 x5a;            /* 0x5a */
     s16 x5c;            /* 0x5c */
     u8 pad5e[0x68 - 0x5e];
@@ -498,11 +502,6 @@ typedef struct { s16 x0; u8 pad[0x16]; Ent ent[12]; } Tbl;
 extern Tbl lbl_803097F0;
 /* lbl_80309730: 12 rows of 16 bytes, one per character slot; +0x8 is the slot mode
  * (0 = unused, see fn_80010538). */
-typedef struct Entry16B {
-    u8 pad[8];
-    s8 mode;
-    u8 pad2[7];
-} Entry16B;
 typedef struct {
     f32 x0;
     u8 pad4[8];
@@ -1315,7 +1314,7 @@ extern s32 fn_8000AD30(u8 dir);
     return 1;
 extern void fn_80032BBC(s8, s32);
 extern void fn_80032B6C(s8, s32);
-extern s16 fn_8001D41C(s16* cur, s16* other);
+s16 fn_8001D41C(s16* cur, s16* other);
 extern void fn_80053F38(s8, s32);
 
 typedef struct {
@@ -4322,6 +4321,52 @@ void fn_8001C474(Task* t) {
     }
 }
 
+static inline Task* FindChr3(s8 key) {
+    s8 i;
+    for (i = 0; i < 14; i++) {
+        Task* p = lbl_80309E24[i];
+        if (p != 0) {
+            ChrWork* w = p->work;
+            if (w->st->id == key) return lbl_80309E24[i];
+        }
+    }
+    return 0;
+}
+static inline Task* FindChrOr0(s8 key) {
+    Task* r = FindChr3(key);
+    if (r != 0) return r;
+    return FindChr3(0);
+}
+s16 fn_8001D41C(s16* a, s16* b) {
+    Task* t;
+    s16 tb;
+    ChrInfo* u;
+    SysObj* s;
+    if (lbl_80347394 != 0) {
+        s = lbl_80347394->work;
+        u = ChrW(s->owner)->st;
+        *a = u->id;
+        *b = u->target;
+    } else {
+    if (lbl_8034733C <= 0) {
+        *a = 0;
+        *b = 0;
+        return -1;
+    }
+    *a = lbl_80347334;
+    *b = lbl_80309730[*a].x4;
+    if (*b < 0 || *b >= 12) *b = *a;
+    tb = *b;
+    t = FindChrOr0(tb);
+    if (ChrW(t)->st->xf0 & 4) {
+        *b = *a;
+        *a = tb;
+        return 1;
+    }
+    }
+    return 0;
+}
+
 void fn_8001DD00(ChrInfo* o, s8 v) {
     s8 i;
     s8 j;
@@ -6024,10 +6069,10 @@ void fn_8001D14C(ChrInfo* o) {
 
 void fn_8001D5C0(s16* a, s16* b) {
     if (lbl_80347394) {
-        Task* t2 = FLD(lbl_80347394->work, 0x50, Task*);
-        u8* d = FLD(t2->work, 0x4c, u8*);
-        *a = (s8)d[0];
-        *b = (s8)d[4];
+        SysObj* s = lbl_80347394->work;
+        ChrInfo* d = ChrW(s->owner)->st;
+        *a = d->id;
+        *b = d->target;
         return;
     }
     *a = lbl_80347330;
