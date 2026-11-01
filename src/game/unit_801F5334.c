@@ -1273,6 +1273,50 @@ void fn_8020EEE8(s32 bank, s8 arg1, s8 id, s32 unused) {
     }
 }
 
+s32 fn_8020EF30(s32 a)
+{
+    Scpt s;
+    Fx_801F9120 *w;
+
+    w = fn_801E1A2C(1, 0x44);
+    if (w == 0) {
+        return 0;
+    }
+    s.work.fx_801F9120 = w;
+    w->x18 = a;
+    w->x1c = w->x18;
+    w->ev.hd.kind = 0;
+    fn_80211058(&s, 9, w->x18, 2, lbl_8030CEA0.x08, &w->ev);
+    s.owner = 0x63;
+    s.kind = 1;
+    s.cur.i = 0;
+    s.cnt = 0;
+    fn_80210F74(&s);
+    return 1;
+}
+
+s32 fn_8020EFD4(s32 a)
+{
+    Scpt s;
+    Fx_801F9120 *w;
+
+    w = fn_801E1A2C(1, 0x44);
+    if (w == 0) {
+        return 0;
+    }
+    s.work.fx_801F9120 = w;
+    w->x18 = a;
+    w->x1c = w->x18;
+    w->ev.hd.kind = 0;
+    fn_80211058(&s, 9, w->x18, 1, lbl_8030CEA0.x08, &w->ev);
+    s.owner = 0x62;
+    s.kind = 1;
+    s.cur.i = 0;
+    s.cnt = 0;
+    fn_80210F74(&s);
+    return 1;
+}
+
 s32 fn_8020F154(s16 a, s32 b)
 {
     Scpt c2;
