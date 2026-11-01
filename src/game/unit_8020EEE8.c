@@ -136,19 +136,21 @@ typedef struct Work8020 {
     s32 x3c;
     u8 pad40[0x4];
 } Work8020;
-typedef struct Part { u8 pad00[0x2c]; s32 x2c; u8 pad30[0x138]; s16 x168; } Part;
-typedef struct Sub { u8 pad00[8]; Part *x8; u8 pad0c[0x1a0 - 0xc]; s32 x1a0; } Sub;
+typedef struct Sub { u8 pad00[8]; struct Actor *x8; u8 pad0c[0x1a0 - 0xc]; s32 x1a0; } Sub;
 /* An actor: fn_8015F1A0's result, lbl_80347450, and the work of a task from fn_8010A164. */
 typedef struct Actor {
     u8 pad00[0x2c];
     s32 x2c;
-    u8 pad30[0x14];
+    u8 pad30[8];
+    NJS_POINT3 pos;     /* 0x38 */
     s32 x44;
     s32 x48;
     s32 x4c;
     u8 pad_50[0xb0];
     s32 x100;
-    u8 pad104[0x1c8 - 0x104];
+    u8 pad104[0x168 - 0x104];
+    s16 x168;           /* 0x168 */
+    u8 pad16a[0x1c8 - 0x16a];
     struct Info *x1c8;
     u8 pad1cc[0x1d8 - 0x1cc];
     Sub *x1d8;
@@ -2242,6 +2244,124 @@ void fn_80210D7C(s32 id)
     }
 }
 void fn_80207738(s32 a, s32 b);
+
+/* One node of a scripted move path (0x30 bytes). */
+typedef struct MvNode {
+    f32 x;       /* 0x00 */
+    f32 y;       /* 0x04 */
+    f32 z;       /* 0x08 */
+    u8 pad0c[0xc];
+    f32 x18;     /* 0x18 */
+    s32 x1c;     /* 0x1c */
+    s32 x20;     /* 0x20 */
+    f32 x24;     /* 0x24 */
+    s32 x28;     /* 0x28 */
+    s32 x2c;     /* 0x2c */
+} MvNode;
+/* fn_8020F3D4's command work: the event message, the actor id and the path. */
+typedef struct SWork {
+    Ev ev;           /* 0x00 */
+    s32 x14;         /* 0x14 */
+    u16 id;          /* 0x18 */
+    u8 pad1a[2];
+    u32 count;       /* 0x1c */
+    MvNode* nodes;   /* 0x20 */
+    struct Spline* result; /* 0x24 */
+} SWork;
+void fn_8016058C(u32 n, MvNode* nodes, Actor* o);
+struct Spline* fn_80165EE4(u32 n, MvNode* nodes, NJS_POINT3* pos);
+static inline s32 IsSelf(u16 id)
+{
+    return id == 0xffff;
+}
+
+/* Moves actor `id` along the `count` path nodes passed after it (a spline through them). */
+s32 fn_8020F3D4(s32 id, s32 count, MvNode* first, ...)
+{
+    va_list ap;
+    Scpt s2;
+    Scpt s1;
+    Actor* o;
+    Obj10A* tk;
+    SWork* w;
+    MvNode* nodes;
+    s32 i;
+    if (count == 0) return 0;
+    do {
+        if (IsSelf(id)) {
+            o = lbl_80347450;
+        } else {
+            tk = fn_8010A164(id);
+            if (tk == NULL) break;
+            o = tk->x24;
+        }
+        if (o != NULL && o->x1d8->x8 == NULL) {
+            if (fn_80210860(&s1, id) != 0) {
+                s1.owner = 0x1a;
+                s1.kind = 1;
+                s1.cur.i = NULL;
+                s1.cnt = 0;
+                fn_80210F74(&s1);
+            }
+        }
+    } while (0);
+    w = fn_801E1A2C(1, 0x44);
+    if (w == NULL) return 0;
+    s2.work.p = w;
+    w->id = id;
+    w->ev.hd.kind = 0;
+    w->count = count;
+    nodes = fn_801E1A2C(1, count * 0x30);
+    if (nodes == NULL) {
+        if (w != NULL) fn_801E1784(w);
+        return 0;
+    }
+    w->nodes = nodes;
+    w->nodes[0] = *first;
+    va_start(ap, first);
+    for (i = 1; i < count; i++) {
+        w->nodes[i] = *va_arg(ap, MvNode*);
+    }
+    if (w->id == 0xffff) {
+        o = lbl_80347450;
+    } else {
+        tk = fn_8010A164(w->id);
+        if (tk == NULL) return 0;
+        o = tk->x24;
+    }
+    if (o == NULL) return 0;
+    if (o->x1d8 != NULL) {
+        f32 px, py, pz;
+        Actor* t;
+        f32* save;
+        struct Spline* r;
+        s32 j;
+        t = o->x1d8->x8;
+        if (t == NULL) t = o;
+        px = t->pos.x;
+        py = t->pos.y;
+        pz = t->pos.z;
+        save = fn_801E1A2C(1, w->count * 4);
+        for (j = 0; j < w->count; j++) save[j] = w->nodes[j].y;
+        fn_8016058C(w->count, w->nodes, t);
+        r = fn_80165EE4(w->count, w->nodes, &t->pos);
+        w->result = r;
+        if (r == NULL) return 0;
+        for (i = 0; i < w->count; i++) w->nodes[i].y = save[i];
+        if (save != NULL) fn_801E1784(save);
+        t->pos.x = px;
+        t->pos.y = py;
+        t->pos.z = pz;
+    }
+    w->x14 = 1;
+    fn_80211058(&s2, 6, w->id, 6, lbl_8030CEA0.x08, &w->ev);
+    s2.owner = 0x23;
+    s2.kind = 1;
+    s2.cur.i = NULL;
+    s2.cnt = 0;
+    fn_80210F74(&s2);
+    return 1;
+}
 
 s32 fn_8020F7F8(s32 id, s32 arg) {
     Scpt m2;
