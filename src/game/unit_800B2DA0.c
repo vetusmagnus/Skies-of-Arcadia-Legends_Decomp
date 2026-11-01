@@ -515,7 +515,10 @@ typedef struct {
 } MapInfo2;
 extern MapInfo2 lbl_80311AC0;
 typedef struct {
-    u8 pad0[0x24];
+    u8 pad0[0x18];
+    u8 flags;       /* 0x18 */
+    u8 state;       /* 0x19 */
+    u8 pad1a[0x24 - 0x1a];
     char **tab;     /* 0x24 name slots */
 } Mgr_800C8F3C;
 extern Mgr_800C8F3C *lbl_80346D70;
@@ -523,7 +526,7 @@ void *fn_8015F1A0(s32 id);
 void fn_801003F4(void *p);
 extern void *lbl_803475A8;
 void *fn_802268E8(void *list, void *fn);
-void fn_800C9144(void);
+void fn_800C9144(Mgr_800C8F3C *t);
 typedef struct {
     u32 a;
     u32 b;
@@ -4250,7 +4253,7 @@ void fn_800C81BC(int unused, u8* p) {
 }
 
 void fn_800C9060(void) {
-    ((u8*)lbl_80346D70)[0x19] = 2;
+    lbl_80346D70->state = 2;
 }
 
 s32 fn_800CB610(void *unused, Obj_800CB610 *obj, s16 *data, s16 n) {
@@ -5710,7 +5713,7 @@ s32 fn_800C8D90(void) {
     return 0;
 }
 
-void fn_800C8F3C(s32 idx) {
+static inline void MgrFreeSlot(s32 idx) {
     void *p;
     void *a;
 
@@ -5724,6 +5727,42 @@ void fn_800C8F3C(s32 idx) {
         fn_801003F4(lbl_80346D70->tab[idx]);
         fn_801E17E0(lbl_80346D70->tab[idx]);
         lbl_80346D70->tab[idx] = 0;
+    }
+}
+
+static inline void MgrFreeAll(void) {
+    s32 i;
+
+    for (i = 0; i < 32; i++) {
+        if (lbl_80346D70->tab[i] != 0) {
+            MgrFreeSlot(i);
+        }
+    }
+}
+
+void fn_800C8F3C(s32 idx) {
+    MgrFreeSlot(idx);
+}
+
+void fn_800C9144(Mgr_800C8F3C *t) {
+    s32 ready; /* uninitialised: the original tests whatever is left in the register */
+
+    switch (t->state) {
+    case 0:
+    case 0xFE:
+        t->state = 1;
+    case 1:
+        if (ready == 0) {
+            t->state = 2;
+        }
+        break;
+    case 2:
+        MgrFreeAll();
+        t->state = 0xFF;
+        break;
+    case 0xFF:
+        t->flags |= 0x40;
+        break;
     }
 }
 
