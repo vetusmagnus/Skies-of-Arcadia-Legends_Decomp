@@ -1947,6 +1947,73 @@ s32 fn_801DBCCC(void) {
 void fn_801DBE1C(const char *fmt, ...) {
 }
 
+void fn_801DBF90(void);
+#include "game/text.h"
+extern u32 lbl_80310B3C[]; /* story-flag bitset */
+extern s32 lbl_803475D8, lbl_80347470, lbl_803476D0, lbl_803476CC, lbl_80347674;
+extern s32 lbl_80347578, lbl_80347280, lbl_803473A4, lbl_803475B4;
+extern f32 lbl_80347488;
+extern u32 lbl_803476D4;
+extern void fn_801E1F08(void);
+extern void fn_80226170(void);
+extern void fn_80219D78(void);
+extern void fn_802281BC(s32);
+extern void fn_801C78B4(void);
+extern void fn_8022DCC4(void);
+extern void fn_801E74D0(void);
+extern void fn_801C8B18(void);
+extern void fn_801CAF30(void);
+extern void fn_80230F48(void);
+extern void fn_802938C0(void (*cb)(void));
+extern void fn_802289AC(void);
+void fn_801D7810(void);
+void fn_801DD7CC(void);
+
+void fn_801DBE88(void) {
+    u32 t;
+    u32 ms;
+    lbl_803475D8 = 0;
+    lbl_80347470 = 0;
+    lbl_803476D4 = 0;
+    lbl_803476D0 = 0;
+    lbl_803476CC = 0;
+    lbl_80347674 = 0;
+    fn_801E1F08();
+    fn_80226170();
+    fn_80219D78();
+    fn_802281BC(0x400);
+    fn_801D7810();
+    fn_801C78B4();
+    fn_8022DCC4();
+    fn_801DA1C0();
+    fn_801DD7CC();
+    DrawStateInit();
+    fn_801E74D0();
+    fn_801C8B18();
+    lbl_803475C0 = 0;
+    lbl_803475BC = 0;
+    lbl_803475B8 = 0;
+    t = OSGetTick();
+    lbl_803475C8 = t;
+    ms = *(u32 *)0x800000F8 / 4 / 1000; /* OS global: bus clock */
+    lbl_80347578 = 0;
+    t = t / ms;
+    lbl_80347488 = 3.4028235e38f;
+    lbl_803475B0 = 0;
+    lbl_80347280 = 0;
+    lbl_803473A4 = 0;
+    lbl_803475B4 = 2;
+    lbl_803475C4 = t;
+    lbl_803475C8 = t;
+    lbl_80310B3C[0x88 / 4] &= ~0x10;
+    lbl_80310B3C[0x88 / 4] |= 0x20;
+    fn_801CAF30();
+    fn_80230F48();
+    fn_802938C0(fn_801DBF90);
+    fn_802289AC();
+    TextReset();
+}
+
 void fn_801DBF90(void) {
 }
 
