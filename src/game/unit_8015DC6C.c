@@ -5460,7 +5460,7 @@ void fn_801863E8(s16 dx, s32 b, s32 mode) {
     TextSetZ(z);
 }
 
-void fn_80186E20(Rec_80186E20* r, u8 c, s8 b, u8 a, f32 v)
+void fn_80186E20(Rec_80186E20* r, s8 c, s8 b, s8 a, f32 v)
 {
     r->a = a;
     r->b = b;
