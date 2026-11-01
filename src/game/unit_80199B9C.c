@@ -32,7 +32,7 @@ typedef struct MenuPartWork {
     u8 pad1[3];
     s16 h4;           /* 0x04 */
     u16 h6;           /* 0x06: the layout index (fn_801B02F4) */
-    s32 w8;           /* 0x08 */
+    u32 w8;           /* 0x08 */
     s32 wc;           /* 0x0C */
     s32 w10;          /* 0x10 */
     u8 pad14[0x1e - 0x14];
@@ -2426,6 +2426,51 @@ void fn_801AB98C(Obj_UNIT0000 *o)
 }
 
 void fn_801AC678(ShopPart* t);
+void* fn_801BE17C(u16 id);
+s32 fn_801BDEF4(u16 id, u16 mode);
+typedef struct Ent_801AC87C { const char* a; const char* b; void* c; u16 xc; u8 pad[0x28 - 0xe]; } Ent_801AC87C;
+
+void fn_801AC87C(ShopPart* t) {
+    s32 i;
+    s32 k;
+    s32 id;
+    s32 n;
+    if (t->flag->w8 == 0) {
+        if (lbl_803471B8->buf->count == 0) {
+            TextSetColor(0xff201008);
+            TextPrint(40.0f + t->obj->o.x, 12.0f + t->obj->o.y, lbl_802EC04C[11]);
+        } else {
+            for (i = 0, k = 0; i < 6; i++, k += 0x18) {
+                n = i + t->list->page * 6;
+                id = lbl_803471B8->buf->out[n].id;
+                if (id != -1) {
+                    if (lbl_803471B8->buf->out[n].type != 0 || (s32)lbl_803471B8->buf->out[n].flag == 3) {
+                        TextSetColor(0x40201008);
+                    } else {
+                        TextSetColor(0xff201008);
+                    }
+                    TextPrint(16.0f + t->obj->o.x, 12.0f + t->obj->o.y + (f32)k, fn_801BE17C(id));
+                    TextPrintNumber(288.0f + t->obj->o.x, 12.0f + t->obj->o.y + (f32)k, fn_801BDEF4(id, 0), 0xC008);
+                }
+            }
+        }
+    } else {
+        if (lbl_803471B8->buf->count == 0) {
+            TextSetColor(0xff201008);
+            TextPrint(40.0f + t->obj->o.x, 12.0f + t->obj->o.y, lbl_802EC04C[12]);
+        } else {
+            TextSetColor(0xff201008);
+            for (i = 0; i < 6; i++) {
+                id = lbl_803471B8->buf->out[i + t->list->page * 6].id;
+                if (id != -1) {
+                    TextPrint(16.0f + t->obj->o.x, 12.0f + t->obj->o.y + (f32)(i * 24), lbl_802ED258[id].b);
+                    TextPrintNumber(288.0f + t->obj->o.x, 12.0f + t->obj->o.y + (f32)(i * 24), fn_801BDEF4(id, 1), 0xC008);
+                }
+            }
+        }
+    }
+}
+
 ShopPart* fn_801ACD38(void* arg, u16 slot) {
     ShopPart* t = fn_802267AC(arg, fn_801AC678);
     t->flag = fn_801E1A74(1, 0x58);
