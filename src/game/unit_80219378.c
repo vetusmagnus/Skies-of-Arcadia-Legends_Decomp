@@ -168,8 +168,8 @@ typedef int s32_8022B064;
 extern s32_8022B064 lbl_80347508;
 extern s32 fn_801DD078(void *a, void *b);
 extern s32 fn_801DCFA0(void *a, void *b);
-s32 fn_80225958(s32 c);
-s32 fn_8022377C(void *a, void *b, s32 r, s32 c);
+struct Xf_80224F28 *fn_80225958(struct Cmp *k);
+s32 fn_8022377C(NJS_POINT3 *out, NJS_POINT3 *in, struct Xf_80224F28 *o, struct Cmp *c);
 typedef struct Ent68 {
     u8 pad0[0x18];
     u32 *list;
@@ -507,26 +507,7 @@ typedef union Shape_802226A8 {
     } seg;
 } Shape_802226A8;
 typedef struct { Angle x, y, z; } Ang3;
-typedef struct {
-    u8 pad0[0x1c];
-    NJS_POINT3* pos;   /* 0x1c */
-    NJS_POINT3* scale; /* 0x20 */
-    Ang3* ang;         /* 0x24 */
-    NJS_POINT3* pos2;  /* 0x28 */
-    Ang3* ang2;        /* 0x2c */
-    NJS_POINT3 oPos;   /* 0x30 */
-    NJS_POINT3 oScale; /* 0x3c */
-    Ang3 oAng;         /* 0x48 */
-    NJS_POINT3 oPos2;  /* 0x54 */
-    Ang3 oAng2;        /* 0x60 */
-} Obj_80223628;
 extern void njInvertMatrix(NJS_MATRIX m);
-typedef struct V3p {
-    f32 x, y, z;
-} V3p;
-typedef struct A3 {
-    Angle x, y, z;
-} A3;
 /* A model's node tree (unit_801D24D0.c draws it with fn_801D25DC). */
 typedef struct ModelNode ModelNode;
 void fn_801D25DC(ModelNode *n);
@@ -535,19 +516,32 @@ typedef struct Shape_80224F28 {
     s16 kind;
 } Shape_80224F28;
 typedef struct Xf_80224F28 {
-    u8 pad0[8];
+    u8 pad0[6];
+    u16 flags;          /* 0x06 */
     Shape_80224F28 *shape;
     u8 padc[0x10];
-    V3p *pos;
-    V3p *scale;
-    A3 *rot;
-    V3p *pos2;
-    A3 *rot2;
-    u8 pad30[0x6c - 0x30];
+    NJS_POINT3 *pos;    /* 0x1c */
+    NJS_POINT3 *scale;  /* 0x20 */
+    Ang3 *rot;          /* 0x24 */
+    NJS_POINT3 *pos2;   /* 0x28 */
+    Ang3 *rot2;         /* 0x2c */
+    NJS_POINT3 oPos;    /* 0x30 */
+    NJS_POINT3 oScale;  /* 0x3c */
+    Ang3 oAng;          /* 0x48 */
+    NJS_POINT3 oPos2;   /* 0x54 */
+    Ang3 oAng2;         /* 0x60 */
     s16 near[0x10];     /* 0x6c: the parts to try next when this one misses */
     s16 nnear;          /* 0x8c */
     u16 key;            /* 0x8e */
 } Xf_80224F28;
+static inline s16 XfFind(Xf_80224F28 *r, u16 key, s16 n) {
+    int i;
+    for (i = 0; i < n; r++, i++) {
+        if (r->key == key) return i;
+    }
+    return -1;
+}
+
 /* A collision query's result: the triangle hit and what it belongs to. */
 typedef struct Cmp {
     NJS_POINT3 v[3];
@@ -1065,6 +1059,103 @@ u32 fn_80223228(u16 n)
     q = n / 1000;
     if (q == 0) return r;
     return r + Digit(lbl_802F8A5C, q);
+}
+
+void fn_80223628(NJS_POINT3* out, NJS_POINT3* in, Xf_80224F28* o);
+extern void fn_801D24D0(NJS_POINT3* out, NJS_POINT3* in, ModelNode* model, Cmp* e);
+
+s32 fn_8022377C(NJS_POINT3* out, NJS_POINT3* in, Xf_80224F28* o, Cmp* c)
+{
+    s32 ret = 0;
+    Cmp e;
+    if (out != in) {
+        out->x = in->x;
+        out->y = in->y;
+        out->z = in->z;
+    }
+    if (o->flags != 0) {
+        Shape_80224F28* p = o->shape;
+        if (p != 0) {
+            if ((o->flags & 4) && p->kind == 2) {
+                e.w32 = c->w32;
+                njPushMatrixEx();
+                fn_80286EE8();
+                fn_8028B498();
+                njUnitMatrix(0);
+                njTranslate(0, o->pos->x, o->pos->y, o->pos->z);
+                njRotateZXY(0, o->rot->x, o->rot->y, o->rot->z);
+                njScale(0, o->scale->x, o->scale->y, o->scale->z);
+                njTranslate(0, o->pos2->x, o->pos2->y, o->pos2->z);
+                njRotateZXY(0, o->rot2->x, o->rot2->y, o->rot2->z);
+                fn_801D24D0(out, in, p->p0, &e);
+                njPopMatrixEx();
+                ret = 1;
+            } else if (o->flags & 3) {
+                fn_80223628(out, in, o);
+                ret = 1;
+            }
+        }
+    }
+    return ret;
+}
+
+Xf_80224F28 *fn_80225958(Cmp *k) {
+    Slot *g = lbl_8034752C;
+    Xf_80224F28 *base;
+    Xf_80224F28 *rec = 0;
+    int gi;
+    int ri;
+    s32 i;
+    u16 key;
+
+    if (k->slot >= 0) {
+        g += k->slot;
+        base = g->p0;
+        if (base != 0 && g->key8 == k->group) {
+            if (k->idx >= 0) {
+                rec = &base[k->idx];
+                if (rec->key != k->key) rec = 0;
+            } else {
+                ri = XfFind(base, k->key, g->count);
+                if (ri >= 0) {
+                    k->idx = ri;
+                    rec = &base[ri];
+                }
+            }
+        } else {
+            k->slot = -1;
+        }
+    } else {
+        key = k->key;
+        if (k->group != 0xffff) {
+            gi = fn_80225E58(lbl_8034752C, lbl_8034752A, k->group);
+            if (gi >= 0) {
+                g += gi;
+                base = g->p0;
+                ri = XfFind(base, key, g->count);
+                if (ri >= 0) {
+                    k->slot = gi;
+                    k->idx = ri;
+                    rec = &base[ri];
+                }
+            }
+        } else {
+            for (i = 0; i < lbl_8034752A; g++, i++) {
+                base = g->p0;
+                if (base != 0) {
+                    ri = XfFind(base, key, g->count);
+                    if (ri >= 0) {
+                        rec = &base[ri];
+                        k->group = g->key8;
+                        k->slot = i;
+                        k->idx = ri;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    return rec;
 }
 
 void fn_802260E8(void *p)
@@ -1628,9 +1719,9 @@ void fn_8021EEF4(DrawState *ds, f32 v, s16 kind)
     }
 }
 
-s32 fn_802238E4(void *a, void *b, s32 c)
+s32 fn_802238E4(NJS_POINT3 *a, NJS_POINT3 *b, Cmp *c)
 {
-    s32 r = fn_80225958(c);
+    Xf_80224F28 *r = fn_80225958(c);
     if (r != 0) {
         return fn_8022377C(a, b, r, c);
     }
@@ -3079,7 +3170,7 @@ void* fn_802226A8(NJS_MATRIX m, NJS_POINT3* scale, void* p)
     return p;
 }
 
-void fn_80223628(NJS_POINT3* out, NJS_POINT3* in, Obj_80223628* o)
+void fn_80223628(NJS_POINT3* out, NJS_POINT3* in, Xf_80224F28* o)
 {
     NJS_MATRIX m;
     NJS_POINT3 p;
@@ -3093,10 +3184,10 @@ void fn_80223628(NJS_POINT3* out, NJS_POINT3* in, Obj_80223628* o)
     njCalcPoint(m, in, &p);
     njUnitMatrix(m);
     njTranslate(m, o->pos->x, o->pos->y, o->pos->z);
-    njRotateZXY(m, o->ang->x, o->ang->y, o->ang->z);
+    njRotateZXY(m, o->rot->x, o->rot->y, o->rot->z);
     njScale(m, o->scale->x, o->scale->y, o->scale->z);
     njTranslate(m, o->pos2->x, o->pos2->y, o->pos2->z);
-    njRotateZXY(m, o->ang2->x, o->ang2->y, o->ang2->z);
+    njRotateZXY(m, o->rot2->x, o->rot2->y, o->rot2->z);
     njCalcPoint(m, &p, out);
 }
 
@@ -4151,14 +4242,6 @@ s32 fn_802250E4(Slot *o, NJS_POINT3 *p, Cmp *res) {
         }
     }
     return ret;
-}
-
-static inline s16 XfFind(Xf_80224F28 *r, u16 key, s16 n) {
-    int i;
-    for (i = 0; i < n; r++, i++) {
-        if (r->key == key) return i;
-    }
-    return -1;
 }
 
 s32 fn_80225330(Slot *o, NJS_POINT3 *p, Cmp *res) {
