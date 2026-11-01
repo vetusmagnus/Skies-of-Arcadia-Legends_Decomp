@@ -644,7 +644,7 @@ typedef struct {
     f32 x, y;      /* 0x00 */
     f32 pad08;     /* 0x08 */
     f32 sx, sy;    /* 0x0C */
-    u32 colour;    /* 0x14 */
+    s32 colour;    /* 0x14 */
     NJS_TEXLIST* texlist; /* 0x18 */
     Rect14* data;  /* 0x1C */
 } Obj20;
@@ -736,7 +736,6 @@ typedef struct Plane {
     NJS_POINT3 n;
 } Plane;
 extern f32 fn_8028FD98(Ray *r, Plane *pl, NJS_POINT3 *out);
-extern void fn_801D81C0(void* a, void* obj, s32 d, s32 e, s32 g, f32 f1, f32 f2, f32 f3);
 /* ADD: a 12-byte record: type tag 0x23, two shorts, one float. */
 typedef struct Rec23 {
     s32 type;  /* 0x00 */
@@ -769,6 +768,7 @@ typedef struct {
     u8 pad[8];
     f32 x, y;
 } Layout;
+void fn_801D81C0(Layout* sprite, Rec23* req, f32 z, f32 a, f32 b, u32 attr, u32 blend, NJS_TEXLIST* texlist);
 
 void fn_801D4A2C(Layout* lay, u32 flags, u32 mode, NJS_TEXLIST* tex, s32 vmode, f32 f1, f32 f2, f32 base, f32 f4, f32 a, f32 b);
 void fn_801D49E4(Layout* a, u32 b, u32 c, s32 d, f32 p1, f32 p2, f32 p3, f32 p4) {
@@ -1340,6 +1340,51 @@ void fn_801D8080(Msg* a, s16 i) {
 }
 
 extern VertexTex lbl_80311D90[4];
+
+void* fn_801D665C(void);
+void fn_801D61C4(void* p);
+extern Rect14* fn_801D6398(Layout* s);
+
+void fn_801D81C0(Layout* sprite, Rec23* req, f32 z, f32 a, f32 b, u32 attr, u32 blend, NJS_TEXLIST* texlist) {
+    DrawState st;
+    NJS_ARGB argb;
+    s32 i;
+    Obj20* obj;
+    Rect14* offs;
+    f32 zz;
+    if (fn_801D616C(sprite) == 0) return;
+    offs = fn_801D6398(sprite);
+    DrawStateDefault2D(&st);
+    st.attr_or |= attr;
+    if (blend == 1) {
+        st.blend_src = 8;
+        st.blend_dst = 10;
+    }
+    DrawStatePush(&st);
+    if (z > -1.0f) z = -1.0f;
+    if (a < 0.0f) a = 0.0f;
+    if (b < 0.0f) b = 0.0f;
+    if (1.0f < b) b = 1.0f;
+    for (i = 0; i < sprite->count; i++) {
+        obj = fn_801D665C();
+        obj->texlist = texlist;
+        obj->colour = req->f8;
+        obj->sx = 1.0f;
+        obj->sy = 1.0f;
+        obj->data = offs;
+        obj->data->hw = req->s4;
+        obj->data->hh = req->s6;
+        obj->x = sprite->x + sprite->elems[i].x + offs[i].hw;
+        obj->y = sprite->y + sprite->elems[i].y + offs[i].hh;
+        fn_801D6528(sprite->elems[i].colour, &argb, a, b);
+        njSetConstantMaterial(&argb);
+        zz = fn_801DBD9C(z + 0.0001f * i);
+        fn_80005D98(obj, i, req->type, zz);
+    }
+    DrawStatePop(NULL);
+    DrawStateRestore();
+    fn_801D61C4(offs);
+}
 
 void fn_801D843C(Layout* set, u32 flags, s32 mode, s32 drawmode, u32 shifted, NJS_TEXLIST* tex, f32 z0, f32 unused, f32 sa, f32 sb) {
     DrawState st;
@@ -3990,7 +4035,7 @@ void fn_801D7A90(NJS_TEXLIST* tex, Desc* d)
         rect.z0 = 0;
         rect.z1 = 0;
         obj.texlist = tex;
-        obj.colour = (s32)d->colour;
+        obj.colour = d->colour;
         obj.sx = 1.0f;
         obj.sy = 1.0f;
         obj.x = d->w / 2.0f + d->ox;
@@ -4715,14 +4760,14 @@ s32 fn_801D3EB4(NJS_POINT3 *out, NJS_POINT3 *p1, NJS_POINT3 *p2, Tri *t)
     return res;
 }
 
-void fn_801D8118(void* a, f32 f1, f32 f2, s16 b, f32 f3, s16 c, f32 f4, s32 d, s32 e, s32 g) {
+void fn_801D8118(Layout* a, f32 f1, f32 f2, s16 b, f32 f3, s16 c, f32 f4, u32 d, u32 e, NJS_TEXLIST* g) {
     Rec23* o;
     o = fn_801E1C7C(12);
     o->s4 = b;
     o->s6 = c;
     o->type = 0x23;
     o->f8 = f2;
-    fn_801D81C0(a, o, d, e, g, f1, f3, f4);
+    fn_801D81C0(a, o, f1, f3, f4, d, e, g);
     fn_801E17E0(o);
 }
 
