@@ -431,6 +431,9 @@ config.libs = [
             Object(NonMatching, "game/unit_801F5334.c"),
             # Sound and stream control split off at its own .sdata2 (0x8034C398, the "_L.dsp" strings)
             # and .bss (0x803148C0 up); fn_8021730C takes an s16 time where fn_801FA290 passes an s32.
+            # Script commands from 0x8020EEE8: a new .sdata2 block at 0x8034C2B8 (second 182.04445f, 100.0f,
+            # 0.0f) and .rodata after unit_801F5334's 0x802D64B8; they pass fn_80210860 a u16 id.
+            Object(NonMatching, "game/unit_8020EEE8.c"),
             Object(NonMatching, "game/unit_802159E0.c"),
             Object(NonMatching, "game/unit_80219378.c"),
             Object(NonMatching, "game/unit_8022D34C.c"),

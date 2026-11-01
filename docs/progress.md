@@ -2282,3 +2282,10 @@ Splits made where the data layout shows an original file boundary, so that held 
   end share the 0x803148C0 and 0x80315484 blocks). Released fn_8021730C, which takes an `s16` time while fn_801FA290
   (unit_801F5334) calls it with an `s32`. (0x8034C390/94 hold two function pointers used by fn_80219D78; they sit
   before this block, so they are taken to be a const table of the previous file.)
+- **unit_8020EEE8** (0x8020EEE8-0x802159E0, from unit_801F5334): `.sdata2` 0x8034C2B8 (8-aligned) holds 182.04445f, 100.0f
+  and 0.0f again (unit_801F5334 has them at 0x8034C28C, 0x8034C264, 0x8034C250); fn_8020F078 uses the new 182.04445f, so it
+  cannot share a file with the users of 0x8034C28C, and fn_8020ED58 still uses 0x8034C264-0x8034C270. The first `.rodata`
+  this range uses (0x802D6658) comes after unit_801F5334's C-defined `.rodata` (0x802D5648-0x802D64B8). The three small
+  functions between (fn_8020EEE8, fn_8020EF30, fn_8020EFD4) use no data, so the exact start within 0x8020EEE8-0x8020F078 is
+  a choice. Released fn_802088D8 (unit_801F5334), which passes fn_80210860 an `s32` id where every caller in this range
+  passes a `u16`.
