@@ -1146,6 +1146,9 @@ extern void njRotateZ(NJS_MATRIX m, Angle a);
  * extern/sdk OSFastCast.h lacks. The SDK's definition is reproduced here only until it is
  * added to <dolphin/os/OSFastCast.h>; the game code itself is the one-line function. */
 #include <dolphin/os/OSFastCast.h>
+/* lbl_80311AC0: the current map. */
+typedef struct MapInfo { s32 x0; s32 map; char room; } MapInfo;
+extern MapInfo lbl_80311AC0;
 typedef unsigned char u8;
 typedef struct Ent_8009884C {
     s16 h0;
@@ -2711,7 +2714,6 @@ Obj_800A3ED4* fn_800A3ED4(void* list, void* cb, s16 v, Src_800A3ED4* src) {
 
 void fn_800B2588(Obj_800B2588 *o)
 {
-    extern s32 lbl_80311AC0[5];
     extern void fn_8015ED90(void *o);
     extern void fn_8015EB8C(void *c, s32 id, void *cb);
     extern void fn_8015E600(void *c);
@@ -2747,7 +2749,7 @@ void fn_800B2588(Obj_800B2588 *o)
         o->state = 1;
     case 1: {
         s32 ready = 0;
-        if (lbl_80311AC0[1] >= 500 && lbl_80311AC0[1] < 600) {
+        if (lbl_80311AC0.map >= 500 && lbl_80311AC0.map < 600) {
             ready = 1;
         }
         ready = (ready != 0);
@@ -4209,8 +4211,6 @@ void fn_800A3680(EvObj *obj)
     }
 }
 
-typedef struct MapInfo { s32 x0; s32 map; char room; } MapInfo;
-extern MapInfo lbl_80311AC0;
 extern Rec* fn_800CCA6C(s32, u32);
 extern void fn_80210B44(void*);
 extern void fn_800A3744(EvObj*);
