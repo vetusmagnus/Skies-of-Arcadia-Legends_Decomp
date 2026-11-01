@@ -86,7 +86,7 @@ typedef struct ChrRec {
     u8 pada[0x14 - 0xa];
     s32 x14;
     s32 x18;
-    u32 bits;           /* 0x1c */
+    s32 bits;           /* 0x1c */
     u8 pad20[0x40 - 0x20];
     s16 stat[4];        /* 0x40 */
     u8 pad48[0x86 - 0x48];
@@ -599,7 +599,7 @@ typedef struct {
     u8 pad[0x44];
     u32 x44;
 } U44;
-extern int fn_80016A18(s8);
+int fn_80016A18(s8 mode);
 void fn_80015138(u8 flag);
 extern void fn_80032B4C(void);
 extern int fn_800168D8(int, void*, u8);
@@ -2566,7 +2566,7 @@ void fn_80011370(s8 a, s8 b)
 }
 
 
-extern int fn_80016B20(s8);
+s32 fn_80016B20(s8 kind);
 void fn_80014D0C(void);
 void fn_80014CFC(void);
 void fn_800152A0(void);
@@ -3308,6 +3308,123 @@ static inline s32 Flagged(s8 id) {
     if (id < 12) return lbl_80309DE4[id]->bits & 0x40000;
     return 0;
 }
+/* The work of the fn_80016C54/fn_80016E1C status tasks fn_800168D8 starts. */
+typedef struct CbWork168 { u8 pad0[4]; void* x4; u8 x8; u8 pad9[3]; } CbWork168;
+extern Task* fn_8003DB34(void* fn);
+extern void fn_80016C54(Task*);
+void fn_80016E1C(Task*);
+int fn_800168D8(int flags, void* arg, u8 flag) {
+    s8 i;
+    s8 start;
+    s8 end;
+    if (flag) {
+        start = 4;
+        end = 0xc;
+    } else {
+        start = 0;
+        end = 4;
+    }
+    for (i = start; i < end; i++) {
+        Task* t = fn_800215EC(i);
+        if (t) {
+            ChrInfo* s = ChrW(t)->st;
+            int m;
+            if (s->id < 0xc) {
+                m = flags & lbl_80309DE4[s->id]->bits;
+            } else {
+                m = 0;
+            }
+            if (m) {
+                Task* n;
+                CbWork168* w;
+                switch (flags) {
+                case 0x80:
+                    n = fn_8003DB34(fn_80016C54);
+                    fn_80061F58(&n->work, 0xc, 0);
+                    w = n->work;
+                    w->x8 = flag;
+                    w->x4 = arg;
+                    return 1;
+                case 0x40000:
+                    n = fn_8003DB34(fn_80016E1C);
+                    fn_80061F58(&n->work, 0xc, 0);
+                    w = n->work;
+                    w->x8 = flag;
+                    w->x4 = arg;
+                    return 1;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+int fn_80016A18(s8 mode) {
+    s8 i;
+    s8 start;
+    s8 end;
+    switch (mode) {
+    case 0:
+        start = 0;
+        end = 4;
+        break;
+    case 1:
+        start = 4;
+        end = 0xc;
+        break;
+    case 2:
+        start = 0;
+        end = 0xc;
+        break;
+    default:
+        return 0;
+    }
+    for (i = start; i < end; i++) {
+        Task* t = fn_800215EC(i);
+        if (t) {
+            ChrInfo* s = ChrW(t)->st;
+            s32 mine = s->x44 & 0x44e80;
+            s32 theirs = lbl_80309DE4[s->id]->bits & 0x44e80;
+            if (mine > theirs) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+s32 fn_80016B20(s8 kind)
+{
+    s8 i;
+    s8 lo;
+    s8 hi;
+    switch (kind) {
+    case 0:
+        lo = 0;
+        hi = 4;
+        break;
+    case 1:
+        lo = 4;
+        hi = 12;
+        break;
+    case 2:
+        lo = 0;
+        hi = 12;
+        break;
+    default:
+        return 0;
+    }
+    for (i = lo; i < hi; i++) {
+        Task* t = fn_800215EC(i);
+        if (t != 0) {
+            s8 id = ChrW(t)->st->id;
+            if ((id < 12 ? lbl_80309DE4[id]->bits & 0x80 : 0) != 0) return 1;
+            if ((id < 12 ? lbl_80309DE4[id]->bits & 0x40000 : 0) != 0) return 1;
+        }
+    }
+    return 0;
+}
+
 void fn_80016E1C(Task* t) {
     s8 lo;
     s8 i;
