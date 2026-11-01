@@ -145,7 +145,8 @@ typedef struct Party {
     s16 x22;
     s16 x24;
     s16 x26;
-    u8 pad28[0x40 - 0x28];
+    s16 x28[6];     /* 0x28 */
+    u8 pad34[0x40 - 0x34];
     s16 x40;
     s16 x42;
     u8 pad44[0x50 - 0x44];
@@ -178,14 +179,34 @@ typedef struct Big {
     u8 pad236[2];
     Party party;        /* 0x238 */
 } Big;
+/* A ship battle command (0x18): what a slot does this turn. */
+typedef struct BtlCmd {
+    char x0;            /* 0x00: kind */
+    s8 x1;              /* 0x01 */
+    s8 x2;              /* 0x02 */
+    s8 x3;              /* 0x03 */
+    u8 pad4;
+    s8 x5;              /* 0x05: scope */
+    s16 x6;             /* 0x06 */
+    s8 x8;              /* 0x08 */
+    u8 x9;              /* 0x09 */
+    u8 padA[2];
+    s16 xc;             /* 0x0C: skill id */
+    s16 xe;             /* 0x0E */
+    s16 x10;            /* 0x10 */
+    s16 x12;            /* 0x12 */
+    s16 x14;            /* 0x14 */
+    u8 pad16[2];
+} BtlCmd;
 typedef struct BtlSlot {
     s16 mode;
     u8 pad2[4];
     s16 x6;
     s16 x8;
-    u8 padA[0xe - 0xa];
-    u8 head[0x18];      /* 0x0E */
-    u8 body[0x18];      /* 0x26 */
+    s16 xa;             /* 0x0A */
+    s16 xc;             /* 0x0C */
+    BtlCmd head;        /* 0x0E */
+    BtlCmd body;        /* 0x26 */
 } BtlSlot;
 /* *lbl_8034727C: the ship battle state (0xAB4). */
 typedef struct BtlWork {
@@ -229,7 +250,7 @@ extern s32 lbl_803472E4;
    field, each 4-aligned as the compiler laid the pool out. */
 typedef struct StrPool_8013D400 {
     char sct[0x10];           /* "me%03d%c.sct" */
-    char shipInfo[0x24];      /* "ShipIs Not Found In sbGetInfo %d" */
+    char shipInfo[0x24];      /* "ShipIs Not Found BtlCmd sbGetInfo %d" */
     char camPath[0x1C];       /* "Camera Path Is Not Found %d" */
     char croot[0xC];          /* "sb_croot" */
     char notCamPath[0x18];    /* "Not Camera Path %d - %s" */
@@ -352,18 +373,6 @@ typedef struct {
     s16 xa;
     u8 pad_c[4];
 } Slot_8014359C;
-typedef struct {
-    u8 x0, x1, x2, x3;
-    u8 pad4;
-    s8 x5;
-    s16 x6;
-    u8 pad8;
-    u8 x9;
-    u8 padA[2];
-    s16 xc;
-    u8 padE[6];
-    s16 x14;
-} In;
 typedef struct {
     u8 pad[0x2C];
     s16 mode;
@@ -1248,6 +1257,58 @@ void fn_80146480(IdxArg* a) {
     }
 }
 
+s32 fn_80146BF4(s32 a, s32 b, s32 c, s32 idx, Req_UNIT0000 *p) {
+    s32 d;
+    s32 flag;
+    Party *arr;
+    s32 k;
+    f32 f;
+    f32 t;
+    s32 cnt;
+    f32 g;
+
+    d = a * 2 - b;
+    flag = 0;
+    if (d < 0) {
+        d = 0;
+    }
+    if (p->x1 == 0) {
+        arr = lbl_8034727C->x24;
+        k = lbl_8034727C->slot[idx].xc;
+        if (lbl_8034727C->slot[idx].body.x0 == 3) {
+            flag = 1;
+        }
+    } else {
+        arr = lbl_8034727C->x20;
+        k = lbl_8034727C->slot[idx].xa;
+        if (lbl_8034727C->slot[idx].head.x0 == 3) {
+            flag = 1;
+        }
+    }
+    f = d;
+    f *= k;
+    f /= 10.0f;
+    t = f * (0.000030517578125f * rand());
+    cnt = 0.05 * t;
+    f *= 0.975;
+    cnt += f;
+    if ((rand() & 7) == 0) {
+        cnt++;
+    }
+    if (c < 0) {
+        c = 0;
+    }
+    g = cnt;
+    if (c < 6) {
+        g *= arr->x28[c];
+        g /= 10.0f;
+    }
+    if (flag != 0) {
+        g *= 0.5f;
+    }
+    return g;
+}
+
 void fn_80146EF4(Slot_8014359C* r, s32 idx) {
     Blk* dst;
     s32 d;
@@ -1925,7 +1986,7 @@ void fn_8014ED5C(Owner *o, f32 v) {
     }
 }
 
-void fn_8014359C(In* in, s32 a, s32 b)
+void fn_8014359C(BtlCmd* in, s32 a, s32 b)
 {
     Slot_8014359C* d = (Slot_8014359C*)((u8*)(*(Ent_8014359C**)&lbl_8034727C) + 0x134 + a * 0x90 + b * 0x10);
     s32 mode;
