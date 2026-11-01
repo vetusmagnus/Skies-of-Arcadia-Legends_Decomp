@@ -4090,6 +4090,42 @@ typedef struct Win_8017DCB4 { s32 hide; u8 pad4[4]; UiObj obj; u8 pad_[0xbc - 8 
 typedef struct Pnl_8017DCB4 { u8 pad[0x24]; Win_8017DCB4* in; } Pnl_8017DCB4;
 typedef struct CampW_8017DCB4 { u8 pad[0xc]; s8 count; u8 pad1[3]; Pnl_8017DCB4* pnl[0xcf]; } CampW_8017DCB4;
 
+void fn_8017D7C0(void) {
+    CampCtrl* c;
+    UiObj* o;
+    s32 i;
+    s32 base;
+    s32 n;
+    s32 off;
+
+    c = lbl_8034710C->holder->ctrl;
+    o = &camp_work.pnl[4]->win->obj;
+    UiObjMoveTo(o, 6, -1, -348.0f, 61.0f);
+    UiObjSetCommand(o, 15, 0);
+    o = &camp_work.pnl[0x78 + lbl_80307638[4].cur[0].sel]->win->obj;
+    UiObjMoveTo(o, 6, -1, -348.0f, 125.0f);
+    UiObjSetCommand(o, 15, 1);
+    o = &camp_work.pnl[0x6e]->win->obj;
+    UiObjMoveTo(o, 6, -1, -348.0f, 189.0f);
+    UiObjSetCommand(o, 15, 2);
+    o = &camp_work.pnl[0x6f]->win->obj;
+    UiObjMoveTo(o, 6, -1, -348.0f, 253.0f);
+    UiObjSetCommand(o, 15, 3);
+    switch (c->cur[2].sel) {
+    case 0: base = 0x7a; n = 5; off = 0; break;
+    case 1: base = 0x7f; n = 3; off = 0; break;
+    }
+    for (i = 0; i < n; i++) {
+        o = &camp_work.pnl[base + i]->win->obj;
+        UiObjMoveTo(o, 6, 5, 668.0f, (off + i) * 64 + 61);
+        UiObjSetCommand(o, 15, i + off);
+        camp_work.pnl[base + i]->win->f74 -= 150.0f;
+    }
+    o = &camp_work.pnl[0x60]->win->obj;
+    UiObjMoveTo(o, 6, -1, 632.0f, 480.0f);
+    UiObjSetCommand(o, 15, 0);
+}
+
 void fn_8017DCB4(void) {
     UiObj* o;
     s32 i;
