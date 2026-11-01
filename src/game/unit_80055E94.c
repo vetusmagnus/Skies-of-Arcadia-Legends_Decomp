@@ -3994,6 +3994,21 @@ void fn_80069684(s16 a, s16 b, s32 c) {
     fn_8006AFD0(a, b, c, 0);
 }
 
+extern s32 fn_800108EC(s32 a, s32 b, ChrRec* c, ChrRec* d);
+
+void fn_80069B58(s16 a, s16 b, void* unused, s8 v) {
+    ChrRec* cb = lbl_80309DE4[b];
+    ChrRec* ca = lbl_80309DE4[a];
+    s16 k = lbl_80309174[a].x6 + 0x24;
+    EnemySkill* row = &lbl_802AD440[k];
+    s16 pw = ca->stat[8] * 2;
+    s8 x = row->element;
+    s32 r = fn_800108EC(pw, x, ca, cb);
+    lbl_80309700[a]->work->x3c = r;
+    lbl_80309700[b]->work->x3c = r;
+    lbl_80309700[b]->work->x44 = v;
+}
+
 void fn_80069CD8(void* a, s16 i, void* b, s8 v) {
     lbl_80309700[i]->work->x3c = -1;
     if (lbl_80309DE4[i]->bits & 0x6100) {
