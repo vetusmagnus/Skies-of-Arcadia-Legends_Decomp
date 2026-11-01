@@ -387,7 +387,8 @@ typedef struct {
     void *sub;
 } K06Obj_800DE2E4;
 typedef struct {
-    u8 pad0[0x1c];
+    s32 state;          /* 0x00 */
+    u8 pad4[0x1c - 4];
     s32 f1c;
     s32 f20;
 } K06Sub_800DE2E4;
@@ -1246,7 +1247,7 @@ typedef struct {
     s8 b1f1;
 } Unit_801051A0;
 extern void* fn_800DE440(Obj_800DE440* o);
-extern void fn_800DE2E4(K06Obj_800DE2E4 *p, u8 *a, u8 *b, s8 *c);
+extern void fn_800DE2E4(K06Obj_800DE2E4 *p, s8 *a, s8 *b, s8 *c);
 extern s32 fn_800E0B08(Obj_800E0B08* o, s32 limit);
 extern s32 fn_800DE228(void *p, f32 f);
 typedef struct Unit_80107B18 {
@@ -3544,6 +3545,77 @@ s32 fn_800DDE60(u8 *self) {
     return 1;
 }
 
+#define BIND()     if (p != 0) {         p->x268 = s;         if (s != 0) s->state = 1;     } else {         if (p != 0) p->x268 = 0;         if (s != 0) s->state = 2;     }
+#define UNBIND()     if (p != 0) p->x268 = 0;     if (s != 0) s->state = 2;
+#define GETB()     if (p != 0 && r != 0) fn_800DE2E4(r, &p->x1ec, &p->x1ed, &p->x1ee);
+
+s32 fn_800DE664(EvObj* p) {
+    s32 ret = 1;
+    u32 w;
+    K06Obj_800DE2E4* r;
+    K06Sub_800DE2E4* s;
+    if (p != 0) {
+        ret = p->state & 0xFFFF;
+        r = 0;
+        if (fn_801C6068(p, 9)) {
+            r = fn_800CCA6C(7, EvMapInfo(p)->nearDist);
+        }
+        if (r != 0) {
+            s = r->sub;
+            w = r->w8 >> 16;
+            if (s != 0) {
+                switch (w) {
+                case 0:
+                    GETB();
+                    BIND();
+                    ret = 7;
+                    break;
+                case 1:
+                    GETB();
+                    BIND();
+                    ret = 10;
+                    break;
+                case 2:
+                    if (p->mapMode == 0) {
+                        BIND();
+                        ret = 2;
+                    } else {
+                        UNBIND();
+                    }
+                    break;
+                case 3:
+                    UNBIND();
+                    if (p->mapMode == 0) ret = 4;
+                    break;
+                case 4:
+                    UNBIND();
+                    GETB();
+                    break;
+                case 5:
+                    if (p->x264 == 0) {
+                        if (p->mapMode != 0) {
+                            BIND();
+                            ret = 6;
+                        } else {
+                            UNBIND();
+                        }
+                    } else {
+                        UNBIND();
+                    }
+                    break;
+                default:
+                    GETB();
+                    break;
+                }
+            }
+        }
+    }
+    return ret;
+}
+#undef BIND
+#undef UNBIND
+#undef GETB
+
 s32 fn_800E043C(LoopObj* obj) {
     return obj->looped != 0;
 }
@@ -5223,7 +5295,7 @@ s32 fn_800D84AC(void *self) {
     return ret;
 }
 
-void fn_800DE2E4(K06Obj_800DE2E4 *p, u8 *a, u8 *b, s8 *c) {
+void fn_800DE2E4(K06Obj_800DE2E4 *p, s8 *a, s8 *b, s8 *c) {
     K06Sub_800DE2E4 *s;
     u32 w;
     if (p == 0) {
@@ -6820,7 +6892,7 @@ void fn_801051A0(Unit_801051A0 *u) {
     if (u == 0) {
         return;
     }
-    fn_800DE2E4(fn_800DE440((Obj_800DE440 *)u), (u8 *)&u->b1ef, (u8 *)&u->b1f0, &u->b1f1);
+    fn_800DE2E4(fn_800DE440((Obj_800DE440 *)u), &u->b1ef, &u->b1f0, &u->b1f1);
     switch (u->state) {
     case 0:
         if (u->b1ef != 0) {
