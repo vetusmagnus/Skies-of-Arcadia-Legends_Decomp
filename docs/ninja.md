@@ -199,6 +199,11 @@ Game code stays cast-free.
   (probably an early CodeWarrior for Dolphin/GameCube from Sega's 2001 port, older than GC/1.0 build 144),
   not a source form. That file lists what was ruled out, including every recognised optimizer pragma and a
   permuter run.
+  Also ruled out on decomp.me: GC/1.2.5e (2.3.3 build 163, not in the decomp.dev bundle) at `-O4,p`. One
+  `lis r31` and no copy on fifo_8029681C, one shared `li` in fn_80298544's leftover loop, and its prologue saves
+  LR before `stwu` (the original is `stwu`-first). The two known builds outside every public set are 2.4.7
+  build 1 (release notes dated June 2001, no release name) and anything older than GC/1.0 (2.3.3 build 144). The
+  decomp Discord's compiler-hunt channel lists them; a test there needs only the two standalone files.
 - Copy pattern, more ruled out (2026-11-01, cloud session; test case in `docs/near/fifo_8029681C.c`, which
   needs no headers): every Wii compiler in the decomp.dev bundle (`Wii/0x4201_127` to `Wii/1.7`) at `-O4,p`,
   `-O4,s`, `-O3` and `-O2`; pairs of `-opt` switches (no cse, deadcode, deadstore, lifetimes, loop, prop,
