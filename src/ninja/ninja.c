@@ -3539,6 +3539,3 @@ void fn_8029D000(s32 v) { lbl_80347F78 = v; }
 
 void fn_8029D008(s32 v) { lbl_80347EE0 = v; }
 
-void fn_8029D010(u32 mode) {
-    set_blend(mode);
-}

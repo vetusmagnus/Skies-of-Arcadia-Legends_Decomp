@@ -1,8 +1,16 @@
-/* Sega Ninja library, 0x8029D698-0x8029DEDC. Drawer file ending with fn_8029DCD0, the owner of the
- * lone 65.0f at 0x8034D328. */
+/* Sega Ninja library, 0x8029D010-0x8029DCD0. One file: fn_8029D010 and fn_8029D698 share one copy of
+ * set_blend's table (0x802DAD78, a local initializer, so emitted once per file), and fn_8029D0F4's
+ * .sdata2 pool (0x8034D300-0x8034D323) is padded to the next file at 0x8034D328 (fn_8029DCD0's lone
+ * 65.0f). The file starts after fn_8029C9B0 (last user of the previous pool, ending at 0x8034D2FF) and
+ * no later than fn_8029D010; the exact start isn't known, so the unit starts at fn_8029D010.
+ * fn_8029D0F4 isn't matched yet. */
 
 #include "ninja_lib.h"
 #include "ninja_blend.h"
+
+void fn_8029D010(u32 mode) {
+    set_blend(mode);
+}
 
 void fn_8029D698(u32 attr, s16* p, u8* c0, u8* c1, u8* c2) {
     u8 kind = attr;

@@ -260,6 +260,12 @@ Game code stays cast-free.
   | 0x8034D3B8 | double | fn_802A5F2C |
   | 0x8034D3C0-... | the same layout again | fn_802A6184, fn_802A6398, fn_802A70B0, fn_802A75C8 (0x8034D3E8, lone), fn_802A7680, fn_802A7894 |
 
+  Correction (after the split): 0x8034D300-0x8034D327 (fn_8029D0F4's pool, padded) and the lone 65.0f at
+  0x8034D328 are two files, and fn_8029D010 belongs with fn_8029D698: both use the one copy of set_blend's
+  table at 0x802DAD78 (a local initializer, emitted once per file; njColorBlendingMode's different table at
+  0x802DAD48 is another file's). So the unit is ninja_8029D010.c (0x8029D010-0x8029DCD0, with that table, the
+  two jump tables at 0x803007F8 and the 0x8034D300 pool) and fn_8029DCD0 is ninja_8029DCD0.c on its own. The
+  file starts after fn_8029C9B0 (last user of the pool ending at 0x8034D2FF) and no later than fn_8029D010.
   Reading: the strip and indexed drawers (0x8029DCD0-0x802A0FD4 and 0x802A2394-0x802A58DC) are many small files,
   each ending with the textured variant that owns a 65.0f (the Dreamcast Ninja had a source file per strip
   format). Around them sit renderer 1's chunk-model file (fn_802A1160, fn_802A1374, fn_802A1B54: one shared pool),

@@ -375,6 +375,7 @@ void fn_8029AFA0(GXAttrType p, GXAttrType c);
 void fn_8029AFF0(GXAttrType p, GXAttrType n, GXAttrType c);
 void fn_8029B058(GXAttrType p, GXAttrType n);
 void fn_8029B110(GXAttrType p, GXAttrType t);
+void fn_8029B1E0(GXAttrType p, GXAttrType n, GXAttrType t);
 
 /* ---- GX render state ---- */
 
