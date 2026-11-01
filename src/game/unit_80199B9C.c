@@ -2036,12 +2036,15 @@ typedef struct EvInfo {
 typedef struct EvExt {
     u8 pad0[0x10];
     EvInfo* info;          /* 0x10 */
+    u8 pad14[0x20 - 0x14];
+    NJS_TEXLIST* texlist;  /* 0x20 */
 } EvExt;
 /* Copy of game/evobj.h's EvObj with the fields this function needs. */
 typedef struct EvObj {
     u8 pad0[0x38];
     NJS_POINT3 pos;          /* 0x38 */
-    u8 pad44[0xE4 - 0x44];
+    Angle ang[3];            /* 0x44 */
+    u8 pad50[0xE4 - 0x50];
     void* model;             /* 0xE4 */
     u8 padE8[0x100 - 0xE8];
     NJS_TEXLIST* texlist;    /* 0x100 */
@@ -2055,6 +2058,8 @@ typedef struct EvObj {
     s32 x210;                /* 0x210 */
     u8 pad214[0x23C - 0x214];
     s32 x23c;                /* 0x23C ADD: the loop sound's handle */
+    u8 pad240[0x25C - 0x240];
+    void* x25c;              /* 0x25C per-kind record (the trail of fn_8019D678) */
 } EvObj;
 extern EvObj *lbl_80347450;
 typedef struct Obj_8019CB80_8019C424 {
@@ -8676,4 +8681,133 @@ void fn_801A2D60(Task_801A343C* t) {
         return;
     }
     par->w->f1c = (f32)t->p24->h16 / (f32)t->p24->h18;
+}
+
+/* The strip handed to fn_8019DBA8: 48 points, 48 indices, 48 extra words. */
+typedef struct Strip_8019DBA8 {
+    NJS_POINT3* v;   /* 0x00 */
+    s32* idx;        /* 0x04 */
+    f32* x8;         /* 0x08 */
+    s32 n;           /* 0x0C */
+} Strip_8019DBA8;
+
+/* The trail record at EvObj.x25c (0x62C bytes). */
+typedef struct Trail_8019D678 {
+    NJS_POINT3 v[48];        /* 0x000 */
+    s32 idx[48];             /* 0x240 */
+    f32 x300[48];            /* 0x300 */
+    Strip_8019DBA8 strip;    /* 0x3C0 */
+    f32 x[25];               /* 0x3D0 */
+    f32 x2[25];              /* 0x434 */
+    f32 z[25];               /* 0x498 */
+    f32 z2[25];              /* 0x4FC */
+    f32 w[25];               /* 0x560 */
+    f32 w2[25];              /* 0x5C4 */
+    s32 cur;                 /* 0x628 */
+} Trail_8019D678;
+
+extern f32 lbl_803467E0;
+extern f32 lbl_803467E4;
+extern f32 lbl_80347160;
+extern void* fn_801E1C34(s32 size);
+extern void fn_801E1784(void* p);
+extern void fn_80296E4C(s32 a);
+extern void fn_80296DC8(u32 v);
+extern s32 fn_80299040(NJS_TEXLIST* texlist);
+extern void fn_80298FE4(s32 i);
+extern void fn_8019DBA8(Strip_8019DBA8* s, f32* x, f32* z, f32* w);
+
+#define TRAIL_STEP(b) \
+    if ((b)->cur > 0) { \
+        (b)->cur--; \
+    } else { \
+        (b)->cur = 24; \
+    }
+
+#define TRAIL_POS(b) \
+    { \
+        f32 x_ = lbl_80347450->pos.x + s; \
+        (b)->x[(b)->cur] = x_; \
+        (b)->x2[(b)->cur] = x_; \
+    } \
+    { \
+        f32 z_ = lbl_80347450->pos.z + c; \
+        (b)->z[(b)->cur] = z_; \
+        (b)->z2[(b)->cur] = z_; \
+    }
+
+void fn_8019D678(Task* t) {
+    extern f32 njSin(s32 a);
+    extern f32 njCos(s32 a);
+    EvObj* o;
+    Trail_8019D678* b;
+    int i;
+    f32 s;
+    f32 c;
+    f32 dx;
+    f32 dz;
+    s32 still;
+
+    o = t->work;
+    if (lbl_80347450 == 0) {
+        return;
+    }
+    switch (t->state) {
+    case 0:
+        fn_80227810(o->ext->texlist);
+        b = fn_801E1C34(0x62c);
+        o->x25c = b;
+        b->strip.v = b->v;
+        b->strip.idx = b->idx;
+        b->strip.x8 = b->x300;
+        b->strip.n = 48;
+        for (i = 0; i < 48; i++) {
+            b->strip.v[i].y = 13.0 - 0.1 * i;
+            b->strip.idx[i] = -1;
+        }
+        b->cur = 24;
+        t->state++;
+    case 1:
+        s = lbl_803467E0 * njSin(lbl_80347450->ang[1]);
+        c = lbl_803467E0 * njCos(lbl_80347450->ang[1]);
+        dx = lbl_80347450->pos.x - lbl_80347450->home.x;
+        dz = lbl_80347450->pos.z - lbl_80347450->home.z;
+        if (lbl_80347160 > 1.0f) {
+            still = 0;
+        } else {
+            still = 1;
+        }
+        lbl_80347160 = fn_80291A5C(dx * dx + dz * dz);
+        b = o->x25c;
+        if (lbl_80347160 > 1.0f) {
+            TRAIL_STEP(b);
+            if (still) {
+                b->w[b->cur] = 0.0f;
+                b->w2[b->cur] = 0.0f;
+            } else {
+                f32 w_ = (lbl_80347160 - 1.0f) * lbl_803467E4;
+                b->w[b->cur] = w_;
+                b->w2[b->cur] = w_;
+            }
+            TRAIL_POS(b);
+        } else if (!still) {
+            TRAIL_STEP(b);
+            b->w[b->cur] = 0.0f;
+            b->w2[b->cur] = 0.0f;
+            TRAIL_POS(b);
+        }
+        fn_80296E4C(0);
+        fn_80296DC8(0);
+        fn_80299040(o->ext->texlist);
+        fn_80298FE4(0);
+        fn_8019DBA8(&b->strip, &b->x[b->cur], &b->z[b->cur], &b->w[b->cur]);
+        break;
+    case 0xff:
+        if (o->ext->texlist != 0) {
+            fn_802275A4(o->ext->texlist, 0);
+        }
+        fn_801E1784(o->x25c);
+        fn_80100B74(t);
+        break;
+    }
 }
