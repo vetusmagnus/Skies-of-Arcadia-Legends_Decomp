@@ -61,7 +61,7 @@ typedef struct {
     void **x28;
 } HolderB;
 extern HolderB *lbl_80346F20;
-typedef struct SysC { u8 pad0[4]; u16 x4; u8 x6; u8 x7; u8 x8; u8 x9; u8 pad1[0x30 - 0xa]; u8 x30; u8 x31; u8 x32; } SysC;
+typedef struct SysC { u8 pad0[2]; s8 x2; u8 pad3; u16 x4; s8 x6; u8 x7; u8 x8; u8 x9; u8 pad1[0x30 - 0xa]; u8 x30; u8 x31; s8 x32; s8 x33; f32 x34; } SysC;
 typedef struct HolderC { u8 pad[0x24]; SysC* x24; } HolderC;
 extern HolderC* lbl_80346F28;
 typedef struct {
@@ -608,6 +608,55 @@ void fn_8012E5C0(u8 v) {
 
 void fn_8012E5D8(void) {
     ((u8*)lbl_80346F28)[0x19] = 2;
+}
+
+void fn_8012E6EC(void) {
+    s32 i;
+    s32 base;
+    lbl_80346F28->x24->x34 += lbl_80346F28->x24->x33 / 15.0f;
+    if (lbl_80346F28->x24->x34 < 0.0f || 1.0f < lbl_80346F28->x24->x34) {
+        lbl_80346F28->x24->x33 *= -1;
+        lbl_80346F28->x24->x34 += lbl_80346F28->x24->x33 / 15.0f;
+    }
+    if (lbl_80346F28->x24->x32 == 1) {
+        switch (lbl_80346F28->x24->x2) {
+        case 0:
+            base = 0;
+            break;
+        case 1:
+            base = 6;
+            break;
+        }
+        for (i = 0; i < 2; i++) {
+            Req s;
+            Spr *h;
+            f32 sc;
+            s32 c;
+            s32 d;
+            if (i == 0) {
+                h = fn_801D68C4(lbl_80346F04, 0x6d);
+                s.obj = h;
+                c = 0;
+                d = 0;
+                sc = 1.0f;
+                h->f14 = (lbl_80346F28->x24->x6 - base) * 0x30 + 0x113;
+            } else {
+                h = fn_801D68C4(lbl_80346F04, 0x6e);
+                s.obj = h;
+                c = 1;
+                d = 2;
+                sc = lbl_80346F28->x24->x34;
+                h->f14 = (lbl_80346F28->x24->x6 - base) * 0x30 + 0x10e;
+            }
+            s.x = 0.001f * (d + 2) + -1.2f;
+            s.y = 1.0f;
+            s.z0 = 0;
+            s.z1 = c;
+            s.one = 1.0f;
+            s.w = sc;
+            fn_8012A9A8(&s);
+        }
+    }
 }
 
 void fn_8012F458(u8 v) { lbl_80346F30->x24->x2 = v; }
