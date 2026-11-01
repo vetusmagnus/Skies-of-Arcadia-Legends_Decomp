@@ -176,10 +176,11 @@ typedef struct Stat {
     s8 x58;     /* enemy weapon effect */
 } Stat;
 typedef struct Chr_UNIT0000 {
-    u8 pad[0x10];
+    u8 pad[0xe];
+    s16 xe;     /* status bits */
     u32 x10;
-    s32 score;
-    u8 pad2[0x4];
+    s32 score;  /* 0x14 */
+    s32 x18;
     u32 w1c;
     u8 pad_20[0x4];
     s16 x24;
@@ -195,8 +196,8 @@ typedef struct Chr_UNIT0000 {
     u8 padb8[2];
     s16 xba;
     u8 padbc[0xfe - 0xbc];
-    u8 xfe;
-    u8 padff;
+    s8 xfe;
+    s8 xff;
     u8 x100;
     u8 pad101;
     s16 x102;   /* first equipped item slot */
@@ -1107,6 +1108,57 @@ void fn_8007B5B0(Task_8007BEB4* t) {
     case 5:
         break;
     }
+}
+
+extern void fn_80022F1C(void *p);
+
+typedef struct Ent_8007C7F8 { s16 lv; s16 hp; s16 mp; s16 x6; s16 x8; s16 st; u8 xc; u8 pad; } Ent_8007C7F8;
+typedef struct Out_8007C7F8 { u8 n; u8 pad1; Ent_8007C7F8 e[4]; } Out_8007C7F8;
+
+void fn_8007C7F8(Out_8007C7F8* out)
+{
+    int i;
+    Chr_UNIT0000* p;
+    s16 f;
+    u32 bits;
+    s16 v;
+    Ent_8007C7F8* e;
+
+    out->n = 0;
+    for (i = 0; i < 4; i++) {
+        p = lbl_80309DE4[i];
+        e = &out->e[i];
+        if (p != 0) {
+            f = 0;
+            e->lv = lbl_8030B7F4.chr[lbl_8030B7F4.party[i]].xb;
+            e->hp = p->score;
+            e->mp = p->x18;
+            e->x6 = p->xfe;
+            e->x8 = p->xff;
+            e->xc = lbl_80309DE4[i]->x100;
+            bits = p->w1c;
+            if (bits & 0x80) f = 1;
+            if (bits & 0x100) f += 2;
+            if (bits & 0x200) f += 4;
+            if (bits & 0x400) f += 8;
+            if (bits & 0x800) f += 0x10;
+            if (bits & 0x1000) f += 0x20;
+            if (bits & 0x4000) f += 0x40;
+            v = p->xe;
+            if (v & 0x1) f |= 0x80;
+            if (v & 0x2) f |= 0x80;
+            if (v & 0x8) f |= 0x80;
+            if (v & 0x10) f |= 0x80;
+            if (v & 0x4) f |= 0x100;
+            if (v & 0x20) f |= 0x200;
+            if (v & 0x40) f |= 0x200;
+            if (v & 0x80) f |= 0x200;
+            if (v & 0x100) f |= 0x200;
+            if (v & 0x200) f |= 0x400;
+            e->st = f;
+        }
+    }
+    fn_80022F1C(out);
 }
 
 void fn_8007D318(u8* p) {
