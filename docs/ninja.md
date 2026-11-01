@@ -191,6 +191,12 @@ Game code stays cast-free.
   optimizer pragmas, inline and wrapper forms) all merge the copies, so this looks like a compiler build we don't
   have rather than a source form. `-O1` matches only njSin/njCos/njTan (checked over the whole unit: no file
   boundary there). A ready test case for other compilers is two FIFO drawers, fn_8029681C and fn_8028A0F4.
+- Copy pattern, more ruled out (2026-11-01, cloud session; test case in `docs/near/fifo_8029681C.c`, which
+  needs no headers): every Wii compiler in the decomp.dev bundle (`Wii/0x4201_127` to `Wii/1.7`) at `-O4,p`,
+  `-O4,s`, `-O3` and `-O2`; pairs of `-opt` switches (no cse, deadcode, deadstore, lifetimes, loop, prop,
+  strength, peephole, space) on top of `-O4,p`, `-opt level=3` and `-opt level=2` with GC/1.2.5n, 1.3.2 and 2.6;
+  SN ProDG 3.5 to 3.9.3 (GCC 2.95), whose code looks nothing like the original (`stmw`, `lis`+`ori` for the
+  address, different prologue). All give one base register for the three stores.
 - Still needing a pointer cast (not merged): fn_802A8F48 (the NgCtx cursor advances by bytes but
   feeds pointer arrays; fn_802A9040 is merged under the stream-cast rule), fn_802A7894, fn_802AC31C, fn_80287610, fn_80287F00, fn_80289390 (an `lhz` strip size read
   from an `s16` stream), fn_802A93CC / fn_802A9C20 / fn_80293AF4 (generic key tables), fn_8029CB1C (flat matrix

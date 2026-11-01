@@ -10,6 +10,8 @@
  * for vs while, `!`/`== 0`/continue forms, operand order, return forms, and a local `s32* f = x194`
  * (17-21 lines; it keeps the 0x194 add outside the loop). lbl_8030A10C is also `ObjStats` in
  * chunklist.h; battle.c's GameState view of it is local to the unit.
+ * decomp-permuter (tools/match/permsetup.py on this file, 15 minutes at -j8) found nothing that
+ * matches; its best only moves the `&` into a temp.
  */
 #define fn_8002F598 fn_8002F598_old
 #include "../src/game/battle.c" /* found through -i include */
