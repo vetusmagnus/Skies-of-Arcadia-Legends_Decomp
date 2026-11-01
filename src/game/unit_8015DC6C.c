@@ -321,14 +321,15 @@ typedef struct {
     s32 state;
 } Slot_80306F58;
 extern Slot_80306F58 lbl_80306F58[3];
+/* Linear move to (destX, destY) over 6 steps. */
 typedef struct Mover {
-    f32 x0;
-    f32 x4;
-    f32 x8;
-    f32 xc;
-    f32 x10;
-    f32 x14;
-    s32 x18;
+    f32 x;      /* 0x00 */
+    f32 y;      /* 0x04 */
+    f32 destX;  /* 0x08 */
+    f32 destY;  /* 0x0C */
+    f32 stepX;  /* 0x10 */
+    f32 stepY;  /* 0x14 */
+    s32 steps;  /* 0x18 */
 } Mover;
 typedef struct Sys_80310A1C {
     u8 pad0[6];
@@ -409,7 +410,7 @@ extern Ent_8016AD08* lbl_8034709C;
 extern int sprintf(char* buf, const char* fmt, ...);
 extern void* fn_801DB244(void* p);
 extern void fn_8016B4F0(void);
-extern s32 fn_8016AEBC(void* self);
+s32 fn_8016AEBC(void* self);
 typedef struct {
     u8 pad00[0x18];
     u8 flags;  /* 0x18 */
@@ -1095,18 +1096,23 @@ typedef struct {
     s32 x30;
     f32 x34;
 } Arg_80164748;
+/* The camp menu cursor's work (lbl_803470A0): a Mover at +4, then a spring on f30. */
 typedef struct {
     s8 kind;
-    u8 pad1[3];
-    f32 f4;
-    f32 f8;
-    u8 padc[0x20 - 0xc];
+    s8 b1;
+    s8 mode;
+    u8 pad3;
+    Mover mv;           /* 0x04 */
     f32 f20;
     f32 f24;
     f32 f28;
     f32 f2c;
-    f32 f30;
-    f32 f34;
+    f32 f30;            /* 0x30 position */
+    f32 f34;            /* 0x34 lower limit */
+    f32 f38;            /* 0x38 acceleration */
+    f32 f3c;            /* 0x3C current acceleration */
+    f32 f40;            /* 0x40 speed limit */
+    f32 f44;            /* 0x44 speed */
 } St_8016CAB4;
 typedef struct {
     u8 pad0[0x24];
@@ -1388,16 +1394,6 @@ typedef struct Obj_80166B2C {
     u8 pad0[0x1d8];
     Work *work;
 } Obj_80166B2C;
-/* Linear move to (destX, destY) over 6 steps. */
-typedef struct Mover6 {
-    f32 x;      /* 0x00 */
-    f32 y;      /* 0x04 */
-    f32 destX;  /* 0x08 */
-    f32 destY;  /* 0x0C */
-    f32 stepX;  /* 0x10 */
-    f32 stepY;  /* 0x14 */
-    s32 steps;  /* 0x18 */
-} Mover6;
 extern NJS_VECTOR lbl_802B4334;
 extern NJS_VECTOR lbl_802B4340;
 extern void njSetMatrix(NJS_MATRIX dst, NJS_MATRIX src);
@@ -2785,6 +2781,112 @@ extern void fn_8016AB98(Arg_8016CAB4 *p);
 extern void fn_8016AAF0(Arg_8016CAB4 *p);
 extern void fn_8016AA9C(Arg_8016CAB4 *p);
 
+s32 fn_8016AA0C(Mover* m);
+void fn_8016AA64(Mover *m, f32 x, f32 y);
+void fn_8016B1E4(void);
+
+static inline f32 Absf(f32 x) { return fabs(x); }
+
+s32 fn_8016AEBC(void* self)
+{
+    s32 ret;
+    s8 sign;
+    switch (lbl_803470A0->st->mode) {
+    case 0:
+        if (lbl_803470A0 != NULL) {
+            lbl_803470A0->st->b1 = 0;
+        }
+        if (lbl_803470A0 != NULL) {
+            lbl_803470A0->st->mv.x = -60.0f;
+            lbl_803470A0->st->mv.y = 0.0f;
+        }
+        if (lbl_803470A0 != NULL) {
+            fn_8016AA64(&lbl_803470A0->st->mv, 0.0f, 0.0f);
+        }
+        if (lbl_803470A0 != NULL) {
+            lbl_803470A0->st->mode = 6;
+        }
+        break;
+    case 1:
+        if (lbl_803470A0 != NULL) {
+            lbl_803470A0->st->b1 = 0;
+        }
+        if (lbl_803470A0 != NULL) {
+            lbl_803470A0->st->mv.x = 0.0f;
+            lbl_803470A0->st->mv.y = 0.0f;
+        }
+        if (lbl_803470A0 != NULL) {
+            fn_8016AA64(&lbl_803470A0->st->mv, -60.0f, 0.0f);
+        }
+        if (lbl_803470A0 != NULL) {
+            lbl_803470A0->st->mode = 6;
+        }
+        break;
+    case 6:
+        if (lbl_803470A0 != NULL) {
+            ret = fn_8016AA0C(&lbl_803470A0->st->mv);
+        }
+        if (ret == 1) {
+            if (lbl_803470A0 != NULL) {
+                lbl_803470A0->st->mode = 10;
+            }
+        }
+        break;
+    case 7:
+        if (lbl_803470A0 != NULL) {
+            lbl_803470A0->st->b1 = 0;
+        }
+        if (lbl_803470A0 != NULL) {
+            lbl_803470A0->st->mv.x = 0.0f;
+            lbl_803470A0->st->mv.y = 0.0f;
+        }
+        if (lbl_803470A0 != NULL) {
+            lbl_803470A0->st->mode = 10;
+        }
+        break;
+    case 8:
+        if (lbl_803470A0 != NULL) {
+            lbl_803470A0->st->b1 = 1;
+        }
+        if (lbl_803470A0 != NULL) {
+            lbl_803470A0->st->mv.x = 0.0f;
+            lbl_803470A0->st->mv.y = 0.0f;
+        }
+        if (lbl_803470A0 != NULL) {
+            lbl_803470A0->st->mode = 10;
+        }
+        break;
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 9:
+    case 10:
+        break;
+    }
+    {
+        St_8016CAB4 *w = lbl_803470A0->st;
+        if (Absf(w->f30 - w->f20) <= w->f38 && Absf(w->f44) <= w->f38) {
+            w->f30 = w->f20;
+        } else {
+            sign = (w->f3c + (w->f30 + w->f44) > w->f20) ? -1 : 1;
+            w->f3c = w->f38 * sign;
+            w->f44 = w->f44 + w->f3c;
+            if (Absf(w->f44) > w->f40) {
+                w->f44 = (w->f44 > 0.0f) ? w->f40 : -1.0f * w->f40;
+            }
+            w->f30 = w->f30 + w->f44;
+            if (w->f30 < w->f34) {
+                w->f30 = w->f34;
+            }
+        }
+    }
+    if (lbl_803470A0->st->b1 == 0) {
+        fn_8016B1E4();
+    }
+    return 1;
+}
+
 void fn_8016B1E4(void)
 {
     s32 i;
@@ -2797,9 +2899,9 @@ void fn_8016B1E4(void)
         q.item = lbl_803470A0->items[i];
         f31 = q.item->x;
         f30 = q.item->y;
-        q.item->x = lbl_803470A0->st->f4 + f31;
+        q.item->x = lbl_803470A0->st->mv.x + f31;
         if (i == 1) {
-            q.item->y = lbl_803470A0->st->f8 + lbl_803470A0->items[i]->y
+            q.item->y = lbl_803470A0->st->mv.y + lbl_803470A0->items[i]->y
                 - lbl_803470A0->st->f24 * (lbl_803470A0->st->f30 / lbl_803470A0->st->f28)
                 - lbl_803470A0->st->f24;
         } else if (i == 2) {
@@ -2809,7 +2911,7 @@ void fn_8016B1E4(void)
             h = (a * ((lbl_803470A0->st->f30 + lbl_803470A0->st->f28) / a)) / 2.0f;
             s->f10 = s->f8 - (1.0f + h);
         } else {
-            q.item->y = lbl_803470A0->st->f8 + lbl_803470A0->items[i]->y;
+            q.item->y = lbl_803470A0->st->mv.y + lbl_803470A0->items[i]->y;
         }
         q.a = 0.001f * i + -1.3f;
         q.b = 1.0f;
@@ -3452,14 +3554,14 @@ void fn_801692F8(void)
 
 s32 fn_8016AA0C(Mover* m)
 {
-    if (m->x18 <= 0) {
-        m->x0 = m->x8;
-        m->x4 = m->xc;
+    if (m->steps <= 0) {
+        m->x = m->destX;
+        m->y = m->destY;
         return 1;
     }
-    m->x0 = m->x0 + m->x10;
-    m->x4 = m->x4 + m->x14;
-    m->x18 = m->x18 - 1;
+    m->x = m->x + m->stepX;
+    m->y = m->y + m->stepY;
+    m->steps = m->steps - 1;
     return 0;
 }
 
@@ -4844,11 +4946,11 @@ void fn_8016CAB4(void) {
         x = a.item->x;
         y = a.item->y;
         if (i == 3) {
-            a.item->x = (*(Obj_8016CAB4**)&lbl_803470B8)->st->f20 + ((*(Obj_8016CAB4**)&lbl_803470B8)->st->f4 + x);
+            a.item->x = (*(Obj_8016CAB4**)&lbl_803470B8)->st->f20 + ((*(Obj_8016CAB4**)&lbl_803470B8)->st->mv.x + x);
         } else {
-            a.item->x = (*(Obj_8016CAB4**)&lbl_803470B8)->st->f4 + x;
+            a.item->x = (*(Obj_8016CAB4**)&lbl_803470B8)->st->mv.x + x;
         }
-        a.item->y = (*(Obj_8016CAB4**)&lbl_803470B8)->st->f8 + (*(Obj_8016CAB4**)&lbl_803470B8)->items[i]->y;
+        a.item->y = (*(Obj_8016CAB4**)&lbl_803470B8)->st->mv.y + (*(Obj_8016CAB4**)&lbl_803470B8)->items[i]->y;
         a.a = 0.01f * (f32)i + -1.3f;
         a.b = 1.0f;
         a.c = 0;
@@ -5450,7 +5552,7 @@ void fn_80166B2C(Obj_80166B2C *obj, s32 ang, s32 idx) {
     }
 }
 
-void fn_8016AA64(Mover6 *m, f32 x, f32 y)
+void fn_8016AA64(Mover *m, f32 x, f32 y)
 {
     f32 dx, dy;
 
