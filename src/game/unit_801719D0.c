@@ -2013,6 +2013,172 @@ static inline s32 CampKind(void) {
     return kind;
 }
 
+void fn_80182A3C(void);
+void fn_801825D8(void);
+void fn_801822A0(void);
+void fn_80181F58(void);
+s32 fn_801818EC(void);
+extern const char* lbl_802F7208[];
+
+
+
+static inline void HideList(void) {
+    s32 i;
+    for (i = 0; i < camp_work.count; i++) {
+        camp_work.pnl[i]->win->x0 = 1;
+    }
+}
+
+static inline void MoveList(void) {
+    s32 i;
+    UiObj* ui;
+    for (i = 0; i < camp_work.count; i++) {
+        ui = &camp_work.pnl[i]->win->obj;
+        UiObjMoveTo(ui, 6, 4, -348.0f, (f32)(61 + i * 64));
+        UiObjSetCommand(ui, 10, i);
+    }
+}
+
+s32 fn_80181318(void) {
+    CampCtrl* slots = lbl_80307638;
+    CampReq req;
+    CampWork* cw;
+    CampCtrl* slot;
+    CampCtrl* ctrl;
+    s32 s;
+    s32 who;
+    s32 sel;
+
+    sel = slots[3].cur[0].sel;
+    switch (sel) {
+    case 0:
+        s = 7;
+        break;
+    case 1:
+        s = 5;
+        break;
+    case 2:
+        s = 10;
+        break;
+    case 3:
+        s = 8;
+        break;
+    default:
+        s = 7;
+        break;
+    }
+    slot = &lbl_80307638[s];
+    ctrl = lbl_8034710C->holder->ctrl;
+
+    if (sel == 1) {
+        who = lbl_8030B7F4.party[slots[1].cur[0].sel];
+        fn_80195EA4(&req, who, ctrl->cur[1].sel, ctrl->cur[4].sel, 1);
+        if (ctrl->cur[0].sel == 4) {
+            fn_801954D0(lbl_802F7208[req.e[slot->cur[0].sel].x6]);
+        } else {
+            fn_801954D0(req.e[slot->cur[0].sel].x10);
+        }
+    }
+    cw = &camp_work;
+    switch (cw->state[6]) {
+    case 0:
+        fn_80182A3C();
+        HideList();
+        if (fn_801953B8() != 0) {
+            camp_work.pnl[4]->win->x0 = 1;
+        }
+        switch (CampKind()) {
+        case 3:
+            camp_work.pnl[0x95]->win->x0 = 1;
+            camp_work.pnl[0x96]->win->x0 = 1;
+            break;
+        }
+        fn_80181F58();
+        fn_801825D8();
+        cw->state[6] = 2;
+        break;
+    case 2:
+        if (CampMenuAnyPanelBusy() == 0) {
+            cw->state[6] = 3;
+        } else if (fn_801C09F8(lbl_80347154, 2) != 0 || fn_801C09F8(lbl_80347154, 1) != 0) {
+            CampMenuFinishAllPanels();
+            cw->state[6] = 3;
+        }
+        break;
+    case 3:
+        switch (fn_801818EC()) {
+        case 0:
+            break;
+        case -1:
+            cw->state[6] = 0x18;
+            break;
+        case 1:
+            cw->state[6] = 0xc;
+            break;
+        }
+        break;
+    case 12:
+        fn_801822A0();
+        cw->state[6] = 0x12;
+        break;
+    case 18:
+        CampMenuAnyPanelBusy();
+        break;
+    case 24:
+        fn_801822A0();
+        switch (CampKind()) {
+        case 3:
+            MoveList();
+            break;
+        }
+        cw->state[6] = 0x13;
+        break;
+    case 19:
+        if (CampMenuAnyPanelBusy() == 0) {
+            sel = slots[3].cur[0].sel;
+            switch (sel) {
+            case 0:
+                s = 7;
+                break;
+            case 1:
+                s = 5;
+                break;
+            case 2:
+                s = 10;
+                break;
+            case 3:
+                s = 8;
+                break;
+            }
+            camp_work.state[s] = 1;
+            camp_screen = s;
+            fn_801959D4(s);
+        } else if (fn_801C09F8(lbl_80347154, 2) != 0 || fn_801C09F8(lbl_80347154, 1) != 0) {
+            CampMenuFinishAllPanels();
+            sel = slots[3].cur[0].sel;
+            switch (sel) {
+            case 0:
+                s = 7;
+                break;
+            case 1:
+                s = 5;
+                break;
+            case 2:
+                s = 10;
+                break;
+            case 3:
+                s = 8;
+                break;
+            }
+            camp_work.state[s] = 1;
+            camp_screen = s;
+            fn_801959D4(s);
+        }
+        break;
+    }
+    return 0;
+}
+
 s32 fn_801818EC(void) {
     CampCtrl* slots = lbl_80307638;
     CampCtrl* ctrl = lbl_8034710C->holder->ctrl;
