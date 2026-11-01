@@ -338,6 +338,12 @@ void fn_80150258(void);
 void fn_80154404(void);
 void fn_801539C8(void);
 typedef struct { f32 pos[3]; s32 v[3]; } Rec_80157684;
+/* What fn_80157684 fills (unit_8010E164.c's Rec_80125820): position and angles of a frame. */
+typedef struct Rec_80125820 {
+    f32 pos[3];
+    s32 v[3];
+    f32 extra[3];
+} Rec_80125820;
 typedef struct { Rec_80157684 r[1]; } Dummy_80157684;
 extern u8* lbl_80346FD4;
 typedef struct { s32 f0; s32 f4; s16 h8; s16 ha; s16 hc; s16 he; s32 f10; } Dst;
@@ -1191,6 +1197,24 @@ void fn_80156024(void) {
     fn_801E17E0(lbl_80346FD0);
     fn_80149070();
     fn_8010A094();
+}
+
+void fn_80157684(Rec_80125820 *out, s32 a, f32 t);
+extern f32 njScalor(NJS_VECTOR *v);
+
+f32 fn_801568F8(s32 a, s32 b, f32 ta, f32 tb) {
+    Rec_80125820 ra;
+    Rec_80125820 rb;
+    NJS_VECTOR v;
+    fn_80157684(&ra, b, ta);
+    fn_80157684(&rb, a, tb);
+    v.x = ra.pos[0] - rb.pos[0];
+    v.y = 0.0f;
+    v.z = ra.pos[2] - rb.pos[2];
+    v.x = -v.x;
+    v.y = -v.y;
+    v.z = -v.z;
+    return njScalor(&v);
 }
 
 void fn_80156CC4(Obj_80157EA8 *o, struct Pose *p)
@@ -2486,7 +2510,7 @@ void fn_80156588(void)
     fn_801539C8();
 }
 
-void fn_80157684(Rec_80157684 *out, s32 a, f32 t)
+void fn_80157684(Rec_80125820 *out, s32 a, f32 t)
 {
     u8 *base = lbl_80346FD4;
     f32 f = t + (120.0f + (lbl_803472E0 - (f32)lbl_80346FC4));
