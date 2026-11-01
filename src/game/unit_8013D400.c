@@ -43,7 +43,12 @@ extern void fn_80100270();
 extern void fn_801F7B04(s32 n);
 extern char lbl_802E5E68[];
 extern f32 lbl_803472E0;
-extern void* lbl_803472CC;
+/* lbl_803472CC: 0xf00 (hi, lo) pairs (fn_80148E08 allocates them). */
+typedef struct Pair_80148464 {
+    s16 a;
+    s16 b;
+} Pair_80148464;
+extern Pair_80148464* lbl_803472CC;
 extern void fn_801E17E0(void* p);
 typedef struct {
     u8 pad0[0x7C];
@@ -1213,6 +1218,24 @@ void fn_80148190(Msg* a, s16 i) {
 extern void fn_80129988(Msg*, s16);
 void fn_801481B0(Msg* a, s16 i) {
     fn_80129988(a, i);
+}
+
+typedef struct Obj_80148464 {
+    s32 idx;
+    u8 lo[8];
+    u8 hi[8];
+} Obj_80148464;
+extern const char lbl_802B3640[];
+
+void fn_80148464(Obj_80148464* o) {
+    s32 i;
+    if (o->idx > 0xef8) {
+        fn_801DBE1C(lbl_802B3640);
+    }
+    for (i = 0; i < 8; i++) {
+        lbl_803472CC[o->idx + i].a = o->hi[i];
+        lbl_803472CC[o->idx + i].b = o->lo[i];
+    }
 }
 
 void fn_80148DDC(void) {
