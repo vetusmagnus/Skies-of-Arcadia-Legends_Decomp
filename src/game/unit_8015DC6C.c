@@ -4090,6 +4090,127 @@ typedef struct Win_8017DCB4 { s32 hide; u8 pad4[4]; UiObj obj; u8 pad_[0xbc - 8 
 typedef struct Pnl_8017DCB4 { u8 pad[0x24]; Win_8017DCB4* in; } Pnl_8017DCB4;
 typedef struct CampW_8017DCB4 { u8 pad[0xc]; s8 count; u8 pad1[3]; Pnl_8017DCB4* pnl[0xcf]; } CampW_8017DCB4;
 
+/* What camp_work.p04 points at (fn_8017C948): two five-entry lists at 0x18 and 0x22. */
+typedef struct CampP04 { u8 pad[0x18]; s16 a[5]; s16 b[5]; } CampP04;
+extern s32 fn_8017CD88(void);
+extern void fn_8017CC70(void);
+extern void fn_8017D250(void);
+extern void fn_8017E174(void);
+extern void fn_8017DF14(void);
+extern void fn_8017DA28(void);
+extern void fn_8017DCB4(void);
+extern void fn_8017D534(void);
+extern void fn_8017D35C(void);
+extern void fn_8017D7C0(void);
+
+s32 fn_8017C948(void)
+{
+    CampP04* t;
+    s32 r;
+    s32 v;
+    CampCtrl* c;
+
+    t = camp_work.p04;
+    c = lbl_8034710C->holder->ctrl;
+    switch (camp_work.state[11]) {
+    case 0:
+        fn_8017D250();
+        fn_8017E174();
+        fn_8017DF14();
+        fn_8017DA28();
+        camp_work.state[11] = 2;
+        switch (c->cur[2].sel) {
+        case 0:
+            v = t->a[c->cur[0].sel];
+            break;
+        case 1:
+            v = t->b[c->cur[0].sel];
+            break;
+        }
+        if (v != -1) {
+            fn_801954D0(fn_801F48AC(v));
+        } else {
+            fn_801954D0(0);
+        }
+        break;
+    case 1:
+        fn_8017D250();
+        fn_8017E174();
+        fn_8017DCB4();
+        fn_8017D534();
+        camp_work.state[11] = 2;
+        switch (c->cur[2].sel) {
+        case 0:
+            v = t->a[c->cur[0].sel];
+            break;
+        case 1:
+            v = t->b[c->cur[0].sel];
+            break;
+        }
+        if (v != -1) {
+            fn_801954D0(fn_801F48AC(v));
+        } else {
+            fn_801954D0(0);
+        }
+        break;
+    case 2:
+        if (!CampMenuAnyPanelBusy()) {
+            camp_work.state[11] = 3;
+        } else if (fn_801C09F8(lbl_80347154, 2) || fn_801C09F8(lbl_80347154, 1)) {
+            CampMenuFinishAllPanels();
+            camp_work.state[11] = 3;
+        }
+        break;
+    case 3:
+        r = fn_8017CD88();
+        fn_8017CC70();
+        switch (r) {
+        case -1:
+            camp_work.state[11] = 0x18;
+            break;
+        case 0:
+            break;
+        case 1:
+            camp_work.state[11] = 0xc;
+            break;
+        }
+        break;
+    case 12:
+        fn_8017D35C();
+        camp_work.state[11] = 0x12;
+        break;
+    case 18:
+        if (!CampMenuAnyPanelBusy()) {
+            camp_work.state[12] = 0;
+            camp_screen = 0xc;
+            fn_801959D4(0xc);
+        } else if (fn_801C09F8(lbl_80347154, 2) || fn_801C09F8(lbl_80347154, 1)) {
+            CampMenuFinishAllPanels();
+            camp_work.state[12] = 0;
+            camp_screen = 0xc;
+            fn_801959D4(0xc);
+        }
+        break;
+    case 24:
+        fn_8017D7C0();
+        camp_work.state[11] = 0x13;
+        break;
+    case 19:
+        if (!CampMenuAnyPanelBusy()) {
+            camp_work.state[1] = 0;
+            camp_screen = 1;
+            fn_801959D4(1);
+        } else if (fn_801C09F8(lbl_80347154, 2) || fn_801C09F8(lbl_80347154, 1)) {
+            CampMenuFinishAllPanels();
+            camp_work.state[1] = 0;
+            camp_screen = 1;
+            fn_801959D4(1);
+        }
+        break;
+    }
+    return 0;
+}
+
 void fn_8017D7C0(void) {
     CampCtrl* c;
     UiObj* o;
