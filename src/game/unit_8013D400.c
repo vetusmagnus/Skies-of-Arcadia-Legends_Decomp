@@ -1156,6 +1156,31 @@ void fn_80146480(IdxArg* a) {
     }
 }
 
+void fn_80146EF4(Slot_8014359C* r, s32 idx) {
+    Blk* dst;
+    s32 d;
+    if (r->x1 == 0) {
+        dst = &lbl_8034727C->a[idx];
+    } else {
+        dst = &lbl_8034727C->b[idx];
+    }
+    switch (r->x0) {
+    case 5:
+        d = lbl_802C4BF0[r->x8].ship_power;
+        break;
+    case 1:
+        d = lbl_802D8A2C[r->x8 - 480].power;
+        break;
+    case 2:
+        d = lbl_802C7C34[r->x8 - 240].power;
+        break;
+    case 7:
+        d = lbl_802D8E64[r->x8].power;
+        break;
+    }
+    dst->w8 = d * 10;
+}
+
 void fn_80147184(Slot_8014359C *c) {
     Party *f;
     s16 *flags;
