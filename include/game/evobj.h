@@ -313,7 +313,8 @@ typedef struct EvObj {
     NJS_TEXLIST* texlist;    /* 0x100 */
     NJS_POINT3 home;         /* 0x104 */
     Angle tgt[3];            /* 0x110 */
-    u8 pad11C[0x158 - 0x11C];
+    NJS_POINT3 x11c;         /* 0x11C saved scale */
+    u8 pad128[0x158 - 0x128];
     NJS_POINT3 x158;         /* 0x158 */
     f32 x164;                /* 0x164 */
     s16 state;               /* 0x168 */

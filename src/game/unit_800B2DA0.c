@@ -1232,29 +1232,68 @@ typedef struct {
     u8 pad[0x10];
     Cfg *cfg;
 } Link;
-typedef struct {
-    u8 pad0[0x20];
-    f32 x20, x24, x28;
-    u8 pad2c[0x100 - 0x2c];
-    u32 x100;
-    u8 pad104[0x176 - 0x104];
-    s16 x176;
-    u8 pad178[0x1c8 - 0x178];
-    Link *link;
-} A;
-typedef struct {
-    u32 flags;
-    u8 pad4[0x7a - 4];
-    s16 x7a;
-    s32 x7c;
-    s32 x80;
-    u8 pad84;
-    u8 x85, x86, x87;
-    u8 pad88[0x8c - 0x88];
-    u32 x8c;
-    u8 x90[0xf9 - 0x90];
-    u8 xf9;
-} B;
+typedef struct EffEmit {
+    f32 x, y;           /* 0x00 */
+    s16 tex;            /* 0x08 */
+    s16 x0a;            /* 0x0A */
+    s32 additive;       /* 0x0C */
+    s32 tinted;         /* 0x10 */
+    u8 alpha;           /* 0x14 */
+    u8 r, g, b;         /* 0x15 */
+    s16 scrollU;        /* 0x18 */
+    s16 scrollV;        /* 0x1A */
+    NJS_TEXLIST* texlist; /* 0x1C */
+} EffEmit;
+
+typedef struct EffRgba {
+    u8 r, g, b, a;
+} EffRgba;
+
+/* emitter configuration (second argument); also see fn_800BA820 */
+typedef struct EffCfg {
+    u32 flags;          /* 0x00 */
+    s32 count;          /* 0x04 */
+    void* table;        /* 0x08 */
+    u8 pad0c[4];
+    s32 x10;            /* 0x10 */
+    s32 x14;            /* 0x14 */
+    f32 x18;            /* 0x18 */
+    u8 pad1c[0x34 - 0x1c];
+    Angle rot[3];       /* 0x34 */
+    u8 pad40[0x70 - 0x40];
+    EffEmit emit;       /* 0x70 */
+    DrawState ds;       /* 0x90 */
+    NJS_POINT3 vB8;     /* 0xB8 */
+    s16 xc4;            /* 0xC4 */
+    s16 xc6;            /* 0xC6 */
+    Angle ac8[3];       /* 0xC8 */
+    s16 xd4;            /* 0xD4 */
+    s16 xd6;            /* 0xD6 */
+    NJS_POINT3 vD8;     /* 0xD8 */
+    s16 xe4;            /* 0xE4 */
+    s16 xe6;            /* 0xE6 */
+    NJS_POINT3 vE8;     /* 0xE8 */
+    s16 xf4;            /* 0xF4 */
+    s16 xf6;            /* 0xF6 */
+    s8 kind;            /* 0xF8 */
+    u8 alphaScale;      /* 0xF9 */
+    s16 xfa;            /* 0xFA */
+    s16 xfc;            /* 0xFC */
+    s16 xfe;            /* 0xFE */
+    s16 x100;           /* 0x100 */
+    s16 x102;           /* 0x102 */
+    f32 x104;           /* 0x104 */
+    f32 x108;           /* 0x108 */
+    s16 x10c;           /* 0x10C */
+    s16 x10e;           /* 0x10E */
+    s16 x110;           /* 0x110 */
+    s16 x112;           /* 0x112 */
+    s16 x114;           /* 0x114 */
+    s16 x116;           /* 0x116 */
+    EffRgba col;        /* 0x118 */
+    f32 x11c;           /* 0x11C */
+    f32 x120;           /* 0x120 */
+} EffCfg;
 extern void fn_8009E910(void *dst, u32 a, u8 *p);
 extern f32 fn_8009E4F8(u8 v);
 typedef struct {
@@ -3816,6 +3855,148 @@ void fn_800B847C(EvObj* obj) {
             prev = p;
             p = p->next;
             i++;
+        }
+    }
+}
+
+void fn_800B9ED8(EvObj *a, EffCfg *b);
+/* The game's field-map model object (see model.c and evobj.c): the player (lbl_80347450), the work of
+ * the story-event, map-object and sparkle tasks and of the field camera tasks. Only the fields the
+ * decompiled code uses are named. */
+struct NJS_MOTION;
+
+/* three angles as a struct (the header has Angle ang[3]); needed to copy them as a unit */
+typedef struct Ang3 { Angle x, y, z; } Ang3;
+
+
+
+
+/* emitter fields of the info record (version 12+), read by fn_800BB574 */
+
+
+
+
+
+
+
+
+extern void fn_8009DC58(EvObj* obj);
+
+void fn_800BB574(EvObj* w, EffCfg* b) {
+    EvInfoEmit* info = w->ext->info;
+    EvEmitSub* s;
+    s32 flag;
+
+    b->flags = 0;
+    fn_8009DC58(w);
+    w->x11c = w->scl;
+    flag = 0;
+    if (EmitInfo(w)->x4c == 0 || (EmitInfo(w)->x4c == 1 && w->model == NULL)) {
+        flag = 1;
+    }
+    if (flag != 0) {
+        b->flags |= 4;
+    }
+    DrawStateDefault2D(&b->ds);
+    fn_800B9ED8(w, b);
+    if (info->x60 != 0) {
+        b->flags |= 0x100;
+    }
+    if (info->x64 != 0) {
+        b->flags |= 0x800;
+    }
+    if (info->x68 != 0) {
+        b->kind = 1;
+    } else if (info->x20 != 0) {
+        b->kind = info->x20 + 1;
+    } else {
+        b->kind = 0;
+    }
+    if (info->x6c != 0) {
+        b->flags |= 2;
+    }
+    b->count = fn_800A1AE8(w, 0x3b);
+    b->table = fn_800A1ABC(w, 0x3b);
+    if (w->motion != NULL) {
+        if (info->x70 != 0) {
+            b->flags |= 0x200;
+        }
+        w->speed = info->x74;
+        s = &info->sub;
+    } else {
+        s = &info->sub;
+    }
+    b->xfc = s->x00;
+    b->x100 = s->x04 + 1;
+    b->x102 = s->x08;
+    b->xfe = s->x0c;
+    b->xfa = b->xfe + b->x102;
+    b->x102 = b->x102 + 1;
+    b->xfe = b->xfe + 1;
+    b->x104 = 1.0f / b->x100;
+    b->x108 = -1.0f / b->x102;
+    if (s->x10 != 0) {
+        b->flags |= 0x400;
+    }
+    b->xc4 = s->x14;
+    b->xc6 = s->x18;
+    b->xe4 = s->x1c;
+    b->xe6 = s->x20 + 1;
+    b->xf4 = s->x24;
+    b->xf6 = s->x28 + 1;
+    b->xd4 = s->x2c;
+    b->xd6 = s->x30;
+    b->x18 = fabsf(s->x34);
+    if (b->x18 < 0.001f) {
+        b->x18 = 0.0f;
+    }
+    b->vB8.x = s->v38.x;
+    b->vB8.y = s->v38.y;
+    b->vB8.z = s->v38.z;
+    if (fabs(b->vB8.x) >= 0.001f || fabs(b->vB8.y) >= 0.001f || fabs(b->vB8.z) >= 0.001f) {
+        b->flags |= 8;
+    }
+    b->ac8[0] = s->a44[0];
+    b->ac8[1] = s->a44[1];
+    b->ac8[2] = s->a44[2];
+    if (b->ac8[2] != 0 || b->ac8[1] != 0 || b->ac8[0] != 0) {
+        b->flags |= 0x10;
+    }
+    b->vD8.x = s->v50.x;
+    b->vD8.y = s->v50.y;
+    b->vD8.z = s->v50.z;
+    if (fabs(b->vD8.x) >= 0.001f || fabs(b->vD8.y) >= 0.001f || fabs(b->vD8.z) >= 0.001f) {
+        b->flags |= 0x20;
+    }
+    b->vE8.x = s->v5c.x;
+    b->vE8.y = s->v5c.y;
+    b->vE8.z = s->v5c.z;
+    if (fabs(b->vE8.x) >= 0.001f || fabs(b->vE8.y) >= 0.001f || fabs(b->vE8.z) >= 0.001f) {
+        b->flags |= 0x40;
+    }
+    w->x204 = s->x68;
+    w->x206 = s->x6c;
+    if (b->flags & 0x100) {
+        b->x10c = info->x2f0;
+        b->x10e = info->x2f4;
+        b->x110 = info->x2f8;
+        b->x112 = info->x2fc;
+        b->x116 = info->x300;
+        b->x114 = 0;
+        b->x120 = 0.01f * info->x304;
+        b->x11c = info->x308;
+        b->col.r = 255;
+        b->col.g = info->x30c;
+        b->col.b = info->x310;
+        b->col.a = info->x314;
+        if (b->x110 == 0) {
+            b->x110 = 1;
+        }
+        if (!b->x120) {
+            b->x120 = 100.0f;
+        }
+        if (b->x10c + b->x10e == 0) {
+            b->flags |= 0x1000;
         }
     }
 }
@@ -6525,39 +6706,39 @@ u32 fn_800B2EEC(Obj *o, u32 src, s32 keep0, f32 t) {
     return out;
 }
 
-void fn_800B9ED8(A *a, B *b) {
-    Cfg *cfg = a->link->cfg;
+void fn_800B9ED8(EvObj *a, EffCfg *b) {
+    Cfg *cfg = a->ext->info;
     if (b->flags & 4) {
-        b->xf9 = 0;
-        fn_8009E910(b->x90, cfg->x50, &b->xf9);
+        b->alphaScale = 0;
+        fn_8009E910(&b->ds, cfg->x50, &b->alphaScale);
         if (cfg->xa0 == 3) {
-            b->x7c = 1;
+            b->emit.additive = 1;
         } else {
-            b->x7c = 0;
+            b->emit.additive = 0;
         }
-        b->x85 = cfg->x54;
-        b->x86 = cfg->x58;
-        b->x87 = cfg->x5c;
-        if (b->x85 != 0 || b->x86 != 0 || b->x87 != 0) {
-            b->x80 = 1;
+        b->emit.r = cfg->x54;
+        b->emit.g = cfg->x58;
+        b->emit.b = cfg->x5c;
+        if (b->emit.r != 0 || b->emit.g != 0 || b->emit.b != 0) {
+            b->emit.tinted = 1;
         } else {
-            b->x80 = 0;
+            b->emit.tinted = 0;
         }
-        b->x8c = a->x100;
-        b->x7a = cfg->x140;
+        b->emit.texlist = a->texlist;
+        b->emit.x0a = cfg->x140;
     } else {
-        a->x20 = fn_8009E4F8(cfg->x54);
-        a->x24 = fn_8009E4F8(cfg->x58);
-        a->x28 = fn_8009E4F8(cfg->x5c);
-        if (-1.0f == a->x20 && -1.0f == a->x24 && -1.0f == a->x28) {
-            a->x28 = 0.0f;
-            a->x24 = 0.0f;
-            a->x20 = 0.0f;
+        a->colour.r = fn_8009E4F8(cfg->x54);
+        a->colour.g = fn_8009E4F8(cfg->x58);
+        a->colour.b = fn_8009E4F8(cfg->x5c);
+        if (-1.0f == a->colour.r && -1.0f == a->colour.g && -1.0f == a->colour.b) {
+            a->colour.b = 0.0f;
+            a->colour.g = 0.0f;
+            a->colour.r = 0.0f;
         }
         if (cfg->x64 != 0) {
-            a->x176 = 0;
+            a->id = 0;
         } else {
-            a->x176 = 3;
+            a->id = 3;
         }
     }
 }
