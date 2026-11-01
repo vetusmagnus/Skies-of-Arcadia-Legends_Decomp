@@ -130,7 +130,14 @@ typedef struct {
     f32 f38_src;
 } Src8031195C;
 extern Src8031195C lbl_8031195C;
-typedef struct { s32 w[16]; } Blk40;
+/* A 0x40-byte camera request (fn_8022DAE8 takes one and keeps a copy). */
+typedef struct {
+    s16 pri;
+    s16 kind;
+    u8 pad4[0x28 - 4];
+    s32 f28;
+    u8 pad2c[0x40 - 0x2c];
+} Blk40;
 extern Blk40 lbl_803118DC;
 extern Blk40 lbl_8031191C;
 extern f32 lbl_803119D4[3];
@@ -177,6 +184,35 @@ void fn_8022D34C(s32 a, f32 b) {
 void fn_8022E964(Node *n, s32 mask);
 extern void fn_8022EF58(Node *n, s32 mask);
 extern char lbl_8034C750;
+extern void* memcpy(void* dst, const void* src, unsigned long n);
+extern Pt lbl_80316830;
+
+s32 fn_8022DAE8(Pt* pos, void* id, Blk40* req) {
+    s32 ret = 1;
+    s32 pri = req->pri;
+    s32 kind = req->kind;
+    if (lbl_8031195C.f0 > pri) {
+        lbl_8031195C.f0 = pri;
+        lbl_8031195C.f4 = kind;
+        lbl_8031195C.f8 = pos;
+        lbl_8031195C.fc = id;
+        lbl_8031195C.f38_src = 0.0f;
+        if (kind >= 2) {
+            if (lbl_80311970.f8 == pos && lbl_80311970.fc == id) {
+                ret = lbl_80347574;
+            } else {
+                ret = 0;
+            }
+            memcpy(&lbl_803118DC, req, 0x40);
+            lbl_803118DC.f28 = -lbl_803118DC.f28;
+            lbl_80316830.x = pos->x;
+            lbl_80316830.y = pos->y;
+            lbl_80316830.z = pos->z;
+        }
+    }
+    return ret;
+}
+
 void fn_8022E8F8(void* p, s32 arg) {
     if (!(*(u32*)p & 0x80000000)) {
         if (strncmp((const char*)p, &lbl_8034C750, 4) == 0) {
