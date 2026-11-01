@@ -508,7 +508,7 @@ config.libs = [
             Object(NonMatching, "ninja/ninja_8029EE28.c"),
             Object(NonMatching, "ninja/ninja_802A1160.c"),
             Object(Matching, "ninja/ninja_802A20DC.c"),
-            Object(NonMatching, "ninja/ninja_802A21C4.c"),
+            Object(Matching, "ninja/ninja_802A21C4.c"),
             Object(Matching, "ninja/ninja_802A3D08.c"),
             Object(NonMatching, "ninja/ninja_802A3EDC.c"),
             Object(NonMatching, "ninja/ninja_802A44F0.c"),
