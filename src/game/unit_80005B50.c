@@ -5,6 +5,7 @@
 #include "game/task.h"
 #include "game/save_8030B7F4.h"
 #include "game/stat_8030B4D4.h"
+#include "game/gamedata.h"
 #include <string.h>
 #define PTR(p, off) (*(void**)((u8*)(p) + (off)))
 extern void fn_8007E13C(void* a);
@@ -85,11 +86,18 @@ typedef struct ChrRec {
     s32 x14;
     s32 x18;
     u32 bits;           /* 0x1c */
-    u8 pad20[0xb4 - 0x20];
+    u8 pad20[0x40 - 0x20];
+    s16 stat[4];        /* 0x40 */
+    u8 pad48[0x94 - 0x48];
+    s16 x94;            /* 0x94 */
+    s16 x96;            /* 0x96 */
+    u8 pad98[0xb4 - 0x98];
     s16 xb4;            /* 0xb4 */
-    s16 xb6;            /* 0xb6 */
+    s16 xb6;            /* 0xb6: weapon id */
     u8 padb8[0x100 - 0xb8];
     u8 x100;            /* 0x100 */
+    u8 pad101[0x110 - 0x101];
+    struct ChrAux* x110; /* 0x110 */
 } ChrRec;
 extern ChrRec* lbl_80309DE4[];
 u32 fn_8000F718(s8 idx, s8 alt, u8* out);
@@ -2126,6 +2134,92 @@ void fn_80010538(s16 idx) {
 }
 
 extern void fn_80011208(s8 a, s8 b, s32 c);
+/* What a character record's x110 points at: the counter it applies (fn_80010584). */
+typedef struct ChrAux {
+    u8 pad0[0x58];
+    s8 x58;        /* counter id */
+    s8 x59;        /* stat index */
+    s8 x5a;        /* threshold */
+} ChrAux;
+/* lbl_80309174: per-character battle state (0x20). */
+typedef struct ChrStat {
+    u8 pad[9];
+    s8 x9;
+    u8 pada[0x20 - 0xa];
+} ChrStat;
+extern ChrStat lbl_80309174[12];
+static inline int Gt(s16 x, int y) { return x > y ? 1 : 0; }
+
+static inline int Roll(ChrRec* p, ChrRec* q, int lim, s16 v)
+{
+    s16 den;
+    s16 num;
+    s16 res;
+    s16 rnd;
+    den = q->x96;
+    num = p->x94;
+    rnd = rand() % 100;
+    if (rnd >= 90) rnd = 100;
+    if (rnd < 10) rnd = 0;
+    if (den == 0) den = 1;
+    res = v / 10.0f * (num * rnd) / den;
+    return Gt(res, lim);
+}
+
+s8 fn_80010584(s16 a, s16 b)
+{
+    ChrRec* p = lbl_80309DE4[a];
+    ChrRec* q = lbl_80309DE4[b];
+    int r = -1;
+    int lim;
+    s16 num;
+    s16 den;
+    s16 res;
+    s16 rnd;
+    s16 v;
+    int c;
+    s8 k;
+    WeaponFx* e;
+    ChrAux* t;
+
+    if (b >= 4 && a < 4) {
+        k = lbl_802C5790[p->xb6].effect;
+        if (k != -1) {
+            e = &lbl_802C7A90[k];
+            r = e->effect;
+            c = Roll(p, q, e->status_rate, q->stat[e->status]);
+            if (c == 1) lbl_80309174[b].x9 = r;
+            else r = -1;
+        }
+    } else if (b < 4 && a >= 4) {
+        t = p->x110;
+        r = t->x58;
+        if (r != -1) {
+            lim = t->x5a;
+            den = q->x96;
+            num = p->x94;
+            v = q->stat[t->x59];
+            rnd = rand() % 100;
+            if (rnd >= 90) rnd = 100;
+            if (rnd < 10) rnd = 0;
+            if (den == 0) den = 1;
+            res = v / 10.0f * (num * rnd) / den;
+            c = Gt(res, lim);
+            if (c == 1) lbl_80309174[b].x9 = r;
+            else r = -1;
+        }
+    }
+    if (lbl_80309DE4[b]->bits & 0x40) {
+        switch (r) {
+        case 3: case 4: case 5: case 6: case 7: case 8: case 9: case 10: case 11: case 12: case 13: case 14:
+        case 0x1a: case 0x3e: case 0x44: case 0x45: case 0x46: case 0x47: case 0x48: case 0x49:
+            r = -1;
+        }
+    }
+    lbl_80309174[b].x9 = r;
+    return r;
+}
+
 s32 fn_80010B5C(void) {
     return 1;
 }
