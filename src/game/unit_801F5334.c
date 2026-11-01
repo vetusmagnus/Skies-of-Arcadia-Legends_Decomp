@@ -1089,6 +1089,25 @@ s32 fn_801FDA70(u32 a, Scpt *st) {
     return 0;
 }
 
+s32 fn_801FDFB8(u32 a, Scpt *s) {
+    u16 f = a;
+    f32 *p;
+    s32 v;
+    if (a & 1) {
+        p = s->cur.f + 1;
+        if (3.4028235e38f == *p) {
+            p++;
+            v = 0x7FFFFFFF;
+        } else {
+            v = fn_801F6120(&p);
+        }
+        s->cur.f = p;
+        lbl_8030CEA0.x15d4 = fn_801F452C(v);
+    }
+    if (f & 8) return 1;
+    return 0;
+}
+
 s32 fn_801FEB08(u32 a, Scpt *st) {
     if (a & 1) {
         u8 *c = st->cur.b;
@@ -1155,6 +1174,47 @@ int fn_801FF1E0(void) {
     return 0;
 }
 
+s32 fn_802000A0(u32 a, Scpt *s) {
+    f32 *p;
+    s32 v;
+    s32 w;
+    if (a & 1) {
+        p = s->cur.f + 1;
+        if (3.4028235e38f == *p) {
+            p++;
+            v = 0x7FFFFFFF;
+        } else {
+            v = fn_801F6120(&p);
+        }
+        w = fn_801F6120(&p);
+        s->cur.f = p;
+        lbl_8030CEA0.x14b0 = v;
+        lbl_8030CEA0.x14c9 = w;
+    }
+    return 0;
+}
+
+s32 fn_8020014C(u32 flags, Scpt *s)
+{
+    float *p;
+    s32 a;
+    s32 b;
+    if (flags & 1) {
+        p = s->cur.f + 1;
+        if (3.4028235e38f == *p) {
+            p++;
+            a = 0x7FFFFFFF;
+        } else {
+            a = fn_801F6120(&p);
+        }
+        b = fn_801F6120(&p);
+        s->cur.f = p;
+        lbl_8030CEA0.x14b4 = a;
+        lbl_8030CEA0.x14ca = b;
+    }
+    return 0;
+}
+
 s32 fn_80200F88(u32 a, Scpt *st) {
     if (a & 1) {
         u8 *c = st->cur.b;
@@ -1187,6 +1247,27 @@ s32 fn_80201458(u32 flags, Scpt *st) {
         return 0;
     }
     return 1;
+}
+
+s32 fn_802051D0(u16 flags, Scpt *s)
+{
+    float *p = s->cur.f;
+    s32 v;
+    if (flags & 1) {
+        p = p + 1;
+        if (3.4028235e38f == *p) {
+            p++;
+            v = 0x7FFFFFFF;
+        } else {
+            v = fn_801F6120(&p);
+        }
+        lbl_8030CEA0.x1574 = v;
+        s->cur.f = p;
+    }
+    if (flags & 8) {
+        return 1;
+    }
+    return 0;
 }
 
 s32 fn_8020726C(u16 flags, Scpt *s)
@@ -1259,6 +1340,30 @@ void fn_80207738(s32 a, s32 b)
 }
 
 extern s16 fn_80209028(s32, Scpt *);
+extern void fn_801165BC(s32 v);
+
+s32 fn_80207C2C(u16 flags, Scpt *s)
+{
+    float *p;
+    s32 v;
+    if (flags & 1) {
+        p = s->cur.f;
+        p++;
+        if (3.4028235e38f == *p) {
+            p++;
+            v = 0x7FFFFFFF;
+        } else {
+            v = fn_801F6120(&p);
+        }
+        s->cur.f = p;
+        fn_801165BC(v);
+    }
+    if (flags & 8) {
+        return 1;
+    }
+    return 0;
+}
+
 void fn_80208F30(s32 a, s32 b)
 {
     Scpt s;
@@ -8972,3 +9077,80 @@ s32 fn_801FD668(u16 flags, ScrObj* o) {
     }
     return 1;
 }
+extern void fn_8016D114(s32 a);
+
+s16 fn_8020BAE0(u16 flags, Scpt *s)
+{
+    float *p;
+    u32 v;
+    if (flags & 1) {
+        p = s->cur.f + 1;
+        v = ReadInt(&p);
+        s->cur.f = p;
+        if (v == 0) {
+            fn_8016D114(8);
+        } else {
+            fn_8016D114(5);
+        }
+    }
+    return (flags >> 3) & 1;
+}
+
+s16 fn_8020BB8C(u16 flags, Scpt *s)
+{
+    float *p;
+    u32 v;
+    if (flags & 1) {
+        p = s->cur.f + 1;
+        v = ReadInt(&p);
+        s->cur.f = p;
+        if (v == 0) {
+            fn_8016D114(7);
+        } else {
+            fn_8016D114(4);
+        }
+    }
+    return (flags >> 3) & 1;
+}
+
+extern void fn_8016B998(s32 a);
+extern void fn_8016C808(s32 a);
+
+s16 fn_8020BC38(u16 flags, Scpt *s)
+{
+    float *p;
+    u32 v;
+    if (flags & 1) {
+        p = s->cur.f + 1;
+        v = ReadInt(&p);
+        s->cur.f = p;
+        if (v == 0) {
+            fn_8016C808(8);
+            fn_8016B998(8);
+        } else {
+            fn_8016C808(3);
+            fn_8016B998(1);
+        }
+    }
+    return (flags >> 3) & 1;
+}
+
+s16 fn_8020BCF4(u16 flags, Scpt *s)
+{
+    float *p;
+    u32 v;
+    if (flags & 1) {
+        p = s->cur.f + 1;
+        v = ReadInt(&p);
+        s->cur.f = p;
+        if (v == 0) {
+            fn_8016C808(7);
+            fn_8016B998(7);
+        } else {
+            fn_8016B998(0);
+            fn_8016C808(2);
+        }
+    }
+    return (flags >> 3) & 1;
+}
+
