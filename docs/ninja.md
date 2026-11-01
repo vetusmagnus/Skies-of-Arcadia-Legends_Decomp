@@ -340,6 +340,15 @@ Logged, not integrated as matches. Functions marked * are in the unit as NonMatc
   for the int-to-float magic). ~15 source forms tried.
 - `njInitMatrix*` (the limit is stored before the base), `fn_802928F4*`, `fn_80292A00*`,
   `fn_80297504*` (register order).
+- `fn_8029DEDC`, `fn_8029E5CC` (indexed drawers that send the vertex colour bytes as TEX1/TEX2,
+  left out of their files): the instructions match with `col = data + 6` (`+ 3`) as a local set
+  after the `GXSetArray` calls and read as `col[idx * 7]` (`[idx * 4]`); any form that indexes `data`
+  directly gets canonicalised to an add inside the loop. Only the registers differ. The original
+  gives `p`, `hdr`, `cull`, `fmt` and `total` r27-r31 and the hoisted cull-table rows, the stride and
+  the colour base low registers, which is the reverse of every other drawer. Their siblings
+  `fn_8029E1B4` and `fn_8029E850` match with the usual declaration order. No order of the
+  declarations changes the allocation (5,040 orders plus all placements of `idx`, `c` and `col`),
+  and neither do explicit table or stride locals, `idx`/`len`/`c` types, or the strip-file pragmas.
 - **GX immediate-mode FIFO writers (about 30 functions, the biggest blocker).** The original
   hoists several separate copies of the FIFO address (`lis rN,0xcc01` then `mr` copies, one per
   store after the second) and reloads the shared 0.0f/1.0f constants before every store. Every form
