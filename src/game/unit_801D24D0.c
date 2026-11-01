@@ -1235,6 +1235,52 @@ typedef struct Msg {
     s32 xc;
 } Msg;
 extern void fn_80291424(Msg*, s16);
+extern void fn_802913D4(u32 colour);
+extern void fn_802911CC(f32* rect, f32 z);
+
+void fn_801D7ED4(Layout* lay, f32 z, f32 a, f32 b)
+{
+    f32 rect[8];
+    u8 col[4];
+    u32 oldc;
+    f32 zz;
+    Cell* c;
+    Elem* e;
+
+    if (fn_801D616C(lay) != 0) {
+        if (z > -1.0f) {
+            z = -1.0f;
+        }
+        if (a < 0.0f) {
+            a = 0.0f;
+        }
+        if (b < 0.0f) {
+            b = 0.0f;
+        }
+        if (1.0f < b) {
+            b = 1.0f;
+        }
+        zz = fn_801DBD9C(z);
+        e = &lay->elems[0];
+        c = &lay->cells[e->idx];
+        oldc = e->colour;
+        fn_801D65B4(oldc, col, a, b);
+        e->colour = (col[0] << 24) + (col[1] << 16) + (col[2] << 8) + col[3];
+        rect[0] = lay->x + e->x;
+        rect[1] = lay->y + e->y;
+        rect[2] = lay->x + e->w;
+        rect[3] = lay->y + e->h;
+        rect[4] = c->u;
+        rect[5] = c->v;
+        rect[6] = c->u2;
+        rect[7] = c->v2;
+        fn_802913D4(e->colour);
+        fn_802913E8(c->tex, e->colour);
+        fn_802911CC(rect, zz);
+        e->colour = oldc;
+    }
+}
+
 void fn_801D8080(Msg* a, s16 i) {
     fn_80291424(a, i);
 }
