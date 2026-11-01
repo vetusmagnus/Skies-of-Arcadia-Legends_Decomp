@@ -45,7 +45,7 @@ typedef struct {
     void *f168;
     u8 b16c;
     u8 b16d;
-    u8 b16e;
+    s8 b16e;
     u8 b16f;
     u8 b170;
     u8 pad171[0x1C4 - 0x171];
@@ -2591,6 +2591,32 @@ void fn_8005BBC4(EvMotTask* t)
 
 void fn_80060950(u8 *p) {
     fn_800D208C(*(void **)(p + 0x34), *(f32 *)(p + 0x38));
+}
+
+void fn_8006097C(Shake *a)
+{
+    lbl_8030A10C.b16c = 1;
+    lbl_8030A10C.b16d = a->kind;
+    lbl_8030A10C.b16e += a->amp;
+    if (lbl_8030A10C.b16e < -7) {
+        lbl_8030A10C.b16e = -7;
+    } else if (lbl_8030A10C.b16e > 7) {
+        lbl_8030A10C.b16e = 7;
+    }
+    lbl_8030A10C.b16f = a->dur;
+    if (lbl_8030A10C.b16f < 15) {
+        lbl_8030A10C.b16f = 15;
+    } else if (lbl_8030A10C.b16f > 0x3b) {
+        lbl_8030A10C.b16f = 0x3b;
+    }
+    lbl_8030A10C.b170 = a->b4;
+    if (lbl_8030A10C.b170 < 1) {
+        lbl_8030A10C.b170 = 1;
+    }
+    if (lbl_8030A10C.b170 > 0xff) {
+        lbl_8030A10C.b170 = 0xff;
+    }
+    lbl_8030A10C.f6c |= 0x200000;
 }
 
 void fn_80061014(Vec3f *a, Vec3f *b, Vec3f *out) {
