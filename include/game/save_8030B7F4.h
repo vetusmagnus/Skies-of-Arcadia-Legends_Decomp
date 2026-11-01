@@ -50,7 +50,7 @@ typedef struct SaveData {
     u8 pad2e0[0x328 - 0x2e0];
     s8 party[5];                /* 0x328 */
     u8 x32d;
-    s8 x32e;
+    u8 x32e;                    /* 0x20 + the current lbl_802C9628 row (fn_801F28CC) */
     s8 x32f;
     s8 x330;
     char x331[0x344 - 0x331];   /* a string (fn_80193FAC) */
@@ -70,8 +70,9 @@ typedef struct SaveData {
     InvEnt saac[0x28];
     u8 xb4c;
     u8 xb4d;                /* proximity level of the nearest sparkle (0..4) */
-    u8 padb4e[2];
-    u8 xb50;
+    u8 padb4e;
+    u8 xb4f;
+    s8 xb50;                /* flags (0x40 tested in fn_801F28CC) */
     u8 padb51[0x1568 - 0xb51];
     Save1568 x1568;             /* 0x1568 */
     u8 pad1594[0x16A0 - 0x1594];
