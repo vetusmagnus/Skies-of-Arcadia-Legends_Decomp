@@ -247,7 +247,8 @@ void *fn_8008F8FC(void *a, s32 b);
 typedef struct Sub_8016645C { u8 pad[0x1a]; s16 x1a; } Sub_8016645C;
 typedef struct Obj_8016645C { u8 pad[0x1d8]; Sub_8016645C *x1d8; } Obj_8016645C;
 typedef struct Arg { u8 pad[0x1c]; u32 x1c; u32 x20; } Arg;
-extern u8 lbl_80310B3C[];
+/* lbl_80310B3C: the event flag bits, 32 per word. */
+extern u32 lbl_80310B3C[];
 void fn_8016DBAC(void *out, void *p);
 typedef struct Out {
     f32 f0;
@@ -3349,7 +3350,7 @@ void fn_8016D114(u8 v) {
 
 s32 fn_8016E1D8(void *p) {
     u32 tmp[2];
-    if (!(*(u32 *)(lbl_80310B3C + 0x88) & 4)) return 0;
+    if (!(lbl_80310B3C[0x22] & 4)) return 0;
     fn_8016DBAC(tmp, p);
     return 1;
 }
@@ -8430,7 +8431,67 @@ void fn_8018FB9C(Obj_8018FB9C *self, s32 id) {
 }
 
 inline s32 Test_80192EDC(u32 b) {
-    return ((*(u32(*)[])&lbl_80310B3C)[b >> 5] & (1 << (b & 31))) != 0;
+    return (lbl_80310B3C[b >> 5] & (1 << (b & 31))) != 0;
+}
+
+#define FLAG(b) ((lbl_80310B3C[(b) >> 5] & (1 << ((b) & 31))) != 0)
+
+static inline u32 Find_801929FC(s32 v) {
+    s32 i;
+    u32 r;
+    for (i = 0; i < 0x58; i++) {
+        if (v == lbl_802ED258[i].id) {
+            r = i;
+            goto done;
+        }
+    }
+    if (i == 0x58) {
+        r = 0;
+    }
+done:
+    return r;
+}
+static inline s32 GetMode(void) {
+    s32 r = 0;
+    switch (lbl_80307638[15].cur[0].sel) {
+    case 0: r = 0; break;
+    case 1: r = 1; break;
+    }
+    return r;
+}
+s32 fn_80192B04(void) {
+    s32 mode;
+    s32 found;
+    s32 i;
+    s32 set;
+
+    mode = GetMode();
+    found = 0;
+    switch (mode) {
+    case 0:
+        for (i = 0; i < 24; i++) {
+            u32 b = lbl_802EBA00[i].id;
+            set = FLAG(b);
+            if (set != 0) {
+                if (found == 1) {
+                    return 1;
+                }
+                found = 1;
+            }
+        }
+        break;
+    case 1:
+        for (i = 0; i < 0x58; i++) {
+            if ((lbl_80310B3C[(Find_801929FC(i) + 0xb54) >> 5] & (1 << ((Find_801929FC(i) + 0xb54) & 31)))) {
+                if (found == 1) {
+                    return 1;
+                }
+                found = 1;
+            }
+        }
+        break;
+    }
+    return 0;
 }
 
 void fn_80192EDC(Cur_80192EDC *c) {
