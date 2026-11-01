@@ -113,7 +113,7 @@ typedef struct CampReq {
     s32 b;            /* 0x04 */
     u8 d;             /* 0x08 */
     s8 count;         /* 0x09 */
-    u8 x0a;           /* 0x0A */
+    s8 x0a;           /* 0x0A */
     s8 x0b;           /* 0x0B */
     s32 xc;           /* 0x0C */
     CampEnt e[6];     /* 0x10 */
@@ -4133,6 +4133,51 @@ void fn_80177BD4(void)
     UiObjSetRaised(obj);
     fn_80199BB8(obj, -348.0f, 125.0f);
     fn_80199BAC(obj, -348.0f, 125.0f);
+}
+
+void fn_80177EFC(void) {
+    CampReq req;
+    CampPnl **arr;
+    s32 i;
+    s32 j;
+    s32 k;
+    s32 mask;
+    s32 idx;
+    CampCtrl *c;
+
+    c = lbl_8034710C->holder->ctrl;
+    c->cur[1].sel = 0;
+    c->cur[1].mask = 0;
+    c->cur[4].sel = 0;
+    idx = lbl_8030B7F4.party[lbl_80307638[1].cur[0].sel];
+    fn_80195EA4(&req, idx, c->cur[1].sel, c->cur[4].sel, 0);
+    arr = camp_work.pnl;
+    for (i = 0; i < 6; i++) {
+        arr[i + 0x34]->win->f74 = -4000.0f;
+    }
+    for (i = 0; i < 6; i++) {
+        fn_80195EA4(&req, idx, i, 0, 0);
+        if (req.b != -1) {
+            c->cur[1].sel = i;
+            c->cur[4].sel = 0;
+            break;
+        }
+    }
+    k = c->cur[1].sel + 0x34;
+    arr[k]->win->f74 += 150.0f;
+    arr[k]->win->f74 += 150.0f;
+    c->cur[4].mask = req.x0a;
+    mask = 0;
+    for (j = 0; j < 6; j++) {
+        fn_80195EA4(&req, idx, j, 0, 0);
+        if (req.b != -1) {
+            mask |= 1 << j;
+        }
+    }
+    c->cur[1].mask = mask;
+    c->cur[6].mask = 0;
+    fn_80195A68(c, 0, 1, 0, 0, 0);
+    fn_801954D0(0);
 }
 
 void fn_801791E0(void)
