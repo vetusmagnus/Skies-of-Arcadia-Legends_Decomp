@@ -314,7 +314,7 @@ typedef struct {
     u8 state;
     u8 pad1a[0x24 - 0x1a];
     Data_8012F75C *x24;
-    void **x28;
+    Obj **x28;
 } Obj_8012F75C;
 extern Obj_8012F75C *lbl_80346F38;
 extern void *fn_802268E8(void *a, void *);
@@ -612,6 +612,29 @@ void fn_8012FB10(s8 slot) {
         t.scale = 1.0f;
         fn_80133BE0(&t, 0xb);
     }
+}
+
+void fn_8012FE2C(s8 n) {
+    Args a;
+    s16 x;
+    s16 y;
+    if (n >= 0 && n < 4) {
+        x = 3;
+        y = 0x1a5 - n * 32;
+    } else {
+        x = 0x1ac;
+        y = 0x1a5 - (n - 4) * 32;
+    }
+    a.obj = lbl_80346F38->x28[0];
+    a.obj->f14 = (f32)x;
+    a.obj->f18 = (f32)y;
+    a.f4 = -1.3f;
+    a.f8 = 1.0f;
+    a.c = 0;
+    a.d = 0;
+    a.e = 1.0f;
+    a.g = 1.0f;
+    fn_8012A954(&a);
 }
 
 s32 fn_8012FF08(void) {
