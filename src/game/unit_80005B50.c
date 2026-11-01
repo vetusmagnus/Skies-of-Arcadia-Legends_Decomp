@@ -80,7 +80,7 @@ typedef struct ChrRec { u8 pad_0[0x14];
  s32 x14;
  s32 x18; u32 bits; } ChrRec;
 extern ChrRec* lbl_80309DE4[];
-extern s32 fn_8000F718(void* p, s32 a, s32 b);
+u32 fn_8000F718(s8 idx, s8 alt, u8* out);
 typedef struct HNode {
     u8 pad0[0x2c];
     struct HNode* child;   /* 0x2c */
@@ -723,7 +723,7 @@ typedef struct Tk_80014474 {
     } work;
 } Tk_80014474;
 extern int fn_8006D1C4(void);
-extern f32 fn_800114AC(void*, f32*, f32*, int);
+f32 fn_800114AC(f32* out, f32* w, f32* h, s8 flag);
 extern void fn_800608C8(void*);
 extern void fn_80061C80(void*, f32, f32, f32, int);
 extern void fn_80071F84(void*, void*, void*);
@@ -1750,6 +1750,40 @@ void fn_8000F168(NJS_TEXLIST* d) {
     }
 }
 
+static inline u32 Pack(u8 r, u8 g, u8 b, u8 a) {
+    return (b << 24) | (g << 16) | (r << 8) | a;
+}
+
+u32 fn_8000F718(s8 idx, s8 alt, u8* out) {
+    f32 tabA[6][3] = {
+        {0.231f, 1.0f, 0.655f}, {1.0f, 0.146f, 0.468f}, {0.711f, 0.446f, 1.0f},
+        {0.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 0.446f}, {1.0f, 1.0f, 1.0f}
+    };
+    f32 tabB[6][3] = {
+        {0.0f, 0.5f, 0.0f}, {0.5f, 0.0f, 0.0f}, {0.25f, 0.0f, 0.5f},
+        {0.0f, 0.5f, 1.0f}, {0.5f, 0.5f, 0.0f}, {0.5f, 0.5f, 0.5f}
+    };
+    u8 r, g, b, a;
+    if (idx > 5) idx = 5;
+    if (alt == 0) {
+        r = tabA[idx][0] * 255.0f;
+        g = tabA[idx][1] * 255.0f;
+        b = tabA[idx][2] * 255.0f;
+        a = 0x7f;
+    } else {
+        r = tabB[idx][0] * 255.0f;
+        g = tabB[idx][1] * 255.0f;
+        b = tabB[idx][2] * 255.0f;
+        a = 0x7f;
+    }
+    if (out != 0) {
+        out[1] = r;
+        out[2] = g;
+        out[3] = b;
+    }
+    return Pack(r, g, b, a);
+}
+
 s32 fn_8000F86C(s32 idx) {
     void* p = lbl_80347394;
     if (p != 0) {
@@ -1758,7 +1792,7 @@ s32 fn_8000F86C(s32 idx) {
     return *(u8*)((u8*)lbl_80309DE4[(s8)idx] + 0x100);
 }
 
-void fn_8000F8A4(void* obj, void* x) {
+void fn_8000F8A4(void* obj, s8 x) {
     s32 v = fn_8000F718(x, 0, 0);
     fn_8000F6F8(obj, 0x40, v, -1, 0);
 }
@@ -1909,6 +1943,74 @@ inline void ResetChrs(int idle)
 
 extern s32 fn_8025ECC4(void);
 s32 fn_800117EC(NJS_POINT3* a, NJS_POINT3* b, f32* out, NJS_POINT3* c);
+
+f32 fn_800114AC(f32* out, f32* w, f32* h, s8 flag) {
+    f32 v[3];
+    f32 maxx = -500.0f;
+    f32 minx = 500.0f;
+    f32 maxz = maxx;
+    f32 top = 0.0f;
+    f32 minz = minx;
+    f32 r;
+    f32 dx, dz;
+    Task* t;
+    ChrInfo* c;
+    ChrWork* o;
+    s16 i;
+    for (i = 0; i < 12; i++) {
+        t = lbl_80309E24[i];
+        if (t == 0) {
+            continue;
+        }
+        o = t->work;
+        c = o->st;
+        if ((c->xec & 0x100) && fn_80020E10(o->x10->xc) < 0) {
+            continue;
+        }
+        o = t->work;
+        if (flag == 0) {
+            fn_80071CF0(&o->pos, v);
+        } else {
+            fn_80071CF0(&c->x13c, v);
+        }
+        if (c->xec & 0x200000) {
+            r = 22.5f;
+        } else {
+            r = 7.5f;
+        }
+        if (v[0] + r > maxx) {
+            maxx = v[0] + r;
+        }
+        if (v[0] - r < minx) {
+            minx = v[0] - r;
+        }
+        if (v[2] + r > maxz) {
+            maxz = v[2] + r;
+        }
+        if (v[2] - r < minz) {
+            minz = v[2] - r;
+        }
+        if (top < c->x15c) {
+            top = c->x15c;
+        }
+    }
+    dx = maxx - minx;
+    if (dx < 0.0f) {
+        dx = -1.0f * dx;
+    }
+    dz = maxz - minz;
+    if (dz < 0.0f) {
+        dz = -1.0f * dz;
+    }
+    dx *= 0.5f;
+    dz *= 0.5f;
+    *w = dx;
+    *h = dz;
+    out[0] = minx + dx;
+    out[2] = minz + dz;
+    out[1] = 0.0f;
+    return top;
+}
 
 f32 fn_80011694(NJS_POINT3* mtx, s16 id, NJS_POINT3* v, s8* out) {
     f32 sum = 0.0f;
@@ -4154,36 +4256,36 @@ void fn_80012130(void* p) {
 f32 fn_8001359C(Vec3* obj, f32* out) {
     f32 b;
     f32 a;
-    Vec3 v;
+    f32 v[3];
     f32 r;
 
-    r = fn_800114AC(&v, &a, &b, 1);
+    r = fn_800114AC(v, &a, &b, 1);
     if (a > b) {
         *out = a;
     } else {
         *out = b;
     }
     *out = 2.0f * *out;
-    v.y = 0.0f;
-    fn_80071CF0(&v, obj);
+    v[1] = 0.0f;
+    fn_80071CF0(v, obj);
     return r;
 }
 
 f32 fn_8001363C(Vec3* obj, f32* out) {
     f32 b;
     f32 a;
-    Vec3 v;
+    f32 v[3];
     f32 r;
 
-    r = fn_800114AC(&v, &a, &b, 0);
+    r = fn_800114AC(v, &a, &b, 0);
     if (a > b) {
         *out = a;
     } else {
         *out = b;
     }
     *out = 2.0f * *out;
-    v.y = 0.0f;
-    fn_80071CF0(&v, obj);
+    v[1] = 0.0f;
+    fn_80071CF0(v, obj);
     return r;
 }
 
