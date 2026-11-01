@@ -5,18 +5,19 @@
 #include "ninja.h"
 #include "game/drawstate.h"
 #include "game/gamedata.h"
+#include "game/sprite.h"
 /* One declaration per global / prototype. Tk and Chr tables are read through raw offsets
    (same offsets and widths as the per-function struct views they replace). */
 typedef struct Lim { u8 pad_0[0x4];
  s8 x4;
  u8 pad_5[0x1]; s16 x6; s16 x8; s16 xa; } Lim;
 /* A loaded model file's materials (fn_8006D080 frees them). */
-typedef struct MdlMat { u32 x0; u32 x4; u32 x8; } MdlMat;
+typedef struct MdlMat { u32 x0; u32 x4; NJS_TEXLIST tex; } MdlMat;
 typedef struct MdlRec {
     u8 pad0[0x14];
     struct { u32 x0; MdlMat* x4; }* x14;
     u8 pad18[8];
-    u32* x20;
+    NJS_TEXLIST* x20;
     u8 pad24[0x68 - 0x24];
 } MdlRec;
 typedef struct MdlBlk { u32 n; MdlRec* r; } MdlBlk;
@@ -2078,6 +2079,7 @@ typedef struct WobCmd {
     V3 v164;
     f32 f170;
     f32 f174;
+    V3 v178;
 } WobCmd;
 typedef struct WobSt {
     s16 cnt;
@@ -2334,6 +2336,232 @@ extern s32 fn_80008F08(void *, s32, s32, s32, s32, s32, void **);
 extern void fn_800308FC(char *, s16, s16);
 extern void fn_8025F120(void *dst, char *src);
 extern void fn_800594CC(void *);
+
+void fn_80061654(NJS_POINT3 *a, NJS_POINT3 *b, NJS_POINT3 *rot, NJS_POINT3 *out, NJS_POINT3 *extra);
+void fn_80061ABC(NJS_POINT3 *out, f32 ay, f32 az, NJS_POINT3 *p, NJS_POINT3 *q);
+/* ADD: the state of one spawned particle (allocated by fn_80058E20) */
+typedef struct BitSt {
+    s16 start;           /* 0x00 */
+    s16 end;             /* 0x02 */
+    s16 cnt;             /* 0x04 */
+    u8 pad6[2];
+    f32 f8;              /* 0x08 */
+    f32 fc;              /* 0x0c */
+    s16 s10;             /* 0x10 */
+    u8 pad12[2];
+    f32 f14;             /* 0x14 */
+    f32 f18;             /* 0x18 */
+    f32 f1c;             /* 0x1c */
+    f32 f20;             /* 0x20 */
+    V3 v24;              /* 0x24 */
+    s16 frame;           /* 0x30 */
+    u8 pad32[2];
+    void* chr;           /* 0x34 */
+    u8 a;                /* 0x38 */
+    u8 step2;            /* 0x39 */
+    u8 step;             /* 0x3a */
+    u8 pad3b;
+    f32 f3c;             /* 0x3c */
+    f32 f40;             /* 0x40 */
+    V3 v44;              /* 0x44 */
+    s16 s50;             /* 0x50 */
+    u8 pad52[2];
+    WobCmd* cfg;         /* 0x54 */
+} BitSt;
+typedef struct BitWork {
+    u8 pad0[8];
+    NJS_TEXLIST* model;  /* 0x08 */
+    u8 padc[0x1c - 0xc];
+    V3 pos;              /* 0x1c */
+    u8 pad28[0x4c - 0x28];
+    BitSt* st;
+    s32 x50;
+    s32 x54;
+} BitWork;
+typedef struct BitTask {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 state;
+    u8 pad1a[0x24 - 0x1a];
+    BitWork* work;
+} BitTask;
+/* ADD: the 0x50-byte quad parameters fn_80033A18 draws */
+typedef struct BitQuad {
+    u8 pad0[4];
+    V3 v4;               /* 0x04 */
+    V3 v10;              /* 0x10 */
+    u8 pad1c[0x28 - 0x1c];
+    f32 sx;              /* 0x28 */
+    f32 sy;              /* 0x2c */
+    u8 pad30[4];
+    s16 frame;           /* 0x34 */
+    u8 pad36[2];
+    s32 x38;             /* 0x38 */
+    Colour4 col[4];      /* 0x3c */
+    NJS_TEXLIST* model;  /* 0x4c */
+} BitQuad;
+extern void fn_80012130(V3*);
+extern void fn_80033A18(BitQuad*, s16, s32, s32);
+
+void fn_800586F4(BitTask* t)
+{
+    BitWork* w = t->work;
+    BitSt* s = w->st;
+    f32 save = 0.0f;
+    f32 sign;
+    s32 flags;
+    DrawState ds;
+    BitQuad d;
+    V3 a;
+    V3 b;
+    V3 pos;
+    int i;
+
+    switch (t->state) {
+    case 0:
+        fn_8006D954(s->cfg->x8);
+        t->state = 1;
+        t->work->x50 = s->cfg->x8;
+        t->work->x54 = -1;
+    case 1:
+        if (s->cnt < s->start) {
+            break;
+        }
+        if (s->cfg->s160 == 0 || s->cfg->s160 > 0xff) {
+            s->cfg->s160 = 0xff;
+        }
+        s->a = s->cfg->s160;
+        s->step = s->a / s->cfg->s1c;
+        if (s->cfg->s1a != 0) {
+            s->step2 = s->a / s->cfg->s1a;
+            s->a = 0;
+        }
+        switch (s->cfg->x10 & 0xf) {
+        case 1:
+            fn_80071CF0(&s->cfg->v164, &a);
+            fn_80071CF0(&s->cfg->v164, &b);
+            break;
+        case 0:
+            fn_8001E4A0(&s->cfg->v164, &a, s->chr);
+            fn_80071CF0(&a, &b);
+            break;
+        case 4:
+            fn_8001E3D8(&s->cfg->v164, &a, s->chr);
+            fn_80071CF0(&a, &b);
+            break;
+        case 5:
+            fn_8001E308(&s->cfg->v164, &a, s->chr);
+            fn_80071CF0(&a, &b);
+            break;
+        default:
+            fn_80071CF0(&s->v24, &a);
+            fn_80071CF0(&a, &b);
+            break;
+        }
+        fn_80071CF0(&a, &s->v44);
+        s->v44.y = s->v44.y + s->fc;
+        a.z = a.z - s->f8;
+        b.z = b.z + s->f8;
+        a.y = a.y + s->fc;
+        b.y = b.y + s->fc;
+        fn_80061ABC(&w->pos, s->f20, s->f3c, &a, &b);
+        s->f3c = 360.0f * (3.0517578e-5f * rand());
+        s->f40 = s->cfg->f2c;
+        t->state = 3;
+        break;
+    case 3:
+        if (s->end >= 0 && s->cnt >= s->end) {
+            t->state = 0xfa;
+            break;
+        }
+        if (s->end >= 0 && s->cnt >= s->end) {
+            t->state = 0xfa;
+        } else {
+            if (s->cnt >= s->end - s->cfg->s1c) {
+                if (s->a >= s->step) {
+                    s->a -= s->step;
+                } else {
+                    s->a = 0;
+                    t->state = 0xfa;
+                }
+            }
+            if (s->cnt < s->start + s->cfg->s1a) {
+                if (s->a + s->step2 < s->cfg->s160) {
+                    s->a += s->step2;
+                } else {
+                    s->a = s->cfg->s160;
+                }
+            }
+            s->f14 += s->f1c;
+            if (s->f14 >= s->f18) {
+                s->f14 = s->f18;
+            }
+            sign = 1.0f;
+            if (3.0517578e-5f * rand() >= 0.5f) {
+                sign *= -1.0f;
+            }
+            w->pos.x = sign * (s->cfg->f28 * (3.0517578e-5f * rand())) + w->pos.x;
+            w->pos.y = w->pos.y + s->f40;
+            if (3.0517578e-5f * rand() >= 0.5f) {
+                sign *= -1.0f;
+            }
+            w->pos.z = sign * (s->cfg->f30 * (3.0517578e-5f * rand())) + w->pos.z;
+            s->f40 += s->cfg->f24;
+            if (s->cfg->f170) {
+                save = w->pos.y;
+                w->pos.y = s->cfg->f170 * njSin(182.04445f * s->f3c) + w->pos.y;
+                s->f3c += s->cfg->f174;
+                if (s->f3c > 360.0f) {
+                    s->f3c = 0.0f;
+                }
+            }
+            DrawStateDefault2D(&ds);
+            if (s->cfg->x10 & 0x20000000) {
+                ds.blend_src = 8;
+                ds.blend_dst = 10;
+            }
+            flags = fn_80040010(s->cfg->x10);
+            if (DrawStatePush(&ds)) {
+                memset(&d, 0, 0x50);
+                d.x38 = 0;
+                d.sx = s->f14;
+                d.sy = s->f14;
+                d.model = w->model;
+                d.frame = s->s50;
+                if (d.frame >= w->model->nbTexture) {
+                    d.frame = 0;
+                }
+                fn_80071CF0(&w->pos, &pos);
+                fn_80061654(&pos, &s->v44, &s->cfg->v178, &d.v4, s->chr);
+                fn_80012130(&d.v10);
+                for (i = 0; i < 4; i++) {
+                    d.col[i].c[0] = 0xff;
+                    d.col[i].c[1] = 0xff;
+                    d.col[i].c[2] = 0xff;
+                    d.col[i].c[3] = 0xff;
+                    d.col[i].c[0] = s->a;
+                }
+                s->s50 = fn_800403AC(s->frame, s->cfg->t42, s->cfg->s142, s->cfg->s144);
+                fn_80033A18(&d, s->s10, 0, flags);
+                DrawStatePop(0);
+            }
+            if (s->cfg->f170) {
+                w->pos.y = save;
+            }
+        }
+        s->frame++;
+        break;
+    case 0xf9:
+    case 0xfa:
+        fn_8006D8DC(s->cfg->x8);
+        fn_801E17E0(s);
+        t->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    s->cnt = s->cnt + 1;
+    fn_80037FD8(s->cfg, &t->state);
+}
 
 s32 fn_800593AC(T5C188 *t) {
     U5C188 *s = t->work->u;
@@ -3893,7 +4121,6 @@ static inline Node *FindRec(char *name) {
 
 extern void fn_80009800(void*);
 extern void fn_802273E0(void*, s32);
-extern s32 fn_802275A4(void *texlist, s32 a);
 
 void fn_8006D080(Node* o, s32 f) {
     MdlMat* m;
@@ -3911,8 +4138,8 @@ void fn_8006D080(Node* o, s32 f) {
             if (r->x14->x0 != 0) {
                 m = r[k].x14->x4;
             }
-            if (r->x20 != 0 && *r->x20 != 0) fn_802275A4(r->x20, 0);
-            if (m != 0 && m->x8 != 0) fn_802275A4(&m->x8, 0);
+            if (r->x20 != 0 && r->x20->textures != 0) fn_802275A4(r->x20, 0);
+            if (m != 0 && m->tex.textures != 0) fn_802275A4(&m->tex, 0);
         }
         fn_802273E0(b, 0);
     }
