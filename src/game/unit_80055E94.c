@@ -5181,6 +5181,33 @@ void fn_8006EB88(char *a, char *b, Out6EB88 *out) {
     fn_8006CF54(out);
 }
 
+extern Task *lbl_80309E24[14];
+typedef struct MdlObj { u8 id; u8 pad1[0x164 - 1]; f32 x164; } MdlObj;
+typedef struct MdlCtl { u8 pad[0x4c]; MdlObj *obj; } MdlCtl;
+extern s32 fn_800154BC(Task *t);
+
+void fn_80073C44(CamObj *arg, s8 mode) {
+    s8 i;
+    for (i = 0; i < 12; i++) {
+        if (lbl_80309E24[i] != NULL && fn_800154BC(lbl_80309E24[i]) == 0) {
+            MdlCtl *c = lbl_80309E24[i]->work;
+            MdlObj *w = c->obj;
+            switch (mode) {
+            case 0:
+                if (fn_8001D944(w->id, arg) == 0) {
+                    w->x164 = 0.0f;
+                }
+                break;
+            case 1:
+                if (fn_8001D944(w->id, arg) != 0) {
+                    w->x164 = 0.0f;
+                }
+                break;
+            }
+        }
+    }
+}
+
 void fn_80073D0C(void) {
 }
 
@@ -5595,7 +5622,6 @@ typedef struct Arg80067CA4 {
 } Arg80067CA4;
 
 extern void *lbl_802DF2B8[18];
-extern Task *lbl_80309E24[14];
 
 extern s16 fn_80020060(Ent80067CA4 *);
 
