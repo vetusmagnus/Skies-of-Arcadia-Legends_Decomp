@@ -2313,6 +2313,55 @@ int fn_801A6A58(int sub, int idx) {
     return 0x29;
 }
 
+s32 fn_801AACB0(ShopTask* t) {
+    s32 ret = 0;
+    u32 n;
+    u32 i;
+    switch (fn_801F4C24(t->w->item)) {
+    case 5:
+        n = 0;
+        if (t->w->x9 != 0) {
+            if (fn_801C0B88(t->w->item, 0)) n = 1;
+            if (fn_801C0B88(t->w->item, 1)) n++;
+            if (fn_801C0B88(t->w->item, 2)) n++;
+            if (fn_801C0B88(t->w->item, 3)) n++;
+            if (n != 4) goto loop5;
+        }
+        ret = 1;
+        t->w->parts[14]->obj->o.alpha = 0.7f;
+        t->w->parts[15]->obj->o.alpha = 0.7f;
+        t->w->parts[16]->obj->o.alpha = 0.7f;
+        t->w->parts[17]->obj->o.alpha = 0.7f;
+        break;
+    loop5:
+        for (i = 0; i < 4; i++) {
+            if (fn_801C0B88(t->w->item, i)) t->w->parts[i + 14]->obj->o.alpha = 0.7f;
+            else t->w->parts[i + 14]->obj->o.alpha = 1.0f;
+        }
+        break;
+    case 6:
+        n = 0;
+        if (t->w->x9 != 0) {
+            if (fn_801C0B88(t->w->item, 0)) n = 1;
+            if (fn_801C0B88(t->w->item, 1)) n++;
+            if (fn_801C0B88(t->w->item, 2)) n++;
+            if (n != 3) goto loop6;
+        }
+        ret = 1;
+        t->w->parts[14]->obj->o.alpha = 0.7f;
+        t->w->parts[15]->obj->o.alpha = 0.7f;
+        t->w->parts[16]->obj->o.alpha = 0.7f;
+        break;
+    loop6:
+        for (i = 0; i < 3; i++) {
+            if (fn_801C0B88(t->w->item, i)) t->w->parts[i + 14]->obj->o.alpha = 0.7f;
+            else t->w->parts[i + 14]->obj->o.alpha = 1.0f;
+        }
+        break;
+    }
+    return ret;
+}
+
 void fn_801AB98C(Obj_UNIT0000 *o)
 {
     Sub_UNIT0000 *s = o->sub;
