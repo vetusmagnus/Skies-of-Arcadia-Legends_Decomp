@@ -616,11 +616,18 @@ extern s8 fn_80030AE8(u32, Unit_8001CED0*);
 extern s16 fn_80009030(Ent_80008800* list, s16 p1, s16 p2, s16 c, s16 d);
 extern void fn_800312F0(Tk_8001CED0*, s16, s16, s8);
 extern void fn_80031254(Tk_8001CED0*);
+/* The camera object fn_8006B6F4 returns; its position is at 0x3c. */
+typedef struct CamObj {
+    u8 pad0[0x3C];
+    f32 pos[3];         /* 0x3c */
+} CamObj;
 typedef struct {
-    u8 pad0[8];
+    u8 pad0[4];
+    CamObj* cam;        /* 0x04 */
     s32 mode;
     f32 b1[3];
-    u8 pad18[4];
+    s16 steps;          /* 0x18 */
+    u8 pad1a[2];
     f32 vel[3];
     f32 b2[3];
     s16 state;
@@ -1597,6 +1604,153 @@ void fn_800091A4(s16* p) {
     }
 }
 
+void fn_8000AA58(void);
+s32 fn_8000ACE8(void);
+void fn_80009FBC(void *p);
+extern void (*lbl_802DAE50[])(void);
+void fn_80009FD8(void);
+
+extern s32 lbl_803475D8;
+extern s32 lbl_80346A94;
+extern s16 lbl_80347368;
+extern void* lbl_8034731C;
+extern s32 lbl_80347380;
+extern s32 lbl_80347338;
+extern s32 lbl_80347508;
+extern s32 lbl_80347518;
+extern f32 lbl_80347510;
+extern char lbl_803480D8[8];
+
+extern void fn_8002F35C(void);
+extern void StvSampLoadBlocking(void);
+extern void fn_801DBA58(u32 a, u32 b, u32 c);
+extern void fn_8025ECBC(void);
+extern void fn_80226170(void);
+extern void fn_801CBC30(void);
+extern void fn_801C78B8(void);
+extern void DrawStateInit(void);
+extern void fn_800300DC(void);
+extern void fn_80030100(void);
+extern void TextReset(void);
+extern s32 fn_80065490(void);
+extern void fn_8005121C(void);
+extern void fn_8002F54C(void);
+extern void fn_801CC578(char* s);
+extern void fn_80077428(void);
+extern void fn_80030ABC(void);
+extern void fn_800309C0(void);
+extern void fn_800849A8(void);
+extern void fn_801D67DC(void);
+extern void fn_800308A8(void);
+extern void fn_800309E4(void);
+extern void fn_8002F6D4(void);
+extern void fn_801CBBAC(f32 v);
+extern void fn_801CBBD8(void);
+extern void fn_80009874(void);
+
+void fn_8000A118(void) {
+    if (lbl_803475D8 == 1) {
+        lbl_8034737C = 8;
+        lbl_80346A94 = 0;
+    }
+    if (lbl_80347368 != 0) fn_8002F35C();
+    switch (lbl_8034737C) {
+    case 0:
+        lbl_80346A98 = 0;
+        if (lbl_80346A94 == 0 && lbl_80347370 != 0) {
+            lbl_80346A94 = 1;
+            StvSampLoadBlocking();
+        }
+        fn_801DBA58(0, 0, 0);
+        lbl_8034737C = 1;
+    case 1:
+        lbl_80347704 = 1;
+        lbl_8034731C = 0;
+        lbl_80346AA4 = 0;
+        OSGetTick();
+        fn_8025ECBC();
+        OSGetTick();
+        fn_8025ECBC();
+        fn_80226170();
+        lbl_80346A98 = fn_802268E8(lbl_803475A8, fn_80009FBC);
+        fn_801CBC30();
+        fn_801C78B8();
+        DrawStateInit();
+        fn_800300DC();
+        fn_80030100();
+        fn_801C78B8();
+        TextReset();
+        fn_8022642C();
+        lbl_80347380 = 0;
+        if (lbl_80347370 != 0) {
+            lbl_8034737C = 2;
+        } else {
+            lbl_8034737C = 3;
+        }
+        break;
+    case 2:
+        lbl_8034737C = 3;
+        break;
+    case 11:
+        if (fn_8000ACE8() != 0) lbl_8034737C = 12;
+        break;
+    case 12:
+        if (fn_80065490() != 0) lbl_8034737C = 3;
+        break;
+    case 3:
+        fn_8005121C();
+        fn_8002F54C();
+        fn_801CC578(lbl_803480D8);
+        fn_80077428();
+        fn_80030ABC();
+        fn_800309C0();
+        fn_800849A8();
+        fn_801D67DC();
+        fn_8000AA58();
+        lbl_8034733C = 0;
+        lbl_80347338 = 0;
+        if (lbl_80347370 != 0) StvSampLoadBlocking();
+        fn_800308A8();
+        lbl_8034737C = 4;
+        break;
+    case 4:
+        fn_800309E4();
+        break;
+    case 5:
+        lbl_802DAE50[lbl_8034733C]();
+        fn_800309E4();
+        fn_8002F6D4();
+        break;
+    case 6:
+        if (lbl_80347508 != 1) {
+            if (lbl_80347518 == 0) {
+                fn_801CBC30();
+                fn_801CBBAC(7.5f);
+                lbl_80347508 = 1;
+                lbl_80347510 = 0.0f;
+            }
+            lbl_8034737C = 7;
+        }
+        fn_800309E4();
+        break;
+    case 7:
+        if (lbl_80347508 != 1) {
+            if (lbl_80347518 == 0) fn_801CBBD8();
+            lbl_8034737C = 8;
+        }
+        fn_800309E4();
+        break;
+    case 8:
+        fn_80009FD8();
+        break;
+    case 9:
+        fn_80009874();
+        break;
+    case 10:
+        break;
+    }
+}
+
 void fn_8000A3A4(void* obj) {
     lbl_80346AA4 = fn_802268E8(lbl_803475A8, fn_8000A3FC);
     PTR(lbl_80346AA4, 0x24) = fn_801E1C7C(12);
@@ -1740,6 +1894,75 @@ static inline int FindNamedChr(Task** out) {
         }
     }
     return 0;
+}
+
+/* The work of the camera task fn_8000D734 runs (its Bounce at 0x4c). */
+typedef struct CamTaskWork {
+    u8 pad0[0x4C];
+    Bounce* move;
+} CamTaskWork;
+/* What lbl_80309E88[0].f4's work points at. */
+typedef struct CamInfo {
+    u8 pad0[0x30];
+    s16 x30;
+    u8 pad32[0x64 - 0x32];
+    f32 x64[3];
+} CamInfo;
+/* lbl_80309E88: four 0x10-byte slots (TblEnt in unit_80055E94.c). */
+typedef struct TblEnt_80309E88 {
+    void* f0;
+    Task* f4;
+    u32 f8;
+    u8 fc;
+    u8 pad[3];
+} TblEnt_80309E88;
+extern TblEnt_80309E88 lbl_80309E88[4];
+extern CamObj* fn_8006B6F4(s32 a);
+extern void* fn_8006B6C8(s16 a);
+void fn_8000D488(Bounce* o, f32* pos);
+
+void fn_8000D734(Task* t) {
+    CamInfo* info;
+    Bounce* m;
+    CamObj* o;
+    CamTaskWork* w;
+    Task* h;
+    f32 dx, dy, dz;
+    if (lbl_80309E5C.x8 & 0x02000000) return;
+    w = t->work;
+    m = w->move;
+    h = lbl_80309E88[0].f4;
+    info = h->work;
+    switch (t->state) {
+    case 0:
+        m->cam = fn_8006B6F4(0);
+        fn_80071CF0(m->cam->pos, m->b2);
+        o = m->cam;
+        dx = m->b1[0] - o->pos[0];
+        dy = m->b1[1] - o->pos[1];
+        dz = m->b1[2] - o->pos[2];
+        m->vel[0] = dx / m->steps;
+        m->vel[1] = dy / m->steps;
+        m->vel[2] = dz / m->steps;
+        if (m->mode == 1) {
+            fn_80071CF0(m->b1, m->cam->pos);
+            m->vel[0] = -1.0f * m->vel[0];
+            m->vel[1] = -1.0f * m->vel[1];
+            m->vel[2] = -1.0f * m->vel[2];
+            m->state = 1;
+        } else {
+            m->state = 0;
+        }
+        t->state = 1;
+    case 1:
+        if (fn_8006B6C8(info->x30) == 0) fn_8000D488(m, info->x64);
+        break;
+    case 2:
+        break;
+    case 3:
+        t->flags |= 0x40;
+        break;
+    }
 }
 
 void fn_8000F168(NJS_TEXLIST* d) {
@@ -2740,9 +2963,10 @@ void fn_80009860(void *v, Ent_80009860 *e)
     e->ptr = v;
 }
 
-void fn_80009FBC(u8 *p)
+void fn_80009FBC(void *p)
 {
-    if (p[0x19] == 0xff) p[0x18] |= 0x40;
+    Task *t = p;
+    if (t->state == 0xff) t->flags |= 0x40;
 }
 
 void fn_8000A38C(void)
