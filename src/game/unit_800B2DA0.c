@@ -2249,7 +2249,7 @@ typedef struct {
     Sub_800D6E1C* sub;
 } Ent_800D6E1C;
 extern Ent_800D6E1C* fn_800CCA6C(s32 a, s32 b);
-extern void fn_800D6C04(void* o);
+extern void fn_800D6C04(EvObj* o);
 extern void fn_800D6974(EvObj* o);
 typedef struct Ent_800C7F64 {
     char *name;
@@ -5022,6 +5022,72 @@ void fn_800D6618(MapTask *t)
         fn_80100B74(t);
         break;
     }
+}
+
+extern void fn_80223324(Hnd *h);
+extern void fn_801E735C(s32 a, void* o, f32 f);
+extern void fn_801E7C6C(NJS_POINT3 *out, f32 a, f32 b, NJS_MOTION *o);
+extern void njCalcVector(NJS_MATRIX m, NJS_VECTOR *v, NJS_VECTOR *out);
+extern NJS_POINT3 lbl_802B15A0;
+static inline s32 MapInfoSpeed(EvInfoMap* c, s32 def) {
+    if (c->count > 11) {
+        return c->speed;
+    }
+    return def;
+}
+
+static inline s32 MapInfoActDist(EvInfoMap* c, s32 def) {
+    if (c->count > 9) {
+        return c->actDist;
+    }
+    return def;
+}
+
+void fn_800D6C04(EvObj* o) {
+    NJS_MATRIX m60;
+    NJS_MATRIX m20;
+    NJS_POINT3 v14;
+    NJS_POINT3 v8;
+    NJS_MOTION* e;
+    EvInfoMap* lim;
+    ItemList* list;
+    EvExt* a;
+    Hnd* sub;
+    f32 f31;
+    sub = o->x1b4;
+    a = o->ext;
+    lim = a->info;
+    f31 = 0.01f * MapInfoSpeed(lim, 100);
+    list = a->items;
+    if (list->count > 2) {
+        NJS_MOTION* t = list->items[2];
+        e = 0;
+        if (t != 0) {
+            e = t;
+        }
+    } else {
+        e = 0;
+    }
+    sub->motion = e;
+    o->x24c.x = f31;
+    if (0.0f > f31) {
+        sub->frame = e->nbFrame - 1.0f;
+    } else {
+        sub->frame = 0.0f;
+    }
+    fn_80223324(sub);
+    fn_801E735C(0, o, 0.01f * MapInfoActDist(lim, 0));
+    o->x1ee = 0;
+    fn_801E7C6C(&v14, 10.0f * f31 + sub->frame, sub->frame, e);
+    njUnitMatrix(m60);
+    njRotateXYZ(m60, o->ang[0], o->ang[1], o->ang[2]);
+    njCalcVector(m60, &v14, &o->vel);
+    v8 = lbl_802B15A0;
+    njUnitMatrix(m20);
+    njTranslate(m20, o->pos.x, o->pos.y, o->pos.z);
+    njRotateXYZ(m20, o->ang[0], o->ang[1], o->ang[2]);
+    njTranslate(m20, o->pivotPos.x, o->pivotPos.y, o->pivotPos.z);
+    njCalcPoint(m20, &v8, &o->x158);
 }
 
 int fn_800D7B04(void) {
