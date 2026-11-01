@@ -927,8 +927,6 @@ typedef struct Par { f32 x0; f32 x4; f32 x8; Dst* xc; } Par;
 typedef struct Work_8000DDFC { u8 pad0[0x4c]; Par* x4c; } Work_8000DDFC;
 typedef struct Task_8000DDFC { u8 pad0[0x18]; u8 flags; u8 mode; u8 pad1a[0x24 - 0x1a]; Work_8000DDFC* work; } Task_8000DDFC;
 extern f32 njSin(Angle a);
-typedef struct Entry { char* name; u8 pad[8]; } Entry;
-typedef struct Table { Entry* ents; u32 count; } Table;
 extern u32 strlen(const char* s);
 typedef struct Inner_80019D7C { u8 pad0[2]; s16 x2; u8 pad4[0xe]; s16 x12; u8 pad14[0xe8-0x14]; s16 xe8; } Inner_80019D7C;
 typedef struct Node { u8 pad[0x24]; void* w; } Node;
@@ -3279,6 +3277,35 @@ s32 fn_80015880(s8 a, f32 f, NJS_POINT3* b, NJS_POINT3* c) {
     return 1;
 }
 
+s16 fn_80015C30(NJS_TEXLIST* t, const char* str);
+extern char lbl_80348260[3];
+extern char lbl_80348264[3];
+static inline NJS_TEXLIST* TaskTex(Task* t)
+{
+    ChrWork* w = t->work;
+    return w->x48;
+}
+NJS_TEXLIST* fn_80015B94(s8 id, s16* out)
+{
+    Task* t = fn_80021658(id);
+    s16 r;
+    if (!t) {
+        t = fn_80021658(0);
+    }
+    if (!TaskTex(t)) {
+        return 0;
+    }
+    r = fn_80015C30(TaskTex(t), lbl_80348260);
+    if (r < 0) {
+        r = fn_80015C30(TaskTex(t), lbl_80348264);
+    }
+    if (r >= 0) {
+        *out = r;
+        return TaskTex(t);
+    }
+    return 0;
+}
+
 void fn_80017320(void) {
 }
 
@@ -5547,16 +5574,16 @@ void fn_8000DDFC(Task_8000DDFC* t) {
     }
 }
 
-s16 fn_80015C30(Table* t, const char* str) {
+s16 fn_80015C30(NJS_TEXLIST* t, const char* str) {
     s16 i;
     s16 j;
     s16 len;
-    if (t == NULL || t->ents == NULL) {
+    if (t == NULL || t->textures == NULL) {
         return -1;
     }
     len = strlen(str);
-    for (i = 0; i < t->count; i++) {
-        const char* n = t->ents[i].name;
+    for (i = 0; i < t->nbTexture; i++) {
+        const char* n = t->textures[i].filename;
         j = 0;
         while (j < len) {
             if (n[j] != str[j]) {
