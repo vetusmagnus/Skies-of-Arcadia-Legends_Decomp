@@ -8906,7 +8906,7 @@ void fn_800D1E58(MapTask* o) {
         fn_8015EBF4(o->work);
         fn_8016ABEC();
         fn_80097660();
-        fn_801E17E0((void *)(w->x1c4));
+        fn_801E17E0(w->slots);
         fn_800D1268((void *)(w));
         fn_80100B74((void *)(o));
         break;

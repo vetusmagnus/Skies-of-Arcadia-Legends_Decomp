@@ -283,6 +283,15 @@ typedef struct EvColl {
     Angle* pivotAng;         /* 0x28 */
 } EvColl;
 
+/* The objects the player is next to / acting on (EvObj.slots, fn_80117BE4). */
+typedef struct EvNear {
+    EvColl* a0;              /* 0x00 */
+    EvColl* a4;              /* 0x04 */
+    EvColl* a8;              /* 0x08 */
+    EvColl* ac;              /* 0x0C */
+    EvColl* x10;             /* 0x10 current event target */
+} EvNear;
+
 typedef struct EvObj {
     u8 pad0[4];
     s32 kind;                /* 0x04 */
@@ -346,7 +355,7 @@ typedef struct EvObj {
     EvHit* hit;              /* 0x1B8 */
     EvColl* coll;            /* 0x1BC */
     EvColl* res;             /* 0x1C0 */
-    void* x1c4;              /* 0x1C4 */
+    EvNear* slots;           /* 0x1C4 */
     EvExt* ext;              /* 0x1C8 */
     void* x1cc;              /* 0x1CC */
     u8 pad1D0[0x1D8 - 0x1D0];
