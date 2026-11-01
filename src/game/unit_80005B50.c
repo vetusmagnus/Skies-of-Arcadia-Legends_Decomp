@@ -189,6 +189,8 @@ typedef struct ChrDraw {
     s32 fog;            /* 0x2c */
     s32 x30;            /* 0x30: nonzero calls fn_80060950 */
 } ChrDraw;
+/* One 0x34-byte joint of a character's skeleton (ChrInfo 0x154). */
+typedef struct Joint { u8 pad[8]; u8 data[0x34 - 8]; } Joint;
 typedef struct ChrInfo {
     s8 id;              /* 0x00 */
     u8 pad1;
@@ -199,7 +201,9 @@ typedef struct ChrInfo {
     s16 x8;             /* 0x08 */
     u8 padA[8];
     s16 state;          /* 0x12 */
-    u8 pad_14[0xc];
+    s16 x14;            /* 0x14 */
+    s16 x16;            /* 0x16 */
+    u8 pad_18[8];
     s16 x20;            /* 0x20 */
     u8 pad22[6];
     s8 x28[10];         /* 0x28 recent ids, -1 = free */
@@ -244,7 +248,7 @@ typedef struct ChrInfo {
     u8 pad13a[2];
     NJS_POINT3 x13c;    /* 0x13c saved pos */
     Angle x148[3];      /* 0x148 saved angles */
-    void* x154;         /* 0x154 */
+    Joint* x154;        /* 0x154 joints */
     u8 pad158[0x15c - 0x158];
     f32 x15c;           /* 0x15c */
     f32 x160;           /* 0x160 alpha */
@@ -260,7 +264,10 @@ typedef struct ChrInfo {
     void* x1fc;         /* 0x1fc matrix */
     u8 pad200[0x204 - 0x200];
     s16 x204;           /* 0x204 */
-    u8 pad206[0x294 - 0x206];
+    u8 pad206[0x20c - 0x206];
+    s16 x20c;           /* 0x20c */
+    s16 x20e;           /* 0x20e */
+    u8 pad210[0x294 - 0x210];
     s16 x294;           /* 0x294 texture variant */
     s8 x296;            /* 0x296 draw kind */
     u8 pad297;
@@ -285,6 +292,8 @@ typedef struct Obj_80017B18 {
     u8 pad0[0xc];
     char xc[0x24];      /* 0x0c name */
     Ent_80008800 *x30;
+    u8 pad34[0x40 - 0x34];
+    f32 x40;            /* 0x40 cached height (fn_800177C0) */
 } Obj_80017B18;
 typedef struct ChrWork {
     void* x0;           /* 0x00 model */
@@ -379,13 +388,19 @@ typedef void (*TaskFn)(void*);
 extern TaskFn lbl_802DAFA8[];
 /* The 0x70-byte objects lbl_80309EC8 keeps at 0x40/0x44 (fn_80014AB8); 0x20000000 in flags
  * releases one. */
+/* The 0x38-byte block at SysObj 0x6c. */
+typedef struct SysSub {
+    u8 pad0[2];
+    s16 x2;             /* 0x02 */
+    u8 pad4[0x38 - 4];
+} SysSub;
 typedef struct SysObj {
     u8 pad0[0x5a];
     s16 x5a;            /* 0x5a */
     s16 x5c;            /* 0x5c */
     u8 pad5e[0x68 - 0x5e];
     u32 flags;          /* 0x68 */
-    u8 x6c[4];          /* 0x6c */
+    SysSub x6c;         /* 0x6c: cleared as a whole by fn_80061F58 */
 } SysObj;
 /* lbl_80309EC8 0x88..0x204, cleared as one block by fn_80014AB8. */
 typedef struct SysMove {
@@ -1005,7 +1020,6 @@ typedef struct Node_80008800 {
 } Node_80008800;
 extern s16 fn_800089F0(Ent_80008800* t, s16 a, s16 b, s16* lo, s16* hi, s16 start);
 typedef struct Vec3_8001E3D8 { f32 x, y, z; } Vec3_8001E3D8;
-typedef struct Joint { u8 pad[8]; u8 data[0x34 - 8]; } Joint;
 typedef struct Model { u8 pad[0x154]; Joint* joints; } Model;
 typedef struct Work_8001E3D8 {
     u8 pad0[0x14];
@@ -2197,7 +2211,9 @@ typedef struct ChrStat {
     s16 x6;             /* 0x06 */
     u8 pad8;
     s8 x9;
-    u8 pada[0x20 - 0xa];
+    u8 pada[0xe - 0xa];
+    s8 xe;              /* 0x0e */
+    u8 padf[0x20 - 0xf];
 } ChrStat;
 extern ChrStat lbl_80309174[12];
 static inline int Gt(s16 x, int y) { return x > y ? 1 : 0; }
@@ -4559,6 +4575,91 @@ s32 fn_80020470(Task* t, s16 x) {
     return 1;
 }
 
+s16 fn_80015460(s16 id);
+static inline s16 Who(Task* t, s16 v) {
+    SysObj* s;
+    if (ChrW(t)->st->x1dc != 0) return fn_80015460(v);
+    if (lbl_80347394 != 0) {
+        s = lbl_80347394->work;
+        return s->x6c.x2;
+    }
+    return 0;
+}
+static inline s32 Hit20(Task* t, ChrInfo* u, s16 e, s16 k) {
+    switch (u->x20c) {
+    case 0x1D:
+        if (fn_800153E0(0x1D, u->x20e) != 0) return 1;
+    }
+    if (e != 0x18) return 0;
+    {
+        s16 a = fn_800760EC(t, 0x15, -1);
+        s16 b = fn_800760EC(t, e, k);
+        if (a == b) return 1;
+        return 0;
+    }
+}
+int fn_80020700(s16 a, s16 b, Task* t) {
+    ChrWork* w = t->work;
+    ChrInfo* in = w->st;
+    switch (in->x20c) {
+    case 0x1d:
+        if (fn_800153E0(0x1d, in->x20e) != 0) {
+            return 1;
+        }
+        break;
+    }
+    if (a != 0x18) {
+        return 0;
+    }
+    {
+        s16 x = fn_800760EC(t, 0x15, -1);
+        s16 y = fn_800760EC(t, a, b);
+        return x == y;
+    }
+}
+
+void fn_800208F4(s16* ev, s16* arg, Task* t) {
+    ChrInfo* u = ChrW(t)->st;
+    s16 k;
+    s16 e;
+    s32 hit;
+    if (!(u->xec & 0x8000)) {
+        e = *ev;
+        switch (e) {
+        case 0x18:
+            k = *arg;
+            hit = Hit20(t, u, e, k);
+            if (hit != 0) {
+                u->xec |= 0x8000;
+                u->x14 = *ev;
+                u->x16 = *arg;
+                if (u->xec & 0x200000) {
+                    *ev = 0x16;
+                } else {
+                    *ev = 0x15;
+                }
+                *arg = -1;
+            }
+            break;
+        case 0x19:
+            u->xec |= 0x8000;
+            u->x14 = 0x18;
+            u->x16 = Who(t, *arg);
+            *ev = 0x10;
+            if (lbl_80309174[u->id].xe != 0) *ev = 0x17;
+            *arg = -1;
+            break;
+        case 0x1D:
+            if (fn_800153E0(0x1D, *arg) != 0) {
+                u->xec |= 0x8000;
+                u->x14 = 0x18;
+                u->x16 = Who(t, *arg);
+            }
+            break;
+        }
+    }
+}
+
 inline void Reset(void)
 {
     Task** p;
@@ -5216,7 +5317,7 @@ void fn_80014784(void) {
         if (o != 0) {
             o->data = fn_801E1C7C(0x70);
             memset(o->data, 0, 0x70);
-            fn_80061F58(o->data->x6c, 0x38, 0);
+            fn_80061F58(&o->data->x6c, 0x38, 0);
             fn_80014AB8(0, o->data);
         }
     }
