@@ -241,7 +241,9 @@ Logged, not integrated as matches. Functions marked * are in the unit as NonMatc
   instructions exact, but the original scales each argument in its own register (`fmuls f1,f1,f4`) where
   MWCC picks a fresh one (24 lines, registers only). Plain, `*=`-in-condition, temp, inline-helper and
   macro forms all give the same diff; no GC compiler from 1.0 to 3.0a5.2 matches it.
-- Register allocation or scheduling only: `fn_80286EE8`, `fn_8028B498`, `fn_80288C68`,
+- `fn_80286EE8` / `fn_8028B498` (light update, duplicate group 40): 23 lines: the walker/base copy of the table
+  address goes the other way and `base + 0x30c` isn't hoisted; best form in `docs/near/fn_80286EE8.c`.
+- Register allocation or scheduling only: `fn_80288C68`,
   `fn_8028F884`, `fn_8028FD98`, `fn_8028FEA4`, `fn_802904E8`, `fn_802907D0`, `fn_80290918`,
   `fn_80291700` (Bezier), `fn_802917C8` (Catmull-Rom), `fn_80291888`, `fn_802918DC`, `fn_80291978`,
   `fn_80291A5C`, `fn_802915C8`, `fn_802938C8`, `fn_802939C4`, `fn_80293B34`, `fn_80293B4C`,
