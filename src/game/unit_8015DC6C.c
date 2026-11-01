@@ -4127,6 +4127,24 @@ void fn_8017DCB4(void) {
     fn_80199BAC(o, 632.0f, 480.0f);
 }
 
+void fn_8017E174(void)
+{
+    s32 i;
+    UiObj* o;
+    CampMenuHideAllPanels();
+    camp_work.pnl[4]->win->x0 = 1;
+    camp_work.pnl[0x78 + lbl_80307638[4].cur[0].sel]->win->x0 = 1;
+    camp_work.pnl[0x6e]->win->x0 = 1;
+    camp_work.pnl[0x6f]->win->x0 = 1;
+    for (i = 0; i < 8; i++) {
+        camp_work.pnl[0x7a + i]->win->x0 = 1;
+        o = &camp_work.pnl[0x7a + i]->win->obj;
+        fn_80199BA4(o, 1);
+        fn_80199B9C(o, 0.7f);
+    }
+    camp_work.pnl[0x60]->win->x0 = 1;
+}
+
 s32 fn_8018126C(void) {
     CampReq req;
     s32 off = lbl_80307638[1].cur[0].sel;
