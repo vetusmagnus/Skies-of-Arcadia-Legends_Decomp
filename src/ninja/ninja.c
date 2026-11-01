@@ -4046,7 +4046,18 @@ void fn_802A8FA0(s32 v) { lbl_80347FB8 = v; }
 
 #pragma optimization_level 1
 void fn_802A8FA8(s32 i) { lbl_80347FBC = &lbl_80346690[i]; }
+
 #pragma optimization_level reset
+void fn_802A9040(void) {
+    u8* p;
+    /* step to the next motion record; the record holds `stride`-byte key-pointer tables (as fn_80293C2C) */
+    p = lbl_80347FBC->base;
+    p += lbl_80347FBC->step;
+    lbl_80347FBC->base = p;
+    lbl_80347FBC->arrA = (void**)p;
+    lbl_80347FBC->arrB = (void**)(p + lbl_80347FBC->stride);
+    lbl_80347FBC->idx = 0;
+}
 
 inline void fn_802A907C(NjObj* obj) {
     NjDrawCtx* ctx;
