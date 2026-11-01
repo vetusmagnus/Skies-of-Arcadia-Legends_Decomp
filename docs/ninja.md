@@ -191,6 +191,20 @@ Game code stays cast-free.
   optimizer pragmas, inline and wrapper forms) all merge the copies, so this looks like a compiler build we don't
   have rather than a source form. `-O1` matches only njSin/njCos/njTan (checked over the whole unit: no file
   boundary there). A ready test case for other compilers is two FIFO drawers, fn_8029681C and fn_8028A0F4.
+- **Copy pattern solved (2026-11-01): a patched GC/1.3.2.** The original compiler's copy propagation did not
+  propagate a copy into a block with a higher loop weight than the copy's own block; stock 1.3.2 does
+  (AddPropagation.c, legality callback 0x5698A0, the different-block path at 0x5699B0). Found by knocking out
+  each PCode pass in turn: skipping the copy propagation after VALUE NUMBERING 2 reproduces both test cases,
+  and limiting it by loop weight keeps the rest of the unit. `tools/patch_mwcc_ninja.py` builds
+  `build/compilers/GC/1.3.2nj` from 1.3.2 (43 bytes, hash-checked). Results with fdiff:
+  - `fn_8029681C` (FIFO point drawer, plain C, `build/match` test) and `fn_80298544` (`docs/near/fn_80298544.c`)
+    match exactly; neither does with any stock compiler.
+  - 275 of the 277 functions in ninja.c that match with 1.3.2 still match. The two that don't, fn_802A1374 and
+    fn_802A7894 (twin strip drawers), differ by where one `clrlwi r31,n,24` is scheduled.
+  - `fn_802A1160` gains the `mr r5,r6` copy but still differs: the original also keeps `mr r9,r0` / `mr r10,r4`
+    (preheader copies of values loaded before the loop) that 1.3.2's register coalescing merges. Turning
+    coalescing off entirely drops the unit to 146 of 277, so the original coalesced selectively; not solved yet.
+  Not wired into configure.py yet: ninja.c would need the 1.3.2nj compiler (fetched compilers plus this script).
 - Copy pattern, a minimal case (2026-11-01): `docs/near/fn_80298544.c`. With GC/1.3.2 the whole function is
   identical (prologue, 8x unroll, trip count, the unrolled body sharing one `li r5,0`) except the leftover loop
   MWCC builds for n % 8: the original hoists `li r9,0` plus `mr` copies for the third and later zero stores,
