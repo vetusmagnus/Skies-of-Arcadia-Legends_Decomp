@@ -12,7 +12,8 @@ struct Task {
     TaskFunc func; /* 0x00 */
     Task* next;    /* 0x04 */
     Task* parent;  /* 0x08 */
-    u8 pad0C[0x0C];
+    u8 pad0C[0x08];
+    s32 x14;  /* 0x14 */
     u8 flags; /* 0x18: 0x40 delete, 0x10 deleted */
     u8 state; /* 0x19: 0 new, 0xFF dying */
     u8 pad1A;
