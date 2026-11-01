@@ -15,7 +15,6 @@
 #include "game/text.h"
 #include "game/gamedata.h"
 #include "game/camera_803119E0.h"
-
 /* The .rodata of the warp/party code (fn_800FFA18 .. fn_801004C4) from its start: fn_801004C4
    reaches its messages through this section base, so the block is defined here, first, with every
    object at its original offset. */
@@ -762,6 +761,18 @@ typedef struct {
     u8 pad20[0x130 - 0x20];
 } GameFiles;
 extern GameFiles lbl_803082F8;
+typedef struct Item_8010C5BC {
+    struct Item_8010C5BC *next;
+    u8 pad4[4];
+    u32 colour;
+    f32 sx;
+    f32 sy;
+    u16 skip;
+    u8 pad16[2];
+    s16 len;
+    char text[1];
+} Item_8010C5BC;
+
 static inline void ResEvMark(s16 id) {
     s16 m;
     for (m = 0; m < 16; m++) {
@@ -11271,3 +11282,61 @@ void fn_80109DCC(s32 id, LoadRes *r) {
     Setup_80109DCC(id, r->data, r->name);
 }
 
+static inline void Style_8010C5BC(TextNode *o, Item_8010C5BC *p, f32 a)
+{
+    u32 c;
+    o->st.sx = p->sx;
+    o->st.sy = p->sy;
+    if (a == 1.0f) {
+        o->st.colour = p->colour;
+    } else {
+        c = p->colour * a;
+        o->st.colour = (p->colour & 0x00FFFFFF) | (c & 0xFF000000);
+    }
+    o->st.z = -1.02f;
+}
+
+void fn_8010C5BC(f32 a, s16 x, s16 y, Item_8010C5BC *p, s16 n)
+{
+    TextNode *o;
+    s32 left;
+    Item_8010C5BC *q;
+
+    if (a == 0.0f) {
+        return;
+    }
+    left = n;
+    q = p;
+    while (q != 0) {
+        if (q->skip == 0) {
+            break;
+        }
+        q = q->next;
+        left--;
+    }
+    if (q == 0) {
+        return;
+    }
+    if (q->sx != 2.0f) {
+        o = TextPrintN(x, y, q->text, left);
+    } else {
+        o = TextPrintN(x + 12, y + 12, q->text, left);
+    }
+    if (o != 0) {
+        Style_8010C5BC(o, q, a);
+    }
+    left -= q->len;
+    q = q->next;
+    while (q != 0 && left > 0) {
+        if (q->skip == 0) {
+            o = TextContinueN(q->text, left);
+            if (o != 0) {
+                Style_8010C5BC(o, q, a);
+            }
+            left -= q->len;
+        } else {
+            left--;
+        }
+        q = q->next;
+    }
+}

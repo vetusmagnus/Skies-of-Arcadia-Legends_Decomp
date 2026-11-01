@@ -998,6 +998,13 @@ typedef struct EnemyEntry {
     s8 unk15;
 } EnemyEntry;
 extern void *lbl_803474B8;
+typedef struct ScrObj {
+    u8 pad0[0x1c];
+    f32* script;
+} ScrObj;
+extern char lbl_802D4DA0[];
+extern f32 lbl_8034C1F0;
+extern void fn_8015F6C0(void* obj, u16 a, s32 c, f32* pos, s32* ivec);
 
 void fn_801F5334(s8 n) {
     s32 i;
@@ -8927,6 +8934,41 @@ int fn_801F53A4(int no)
         if (id == -1) break;
         e = EnemyFind(data, id);
         if (e->unk15 != 1) return 0;
+    }
+    return 1;
+}
+
+s32 fn_801FD668(u16 flags, ScrObj* o) {
+    if (flags & 1) {
+        f32* p;
+        s32 iv[3];
+        struct {
+            u16 a;
+            u16 b;
+            s32 c;
+            f32 f[10];
+        } m;
+        Obj10A* t;
+        p = o->script + 1;
+        m.a = ReadInt(&p);
+        m.c = ReadInt(&p);
+        m.b = ReadInt(&p);
+        m.f[0] = fn_801F6120(&p);
+        m.f[1] = fn_801F6120(&p);
+        m.f[2] = fn_801F6120(&p);
+        m.f[3] = fn_801F6120(&p);
+        m.f[4] = fn_801F6120(&p);
+        m.f[5] = fn_801F6120(&p);
+        iv[0] = 182.04445f * m.f[3];
+        iv[1] = 182.04445f * m.f[4];
+        iv[2] = 182.04445f * m.f[5];
+        o->script = p;
+        t = fn_8010A164(m.b);
+        if (t == 0) {
+            fn_801DBE1C(lbl_802D4DA0, m.b);
+        }
+        fn_8015F6C0(t->x24, m.a, m.c, m.f, iv);
+        return 0;
     }
     return 1;
 }

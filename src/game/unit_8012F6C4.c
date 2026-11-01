@@ -21,7 +21,14 @@ typedef struct {
     };
 } Holder_8012FF48;
 typedef struct {
-    u8 pad0[0x1c];
+    u8 pad_0[0x4];
+    s8 v0;
+    u8 pad_5[0x3];
+    s32 v1;
+    s32 v2;
+    s32 v3;
+    u8 pad_14[0x4];
+    char* msg;
     s32 kind[3];
 } Sys_8013360C;
 typedef struct {
@@ -2289,5 +2296,53 @@ void fn_80136848(s32 x, s32 y) {
         } else {
             Rec5Copy(x, y, d);
         }
+    }
+}
+
+void fn_80133750(void)
+{
+    NumDraw it;
+    f32 z;
+
+    it.x = 0x37;
+    it.y = 0xC6;
+    it.v = lbl_80346F58->x24->v0;
+    it.z = -1.2989999f;
+    it.scale = 1.0f;
+    it.col = 0xFFC8C8C8;
+    fn_80133BE0(&it, 12);
+
+    it.x = 0x70;
+    it.y = 0xC6;
+    it.v = lbl_80346F58->x24->v1;
+    it.z = -1.2989999f;
+    it.scale = 1.0f;
+    it.col = 0xFFC8C8C8;
+    fn_80133BE0(&it, 12);
+
+    it.x = 0x94;
+    it.y = 0xC6;
+    it.v = lbl_80346F58->x24->v2;
+    it.z = -1.2989999f;
+    it.scale = 1.0f;
+    it.col = 0xFFC8C8C8;
+    fn_80133BE0(&it, 12);
+
+    it.x = 0x67;
+    it.y = 0xFF;
+    it.v = lbl_80346F58->x24->v3;
+    it.z = -1.2989999f;
+    it.scale = 1.0f;
+    it.col = 0xFFC8C8C8;
+    fn_80133BE0(&it, 12);
+
+    if (lbl_80346F58->x24->msg != 0) {
+        z = TextGetZ();
+        TextSetZ(-1.2989999f);
+        TextPushColor();
+        TextSetColor(0xFFC8C8C8);
+        TextPrint(0x15, 0xE1, lbl_80346F58->x24->msg);
+        TextPopColor(1);
+        TextSetZ(z);
     }
 }

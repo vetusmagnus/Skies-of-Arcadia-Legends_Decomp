@@ -70,6 +70,26 @@ typedef struct CampWork {
 extern CampWork camp_work;
 extern CampCtrl lbl_80307638[22];
 extern CampTask *lbl_8034710C;
+extern s32 fn_80193F78(void);
+extern s32 lbl_80347154;
+extern s32 camp_screen;
+extern void fn_801F2E44(s32 a);
+extern void fn_80180EA0(void);
+extern void fn_80195A68(void* p, s32 a, s32 b, s32 c, s32 d, s32 e);
+extern void fn_80180CCC(void);
+extern void fn_80180B80(void);
+extern void fn_80180A84(void);
+extern s32 CampMenuAnyPanelBusy(void);
+extern s32 fn_801C09F8(s32 a, s32 b);
+extern void CampMenuFinishAllPanels(void);
+extern s32 fn_8017F9D8(void);
+extern void fn_8017F840(void);
+extern void fn_801808D4(void);
+extern void fn_801959D4(s32 n);
+typedef struct Node_8018DD24 { s32 x0, x4; u8 ui[0x8c - 8]; f32 f8c; } Node_8018DD24;
+typedef struct Obj_8018DD24 { u8 pad0[0x18]; u8 flags; u8 state; u8 pad1a[0x24 - 0x1a]; Node_8018DD24 *node; } Obj_8018DD24;
+extern void fn_80199F38(void *ui);
+
 /* Hide camp panel k (its window's first word is the hidden flag). */
 static inline void Hide(CampWork *a, s32 k) {
     a->pnl[k]->win->x0 = 1;
@@ -12104,5 +12124,175 @@ void fn_801847F0(void) {
         UiObjMoveTo(o, 6, 4, -8.0f, 381.0f);
         if (c->cur[0].sel == 5) UiObjSetCommand(o, 10, 5);
         else UiObjSetCommand(o, 15, 5);
+    }
+}
+
+void fn_80171484(void)
+{
+    UiObj* obj;
+    s32 i;
+    UiObj* o1;
+    s32 j;
+    s32 a;
+    s32 b;
+    s32 d;
+    CampCtrl* c;
+
+    c = lbl_8034710C->holder->ctrl;
+    o1 = &camp_work.pnl[lbl_80307638[1].cur[0].sel]->win->obj;
+    UiObjMoveTo(o1, 6, 4, -8.0f, 61.0f);
+    UiObjSetCommand(o1, 15, 0);
+    for (j = 0; j < 4; j++) {
+        if (c->cur[0].mask & (1 << j)) {
+            obj = &camp_work.pnl[j + 0x1f]->win->obj;
+            UiObjMoveTo(obj, 6, -1, -8.0f, (j + 1) * 64 + 61);
+            if (c->cur[0].sel == j) {
+                UiObjSetCommand(obj, 10, j + 1);
+            } else {
+                UiObjSetCommand(obj, 15, j + 2);
+            }
+        }
+    }
+    switch (c->cur[4].sel) {
+    case 0:
+        a = 0x23;
+        b = 4;
+        d = 3;
+        break;
+    case 1:
+        a = 0x27;
+        b = 5;
+        d = 4;
+        break;
+    case 2:
+        a = 0x2c;
+        b = 6;
+        d = 5;
+        break;
+    }
+    for (i = 0; i < b; i++) {
+        obj = &camp_work.pnl[a + i]->win->obj;
+        if (d == i) {
+            UiObjMoveTo(obj, 6, 4, 328.0f, 381.0f);
+            UiObjSetCommand(obj, 15, 6);
+        } else {
+            UiObjMoveTo(obj, 6, 4, 328.0f, i * 64 + 61);
+            UiObjSetCommand(obj, 15, i + 1);
+        }
+    }
+    if (lbl_8030B7F4.party[c->cur[2].sel] == 0 && fn_80193F78() && c->cur[4].sel == 0) {
+        obj = &camp_work.pnl[0x32]->win->obj;
+        UiObjMoveTo(obj, 6, 4, 328.0f, 317.0f);
+        UiObjSetCommand(obj, 15, 5);
+    }
+}
+
+s32 fn_8017F644(void) {
+    CampCtrl* c;
+    s32 r;
+
+    fn_801F2E44(lbl_8030B7F4.party[lbl_80307638[1].cur[0].sel]);
+    switch (camp_work.state[10]) {
+    case 0:
+        c = lbl_8034710C->holder->ctrl;
+        fn_80180EA0();
+        c->cur[6].mask = 2;
+        fn_80195A68(c, 1, 1, 0, 0, 0);
+        c->cur[1].sel = 0;
+        c->cur[1].x8 = 1;
+        c->state = 0;
+        fn_801954D0(0);
+        fn_80180CCC();
+        fn_80180B80();
+        fn_80180A84();
+        camp_work.state[10] = 2;
+        break;
+    case 2:
+        if (CampMenuAnyPanelBusy() == 0) {
+            camp_work.state[10] = 3;
+        } else if (fn_801C09F8(lbl_80347154, 2) != 0 || fn_801C09F8(lbl_80347154, 1) != 0) {
+            CampMenuFinishAllPanels();
+            camp_work.state[10] = 3;
+        }
+        break;
+    case 3:
+        r = fn_8017F9D8();
+        fn_8017F840();
+        switch (r) {
+        case -1:
+            camp_work.state[10] = 0x18;
+            break;
+        case 0x7fffffff: /* only this second case gives the original's beq/blt/b tree; 0x7FFFFFFF is the
+                            script "no value" sentinel, but whether fn_8017F9D8 returns it is unverified */
+            break;
+        }
+        break;
+    case 0x18:
+        camp_work.pnl[0x64]->win->x0 = 0;
+        fn_801808D4();
+        camp_work.state[10] = 0x13;
+        break;
+    case 0x13:
+        if (CampMenuAnyPanelBusy() == 0) {
+            camp_work.state[3] = 0;
+            camp_screen = 3;
+            fn_801959D4(3);
+        } else if (fn_801C09F8(lbl_80347154, 2) != 0 || fn_801C09F8(lbl_80347154, 1) != 0) {
+            CampMenuFinishAllPanels();
+            camp_work.state[3] = 0;
+            camp_screen = 3;
+            fn_801959D4(3);
+        }
+        break;
+    }
+    return 0;
+}
+
+void fn_8018DD24(Obj_8018DD24 *self) {
+    Node_8018DD24 *node = self->node;
+    void *ui = node->ui;
+    s32 b;
+    s16 a;
+    s16 c;
+    switch (node->x4) {
+    case 0x67:
+        if (lbl_80307638[15].cur[0].sel == 0) {
+            a = 0x18;
+            b = lbl_80307638[16].cur[0].sel;
+            c = (lbl_80307638[16].cur[4].sel % 2) * 0xf8;
+        } else {
+            a = 0;
+            b = lbl_80307638[16].cur[0].sel;
+            c = (lbl_80307638[16].cur[4].sel % 2) * 0xf8;
+        }
+        break;
+    default:
+        break;
+    }
+    {
+        f32 x = c + 0x30;
+        f32 y = b * 0x18 + 0x83 + a;
+        fn_80199BB8(ui, x, y);
+        fn_80199BAC(ui, x, y);
+    }
+    switch (self->state) {
+    case 0xFE:
+    case 0:
+        self->state = 1;
+    case 1:
+        fn_80199F38(ui);
+        UiObjCalcRect(ui);
+        if (self->node->x0 == 1) {
+            self->node->f8c = lbl_8034710C->holder->ctrl->f74;
+            fn_800FF3EC(self->node);
+        }
+        break;
+    case 0x64:
+        self->state = 0xff;
+        break;
+    case 0xFF:
+        fn_80199F58(self->node);
+        self->flags |= 0x40;
+        break;
     }
 }

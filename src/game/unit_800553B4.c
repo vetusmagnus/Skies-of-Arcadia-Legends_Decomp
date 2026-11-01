@@ -1,4 +1,5 @@
 #include "types.h"
+#include "ninja.h"
 s32 fn_80227068(s32 n);
 typedef struct { f32 x, y, z; } V3;
 typedef struct U553FC {
@@ -39,13 +40,71 @@ typedef struct O553FC {
     S553FC *s;
 } O553FC;
 typedef struct G553FC {
-    u8 pad[0x1c4];
+    u8 pad_0[0x6c];
+    u32 flags6c;
+    s16 s70;
+    u8 pad_72[0x152];
     s32 count;
 } G553FC;
 extern G553FC lbl_8030A10C;
 extern void fn_80071CF0(V3 *, V3 *);
 extern void fn_8001E4A0(V3 *, V3 *, T553FC *);
 extern void fn_80037FD8(void *cmd, u8 *state);
+typedef struct Unit {
+    u8 pad0[0xEC];
+    u32 shape;       /* 0xEC */
+    u32 flags;       /* 0xF0 */
+} Unit;
+typedef struct ChrRes {
+    u8 pad0[0xC];
+    char name[0x30 - 0xC];  /* 0x0C: resource name */
+} ChrRes;
+typedef struct Actor {
+    u8 pad0[0x10];
+    ChrRes *res;     /* 0x10 */
+    u8 pad14[0x4C - 0x14];
+    Unit *unit;      /* 0x4C */
+} Actor;
+typedef struct ActorTask {
+    u8 pad0[0x24];
+    Actor *work;     /* 0x24 */
+} ActorTask;
+typedef struct Cfg {
+    u8 pad0[0x10];
+    u32 flags10;     /* 0x10 */
+    u8 pad14[4];
+    s16 kind;        /* 0x18 */
+    s16 at;          /* 0x1A trigger frame */
+    s16 end;         /* 0x1C */
+    s16 sub;         /* 0x1E */
+    s16 se0;         /* 0x20 */
+    s16 bank;        /* 0x22 */
+    s16 se1;         /* 0x24 */
+    s16 se2;         /* 0x26 */
+} Cfg;
+typedef struct W {
+    u16 frame;            /* 0x00 */
+    u8 pad2[2];
+    s32 handle;           /* 0x04 */
+    ActorTask *a;         /* 0x08 */
+    Cfg *cfg;             /* 0x0C */
+} W;
+typedef struct WTask {
+    u8 pad0[0x18];
+    u8 flags;        /* 0x18 */
+    u8 state;        /* 0x19 */
+    u8 pad1A[0x24 - 0x1A];
+    W *work;         /* 0x24 */
+} WTask;
+ActorTask *fn_8001E05C(ActorTask *t);
+s16 CharSeTableGet(s16 i);
+s32 SePlay(s32 bank, s8 arg1, s8 id);
+s32 rand(void);
+s32 fn_80075C70(ActorTask *t, s32 a, s32 b);
+void fn_80217830(s32 h);
+void fn_802172C8(s32 h, s8 vol);
+s32 fn_80216F48(s32 h);
+s8 fn_80020E10(char *name);
 
 s32 fn_800553B4(void) {
   if (fn_80227068(1) == 0) {
@@ -234,3 +293,117 @@ void fn_80055558(T55558 *t)
     fn_80037FD8(w->cfg, &t->state);
 }
 
+void fn_80055A38(WTask *t)
+{
+    W *w = t->work;
+    Unit *u;
+    s16 n = 0;
+    s16 v;
+    s16 ses[3];
+    ActorTask *o;
+
+    u = w->a->work->unit;
+    switch (t->state) {
+    case 0:
+        if (w->cfg->kind == 1) {
+            t->state = 0xfa;
+            return;
+        }
+        t->state = 1;
+        if (w->cfg->sub == 0)
+            w->cfg->sub = lbl_8030A10C.s70;
+    case 1:
+        if (w->frame != w->cfg->at)
+            break;
+        v = CharSeTableGet(w->cfg->se0);
+        switch (w->cfg->kind) {
+        case 6:
+            if (w->cfg->se0 != 0) {
+                ses[0] = CharSeTableGet(w->cfg->se0);
+                n = 1;
+            }
+            if (w->cfg->se1 != 0)
+                ses[n++] = CharSeTableGet(w->cfg->se1);
+            if (w->cfg->se2 != 0)
+                ses[n++] = CharSeTableGet(w->cfg->se2);
+            if (n != 0)
+                v = rand() % n;
+            else
+                v = 0;
+            w->handle = SePlay(w->cfg->bank, w->cfg->sub, ses[v]);
+            break;
+        case 4:
+        case 5:
+            break;
+        default:
+            w->handle = SePlay(w->cfg->bank, w->cfg->sub, v);
+        }
+        t->state = 2;
+        break;
+    case 2:
+        switch (w->cfg->kind) {
+        default:
+            t->state = 0xfa;
+            break;
+        case 2:
+            if (u->shape & 0x20000) {
+                fn_80217830(w->handle);
+                t->state = 0xfa;
+            }
+            break;
+        case 3:
+            if (u->flags & 0x200000) {
+                u->flags &= ~0x200000;
+                fn_80217830(w->handle);
+                t->state = 0xfa;
+            }
+            break;
+        case 5:
+            if (u->flags & 0x100000) {
+                v = CharSeTableGet(w->cfg->se0);
+                u->flags &= ~0x100000;
+                w->handle = SePlay(w->cfg->bank, w->cfg->sub, v);
+                t->state = 0xfa;
+            }
+            break;
+        case 4:
+            o = fn_8001E05C(w->a);
+            if (fn_80075C70(o, 0xb, -1) != 0 || fn_80075C70(o, 0x20, -1) != 0) {
+                v = CharSeTableGet(w->cfg->se0);
+                w->handle = SePlay(w->cfg->bank, w->cfg->sub, v);
+                t->state = 0xfa;
+            }
+            if (w->frame >= w->cfg->end)
+                t->state = 0xfa;
+            break;
+        }
+        if (w->handle != 0 && (u->shape & 0x100000))
+            fn_802172C8(w->handle, -0x20);
+        if (t->state == 0xfa && w->handle != 0 && (w->cfg->flags10 & 0x8000)) {
+            lbl_8030A10C.flags6c |= 0x200;
+            t->state = 3;
+        }
+        break;
+    case 3:
+        if (fn_80216F48(w->handle) == 0) {
+            t->state = 0xfa;
+            goto stop;
+        }
+        lbl_8030A10C.flags6c |= 0x200;
+        break;
+    case 0xf9:
+    stop:
+        if (w->handle != 0)
+            fn_80217830(w->handle);
+    case 0xfa:
+        t->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    w->frame++;
+    if (u->shape & 0x100) {
+        if (fn_80020E10(w->a->work->res->name) < 0)
+            t->state = 0xfa;
+    }
+    fn_80037FD8(w->cfg, &t->state);
+}

@@ -268,6 +268,17 @@ typedef struct {
 } EvInfoCount;
 typedef struct Vec3_800A12D8 { f32 x, y, z; } Vec3_800A12D8;
 extern f32 fn_80291A5C(f32 x);
+/* Four separate .bss arrays of the unit, reached through its section base. */
+extern s32 lbl_803033B0[6];
+extern s32 lbl_803033C8[6];
+extern s32 lbl_803033E0[6];
+extern s32 lbl_803033F8[6];
+extern void fn_800CAC04(s32 a, s32 b, s32 c, s32 d, f32 y, f32 sx, f32 sy);
+s32 lbl_803033B0[6];
+/* count */
+s32 lbl_803033C8[6];
+s32 lbl_803033E0[6];
+s32 lbl_803033F8[6];
 
 static inline EvInfoCount* CountInfo(EvObj* e) {
     return e->ext->info;
@@ -4549,3 +4560,53 @@ void fn_800A3744(EvObj *obj)
     }
 }
 
+/* state */
+
+/* Layout stub, NOT part of the merge: MWCC lays the pooled .bss arrays out in order of first use in
+ * the file. In the unit, fn_8009C518 (earlier) sets that order; this stub stands in for it here. */
+void bss_order_stub(void) { lbl_803033B0[0] = 0; lbl_803033C8[0] = 0; lbl_803033E0[0] = 0; lbl_803033F8[0] = 0; }
+
+void fn_8009CFD8(void) {
+    s32 i;
+    s32 y = 0x104;
+    for (i = 0; i < 6; y -= 0x23, i++) {
+        s32 n = lbl_803033B0[i];
+        if (n > 0) {
+            s32 s = lbl_803033F8[i];
+            switch (s) {
+            case 0:
+            case 1:
+            case 2: {
+                f32 f = 0.5f * (s + 1);
+                fn_800CAC04(lbl_803033E0[i], (s + 1) * 50, lbl_803033C8[i], 0xff, y, f, f);
+                lbl_803033F8[i]++;
+                break;
+            }
+            case 3: {
+                s32 a, b;
+                f32 sx, sy;
+                if (n > 45) {
+                    a = (n - 45) * 50;
+                } else {
+                    a = 0;
+                }
+                if (n >= 5) {
+                    b = 0xff;
+                    sx = 1.5f;
+                    sy = 0.022222223f * (n - 5) + 1.5f;
+                } else {
+                    b = n * 50;
+                    sy = 0.3f * n;
+                    sx = sy;
+                }
+                fn_800CAC04(lbl_803033E0[i], b, lbl_803033C8[i], a, y, sx, sy);
+                lbl_803033B0[i]--;
+                if (lbl_803033B0[i] == 0) {
+                    lbl_803033F8[i] = 0;
+                }
+                break;
+            }
+            }
+        }
+    }
+}
