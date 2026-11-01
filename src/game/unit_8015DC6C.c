@@ -3515,6 +3515,27 @@ extern s32 lbl_803470C0;
 extern s32 fn_801943F4(void);
 extern s32 fn_801946E8(s32 a, s32 b, s32 c);
 
+extern s32 fn_801956EC(s32 a);
+
+void fn_80170C64(void) {
+    CampCtrl* c;
+    u32 mask;
+    s32 i;
+
+    c = lbl_8034710C->holder->ctrl;
+    c->cur[0].mask = fn_801956EC(lbl_8030B7F4.party[lbl_80307638[1].cur[0].sel]);
+    c->cur[4].mask = 7;
+    c->cur[2].sel = lbl_80307638[1].cur[0].sel;
+    c->cur[2].x8 = lbl_80307638[1].cur[0].sel;
+    c->cur[2].mask = 0;
+    mask = 0;
+    for (i = 0; i < camp_work.count; i++) {
+        mask |= 1 << i;
+    }
+    c->cur[2].mask = mask;
+    fn_80195A68(c, 1, 0, 0, 1, 1);
+}
+
 void fn_801719D0(void) {
     s32 i;
     int j;
@@ -4300,6 +4321,25 @@ void fn_8017E174(void)
         fn_80199B9C(o, 0.7f);
     }
     camp_work.pnl[0x60]->win->x0 = 1;
+}
+
+extern s32 fn_801953B0(void);
+void fn_8017EAEC(void)
+{
+    CampCtrl* c = lbl_8034710C->holder->ctrl;
+    s32 i;
+    c->cur[0].sel = 0;
+    c->cur[0].x8 = 0;
+    if (fn_801953B0() == 1) {
+        c->cur[0].mask = 3;
+    } else {
+        c->cur[0].mask = 1;
+    }
+    c->cur[2].mask = 3;
+    fn_80195A68(c, 1, 0, 0, 0, 1);
+    for (i = 0; i < 8; i++) {
+        camp_work.pnl[0x7a + i]->win->f74 = -6190.0f;
+    }
 }
 
 s32 fn_8018126C(void) {
