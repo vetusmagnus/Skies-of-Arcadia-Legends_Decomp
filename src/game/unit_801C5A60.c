@@ -162,18 +162,19 @@ typedef struct AkFio {
     s32 state;
     u8 info[0x34];
     s32 w38;
-    u8 pad3c[8];
+    u8 pad3c[4];
+    s32 packed;         /* 0x40: an AKLZ (compressed) file */
     s32 w44;
     s32 w48;
     s32 w4c;
     s32 w50;
     s32 w54;
-    u8 pad58[4];
+    s32 w58;
     u8 b5c;
     u8 pad5d[3];
     s32 w60;
     u8 pad64[0xc];
-    s32 w70;
+    void* w70;
     u8 pad74[4];
     void* buf;
     u8 pad7c[8];
@@ -474,6 +475,84 @@ void fn_801C62E4(void) {
 }
 
 s32 fn_801C6E14(AkRd *s, u8 *out);
+
+/* The 0x20-byte header of an akFIO file; "AKLZ" files are compressed. */
+typedef struct AklzHdr {
+    u8 magic[4];
+    u32 id;
+    f32 ver;
+    s32 size;
+    u8 pad10[0x10];
+} AklzHdr;
+
+static inline s32 AklzCheck(AklzHdr* h) {
+    if (h->id != 0x7E3F5164) {
+        return 0;
+    }
+    if (h->magic[0] != 'A' || h->magic[1] != 'K' || h->magic[2] != 'L' || h->magic[3] != 'Z') {
+        return 0;
+    }
+    if (h->ver != 0.1f) {
+        return 0;
+    }
+    return 1;
+}
+
+AkFio* fn_801C64DC(s32 h)
+{
+    AklzHdr hdr __attribute__((aligned(32)));
+    AkFio* f = fn_801E1C7C(0xa0);
+    s32 id;
+    s32 r;
+
+    if (f == 0) {
+        OSPanic("akFIO.c", 0x399, 0);
+    }
+    id = fn_8023A4B0(h);
+    if (id == -1) {
+        return 0;
+    }
+    if (fn_8023A7A4(id, f->info) != 1) {
+        return 0;
+    }
+    f->w60 = f->w38;
+    fn_8023AB88(f->info, &hdr, 0x20, 0, 0, 2);
+    while (fn_8023CD10(f->info) != 0) {
+        r = fn_801D168C();
+        if (r != -1) {
+            fn_801D150C(r);
+        }
+        fn_801DBF94(0);
+    }
+    if ((f->packed = AklzCheck(&hdr)) == 0) {
+        f->w54 = (f->w38 + 0x1f) & ~0x1f;
+        f->b5c = 3;
+        f->w58 = 0;
+        f->w70 = 0;
+        f->buf = 0;
+    } else {
+        f->w54 = (hdr.size + 0x1f) & ~0x1f;
+        f->w58 = 0x10;
+        f->b5c = 5;
+        if (f->w60 < 0x20000) {
+            f->w70 = fn_801E1C7C(f->w60);
+        } else {
+            f->w70 = fn_801E1C7C(0x20000);
+        }
+        if (f->w70 == 0) {
+            OSPanic("akFIO.c", 0x3ee, 0);
+        }
+        f->buf = fn_801E1C7C(0x1000);
+        if (f->buf == 0) {
+            OSPanic("akFIO.c", 0x3f9, 0);
+        }
+    }
+    f->w44 = 0;
+    f->w84 = 0;
+    f->state = 1;
+    f->w50 = 0;
+    return f;
+}
 
 void fn_801C74D0(AkRd* f) {
     u8* dst = f->dst;
