@@ -2,6 +2,7 @@
 #include "ninja.h"
 #include "game/drawstate.h"
 #include <dolphin/os.h>
+#include <dolphin/dvd.h>
 #include "game/task.h"
 #include "game/save_8030B7F4.h"
 #include "game/stat_8030B4D4.h"
@@ -134,7 +135,7 @@ extern void fn_8028AB48(void);
 extern void fn_802A9B94(s32 a, s32 b, s32 c, void (*f)(void));
 extern s32 lbl_803478A0;
 extern s32* lbl_803478A4;
-extern u8 *lbl_803478DC;
+extern DVDFileInfo *lbl_803478DC;
 /* A linked condition record (fn_800085EC walks the list). */
 typedef struct CondLink {
     s16 x0;
@@ -964,9 +965,8 @@ extern s32 lbl_803478B4;
 extern s32 lbl_803478B0;
 extern s32 lbl_803478C0;
 extern s32 lbl_803478C4;
-extern s32 lbl_803478C8;
-s32 fn_8023CD10(u8* h);
-s32 fn_8023AC78(u8* h);
+extern u8* lbl_803478C8;
+s32 DVDGetTransferredSize(DVDFileInfo* fileinfo);
 typedef struct Tk_80009FD8 { u8 pad0[4]; struct Tk_80009FD8* next; u8 pad8[0x10]; u8 flags; } Tk_80009FD8;
 typedef struct Sys_80310A1C { u8 pad0[0x18]; u8 f18; } Sys_80310A1C;
 extern Tk_80009FD8* lbl_80346A98;
@@ -1136,14 +1136,13 @@ typedef struct { u8 pad[0x1c]; NJS_POINT3 pos; u8 pad28[0x4c - 0x28]; Flags* x4c
 typedef struct { u8 pad[0x24]; Work_800171F0* work; } Obj_800171F0;
 extern f32 fn_80071E9C(void*, void*);
 void fn_8001E19C(NJS_POINT3 *self, NJS_POINT3 *out, void *ctx, NJS_POINT3 *v);
-extern s32 fn_8023AB88(void *info, void *addr, s32 len, s32 offset, void (*cb)(void), s32 prio);
 typedef struct { s32 a; s32 b; s32 err; } Err_803457F8;
 extern Err_803457F8 lbl_803457F8;
 extern s32 lbl_803478AC;
 extern s32 lbl_80346738;
 extern s32 lbl_803478D4;
 extern s32 lbl_803478BC;
-extern void *lbl_803478D8;
+extern u8 *lbl_803478D8;
 extern s32 lbl_803478D0;
 extern s32 lbl_803478CC;
 extern s32 lbl_803478A8;
@@ -1599,7 +1598,7 @@ s32 fn_800079AC(ArcSet* set, s32 idx) {
 }
 
 void fn_80008170(void) {
-    fn_8023A8E0((s32)lbl_803478DC);
+    DVDClose(lbl_803478DC);
 }
 
 s32 fn_80008C68(s32 key, Task* obj);
@@ -4667,7 +4666,7 @@ void fn_80007514(s32 **a, s32 *b)
 
 s32 fn_80008258(s32 *out)
 {
-    u32 n = *(u32 *)(lbl_803478DC + 0x34);
+    u32 n = lbl_803478DC->length;
     *out = (n + 0x1f) & ~0x1fu;
     return 1;
 }
@@ -6729,11 +6728,11 @@ s32 fn_8001BAC0(Unit_8001BAC0* u, s16 idx, s16 want, s16 other)
 void fn_80007EC0(void) {
     s32 r;
     if (lbl_803478B8 == 2) {
-        r = fn_8023CD10(lbl_803478DC);
+        r = DVDGetCommandBlockStatus(&lbl_803478DC->cb);
         switch (r) {
         case 0:
             if (lbl_803478B4 == 1) {
-                s32 n = fn_8023AC78(lbl_803478DC);
+                s32 n = DVDGetTransferredSize(lbl_803478DC);
                 lbl_803478C4 -= n;
                 lbl_803478C0 += n;
                 lbl_803478C8 += n;
@@ -6758,7 +6757,7 @@ void fn_80007EC0(void) {
             break;
         }
     } else if (lbl_803478B8 == 0) {
-        r = fn_8023CD10(lbl_803478DC);
+        r = DVDGetCommandBlockStatus(&lbl_803478DC->cb);
         switch (r) {
         case 0:
             lbl_803478B8 = 3;
@@ -7463,7 +7462,7 @@ s32 fn_80008000(s32 idx) {
             lbl_803478BC = idx;
             lbl_803478D0 = bs;
             lbl_803478CC = bs << 11;
-            if (fn_8023AB88(lbl_803478DC, lbl_803478D8, lbl_803478CC, blk << 11, 0, 2) == 0) {
+            if (DVDReadAsyncPrio(lbl_803478DC, lbl_803478D8, lbl_803478CC, blk << 11, 0, 2) == 0) {
                 lbl_803457F8.err = 5;
                 return -1;
             }
@@ -7471,7 +7470,7 @@ s32 fn_80008000(s32 idx) {
             lbl_803478BC = idx;
             lbl_803478D0 = lbl_803478AC - blk;
             lbl_803478CC = lbl_803478A8 - (blk << 11);
-            if (fn_8023AB88(lbl_803478DC, lbl_803478D8, lbl_803478CC, blk << 11, 0, 2) == 0) {
+            if (DVDReadAsyncPrio(lbl_803478DC, lbl_803478D8, lbl_803478CC, blk << 11, 0, 2) == 0) {
                 lbl_803457F8.err = 5;
                 return -1;
             }
@@ -7479,6 +7478,131 @@ s32 fn_80008000(s32 idx) {
         lbl_803478B8 = 2;
         lbl_803478B4 = 0;
     }
+    return 0;
+}
+
+extern DVDFileInfo lbl_80316980;
+extern u8 lbl_803169C0[];
+void* fn_802AC710(void* dst, const void* src, u32 n);
+
+inline int Contains(s32 first, s32 cnt, s32 v)
+{
+    s32 last = cnt - 1 + first;
+    if (first < 0) {
+        return -1;
+    }
+    if (first <= v && v <= last) {
+        return 1;
+    }
+    return -1;
+}
+
+s32 fn_80007BFC(void* dst, s32 size)
+{
+    s32 pos;
+    s32 n;
+    s32 in;
+
+    if (size == 0) {
+        return 1;
+    }
+    fn_80007EC0();
+    switch (lbl_803478B8) {
+    case 2:
+        return 0;
+    case 3:
+        lbl_803478C4 = size;
+        lbl_803478C8 = dst;
+        lbl_803478B8 = 1;
+    case 1:
+        while (lbl_803478B8 != 3) {
+            pos = lbl_803478C0;
+            if (lbl_803478A8 < pos + lbl_803478C4) {
+                lbl_803478C4 = lbl_803478A8 - pos;
+            }
+            lbl_803478BC = pos >> 11;
+            lbl_803478B0 = pos & 0x7ff;
+            if (lbl_803478BC > lbl_803478AC) {
+                lbl_803457F8.err = 5;
+                return -1;
+            }
+            in = Contains(lbl_803478D4, lbl_803478D0, lbl_803478BC);
+            if (in > 0) {
+                n = lbl_803478CC - lbl_803478B0;
+                if (lbl_803478C4 <= n) {
+                    fn_802AC710(lbl_803478C8, lbl_803478D8 + lbl_803478B0, lbl_803478C4);
+                    DCFlushRange(lbl_803478C8, lbl_803478C4);
+                    lbl_803478C8 = NULL;
+                    lbl_803478C0 += lbl_803478C4;
+                    lbl_803478C4 = 0;
+                    lbl_803478B8 = 3;
+                    lbl_803478BC = lbl_803478C0 >> 11;
+                    lbl_803478B0 = lbl_803478C0 & 0x7ff;
+                    if ((lbl_803478C0 & 0x7ff) == 0 && lbl_803478BC < lbl_803478AC) {
+                        fn_80008000(lbl_803478BC);
+                        lbl_803478B8 = 0;
+                    }
+                    return 1;
+                }
+                fn_802AC710(lbl_803478C8, lbl_803478D8 + lbl_803478B0, n);
+                DCFlushRange(lbl_803478C8, n);
+                lbl_803478C0 += n;
+                lbl_803478C4 -= n;
+                lbl_803478C8 += n;
+            } else {
+                if (lbl_803478C4 >= 0x81f && ((u32)lbl_803478C8 & 0x1f) == 0) { /* address alignment */
+                    s32 sec = lbl_803478BC;
+                    if (sec >= lbl_803478AC || sec < 0) {
+                        return -1;
+                    }
+                    lbl_803478BC = sec;
+                    if (!DVDReadAsyncPrio(lbl_803478DC, lbl_803478C8, lbl_803478C4 & ~0x7ff, sec << 11, 0, 2)) {
+                        lbl_803457F8.err = 5;
+                        return -1;
+                    }
+                    lbl_803478B8 = 2;
+                    lbl_803478B4 = 1;
+                } else {
+                    return fn_80008000(lbl_803478BC);
+                }
+                return 0;
+            }
+        }
+        break;
+    case 0:
+        return 0;
+    case 4:
+        lbl_803457F8.err = 5;
+        return -1;
+    default:
+        break;
+    }
+    return 1;
+}
+
+s32 fn_80008194(char* name) {
+    s32 len;
+    s32 aligned;
+    lbl_803478D8 = (u8*)(((u32)lbl_803169C0 + 0x1f) & ~0x1f); /* address alignment */
+    lbl_803478DC = &lbl_80316980;
+    if (!DVDOpen(name, &lbl_80316980)) {
+        lbl_803457F8.err = 2;
+        return -1;
+    }
+    len = lbl_803478DC->length;
+    aligned = (len + 0x1f) & ~0x1f;
+    lbl_803478A8 = aligned;
+    lbl_803478AC = (aligned + 0x7ff) >> 11;
+    lbl_803478B0 = 0;
+    lbl_803478C0 = 0;
+    lbl_803478BC = 0;
+    lbl_803478D4 = -1;
+    lbl_803478D0 = 0;
+    lbl_803478CC = 0;
+    if (fn_80008000(0) < 0) {
+        return -1;
+    }
+    lbl_803478B8 = 0;
     return 0;
 }
 
