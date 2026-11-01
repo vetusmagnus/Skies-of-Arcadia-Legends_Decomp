@@ -8730,6 +8730,139 @@ void fn_801753D4(void) {
     UiObjSetCommand(o, 15, 0);
 }
 
+extern void fn_80195410(void);
+extern void fn_80175774(void);
+extern s32 lbl_80347128;
+extern s32 fn_801929B8(s32 idx);
+extern s32 fn_8019A21C(u32 mask, s32 d, s32 n, s32 unused, s32 max);
+extern s32 fn_80195CD0(s8 a, s8 b, s32 c, s8 d);
+extern void fn_801954D0(const char* help);
+
+s32 fn_80175EE8(void)
+{
+    CampReq req;
+    CampCtrl* g = lbl_80307638;
+    CampCtrl* c;
+    s32 id;
+    s32 n;
+    s32 m;
+
+    c = lbl_8034710C->holder->ctrl;
+    id = lbl_8030B7F4.party[g[1].cur[0].sel];
+    n = fn_80195D8C(id, g[8].cur[0].sel + 1, 3, c->cur[4].sel);
+    m = fn_80195CD0(id, g[8].cur[0].sel + 1, 3, c->cur[4].sel);
+    if (n <= 0) {
+        camp_work.pnl[0x63]->win->x0 = 0;
+        c->cur[0].sel = 0;
+    } else {
+        camp_work.pnl[0x63]->win->x0 = 1;
+    }
+    id = lbl_8030B7F4.party[g[1].cur[0].sel];
+    fn_80195EA4(&req, id, g[8].cur[0].sel + 1, c->cur[4].sel, 3);
+    fn_801954D0(req.e[c->cur[0].sel].x10);
+    if (n <= 0) {
+        if (fn_801C09F8(lbl_80347154, 1) != 0) {
+            fn_801929B8(5);
+            return -1;
+        }
+        goto end;
+    }
+    switch (c->cur[6].mask) {
+    case 1:
+        c->cur[6].mask = 1;
+        fn_80195A68(c, 1, 0, 0, 0, 1);
+        if (fn_801C09F8(lbl_80347154, 5) != 0) {
+            c->cur[0].x8 = c->cur[0].sel;
+            c->cur[0].sel++;
+            if (c->cur[0].sel >= n) {
+                c->cur[0].sel = 0;
+            }
+            if (c->cur[0].x8 != c->cur[0].sel) goto moved;
+        } else if (fn_801C09F8(lbl_80347154, 4) != 0) {
+            c->cur[0].x8 = c->cur[0].sel;
+            c->cur[0].sel--;
+            if (c->cur[0].sel < 0) {
+                c->cur[0].sel = n - 1;
+            }
+            if (c->cur[0].x8 != c->cur[0].sel) goto moved;
+        } else if (fn_801C09F8(lbl_80347154, 7) != 0) {
+            c->cur[4].x8 = c->cur[4].sel;
+            c->cur[4].sel++;
+            if (c->cur[4].sel >= m) {
+                c->cur[4].sel = 0;
+            }
+            if (c->cur[4].x8 != c->cur[4].sel) goto moved2;
+        } else if (fn_801C09F8(lbl_80347154, 6) != 0) {
+            c->cur[4].x8 = c->cur[4].sel;
+            c->cur[4].sel--;
+            if (c->cur[4].sel < 0) {
+                c->cur[4].sel = m - 1;
+            }
+            if (c->cur[4].x8 != c->cur[4].sel) goto moved2;
+        } else if (fn_801C09F8(lbl_80347154, 2) != 0) {
+            if (g[8].cur[0].sel == 0) {
+                lbl_80347128 = 1;
+            } else {
+                lbl_80347128 = 0;
+            }
+            goto help;
+        } else if (fn_801C09F8(lbl_80347154, 1) != 0) {
+            fn_801929B8(5);
+            return -1;
+        }
+        break;
+    case 0:
+        c->cur[6].mask = 0;
+        fn_80195A68(c, 0, 1, 0, 0, 0);
+        if (fn_801C09F8(lbl_80347154, 7) != 0) {
+            c->cur[1].x8 = c->cur[1].sel;
+            c->cur[1].sel = fn_8019A21C(c->cur[1].mask, 1, c->cur[1].sel, 0, 7);
+            if (c->cur[1].x8 != c->cur[1].sel) goto moved;
+        } else if (fn_801C09F8(lbl_80347154, 6) != 0) {
+            c->cur[1].x8 = c->cur[1].sel;
+            c->cur[1].sel = fn_8019A21C(c->cur[1].mask, -1, c->cur[1].sel, 0, 7);
+            if (c->cur[1].x8 != c->cur[1].sel) goto moved;
+        } else if (fn_801C09F8(lbl_80347154, 2) != 0) {
+            lbl_80347128 = 1;
+            goto help;
+        } else if (fn_801C09F8(lbl_80347154, 1) != 0) {
+            lbl_80347128 = 0;
+            goto help;
+        }
+        break;
+    case 6:
+        if (CampMenuAnyPanelBusy() == 0) {
+            if (lbl_80347128 == 1) {
+                c->cur[6].mask = 0;
+            } else {
+                c->cur[6].mask = 1;
+            }
+        } else if (fn_801C09F8(lbl_80347154, 2) != 0 || fn_801C09F8(lbl_80347154, 1) != 0) {
+            CampMenuFinishAllPanels();
+            if (lbl_80347128 == 1) {
+                c->cur[6].mask = 0;
+            } else {
+                c->cur[6].mask = 1;
+            }
+        }
+        break;
+    }
+    goto end;
+moved:
+    fn_80195410();
+    fn_801929B8(0);
+    goto end;
+moved2:
+    c->cur[0].sel = 0;
+    fn_80195410();
+    fn_801929B8(0);
+    goto end;
+help:
+    fn_80175774();
+end:
+    return 0;
+}
+
 void fn_80175520(void) {
     f32 y;
     s32 i;
