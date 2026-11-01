@@ -32,10 +32,6 @@ typedef struct SubA {
     u8 pad_00[0x10];
     TblA *tbl_10;
 } SubA;
-typedef struct ObjB_800A1ABC {
-    u8 pad_000[0x1c8];
-    SubA *sub_1c8;
-} ObjB_800A1ABC;
 typedef struct LeafC {
     u8 pad_00[0x19];
     u8 state_19;
@@ -616,14 +612,22 @@ struct Node_8009D294 {
 };
 extern s32 fn_801CB460(s32 op);
 typedef struct {
-    s32 w0, w4, w8;
+    u16* w0;
+    NJS_POINT3* w4;
+    Angle* w8;
     u8 pad0[0x24 - 0xc];
     f32 f24, f28, f2c, f30;
     s32 w34, w38;
-    u8 pad1[0x44 - 0x3c];
+    s32 w3c, w40;
     s32 w44, w48, w4c, w50;
     f32 f54;
-    s32 w58, w5c, w60, w64, w68, w6c, w70;
+    s32 w58;
+    NJS_TEXLIST* w5c;
+    s32 w60;
+    u32* w64;
+    s32 w68;
+    u32* w6c;
+    s32 w70;
     f32 f74, f78;
 } P;
 extern s32 rand(void);
@@ -1692,9 +1696,9 @@ void fn_800A1948(void *unused, u32 *dst, u8 flags) {
     }
 }
 
-void *fn_800A1ABC(ObjB_800A1ABC *b, u32 i)
+void *fn_800A1ABC(EvObj *b, u32 i)
 {
-    TblA *t = b->sub_1c8->tbl_10;
+    TblA *t = b->ext->info;
     if (i >= t->count) {
         return NULL;
     }
@@ -1829,9 +1833,9 @@ void* fn_8009E8B0(s32 n) {
     return p;
 }
 
-u32 fn_800A1AE8(u8* o, u32 idx) {
+u32 fn_800A1AE8(EvObj* o, u32 idx) {
     u32 cnt = 0;
-    u32* p = *(u32**)(*(u8**)(o + 0x1c8) + 0x10);
+    u32* p = o->ext->info;
     u32 n = p[0];
     s32 found = 0;
     u32 i = idx;
@@ -2655,6 +2659,121 @@ void fn_800AD588(P *src, P *dst) {
     dst->w6c = src->w6c;
     dst->f24 += dst->f28 * (3.0517578125e-05f * (f32)rand());
     dst->f2c += dst->f30 * (3.0517578125e-05f * (f32)rand());
+}
+
+/* EvExt.info of the ring-emitter kind (fn_800AC728). */
+typedef struct {
+    u32 count;              /* 0x00 */
+    u8 pad04[0x24 - 0x04];
+    Src8009DCA8 blend;      /* 0x24 */
+    u32 x44;                /* 0x44 */
+    f32 x48;                /* 0x48 radius */
+    s32 x4c;                /* 0x4C count */
+    u32 x50;                /* 0x50 mode */
+    f32 x54;                /* 0x54 */
+    f32 x58, x5c, x60, x64; /* 0x58 */
+    f32 x68, x6c;           /* 0x68 */
+    s32 x70, x74, x78, x7c; /* 0x70 */
+    s32 x80, x84;           /* 0x80 */
+    f32 x88;                /* 0x88 */
+    s32 x8c;                /* 0x8C */
+    u32 x90;                /* 0x90 */
+} EvInfoRing;
+static inline EvInfoRing* RingInfo(EvObj* e) {
+    return e->ext->info;
+}
+/* One ring point of fn_800AC728 (EvObj.x25c). */
+typedef struct {
+    NJS_POINT3 pos;  /* 0x00 */
+    u8 pad0c[4];
+    s32 x10;         /* 0x10 */
+    u8 pad14[4];
+} RingPart;
+
+void fn_800AC728(EvObj *w, P *p)
+{
+    RingPart *pt;
+    s32 mode;
+    s32 i;
+    s32 acc;
+    f32 radius;
+    s32 k;
+    f32 t;
+
+    radius = RingInfo(w)->x48;
+    w->x22c = RingInfo(w)->x4c;
+    if (w->x22c != 0) {
+        w->x25c = fn_801E1A2C(1, w->x22c * 0x18);
+    }
+    pt = w->x25c;
+    mode = RingInfo(w)->x50;
+    w->x258 = RingInfo(w)->x54;
+    w->x22e = RingInfo(w)->x80;
+    w->x230 = RingInfo(w)->x84;
+    if (w->x22e == 0) {
+        w->x22e = 1;
+    }
+    w->x1fc = RingInfo(w)->x90 != 0 ? RingInfo(w)->x90 : -1;
+    p->f24 = RingInfo(w)->x58;
+    p->f28 = RingInfo(w)->x5c;
+    p->f2c = RingInfo(w)->x60;
+    p->f30 = RingInfo(w)->x64;
+    p->w3c = 182.04445f * RingInfo(w)->x68;
+    p->w40 = 182.04445f * RingInfo(w)->x6c;
+    p->w44 = RingInfo(w)->x70;
+    p->w48 = RingInfo(w)->x74;
+    p->w4c = RingInfo(w)->x78;
+    p->w50 = RingInfo(w)->x7c;
+    p->f54 = RingInfo(w)->x88;
+    if (p->f54 == 0.0f) {
+        p->f54 = 1.0f;
+    }
+    p->w58 = RingInfo(w)->x8c;
+    p->w64 = fn_800A1ABC(w, 0x24);
+    p->w60 = fn_800A1AE8(w, 0x24);
+    p->w5c = w->texlist;
+    p->w70 = 0;
+    p->w68 = 0;
+    p->w6c = fn_800A10A8(p->w64, p->w70, p->w60);
+    p->f74 = 16.0f;
+    p->f78 = 16.0f;
+    p->w4 = &w->x24c;
+    p->w8 = &w->x20c;
+    w->point = 0;
+    p->w0 = &w->point;
+    w->x1fb = 0;
+    w->x1fa = 0;
+    for (i = 0, acc = 0; i < w->x22c; pt++, i++) {
+        NJS_VECTOR v = {0.0f, 0.0f, 0.0f};
+        if (i == 0) {
+            pt->x10 = 0;
+        } else {
+            pt->x10 = w->x230 * (3.0517578125e-05f * rand());
+        }
+        if (mode == 1) {
+            fn_800A1210(&pt->pos, &v, 360.0f * (3.0517578125e-05f * rand()), radius);
+        } else {
+            fn_800A1210(&pt->pos, &v, acc, radius);
+            acc += 360 / w->x22c;
+        }
+    }
+    if (RingInfo(w)->x44 == 1) {
+        w->pivotPos.x = RingInfo(w)->blend.f08;
+        w->pivotPos.y = RingInfo(w)->blend.f0C;
+        w->pivotPos.z = RingInfo(w)->blend.f10;
+        w->pivotAng[0] = RingInfo(w)->blend.i14;
+        w->pivotAng[1] = RingInfo(w)->blend.i18;
+        w->pivotAng[2] = RingInfo(w)->blend.i1C;
+        w->pivot = 1;
+    } else {
+        w->pivotPos.x = w->pivotPos.y = w->pivotPos.z = 0.0f;
+        w->pivotAng[0] = w->pivotAng[1] = w->pivotAng[2] = 0;
+        w->pivot = 0;
+    }
+    t = ceil((f32)p->w4c / (s32)w->x22e); /* signed divide: x22e is a u16 count */
+    k = (f32)ceil((1.0f + t) * w->x22c);
+    w->x264 = fn_8009E8B0(k);
+    w->x236 = k;
 }
 
 void fn_800AF780(void) {

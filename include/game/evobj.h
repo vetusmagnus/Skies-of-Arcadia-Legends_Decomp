@@ -414,7 +414,9 @@ typedef struct EvObj {
     u16 x22e;                /* 0x22E colour key index */
     u16 x230;                /* 0x230 */
     u16 point;               /* 0x232 */
-    u8 pad234[0x23C - 0x234];
+    u8 pad234[2];
+    u16 x236;                /* 0x236 */
+    u8 pad238[0x23C - 0x238];
     s32 x23c;                /* 0x23C sound handle */
     s32 x240;                /* 0x240 sound handle */
     u8 pad244[0x248 - 0x244];
