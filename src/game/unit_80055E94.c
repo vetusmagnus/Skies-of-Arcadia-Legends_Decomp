@@ -132,9 +132,9 @@ typedef NJS_POINT3 Vec3;
 typedef struct Ent { s32 x0; u32 x4; s32 x8; s32 xc; } Ent;
 typedef struct Hdr { u8 pad0[4]; s16 count; u8 pad6[2]; Ent e[1]; } Hdr;
 void fn_800D208C(void *obj, f32 f);
-void fn_8006AFD0(s16 a, s16 b, s32 kind, s32 c);
+void fn_8006AFD0(s16 a, s16 b, s32 kind, s8 c);
 void fn_8006AE20(s16 a, s16 slot, int mode, s8 val);
-extern void fn_8006AC68(s16 i);
+void fn_8006AC68(s16 a, s16 i, s32 b, s8 c);
 extern void fn_800696A8(s16 a, s16 i, s32 b, s8 v);
 s16 fn_8006E924(char* path, char* name, Node** out, void* key);
 s32 rand(void);
@@ -3146,6 +3146,26 @@ void fn_8006AB6C(s16 a, s16 idx, s32 b, s8 v)
     }
 }
 
+void fn_8006AC68(s16 a, s16 i, s32 b, s8 c) {
+    WorkRec *w = lbl_80309700[i]->work;
+    if (lbl_80309DE4[i]->bits & 0x61d0) {
+        c = 0;
+        w->x44 = -1;
+        w->x3c = -1;
+    } else {
+        fn_800696A8(a, i, b, c);
+        w->x46 = w->x44;
+        if (w->x44 == -1) c = 0;
+    }
+    fn_8006AFD0(a, i, b, c);
+    if (lbl_80309DE4[i]->x14 - lbl_80309700[i]->work->x3c <= 0) {
+        w->x44 = 0;
+        w->x46 = -1;
+        w->x48 = -1;
+        w->x4a = -1;
+    }
+}
+
 void fn_8006B3C4(void *a, s16 idx) {
     ChrRec *p = lbl_80309DE4[idx];
     p->bits |= 1;
@@ -3577,8 +3597,8 @@ void fn_800688E8(void* a, s16 i, void* b, s8 v) {
     }
 }
 
-void fn_80069008(s16 i) {
-    fn_8006AC68(i);
+void fn_80069008(s16 i, s16 a, s32 b, s8 c) {
+    fn_8006AC68(i, a, b, c);
     lbl_80309700[i]->work->x44 = 0;
     lbl_80309700[i]->work->x3c = lbl_80309DE4[i]->x14;
 }
