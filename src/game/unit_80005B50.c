@@ -132,15 +132,15 @@ extern void fn_802A9B94(s32 a, s32 b, s32 c, void (*f)(void));
 extern s32 lbl_803478A0;
 extern s32* lbl_803478A4;
 extern u8 *lbl_803478DC;
-extern void fn_8000832C(s32 a, s32 b, s32 c);
 /* A linked condition record (fn_800085EC walks the list). */
 typedef struct CondLink {
     s16 x0;
     s16 x2;
-    u8 pad4[4];
+    s16 x4;                 /* 0x4: first table index (fn_8000832C) */
+    s16 x6;                 /* 0x6: end index */
     struct CondLink* next;  /* 0x8 */
+    struct CondLink* prev;  /* 0xc */
 } CondLink;
-extern s16 fn_800086BC(s32 a, s16 b, s16 c, s32 d, CondLink* e, s32 f);
 typedef struct {
     u8 pad0[0xc];
     void* xc;           /* 0x0c */
@@ -288,6 +288,8 @@ typedef struct Ent_80008800 {
     u8 pad4[8];
     Key* xc;
 } Ent_80008800;
+s32 fn_8000832C(Task* obj, Ent_80008800* tbl, CondLink* range);
+s16 fn_800086BC(Task* t, s16 a, s16 b, Ent_80008800* tbl, CondLink* e, u8 f);
 typedef struct Obj_80017B18 {
     u8 pad0[0xc];
     char xc[0x24];      /* 0x0c name */
@@ -1010,14 +1012,6 @@ typedef struct EntD { s32 a; s32 b; s32 size; void *data; } EntD;
 extern void fn_80035918(void *p);
 extern s16 fn_800364F4(void *p);
 extern s32 fn_800364B8(void *e);
-typedef struct Node_80008800 {
-    s16 x0;
-    s16 x2;
-    s16 x4;
-    s16 x6;
-    struct Node_80008800* x8;
-    struct Node_80008800* xc;
-} Node_80008800;
 extern s16 fn_800089F0(Ent_80008800* t, s16 a, s16 b, s16* lo, s16* hi, s16 start);
 typedef struct Vec3_8001E3D8 { f32 x, y, z; } Vec3_8001E3D8;
 typedef struct Model { u8 pad[0x154]; Joint* joints; } Model;
@@ -1625,7 +1619,94 @@ void fn_80008170(void) {
     fn_8023A8E0((s32)lbl_803478DC);
 }
 
-s16 fn_800085EC(s32 a, s16 b, s16 c, s32 d, CondLink* p) {
+s32 fn_80008C68(s32 key, Task* obj);
+extern s32 fn_800367E8(s32 key, Ent_80008800* e, Task* obj);
+extern s32 fn_8003732C(s32 key, Ent_80008800* e, Task* obj);
+static inline s32 CmdAllowed(Task* obj, s16 id, s16 g) {
+    s16 grp = lbl_8030A10C.xf0;
+    ChrInfo* work = ChrW(obj)->st;
+    if (grp != 0 && g != grp) {
+        switch (id) {
+        case 0x36:
+            return 1;
+        default:
+            return 0;
+        }
+    }
+    if (work->xf0 & 0x8000) {
+        switch ((g << 16) | id) {
+        case 0x30009:
+        case 0x3001F:
+        case 0x3002A:
+        case 0x30036:
+        case 0x3003B:
+        case 0x30042:
+        case 0x30058:
+            return 0;
+        }
+    }
+    return 1;
+}
+s32 fn_8000832C(Task* obj, Ent_80008800* tbl, CondLink* range) {
+    Ent_80008800* e;
+    s32 count = 0;
+    s16 i = 0;
+    s32 v;
+    s32 key;
+    if (range != 0) i = range->x4;
+    if (tbl != 0) {
+        e = &tbl[i];
+        do {
+            s16 id = e->x0;
+            s16 g = e->x2;
+            if (id < 0) break;
+            if (CmdAllowed(obj, id, g) != 0) {
+                key = (g << 16) | id;
+                v = 0;
+                if (fn_80008C68(key, obj) == 0) {
+                    v = 0;
+                } else {
+                    switch (key) {
+                    case 0x30007:
+                    case 0x30032:
+                    case 0x30041:
+                    case 0x3004E:
+                        break;
+                    default:
+                        v = fn_800367E8(key, e, obj);
+                        break;
+                    }
+                }
+                if (v == 0) v = fn_8003732C(key, e, obj);
+                if (v != 0) count++;
+            }
+            e++;
+            i++;
+        } while (range == 0 || i < range->x6);
+    }
+    return count;
+}
+
+static inline s16 EntScore(Task* a, Ent_80008800* d, CondLink* e)
+{
+    return fn_8000832C(a, d, e);
+}
+s16 fn_80008530(Task* a, s16 b, s16 c, Ent_80008800* d, CondLink* p) {
+    CondLink* cur = p;
+    s16 sum = 0;
+    if (p == NULL) {
+        return fn_800086BC(a, b, c, d, 0, 0);
+    }
+    while (cur != NULL) {
+        if (fn_8003DE8C(cur->x0, cur->x2, b, c) != 0) {
+            sum += (cur != NULL) ? EntScore(a, d, cur) : fn_8000832C(a, d, 0);
+        }
+        cur = cur->next;
+    }
+    return sum;
+}
+
+s16 fn_800085EC(Task* a, s16 b, s16 c, Ent_80008800* d, CondLink* p) {
     CondLink* cur = p;
     s16 sum = 0;
     if (p == NULL) {
@@ -1640,8 +1721,8 @@ s16 fn_800085EC(s32 a, s16 b, s16 c, s32 d, CondLink* p) {
     return sum;
 }
 
-Node_80008800* fn_80008938(Ent_80008800* t, s16 a, s16 b) {
-    Node_80008800* out = 0;
+CondLink* fn_80008938(Ent_80008800* t, s16 a, s16 b) {
+    CondLink* out = 0;
     s16 lo;
     s16 hi;
     if (t != 0) {
@@ -3698,12 +3779,12 @@ s32 fn_80008258(s32 *out)
     return 1;
 }
 
-void fn_80008308(s32 a, s32 b)
+void fn_80008308(Task* a, Ent_80008800* b)
 {
     fn_8000832C(a, b, 0);
 }
 
-void fn_80008694(s32 a, s16 b, s16 c, s32 d)
+void fn_80008694(Task* a, s16 b, s16 c, Ent_80008800* d)
 {
     fn_800086BC(a, b, c, d, 0, 0);
 }
@@ -5828,10 +5909,10 @@ EntD *fn_800095D0(void *old, u8 *src, void *extra) {
     return out;
 }
 
-Node_80008800* fn_80008800(Ent_80008800* t)
+CondLink* fn_80008800(Ent_80008800* t)
 {
-    Node_80008800* head = 0;
-    Node_80008800* cur = 0;
+    CondLink* head = 0;
+    CondLink* cur = 0;
     s16 n;
     Key* k;
     s16 lo;
@@ -5845,11 +5926,11 @@ Node_80008800* fn_80008800(Ent_80008800* t)
                 fn_80061F58(&head, 0x10, 0);
                 cur = head;
             } else {
-                Node_80008800* prev;
-                fn_80061F58(&cur->x8, 0x10, 0);
+                CondLink* prev;
+                fn_80061F58(&cur->next, 0x10, 0);
                 prev = cur;
-                cur = cur->x8;
-                cur->xc = prev;
+                cur = cur->next;
+                cur->prev = prev;
             }
             cur->x0 = k->x0;
             cur->x2 = k->x4;
