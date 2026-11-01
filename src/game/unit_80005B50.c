@@ -3384,6 +3384,31 @@ void fn_80016E1C(Task* t) {
     }
 }
 
+s32 fn_8001712C(s8 id, f32* out)
+{
+    Task* t;
+    ChrWork* w;
+    ChrInfo* st;
+    s16 k;
+    s16 v;
+    t = fn_80021658(id);
+    if (t == NULL) {
+        return 0;
+    }
+    w = t->work;
+    st = w->st;
+    k = fn_80020094(t->work, 0, -1, 1);
+    if (k < 0) {
+        return 0;
+    }
+    v = st->anims[k].xe;
+    if (v == 0) {
+        return 0;
+    }
+    *out = v * 15.0f * 0.25f;
+    return 1;
+}
+
 void fn_80017320(void) {
 }
 
@@ -3629,7 +3654,7 @@ void fn_80018084(Task* t)
 
 s32 fn_80020060(ChrAnim* p);
 s32 fn_80017018(s8 idx);
-extern void fn_8001712C(s8 k, void *p);
+s32 fn_8001712C(s8 id, f32* out);
 
 extern s32 fn_80060B98(void*, void*, void*, f32*);
 
