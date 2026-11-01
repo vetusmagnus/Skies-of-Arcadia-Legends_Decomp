@@ -2740,6 +2740,93 @@ void fn_80111FC4(EvObj *o) {
     }
 }
 
+void fn_80113AF0(EvObj *o) {
+    Xf d;
+    u8 save[0x24];
+    o->speed = lbl_80347424;
+    MemCopy(save, &o->pos, 0x24);
+    MemCopy(&o->pos, &o->home, 0x24);
+    fn_80118AA4(o);
+    fn_80119744(&d, o, o->motion, o->x18c);
+    fn_80118948(o);
+    lbl_80347404 = 1;
+    MemCopy(&o->pos, save, 0x24);
+    d.pos.x = 0.0f;
+    d.pos.z = 0.0f;
+    o->pos.x = o->home.x + d.pos.x;
+    o->pos.y = o->home.y + d.pos.y;
+    o->pos.z = o->home.z + d.pos.z;
+    o->ang[0] = o->tgt[0] + d.ang[0];
+    o->ang[1] = o->tgt[1] + d.ang[1];
+    o->ang[2] = o->tgt[2] + d.ang[2];
+    switch (o->x172) {
+    case 0:
+        if (lbl_8034741C->id12 == 0xe) {
+            o->x172 = 1;
+        } else {
+            o->x172 = 2;
+        }
+        break;
+    case 1:
+        if (lbl_80311A60[0]->y < 0) {
+            fn_801E7414(0x1b, o);
+            SePlay(0xf, 5, 0x1b);
+            o->x172 = 0x10;
+        } else if (lbl_80311A60[0]->y > 0x40) {
+            lbl_80346E68 = 1;
+            lbl_80310B3C[0x88 / 4] &= ~1;
+            o->x198 = 1;
+            o->x19c = 0;
+            o->x19c = 1;
+            o->motionId = 8;
+            o->x172 = 0;
+        }
+        break;
+    case 2:
+        if (lbl_80311A60[0]->y > 0) {
+            fn_801E7414(0x1c, o);
+            SePlay(0xf, 5, 0x1b);
+            o->x172 = 0x10;
+        } else if (lbl_80311A60[0]->y < -0x40) {
+            lbl_80346E68 = 1;
+            lbl_80310B3C[0x88 / 4] &= ~1;
+            o->x198 = 1;
+            o->x19c = 0;
+            o->x19c = 1;
+            o->motionId = 8;
+            o->x172 = 0;
+        }
+        break;
+    case 0x10:
+        if (o->x198 == 1) {
+            o->home.x = o->pos.x;
+            o->home.y = o->pos.y;
+            o->home.z = o->pos.z;
+            o->tgt[0] = o->ang[0];
+            o->tgt[1] = o->ang[1];
+            o->tgt[2] = o->ang[2];
+            if (lbl_80311A60[0]->y == 0) {
+                fn_801E7414(0x1d, o);
+                o->motionId = 8;
+                o->x172 = 0;
+            } else if (lbl_80311A60[0]->y > 0) {
+                SePlay(0xf, 5, 0x1b);
+                fn_801E7414(0x1c, o);
+                o->x18c = lbl_80347424;
+                o->motionId = 7;
+                o->x172 = 0;
+            } else {
+                SePlay(0xf, 5, 0x1b);
+                fn_801E7414(0x1b, o);
+                o->x18c = lbl_80347424;
+                o->motionId = 7;
+                o->x172 = 0;
+            }
+        }
+        break;
+    }
+}
+
 void fn_80113E28(EvObj *o) {
     Xf d;
     Ent_8020F3D4 req;
