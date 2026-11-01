@@ -6,22 +6,31 @@
 #include "game/save_8030B7F4.h"
 #include <string.h>
 typedef struct {
-    s32 w[7];
-} Tbl_801303D0;
-typedef struct {
-    u8 pad0[0x94];
+    u8 pad0[1];
+    u8 x1;
+    u8 pad2[2];
+    s32 x4;
+    s8 x8;
+    u8 pad9[0x2c - 9];
+    s32 a2c[8];         /* 0x2C */
+    f32 a4c[8];         /* 0x4C */
+    f32 a6c[8];         /* 0x6C */
+    f32 x8c;
+    f32 x90;
     s8 x94;
-    u8 pad_95[0x13];
-    s32 dst[0x8];
+    u8 pad_95[3];
+    f32 x98;
+    f32 x9c;
+    f32 xa0;
+    s16 xa4;
+    u8 pad_a6[2];
+    s32 dst[0x8];       /* 0xA8 */
     s32 src[0x8];
 } Sys_8012FF48;
 typedef struct {
     u8 pad[0x24];
     Sys_8012FF48 *x24;
-    union {
-        u8 *x28;
-        Tbl_801303D0 *tbl;
-    };
+    void **x28;         /* sprites */
 } Holder_8012FF48;
 typedef struct {
     u8 pad_0[0x4];
@@ -664,6 +673,37 @@ void fn_80130350(u8 v) {
 
 void fn_80130368(void) {
     ((u8*)lbl_80346F40)[0x19] = 2;
+}
+
+void fn_80131254(void) {
+    s32 i;
+    s8 v = lbl_8030B4D4.x2d4;
+    lbl_80346F40->x24->x94 = v;
+    if (v == 3) {
+        lbl_80346F40->x28[0] = fn_801D68C4(lbl_80346F04, 0x64);
+        lbl_80346F40->x28[4] = fn_801D68C4(lbl_80346F04, 0x68);
+        lbl_80346F40->x28[6] = fn_801D68C4(lbl_80346F04, 0x84);
+        lbl_80346F40->x28[1] = fn_801D68C4(lbl_80346F04, 0x83);
+    } else {
+        lbl_80346F40->x28[0] = fn_801D68C4(lbl_80346F08, 0x64);
+        lbl_80346F40->x28[4] = fn_801D68C4(lbl_80346F08, 0x68);
+        lbl_80346F40->x28[6] = fn_801D68C4(lbl_80346F08, 0x84);
+        lbl_80346F40->x28[1] = fn_801D68C4(lbl_80346F08, 0x83);
+    }
+    for (i = 0; i < 8; i++) {
+        lbl_80346F40->x24->a2c[i] = 0xff40dc40;
+        lbl_80346F40->x24->a4c[i] = 1.0f;
+        lbl_80346F40->x24->a6c[i] = 1.0f;
+    }
+    lbl_80346F40->x24->x8 = -1;
+    lbl_80346F40->x24->x8c = 250.0f;
+    lbl_80346F40->x24->x90 = 77.0f;
+    lbl_80346F40->x24->xa4 = 0;
+    lbl_80346F40->x24->x1 = 0;
+    lbl_80346F40->x24->x4 = 0;
+    lbl_80346F40->x24->x98 = 0.0f;
+    lbl_80346F40->x24->x9c = 0.0f;
+    lbl_80346F40->x24->xa0 = 0.0f;
 }
 
 void fn_80131598(u8 v) {
@@ -1473,15 +1513,15 @@ void fn_8012FF48(s8 mode)
 {
     lbl_80346F40->x24->x94 = mode;
     if (mode == 3) {
-        *(void **)(lbl_80346F40->x28 + 0x0) = fn_801D68C4(lbl_80346F04, 0x64);
-        *(void **)(lbl_80346F40->x28 + 0x10) = fn_801D68C4(lbl_80346F04, 0x68);
-        *(void **)(lbl_80346F40->x28 + 0x18) = fn_801D68C4(lbl_80346F04, 0x84);
-        *(void **)(lbl_80346F40->x28 + 0x4) = fn_801D68C4(lbl_80346F04, 0x83);
+        lbl_80346F40->x28[0] = fn_801D68C4(lbl_80346F04, 0x64);
+        lbl_80346F40->x28[4] = fn_801D68C4(lbl_80346F04, 0x68);
+        lbl_80346F40->x28[6] = fn_801D68C4(lbl_80346F04, 0x84);
+        lbl_80346F40->x28[1] = fn_801D68C4(lbl_80346F04, 0x83);
     } else {
-        *(void **)(lbl_80346F40->x28 + 0x0) = fn_801D68C4(lbl_80346F08, 0x64);
-        *(void **)(lbl_80346F40->x28 + 0x10) = fn_801D68C4(lbl_80346F08, 0x68);
-        *(void **)(lbl_80346F40->x28 + 0x18) = fn_801D68C4(lbl_80346F08, 0x84);
-        *(void **)(lbl_80346F40->x28 + 0x4) = fn_801D68C4(lbl_80346F08, 0x83);
+        lbl_80346F40->x28[0] = fn_801D68C4(lbl_80346F08, 0x64);
+        lbl_80346F40->x28[4] = fn_801D68C4(lbl_80346F08, 0x68);
+        lbl_80346F40->x28[6] = fn_801D68C4(lbl_80346F08, 0x84);
+        lbl_80346F40->x28[1] = fn_801D68C4(lbl_80346F08, 0x83);
     }
 }
 
@@ -1844,13 +1884,13 @@ void fn_801303D0(Task_801303D0 *t) {
     case 0:
     case 0xFE:
         lbl_80346F40->x28 = fn_801E1C7C(0x1c);
-        lbl_80346F40->tbl->w[0] = (s32)fn_801D68C4(lbl_80346F04, 0x64);
-        lbl_80346F40->tbl->w[2] = (s32)fn_801D68C4(lbl_80346F04, 0x66);
-        lbl_80346F40->tbl->w[5] = (s32)fn_801D68C4(lbl_80346F04, 0x67);
-        lbl_80346F40->tbl->w[3] = (s32)fn_801D68C4(lbl_80346F04, 0x65);
-        lbl_80346F40->tbl->w[4] = (s32)fn_801D68C4(lbl_80346F04, 0x68);
-        lbl_80346F40->tbl->w[1] = (s32)fn_801D68C4(lbl_80346F04, 0x83);
-        lbl_80346F40->tbl->w[6] = (s32)fn_801D68C4(lbl_80346F04, 0x84);
+        lbl_80346F40->x28[0] = fn_801D68C4(lbl_80346F04, 0x64);
+        lbl_80346F40->x28[2] = fn_801D68C4(lbl_80346F04, 0x66);
+        lbl_80346F40->x28[5] = fn_801D68C4(lbl_80346F04, 0x67);
+        lbl_80346F40->x28[3] = fn_801D68C4(lbl_80346F04, 0x65);
+        lbl_80346F40->x28[4] = fn_801D68C4(lbl_80346F04, 0x68);
+        lbl_80346F40->x28[1] = fn_801D68C4(lbl_80346F04, 0x83);
+        lbl_80346F40->x28[6] = fn_801D68C4(lbl_80346F04, 0x84);
         fn_80131254();
         lbl_80305FA0[0] = (s32)fn_801D68C4(lbl_80346F04, 0x84);
         lbl_80305FA0[1] = (s32)fn_801D68C4(lbl_80346F04, 0x85);
