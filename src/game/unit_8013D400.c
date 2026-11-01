@@ -172,8 +172,8 @@ typedef struct Big {
     s16 x8;
     u8 padA[2];
     s16 xc;
-    u8 xe[0x140];       /* 0x00E: 0x50 4-byte records (fn_8013D718 kind 1) */
-    u8 x14e[0x78];      /* 0x14E: 0x1E 4-byte records (kind 0) */
+    InvEnt xe[0x50];    /* 0x00E: usable items (fn_8013D718 kind 1) */
+    InvEnt x14e[0x1e];  /* 0x14E: ship items (kind 0) */
     MenuItem items[4];  /* 0x1C6 */
     u8 pad236[2];
     Party party;        /* 0x238 */
@@ -672,7 +672,7 @@ typedef struct {
     u8 b29;
     u8 b2a;
 } Sys_8014654C;
-extern s32 fn_8013D718(s32 kind, u8 *tbl, s32 id);
+s32 fn_8013D718(s32 kind, InvEnt *tbl, s32 idx);
 extern void fn_8012AEB8(s32 a);
 extern void fn_8012AED0(s32 a);
 extern void fn_8012C648(s32 a);
@@ -1008,6 +1008,98 @@ void fn_8013D400(s32 a, s32 b) {
 s32 fn_8013D708(u8* p) {
     p[0x1] = 0;
     return 2;
+}
+
+static inline s32 party_count(void) {
+    s32 n = 0;
+    Big *p = fn_80135598();
+    if (p != 0) {
+        for (n = 0; n < 4; n++) {
+            if (p->order[n] < 0) {
+                break;
+            }
+        }
+    }
+    return n;
+}
+
+static inline s32 fn_used(s32 kind, InvEnt *tbl, s32 idx) {
+    s32 used = 0;
+    s32 n;
+    s32 want;
+    s32 i;
+    if (tbl != 0) {
+        n = party_count();
+        want = -1;
+        switch (kind) {
+        case 0:
+            want = 1;
+            break;
+        case 1:
+            want = 2;
+            break;
+        }
+        if (n > 0 && n <= 4 && want != -1) {
+            for (i = 0; i < n; i++) {
+                if (want == lbl_80308E90[i + 4].kind && idx == lbl_80308E90[i + 4].member) {
+                    used++;
+                }
+            }
+        }
+        used = tbl[idx].cnt - used;
+    }
+    return used;
+}
+
+s32 fn_8013D718(s32 kind, InvEnt *tbl, s32 idx) {
+    s32 limit = 0;
+    s32 res = -1;
+    s32 used;
+    s32 j;
+    s32 ok;
+    s32 id;
+
+    switch (kind) {
+    case 0:
+        limit = 0x1e;
+        break;
+    case 1:
+        limit = 0x50;
+        break;
+    }
+    if (tbl != 0 && idx >= 0 && idx < limit) {
+        used = fn_used(kind, tbl, idx);
+        if (used > 0) {
+            id = tbl[idx].id;
+            switch (kind) {
+            case 0:
+                ok = 0;
+                if (id >= 0x1e0 && id <= 0x1fd) {
+                    j = id - 0x1e0;
+                    if (lbl_802D8A2C[j].use_mask & 1) {
+                        ok = 1;
+                    }
+                }
+                if (ok != 0) {
+                    res = id;
+                }
+                break;
+            case 1:
+                ok = 0;
+                if (id >= 0xf0 && id <= 0x13f) {
+                    j = id - 0xf0;
+                    if (lbl_802C7C34[j].use_mask & 1) {
+                        ok = 1;
+                    }
+                }
+                if (ok != 0) {
+                    res = id;
+                }
+                break;
+            }
+        }
+    }
+    return res;
 }
 
 void fn_8013DB64(void) {
@@ -2581,7 +2673,7 @@ static inline s32 KindMode(s32 kind)
 
 static inline int KindUsable(s32 kind, s8 *list, s32 idx)
 {
-    u8 *tbl;
+    InvEnt *tbl;
     s32 res;
     int ok;
     Big *p;
