@@ -411,16 +411,18 @@ typedef struct {
     void* (*x18)[2];
     void* x1c;
 } Script_801F7500;
-typedef struct { void* a; void* b; } Pair;
-typedef struct {
+/* A camera spline script (lbl_8030CEA0.x1914): n nodes with their eye and look-at points and the
+ * two control points per segment that fn_8021331C computes for each curve. */
+typedef struct Script_801F773C {
     u32 n;                  /* 0x00 */
     u32 idx;                /* 0x04 */
     s32* times;             /* 0x08 */
-    void** xc;              /* 0x0c */
-    Pair* x10;              /* 0x10 */
-    void** x14;             /* 0x14 */
-    Pair* x18;              /* 0x18 */
+    f32** xc;               /* 0x0c: eye points */
+    f32** x10;              /* 0x10: 2 control points per segment of the eye curve */
+    f32** x14;              /* 0x14: look-at points */
+    f32** x18;              /* 0x18: 2 control points per segment of the look-at curve */
     f32* angles;            /* 0x1c */
+    u8* x20;                /* 0x20: ease kind per node (fn_802023BC) */
 } Script_801F773C;
 void fn_80213178(f32 t, f32 dur, f32 *p0, f32 *p1, f32 *p2, f32 *p3, f32 *out);
 void fn_800B09C0(s8 id, s8 a, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5);
@@ -1245,6 +1247,181 @@ s32 fn_80201458(u32 flags, Scpt *st) {
         }
         st->cur.f = p;
         return 0;
+    }
+    return 1;
+}
+
+float fn_801F6120(float **p);
+#define RDI(p) (*(p) == 3.4028235e38f ? ((p)++, 0x7FFFFFFF) : (s32)fn_801F6120(&(p)))
+
+void fn_8021331C(s32 n, f32 **in, f32 **out);
+void fn_80213718(f32 *pt, s32 *ang, f32 *out, f32 d);
+f32 fn_80212A78(s32 kind, f32 t, f32 dur);
+
+#define FREEALL(s, v) \
+    for (v = 0; v < s->n; v++) { \
+        if (s->xc[v] != NULL) { \
+            fn_801E1784(s->xc[v]); \
+            s->xc[v] = NULL; \
+        } \
+        if (s->x14[v] != NULL) { \
+            fn_801E1784(s->x14[v]); \
+            s->x14[v] = NULL; \
+        } \
+        if (s->x10[2 * v] != NULL) { \
+            fn_801E1784(s->x10[2 * v]); \
+            s->x10[2 * v] = NULL; \
+        } \
+        if (s->x10[2 * v + 1] != NULL) { \
+            fn_801E1784(s->x10[2 * v + 1]); \
+            s->x10[2 * v + 1] = NULL; \
+        } \
+        if (s->x18[2 * v] != NULL) { \
+            fn_801E1784(s->x18[2 * v]); \
+            s->x18[2 * v] = NULL; \
+        } \
+        if (s->x18[2 * v + 1] != NULL) { \
+            fn_801E1784(s->x18[2 * v + 1]); \
+            s->x18[2 * v + 1] = NULL; \
+        } \
+    } \
+    if (s->xc != NULL) { \
+        fn_801E1784(s->xc); \
+        s->xc = NULL; \
+    } \
+    if (s->x14 != NULL) { \
+        fn_801E1784(s->x14); \
+        s->x14 = NULL; \
+    } \
+    if (s->x10 != NULL) { \
+        fn_801E1784(s->x10); \
+        s->x10 = NULL; \
+    } \
+    if (s->x18 != NULL) { \
+        fn_801E1784(s->x18); \
+        s->x18 = NULL; \
+    } \
+    if (s->times != NULL) { \
+        fn_801E1784(s->times); \
+        s->times = NULL; \
+    } \
+    if (s->angles != NULL) { \
+        fn_801E1784(s->angles); \
+        s->angles = NULL; \
+    } \
+    if (s->x20 != NULL) { \
+        fn_801E1784(s->x20); \
+        s->x20 = NULL; \
+    } \
+    lbl_8030CEA0.x15cc = 0;
+
+s32 fn_802023BC(u16 f, Scpt *c)
+{
+    Script_801F773C *s;
+    ScptCur cur;
+    f32 out[3];
+    s32 ang[3];
+    u32 i;
+    u32 j;
+    u32 k;
+
+    if (f & 1) {
+        cur = c->cur;
+        fn_801F7500();
+        cur.f++;
+        s = fn_801E1A2C(1, 0x24);
+        if (s == NULL) {
+            fn_801DBE1C("scptMVCA3: malloc failed");
+        }
+        c->work.p = s;
+        s->idx = 0;
+        s->n = *cur.u++;
+        s->xc = fn_801E1A2C(1, s->n * 4);
+        s->x14 = fn_801E1A2C(1, s->n * 4);
+        s->x10 = fn_801E1A2C(1, s->n * 8);
+        s->x18 = fn_801E1A2C(1, s->n * 8);
+        s->times = fn_801E1A2C(1, s->n * 4);
+        s->angles = fn_801E1A2C(1, s->n * 4);
+        s->x20 = fn_801E1A2C(1, s->n);
+        for (i = 0; i < s->n; i++) {
+            s->xc[i] = fn_801E1A2C(1, 0xc);
+            s->x14[i] = fn_801E1A2C(1, 0xc);
+            s->x10[2 * i] = fn_801E1A2C(1, 0xc);
+            s->x10[2 * i + 1] = fn_801E1A2C(1, 0xc);
+            s->x18[2 * i] = fn_801E1A2C(1, 0xc);
+            s->x18[2 * i + 1] = fn_801E1A2C(1, 0xc);
+            s->xc[i][0] = fn_801F6120(&cur.f);
+            s->xc[i][1] = fn_801F6120(&cur.f);
+            s->xc[i][2] = fn_801F6120(&cur.f);
+            if (0.0f == s->xc[i][0]) {
+                s->xc[i][0] = 0.1f;
+            }
+            if (0.0f == s->xc[i][1]) {
+                s->xc[i][1] = 0.1f;
+            }
+            if (0.0f == s->xc[i][2]) {
+                s->xc[i][2] = 0.1f;
+            }
+            ang[0] = 182.04445f * fn_801F6120(&cur.f);
+            ang[1] = 182.04445f * fn_801F6120(&cur.f);
+            s->angles[i] = fn_801F6120(&cur.f);
+            ang[2] = 182.04445f * s->angles[i];
+            s->times[i] = RDI(cur.f);
+            if (s->times[i] <= 0) {
+                s->times[i] = 1;
+            }
+            s->x20[i] = RDI(cur.f);
+            fn_80213718(s->xc[i], ang, out, 100.0f);
+            s->x14[i][0] = out[0];
+            if (0.0f == s->x14[i][0]) {
+                s->x14[i][0] = 0.1f;
+            }
+            s->x14[i][1] = out[1];
+            if (0.0f == s->x14[i][1]) {
+                s->x14[i][1] = 0.1f;
+            }
+            s->x14[i][2] = out[2];
+            if (0.0f == s->x14[i][2]) {
+                s->x14[i][2] = 0.1f;
+            }
+        }
+        fn_8021331C(s->n, s->xc, s->x10);
+        fn_8021331C(s->n, s->x14, s->x18);
+        c->cur = cur;
+        lbl_8030CEA0.x15cc = 1;
+    }
+    if (f & 2) {
+        f32 tmp[3];
+        f32 e;
+        f32 t;
+        s32 t1;
+        s = c->work.p;
+        if (c->cnt == s->times[s->idx + 1]) {
+            c->cnt = 0;
+            if (++s->idx == s->n - 1) {
+                fn_80213478(s->x14[s->idx], s->xc[s->idx], &lbl_8030CEA0.x1908);
+                lbl_8030CEA0.x18fc = s->xc[s->idx][0];
+                lbl_8030CEA0.x1900 = s->xc[s->idx][1];
+                lbl_8030CEA0.x1904 = s->xc[s->idx][2];
+                lbl_8030CEA0.x1910 = 182.04445f * s->angles[s->idx];
+                FREEALL(s, j)
+                return 0;
+            }
+        }
+        e = fn_80212A78(s->x20[s->idx + 1], c->cnt + 1, s->times[s->idx + 1]);
+        t1 = s->times[s->idx + 1];
+        t = t1 * e;
+        fn_80213178(t, t1, s->xc[s->idx], s->x10[2 * s->idx], s->x10[2 * s->idx + 1],
+                    s->xc[s->idx + 1], &lbl_8030CEA0.x18fc);
+        fn_80213178(t, t1, s->x14[s->idx], s->x18[2 * s->idx], s->x18[2 * s->idx + 1],
+                    s->x14[s->idx + 1], tmp);
+        fn_80213478(tmp, &lbl_8030CEA0.x18fc, &lbl_8030CEA0.x1908);
+        lbl_8030CEA0.x1910 = 182.04445f * (e * (s->angles[s->idx + 1] - s->angles[s->idx]) + s->angles[s->idx]);
+        c->cnt++;
+    }
+    if (f & 8) {
+        s = c->work.p;
+        FREEALL(s, k)
     }
     return 1;
 }
@@ -5184,10 +5361,10 @@ void fn_801F773C(void)
                 s->idx = 1;
             }
         }
-        fn_80213178((f32)lbl_8030CEA0.x1918, (f32)s->times[s->idx], s->xc[s->idx], s->x10[s->idx].a,
-                    s->x10[s->idx].b, s->xc[s->idx + 1], &lbl_8030CEA0.x18fc);
-        fn_80213178((f32)lbl_8030CEA0.x1918, (f32)s->times[s->idx], s->x14[s->idx], s->x18[s->idx].a,
-                    s->x18[s->idx].b, s->x14[s->idx + 1], tmp);
+        fn_80213178((f32)lbl_8030CEA0.x1918, (f32)s->times[s->idx], s->xc[s->idx], s->x10[2 * s->idx],
+                    s->x10[2 * s->idx + 1], s->xc[s->idx + 1], &lbl_8030CEA0.x18fc);
+        fn_80213178((f32)lbl_8030CEA0.x1918, (f32)s->times[s->idx], s->x14[s->idx], s->x18[2 * s->idx],
+                    s->x18[2 * s->idx + 1], s->x14[s->idx + 1], tmp);
         fn_80213478(tmp, &lbl_8030CEA0.x18fc, &lbl_8030CEA0.x1908);
         {
             f32 lo = s->angles[s->idx];
