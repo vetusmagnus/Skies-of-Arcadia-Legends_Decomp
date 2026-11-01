@@ -240,8 +240,8 @@ typedef struct Obj10A { void (*fn)(struct Obj10A *); u8 pad4[0x15]; u8 x19; u8 p
 extern Obj10A *fn_8010A164(u32 id);
 extern void *lbl_8034759C;
 extern s32 lbl_803473C0;
-extern u8 fn_8020E984(void);
-void fn_801BEA70(void *a, u32 idx, s32 mode);
+s32 fn_8020E984(void);
+void fn_801BEA70(void *a, u32 idx, u8 mode);
 extern s32 lbl_803477A8;
 extern s32 lbl_803477AC;
 void fn_800EB58C(s32 n);
@@ -966,6 +966,39 @@ extern void fn_801DBE1C(const char *fmt, ...);
 int fn_801F60F0(void) {
     fn_801DBE1C("scptSTUB: code error!");
     return 0;
+}
+
+s32 fn_801F7958(void)
+{
+    u32 i;
+    const char* str = lbl_802D4720;
+    lbl_8030CEA0.x818.w = 12;
+    lbl_8030CEA0.x0 = 0;
+    lbl_8030CEA0.x4 = lbl_8030CEA0.x818.b;
+    lbl_8030CEA0.x1874 = 0;
+    lbl_8030CEA0.sp = 0;
+    lbl_8030CEA0.x1878 = 0x20;
+    lbl_8030CEA0.x1914 = 0;
+    lbl_8030CEA0.x0a = 0;
+    if (lbl_8030CEA0.x10 != 0) {
+        fn_801DBE1C(str + 0xa4);
+    }
+    lbl_8030CEA0.xc = 0x180;
+    lbl_8030CEA0.x10 = fn_801E1A2C(1, 0x4e00);
+    if (lbl_8030CEA0.x10 == 0) {
+        fn_801DBE1C(str + 0xc8);
+    }
+    lbl_8030CEA0.x14 = fn_801E1A2C(1, 0xc00);
+    if (lbl_8030CEA0.x14 == 0) {
+        fn_801DBE1C(str + 0xe8);
+    }
+    memset(lbl_8030CEA0.x10, 0, 0x4e00);
+    memset(lbl_8030CEA0.x14, 0, 0xc00);
+    for (i = 0; i < 256; i++) {
+        lbl_8030CEA0.ent[i][1] = 0;
+        lbl_8030CEA0.ent[i][0] = 0;
+    }
+    return 1;
 }
 
 s32 fn_801F7CD8(u32 a, Scpt *st) {
@@ -6561,6 +6594,17 @@ static inline s32 FlagCount(u32 base, s32 cnt)
         if (FlagTest(base + i) == 1) n++;
     }
     return n;
+}
+
+s32 fn_8020E984(void)
+{
+    s32 i;
+    for (i = 19; i >= 0; i--) {
+        if (FlagTest(lbl_802D5940[i].flag) == 1 && i >= 0) {
+            return lbl_802D5940[i].val;
+        }
+    }
+    return 0;
 }
 
 void fn_8020ED58(void)
