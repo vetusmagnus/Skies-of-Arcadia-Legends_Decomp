@@ -213,6 +213,19 @@ Game code stays cast-free.
   files and `tools/verify_mwcc_ninja.py`: [mwcc_ninja/README.md](mwcc_ninja/README.md). configure.py builds
   ninja.c with 1.3.2nj, and the four functions are in ninja.c (objdiff: 287 Ninja matches with stock, 291
   with 1.3.2nj, none lost). fdiff on Ninja code needs `CCV=1.3.2nj`.
+- **Remaining compiler-blocked Ninja functions (2026-11-01).** With GC/1.3.2nj, 29 functions now match that no
+  stock compiler matches (`tools/verify_mwcc_ninja.py` lists them). What is left of the copy-pattern list:
+  - One load out of place, 12 functions (the strip drawers that send each vertex value once): the offset-0
+    field is loaded last. It happens before the PCode passes, so it is probably a second compiler difference,
+    at the IRO level. Details, the list and a draft: `docs/near/fn_802A2F84.c`.
+  - Register assignment only (instructions exact, so not the compiler): fn_8029F86C, fn_802A0FD4, fn_802A09AC
+    (the original keeps `nuv * 2` apart from `nuv`; every declaration order tried, 48 lines at best),
+    fn_80295FEC (counter vs size in r31), fn_802AC5E8 (5 lines; `n * 3` computed twice).
+  - Not tried yet: the GXClearVtxDesc drawers (fn_8029DEDC, fn_8029E5CC, fn_8029F0F8, fn_8029F680, fn_8029FE0C,
+    fn_802A02E8, fn_802A07C0, fn_802A0DE8), the float + index mixes (fn_802A2770, fn_802A2A8C, fn_802A33EC,
+    fn_802A3790, fn_802A404C, fn_802A42DC, fn_802A44F0, fn_802A49F4, fn_802A4C20, fn_802A4FC8, fn_802A52C4,
+    fn_802A5530), fn_8029DCD0/fn_8029E1B4/fn_8029E850/fn_8029EC1C, fn_80296918, fn_8029833C, fn_802A8BA4.
+    fn_8029E40C/fn_8029EA5C have one FIFO register and no copies, so they aren't compiler-blocked.
 - Copy pattern, a minimal case (2026-11-01): `docs/near/fn_80298544.c`. With GC/1.3.2 the whole function is
   identical (prologue, 8x unroll, trip count, the unrolled body sharing one `li r5,0`) except the leftover loop
   MWCC builds for n % 8: the original hoists `li r9,0` plus `mr` copies for the third and later zero stores,
