@@ -1,7 +1,7 @@
 #include "types.h"
 #include <string.h>
 #include "game/drawstate.h"
-extern u32 lbl_80347228;
+extern s32 lbl_80347228;
 extern u32 lbl_80347230;
 extern u32 lbl_8034723C;
 extern u32 lbl_80347240;
@@ -230,6 +230,114 @@ void fn_801CF090(u32 a, u32 b, f32 d, u32 c)
 }
 
 extern u32 lbl_80347224;
+extern void fn_80230F6C(u32 p);
+extern void fn_802890A4(u32 a);
+extern void fn_802873BC(u32 a);
+extern void fn_80287C14(u32 a);
+extern void fn_8028AB48(u32 a);
+extern void fn_80288FC8(u32 a);
+extern void fn_802872D4(u32 a);
+extern void fn_80287B38(u32 a);
+extern void fn_8028AA60(u32 a);
+extern void fn_80292C74(u32 a, u32 b, f32 f);
+extern void fn_80292D88(u32 a, u32 b, f32 f);
+extern void fn_80293310(u32 a, u32 b, f32 f);
+extern void fn_80293424(u32 a, u32 b, f32 f);
+extern void fn_80007398(u32 a, u32 b, u32 c, f32 f);
+extern void fn_80007348(u32 a, u32 b, u32 c, f32 f);
+extern void fn_800072F8(u32 a, u32 b, u32 c, f32 f);
+extern void fn_800072A8(u32 a, u32 b, u32 c, f32 f);
+extern void fn_80292EA8(u32 a, u32 b, f32 f);
+extern void fn_80292FBC(u32 a, u32 b, f32 f);
+extern void fn_802930DC(u32 a, u32 b, f32 f);
+extern void fn_802931F0(u32 a, u32 b, f32 f);
+extern void fn_80007370(u32 a, u32 b, u32 c, f32 f);
+extern void fn_80007320(u32 a, u32 b, u32 c, f32 f);
+extern void fn_800072D0(u32 a, u32 b, u32 c, f32 f);
+extern void fn_80007280(u32 a, u32 b, u32 c, f32 f);
+
+void fn_801D075C(void)
+{
+    if ((lbl_80347220 & 0x400000) && lbl_80347228 == 0x10) {
+        fn_80230F6C(lbl_80347230);
+        return;
+    }
+    switch (lbl_80347228) {
+    case 0x1:
+        fn_802890A4(lbl_8034722C);
+        break;
+    case 0x2:
+        fn_802873BC(lbl_8034722C);
+        break;
+    case 0x4:
+        fn_80287C14(lbl_8034722C);
+        break;
+    case 0x8:
+        fn_8028AB48(lbl_8034722C);
+        break;
+    case 0x10:
+        fn_80288FC8(lbl_80347230);
+        break;
+    case 0x20:
+        fn_802872D4(lbl_80347230);
+        break;
+    case 0x40:
+        fn_80287B38(lbl_80347230);
+        break;
+    case 0x80:
+        fn_8028AA60(lbl_80347230);
+        break;
+    case 0x1000:
+        fn_80292C74(lbl_80347230, lbl_80347234, lbl_80347244);
+        break;
+    case 0x2000:
+        fn_80292D88(lbl_80347230, lbl_80347234, lbl_80347244);
+        break;
+    case 0x4000:
+        fn_80293310(lbl_80347230, lbl_80347234, lbl_80347244);
+        break;
+    case 0x8000:
+        fn_80293424(lbl_80347230, lbl_80347234, lbl_80347244);
+        break;
+    case 0x10000:
+        fn_80007398(lbl_80347230, lbl_80347234, lbl_80347238, lbl_80347244);
+        break;
+    case 0x20000:
+        fn_80007348(lbl_80347230, lbl_80347234, lbl_80347238, lbl_80347244);
+        break;
+    case 0x40000:
+        fn_800072F8(lbl_80347230, lbl_80347234, lbl_80347238, lbl_80347244);
+        break;
+    case 0x80000:
+        fn_800072A8(lbl_80347230, lbl_80347234, lbl_80347238, lbl_80347244);
+        break;
+    case 0x100000:
+        fn_80292EA8(lbl_80347230, lbl_8034723C, lbl_80347244);
+        break;
+    case 0x200000:
+        fn_80292FBC(lbl_80347230, lbl_8034723C, lbl_80347244);
+        break;
+    case 0x400000:
+        fn_802930DC(lbl_80347230, lbl_8034723C, lbl_80347244);
+        break;
+    case 0x800000:
+        fn_802931F0(lbl_80347230, lbl_8034723C, lbl_80347244);
+        break;
+    case 0x1000000:
+        fn_80007370(lbl_80347230, lbl_8034723C, lbl_80347240, lbl_80347244);
+        break;
+    case 0x2000000:
+        fn_80007320(lbl_80347230, lbl_8034723C, lbl_80347240, lbl_80347244);
+        break;
+    case 0x4000000:
+        fn_800072D0(lbl_80347230, lbl_8034723C, lbl_80347240, lbl_80347244);
+        break;
+    case 0x8000000:
+        fn_80007280(lbl_80347230, lbl_8034723C, lbl_80347240, lbl_80347244);
+        break;
+    }
+}
+
 void fn_801D0B2C(void) {
     lbl_80347224 = 0;
 }
