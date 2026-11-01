@@ -38,7 +38,7 @@ typedef struct AkFio {
     s32 prio;       /* 0x88 */
     s32 prio0;      /* 0x8c */
 } AkFio;
-typedef struct { char* str; s32 w4; } FioName;
+typedef struct { char* str; u32 w4; } FioName; /* w4: the buffer address */
 typedef struct FioOut {
     s32 addr;
     u32 own;        /* addr was allocated for the request */
@@ -194,6 +194,38 @@ u32 fn_801CC0A0(u32 *o)
 }
 
 s32 fn_801CBE38(void);
+extern char lbl_8034BD08[6];
+extern char lbl_802C41D0[16];
+extern void OSPanic(const char* file, int line, const char* msg, ...);
+extern void fn_801C6308(AkFio* f);
+extern void fn_801E17E0(u32 p);
+
+void fn_801CC0E4(FioName* n) {
+    FioReq* node;
+    if (n == NULL) {
+        OSPanic(lbl_8034BD08, 0x2c7, lbl_802C41D0);
+    }
+    if (lbl_80347200 != NULL) {
+        if (lbl_80347200->name == n) {
+            if (lbl_80347200->fio != NULL) {
+                fn_801C6308(lbl_80347200->fio);
+            }
+        }
+        for (node = lbl_80347200; node != NULL; node = node->next) {
+            if (node->name == n) {
+                node->w10 = -1;
+                node->cancel = 1;
+            }
+        }
+        fn_801CBE38();
+    }
+    if (n->w4 != 0) {
+        fn_801E17E0(n->w4);
+        n->w4 = 0;
+    }
+    fn_801E1718(n);
+}
+
 void fn_801CC3A4(void) {
     fn_801CBE38();
 }
