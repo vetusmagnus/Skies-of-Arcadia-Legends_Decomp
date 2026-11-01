@@ -245,7 +245,7 @@ void fn_80222838(Link *l);
 typedef struct Args { s32 i[5]; f32 f[20]; } Args;
 void fn_80155994(Args *a);
 #define RDI(p) (*(p) == 3.4028235e38f ? ((p)++, 0x7FFFFFFF) : (s32)fn_801F6120(&(p)))
-void fn_80216E38(s32 n, u8 *p);
+void fn_80216E38(u32 n, char *p);
 extern u8 lbl_80310A1C[];
 void fn_8016D904(s32 n);
 void fn_801E749C(float *v);
@@ -260,7 +260,7 @@ extern void ScreenFadeDraw(void *p, f32 a, f32 b, f32 c, f32 d, f32 e);
 extern void njUnitMatrix(f32 *m);
 extern void njRotateXYZ(f32 *m, s32 x, s32 y, s32 z);
 extern void fn_80148188(s32 v);
-extern void *fn_802159E0(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g, s32 h, s32 i);
+u32 fn_802159E0(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g, char *path, s32 size);
 s32 fn_8011768C(u32 flags);
 /* lbl_802F7940: the script command table, indexed by Scpt.owner. */
 typedef struct {
@@ -2970,6 +2970,19 @@ static inline s32 strm_active(u32 id)
     return r;
 }
 
+void fn_80216E38(u32 n, char *p)
+{
+    char buf[0x40];
+
+    strcpy(buf, "/sound/");
+    strcat(buf, p);
+    if (n == 0) {
+        lbl_803477B8 = fn_802159E0(1, 2, 0x5622, 2, 0, 0, 0, buf, 0x4000);
+    } else if (n == 1) {
+        lbl_803477B8 = fn_802159E0(1, 2, 0xAC44, 2, 0, 0, 0, buf, 0x100000);
+    }
+}
+
 s32 fn_80216F48(u32 h) {
     if (h == 1) {
         return lbl_803477E0 != -1;
@@ -4023,7 +4036,7 @@ s32 fn_801FEE54(u32 flags, Scpt *st) {
         }
         {
             u32 w;
-            u8 *q = (u8 *)p;
+            char *q = (char *)p;
             w = *(u32 *)q;
             p = (float *)(q + 4);
             st->cur.f = p;
@@ -4151,14 +4164,14 @@ s32 fn_80214AA0(s32 flags, Scpt *obj)
     return 0;
 }
 
-void *fn_80215EA0(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g, s32 h)
+u32 fn_80215EA0(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, char *g, s32 h)
 {
     return fn_802159E0(1, a, b, c, d, e, f, g, h);
 }
 
-void *fn_80215F14(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, char *path)
+u32 fn_80215F14(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, char *path)
 {
-    return fn_802159E0(1, a, b, c, d, e, f, (s32)path, 0x8000);
+    return fn_802159E0(1, a, b, c, d, e, f, path, 0x8000);
 }
 
 s32 fn_801F5D08(s32 unused, Scpt *st) {
