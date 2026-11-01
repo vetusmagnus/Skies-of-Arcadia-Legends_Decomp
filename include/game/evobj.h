@@ -320,7 +320,7 @@ typedef struct EvObj {
     u16 x172;                /* 0x172 */
     u8 pad174[2];
     u16 id;                  /* 0x176 */
-    u8 pad178[2];
+    u16 x178;                /* 0x178 */
     u16 x17a;                /* 0x17A */
     u8 pad17C[4];
     s32 x180;                /* 0x180 */

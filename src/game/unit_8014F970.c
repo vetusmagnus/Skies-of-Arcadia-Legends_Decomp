@@ -3,6 +3,7 @@
 #include "game/drawstate.h"
 #include "game/work_8030CEA0.h"
 #include "game/btlside.h"
+#include "game/task.h"
 #include <math.h>
 #include <dolphin/types.h>
 #define AT(T, p, off) (*(T *)((u8 *)(p) + (off)))
@@ -111,8 +112,6 @@ extern Obj_8015854C* lbl_80306DB8[];
 extern s32 lbl_8034729C;
 extern u32 lbl_802E7090[];
 extern void *lbl_80346FA0;
-extern void *lbl_80346FA4;
-extern void *lbl_80346FA8;
 extern void *lbl_80346F9C;
 extern void *lbl_80346FB0;
 extern void *lbl_80346FB4;
@@ -296,7 +295,7 @@ extern u8 *lbl_80346FD0;
 extern s32 lbl_803472B8;
 typedef struct Fx {
     s32 mode;            /* 0x000 */
-    u8 pad4[0x34 - 4];
+    f32 x04[12];         /* 0x004 saved copy of x34..x60 */
     f32 x34, x38, x3c, x40, x44, x48, x4c, x50, x54, x58, x5c, x60;
     f32 x64, x68, x6c, x70, x74, x78, x7c, x80, x84, x88, x8c, x90;
     u8 pad94[0x154 - 0x94];
@@ -1010,16 +1009,6 @@ extern f32 lbl_8034A8F8;
 extern f32 lbl_8034A904;
 void fn_801E7194(u16 a, void *model, Anim_80156E54 *anim, void *c, f32 frame);
 typedef struct {
-    u8 pad0[0x178];
-    u16 f178;
-    u8 pad17a[0x1c8 - 0x17a];
-    u8* f1c8;
-} Inner_801512DC;
-typedef struct {
-    u8 pad0[0x24];
-    Inner_801512DC* f24;
-} Res_801512DC;
-typedef struct {
     s32 f0;
     s32 f4;
     s32 f8;
@@ -1029,19 +1018,25 @@ typedef struct {
 } In_801512DC;
 typedef struct {
     s32 f0;
-    u8 pad4[0x34 - 4];
-    f32 a[12];
-    f32 b[12];
-    u8 pad94[0x214 - 0x94];
-} Sub_801512DC;
-typedef struct {
-    s32 f0;
     s32 f4;
     s32 f8;
     s32 fc;
     u8 pad10[0x20 - 0x10];
-    Sub_801512DC sub;
+    Fx sub;
 } Obj_801512DC;
+/* *lbl_80346FA4: the battle camera: the current and previous shot, the shot table, the output view. */
+typedef struct {
+    s32 f0;                  /* 0x000 current shot */
+    s32 f4;                  /* 0x004 previous shot */
+    s32 f8;
+    s32 fc;
+    Obj_801512DC* f10;       /* 0x010 shots */
+    u8 pad14[0x214 - 0x14];
+    NJS_POINT3 pos;          /* 0x214 */
+    Angle ang[3];            /* 0x220 */
+    f32 f22c;                /* 0x22C */
+} BtlCam;
+extern BtlCam *lbl_80346FA4;
 extern char lbl_802B3B18[];
 /* lbl_8034727C: rows of 0x3E bytes starting at +0x3A (fn_8015A780 reads +0x50/+0x68
  * of the same rows). Fields come in pairs 0x18 apart, picked by a 0/1 flag. */
@@ -1081,11 +1076,14 @@ typedef struct {
     s32 w4;
     s32 w8;
     s32 wc;
-    u8 pad10[0x1c - 0x10];
+    u8 pad10[0x18 - 0x10];
+    s32 w18;
     s32 w1c;
     u8 pad20[4];
     Ent_80150800 ent[2];
 } Obj_80150800;
+/* *lbl_80346FA8: the battle camera's mode state (0x6C, fn_80150A80). */
+extern Obj_80150800 *lbl_80346FA8;
 typedef struct {
     u8 pad0[0x58];
     s32 w58;
@@ -1149,6 +1147,100 @@ void fn_8014F99C(BtlShip *o, f32 *m) {
         njTranslate(m, r->target.x, r->target.y, r->target.z);
     }
     fn_80153060(o->fx, m);
+}
+
+s32 fn_80150800(Obj_80150800 *o);
+void fn_801517EC(Fx *p);
+void fn_801515EC(Fx *p);
+void fn_801514C4(Fx *o, s32 flag);
+typedef struct V3_80150014 {
+    f32 x, y, z;
+} V3_80150014;
+typedef struct W3_80150014 {
+    u32 a, b, c;
+} W3_80150014;
+typedef struct K_80150014 {
+    V3_80150014 pos;
+    W3_80150014 w;
+    f32 f18;
+    V3_80150014 v1c;
+    V3_80150014 v28;
+    V3_80150014 v34;
+    W3_80150014 w40;
+} K_80150014;
+typedef struct In_80150014 {
+    V3_80150014 pos;
+    W3_80150014 w;
+} In_80150014;
+extern K_80150014 lbl_80306AC8;
+extern void* lbl_80346F98;
+extern void fn_8015073C(void* a, void* b, void* c);
+extern void fn_801502B8(BtlCam* m);
+
+static inline void Select(s32 t) {
+    BtlCam* m = lbl_80346FA4;
+    m->f4 = m->f0;
+    m->f0 = t;
+    if (m->f4 != m->f0) {
+        if (m->f0 != 0) {
+            Obj_801512DC* e = m->f10 + m->f0;
+            fn_801517EC(&e->sub);
+            fn_801515EC(&e->sub);
+        }
+        m->fc = 0;
+        m->f8 = 0;
+    } else {
+        m->fc = 0;
+        m->f8 = 0;
+        m->f4 = 0;
+    }
+}
+
+void fn_80150014(In_80150014* a, f32* b, V3_80150014* c) {
+    BtlCam* m;
+
+    lbl_80306AC8.v28.x = lbl_80306AC8.v1c.x;
+    lbl_80306AC8.v28.y = lbl_80306AC8.v1c.y;
+    lbl_80306AC8.v28.z = lbl_80306AC8.v1c.z;
+    lbl_80306AC8.v1c.x = c->x;
+    lbl_80306AC8.v1c.y = c->y;
+    lbl_80306AC8.v1c.z = c->z;
+    lbl_80306AC8.v34.x = lbl_80306AC8.pos.x;
+    lbl_80306AC8.v34.y = lbl_80306AC8.pos.y;
+    lbl_80306AC8.v34.z = lbl_80306AC8.pos.z;
+    lbl_80306AC8.pos.x = a->pos.x;
+    lbl_80306AC8.pos.y = a->pos.y;
+    lbl_80306AC8.pos.z = a->pos.z;
+    lbl_80306AC8.w40.a = lbl_80306AC8.w.a;
+    lbl_80306AC8.w40.b = lbl_80306AC8.w.b;
+    lbl_80306AC8.w40.c = lbl_80306AC8.w.c;
+    lbl_80306AC8.w.a = a->w.a;
+    lbl_80306AC8.w.b = a->w.b;
+    lbl_80306AC8.w.c = a->w.c;
+    lbl_80306AC8.f18 = 60.0f;
+    if (fn_80150800(lbl_80346FA8) != 0) {
+        fn_8015073C(lbl_80346FA8, lbl_80346FAC, lbl_80346FB0);
+        Select(lbl_80346FA8->w18);
+    }
+    m = lbl_80346FA4;
+    if (m->fc != 0) {
+        m->fc--;
+    }
+    if (m->f0 != 0) {
+        fn_801514C4(&m->f10[m->f0].sub, 1);
+    }
+    if (m->f4 != 0) {
+        fn_801514C4(&m->f10[m->f4].sub, 1);
+    }
+    lbl_80346F98 = &lbl_80346FA4->f10[lbl_80346FA4->f0].sub;
+    fn_801502B8(lbl_80346FA4);
+    a->pos.x = lbl_80346FA4->pos.x;
+    a->pos.y = lbl_80346FA4->pos.y;
+    a->pos.z = lbl_80346FA4->pos.z;
+    a->w.a = lbl_80346FA4->ang[0];
+    a->w.b = lbl_80346FA4->ang[1];
+    a->w.c = lbl_80346FA4->ang[2];
+    *b = lbl_80346FA4->f22c;
 }
 
 s32 fn_80153BBC(void)
@@ -1550,24 +1642,24 @@ void fn_8014FCD8(u8 *base, s32 i, u16 v) {
     *(u16 *)(e + 0x4a) = 0;
 }
 
-void fn_801515EC(u8 *p) {
-    *(u32 *)(p + 0x168) = 0;
+void fn_801515EC(Fx *p) {
+    p->init = 0;
 }
 
-void fn_801515F8(u8 *p, u32 a, u32 b, u32 c, u32 d, u32 e) {
-    *(u32 *)(p + 0x154) = b;
-    *(u32 *)(p + 0x158) = a;
-    *(u32 *)(p + 0x160) = c;
-    *(u32 *)(p + 0x15c) = d;
-    *(u32 *)(p + 0x164) = e;
+void fn_801515F8(Fx *p, NJS_POINT3 *a, Angle *b, NJS_POINT3 *c, NJS_POINT3 *d, NJS_POINT3 *e) {
+    p->ang = b;
+    p->pos = a;
+    p->ofs1 = c;
+    p->ofs2 = d;
+    p->target = e;
 }
 
-void fn_801517EC(u8 *p) {
-    memcpy(p + 0x34, p + 4, 0x30);
+void fn_801517EC(Fx *p) {
+    memcpy(&p->x34, p->x04, 0x30);
 }
 
-void fn_8015181C(u8 *p) {
-    memcpy(p + 4, p + 0x34, 0x30);
+void fn_8015181C(Fx *p) {
+    memcpy(p->x04, &p->x34, 0x30);
 }
 
 void fn_8015271C(Obj_8015271C* o) {
@@ -1781,7 +1873,6 @@ s32 fn_80156A3C(void) {
     return (lbl_80347024 += 0x1e) - 0x1e;
 }
 
-extern void fn_80150014(Msg*, s16);
 void fn_80157360(s32 idx) {
     BtlShip *fld = lbl_80346FC8[idx]->ship;
     Lane *p = &fld->lane[0];
@@ -1818,8 +1909,8 @@ void fn_80157360(s32 idx) {
     }
 }
 
-void fn_80157510(Msg* a, s16 i) {
-    fn_80150014(a, i);
+void fn_80157510(In_80150014* a, f32* b, V3_80150014* c) {
+    fn_80150014(a, b, c);
 }
 
 void fn_80157530(s32 a, s32 b, s32 c) {
@@ -4259,11 +4350,15 @@ void fn_80156E54(Obj_80156E54 *self, void *m)
     njPopMatrixEx();
 }
 
+static inline EvObj* TaskWork(struct Task* t) {
+    return t->work;
+}
+
 void fn_801512DC(Obj_801512DC* o, In_801512DC* in) {
-    Sub_801512DC* s;
+    Fx* s;
     NJS_POINT3* c;
     BtlSide* sl;
-    Res_801512DC* r;
+    struct Task* r;
     EvObj* a;
     EvObj* b;
     s32 t;
@@ -4287,36 +4382,36 @@ void fn_801512DC(Obj_801512DC* o, In_801512DC* in) {
         b = lbl_80346FC8[t ^ 1]->obj;
         r = fn_8010A164(o->f8);
         if (r == NULL) {
-            fn_8015757C((s32)lbl_802B3B18, r->f24->f178);
+            fn_8015757C((s32)lbl_802B3B18, TaskWork(r)->x178);
         }
-        fn_801515F8((void *)s, (u32)&a->pos, (u32)a->ang, (u32)c, (u32)(r->f24->f1c8 + 0x44), (u32)&b->pos);
-        s->f0 = in->f10;
-        s->a[0] = in->f[0];
-        s->a[1] = in->f[1];
-        s->a[2] = in->f[2];
-        s->a[3] = in->f[3];
-        s->a[4] = in->f[4];
-        s->a[5] = in->f[5];
-        s->a[6] = in->f[6];
-        s->a[7] = in->f[7];
-        s->a[8] = in->f[8];
-        s->a[9] = in->f[9];
-        s->a[10] = in->f[10];
-        s->a[11] = in->f[11];
+        fn_801515F8(s, &a->pos, a->ang, c, &TaskWork(r)->ext->target, &b->pos);
+        s->mode = in->f10;
+        s->x34 = in->f[0];
+        s->x38 = in->f[1];
+        s->x3c = in->f[2];
+        s->x40 = in->f[3];
+        s->x44 = in->f[4];
+        s->x48 = in->f[5];
+        s->x4c = in->f[6];
+        s->x50 = in->f[7];
+        s->x54 = in->f[8];
+        s->x58 = in->f[9];
+        s->x5c = in->f[10];
+        s->x60 = in->f[11];
         break;
     case 1:
-        s->b[0] = in->f[0];
-        s->b[1] = in->f[1];
-        s->b[2] = in->f[2];
-        s->b[3] = in->f[3];
-        s->b[4] = in->f[4];
-        s->b[5] = in->f[5];
-        s->b[6] = in->f[6];
-        s->b[7] = in->f[7];
-        s->b[8] = in->f[8];
-        s->b[9] = in->f[9];
-        s->b[10] = in->f[10];
-        s->b[11] = in->f[11];
+        s->x64 = in->f[0];
+        s->x68 = in->f[1];
+        s->x6c = in->f[2];
+        s->x70 = in->f[3];
+        s->x74 = in->f[4];
+        s->x78 = in->f[5];
+        s->x7c = in->f[6];
+        s->x80 = in->f[7];
+        s->x84 = in->f[8];
+        s->x88 = in->f[9];
+        s->x8c = in->f[10];
+        s->x90 = in->f[11];
         break;
     }
     fn_80151610((void *)s, 1);
@@ -4335,7 +4430,7 @@ void fn_8015596C(void *p) {
 }
 
 extern char lbl_802B3AFC[];
-void fn_8015128C(Sub_801512DC *objs, In_801512DC *in) {
+void fn_8015128C(Obj_801512DC *objs, In_801512DC *in) {
     s32 idx = in->f0;
 
     if (idx >= 0x80) {
@@ -4343,7 +4438,7 @@ void fn_8015128C(Sub_801512DC *objs, In_801512DC *in) {
         return;
     }
     if (idx > 0) {
-        fn_801512DC((void *)&objs[idx], in);
+        fn_801512DC(&objs[idx], in);
     }
 }
 
