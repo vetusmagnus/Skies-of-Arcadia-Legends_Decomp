@@ -1,4 +1,5 @@
 #include "types.h"
+#include "game/task.h"
 #include "ninja.h"
 #include "game/drawstate.h"
 typedef struct Ent {
@@ -10,7 +11,7 @@ extern Ent lbl_8030E7C0[4];
 extern s32 lbl_803474F8;
 extern s32 lbl_8034750C;
 void fn_801E1718(void *o);
-extern u32 lbl_80347518;
+extern s32 lbl_80347518;
 extern f32 lbl_80347510;
 extern u32 lbl_80347508;
 extern u32 lbl_80347504;
@@ -127,9 +128,9 @@ typedef struct FadeVtx {
     u32 col;
 } FadeVtx;
 extern f32 fn_801DBD9C(f32 z);
-extern void fn_801CBA98(void);
+void fn_801CBA98(Task *o);
 extern FadeVtx lbl_80308C78[4];
-extern u32 lbl_803471F8;
+extern s32 lbl_803471F8;
 void* fn_801E1C7C(s32 size);
 s32 fn_801CBD48(FioReq *s);
 
@@ -170,6 +171,47 @@ typedef struct Msg {
     s32 x8;
     s32 xc;
 } Msg;
+static inline void FadePush(float a, float c)
+{
+    s32 i = lbl_803474F8;
+    if (i >= 4) {
+        return;
+    }
+    lbl_8030E7C0[i].a = a;
+    lbl_8030E7C0[i].b = lbl_8034750C;
+    lbl_8030E7C0[i].c = c;
+    lbl_803474F8 = i + 1;
+}
+
+void fn_801CBA98(Task *o) {
+    f32 d = lbl_80347514 - 1.0f;
+    if (d <= 0.0f) {
+        d = 1.0f;
+    }
+    lbl_80347508 = 1;
+    lbl_80347504 = 1;
+    if (lbl_80347518 == 1) {
+        lbl_80347510 = lbl_80347510 + 1.0f / d;
+        if (lbl_80347510 >= 1.0f) {
+            lbl_80347508 = 0;
+            lbl_80347510 = 1.0f;
+            lbl_80347514 = 30.0f;
+        }
+    } else {
+        lbl_80347510 = lbl_80347510 - 1.0f / d;
+        if (lbl_80347510 <= 0.0f) {
+            lbl_80347504 = 0;
+            lbl_80347508 = 0;
+            lbl_80347510 = 0.0f;
+            lbl_80347514 = 30.0f;
+        }
+    }
+    FadePush(lbl_80347510, -1.0f);
+    if (lbl_803471F8 == 1) {
+        o->flags |= 0x40;
+    }
+}
+
 void fn_801CBBF8(void) {
     lbl_803471F8 = 1;
 }
