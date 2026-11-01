@@ -84,21 +84,23 @@ void fn_80286EE8(void);
 void fn_8028B498(void);
 void fn_801E04E8(void *m, s32 a, void *b, void *c);
 /* A heap block's 0x20-byte header (the user pointer is 0x20 past it). */
+/* A heap block header: the caller's memory follows it (data == header + 1). */
 typedef struct MemBlk {
     void *data;
-    u32 size;
-    u8 pad8[0x14 - 8];
-    struct MemBlk *prev;
-    struct MemBlk *next;
+    u32 size;             /* 0x04 rounded size */
+    u32 x8;
+    s32 idx;              /* 0x0C */
+    s32 x10;              /* 0x10 owner kind, set by the callers */
+    struct MemBlk *prev;  /* 0x14 */
+    struct MemBlk *next;  /* 0x18 */
     u8 pad1c;
-    s8 tag;
-    u8 tag2;
-    s8 flag;
+    char name[2];         /* 0x1D "M"/"R"/"D" + "_AMEM" */
+    s8 flag;              /* 0x1F allocated from the alternate heap */
 } MemBlk;
 typedef struct MemHeap {
     MemBlk *first;
 } MemHeap;
-void *fn_801E184C(MemHeap *heap, s32 idx, s32 mode, u32 n);
+void *fn_801E184C(MemHeap *heap, s32 idx, u32 count, u32 n);
 extern MemHeap lbl_802F6748[];
 void GXInvalidateVtxCache(void);
 void GXInvalidateTexAll(void);
@@ -569,7 +571,7 @@ extern void fn_801CC3A4(void);
 extern void fn_80218678(void);
 extern void* heap_main;
 extern void* heap_font;
-extern void* lbl_80346720;
+extern void *volatile lbl_80346720; /* the allocator reloads it right after storing it */
 extern void* lbl_8034769C;
 extern void* lbl_803476A0;
 extern void* lbl_803476A4;
@@ -1945,6 +1947,75 @@ void fn_801E17E0(void* p) {
         }
         fn_801E15FC(lbl_802F6748, p);
     }
+}
+
+extern void *fn_80005B50(void *heap, u32 size);
+extern s32 lbl_803476E8;
+extern s32 lbl_803476EC;
+
+static inline void MarkAlt(MemBlk *h, void *heap) {
+    h->flag = 0;
+    if (lbl_803476E8 == 1) {
+        h->flag = 1;
+        lbl_80346720 = heap;
+    }
+}
+
+void *fn_801E184C(MemHeap *list, s32 idx, u32 count, u32 n) {
+    MemBlk *h;
+    MemBlk *p;
+    u32 size;
+    void *saved;
+    lbl_803476E0++;
+    if (count != 0) n *= count;
+    saved = lbl_80346720;
+    n = (n + 0x1f) & ~0x1f;
+    if (lbl_803476E8 == 1) lbl_80346720 = lbl_803476A0;
+    size = n + 0x20;
+    p = fn_80005B50(lbl_80346720, size);
+    if (p != NULL) {
+        h = p;
+    } else {
+        if (lbl_803476E8 == 1) {
+            lbl_803476E8 = 0;
+            p = fn_80005B50(lbl_80346720, size);
+            lbl_803476E8 = 1;
+        } else {
+            h = lbl_80346720;
+            lbl_803476E8 = 1;
+            lbl_80346720 = lbl_803476A0;
+            p = fn_80005B50(lbl_80346720, size);
+            if (lbl_803476EC != 1) MarkAlt(p, h);
+            lbl_803476E8 = 0;
+            lbl_803476EC = 1;
+        }
+        h = p;
+    }
+    h->idx = idx;
+    strncpy(h->name, "M_AMEM", 2);
+    h->data = h + 1;
+    if (count != 0) {
+        u32 *q;
+        u32 i;
+        u32 cnt = n >> 5;
+        q = h->data;
+        for (i = 0; i < cnt; i++) {
+            u32 j;
+            for (j = 0; j < 8; j++) *q++ = 0;
+        }
+    }
+    if (list->first != NULL) list->first->prev = h;
+    h->prev = NULL;
+    h->next = list->first;
+    list->first = h;
+    h->size = n;
+    lbl_803476FC += n;
+    if (lbl_803476EC == 1) {
+        lbl_803476EC = 0;
+    } else {
+        MarkAlt(h, saved);
+    }
+    return h->data;
 }
 
 void fn_801E1A2C(s32 mode, u32 n) {
@@ -3985,10 +4056,10 @@ void fn_801E15FC(MemHeap *h, void *p) {
     lbl_803476E0 = lbl_803476E0 - 1;
     if (p != 0) {
         b = (MemBlk *)((u8 *)p - 0x20);
-        if (MemEqual(&b->tag2, "_AMEM", 1) != 1) {
+        if (MemEqual(&b->name[1], "_AMEM", 1) != 1) {
             fn_801DBE1C("memFree Error");
         }
-        if (b->tag == 'M' || b->tag == 'R') {
+        if (b->name[0] == 'M' || b->name[0] == 'R') {
             if (b->prev == 0) {
                 h->first = b->next;
                 if (b->next != 0) {
@@ -4005,7 +4076,7 @@ void fn_801E15FC(MemHeap *h, void *p) {
             if (b->flag == 1) {
                 lbl_80346720 = lbl_803476A0;
             }
-            strncpy((char *)&b->tag, "D_AMEM", 2);
+            strncpy(b->name, "D_AMEM", 2);
             fn_80005AD8(lbl_80346720, b);
             lbl_80346720 = saved;
         }
