@@ -394,7 +394,9 @@ typedef struct SysSub {
     u8 pad4[0x38 - 4];
 } SysSub;
 typedef struct SysObj {
-    u8 pad0[0x50];
+    u8 pad0[0x3c];
+    u32 x3c;            /* 0x3c */
+    u8 pad40[0x50 - 0x40];
     Task* owner;        /* 0x50: the character it belongs to */
     u8 pad54[0x5a - 0x54];
     s16 x5a;            /* 0x5a */
@@ -924,22 +926,9 @@ extern s32 fn_8001604C(void* t, s8* arr, s32 a, s32 b);
 extern s32 fn_80016234(void* t, s8 flag, s32 a, s32 b, s32 c);
 extern s32 fn_80015EC8(void* t, s8* arr, s8 flag);
 typedef struct { f32 x, y, z; } V3;
-typedef struct F163A4Unit {
-    s8 x0;
-    u8 pad1[3];
-    s8 x4;
-} F163A4Unit;
-typedef struct F163A4Work {
-    u8 pad0[0x4c];
-    F163A4Unit* unit;
-} F163A4Work;
-typedef struct F163A4Task {
-    u8 pad0[0x24];
-    F163A4Work* wk;
-} F163A4Task;
 extern void fn_8001E6DC(V3* out, s8 v);
 extern s8 fn_80018398(V3* v, s32 a);
-extern s32 fn_8001D944(s8 id, void* t);
+int fn_8001D944(s8 id, Task* t);
 typedef struct Node_800102C8 {
     u8 pad[0x24];
     void* val;
@@ -5952,8 +5941,9 @@ s32 fn_80015D78(void* t, s32 id, s32 p5, s32 p6, s32 p7, s16 mode) {
     return 0;
 }
 
-s32 fn_800163A4(F163A4Task* t, s8 flag, s8 mode, s16 want, s16 cols, s16 rows) {
-    F163A4Unit* u = t->wk->unit;
+s32 fn_800163A4(Task* t, s8 flag, s8 mode, s16 want, s16 cols, s16 rows) {
+    ChrWork* w = t->work;
+    ChrInfo* u = w->st;
     V3 v;
     f32 step;
     f32 x0;
@@ -5961,13 +5951,13 @@ s32 fn_800163A4(F163A4Task* t, s8 flag, s8 mode, s16 want, s16 cols, s16 rows) {
     s8 i;
     s8 id;
     s32 sel;
-    if (u->x0 == want) {
+    if (u->id == want) {
         return 0;
     }
     if (flag != 0) {
-        sel = u->x4;
+        sel = u->target;
     } else {
-        sel = u->x0;
+        sel = u->id;
     }
     fn_8001E6DC(&v, sel);
     step = 15.0f;
@@ -6202,6 +6192,55 @@ static inline Task* Find(s8 id) {
     }
     return 0;
 }
+int fn_8001D944(s8 id, Task* t) {
+    int r = 0;
+    ChrWork* w = t->work;
+    ChrInfo* st = w->st;
+    if (st->id == id) {
+        return 0;
+    }
+    if (st->x1dc == 0) {
+        Task* o = Find(id);
+        s8 a;
+        s8 b;
+        SysObj* sw;
+        o = o ? o : Find(0);
+        a = fn_80020E10(w->x10->xc);
+        w = o->work;
+        b = fn_80020E10(w->x10->xc);
+        if ((a < 0 && b < 0) || (a >= 0 && b >= 0)) {
+            r = 0;
+        } else {
+            r = 1;
+        }
+        sw = lbl_80347394->work;
+        if (sw->x3c & 0x4000) {
+            if (r == 1) {
+                r = 0;
+            } else {
+                r = 1;
+            }
+        }
+        return r;
+    }
+    if (st->id < 4 && id >= 4) {
+        r = 1;
+    }
+    if (st->id >= 4 && id < 4) {
+        r = 1;
+    }
+    if (lbl_80347394 == 0) {
+        if (fn_80014C90(st->id, 0x400000)) {
+            if (r == 1) {
+                r = 0;
+            } else {
+                r = 1;
+            }
+        }
+    }
+    return r;
+}
+
 s32 fn_8001DB44(Task* t, s8 mode) {
     ChrWork* w = t->work;
     Task* o;
