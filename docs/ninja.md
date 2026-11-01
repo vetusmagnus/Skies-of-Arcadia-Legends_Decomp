@@ -400,9 +400,20 @@ Logged, not integrated as matches. Functions marked * are in the unit as NonMatc
 - Inline-argument copies (2026-11-01): `fn_802A1160` (35 lines) and the NGDL recorder start `fn_802A8D64`
   both look like a body inlined from a helper, and in both the original keeps a register copy of each value
   passed in (`mr r10,r4` for the vertex base; `mr r27,r3` for the buffer and `mr r28,r9` for the NGGD block)
-  where 1.3.2nj coalesces the parameter with its argument. Written as `static inline` helpers, the rest of the
-  code lines up, so this may be a second compiler-side difference like the copy pattern rather than a source
-  form. Not investigated in the compiler yet.
+  where 1.3.2nj has none. Traced with the IRO log compiler and PCode dumps (test case: fn_802A1160 with the
+  walk as `static inline void walk(u32* v, u32* base)`):
+  - The inliner substitutes an argument directly when the helper never assigns the parameter; only `v`
+    (advanced in the loop) gets a temporary, so only `v` gets its `mr`. Parameter types, `register`/`const`,
+    `base + 0`, casts and passing the global directly don't change that.
+  - A helper local copy (`u32* b = base;`) becomes an IRO temporary; IRO's first copy propagation forwards
+    it and use-def drops it. With `#pragma opt_propagation off` the temporary survives IRO to the end, but
+    the PCode the backend optimizer starts from (driver entry 0x4FF6A0) already uses `base`'s virtual
+    register: turning the IR into PCode gives a local whose only definition is a copy of another local the
+    same register. None of the backend copy-propagation runs is involved (each of the 12 mode-1 calls made
+    block-local in turn changes nothing here).
+  - No stock GC compiler (1.0 to 3.0a5.2) keeps the copy either. So this looks like a second difference in
+    the compiler Ninja was built with, at the IR-to-PCode step rather than in copy propagation. Finding and
+    modelling it would need the lowering code reverse-engineered; not done yet.
 - `fn_80286EE8` / `fn_8028B498` (light update, duplicate group 40): 23 lines: the walker/base copy of the table
   address goes the other way and `base + 0x30c` isn't hoisted; best form in `docs/near/fn_80286EE8.c`.
 - Register allocation or scheduling only: `fn_80288C68`,

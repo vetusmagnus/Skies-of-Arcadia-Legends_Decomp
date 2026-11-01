@@ -2,6 +2,7 @@
 """Set up a decomp-permuter directory for one game function (works on Windows, no cpp needed).
 
 usage: tools/match/permsetup.py SRC FN [OUTDIR]     (default OUTDIR: build/permuter/FN)
+       CCV=<version> picks the compiler as in fdiff.py (CCV=1.3.2nj for src/ninja).
 then:  python <decomp-permuter>/permuter.py OUTDIR -j8 --stop-on-zero
 
 Writes base.c (SRC preprocessed by MWCC, every function body except FN's and the inline helpers
@@ -43,7 +44,8 @@ def bracket_end(text, i):
 def strip_bodies(text, keep):
     """Replace function bodies with ';', keeping FN and the inline functions without asm."""
     out, pos = [], 0
-    rx = re.compile(r"^[^\n;{}#]*?\b(\w+)\s*\([^;{}]*\)\s*\{", re.M)
+    # The optional group takes the parameter declarations of a K&R definition (fn_802976F8).
+    rx = re.compile(r"^[^\n;{}#]*?\b(\w+)\s*\([^;{}]*\)((?:\s*[^;{}()]+;)*)\s*\{", re.M)
     while True:
         m = rx.search(text, pos)
         if not m:
@@ -55,6 +57,9 @@ def strip_bodies(text, keep):
         # pycparser can't read MWCC's asm blocks (SDK inlines), so those become prototypes too.
         if m.group(1) == keep or (re.search(r"\binline\b", head) and not re.search(r"\basm\b", body)):
             out.append(text[pos:end + 1])
+        elif m.group(2):
+            # K&R: an old-style declaration, since the parameter list has names but no types
+            out.append(text[pos:m.start()] + head[:head.index("(", head.index(m.group(1)))] + "();")
         else:
             out.append(text[pos:m.start()] + head.rstrip() + ";")
         pos = end + 1
@@ -80,7 +85,7 @@ def main():
     src, fn = sys.argv[1], sys.argv[2]
     out = sys.argv[3] if len(sys.argv) > 3 else os.path.join(ROOT, "build", "permuter", fn)
     os.makedirs(out, exist_ok=True)
-    cc = os.path.join(ROOT, "build", "compilers", "GC", "1.3.2", "mwcceppc.exe")
+    cc = os.path.join(ROOT, "build", "compilers", "GC", os.environ.get("CCV", "1.3.2"), "mwcceppc.exe")
     wrap = "" if WINDOWS else f'"{fwd(os.path.join(ROOT, "build", "tools", "wibo"))}" '
     pre = subprocess.run(f'{wrap}"{cc}" {FLAGS} -EP "{os.path.abspath(src)}"', shell=True, cwd=ROOT,
                          check=True, capture_output=True, text=True).stdout
