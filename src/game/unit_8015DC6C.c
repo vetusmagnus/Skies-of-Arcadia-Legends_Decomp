@@ -1524,6 +1524,7 @@ typedef struct {
     s8 f8;
     u8 pad[0xb];
 } Gx_8016022C;
+extern Gx_8016022C lbl_80311AC0;
 typedef struct {
     u8 pad0[0x16c];
     s16 h16c;
@@ -8286,7 +8287,6 @@ void fn_801841DC(void) {
 
 void fn_8016022C(Obj_8016022C *obj, Arg_8016022C *arg)
 {
-    extern Gx_8016022C lbl_80311AC0;
     extern s32 fn_8015FF98(s32 idx, Inner_8016022C *o, f32 t);
     extern u32 fn_8008F8FC(Inner_8016022C *o, s32 i);
     extern s32 fn_8016645C(Inner_8016022C *o, Arg_8016022C *a);
