@@ -79,12 +79,11 @@ typedef struct { u8 pad[4]; f32 x, y, z; u8 pad2[0x1c - 0x10]; } Ent_801DFA9C;
 typedef struct { Hdr* stream; Ent_801DFA9C* ent; u8 pad[4]; } Item_801DFA9C;
 extern s32 fn_801CB0A4(s32 type);
 s32 fn_801DFA9C(Item_801DFA9C* items, s32 count);
-typedef struct Mo { u8 pad0[4]; u8 m4[0x28]; u8 m2c[0x1C]; s32 x48; void *x4c; } Mo;
+typedef struct Mo Mo;
 void njPushMatrixEx(void);
 void njPopMatrixEx(void);
 void fn_80286EE8(void);
 void fn_8028B498(void);
-void fn_801E04E8(void *m, s32 a, void *b, void *c);
 /* A heap block's 0x20-byte header (the user pointer is 0x20 past it). */
 /* A heap block header: the caller's memory follows it (data == header + 1). */
 typedef struct MemBlk {
@@ -240,34 +239,38 @@ struct Node801D {
 };
 void fn_801DA748(Node801D* n);
 typedef struct Node801DF6 Node801DF6;
-typedef struct { void* x0; } Data801DF6;
+typedef struct { u16* x0; } Data801DF6;
+/* A model tree node (a Ninja object): flags, model, position, angles, scale, child, sibling. */
 struct Node801DF6 {
     u32 flags;       /* 0x00 */
     Data801DF6* d;   /* 0x04 */
-    u8 pad08[0x24];
+    f32 pos[3];      /* 0x08 */
+    Angle ang[3];    /* 0x14 */
+    f32 scl[3];      /* 0x20 */
     Node801DF6* c1;  /* 0x2c */
     Node801DF6* c2;  /* 0x30 */
 };
 extern s32 fn_801CB1AC(void* p);
 void fn_801DF600(Node801DF6* n, s32* count, s32* total);
-typedef struct {
-    f32 dist;          /* 0x00 */
-    NJS_POINT3 pos;    /* 0x04 */
-    NJS_VECTOR dir;    /* 0x10 */
-} Hit801E;
-typedef struct {
+typedef struct HitOut {
+    f32 dist;
+    NJS_POINT3 pos; /* 4: input point */
+    NJS_POINT3 dir; /* 0x10: result direction */
+} HitOut;
+typedef struct Ellipsoid {
+    NJS_POINT3 center;
+    NJS_POINT3 scale;
+} Ellipsoid;
+/* An axis-aligned box: its two corners, then the falloff radius. */
+typedef struct Box {
     NJS_POINT3 v[2]; /* 0x00 min, 0x0C max */
     f32 r;           /* 0x18 falloff radius */
-} Box801E;
-typedef struct {
-    NJS_POINT3 c;     /* 0x00 */
-    NJS_POINT3 d;     /* 0x0C */
-} Ref801E;
+} Box;
 extern void njUnitVector(NJS_VECTOR* v);
 extern void njCalcVector(f32* m, NJS_VECTOR* v, NJS_VECTOR* out);
 extern void fn_802900C0(NJS_POINT3* p, NJS_POINT3* c, NJS_POINT3* out);
 extern f32 fn_80291A5C(f32 v);
-extern f32 fn_801DFE48(NJS_POINT3* p, Box801E* box);
+extern f32 fn_801DFE48(NJS_POINT3* p, Box* box);
 typedef struct DataEntry {
     void *base;
     s32 offset;
@@ -713,20 +716,22 @@ typedef struct KeySet_801DEDC0 {
     Key_801DEDC0* keys;
     s32 count;
 } KeySet_801DEDC0;
-typedef struct HitOut {
-    f32 dist;
-    NJS_POINT3 pos; /* 4: input point */
-    NJS_POINT3 dir; /* 0x10: result direction */
-} HitOut;
-typedef struct Ellipsoid {
-    NJS_POINT3 center;
-    NJS_POINT3 scale;
-} Ellipsoid;
-typedef struct Box {
-    NJS_POINT3 min;
-    NJS_POINT3 max;
-    f32 extra; /* 0x18 */
-} Box;
+/* One collision result slot of a model walk (fn_801E04E8/fn_801E0AC0). */
+typedef struct Slot801E {
+    void* key;       /* 0x00 */
+    HitOut* hit;     /* 0x04 */
+    s32 n;           /* 0x08 */
+} Slot801E;
+struct Mo {
+    u8 pad0[4];
+    Ellipsoid m4;    /* 0x04 */
+    u8 pad1c[0x2c - 0x1c];
+    Box m2c;         /* 0x2C */
+    Node801DF6* x48; /* 0x48 the model */
+    Slot801E* x4c;   /* 0x4C */
+};
+Slot801E* fn_801E04E8(Ellipsoid* ref, Node801DF6* obj, Slot801E* slot, Box* box);
+Slot801E* fn_801E0AC0(Ellipsoid* ref, Node801DF6* obj, Slot801E* slot, Box* box);
 extern void fn_8028FEA4(NJS_POINT3* p, Ellipsoid* e, NJS_POINT3* out);
 typedef struct Tri {
     NJS_POINT3 a;
@@ -2158,7 +2163,7 @@ void fn_801DF94C(Ob *o) {
 
 extern Plane lbl_802F66B8[6];
 
-f32 fn_801DFE48(NJS_POINT3* p, Box801E* b) {
+f32 fn_801DFE48(NJS_POINT3* p, Box* b) {
     Ray ray;
     NJS_POINT3 out;
     Plane* pl = lbl_802F66B8;
@@ -2213,6 +2218,63 @@ f32 fn_801DFE48(NJS_POINT3* p, Box801E* b) {
     return 0.0f;
 }
 
+void fn_801E0204(HitOut* hit, Ellipsoid* ref, f32* mtx, Box* box);
+extern void* fn_801CB12C(u16* p);
+Slot801E* fn_801E04E8(Ellipsoid* ref, Node801DF6* obj, Slot801E* slot, Box* box) {
+    s32 cnt;
+    HitOut* hit;
+    s32 size;
+    s32 n;
+    s32 type;
+    u16* p;
+    u16* data;
+    Ellipsoid r;
+    NJS_MATRIX m;
+
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    if (!(obj->flags & 1)) njTranslate(0, obj->pos[0], obj->pos[1], obj->pos[2]);
+    if (!(obj->flags & 2)) njRotateXYZ(0, obj->ang[0], obj->ang[1], obj->ang[2]);
+    if (!(obj->flags & 4)) njScale(0, obj->scl[0], obj->scl[1], obj->scl[2]);
+    if (!(obj->flags & 8) && obj->d != 0) {
+        p = fn_801CB12C(obj->d->x0);
+        if (slot->key == p) {
+            fn_80291C44(m);
+            njInvertMatrix(m);
+            r.center.x = ref->center.x;
+            r.center.y = ref->center.y;
+            r.center.z = ref->center.z;
+            r.scale.x = ref->scale.x;
+            r.scale.y = ref->scale.y;
+            r.scale.z = ref->scale.z;
+            hit = slot->hit;
+            slot->n = 0;
+            do {
+                size = p[0];
+                type = (u8)p[1];
+                data = p + 2;
+                n = fn_801CB0A4(type);
+                if (n >= 0) cnt = data[0];
+                if (!(0 <= n)) size = n & 0xffff;
+                if (n > 0) {
+                    slot->n += cnt;
+                    do {
+                        fn_801E0204(hit, &r, m, box);
+                        hit++;
+                    } while (--cnt > 0);
+                }
+                p = data + size * 2;
+            } while (type != 0xff);
+            slot++;
+        }
+    }
+    if (obj->c1 != 0 && !(obj->flags & 0x10)) slot = fn_801E04E8(ref, obj->c1, slot, box);
+    njPopMatrixEx();
+    if (obj->c2 != 0) slot = fn_801E04E8(ref, obj->c2, slot, box);
+    return slot;
+}
+
 void fn_801E06E0(Mo *o) {
     njPushMatrixEx();
     fn_80286EE8();
@@ -2220,6 +2282,63 @@ void fn_801E06E0(Mo *o) {
     njUnitMatrix(0);
     fn_801E04E8(&o->m4, o->x48, o->x4c, &o->m2c);
     njPopMatrixEx();
+}
+
+void fn_801E0734(HitOut* o, Ellipsoid* e, NJS_MATRIX m, Box* b);
+extern void* fn_801CB12C(u16* p);
+Slot801E* fn_801E0AC0(Ellipsoid* ref, Node801DF6* obj, Slot801E* slot, Box* box) {
+    s32 cnt;
+    HitOut* hit;
+    s32 size;
+    s32 n;
+    s32 type;
+    u16* p;
+    u16* data;
+    Ellipsoid r;
+    NJS_MATRIX m;
+
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    if (!(obj->flags & 1)) njTranslate(0, obj->pos[0], obj->pos[1], obj->pos[2]);
+    if (!(obj->flags & 2)) njRotateXYZ(0, obj->ang[0], obj->ang[1], obj->ang[2]);
+    if (!(obj->flags & 4)) njScale(0, obj->scl[0], obj->scl[1], obj->scl[2]);
+    if (!(obj->flags & 8) && obj->d != 0) {
+        p = fn_801CB12C(obj->d->x0);
+        if (slot->key == p) {
+            fn_80291C44(m);
+            njInvertMatrix(m);
+            r.center.x = ref->center.x;
+            r.center.y = ref->center.y;
+            r.center.z = ref->center.z;
+            r.scale.x = ref->scale.x;
+            r.scale.y = ref->scale.y;
+            r.scale.z = ref->scale.z;
+            hit = slot->hit;
+            slot->n = 0;
+            do {
+                size = p[0];
+                type = (u8)p[1];
+                data = p + 2;
+                n = fn_801CB0A4(type);
+                if (n >= 0) cnt = data[0];
+                if (!(0 <= n)) size = n & 0xffff;
+                if (n > 0) {
+                    slot->n += cnt;
+                    do {
+                        fn_801E0734(hit, &r, m, box);
+                        hit++;
+                    } while (--cnt > 0);
+                }
+                p = data + size * 2;
+            } while (type != 0xff);
+            slot++;
+        }
+    }
+    if (obj->c1 != 0 && !(obj->flags & 0x10)) slot = fn_801E0AC0(ref, obj->c1, slot, box);
+    njPopMatrixEx();
+    if (obj->c2 != 0) slot = fn_801E0AC0(ref, obj->c2, slot, box);
+    return slot;
 }
 
 void fn_801E0CB8(Mo *o) {
@@ -2931,7 +3050,7 @@ void fn_801DF600(Node801DF6* n, s32* count, s32* total) {
     if (c != 0) CountNode2(c, count, total);
 }
 
-void fn_801E0204(Hit801E* hit, Ref801E* ref, f32* mtx, Box801E* box) {
+void fn_801E0204(HitOut* hit, Ellipsoid* ref, f32* mtx, Box* box) {
     NJS_POINT3 p;
     NJS_POINT3 q;
     NJS_VECTOR v;
@@ -2939,18 +3058,18 @@ void fn_801E0204(Hit801E* hit, Ref801E* ref, f32* mtx, Box801E* box) {
     njCalcPoint(NULL, &hit->pos, &p);
     if (p.x > box->v[0].x && p.y > box->v[0].y && p.z > box->v[0].z && p.x < box->v[1].x && p.y < box->v[1].y &&
         p.z < box->v[1].z) {
-        fn_802900C0(&p, &ref->c, &q);
-        v.x = q.x - ref->c.x;
-        v.y = q.y - ref->c.y;
-        v.z = q.z - ref->c.z;
+        fn_802900C0(&p, &ref->center, &q);
+        v.x = q.x - ref->center.x;
+        v.y = q.y - ref->center.y;
+        v.z = q.z - ref->center.z;
         hit->dist = fn_80291A5C(v.x * v.x + v.y * v.y + v.z * v.z);
         v.x = p.x - q.x;
         v.y = p.y - q.y;
         v.z = p.z - q.z;
         if (v.x == 0.0f && v.y == 0.0f && v.z == 0.0f) {
-            v.x = ref->d.x;
-            v.y = ref->d.y;
-            v.z = ref->d.z;
+            v.x = ref->scale.x;
+            v.y = ref->scale.y;
+            v.z = ref->scale.z;
         }
         njUnitVector(&v);
         njCalcVector(mtx, &v, &hit->dir);
@@ -2965,18 +3084,18 @@ void fn_801E0204(Hit801E* hit, Ref801E* ref, f32* mtx, Box801E* box) {
             hit->dir.y = 0.0f;
             hit->dir.x = 0.0f;
         } else {
-            fn_802900C0(&p, &ref->c, &q);
-            v.x = q.x - ref->c.x;
-            v.y = q.y - ref->c.y;
-            v.z = q.z - ref->c.z;
+            fn_802900C0(&p, &ref->center, &q);
+            v.x = q.x - ref->center.x;
+            v.y = q.y - ref->center.y;
+            v.z = q.z - ref->center.z;
             hit->dist = fn_80291A5C(v.x * v.x + v.y * v.y + v.z * v.z);
             v.x = p.x - q.x;
             v.y = p.y - q.y;
             v.z = p.z - q.z;
             if (v.x == 0.0f && v.y == 0.0f && v.z == 0.0f) {
-                v.x = ref->d.x;
-                v.y = ref->d.y;
-                v.z = ref->d.z;
+                v.x = ref->scale.x;
+                v.y = ref->scale.y;
+                v.z = ref->scale.z;
             }
             njUnitVector(&v);
             v.x *= s;
@@ -4746,8 +4865,8 @@ void fn_801E0734(HitOut* o, Ellipsoid* e, NJS_MATRIX m, Box* b) {
     NJS_POINT3 d;
     f32 k;
     njCalcPoint(0, &o->pos, &p);
-    if (p.x > b->min.x && p.y > b->min.y && p.z > b->min.z && p.x < b->max.x && p.y < b->max.y &&
-        p.z < b->max.z) {
+    if (p.x > b->v[0].x && p.y > b->v[0].y && p.z > b->v[0].z && p.x < b->v[1].x && p.y < b->v[1].y &&
+        p.z < b->v[1].z) {
         fn_8028FEA4(&p, e, &c);
         d.x = c.x - e->center.x;
         d.y = c.y - e->center.y;
@@ -4768,7 +4887,7 @@ void fn_801E0734(HitOut* o, Ellipsoid* e, NJS_MATRIX m, Box* b) {
             njCalcVector(m, (void *)(&d), (void *)(&o->dir));
         }
     } else {
-        if (b->extra == 0.0f) {
+        if (b->r == 0.0f) {
             o->dir.z = 0.0f;
             o->dir.y = 0.0f;
             o->dir.x = 0.0f;
