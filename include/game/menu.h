@@ -27,12 +27,20 @@ typedef struct {
 
 /* The work of the save/load and other menu tasks that keep their parts in one table. */
 typedef struct {
-    u8 pad[0x1F8];
+    u8 x0;
+    u8 sel;      /* 0x01 cursor */
+    u8 state;    /* 0x02 */
+    u8 x3;
+    u8 pad4[0x128 - 4];
+    u32 x128;    /* 0x128 */
+    u8 pad12c[0x1F8 - 0x12C];
     MenuPart* parts[MENU_PART_COUNT]; /* 0x1F8 */
 } MenuWork;
 
 typedef struct {
-    u8 pad[0x24];
+    u8 pad[0x19];
+    u8 state;       /* 0x19 */
+    u8 pad1a[0x24 - 0x1a];
     MenuWork* work; /* 0x24 */
 } MenuTask;
 
