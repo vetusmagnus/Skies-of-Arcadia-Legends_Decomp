@@ -9,7 +9,7 @@
 typedef struct {
     NJS_POINT3 pos;
     NJS_POINT3 dir;
-    u8 pad18[2];
+    s16 x18;
     s16 x1a;
     u8 pad1c[4];
 } Camera803119E0;
