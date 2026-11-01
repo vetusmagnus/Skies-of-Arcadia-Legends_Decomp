@@ -204,7 +204,9 @@ typedef struct ChrInfo {
     s16 state;          /* 0x12 */
     s16 x14;            /* 0x14 */
     s16 x16;            /* 0x16 */
-    u8 pad_18[8];
+    s16 x18;            /* 0x18 */
+    s16 x1a;            /* 0x1a */
+    u8 pad_1c[4];
     s16 x20;            /* 0x20 */
     u8 pad22[6];
     s8 x28[10];         /* 0x28 recent ids, -1 = free */
@@ -905,9 +907,19 @@ typedef struct Inner_80019D7C { u8 pad0[2]; s16 x2; u8 pad4[0xe]; s16 x12; u8 pa
 typedef struct Node { u8 pad[0x24]; void* w; } Node;
 typedef struct Work_80019D7C { u8 pad[0x4c]; Inner_80019D7C* in; } Work_80019D7C;
 /* The 0x18-byte work of the fn_80019B70 task: two character tasks and up to three (kind, value) pairs. */
-typedef struct Blk_80019D7C { u8 pad[4]; Task* a; Task* b; s16 c; s16 d; s16 x10; s16 x12; s16 x14; s16 x16; } Blk_80019D7C;
-typedef struct Obj_80019D7C { u8 pad[0x24]; Blk_80019D7C* blk; } Obj_80019D7C;
-extern void fn_80019B70(void*);
+typedef struct SeqWork {
+    s8 idx;             /* 0x00 next pair */
+    u8 pad1[3];
+    Task* owner;        /* 0x04 */
+    Task* b;            /* 0x08 */
+    s16 kind[3];        /* 0x0c, 0 ends */
+    s16 val[3];         /* 0x12 */
+} SeqWork;
+inline SeqWork* SeqW(Task* t)
+{
+    return t->work;
+}
+void fn_80019B70(Task* t);
 void fn_80018CBC(Task* t, s16 idx, s16 mode, ChrWork* alt, s16 kind);
 s32 fn_8001C1F0(Task* o);
 typedef struct Cmd { u8 pad0[0x10]; s16 x10; s16 x12; } Cmd;
@@ -3642,18 +3654,18 @@ void fn_80018084(Task* t)
     Inner_80019D7C* u = w->in;
     switch (u->x12) {
     case 0: {
-        Obj_80019D7C* o;
+        Task* o;
         fn_8001FABC(t);
         o = fn_802268E8(lbl_803475A8, fn_80019B70);
-        fn_80061F58(&o->blk, 0x18, 0);
-        o->blk->a = t;
-        o->blk->b = t;
-        o->blk->c = 30;
-        o->blk->x12 = 2;
-        o->blk->d = 30;
-        o->blk->x14 = 3;
-        o->blk->x10 = 30;
-        o->blk->x16 = 4;
+        fn_80061F58(&o->work, 0x18, 0);
+        SeqW(o)->owner = t;
+        SeqW(o)->b = t;
+        SeqW(o)->kind[0] = 30;
+        SeqW(o)->val[0] = 2;
+        SeqW(o)->kind[1] = 30;
+        SeqW(o)->val[1] = 3;
+        SeqW(o)->kind[2] = 30;
+        SeqW(o)->val[2] = 4;
         u->x12 = 1;
         break;
     }
@@ -4138,17 +4150,71 @@ void fn_800193B8(Task* t)
     fn_80018CBC(t, u->xe4, 0, 0, u->x2);
 }
 
+void fn_80019B70(Task* t) {
+    SeqWork* w = t->work;
+    ChrInfo* u = ChrW(w->owner)->st;
+    if (w->kind[0] == 0) t->state = 4;
+    switch (t->state) {
+    case 0:
+        u->xec |= 0x40010000;
+        u->x134 = 1;
+        u->x18 = w->kind[w->idx];
+        u->x1a = w->val[w->idx];
+        w->idx = 1;
+        t->state = 1;
+        break;
+    case 1:
+        u->xec |= 0x40000000;
+        if (u->x6 == u->x18) t->state = 2;
+        break;
+    case 2: {
+        s16 k;
+        u->xec |= 0x40000000;
+        k = w->kind[w->idx];
+        if (k == 0) {
+            t->state = 4;
+            return;
+        }
+        if (u->x134 == 0) return;
+        u->x18 = k;
+        u->x1a = w->val[w->idx];
+        w->idx++;
+        if (w->idx < 3 && w->kind[w->idx] != 0) return;
+        t->state = 3;
+        break;
+    }
+    case 3:
+        if (w->kind[1] == 5 || w->kind[1] == 4) {
+            if (w->kind[0] == 0xB) u->xf0 |= 4;
+        }
+        u->xec &= ~0x40010000;
+        t->state = 4;
+        break;
+    case 4:
+        if (u->x134 == 0) return;
+        if (lbl_80347394 == 0) {
+            if (lbl_8034733C != 5) return;
+            u->xf0 &= ~4;
+            t->flags |= 0x40;
+        } else {
+            u->xf0 &= ~4;
+            t->flags |= 0x40;
+        }
+        break;
+    }
+}
+
 void fn_80019E44(Task* t) {
     Work_80019D7C* w = t->work;
     Inner_80019D7C* in = w->in;
     switch (in->x12) {
     case 0: {
-        Obj_80019D7C* o = fn_802268E8(lbl_803475A8, fn_80019B70);
-        fn_80061F58(&o->blk, 0x18, 0);
-        o->blk->a = t;
-        o->blk->b = t;
-        o->blk->c = 11;
-        o->blk->d = 4;
+        Task* o = fn_802268E8(lbl_803475A8, fn_80019B70);
+        fn_80061F58(&o->work, 0x18, 0);
+        SeqW(o)->owner = t;
+        SeqW(o)->b = t;
+        SeqW(o)->kind[0] = 11;
+        SeqW(o)->kind[1] = 4;
         in->x12 = 1;
         break;
     }
@@ -6070,12 +6136,12 @@ void fn_80019D7C(Task* t) {
     Inner_80019D7C* in = w->in;
     switch (in->x12) {
     case 0: {
-        Obj_80019D7C* o = fn_802268E8(lbl_803475A8, fn_80019B70);
-        fn_80061F58(&o->blk, 0x18, 0);
-        o->blk->a = t;
-        o->blk->b = t;
-        o->blk->c = 11;
-        o->blk->d = 5;
+        Task* o = fn_802268E8(lbl_803475A8, fn_80019B70);
+        fn_80061F58(&o->work, 0x18, 0);
+        SeqW(o)->owner = t;
+        SeqW(o)->b = t;
+        SeqW(o)->kind[0] = 11;
+        SeqW(o)->kind[1] = 5;
         in->x12 = 1;
         break;
     }
