@@ -5797,6 +5797,114 @@ extern void fn_80228930(void);
 extern void fn_800C9060(void);
 extern Task *lbl_803470FC;
 
+/* Text at a float position. */
+static inline void TextPrintF(f32 x, f32 y, const char *str)
+{
+    TextPrint(x, y, str);
+}
+
+#define SHOW(xo, av, col)                                                              \
+    if (flag == 1) {                                                                   \
+        if ((col) == 0xff201008) {                                                     \
+            TextPrintF(x + (xo), y + 0x22, "-");                          \
+        } else {                                                                       \
+            fn_8019A374((av), x + (xo), y + 0x22, 10.0f + self->pos.f0, (col), 0); \
+        }                                                                              \
+    } else {                                                                           \
+        fn_8019A374((av), x + (xo), y + 0x22, 10.0f + self->pos.f0, 0xff201008, 0); \
+    }
+
+void fn_801900F8(Inner_8018A16C *self, s32 id)
+{
+    s16 x;
+    s16 y;
+    s32 cur;
+    s32 flag;
+    f32 oz;
+    s32 a, b;
+    u32 col;
+    CampP04 *lst;
+    CampCtrl *ctl;
+
+    lst = camp_work.p04;
+    ctl = lbl_80307638;
+    flag = 0;
+    x = self->obj.rect[0];
+    y = self->obj.rect[1];
+    switch (self->type) {
+    case 0x70:
+        x += 12;
+        break;
+    case 0x71:
+        flag = 1;
+        x += 12;
+        break;
+    case 0x74:
+        break;
+    }
+    cur = lst->a[ctl[11].cur[0].sel];
+    oz = TextGetZ();
+    TextSetZ(10.0f + self->pos.f0);
+    TextPushColor();
+    TextSetColor(0xff201008);
+
+    a = id == -1 ? 0 : lbl_802D7E4C[id - 400].attack;
+    b = lbl_802D7E4C[cur - 400].attack;
+    if (a == b) {
+        col = 0xff201008;
+    } else if (a > b) {
+        col = 0xff2b5000;
+    } else {
+        col = 0xff800000;
+    }
+    SHOW(0x33, a, col)
+
+    a = id == -1 ? 0 : lbl_802D7E4C[id - 400].accuracy;
+    b = lbl_802D7E4C[cur - 400].accuracy;
+    if (a == b) {
+        col = 0xff201008;
+    } else if (a > b) {
+        col = 0xff2b5000;
+    } else {
+        col = 0xff800000;
+    }
+    if (flag == 1) {
+        if (col == 0xff201008) {
+            TextPrintF(x + 0x7b, y + 0x22, "-");
+        } else {
+            fn_8019A374(a, (x + 0x7b), y + 0x22, 10.0f + self->pos.f0, col, 0);
+        }
+    } else {
+        if (a == -1) a = 999;
+        fn_8019A374(a, (x + 0x7b), y + 0x22, 10.0f + self->pos.f0, 0xff201008, 0);
+    }
+
+    a = id == -1 ? 0 : lbl_802D7E4C[id - 400].cost;
+    b = lbl_802D7E4C[cur - 400].cost;
+    if (a == b) {
+        col = 0xff201008;
+    } else if (a < b) {
+        col = 0xff2b5000;
+    } else {
+        col = 0xff800000;
+    }
+    SHOW(0xc3, a, col)
+
+    a = id == -1 ? 0 : lbl_802D7E4C[id - 400].limit;
+    b = lbl_802D7E4C[cur - 400].limit;
+    if (a == b) {
+        col = 0xff201008;
+    } else if (a > b) {
+        col = 0xff2b5000;
+    } else {
+        col = 0xff800000;
+    }
+    SHOW(0x10b, a, col)
+
+    TextPopColor(1);
+    TextSetZ(oz);
+}
+
 void fn_801920AC(Task* t)
 {
     int i;
