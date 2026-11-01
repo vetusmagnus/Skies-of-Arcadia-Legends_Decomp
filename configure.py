@@ -402,6 +402,11 @@ config.libs = [
             # 0x80303618/34/50 are addressed from one pooled base, so they are defined here.
             Object(NonMatching, "game/unit_800AE300.c"),
             Object(NonMatching, "game/unit_800B2DA0.c"),
+            # Split at the 0x803492F8 .sdata2 block (a second int-to-float double and 0.0f) and the
+            # .data block 0x802E1118 (pooled from one base); ends at the 0x803493C8 block (starts with 0.0f).
+            Object(NonMatching, "game/unit_800CE2B4.c"),
+            # Starts at the 0x803493C8 .sdata2 block and the .data block 0x802E1450.
+            Object(NonMatching, "game/unit_800D2048.c"),
             Object(NonMatching, "game/unit_800D81E8.c"),
             Object(NonMatching, "game/unit_8010E164.c"),
             Object(NonMatching, "game/unit_8012ADB4.c"),

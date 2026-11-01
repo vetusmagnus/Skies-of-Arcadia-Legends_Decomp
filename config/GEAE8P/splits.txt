@@ -93,7 +93,13 @@ game/unit_800AE300.c:
 	.text       start:0x800AE300 end:0x800B2DA0
 
 game/unit_800B2DA0.c:
-	.text       start:0x800B2DA0 end:0x800D81E8
+	.text       start:0x800B2DA0 end:0x800CE2B4
+
+game/unit_800CE2B4.c:
+	.text       start:0x800CE2B4 end:0x800D2048
+
+game/unit_800D2048.c:
+	.text       start:0x800D2048 end:0x800D81E8
 
 game/unit_800D81E8.c:
 	.text       start:0x800D81E8 end:0x8010E164
