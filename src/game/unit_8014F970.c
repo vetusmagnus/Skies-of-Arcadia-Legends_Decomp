@@ -1,6 +1,7 @@
 #include "types.h"
 #include "ninja.h"
 #include "game/drawstate.h"
+#include "game/work_8030CEA0.h"
 #include <math.h>
 #include <dolphin/types.h>
 #define AT(T, p, off) (*(T *)((u8 *)(p) + (off)))
@@ -186,7 +187,6 @@ typedef struct Slot_80154C34 {
     s16 id;
     s16 timer;
 } Slot_80154C34;
-extern u8 *lbl_80346FE0;
 typedef struct Ent_80155AB4 {
     s32 id;
     void *p;
@@ -586,14 +586,6 @@ extern s32 fn_801D6E38(void);
 extern Handle* fn_80226704(s32, void*, s32);
 extern void* fn_801E1A2C(s32, s32);
 typedef struct {
-    u8 a;
-    s8 b;
-    u16 c;
-} Key_80155438;
-typedef struct {
-    s32 w[2];
-} Pair_80155438;
-typedef struct {
     void *x0;
     u32 x4;
     u16 x8;
@@ -607,8 +599,8 @@ typedef struct {
     u8 x1e;
     u8 x1f;
     u8 pad20[4];
-    Key_80155438 keys[31];
-    Pair_80155438 pairs[31];
+    Key keys[31];
+    Pair pairs[31];
 } Anim_80155438;
 typedef struct {
     u8 pad[0x18];
@@ -616,12 +608,6 @@ typedef struct {
     u8 pad19[0x24 - 0x19];
     Anim_80155438 *anim;
 } Handle_80155438;
-typedef struct {
-    s32 x0;
-    u8 pad4[0x10];
-    Key_80155438 keys[31];
-    Pair_80155438 pairs[31];
-} State_80155438;
 void fn_801D6CBC(void *a, void *b);
 void fn_801D6C3C(void *a);
 void fn_801E1784(void *a);
@@ -636,15 +622,20 @@ typedef struct {
     u8 pad20[4];
     Key keys[31]; /* 0x24 */
 } Anim_80155624;
-typedef struct {
-    u8 pad0[6];
+/* lbl_80346FE0 (0x1d8 bytes): the battle sequence state, its keys and the pending events. */
+typedef struct Seq_80346FE0 {
+    s32 x0;
+    u8 pad4[2];
     s16 x6;
     s32 x8;
     u16 xc;
     u16 xe;
-    u8 pad10[4];
-    Key keys[31]; /* 0x14 */
-} State_80155624;
+    u32 x10;              /* events queued */
+    Key keys[31];         /* 0x14 */
+    Pair pairs[31];       /* 0x90 */
+    Slot_80154C34 pend[10]; /* 0x188 */
+} Seq_80346FE0;
+extern Seq_80346FE0 *lbl_80346FE0;
 typedef struct {
     u8 pad00[0x44];
     f32 pos[3];  /* 0x44 */
@@ -1112,12 +1103,6 @@ typedef struct {
 } Thing;
 extern void fn_801536E0(void);
 extern void fn_8014F714(Item *p);
-typedef struct {
-    s32 x0;
-    u8 pad4[0x14 - 0x4];
-    Key keys[31];   /* 0x14 */
-    Pair pairs[31]; /* 0x90 */
-} State_8015519C;
 extern u32 lbl_80310B3C[];
 extern s32 fn_80212050(void);
 extern Anim* fn_801552B0(s32 owner, KeyIn* in1, Pair* in2);
@@ -1177,6 +1162,34 @@ static inline void ClearAll(void) {
 }
 
 /* Shutdown: frees the slot resources and buffers and calls the subsystems' exit functions. */
+extern void fn_80154CC4(s16 id);
+
+void fn_80154B6C(void) {
+    Seq_80346FE0* g = lbl_80346FE0;
+    if (g != NULL) {
+        int i;
+        Slot_80154C34* p = g->pend;
+        g->x10 = 0;
+        for (i = 0; i < 10; i++, p++) {
+            if (p->active != 0) {
+                p->timer--;
+                if (p->timer < 0) {
+                    fn_80212050();
+                    if (fn_801D6E38() != 0) {
+                        fn_80154CC4(p->id);
+                        if (lbl_8030CEA0.x82c != 0) {
+                            lbl_8030CEA0.x82c = 4;
+                        }
+                    }
+                    p->active = 0;
+                    p->id = 0;
+                    p->timer = 0;
+                }
+            }
+        }
+    }
+}
+
 void fn_80156024(void) {
     s32 i;
     ClearAll();
@@ -2114,7 +2127,7 @@ void fn_80153324(s32 idx, s32 *pa, s32 *pb, s32 *pc)
 
 void fn_80154C34(s32 val, s32 delay)
 {
-    u8 *g = lbl_80346FE0;
+    Seq_80346FE0 *g = lbl_80346FE0;
     Slot_80154C34 *s;
     s32 i;
     u32 cnt;
@@ -2122,7 +2135,7 @@ void fn_80154C34(s32 val, s32 delay)
     if (g == 0) {
         return;
     }
-    s = (Slot_80154C34 *)(g + 0x188);
+    s = g->pend;
     for (i = 0; i < 10; i++) {
         if (s->active == 0) {
             if (val >= 0x48) {
@@ -2134,13 +2147,13 @@ void fn_80154C34(s32 val, s32 delay)
             }
             s->active = 1;
             s->id = (s16)val;
-            cnt = AT(u32, lbl_80346FE0, 0x10);
+            cnt = lbl_80346FE0->x10;
             if (cnt != 0) {
                 s->timer = (s16)(cnt + delay);
             } else {
                 s->timer = (s16)delay;
             }
-            AT(u32, lbl_80346FE0, 0x10) = AT(u32, lbl_80346FE0, 0x10) + 1;
+            lbl_80346FE0->x10 = lbl_80346FE0->x10 + 1;
             return;
         }
         s++;
@@ -3120,13 +3133,13 @@ void fn_80155624(Anim_80155624* a)
     Key* dst;
     Key* src;
 
-    (*(State_80155624**)&lbl_80346FE0)->x8 = a->x4;
-    (*(State_80155624**)&lbl_80346FE0)->xc = a->x8;
-    (*(State_80155624**)&lbl_80346FE0)->xe = a->keys[a->x8].c;
-    if ((*(State_80155624**)&lbl_80346FE0)->x6 == 0) {
+    lbl_80346FE0->x8 = a->x4;
+    lbl_80346FE0->xc = a->x8;
+    lbl_80346FE0->xe = a->keys[a->x8].c;
+    if (lbl_80346FE0->x6 == 0) {
         return;
     }
-    src = (*(State_80155624**)&lbl_80346FE0)->keys;
+    src = lbl_80346FE0->keys;
     dst = a->keys;
     for (i = 0; i < 31;) {
         *dst = *src;
@@ -3146,12 +3159,12 @@ void fn_80155624(Anim_80155624* a)
         dst->c = 0;
     }
     a->x4 = 0;
-    (*(State_80155624**)&lbl_80346FE0)->x8 = 0;
+    lbl_80346FE0->x8 = 0;
     a->x8 = 0;
-    (*(State_80155624**)&lbl_80346FE0)->xc = 0;
+    lbl_80346FE0->xc = 0;
     a->x1e = a->keys[0].a;
     a->x1f = a->keys[0].b;
-    (*(State_80155624**)&lbl_80346FE0)->x6 = 0;
+    lbl_80346FE0->x6 = 0;
 }
 
 void fn_80156B04(f32* mtx, Obj_80156B04* o, NJS_POINT3* off, Angle* rot, void* out)
@@ -3676,8 +3689,8 @@ void fn_80155438(Handle_80155438 *h)
 {
     Anim_80155438 *a = h->anim;
     int i;
-    Key_80155438 *k;
-    Pair_80155438 *p;
+    Key *k;
+    Pair *p;
 
     fn_80155624((void *)(a));
     a->x14 = a->pairs[a->x8].w[0];
@@ -3701,8 +3714,8 @@ void fn_80155438(Handle_80155438 *h)
                     h->anim = 0;
                 }
                 h->flags |= 0x40;
-                k = (*(State_80155438 **)&lbl_80346FE0)->keys;
-                p = (*(State_80155438 **)&lbl_80346FE0)->pairs;
+                k = lbl_80346FE0->keys;
+                p = lbl_80346FE0->pairs;
                 for (i = 31; i != 0; i--) {
                     k->a = 0;
                     k->b = 0;
@@ -3712,7 +3725,7 @@ void fn_80155438(Handle_80155438 *h)
                     k++;
                     p++;
                 }
-                (*(State_80155438 **)&lbl_80346FE0)->x0 = 0;
+                lbl_80346FE0->x0 = 0;
                 return;
             }
             a->x8 = 0;
@@ -4248,8 +4261,8 @@ void fn_801525F8(Obj_801528AC* o, f32 x, f32 y, f32 z)
 
 void fn_8015519C(KeyIn* in1, Pair* in2)
 {
-    Key* k = (*(State_8015519C**)&lbl_80346FE0)->keys;
-    Pair* p = (*(State_8015519C**)&lbl_80346FE0)->pairs;
+    Key* k = lbl_80346FE0->keys;
+    Pair* p = lbl_80346FE0->pairs;
     Anim* a;
     Key* sk;
     Pair* sp;
@@ -4274,8 +4287,8 @@ void fn_8015519C(KeyIn* in1, Pair* in2)
             sp++;
         }
     } else {
-        k = (*(State_8015519C**)&lbl_80346FE0)->keys;
-        p = (*(State_8015519C**)&lbl_80346FE0)->pairs;
+        k = lbl_80346FE0->keys;
+        p = lbl_80346FE0->pairs;
         for (i = 0; i < 31; i++, k++, p++) {
             k->a = 0;
             k->b = 0;
@@ -4283,7 +4296,7 @@ void fn_8015519C(KeyIn* in1, Pair* in2)
             p->w[0] = 0;
             p->w[1] = 0;
         }
-        (*(State_8015519C**)&lbl_80346FE0)->x0 = 0;
+        lbl_80346FE0->x0 = 0;
     }
 }
 
