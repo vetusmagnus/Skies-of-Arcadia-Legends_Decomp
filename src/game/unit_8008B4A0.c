@@ -50,7 +50,8 @@ typedef struct {
 } Sub80309700;
 typedef struct Slot {
     void (*fn)(struct Slot*);
-    u8 pad4[0x19 - 4];
+    u8 pad4[0x18 - 4];
+    u8 flags;           /* 0x18 */
     u8 state;
     u8 pad1a[0x24 - 0x1a];
     Sub80309700* sub;
@@ -151,7 +152,7 @@ typedef struct {
 } Chr_8008D3B0;
 typedef Sub80309700 Sub_8008D3B0;
 extern s8 lbl_80347334;
-extern void fn_8008CDA8(void* o);
+void fn_8008CDA8(Slot* o);
 extern s32 memcmp(const void* a, const void* b, u32 n);
 typedef struct {
     u8 pad00[0x4];
@@ -1576,7 +1577,7 @@ void fn_8008D3B0(Slot* o) {
         }
     case 1:
         if (fn_8007FFE8(i, 0) != 0) {
-            lbl_80309700[i]->fn = (void*)fn_8008CDA8;
+            lbl_80309700[i]->fn = fn_8008CDA8;
             lbl_80309700[i]->state = 0;
         }
         break;
