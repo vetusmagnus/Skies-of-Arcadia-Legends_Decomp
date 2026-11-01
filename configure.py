@@ -429,6 +429,9 @@ config.libs = [
             Object(NonMatching, "game/unit_801E1A74.c"),
             Object(NonMatching, "game/unit_801F224C.c"),
             Object(NonMatching, "game/unit_801F5334.c"),
+            # Sound and stream control split off at its own .sdata2 (0x8034C398, the "_L.dsp" strings)
+            # and .bss (0x803148C0 up); fn_8021730C takes an s16 time where fn_801FA290 passes an s32.
+            Object(NonMatching, "game/unit_802159E0.c"),
             Object(NonMatching, "game/unit_80219378.c"),
             Object(NonMatching, "game/unit_8022D34C.c"),
         ],

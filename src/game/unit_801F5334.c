@@ -87,40 +87,13 @@ void fn_801F7500(void);
 void fn_800976EC(u32 a);
 void fn_80142C78(void *p);
 void fn_80147DCC(void *p);
-s32 fn_80219B7C(void);
-s32 fn_801D168C(void);
-void fn_801D150C(s32 v);
 void fn_802173F4(u32 mode, s8 vol8, s16 time);
-extern u32 lbl_803477B8;
-extern s32 lbl_803477BC;
-extern s32 lbl_803477C0;
-/* A sequence request: x4 key pairs (bank, id) from key; lbl_80315484 is the one playing,
- * lbl_80315434 the one paused, lbl_8031545C the next one. */
-typedef struct SeqReq {
-    s32 x0;
-    s32 x4;
-    u8 key[0x20];
-} SeqReq;
-extern SeqReq lbl_80315484;
-extern SeqReq lbl_80315434;
-extern SeqReq lbl_8031545C;
-extern s32 lbl_803477D4;
-extern s32 lbl_803477D8;
-void sndSeqVolume(u8 vol, u16 time, u32 id, u8 mode);
-void sndSeqPause(u32 id);
-void sndSeqStop(u32 id);
-void fn_802193BC();
-typedef struct Slot { u8 pad_00[0x10]; s32 field_10; u8 pad_14[0x24]; u8 vol; u8 pad39[3]; } Slot;
-extern Slot lbl_80315120[];
-s32 fn_80219834(s32 v);
 s8 fn_801F452C(s16 id);
 extern s32 lbl_8034757C;
 s32 fn_801D6E38(s32 arg);
 s32 SePlay(s32 bank, s8 arg1, s8 id);
 void fn_8020EEE8(s32 bank, s8 arg1, s8 id, s32 unused);
-extern s32 lbl_803477DC;
 void fn_80217830(s32 arg);
-extern u32 lbl_803477E0;
 float fn_801F6120(float **p);
 /* An int argument of the script stream; FLT_MAX stands for 'unset' (0x7FFFFFFF). */
 static inline s32 ReadInt(f32** p)
@@ -269,7 +242,6 @@ extern void ScreenFadeDraw(void *p, f32 a, f32 b, f32 c, f32 d, f32 e);
 extern void njUnitMatrix(f32 *m);
 extern void njRotateXYZ(f32 *m, s32 x, s32 y, s32 z);
 extern void fn_80148188(s32 v);
-u32 fn_802159E0(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g, char *path, s32 size);
 s32 fn_8011768C(u32 flags);
 /* lbl_802F7940: the script command table, indexed by Scpt.owner. */
 typedef struct {
@@ -292,34 +264,7 @@ void fn_80147DA8(s32 a, s32 b);
 void fn_80147DC8(s32 a, s32 b);
 extern s32 lbl_803477A8;
 extern s32 lbl_803477AC;
-typedef struct { u8 pad[8]; u32 off; u32 len; } StrmSrc;
-/* One of the four DVD audio stream slots (lbl_80314B80). */
-typedef struct Strm {
-    u8 state;           /* 0x00 in use / playing */
-    u8 pad01[3];
-    u32 id;             /* 0x04 */
-    struct Strm* left;  /* 0x08 linked channel slots */
-    struct Strm* right; /* 0x0C */
-    StrmSrc* src;       /* 0x10 */
-    u8 a;               /* 0x14 */
-    u8 b;               /* 0x15 */
-    u8 pad16[2];
-    u8 info[0x3c];      /* 0x18 DVDFileInfo */
-    u32 handle;         /* 0x54 */
-    u32 pos;            /* 0x58 */
-    u32 len;            /* 0x5C */
-    u8* buf;            /* 0x60 */
-    u32 size;           /* 0x64 */
-    u32 w68;            /* 0x68 */
-    u8 b6c;             /* 0x6C */
-    u8 pad6d[3];
-    s32 w70;            /* 0x70 */
-    s32 w74;            /* 0x74 */
-    s32 w78;            /* 0x78 */
-    s32 w7c;            /* 0x7C */
-} Strm;
 extern void* memset(void* dst, int c, u32 n);
-extern void sndStreamMixParameterEx(u32 h, u32 a, u32 b, u32 c, u32 d, u32 e);
 void fn_800EB58C(s32 n);
 extern f32 fn_80291A5C(f32 v);
 double atan2(double y, double x);
@@ -334,22 +279,6 @@ void fn_8021730C(u32 mode, s32 x);
 typedef struct { u8 pad0[0x190]; f32 f190; } Obj_80207630;
 s32 fn_8015F1F0(void *o);
 extern void fn_8009701C(s8 a);
-typedef struct StrmTbl {
-    Strm s[4];
-    u32 counter;        /* 0x200 */
-    u32 intr;           /* 0x204 */
-    u32 lock;           /* 0x208 */
-} StrmTbl;
-extern StrmTbl lbl_80314B80;
-typedef struct {
-    u32 id;
-    s32 slot;
-    s32 time;
-    s32 flag;
-    u8 vol;
-    u8 pad11[3];
-} SndSlot;
-extern SndSlot lbl_80315030[12];
 extern s32 fn_80218570(s32 a, s32 b, s32 c);
 void fn_80097204(f32 a, f32 b, f32 c);
 void fn_800972E0(s32 a);
@@ -401,12 +330,6 @@ extern void fn_80212C04(f32 *a, f32 *b, f32 *c);
 void fn_801558B0(s32 *v);
 typedef struct Pair8 { s32 a; u8 b[8]; u8 c[8]; } Pair8;
 void fn_80148464(Pair8 *v);
-extern void sndStreamARAMUpdate(u32 h, u32 a, u32 b, u32 c, u32 d);
-extern void sndStreamDeactivate(u32 h);
-extern s32 fn_8023CD10(void *info);
-extern s32 fn_8023AB88(void *info, void *addr, s32 len, s32 offset, void (*cb)(void), s32 prio);
-extern void fn_8023A8E0(void *info);
-extern void fn_80216030(void);
 extern char lbl_802D478C[];
 extern char lbl_802D47A4[];
 typedef struct { u8 pad[0x54]; u32 size; } Res;
@@ -1019,7 +942,6 @@ typedef struct ScrObj {
     f32* script;
 } ScrObj;
 extern char lbl_802D4DA0[];
-extern f32 lbl_8034C1F0;
 extern void fn_8015F6C0(void* obj, u16 a, s32 c, f32* pos, s32* ivec);
 
 void fn_801F5334(s8 n) {
@@ -2828,8 +2750,6 @@ s32 fn_802150BC(u32 a, Scpt *st) {
     }
     return 1;
 }
-
-extern s32 lbl_803477E8;
 void fn_8014836C(u16 a, s32 b);
 s32 fn_80215368(u32 flags, Scpt *c) {
     float *p;
@@ -3080,267 +3000,6 @@ s32 fn_80215590(u32 flags, Scpt* c)
     return 1;
 }
 
-s32 fn_80215F8C(void) {
-    return 1;
-}
-
-extern u32 OSDisableInterrupts(void);
-extern void OSRestoreInterrupts(u32 level);
-void fn_80216744(Strm *s);
-
-static inline void strm_stop(Strm *s)
-{
-    if (s->state != 0 && s->w74 == 0) {
-        sndStreamMixParameterEx(s->handle, 0, s->b, 0, 0, 0);
-        s->w74 = 1;
-        sndStreamDeactivate(s->handle);
-        if (s->w78 == 0) {
-            fn_8023A8E0(s->info);
-            s->state = 0;
-        } else {
-            s->w7c = 1;
-        }
-    }
-}
-
-static inline s32 strm_find(u32 id)
-{
-    s32 i;
-    Strm *p = lbl_80314B80.s;
-    for (i = 0; i < 4; i++) {
-        if (p->state != 0 && id == p->id) {
-            return i;
-        }
-        p++;
-    }
-    return -1;
-}
-
-static inline void strm_stop_id(Strm *s)
-{
-    u32 idx;
-    Strm *t;
-    u32 id = s->id;
-    if (lbl_80314B80.lock++ == 0) {
-        lbl_80314B80.intr = OSDisableInterrupts();
-    }
-    idx = strm_find(id);
-    if (idx != -1) {
-        strm_stop(&lbl_80314B80.s[idx]);
-        t = lbl_80314B80.s[idx].left;
-        if (t != 0) {
-            strm_stop(t);
-        }
-        t = lbl_80314B80.s[idx].right;
-        if (t != 0) {
-            strm_stop(t);
-        }
-    }
-    if (lbl_80314B80.lock != 0 && --lbl_80314B80.lock == 0) {
-        OSRestoreInterrupts(lbl_80314B80.intr);
-    }
-}
-
-s32 fn_802163FC(s32 a, s32 b, s32 c, s32 d, Strm *s)
-{
-    s32 st = fn_8023CD10(s->info);
-    if (st != 0 && st != 1 && st != 2) {
-        strm_stop_id(s);
-        return 0;
-    }
-    if (s->w74 != 0) {
-        sndStreamDeactivate(s->handle);
-        if (s->w78 == 0) {
-            fn_8023A8E0(s->info);
-            s->state = 0;
-        } else {
-            s->w7c = 1;
-        }
-        return 0;
-    }
-    if (b + d < (s->w68 >> 1)) {
-        return 0;
-    }
-    fn_80216744(s);
-    return s->w68 >> 1;
-}
-
-s32 fn_80216CA4(void)
-{
-    return lbl_803477E8 == 0;
-}
-
-void fn_80216CD8(void) {
-    while (fn_80219B7C() != 0) {
-        s32 r = fn_801D168C();
-        if (r != -1) {
-            fn_801D150C(r);
-        }
-    }
-}
-
-extern u32 lbl_803477C8[2];
-extern s32 sndSeqGetValid(u32 id);
-
-/* Whether stream id is playing; under the stream lock. */
-static inline s32 strm_active(u32 id)
-{
-    s32 r = 0;
-    u32 i;
-    if (lbl_80314B80.lock++ == 0) {
-        lbl_80314B80.intr = OSDisableInterrupts();
-    }
-    i = strm_find(id);
-    if (i != -1) {
-        r = lbl_80314B80.s[i].state != 0 && lbl_80314B80.s[i].w70 != 0;
-    }
-    if (lbl_80314B80.lock != 0 && --lbl_80314B80.lock == 0) {
-        OSRestoreInterrupts(lbl_80314B80.intr);
-    }
-    return r;
-}
-
-void fn_80216E38(u32 n, char *p)
-{
-    char buf[0x40];
-
-    strcpy(buf, "/sound/");
-    strcat(buf, p);
-    if (n == 0) {
-        lbl_803477B8 = fn_802159E0(1, 2, 0x5622, 2, 0, 0, 0, buf, 0x4000);
-    } else if (n == 1) {
-        lbl_803477B8 = fn_802159E0(1, 2, 0xAC44, 2, 0, 0, 0, buf, 0x100000);
-    }
-}
-
-s32 fn_80216F48(u32 h) {
-    if (h == 1) {
-        return lbl_803477E0 != -1;
-    }
-    if ((h & 0xfffe) == 0x10) {
-        u32 id = lbl_803477C8[h - 0x10];
-        return id != -1 && strm_active(id);
-    }
-    if (h >= 0x100) {
-        SndSlot *e = lbl_80315030;
-        s32 i;
-        for (i = 0; i < 6; i++, e++) {
-            if (e->id == h - 0x100) {
-                return sndSeqGetValid(e->id);
-            }
-        }
-    }
-    return 0;
-}
-
-void fn_802172C8(u32 mode, s8 a) {
-    if (mode != 0) {
-        s32 x = a;
-        s32 v = -0x7e;
-        if (x > -0x7f) {
-            v = x;
-        }
-        fn_802173F4(mode, v, 0);
-    }
-}
-
-void fn_80217B98(void) {
-    SndSlot *e = lbl_80315030;
-    s32 i;
-    for (i = 0; i < 6; i++, e++) {
-        if (e->id != 0xFFFFFFFF) {
-            if (e->id != lbl_803477E0) {
-                sndSeqStop(e->id);
-            }
-            e->id = 0xFFFFFFFF;
-            e->time = 0x2710;
-        }
-    }
-}
-
-void fn_80217C24(void) {
-    SndSlot *e = lbl_80315030;
-    s32 i;
-    for (i = 0; i < 6; i++, e++) {
-        if (e->id != 0xFFFFFFFF) {
-            if (e->id != lbl_803477E0) {
-                sndSeqStop(e->id);
-            }
-            e->id = 0xFFFFFFFF;
-            e->time = 0x2710;
-        }
-    }
-}
-
-static inline s32 req_commit(SeqReq *r)
-{
-    SeqReq *prev = &lbl_80315484;
-    if (r->x4 == prev->x4 && MemEqual(r->key, prev->key, r->x4 * 2)) {
-        lbl_8031545C.x4 = 0;
-        return 1;
-    }
-    if (lbl_803477E0 != -1) {
-        if (r->x4 > 1) {
-            sndSeqStop(lbl_803477E0);
-            lbl_803477E0 = -1;
-        } else {
-            sndSeqVolume(0, 500, lbl_803477E0, 1);
-        }
-        prev->x4 = 0;
-    }
-    MemCopy(&lbl_8031545C, r, 0x28);
-    return 1;
-}
-
-s32 fn_802182F4(s32 unused, s32 n, s8 a, s8 b, ...)
-{
-    SeqReq q;
-    SeqReq r;
-    va_list ap;
-    s32 i;
-    if (n == 1) {
-        memset(&r, 0, 0x28);
-        r.x4 = 1;
-        r.x0 = 0;
-        r.key[0] = a;
-        r.key[1] = b;
-        return req_commit(&r);
-    }
-    memset(&q, 0, 0x28);
-    q.x4 = n;
-    q.x0 = (a < 0);
-    q.key[0] = a;
-    q.key[1] = b;
-    va_start(ap, b);
-    for (i = 1; i < n; i++) {
-        q.key[i * 2] = va_arg(ap, int);
-        q.key[i * 2 + 1] = va_arg(ap, int);
-    }
-    return req_commit(&q);
-}
-
-void fn_80218D80(char *name, u32 tag, s32 v) {
-}
-
-void fn_80218D84(void) {
-    fn_802193BC();
-    while (fn_80219B7C() != 0) {
-        s32 r = fn_801D168C();
-        if (r != -1) {
-            fn_801D150C(r);
-        }
-    }
-}
-
-void fn_80219324(s32 i) {
-    if (lbl_80315120[i].field_10 >= 0) {
-        s32 r;
-        do {
-            r = fn_80219834(1);
-        } while (i != r);
-    }
-}
-
 void fn_801F5380(void) {
     fn_801F452C(0x102);
 }
@@ -3370,35 +3029,6 @@ s32 fn_801FED3C(s32 flag, Scpt *c) {
 
 s32 fn_80212050(void) {
     return fn_801D6E38(lbl_8034757C) != 0 ? lbl_8034757C : -1;
-}
-
-void fn_80216F1C(s8 a, s8 b) {
-    SePlay(0xf, a, b);
-}
-
-void fn_80217800(s32 v) {
-    if (v == lbl_803477DC) {
-        fn_80217830(1);
-    }
-}
-
-s32 fn_80217FD4(s32 bank, s8 arg1, s8 id) {
-    return SePlay(bank, arg1, id);
-}
-
-s32 fn_80218DC4(void) {
-    if (lbl_803477DC != 2) {
-        return -1;
-    }
-    return lbl_803477E0;
-}
-
-void fn_80216EFC(s32 a) {
-    fn_80217830(a);
-}
-
-void fn_80216CB4(char *p) {
-    fn_802193BC(p, 0);
 }
 
 extern void fn_80168398(f32 a, f32 b, f32 c, f32 d, s32 i0, s32 i1, s32 i2, s32 i3, u16 i4, u8 i5);
@@ -4386,16 +4016,6 @@ s32 fn_80214AA0(s32 flags, Scpt *obj)
     return 0;
 }
 
-u32 fn_80215EA0(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, char *g, s32 h)
-{
-    return fn_802159E0(1, a, b, c, d, e, f, g, h);
-}
-
-u32 fn_80215F14(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, char *path)
-{
-    return fn_802159E0(1, a, b, c, d, e, f, path, 0x8000);
-}
-
 s32 fn_801F5D08(s32 unused, Scpt *st) {
     float *p = st->cur.f;
     s16 idx;
@@ -4483,20 +4103,6 @@ s32 fn_80210064(s32 id)
     s.cnt = 0;
     fn_80210F74(&s);
     return 1;
-}
-
-void fn_80217790(void)
-{
-    SndSlot *e = lbl_80315030;
-    s32 i;
-
-    for (i = 0; i < 6; i++) {
-        if (e->id != -1) {
-            sndSeqPause(e->id);
-            e->flag = 1;
-        }
-        e++;
-    }
 }
 
 void fn_8020F0F0(void) {
@@ -4716,37 +4322,6 @@ s32 fn_801F570C(u32 flags, Scpt *cmd)
     return 1;
 }
 
-u32 fn_80216A9C(Strm* s, StrmSrc* src, u8 a, u8 b)
-{
-    u32 ret;
-    u32 h;
-    s->src = src;
-    s->a = a;
-    s->b = b;
-    s->w70 = 1;
-    s->w74 = 0;
-    s->w7c = 0;
-    s->w78 = 1;
-    s->b6c = 1;
-    s->size = 0x6280;
-    s->w68 = (s->size >> 3) * 14;
-    if (s->size > 0x6280) {
-        s->size = 0x6280;
-    }
-    h = s->size >> 1;
-    s->pos = h;
-    s->len = s->src->len;
-    if (s->len < h) {
-        ret = s->len;
-        memset(s->buf + s->len, 0, h - s->len);
-    } else {
-        ret = h;
-    }
-    s->state = 2;
-    sndStreamMixParameterEx(s->handle, s->a, s->b, 0, 0, 0);
-    return ret;
-}
-
 s32 fn_801F5F50(u32 flags, Scpt *st) {
     float *p;
     u8 *def = NULL;
@@ -4931,36 +4506,6 @@ s16 fn_802057E0(u32 flags, Scpt *st) {
         }
     }
     return (f >> 3) & 1;
-}
-
-s32 fn_80216B88(Strm **out) {
-    s32 i;
-    u32 j;
-    u32 id;
-    Strm *base = lbl_80314B80.s;
-    Strm *p = base;
-    for (i = 0; i < 4; p++, i++) {
-        if (p->state == 0) {
-            do {
-                id = lbl_80314B80.counter++;
-                if (id == -1) {
-                    id = lbl_80314B80.counter++;
-                }
-                for (j = 0; j < 4; j++) {
-                    if (base[j].state != 0 && id == base[j].id) {
-                        break;
-                    }
-                }
-            } while (j != 4);
-            lbl_80314B80.s[i].state = 1;
-            lbl_80314B80.s[i].id = id;
-            lbl_80314B80.s[i].left = 0;
-            lbl_80314B80.s[i].right = 0;
-            *out = &lbl_80314B80.s[i];
-            return id;
-        }
-    }
-    return -1;
 }
 
 s32 fn_801FA398(u16 flags, Scpt *c)
@@ -5874,47 +5419,6 @@ s32 fn_80215444(u32 flags, Scpt *c) {
         return 0;
     }
     return 1;
-}
-
-void fn_80216744(Strm *s)
-{
-    u8 *dst;
-    u32 cnt;
-
-    cnt = s->size >> 1;
-    if (s->b6c != 0) {
-        dst = s->buf + cnt;
-    } else {
-        dst = s->buf;
-    }
-    if (s->pos + cnt > s->len) {
-        if (s->len > s->pos) {
-            cnt = s->len - s->pos;
-            memset(dst + cnt, 0, (s->size >> 1) - cnt);
-        } else {
-            memset(dst, 0, s->size >> 1);
-            sndStreamARAMUpdate(s->handle, s->b6c != 0 ? s->w68 >> 1 : 0, s->w68 >> 1, 0, 0);
-            cnt = 0;
-        }
-    }
-    if (cnt != 0) {
-        if (fn_8023CD10(s->info) == 0) {
-            fn_8023AB88(s->info, dst, cnt, s->src->off + s->pos, fn_80216030, 2);
-            s->w78 = 1;
-            s->pos += cnt;
-        }
-    } else if (s->w70 != 0) {
-        s->w70 = 0;
-    } else {
-        sndStreamDeactivate(s->handle);
-        if (s->w78 == 0) {
-            fn_8023A8E0(s->info);
-            s->state = 0;
-        } else {
-            s->w7c = 1;
-        }
-    }
-    s->b6c ^= 1;
 }
 
 s32 fn_801F7158(s32 name)
@@ -7679,6 +7183,7 @@ s32 fn_801F5D7C(s32 unused, Scpt *st) {
     st->cur.f = p;
     return 0;
 }
+void fn_80216CB4(char *p);
 
 s16 fn_801F7C18(u32 flags, Scpt *s)
 {
@@ -8035,6 +7540,7 @@ s16 fn_801FA060(u16 flags, Scpt* c)
     }
     return (flags >> 3) & 1;
 }
+s32 fn_80217FD4(s32 bank, s8 arg1, s8 id);
 
 s16 fn_801F9708(u32 a0, Scpt *st) {
     u16 a = a0;
@@ -8496,6 +8002,7 @@ s32 fn_801F9454(u16 flags, Scpt* c)
 
 extern char lbl_8034C1CC[5];
 extern char lbl_8034C1D4[5];
+void fn_80218D80(char *name, u32 tag, s32 v);
 s16 fn_801FA4C0(u16 flags, Scpt* c)
 {
     if (flags & 1) {
@@ -8533,110 +8040,6 @@ s16 fn_801FA4C0(u16 flags, Scpt* c)
     return (flags >> 3) & 1;
 }
 
-void fn_80216D14(s16 x)
-{
-    u32 mode = lbl_803477B8;
-
-    if (mode != 0) {
-        if (mode == 0x10 || mode == 0x11) {
-            lbl_803477C0 = 0x20;
-            lbl_803477BC = mode - 0x10;
-        } else {
-            fn_802173F4(mode, -0x7f, x);
-            if (mode == 1) {
-                lbl_80315484.x4 = 0;
-            }
-        }
-    }
-    lbl_803477B8 = 0;
-}
-
-void fn_80217380(u32 mode)
-{
-    if (mode != 0) {
-        if (mode == 0x10 || mode == 0x11) {
-            lbl_803477C0 = 0x20;
-            lbl_803477BC = mode - 0x10;
-        } else {
-            fn_802173F4(mode, -0x7f, 1000);
-            if (mode == 1) {
-                lbl_80315484.x4 = 0;
-            }
-        }
-    }
-}
-
-/* Sets the music and the six sequence slots to m/128 of their volumes. */
-static inline void SetVol(s32 m) {
-    s32 i;
-    SndSlot *e;
-    if (lbl_803477E0 != 0xFFFFFFFF) {
-        sndSeqVolume(m * lbl_80315120[lbl_803477DC].vol / 128, 500, lbl_803477E0, 0);
-    }
-    for (i = 0; i < 6; i++) {
-        e = &lbl_80315030[i];
-        if (e->id != 0xFFFFFFFF) {
-            sndSeqVolume(m * e->vol / 128, 500, e->id, 0);
-        }
-    }
-}
-
-void fn_80217134(void) {
-    SetVol(127);
-}
-
-void fn_802171F0(s8 v) {
-    s32 m = (v + 0x80) / 2;
-    s32 i;
-    SndSlot *e;
-    if (lbl_803477E0 != 0xFFFFFFFF) {
-        sndSeqVolume(m * lbl_80315120[lbl_803477DC].vol / 128, 500, lbl_803477E0, 0);
-    }
-    for (i = 0; i < 6; i++) {
-        e = &lbl_80315030[i];
-        if (e->id != 0xFFFFFFFF) {
-            sndSeqVolume(m * e->vol / 128, 500, e->id, 0);
-        }
-    }
-}
-
-void fn_80217608(void)
-{
-    if (lbl_803477E0 != -1) {
-        sndSeqVolume(0, 500, lbl_803477E0, 2);
-        sndSeqPause(lbl_803477E0);
-        MemCopy(&lbl_80315434, &lbl_80315484, 0x28);
-        lbl_803477D8 = lbl_803477E0;
-        lbl_803477D4 = lbl_803477DC;
-        lbl_80315484.x4 = 0;
-        lbl_803477E0 = -1;
-    }
-}
-
-s32 fn_80218570(s32 unused, s32 a, s32 b) {
-    SeqReq t;
-    memset(&t, 0, sizeof(t));
-    t.x4 = 1;
-    t.x0 = 0;
-    t.key[0] = a;
-    t.key[1] = b;
-    if (t.x4 == lbl_80315484.x4 && MemEqual(t.key, lbl_80315484.key, t.x4 << 1)) {
-        lbl_8031545C.x4 = 0;
-        return 1;
-    }
-    if (lbl_803477E0 != -1) {
-        if (t.x4 > 1) {
-            sndSeqStop(lbl_803477E0);
-            lbl_803477E0 = -1;
-        } else {
-            sndSeqVolume(0, 500, lbl_803477E0, 1);
-        }
-        lbl_80315484.x4 = 0;
-    }
-    MemCopy(&lbl_8031545C, &t, 0x28);
-    return 1;
-}
-
 s32 fn_8020BDB0(u16 flags, Scpt* obj)
 {
     f32* p;
@@ -8654,33 +8057,6 @@ s32 fn_8020BDB0(u16 flags, Scpt* obj)
     if (flags & 8)
         return 1;
     return 0;
-}
-
-void fn_802173F4(u32 mode, s8 vol8, s16 time) {
-    s32 vol = (vol8 + 0x80) / 2;
-    u8 stop = vol8 <= -0x7f;
-    SndSlot *e;
-    s32 i;
-    if (time > 500) {
-        time = 500;
-    }
-    if (mode == 1) {
-        sndSeqVolume(vol * lbl_80315120[lbl_803477DC].vol / 128, time, lbl_803477E0, stop);
-    } else if (mode >= 0x100) {
-        e = lbl_80315030;
-        for (i = 0; i < 6; e++, i++) {
-            if (mode - 0x100 == e->id) {
-                if (lbl_803477E0 != lbl_80315030[i].id) {
-                    lbl_80315030[i].vol = vol * lbl_80315120[lbl_80315030[i].slot].vol / 128;
-                    sndSeqVolume(lbl_80315030[i].vol, time, mode - 0x100, stop);
-                }
-                if (stop == 1) {
-                    lbl_80315030[i].time = 10000;
-                }
-                return;
-            }
-        }
-    }
 }
 
 extern char lbl_802D4E34[];

@@ -2276,3 +2276,9 @@ Splits made where the data layout shows an original file boundary, so that held 
   0x8004DE48 on uses only constants from 0x80348700 up. Released fn_8004E474, which calls fn_8001D944 with an `s8` id
   (callee-extended) where effect.c's fn_8004B7C4/fn_8004DD54 pass an `int`. Its three constants stay extern labels as in
   the isolated match (literals load in the other order).
+- **unit_802159E0** (0x802159E0-0x80219378, from unit_801F5334): the sound/stream control file. Its `.sdata2` starts at
+  0x8034C398 (8-aligned, its own "_L.dsp"/"/sound/" strings) right after the 3.4e38f block that only the functions before
+  0x802159E0 use, and its `.bss` starts at 0x803148C0 (everything before uses `.bss` below 0x80314740; 0x802159E0 to the
+  end share the 0x803148C0 and 0x80315484 blocks). Released fn_8021730C, which takes an `s16` time while fn_801FA290
+  (unit_801F5334) calls it with an `s32`. (0x8034C390/94 hold two function pointers used by fn_80219D78; they sit
+  before this block, so they are taken to be a const table of the previous file.)
