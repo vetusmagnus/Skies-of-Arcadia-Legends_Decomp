@@ -7,6 +7,7 @@
 #include <math.h>
 #include "game/task.h"
 #include "game/evobj.h"
+#include "game/btlside.h"
 #include <string.h>
 #include "string.h"
 extern void fn_80117748();
@@ -1293,7 +1294,6 @@ typedef struct In_80124428 {
     s8 kind;
     s8 arg;
 } In_80124428;
-extern u8* lbl_80346FC8[2];
 typedef struct Obj_80124A7C {
     u8 _00[0x50];
     f32 f50;
@@ -5927,7 +5927,7 @@ void fn_80124428(Obj_80124428* o, In_80124428* in) {
             for (i = 0; i < 4; i++) {
                 f32 tmp[4] = { 15.0f, 51.0f, 70.5f, 112.5f };
                 if (o->f18c == tmp[i]) {
-                    *(s32*)(lbl_80346FC8[1] + 0x61c) = 1;
+                    lbl_80346FC8[1]->cue.x18 = 1;
                     break;
                 }
             }
@@ -5951,7 +5951,7 @@ void fn_80124428(Obj_80124428* o, In_80124428* in) {
                     sel[1] = yb[1];
                 }
                 if (o->f18c == sel[i]) {
-                    *(s32*)(lbl_80346FC8[1] + 0x61c) = 1;
+                    lbl_80346FC8[1]->cue.x18 = 1;
                     break;
                 }
             }
@@ -5960,9 +5960,9 @@ void fn_80124428(Obj_80124428* o, In_80124428* in) {
     }
     case 0x23: {
         if (in->arg != 1) {
-            u8* p = lbl_80346FC8[1];
+            BtlSide* p = lbl_80346FC8[1];
             if (15.0f == o->f18c) {
-                *(s32*)(p + 0x61c) = 1;
+                p->cue.x18 = 1;
             }
         }
         break;
@@ -5971,7 +5971,7 @@ void fn_80124428(Obj_80124428* o, In_80124428* in) {
         s8 v = in->arg;
         if (v != 0) {
             f32 t;
-            u8* p;
+            BtlSide* p;
             if (v == 1) {
                 t = 20.0f;
             }
@@ -5980,7 +5980,7 @@ void fn_80124428(Obj_80124428* o, In_80124428* in) {
             }
             p = lbl_80346FC8[1];
             if (o->f18c == t) {
-                *(s32*)(p + 0x61c) = 1;
+                p->cue.x18 = 1;
             }
         }
         break;
