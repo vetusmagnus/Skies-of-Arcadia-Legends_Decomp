@@ -17,7 +17,13 @@ dolphin/os/OSAlloc.c:
 	.sdata      start:0x80346720 end:0x80346728
 
 game/unit_80005B50.c:
-	.text       start:0x80005D98 end:0x80020B50
+	.text       start:0x80005D98 end:0x80009800
+
+game/unit_80009800.c:
+	.text       start:0x80009800 end:0x8000A38C
+
+game/unit_8000A38C.c:
+	.text       start:0x8000A38C end:0x80020B50
 
 game/unit_80020B50.c:
 	.text       start:0x80020B50 end:0x8002A034
