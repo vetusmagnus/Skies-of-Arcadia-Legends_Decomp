@@ -1,3 +1,4 @@
+#include "types.h"
 /* Battle character state (0x8002C010 - 0x80031254): the per-character stat block lbl_80309DE4
  * (Chr: stat recompute fn_8002D72C, damage fn_8002DC14, limit gauge Lim), the event command
  * handlers that take (Msg*, slot index) and set or clear its status bits, the battle unit
@@ -44,7 +45,6 @@ typedef struct Unit {
     u8 pad1e0[0x228 - 0x1E0];
     void* x228;             /* 0x228 */
 } Unit;
-
 /* Work area of a character task (task->work). */
 typedef struct Wk {
     s16 type;               /* 0x00 */
@@ -58,7 +58,6 @@ typedef struct Wk {
     u8 pad4a[2];
     Unit* w;                /* 0x4C */
 } Wk;
-
 /* Task object (same layout as Task in game/task.h, work typed per owner). */
 typedef struct Tk {
     void (*func)(struct Tk*);   /* 0x00 */
@@ -70,7 +69,6 @@ typedef struct Tk {
     u8 pad1A[0x0A];
     Wk* work;                   /* 0x24 */
 } Tk;
-
 /* Event message: handler argument. */
 typedef struct Msg {
     s16 x0;
@@ -80,7 +78,6 @@ typedef struct Msg {
     s32 x8;
     s32 xc;
 } Msg;
-
 /* Per-character stat block (lbl_80309DE4[12]). */
 typedef struct Chr {
     s16 x0;                 /* 0x00 */
@@ -117,7 +114,6 @@ typedef struct Chr {
     s8 xfe;
     s8 xff;
 } Chr;
-
 /* Per-character state table entry (lbl_80309174[12]). */
 typedef struct ChrState {
     s32 x0;
@@ -127,14 +123,12 @@ typedef struct ChrState {
     s8 x8;
     u8 pad9[0x17];
 } ChrState;
-
 typedef struct Lim {
     u8 pad[6];
     s16 x6;
     s16 x8;
     s16 xa;
 } Lim;
-
 /* Callback list node (GameState.head / GameState.list). */
 typedef struct Callback {
     void (*fn)(void*);
@@ -143,7 +137,6 @@ typedef struct Callback {
     struct Callback* next;
     u32 flags;
 } Callback;
-
 typedef struct GameState {
     u8 pad0[8];
     Tk* x8;                 /* 0x08 */
@@ -169,7 +162,6 @@ typedef struct GameState {
     u32 x1c0;               /* 0x1C0 */
     u8 pad1c4[0x1D0 - 0x1C4];
 } GameState;
-
 typedef struct Slot {
     u32 flags;
     u32 x4;
@@ -177,14 +169,12 @@ typedef struct Slot {
     u32 xc;
     u8 pad[0x24 - 0x10];
 } Slot;
-
 typedef struct Cfg {
     s32 flag;
     s32 cnt;
     s32 v[2];
     s32 p[3][2];
 } Cfg;
-
 extern Tk* lbl_80309700[12];
 extern Tk* lbl_80309E24[12];
 extern Tk* lbl_80347394;
@@ -213,7 +203,6 @@ extern void fn_80032BBC(s8, s32);
 extern void fn_80032B6C(s8, s32);
 extern void fn_80029168(s32, s32);
 extern int fn_80014C90(s8, int);
-
 /* Function-local types (suffix = function address). */
 typedef struct { u8 pad[8]; s8 x8; u8 pad9; s8 xa; u8 padb[5]; } Ent2;
 typedef struct { u32 flags; s32 val; } Ent_8002EEFC;
@@ -236,7 +225,6 @@ typedef struct {
     Tk* b;
     s16 timer; /* 0x08 */
 } Work_80030C94;
-
 extern void fn_8002BC4C(s16);
 extern void fn_80010474(s16);
 extern s8 lbl_80347334;
@@ -336,10 +324,10 @@ extern s8 fn_8001E910(Tk*);
 extern void fn_8001D14C(Unit*);
 extern int fn_800207C8(Tk*);
 extern void fn_8001DCA0(Unit*);
-
 /* forward declarations */
 extern void fn_8002F188(Tk* o, u32* out);
 extern void fn_80030E5C(Tk* task);
+typedef struct St { u8 pad[0x68]; u32 x68; u8 pad2[0x194 - 0x6C]; u32 x194[10]; u32 x1bc; u32 x1c0; } St;
 
 static inline void ChrSetTimer(s16 i) {
     Chr* e = lbl_80309DE4[i];
@@ -1838,38 +1826,6 @@ s32 fn_8002F674(void) {
     }
 }
 
-void fn_8002F6D4(void) {
-    s16 i;
-    Unit* r;
-    fn_80017320();
-    switch (lbl_8034733C) {
-    case 3:
-        for (i = 0; i < 12; i++) {
-            if (lbl_80309E24[i] != NULL) {
-                r = lbl_80309E24[i]->work->w;
-                if (r->x228 != NULL) {
-                    fn_8006D080(r->x228, 1);
-                    r->x228 = NULL;
-                }
-            }
-        }
-        break;
-    }
-    fn_800315FC();
-    if (lbl_8030A6D4[lbl_8034757C].x8 != 0) {
-        lbl_8030A10C.x194[lbl_8030A10C.x1c0] = lbl_8030A6D4[lbl_8034757C].x8;
-        if (++lbl_8030A10C.x1c0 >= 10) {
-            lbl_8030A10C.x1c0 = 0;
-        }
-        lbl_8030A10C.x1bc = 0;
-    } else {
-        if (++lbl_8030A10C.x1bc > 60) {
-            lbl_8030A10C.x1bc = 0;
-            lbl_8030A10C.x1c0 = 0;
-        }
-    }
-}
-
 static inline s32 NeedsAdd(Tk* t, s32 hash) {
     s16 k;
     s32* p = ((s32*)t->work) + 1;
@@ -2619,6 +2575,41 @@ void fn_80030E5C(Tk* task) {
             fn_8002ECA4(c, x4);
             fn_8002E48C(obj);
             fn_8001DCA0(o);
+        }
+    }
+}
+
+static inline void FreeAll(void) {
+    s16 i;
+    for (i = 0; i < 12; i++) {
+        if (lbl_80309E24[i] != NULL) {
+            Unit* r = lbl_80309E24[i]->work->w;
+            if (r->x228 != NULL) {
+                fn_8006D080(r->x228, 1);
+                r->x228 = NULL;
+            }
+        }
+    }
+}
+
+void fn_8002F6D4(void) {
+    fn_80017320();
+    switch (lbl_8034733C) {
+    case 3:
+        FreeAll();
+        break;
+    }
+    fn_800315FC();
+    if (lbl_8030A6D4[lbl_8034757C].x8 != 0) {
+        lbl_8030A10C.x194[lbl_8030A10C.x1c0] = lbl_8030A6D4[lbl_8034757C].x8;
+        if (++lbl_8030A10C.x1c0 >= 10) {
+            lbl_8030A10C.x1c0 = 0;
+        }
+        lbl_8030A10C.x1bc = 0;
+    } else {
+        if (++lbl_8030A10C.x1bc > 60) {
+            lbl_8030A10C.x1bc = 0;
+            lbl_8030A10C.x1c0 = 0;
         }
     }
 }
