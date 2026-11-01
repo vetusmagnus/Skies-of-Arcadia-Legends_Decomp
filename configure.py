@@ -187,6 +187,9 @@ if args.map:
 # Use for any additional files that should cause a re-configure when modified
 config.reconfig_deps = []
 
+# Ninja's compiler, GC/1.3.2nj, is patched from the stock GC/1.3.2 in the compilers directory.
+compilers_dir = config.compilers()
+
 # Game code must be plain C: no inline asm, pragmas or fakematch markers (tools/check_game_src.py).
 # It runs before anything compiles, so a hit stops the build.
 game_src = sorted(
@@ -203,6 +206,11 @@ config.custom_build_rules = [
         "command": f'"{sys.executable}" tools/check_game_src.py --stamp $out $in',
         "description": "CHECK game code is plain C",
     },
+    {
+        "name": "patch_mwcc_ninja",
+        "command": f'"{sys.executable}" tools/patch_mwcc_ninja.py "{compilers_dir}/GC/1.3.2" "{compilers_dir}/GC/1.3.2nj"',
+        "description": "PATCH GC/1.3.2 -> GC/1.3.2nj (Ninja's compiler)",
+    },
 ]
 config.custom_build_steps = {
     "pre-compile": [
@@ -211,6 +219,14 @@ config.custom_build_steps = {
             "inputs": game_src,
             "implicit": ["tools/check_game_src.py"],
             "outputs": f"build/{config.version}/check_game_src.ok",
+        },
+        {
+            # Runs after the compilers download (a directory output, so order-only); the script
+            # checks the stock compiler's hash.
+            "rule": "patch_mwcc_ninja",
+            "inputs": ["tools/patch_mwcc_ninja.py"],
+            "order_only": [str(compilers_dir)] if config.compilers_path is None else None,
+            "outputs": str(compilers_dir / "GC/1.3.2nj/mwcceppc.exe"),
         },
     ],
 }
@@ -455,10 +471,11 @@ config.libs = [
         ],
     ),
     # Sega's Ninja graphics library, compiled like the game (docs/ninja.md). One unit for the whole
-    # region until the real file boundaries show up.
+    # region until the real file boundaries show up. Built with GC/1.3.2nj, stock 1.3.2 with the
+    # late copy propagation made block-local (tools/patch_mwcc_ninja.py, docs/mwcc_ninja/README.md).
     {
         "lib": "ninja",
-        "mw_version": "GC/1.3.2",
+        "mw_version": "GC/1.3.2nj",
         "cflags": cflags_game,
         "progress_category": "ninja",
         "objects": [

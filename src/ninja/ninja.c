@@ -372,6 +372,17 @@ void fn_8028A058(u32 argb, s32 p, f32 w) {
 }
 #pragma optimization_level reset
 
+typedef struct { f32 x, y, z; u32 col; } NjColVtx;
+
+void fn_8028A0F4(NjColVtx* v, s32 n) {
+    s32 i;
+    GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, n);
+    for (i = 0; i < n; i++, v++) {
+        GXPosition3f32(v->x, v->y, v->z * lbl_80347F30 + lbl_80347F34);
+        GXColor1u32(__rlwinm(v->col, 8, 0, 31));
+    }
+}
+
 void fn_8028A268(void) {
 }
 
@@ -739,6 +750,20 @@ void fn_80290EA8(u16 x) {
     lbl_80347E44 = x;
 }
 #pragma optimization_level reset
+
+typedef struct { f32 x, y, z; f32 u, v; u32 col; } NjTexVtx;
+
+void fn_80291064(NjTexVtx* v, s32 n, s32 flag) {
+    s32 i;
+    fn_8029CB74();
+    fn_8029B248(0, flag);
+    GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, n);
+    for (i = 0; i < n; i++, v++) {
+        GXPosition3f32(v->x, v->y, v->z * lbl_80347F30 + lbl_80347F34);
+        GXColor1u32(__rlwinm(v->col, 8, 0, 31));
+        GXTexCoord2f32(v->u, v->v);
+    }
+}
 
 #pragma optimization_level 1
 void fn_802913D4(u32 x) {
@@ -2120,6 +2145,15 @@ void fn_8029638C(NjObj* obj, NJS_MOTION* mot, NJS_MOTION* shape, NjModelCb cb, f
     }
 }
 
+void fn_8029681C(NJS_POINT3* p, s32 n, f32 size) {
+    GXSetPointSize(size * 12.0f, 0);
+    do {
+        GXBegin(GX_POINTS, GX_VTXFMT0, 1);
+        GXPosition3f32(p->x, p->y, p->z);
+        p++;
+    } while (--n);
+}
+
 void fn_802968B8(void) {
 }
 
@@ -2558,6 +2592,21 @@ s32 fn_802982F0(s32 key) {
         if (lbl_80347ED4[i].mem != 0 && key == lbl_80347ED4[i].mem->id) return i;
     }
     return -1;
+}
+
+void fn_80298544(NjTexRef* refs, s32 n) {
+    s32 i;
+    lbl_80347ED4 = refs;
+    lbl_80347ED0 = n;
+    for (i = 0; i < n; i++) {
+        refs->w00 = 0;
+        refs->w04 = 0;
+        refs->key = -1;
+        refs->mem = NULL;
+        refs->refs = 0;
+        refs->w14 = 0;
+        refs++;
+    }
 }
 
 s32 fn_80298694(NjTexBody* b, const void* src) {

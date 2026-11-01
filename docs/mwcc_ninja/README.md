@@ -62,11 +62,17 @@ d8f9c36d62f66c2a044d5a20a132b79eeb2f36e5) into `build/compilers/GC/1.3.2nj`:
 Checks
 ------
 
-`tools/verify_mwcc_ninja.py` rebuilds the patched compiler and diffs every function:
+configure.py builds src/ninja/ninja.c (and only that unit) with GC/1.3.2nj; the patch runs as a
+pre-compile step after the compilers download. `tools/verify_mwcc_ninja.py` rebuilds the patched compiler
+and diffs every function in ninja.c with both compilers:
 
 - All 277 functions in src/ninja/ninja.c that match with stock 1.3.2 still match.
-- The four files here match as plain C, with the SDK's own GXVert.h inlines and the game's own vertex
-  layouts; with stock 1.3.2 they are 25-36 lines off.
+- Four more match only with the patch, as plain C with the SDK's own GXVert.h inlines and the game's own
+  vertex layouts: fn_8028A0F4, fn_80291064, fn_8029681C, fn_80298544 (25-36 lines off with stock 1.3.2).
+- The full build agrees: objdiff counts 287 matching Ninja functions with stock 1.3.2 and 291 with
+  1.3.2nj, the same 287 plus those four, and main.dol still rebuilds byte-identical.
+- To diff Ninja code by hand, pass the compiler: `CCV=1.3.2nj tools/match/fdiff.py src/ninja/ninja.c FN`.
+  objdiff has no decomp.me scratch preset for the unit (decomp.me has no 1.3.2nj).
 - Stock GC/1.3 matches 269 of the 277 and 1.2.5n 53, so 1.3.2 is the closest public base.
 
 Alternatives that were ruled out, each against all 277 functions: dropping the late run entirely (255),
@@ -81,7 +87,7 @@ Scope and open questions
   compiler. The project already uses per-library compilers (OSReport with 1.2.5n, MusyX, the SDK).
 - **Which compiler that was** isn't known. The compiler hunt lists CW 1.3.1 (between 1.3 build 53 and 1.3.2
   build 81) as missing; a build from that window is a natural candidate. Anyone with another 1.3-era build
-  can test it with the four files here (no headers needed beyond the repo's).
+  can test it with `docs/near/fifo_8029681C.c` (no headers) or the four functions above.
 - **Two models fit equally well** so far: block-local propagation in the late run, and a pessimistic
   available-copies start in the late run only. They differ only for a copy used in a later block that isn't
   deeper in a loop; nothing in the Ninja code matched so far tells them apart. The patch uses the simpler one.

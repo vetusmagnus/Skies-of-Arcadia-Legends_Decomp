@@ -4,13 +4,13 @@
 usage: tools/verify_mwcc_ninja.py
        (after `ninja` and `tools/match/asmindex.py build`; builds build/compilers/GC/1.3.2nj)
 
-For each compiler it compiles src/ninja/ninja.c and the plain-C files in docs/mwcc_ninja/ and
-diffs every function against the original with tools/match/fdiff.py. A function counts as a
-match when fdiff prints no difference. The patched compiler must keep every ninja.c function
-that matches with stock and match the docs/mwcc_ninja/ functions. Game code is not compiled
-with it: the game was built with stock 1.3.2 behaviour (docs/ninja.md, "Copy pattern").
+For each compiler it compiles src/ninja/ninja.c and diffs every function against the original with
+tools/match/fdiff.py. A function counts as a match when fdiff prints no difference. Every function
+that matches with stock 1.3.2 must still match with 1.3.2nj (the regression check), and every
+function in ninja.c must match with 1.3.2nj, the compiler configure.py builds it with. The ones
+that match only with the patch are listed. Game code is not compiled with it: the game was built
+with stock 1.3.2 behaviour (docs/ninja.md, "Copy pattern").
 """
-import glob
 import json
 import os
 import re
@@ -56,12 +56,12 @@ def main():
           f"{len(keep) - len(lost)} still match with 1.3.2nj")
     for f in lost:
         print(f"  lost: {f} ({patched.get(f)} diff lines)")
-    ok = not lost
-    for path in sorted(glob.glob("docs/mwcc_ninja/*.c")):
-        fn = os.path.splitext(os.path.basename(path))[0]
-        s, p = diff_counts(path, [fn], "1.3.2").get(fn), diff_counts(path, [fn], "1.3.2nj").get(fn)
-        print(f"{path}: 1.3.2 {s} diff lines, 1.3.2nj {p}")
-        ok &= p == 0
+    only = [f for f in ninja if patched.get(f) == 0 and stock.get(f) != 0]
+    print(f"{len(only)} match only with 1.3.2nj: {' '.join(only)}")
+    bad = [f for f in ninja if patched.get(f) != 0 and f not in lost]
+    for f in bad:
+        print(f"  no match with 1.3.2nj: {f} ({patched.get(f)} diff lines)")
+    ok = not lost and not bad
     print("OK" if ok else "FAILED")
     sys.exit(0 if ok else 1)
 
