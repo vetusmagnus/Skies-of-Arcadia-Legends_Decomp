@@ -4138,6 +4138,32 @@ void fn_8021BED0(void) {
     }
 }
 
+void fn_8021BD7C(s32 id)
+{
+    s8 buf[22];
+    if (id < 0) {
+        fn_8021BED0();
+        fill(buf);
+        fn_8021AF94(&lbl_8030B4D4.limit, &lbl_8030B7F4.x1568.b1568, buf);
+    } else {
+        switch (id) {
+        case 1:
+            fn_8021BAEC(id);
+            break;
+        case 0:
+            fn_8021B91C(id);
+            break;
+        case 2:
+            fn_8021B644(id);
+            break;
+        case 3:
+        case 4:
+            fn_8021B4B4(id);
+            break;
+        }
+    }
+}
+
 static inline s32 InRange6(s32 v)
 {
     s32 r = 0;
