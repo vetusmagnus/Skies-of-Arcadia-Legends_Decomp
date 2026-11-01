@@ -1,6 +1,5 @@
 #include "types.h"
 void *fn_801E184C(void *base, s32 idx, s32 a, s32 n);
-extern u32 lbl_802F6748[4];
 extern s32 lbl_803476E4;
 extern u32 lbl_803476F8;
 extern u32 lbl_803476F4;
@@ -8,11 +7,15 @@ extern u32 lbl_803476FC;
 extern u32 lbl_80347700;
 extern u32 lbl_803476E8;
 extern u32 lbl_803476EC;
+/* A heap block header (unit_801D24D0.c's MemBlk); lbl_802F6748 heads one list of them per heap. */
 typedef struct Node {
     void *data;
-    u32 pad04[5];
-    struct Node *next;
+    u32 pad04[3];
+    u32 list;           /* 0x10 */
+    struct Node *prev;  /* 0x14 */
+    struct Node *next;  /* 0x18 */
 } Node;
+extern Node *lbl_802F6748[4];
 void fn_801E15FC(void *slot, void *data);
 
 void fn_801E1A74(s32 a, u32 n) {
@@ -42,23 +45,71 @@ void fn_801E1C7C(s32 n) {
 
 extern void fn_801E15FC(void*, void*);
 void fn_801E1D30(void) {
-    void* node = *(void**)lbl_802F6748;
+    Node* node = lbl_802F6748[0];
     while (node != 0) {
-        void* next = *(void**)((u8*)node + 0x18);
-        fn_801E15FC(lbl_802F6748, *(void**)node);
+        Node* next = node->next;
+        fn_801E15FC(lbl_802F6748, node->data);
         node = next;
     }
-    *(void**)lbl_802F6748 = 0;
+    lbl_802F6748[0] = 0;
 }
 
 void fn_801E1D94(void) {
-    void* node = *(void**)lbl_802F6748;
+    Node* node = lbl_802F6748[0];
     while (node != 0) {
-        void* next = *(void**)((u8*)node + 0x18);
-        fn_801E15FC(lbl_802F6748, *(void**)node);
+        Node* next = node->next;
+        fn_801E15FC(lbl_802F6748, node->data);
         node = next;
     }
-    *(void**)lbl_802F6748 = 0;
+    lbl_802F6748[0] = 0;
+}
+
+static inline void Link(u32 i, Node *n)
+{
+    n->list = i;
+    if (lbl_802F6748[i] != NULL) {
+        lbl_802F6748[i]->prev = n;
+    }
+    n->prev = NULL;
+    n->next = lbl_802F6748[i];
+    lbl_802F6748[i] = n;
+}
+
+/* Moves the node holding data from whichever list it is on to list `to`. */
+void fn_801E1DF8(s32 to, void *data)
+{
+    Node *prev;
+    u32 i;
+    Node *n;
+    for (i = 0; i < 3; i++) {
+        if (to == i) {
+            continue;
+        }
+        for (n = lbl_802F6748[i]; n != NULL; n = n->next) {
+            if (n->data == data) {
+                if (i == 2) {
+                    lbl_80347700++;
+                }
+                {
+                    Node **head = &lbl_802F6748[i];
+                    prev = n->prev;
+                    if (prev == NULL) {
+                        *head = n->next;
+                        if (n->next != NULL) {
+                            n->next->prev = NULL;
+                        }
+                    } else {
+                        prev->next = n->next;
+                    }
+                    if (n->next != NULL) {
+                        n->next->prev = n->prev;
+                    }
+                }
+                Link(to, n);
+                return;
+            }
+        }
+    }
 }
 
 void fn_801E1EE4(void)
@@ -87,17 +138,17 @@ void fn_801E1F08(void)
 
 void fn_801E1CCC(void) {
     Node *next;
-    u32 *slot;
+    Node **slot;
     Node *n;
 
     slot = lbl_802F6748 + 1;
-    n = *(Node **)slot;
+    n = *slot;
     while (n != NULL) {
         next = n->next;
         fn_801E15FC(slot, n->data);
         n = next;
     }
-    *(Node **)slot = NULL;
+    *slot = NULL;
 }
 
 void *fn_801E1BDC(u32 n) {
