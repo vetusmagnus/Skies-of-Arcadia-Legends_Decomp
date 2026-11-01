@@ -229,6 +229,8 @@ Logged, not integrated as matches. Functions marked * are in the unit as NonMatc
     an inline function, `register` pointers, pointer parameters per write and per call, nested
     `POS2`+`POS1` helpers, inlines defined after use, indexed and pointer loops. Test files are in
     `build/agents/fifo/` (local).
+- `fn_802A1160` (duplicate group 12, the second renderer's chunk-model callback): 38 lines, the per-use copy
+  shape for `&lbl_80300760` like `fn_802873BC`; best source and what was tried in `docs/near/fn_802A1160.c`.
 - Ambient colour setters `fn_802871D8` / `fn_8028B784` (duplicate group 74, one per light table):
   instructions exact, but the original scales each argument in its own register (`fmuls f1,f1,f4`) where
   MWCC picks a fresh one (24 lines, registers only). Plain, `*=`-in-condition, temp, inline-helper and
