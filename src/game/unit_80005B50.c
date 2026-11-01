@@ -790,7 +790,7 @@ typedef struct Cx_BB28 {
     struct { u8 pad[0x2c]; void* x2c; }* x2c;
 } Cx_BB28;
 extern TaskFn fn_8000F0A4(s16 i);
-extern void fn_80061F58(void*, int, int);
+extern int fn_80061F58(void*, int, int);
 extern void fn_8006CF28(void*, void*, s16);
 extern void fn_8006CEEC(void*, void*, int, s16);
 extern void fn_8022F00C(void*);
@@ -1594,6 +1594,26 @@ s16 fn_800085EC(s32 a, s16 b, s16 c, s32 d, CondLink* p) {
         cur = cur->next;
     }
     return sum;
+}
+
+Node_80008800* fn_80008938(Ent_80008800* t, s16 a, s16 b) {
+    Node_80008800* out = 0;
+    s16 lo;
+    s16 hi;
+    if (t != 0) {
+        if (fn_800089F0(t, a, b, &lo, &hi, 0) != 0) {
+            if (fn_80061F58(&out, 0x10, 0) != 0) {
+                out->x0 = a;
+                out->x2 = b;
+                out->x4 = lo;
+                out->x6 = hi;
+                return out;
+            }
+            return 0;
+        }
+        return 0;
+    }
+    return 0;
 }
 
 void fn_800091A4(s16* p) {
@@ -2471,6 +2491,14 @@ void fn_800121D8(Task* t)
 }
 
 extern void fn_8028BB90(void* p);
+
+void fn_80013504(Vec3* obj, Vec3* src, void* p5, f32 a, f32 b) {
+    fn_80061C80(obj, 0.0f, b, a, 0);
+    obj->x = obj->x + src->x;
+    obj->z = obj->z + src->z;
+    obj->y = a;
+    fn_80071F84(p5, src, obj);
+}
 
 void fn_80014AB8(u8 kind, SysObj* o) {
     if (o != NULL) {
