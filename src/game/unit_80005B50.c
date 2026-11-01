@@ -78,9 +78,19 @@ typedef struct {
 } Sys_80309E5C;
 extern Sys_80309E5C lbl_80309E5C;
 extern Task* lbl_80347394;
-typedef struct ChrRec { u8 pad_0[0x14];
- s32 x14;
- s32 x18; u32 bits; } ChrRec;
+typedef struct ChrRec {
+    u8 pad_0[8];
+    s16 x8;             /* 0x08 */
+    u8 pada[0x14 - 0xa];
+    s32 x14;
+    s32 x18;
+    u32 bits;           /* 0x1c */
+    u8 pad20[0xb4 - 0x20];
+    s16 xb4;            /* 0xb4 */
+    s16 xb6;            /* 0xb6 */
+    u8 padb8[0x100 - 0xb8];
+    u8 x100;            /* 0x100 */
+} ChrRec;
 extern ChrRec* lbl_80309DE4[];
 u32 fn_8000F718(s8 idx, s8 alt, u8* out);
 typedef struct HNode {
@@ -179,8 +189,10 @@ typedef struct ChrInfo {
     u8 pad22[6];
     s8 x28[10];         /* 0x28 recent ids, -1 = free */
     u8 pad32[0x48 - 0x32];
-          s8 x48;
-          u8 pad_49[0x7];
+    s8 x48;             /* 0x48 */
+    u8 pad_49;
+    s16 x4a;            /* 0x4a */
+    u8 pad4c[4];
     u32 x50;            /* 0x50 draw flags */
     u8 pad54[0x8];
     ChrMot* x5c;        /* 0x5c */
@@ -201,7 +213,7 @@ typedef struct ChrInfo {
     s16 xea;            /* 0xea */
     u32 xec;            /* 0xec */
     u32 xf0;            /* 0xf0 */
-    u8 padf4[4];
+    u32 xf4;            /* 0xf4 */
     NJS_POINT3 pos;     /* 0xf8 */
     f32 x104[3];        /* 0x104 */
     NJS_POINT3 x110;    /* 0x110 target */
@@ -352,7 +364,10 @@ extern TaskFn lbl_802DAFA8[];
 /* The 0x70-byte objects lbl_80309EC8 keeps at 0x40/0x44 (fn_80014AB8); 0x20000000 in flags
  * releases one. */
 typedef struct SysObj {
-    u8 pad0[0x68];
+    u8 pad0[0x5a];
+    s16 x5a;            /* 0x5a */
+    s16 x5c;            /* 0x5c */
+    u8 pad5e[0x68 - 0x5e];
     u32 flags;          /* 0x68 */
     u8 x6c[4];          /* 0x6c */
 } SysObj;
@@ -909,17 +924,7 @@ typedef struct Blk_80019D7C { u8 pad[4]; Task* a; Task* b; s16 c; s16 d; s16 x10
 typedef struct Obj_80019D7C { u8 pad[0x24]; Blk_80019D7C* blk; } Obj_80019D7C;
 extern void fn_80019B70(void*);
 extern void fn_80018CBC(Task*, int, int, int, int);
-typedef struct W_8001C348 {
-    u8 pad0[0x4a];
-    s16 x4a;
-    u8 pad4c[0xec - 0x4c];
-    u32 xec;
-    u8 padf0[4];
-    u32 xf4;
-} W_8001C348;
-typedef struct Mid_8001C348 { u8 pad[0x4c]; W_8001C348* w; } Mid_8001C348;
-typedef struct Tk_8001C348 { u8 pad[0x24]; Mid_8001C348* mid; } Tk_8001C348;
-extern s32 fn_8001C1F0(void* t);
+s32 fn_8001C1F0(Task* o);
 typedef struct Cmd { u8 pad0[0x10]; s16 x10; s16 x12; } Cmd;
 typedef struct Item { s16 lo; s16 hi; u8 pad4[8]; Cmd* obj; } Item;
 typedef struct Sub143 { u8 pad00[0x30]; s16 state; } Sub143;
@@ -2053,11 +2058,12 @@ u32 fn_8000F718(s8 idx, s8 alt, u8* out) {
 }
 
 s32 fn_8000F86C(s32 idx) {
-    void* p = lbl_80347394;
+    Task* p = lbl_80347394;
     if (p != 0) {
-        return (s8)*(s16*)((u8*)PTR(p, 0x24) + 0x5c);
+        SysObj* s = p->work;
+        return (s8)s->x5c;
     }
-    return *(u8*)((u8*)lbl_80309DE4[(s8)idx] + 0x100);
+    return lbl_80309DE4[(s8)idx]->x100;
 }
 
 void fn_8000F8A4(void* obj, s8 x) {
@@ -2065,9 +2071,44 @@ void fn_8000F8A4(void* obj, s8 x) {
     fn_8000F6F8(obj, 0x40, v, -1, 0);
 }
 
+s8 fn_8000FA30(s8 idx) {
+    s8 v;
+    SysObj* s;
+    if (lbl_80347394 == 0) {
+        v = lbl_80309DE4[idx]->xb6;
+        if (v >= 0 && v < 0x10) {
+        } else if (v >= 0x10 && v < 0x20) {
+            v = v - 0x10;
+        } else if (v >= 0x20 && v < 0x30) {
+            v = v - 0x20;
+        } else if (v >= 0x30 && v < 0x3a) {
+            v = v - 0x30;
+        } else if (v >= 0x3a && v < 0x40) {
+            v = v - 0x3a;
+        } else if (v >= 0x40 && v < 0x47) {
+            v = v - 0x40;
+        } else if (v == 0x47 || v == 0x48) {
+            v = 0x10;
+        } else if (v == 0x49) {
+            v = 0x11;
+        } else {
+            v = -1;
+        }
+        if (v < 0) {
+            v = 0;
+        }
+        if (v > 0x11) {
+            v = 0x11;
+        }
+        return v;
+    }
+    s = lbl_80347394->work;
+    return s->x5a;
+}
+
 void fn_80010538(s16 idx) {
     s32 mode = lbl_80309730[idx].mode;
-    void* q;
+    ChrRec* q;
     if (mode == 0) {
         return;
     }
@@ -2075,7 +2116,7 @@ void fn_80010538(s16 idx) {
         return;
     }
     q = lbl_80309DE4[idx];
-    *(s16*)((u8*)q + 0xb4) += *(s16*)((u8*)q + 8);
+    q->xb4 += q->x8;
 }
 
 extern void fn_80011208(s8 a, s8 b, s32 c);
@@ -3051,6 +3092,40 @@ s32 fn_8001BBF8(void* obj) {
         return 0;
     default:
         return 1;
+    }
+}
+
+extern s32 fn_80014C90(u8 id, s32 flags);
+
+s32 fn_8001C1F0(Task* o)
+{
+    ChrWork* cw = o->work;
+    ChrInfo* w = cw->st;
+    switch (w->x6) {
+    default:
+        if ((w->xf0 & 4) && fn_80014C90(w->id, 4) != 0 && fn_80014C90(w->id, 0x800000) != 0) {
+            return 1;
+        }
+        return 0;
+    case 9:
+    case 10:
+        if (fn_80014C90(w->id, 4) != 0 && fn_80014C90(w->id, 0x800000) != 0) {
+            return 1;
+        }
+        return 0;
+    case 11:
+    case 32:
+        if (fn_80014C90(w->id, 4) != 0 && fn_80014C90(w->id, 0x800000) != 0) {
+            switch (w->x4a) {
+            case 4:
+            case 5:
+            case 8:
+                return 1;
+            default:
+                return 0;
+            }
+        }
+        return 0;
     }
 }
 
@@ -4849,8 +4924,9 @@ void fn_80019D7C(Task* t) {
     fn_80018CBC(t, in->xe8, 0, 0, in->x2);
 }
 
-void fn_8001C348(Tk_8001C348* t) {
-    W_8001C348* w = t->mid->w;
+void fn_8001C348(Task* t) {
+    ChrWork* cw = t->work;
+    ChrInfo* w = cw->st;
     if (fn_8001C1F0(t) != 0) {
         w->xf4 &= 0x7FFFFFFF;
     }
@@ -7007,5 +7083,51 @@ s32 fn_800205B8(s16 id) {
     fn_8001D41C(&a, &b);
     if (a == id) return 1;
     return 0;
+}
+
+/* A pack of 12-byte entries; fn_80007528 hands each to one of four loaders by its flag bits. */
+typedef struct ArcEnt {
+    u32 x0;
+    u32 flags;
+    u32 x8;
+} ArcEnt;
+typedef struct ArcPack {
+    ArcEnt* ents;
+    u32 count;
+} ArcPack;
+typedef s32 (*ArcPackFn)(ArcPack* pk, u32 i);
+extern ArcPackFn lbl_802DAE40[4];
+
+s32 fn_80007528(ArcPack* pk) {
+    u32 i;
+    if (pk->count == 0) {
+        lbl_803457F8.err = 1;
+        return -1;
+    }
+    for (i = 0; i < pk->count; i++) {
+        s32 kind;
+        switch (pk->ents[i].flags & 0x5C000000) {
+        case 0:
+            kind = 0;
+            break;
+        case 0x40000000:
+            kind = 1;
+            break;
+        case 0x08000000:
+            kind = 2;
+            break;
+        case 0x04000000:
+            kind = 3;
+            break;
+        default:
+            kind = 2;
+            break;
+        }
+        if (lbl_802DAE40[kind](pk, i) < 0) {
+            lbl_803457F8.a = i;
+            return -1;
+        }
+    }
+    return 1;
 }
 
