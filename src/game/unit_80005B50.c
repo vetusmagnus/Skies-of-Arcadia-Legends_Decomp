@@ -215,7 +215,8 @@ typedef struct ChrInfo {
     s8 x48;             /* 0x48 */
     u8 pad_49;
     s16 x4a;            /* 0x4a */
-    u8 pad4c[4];
+    s16 x4c;            /* 0x4c */
+    u8 pad4e[2];
     u32 x50;            /* 0x50 draw flags */
     u8 pad54[0x8];
     ChrMot* x5c;        /* 0x5c */
@@ -4267,6 +4268,57 @@ s32 fn_8001C1F0(Task* o)
             }
         }
         return 0;
+    }
+}
+
+extern s32 fn_80008AB4(Ent_80008800* tbl, s32 a, s32 b, s32 c, s32 d, s32 e, CondLink* list);
+s16 fn_80008530(Task* a, s16 b, s16 c, Ent_80008800* d, CondLink* p);
+static inline Task* FindChr(s8 key) {
+    s8 i;
+    for (i = 0; i < 14; i++) {
+        Task* p = lbl_80309E24[i];
+        if (p != 0) {
+            ChrWork* w = p->work;
+            if (w->st->id == key) return lbl_80309E24[i];
+        }
+    }
+    return 0;
+}
+void fn_8001C474(Task* t) {
+    ChrInfo* u = ChrW(t)->st;
+    s32 flag = 0;
+    Ent_80008800* h;
+    GS* g;
+    if (fn_80014C90(u->id, 0x10) != 0) {
+        h = ChrW(t)->x10->x30;
+        if (fn_80008AB4(h, 0x1e, 0x26, -1, -1, 0, u->x298) != 0) {
+            fn_800086BC(t, 0x1e, 0x26, h, 0, 1);
+        } else {
+            fn_800086BC(t, 0x1e, 0x26, lbl_8030A10C.x10, 0, 1);
+        }
+        if (FindChr(u->x48) != 0) {
+            switch (u->x4a) {
+            case 4:
+            case 5:
+            case 9:
+            case 10:
+                flag = 1;
+            }
+        }
+    }
+    if ((u->xec & 0x2000) || flag != 0) {
+        u->xec &= ~0x2000;
+    } else if (!(u->xf0 & 0x4000000) && u->x204 != 0 && (u->xf4 & 0x4000000)) {
+        fn_800086BC(t, 0x1e, 0x26, lbl_8030A10C.x10, 0, 1);
+    } else {
+        g = &lbl_8030A10C;
+        u->xec |= 0x800;
+        if (fn_80008530(t, u->x4a, u->x4c, g->xc, g->x180) == 0) {
+            u->xec |= 0x1000;
+            fn_80008530(t, 0x20, u->x4c, g->xc, g->x180);
+            u->xec &= ~0x1000;
+        }
+        u->xec &= ~0x800;
     }
 }
 
