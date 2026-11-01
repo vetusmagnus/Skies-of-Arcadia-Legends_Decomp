@@ -869,7 +869,7 @@ typedef struct O6065C {
     S6065C *s;
 } O6065C;
 extern s32 fn_8022E258(void *, void *, u8, s32);
-s32 fn_80061F58(void* dst, u32 size, u8 c);
+extern void fn_80061F58(void *, s32, s32);
 extern void fn_8022F580(void *, s32, s32);
 extern void fn_8022E4CC(void *, s32, s32, s32, s32, s32);
 typedef struct Out6EB88 {
@@ -3649,21 +3649,6 @@ void fn_80061F3C(f32 *src, f32 *dst) {
     dst[0] = src[0];
     dst[1] = src[1];
     dst[2] = src[2];
-}
-
-s32 fn_80061F58(void* dst, u32 size, u8 c)
-{
-    void** slot = dst; /* dst is the address of any pointer variable */
-    void* p;
-
-    *slot = fn_801E1C7C(size);
-    p = *slot;
-    while (p == 0) {
-    }
-    while ((u32)p & 0x1f) { /* address alignment */
-    }
-    memset(p, c, size);
-    return 1;
 }
 
 void fn_80064AC8(O80064CA4 *o) {
