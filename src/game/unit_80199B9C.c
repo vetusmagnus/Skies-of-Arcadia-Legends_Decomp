@@ -573,19 +573,7 @@ extern ShopTask* lbl_803471B8;
 extern s32 fn_801B93E8(ShopTask* t);
 struct Task_801B11EC;
 extern void fn_801B11EC(struct Task_801B11EC* t);
-typedef struct Task_801B1A78 {
-    u8 pad00[0x24];
-    u8* p24;
-    MenuPanel* p28;
-    u32 w2c;
-} Task_801B1A78;
 extern void fn_801B5EA8();
-typedef struct Task_801B6240 {
-    u8 pad00[0x24];
-    u8* p24;
-    MenuPanel* p28;
-    u32 w2c;
-} Task_801B6240;
 void fn_801B6950(ShopPart* t);
 typedef struct Pair_UNIT0000 {
     const char* a;
@@ -3354,22 +3342,22 @@ void fn_801B11EC(Task_801B11EC* t) {
     }
 }
 
-Task_801B1A78* fn_801B1A78(void* a)
+ShopPart* fn_801B1A78(void* a)
 {
-    Task_801B1A78* o = fn_802267AC(a, fn_801B11EC);
-    o->p24 = fn_801E1A74(1, 0x58);
-    o->p28 = fn_801E1A74(1, 0x6c);
-    o->w2c = 0;
-    o->p24[0] = 0;
-    o->p28->o.x = 648.0f;
-    o->p28->o.tx = 648.0f;
-    o->p28->o.y = 282.0f;
-    o->p28->o.ty = 282.0f;
-    o->p28->h54 = 0;
-    o->p28->h52 = 0;
-    o->p28->o.f38 = 1.0f;
-    o->p28->o.alpha = 1.0f;
-    o->p28->o.z = -4400.0f;
+    ShopPart* o = fn_802267AC(a, fn_801B11EC);
+    o->flag = fn_801E1A74(1, 0x58);
+    o->obj = fn_801E1A74(1, 0x6c);
+    o->obj2 = 0;
+    o->flag->b0 = 0;
+    o->obj->o.x = 648.0f;
+    o->obj->o.tx = 648.0f;
+    o->obj->o.y = 282.0f;
+    o->obj->o.ty = 282.0f;
+    o->obj->h54 = 0;
+    o->obj->h52 = 0;
+    o->obj->o.f38 = 1.0f;
+    o->obj->o.alpha = 1.0f;
+    o->obj->o.z = -4400.0f;
     return o;
 }
 
@@ -3459,23 +3447,23 @@ void fn_801B1B3C(ShopPart* t) {
     }
 }
 
-Task_801B6240* fn_801B6240(void* a, f32 x)
+ShopPart* fn_801B6240(void* a, f32 x)
 {
-    Task_801B6240* o = fn_802267AC(a, fn_801B5EA8);
-    o->p24 = fn_801E1A74(1, 0x58);
-    o->p28 = fn_801E1A74(1, 0x6c);
-    o->w2c = 0;
-    o->p24[0] = 0;
-    o->p28->o.alpha_en = 0;
-    o->p28->o.x = 640.0f;
-    o->p28->o.tx = 640.0f;
-    o->p28->o.y = 480.0f;
-    o->p28->o.ty = 480.0f;
-    o->p28->o.rdx = 0.0f;
-    o->p28->o.rdy = 0.0f;
-    o->p28->o.alpha = 1.0f;
-    o->p28->o.z = x;
-    UiObjSetLowered(&o->p28->o);
+    ShopPart* o = fn_802267AC(a, fn_801B5EA8);
+    o->flag = fn_801E1A74(1, 0x58);
+    o->obj = fn_801E1A74(1, 0x6c);
+    o->obj2 = 0;
+    o->flag->b0 = 0;
+    o->obj->o.alpha_en = 0;
+    o->obj->o.x = 640.0f;
+    o->obj->o.tx = 640.0f;
+    o->obj->o.y = 480.0f;
+    o->obj->o.ty = 480.0f;
+    o->obj->o.rdx = 0.0f;
+    o->obj->o.rdy = 0.0f;
+    o->obj->o.alpha = 1.0f;
+    o->obj->o.z = x;
+    UiObjSetLowered(&o->obj->o);
     return o;
 }
 
@@ -5542,23 +5530,23 @@ void fn_801A0C3C(Self_801A0C3C *o) {
     }
 }
 
-Task_801B6240* fn_801B6320(void* a, f32 x)
+ShopPart* fn_801B6320(void* a, f32 x)
 {
-    Task_801B6240* o = fn_802267AC(a, fn_801B5FA8);
-    o->p24 = fn_801E1A74(1, 0x58);
-    o->p28 = fn_801E1A74(1, 0x6c);
-    o->w2c = 0;
-    o->p24[0] = 0;
-    o->p28->o.alpha_en = 0;
-    o->p28->o.x = 640.0f;
-    o->p28->o.tx = 640.0f;
-    o->p28->o.y = 480.0f;
-    o->p28->o.ty = 480.0f;
-    o->p28->o.rdx = 0.0f;
-    o->p28->o.rdy = 0.0f;
-    o->p28->o.alpha = 1.0f;
-    o->p28->o.z = x;
-    UiObjSetLowered(&o->p28->o);
+    ShopPart* o = fn_802267AC(a, fn_801B5FA8);
+    o->flag = fn_801E1A74(1, 0x58);
+    o->obj = fn_801E1A74(1, 0x6c);
+    o->obj2 = 0;
+    o->flag->b0 = 0;
+    o->obj->o.alpha_en = 0;
+    o->obj->o.x = 640.0f;
+    o->obj->o.tx = 640.0f;
+    o->obj->o.y = 480.0f;
+    o->obj->o.ty = 480.0f;
+    o->obj->o.rdx = 0.0f;
+    o->obj->o.rdy = 0.0f;
+    o->obj->o.alpha = 1.0f;
+    o->obj->o.z = x;
+    UiObjSetLowered(&o->obj->o);
     return o;
 }
 
