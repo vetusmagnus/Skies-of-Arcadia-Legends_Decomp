@@ -106,7 +106,14 @@ extern u32 lbl_803478A0;
 extern u32 lbl_803478A4;
 extern u8 *lbl_803478DC;
 extern void fn_8000832C(s32 a, s32 b, s32 c);
-extern void fn_800086BC(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f);
+/* A linked condition record (fn_800085EC walks the list). */
+typedef struct CondLink {
+    s16 x0;
+    s16 x2;
+    u8 pad4[4];
+    struct CondLink* next;  /* 0x8 */
+} CondLink;
+extern s16 fn_800086BC(s32 a, s16 b, s16 c, s32 d, CondLink* e, s32 f);
 typedef struct {
     u8 pad0[0xc];
     void* xc;           /* 0x0c */
@@ -451,7 +458,9 @@ typedef struct {
     u8 pad4[4];
     void* x8;
     struct { u8 pad[4]; u32 x4; }* xc;
-    u8 pad10[8];
+    struct { u8 pad[8]; void* x8; }* x10;
+    u8 pad14[2];
+    s16 x16;
     s16 x18;
     u8 pad1a[0x1c - 0x1a];
     f32 tx;
@@ -1565,6 +1574,21 @@ void fn_80008170(void) {
     fn_8023A8E0((s32)lbl_803478DC);
 }
 
+s16 fn_800085EC(s32 a, s16 b, s16 c, s32 d, CondLink* p) {
+    CondLink* cur = p;
+    s16 sum = 0;
+    if (p == NULL) {
+        return fn_800086BC(a, b, c, d, 0, 0);
+    }
+    while (cur != NULL) {
+        if (fn_8003DE8C(cur->x0, cur->x2, b, c) != 0) {
+            sum += fn_800086BC(a, b, c, d, cur, 0);
+        }
+        cur = cur->next;
+    }
+    return sum;
+}
+
 void fn_800091A4(s16* p) {
     s16 x = p[0];
     s16 y = p[1];
@@ -1620,6 +1644,27 @@ typedef struct Par_8000BF48 { u8 pad0[8]; u32 x8; f32 xc; f32 x10; f32 x14; s16 
 typedef struct Work_8000BF48 { u8 pad0[0x4c]; Par_8000BF48* x4c; u8 pad50[8]; } Work_8000BF48;
 typedef struct Src_8000BF48 { s16 x0; u8 pad2[2]; u32 x4; f32 x8; f32 xc; f32 x10; s16 x14; } Src_8000BF48;
 typedef struct Owner_8000BF48 { u8 pad[0xc]; Src_8000BF48* src; } Owner_8000BF48;
+
+void fn_8000B5F4(W *o, f32 frame) {
+    void *aux = NULL;
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    njTranslate(0, o->tx, o->ty, o->tz);
+    njRotateXYZ(0, o->rx, o->ry, o->rz);
+    njScale(0, o->sx, o->sy, o->sz);
+    fn_8006CEEC(o->x10->x8, &aux, 1, o->x16);
+    if (o->x0 != NULL) {
+        if (o->xc != NULL && aux != NULL) {
+            fn_800353F4(o->x0, o->xc, aux, frame, o->x44);
+        } else if (o->xc != NULL) {
+            fn_80035380(o->x0, o->xc, frame, o->x44);
+        } else {
+            fn_80035140(o->x0, o->x44);
+        }
+    }
+    njPopMatrixEx();
+}
 
 void fn_8000BF48(Owner_8000BF48* ow) {
     Src_8000BF48* s = ow->src;
@@ -2577,7 +2622,7 @@ void fn_80008308(s32 a, s32 b)
     fn_8000832C(a, b, 0);
 }
 
-void fn_80008694(s32 a, s32 b, s32 c, s32 d)
+void fn_80008694(s32 a, s16 b, s16 c, s32 d)
 {
     fn_800086BC(a, b, c, d, 0, 0);
 }
