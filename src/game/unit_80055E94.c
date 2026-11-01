@@ -22,7 +22,7 @@ typedef struct Node {
     struct Node* x38;    /* 0x38 next */
     u8 pad3c[8];
 } Node;
-typedef struct { void *ptr; s8 id; u8 kind; s16 s; u8 pad8[8]; } Slot_8030A10C;
+typedef struct { u32 handle; s8 id; u8 kind; s16 s; u8 pad8[8]; } Slot_8030A10C;
 typedef struct {
     u32 f0;
     u8 pad4[0x64];
@@ -940,9 +940,9 @@ typedef struct S_8005C480 {
 } S_8005C480;
 s32 fn_8006D954(s32 key);
 extern void fn_8006D8DC(s32);
-extern void fn_80215F94(void *);
-extern s32 fn_80216F48(void *);
-extern void fn_80217830(void *);
+extern void fn_80215F94(u32);
+extern s32 fn_80216F48(u32);
+extern void fn_80217830(s32);
 typedef struct Un_8005D614 {
     u8 pad0[2];
     s16 s2;
@@ -5186,6 +5186,33 @@ typedef struct MdlObj { u8 id; u8 pad1[0x164 - 1]; f32 x164; } MdlObj;
 typedef struct MdlCtl { u8 pad[0x4c]; MdlObj *obj; } MdlCtl;
 extern s32 fn_800154BC(Task *t);
 
+typedef struct Snd { u8 pad_00[7]; s8 x7; u8 pad_08[0x20]; s32 x28; s32 x2c; } Snd;
+extern void fn_80218D84(void *dst, u32 src, u32 size);
+extern s32 SePlay(s32 bank, s8 arg1, s8 id);
+
+void fn_80072F10(Snd *s) {
+    if (lbl_8030A10C.x7c != 0) {
+        if (s->x28 != 0) {
+            fn_80217830(s->x28);
+        }
+        fn_80218D84(lbl_8030A10C.x84, lbl_8030A10C.x7c, (lbl_8030A10C.x74 + 0x1f) & ~0x1f);
+        s->x28 = SePlay(3, 3, 0);
+        lbl_8030A10C.x7c = 0;
+        lbl_8030A10C.x74 = 0;
+    }
+    if (lbl_8030A10C.x80 != 0) {
+        if (s->x2c != 0) {
+            fn_80217830(s->x2c);
+        }
+        if (s->x7 != 0) {
+            fn_80218D84(lbl_8030A10C.xa4, lbl_8030A10C.x80, (lbl_8030A10C.x78 + 0x1f) & ~0x1f);
+        }
+        s->x2c = SePlay(3, 7, 0);
+        lbl_8030A10C.x80 = 0;
+        lbl_8030A10C.x78 = 0;
+    }
+}
+
 void fn_80073C44(CamObj *arg, s8 mode) {
     s8 i;
     for (i = 0; i < 12; i++) {
@@ -5748,7 +5775,7 @@ void fn_8005C480(Task *o) {
     switch (o->state) {
     case 0:
         for (i = 0; i < 2; i++) {
-            if ((s8)u->id == lbl_8030A10C.e[i].id && lbl_8030A10C.e[i].ptr != 0) {
+            if ((s8)u->id == lbl_8030A10C.e[i].id && lbl_8030A10C.e[i].handle != 0) {
                 switch (lbl_8030A10C.e[i].kind) {
                 case 5:
                     if (u->s6 == 1) {
@@ -5783,21 +5810,21 @@ void fn_8005C480(Task *o) {
         if (s->cnt < s->a->s1c) {
             break;
         }
-        fn_80215F94(lbl_8030A10C.e[s->idx].ptr);
+        fn_80215F94(lbl_8030A10C.e[s->idx].handle);
         o->state = 3;
         break;
     case 3:
-        if (fn_80216F48(lbl_8030A10C.e[s->idx].ptr) == 0) {
-            lbl_8030A10C.e[s->idx].ptr = 0;
+        if (fn_80216F48(lbl_8030A10C.e[s->idx].handle) == 0) {
+            lbl_8030A10C.e[s->idx].handle = 0;
             lbl_8030A10C.e[s->idx].id = -1;
             o->state = 0xfa;
         }
         break;
     case 0xf9:
-        if (fn_80216F48(lbl_8030A10C.e[s->idx].ptr) != 0) {
-            fn_80217830(lbl_8030A10C.e[s->idx].ptr);
+        if (fn_80216F48(lbl_8030A10C.e[s->idx].handle) != 0) {
+            fn_80217830(lbl_8030A10C.e[s->idx].handle);
         }
-        lbl_8030A10C.e[s->idx].ptr = 0;
+        lbl_8030A10C.e[s->idx].handle = 0;
         lbl_8030A10C.e[s->idx].id = -1;
     case 0xfa:
         fn_8006D8DC(1);
