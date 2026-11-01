@@ -1573,7 +1573,7 @@ extern Hnd* fn_80225B74(s32 mask, u16 id);
 s32 fn_80095110(void) {
     s32 r = -1;
     if (lbl_80347450 != 0 && lbl_80347450->hit != 0) {
-        Hnd* h = fn_80225B74(lbl_80347450->hit->x28, lbl_80347450->hit->id);
+        Hnd* h = fn_80225B74(lbl_80347450->hit->key.x28, lbl_80347450->hit->key.id);
         if (h != 0) {
             s32 a = h->a != 0 ? h->a->size : 0;
             r = a;

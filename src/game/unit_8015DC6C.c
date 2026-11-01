@@ -1678,7 +1678,7 @@ s32 fn_8015ED90(Task *t)
         fn_80227810(o->x1c8->x20);
     }
     if (o->hit != NULL) {
-        id = o->hit->id;
+        id = o->hit->key.id;
         if (id == 0xffff) {
             id = o->h17a;
         }
@@ -1957,9 +1957,9 @@ void fn_8016058C(s32 n, Key *ents, EvObj *obj)
                 break;
             default:
                 if (obj->hit != 0) {
-                    id = obj->hit->id;
+                    id = obj->hit->key.id;
                     flag = 1;
-                    mask = obj->hit->x28;
+                    mask = obj->hit->key.x28;
                 } else {
                     mask = 0xffff;
                 }

@@ -6758,7 +6758,7 @@ void fn_800FF908(void)
         lbl_8030A764[1] = c->ang[1];
         lbl_8030A764[2] = c->ang[2];
         if (c->hit != 0) {
-            lbl_803474AC[0] = c->hit->id;
+            lbl_803474AC[0] = c->hit->key.id;
         } else {
             lbl_803474AC[0] = -1;
         }
@@ -6771,7 +6771,7 @@ void fn_800FF908(void)
         lbl_8030A764[4] = c->ang[1];
         lbl_8030A764[5] = c->ang[2];
         if (c->hit != 0) {
-            lbl_803474AC[1] = c->hit->id;
+            lbl_803474AC[1] = c->hit->key.id;
         } else {
             lbl_803474AC[1] = -1;
         }
@@ -10197,8 +10197,8 @@ void fn_800FF7A0(void) {
         lbl_80347450->ang[0] = lbl_8030A764[0];
         lbl_80347450->ang[1] = lbl_8030A764[1];
         lbl_80347450->ang[2] = lbl_8030A764[2];
-        lbl_80347450->hit->id = lbl_803474AC[0];
-        lbl_80347450->hit->x28 = 0xFFFF;
+        lbl_80347450->hit->key.id = lbl_803474AC[0];
+        lbl_80347450->hit->key.x28 = 0xFFFF;
         lbl_80347450->hit->x2e = -1;
         lbl_80347450->hit->x2c = -1;
     } else if (lbl_803474B0[1] == 1) {
@@ -10208,8 +10208,8 @@ void fn_800FF7A0(void) {
         lbl_80347450->ang[0] = lbl_8030A764[3];
         lbl_80347450->ang[1] = lbl_8030A764[4];
         lbl_80347450->ang[2] = lbl_8030A764[5];
-        lbl_80347450->hit->id = lbl_803474AC[1];
-        lbl_80347450->hit->x28 = 0xFFFF;
+        lbl_80347450->hit->key.id = lbl_803474AC[1];
+        lbl_80347450->hit->key.x28 = 0xFFFF;
         lbl_80347450->hit->x2e = -1;
         lbl_80347450->hit->x2c = -1;
     }
@@ -10919,7 +10919,7 @@ inline s32 SavePlayer_80101828(void) {
         lbl_80347484 = lbl_80347450->pos.y;
         lbl_80347480 = lbl_80347450->pos.z;
         lbl_8034747C = lbl_80347450->ang[1];
-        lbl_80347478 = lbl_80347450->hit->id;
+        lbl_80347478 = lbl_80347450->hit->key.id;
         ok = 1;
     } else {
         ok = 0;

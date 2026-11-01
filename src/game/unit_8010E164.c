@@ -2635,7 +2635,7 @@ void fn_80111FC4(EvObj *o) {
         req.w1c = 2;
         req.w20 = 0x7fffffff;
         req.f24 = 1.0f;
-        req.w28 = o->hit->id;
+        req.w28 = o->hit->key.id;
         req.w2c = 1;
         fn_8020F3D4(0xffff, 1, &req);
         v8.x = 0.0f;
@@ -2786,7 +2786,7 @@ void fn_80113E28(EvObj *o) {
         req.w1c = 2;
         req.w20 = 0x7fffffff;
         req.f24 = 1.0f;
-        req.w28 = o->hit->id;
+        req.w28 = o->hit->key.id;
         req.w2c = 1;
         fn_8020F3D4(0xffff, 1, &req);
         v8.x = 0.0f;
@@ -2831,6 +2831,146 @@ void fn_80113E28(EvObj *o) {
         }
         break;
     }
+}
+
+extern s32 fn_802249CC(NJS_POINT3* out, NJS_POINT3* a, NJS_POINT3* b, EvHit* h);
+
+s32 fn_80114138(EvObj *o, s32 yaw, Angle *ang) {
+    NJS_POINT3 start;
+    NJS_POINT3 end;
+    NJS_POINT3 hitp;
+    NJS_POINT3 d;
+    EvHit h;
+    s32 n;
+    f32 sx, sy, sz;
+
+    fn_801DCF24(&d, ang, yaw - 0x4000, 4.0f);
+    sx = 4.0f * o->up.x;
+    sy = 4.0f * o->up.y;
+    sz = 4.0f * o->up.z;
+    n = 0;
+    start.x = o->pos.x + sx;
+    start.y = o->pos.y + sy;
+    start.z = o->pos.z + sz;
+    end.x = start.x + d.x;
+    end.y = start.y + d.y;
+    end.z = start.z + d.z;
+    h.key = o->hit->key;
+    h.x2c = o->hit->x2c;
+    h.x2e = o->hit->x2e;
+    h.x30 = o->hit->x30;
+    if (fn_802249CC(&hitp, &start, &end, &h) != 0 && (h.h24 & 0x4800) == 0x4800) {
+        n = 1;
+        o->pos.x = o->pos.x + (hitp.x - end.x);
+        o->pos.y = o->pos.y + (hitp.y - end.y);
+        o->pos.z = o->pos.z + (hitp.z - end.z);
+        start.x = o->pos.x + sx;
+        start.y = o->pos.y + sy;
+        start.z = o->pos.z + sz;
+    }
+    end.x = start.x - d.x;
+    end.y = start.y - d.y;
+    end.z = start.z - d.z;
+    h.key = o->hit->key;
+    h.x2c = o->hit->x2c;
+    h.x2e = o->hit->x2e;
+    h.x30 = o->hit->x30;
+    if (fn_802249CC(&hitp, &start, &end, &h) != 0 && (h.h24 & 0x4800) == 0x4800) {
+        n++;
+        o->pos.x = o->pos.x + (hitp.x - end.x);
+        o->pos.y = o->pos.y + (hitp.y - end.y);
+        o->pos.z = o->pos.z + (hitp.z - end.z);
+        start.x = o->pos.x + sx;
+        start.y = o->pos.y + sy;
+        start.z = o->pos.z + sz;
+    }
+    end.x = 6.0f * o->dir.x + start.x;
+    end.y = 6.0f * o->dir.y + start.y;
+    end.z = 6.0f * o->dir.z + start.z;
+    h.key = o->hit->key;
+    h.x2c = o->hit->x2c;
+    h.x2e = o->hit->x2e;
+    h.x30 = o->hit->x30;
+    if (fn_802249CC(&hitp, &start, &end, &h) != 0 && (h.h24 & 0x4800) == 0x4800) {
+        n++;
+        o->pos.x = o->pos.x + (hitp.x - end.x);
+        o->pos.y = o->pos.y + (hitp.y - end.y);
+        o->pos.z = o->pos.z + (hitp.z - end.z);
+    }
+    return n != 0;
+}
+
+extern void njUnitVector(NJS_POINT3 *v);
+extern s32 fn_80224D08(NJS_POINT3 *out, NJS_POINT3 *a, NJS_POINT3 *b, EvHit *q);
+
+extern void fn_80290668(NJS_POINT3 *a, NJS_POINT3 *b, NJS_POINT3 *c, NJS_POINT3 *out);
+
+s32 fn_801144A4(EvObj *o, s32 yaw, Angle *ang) {
+    NJS_POINT3 hit[3];
+    NJS_POINT3 off[3];
+    EvHit q;
+    NJS_POINT3 v14, v8;
+    f32 a0;
+    f32 a1;
+    f32 a2;
+    f32 b0;
+    f32 b1;
+    f32 b2;
+    fn_801DCF24(&off[0], ang, yaw + 0x2aaa, 6.0f);
+    fn_801DCF24(&off[1], ang, yaw - 0x2aaa, 6.0f);
+    fn_801DCF24(&off[2], ang, yaw + 0x8000, 6.0f);
+    a0 = 4.0f * o->up.x;
+    a1 = 4.0f * o->up.y;
+    a2 = 4.0f * o->up.z;
+    b0 = 8.0f * o->up.x;
+    b1 = 8.0f * o->up.y;
+    b2 = 8.0f * o->up.z;
+    v14.x = a0 + (o->pos.x + off[0].x);
+    v14.y = a1 + (o->pos.y + off[0].y);
+    v14.z = a2 + (o->pos.z + off[0].z);
+    v8.x = v14.x - b0;
+    v8.y = v14.y - b1;
+    v8.z = v14.z - b2;
+    q.key = o->hit->key;
+    q.x2c = o->hit->x2c;
+    q.x2e = o->hit->x2e;
+    q.x30 = o->hit->x30;
+    if (fn_80224D08(&hit[0], &v14, &v8, &q) != 0) {
+        v14.x = a0 + (o->pos.x + off[1].x);
+        v14.y = a1 + (o->pos.y + off[1].y);
+        v14.z = a2 + (o->pos.z + off[1].z);
+        v8.x = v14.x - b0;
+        v8.y = v14.y - b1;
+        v8.z = v14.z - b2;
+        q.key = o->hit->key;
+        q.x2c = o->hit->x2c;
+        q.x2e = o->hit->x2e;
+        q.x30 = o->hit->x30;
+        if (fn_80224D08(&hit[1], &v14, &v8, &q) != 0) {
+            v14.x = a0 + (o->pos.x + off[2].x);
+            v14.y = a1 + (o->pos.y + off[2].y);
+            v14.z = a2 + (o->pos.z + off[2].z);
+            v8.x = v14.x - b0;
+            v8.y = v14.y - b1;
+            v8.z = v14.z - b2;
+            q.key = o->hit->key;
+            q.x2c = o->hit->x2c;
+            q.x2e = o->hit->x2e;
+            q.x30 = o->hit->x30;
+            if (fn_80224D08(&hit[2], &v14, &v8, &q) != 0) {
+                fn_80290668(&hit[0], &hit[1], &hit[2], &o->up);
+                njUnitVector(&o->up);
+                v14.x = o->pos.x + a0;
+                v14.y = o->pos.y + a1;
+                v14.z = o->pos.z + a2;
+                v8.x = v14.x - b0;
+                v8.y = v14.y - b1;
+                v8.z = v14.z - b2;
+                return fn_80224D08(&o->pos, &v14, &v8, o->hit);
+            }
+        }
+    }
+    return 0;
 }
 
 void fn_801150DC(void *a, void *b, void *c, void *d) {

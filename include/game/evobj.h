@@ -277,12 +277,17 @@ typedef struct {
     s16 s1e;      /* 0x1E */
 } EvDraw;
 
+/* The collision key at EvHit 0x28 (copied as one word by fn_80114138/fn_801144A4). */
+typedef struct {
+    u16 x28;      /* 0x28 */
+    u16 id;       /* 0x2A */
+} EvHitKey;
+
 typedef struct {
     u8 pad0[0x24];
     u16 h24;      /* 0x24 */
     u8 pad26[2];
-    u16 x28;      /* 0x28 */
-    u16 id;       /* 0x2A */
+    EvHitKey key; /* 0x28 */
     s16 x2c;      /* 0x2C */
     s16 x2e;      /* 0x2E */
     u16 x30;      /* 0x30: saved around fn_80225930 (fn_8016058C) */
