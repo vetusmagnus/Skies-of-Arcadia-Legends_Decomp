@@ -23,7 +23,13 @@ game/unit_80009800.c:
 	.text       start:0x80009800 end:0x8000A38C
 
 game/unit_8000A38C.c:
-	.text       start:0x8000A38C end:0x80020B50
+	.text       start:0x8000A38C end:0x80011160
+
+game/unit_80011160.c:
+	.text       start:0x80011160 end:0x80014784
+
+game/unit_80014784.c:
+	.text       start:0x80014784 end:0x80020B50
 
 game/unit_80020B50.c:
 	.text       start:0x80020B50 end:0x8002A034
@@ -81,7 +87,13 @@ musyx/runtime/CheapReverb/creverb_fx.c:
 	.text       start:0x80074D78 end:0x80074D9C
 
 game/unit_80074D9C.c:
-	.text       start:0x80074D9C end:0x8008A8B4
+	.text       start:0x80074D9C end:0x80078A20
+
+game/unit_80078A20.c:
+	.text       start:0x80078A20 end:0x8007DE54
+
+game/unit_8007DE54.c:
+	.text       start:0x8007DE54 end:0x8008A8B4
 
 game/unit_8008A8B4.c:
 	.text       start:0x8008A8B4 end:0x8008B4A0
@@ -132,7 +144,10 @@ game/unit_8014F970.c:
 	.text       start:0x8014F970 end:0x8015DC6C
 
 game/unit_8015DC6C.c:
-	.text       start:0x8015DC6C end:0x80193F28
+	.text       start:0x8015DC6C end:0x801719D0
+
+game/unit_801719D0.c:
+	.text       start:0x801719D0 end:0x80193F28
 
 game/unit_80193F28.c:
 	.text       start:0x80193F28 end:0x80199B9C

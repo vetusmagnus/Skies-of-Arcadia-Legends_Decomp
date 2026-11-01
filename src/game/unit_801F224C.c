@@ -13,6 +13,11 @@ s8 fn_801EFCC4(s16 id, s32 n);
 extern const s8 lbl_802D4600[24];
 s32 fn_801E4BBC(s8 i);
 s32 fn_801F4A60(s16 id);
+extern WeaponData lbl_802C5790[];
+extern GearData lbl_802C6190[];
+extern GearData lbl_802C6E10[];
+extern ShipGearData lbl_802D83EC[];
+extern s8 fn_801F452C(s16 id);
 
 s32 fn_801F2508(void *a, void *b)
 {
@@ -485,3 +490,136 @@ s8 fn_801F452C(s16 id) {
     } while (i < n);
     return 0;
 }
+
+#ifdef NONMATCHING
+typedef struct Cannon_801F3FD0 { char name[17]; s8 ships; s8 type; u8 pad13[0x24 - 0x13]; } Cannon_801F3FD0;
+typedef struct Game_801F3B90 {
+    u8 pad[0x328];
+    s8 party[4];
+} Game_801F3B90;
+#endif
+
+/* Whether character chr can equip item id: 0 no, 1 every copy is equipped by someone else, 2 yes. */
+#ifdef NONMATCHING
+s32 fn_801F3FD0(s32 chr, s16 id)
+{
+    s32 bit;
+    u32 kind;
+    s8 n;
+    s32 ship;
+    s32 i;
+    s32 p;
+    s16 k;
+
+    bit = 5 - chr;
+    kind = fn_801F4C24(id);
+    n = fn_801F452C(id);
+    ship = lbl_8030B7F4.x1568.b1568;
+    switch (kind) {
+    case 0:
+        if (chr == lbl_802C5790[id].owner) {
+            return 2;
+        }
+        break;
+    case 1:
+        k = id - 0x50;
+        if ((1 << bit) & lbl_802C6190[k].owners) {
+            for (i = 0; i < 4; i++) {
+                p = lbl_8030B7F4.party[i];
+                if (id == lbl_8030B7F4.chr[p].slot1 && chr != p) {
+                    if (--n <= 0) {
+                        return 1;
+                    }
+                }
+            }
+            return 2;
+        }
+        break;
+    case 2:
+        k = id - 0xa0;
+        if ((1 << bit) & lbl_802C6E10[k].owners) {
+            for (i = 0; i < 4; i++) {
+                p = lbl_8030B7F4.party[i];
+                if (id == lbl_8030B7F4.chr[p].slot2 && chr != p) {
+                    if (--n <= 0) {
+                        return 1;
+                    }
+                }
+            }
+            return 2;
+        }
+        break;
+    case 5:
+        if (ship == -1) {
+            return 0;
+        }
+        k = id - 0x190;
+        p = ((1 << (5 - ship)) & lbl_802D7E4C[k].ships) != 0;
+        if (p) {
+            if (chr == 4) {
+                if (lbl_802D7E4C[k].type == 3) {
+                    return 1;
+                }
+            } else if (lbl_802D7E4C[k].type != 3) {
+                for (i = 0; i < 5; i++) {
+                    if (lbl_8030B7F4.x1568.s1580[i] == id && chr != i) {
+                        if (--n <= 0) {
+                            return 1;
+                        }
+                    }
+                }
+                return 2;
+            }
+        }
+        break;
+    case 6:
+        if (ship == -1) {
+            return 0;
+        }
+        k = id - 0x1b8;
+        if ((1 << (5 - ship)) & lbl_802D83EC[k].ships) {
+            for (i = 0; i < 3; i++) {
+                if (lbl_8030B7F4.x1568.s158a[i] == id && chr != i) {
+                    if (--n <= 0) {
+                        return 1;
+                    }
+                }
+            }
+            return 2;
+        }
+        break;
+    }
+    return 0;
+}
+#endif
+
+#ifdef NONMATCHING
+s32 fn_801F3B90(s32 id) {
+    s32 i;
+    s32 k;
+    s32 j;
+    s8 *p = lbl_8030B7F4.party;
+    for (i = 0; i < 4; i++) {
+        if (lbl_8030B7F4.party[i] == id) {
+            return 0;
+        }
+        if (lbl_8030B7F4.party[i] == -1) {
+            p[i] = id;
+            lbl_8030B4D4.x2d4 = lbl_8030B4D4.x2d4 + 1;
+            for (k = 0; k < 4; k++) {
+                for (j = 0; j < 3; j++) {
+                    s8 a = p[j];
+                    s8 b = p[j + 1];
+                    if (b != -1 && a > b) {
+                        p[j] = b;
+                        p[j + 1] = a;
+                    }
+                }
+            }
+            fn_801EF7E0();
+            return 1;
+        }
+    }
+    return 0;
+}
+#endif

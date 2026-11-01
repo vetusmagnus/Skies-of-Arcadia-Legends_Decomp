@@ -6,19 +6,31 @@
 #include "game/save_8030B7F4.h"
 #include <string.h>
 typedef struct {
-    s32 w[7];
-} Tbl_801303D0;
-typedef struct {
-    u8 pad0[0x94];
+    u8 pad0[1];
+    u8 x1;
+    u8 pad2[2];
+    s32 x4;
+    s8 x8;
+    u8 pad9[0x2c - 9];
+    s32 a2c[8];         /* 0x2C */
+    f32 a4c[8];         /* 0x4C */
+    f32 a6c[8];         /* 0x6C */
+    f32 x8c;
+    f32 x90;
     s8 x94;
+    u8 pad_95[3];
+    f32 x98;
+    f32 x9c;
+    f32 xa0;
+    s16 xa4;
+    u8 pad_a6[2];
+    s32 dst[0x8];       /* 0xA8 */
+    s32 src[0x8];
 } Sys_8012FF48;
 typedef struct {
     u8 pad[0x24];
     Sys_8012FF48 *x24;
-    union {
-        u8 *x28;
-        Tbl_801303D0 *tbl;
-    };
+    void **x28;         /* sprites */
 } Holder_8012FF48;
 typedef struct {
     u8 pad_0[0x4];
@@ -208,25 +220,34 @@ typedef struct {
     s16 s18;
     s16 s1a;
 } Item;
+/* A party slot (0x22): the name, then the id and stats copied from the character or cannon data. */
 typedef struct {
-    u8 pad0[0x12];
-    s16 id;
+    char name[0x11];
+    u8 pad11;
+    s16 id;     /* 0x12 */
     s8 b14;
-    u8 pad15[0x1e - 0x15];
+    s8 b15;
+    s16 s16;
+    s16 s18;
+    s16 s1a;
+    s16 s1c;
     s8 b1e;
     s8 b1f;
     s8 b20;
     u8 pad21;
 } Member;
 typedef struct {
-    s32 x0;
-    u8 pad4[0x11 - 0x4];
+    char name[0x11];
     s8 b11;
-    u8 pad12[0x18 - 0x12];
+    u8 pad12[2];
+    s32 x14;
     s32 x18;
-    u8 pad1c[0x58 - 0x1c];
+    s16 h1c, h1e, h20, h22, h24, h26;
+    s16 h28[6];
+    s16 h34[6];
+    s16 h40, h42, h44, h46, h48, h4a, h4c, h4e, h50, h52, h54, h56;
     u32 flags; /* 0x58 */
-    u8 pad5c[0x60 - 0x5c];
+    s32 x5c;
     Member mem[5];
 } Party;
 /* lbl_803063F0: the battle menu's system record (fn_80135598). */
@@ -244,20 +265,6 @@ void fn_80134E7C(Party *party);
 void fn_80135290(Item *v, s32 slot, s32 add);
 s32 fn_8021A1C4(s8 *out);
 s32 fn_8021A83C(Save1568 *ship, void *crew);
-typedef struct {
-    char name[0x11];
-    u8 pad11;
-    s16 s12;
-    s8 b14;
-    s8 b15;
-    s16 s16;
-    s16 s18;
-    s16 s1a;
-    s16 s1c;
-    s8 b1e;
-    s8 b1f;
-    s8 b20;
-} Dst;
 typedef struct {
     s16 v0;
     s16 v2;
@@ -311,7 +318,7 @@ typedef struct {
     u8 state;
     u8 pad1a[0x24 - 0x1a];
     Data_8012F75C *x24;
-    void **x28;
+    Obj **x28;
 } Obj_8012F75C;
 extern Obj_8012F75C *lbl_80346F38;
 extern void *fn_802268E8(void *a, void *);
@@ -611,6 +618,29 @@ void fn_8012FB10(s8 slot) {
     }
 }
 
+void fn_8012FE2C(s8 n) {
+    Args a;
+    s16 x;
+    s16 y;
+    if (n >= 0 && n < 4) {
+        x = 3;
+        y = 0x1a5 - n * 32;
+    } else {
+        x = 0x1ac;
+        y = 0x1a5 - (n - 4) * 32;
+    }
+    a.obj = lbl_80346F38->x28[0];
+    a.obj->f14 = (f32)x;
+    a.obj->f18 = (f32)y;
+    a.f4 = -1.3f;
+    a.f8 = 1.0f;
+    a.c = 0;
+    a.d = 0;
+    a.e = 1.0f;
+    a.g = 1.0f;
+    fn_8012A954(&a);
+}
+
 s32 fn_8012FF08(void) {
     u8 *o = *(u8 **)((u8 *)lbl_80346F40 + 0x24);
     u8 c = o[1];
@@ -643,6 +673,37 @@ void fn_80130350(u8 v) {
 
 void fn_80130368(void) {
     ((u8*)lbl_80346F40)[0x19] = 2;
+}
+
+void fn_80131254(void) {
+    s32 i;
+    s8 v = lbl_8030B4D4.x2d4;
+    lbl_80346F40->x24->x94 = v;
+    if (v == 3) {
+        lbl_80346F40->x28[0] = fn_801D68C4(lbl_80346F04, 0x64);
+        lbl_80346F40->x28[4] = fn_801D68C4(lbl_80346F04, 0x68);
+        lbl_80346F40->x28[6] = fn_801D68C4(lbl_80346F04, 0x84);
+        lbl_80346F40->x28[1] = fn_801D68C4(lbl_80346F04, 0x83);
+    } else {
+        lbl_80346F40->x28[0] = fn_801D68C4(lbl_80346F08, 0x64);
+        lbl_80346F40->x28[4] = fn_801D68C4(lbl_80346F08, 0x68);
+        lbl_80346F40->x28[6] = fn_801D68C4(lbl_80346F08, 0x84);
+        lbl_80346F40->x28[1] = fn_801D68C4(lbl_80346F08, 0x83);
+    }
+    for (i = 0; i < 8; i++) {
+        lbl_80346F40->x24->a2c[i] = 0xff40dc40;
+        lbl_80346F40->x24->a4c[i] = 1.0f;
+        lbl_80346F40->x24->a6c[i] = 1.0f;
+    }
+    lbl_80346F40->x24->x8 = -1;
+    lbl_80346F40->x24->x8c = 250.0f;
+    lbl_80346F40->x24->x90 = 77.0f;
+    lbl_80346F40->x24->xa4 = 0;
+    lbl_80346F40->x24->x1 = 0;
+    lbl_80346F40->x24->x4 = 0;
+    lbl_80346F40->x24->x98 = 0.0f;
+    lbl_80346F40->x24->x9c = 0.0f;
+    lbl_80346F40->x24->xa0 = 0.0f;
 }
 
 void fn_80131598(u8 v) {
@@ -792,6 +853,84 @@ void fn_8013312C(u8 v) {
 
 void fn_80133144(void) {
     ((u8*)lbl_80346F58)[0x19] = 2;
+}
+
+extern s32 fn_8021ADA0(Save1568* p, void* q);
+extern s16 fn_8021ACE0(Save1568* p, void* q);
+extern s16 fn_8021AC20(Save1568* p, void* q);
+extern s16 fn_8021AB60(Save1568* p, void* q);
+extern s32 fn_8021AA48(Save1568* p, void* q, s32 k);
+extern s16 fn_8021A880(Save1568* p, void* q);
+extern s32 fn_8021A0BC(s32 v);
+void fn_80134D1C(Member* out, Save1568* t, void* b, s32 idx);
+
+static inline void PartyMembers(Member* ent, Save1568* p, s8* buf) {
+    s32 i;
+    if (ent != 0 && p != 0 && buf != 0) {
+        for (i = 0; i < 5; i++) {
+            fn_80134D1C(&ent[i], p, buf, i);
+        }
+    }
+}
+
+static inline void PartyMask(u32* m, s8* buf) {
+    s32 j;
+    if (m != 0 && buf != 0) {
+        *m = 0;
+        for (j = 0; j < 0x16; j++) {
+            s32 v = buf[j];
+            if (fn_8021A0BC(v) != 0) {
+                *m |= 1 << v;
+            }
+        }
+    }
+}
+
+void fn_80134E7C(Party* dst) {
+    s8 buf[0x16];
+    s32 i;
+    Save1568* p;
+
+    if (dst == 0) {
+        return;
+    }
+    p = &lbl_8030B7F4.x1568;
+    if (p->b1568 < 0) {
+        p = 0;
+    }
+    if (p == 0) {
+        return;
+    }
+    fn_8021A1C4(buf);
+    MemCopy(dst, p->name, 0x11);
+    dst->b11 = p->b1568;
+    dst->x14 = fn_8021ADA0(p, buf);
+    dst->x18 = p->x157c;
+    dst->h1c = fn_8021ACE0(p, buf);
+    dst->h1e = 0;
+    dst->h20 = fn_8021AC20(p, buf);
+    dst->h22 = 0;
+    dst->h24 = fn_8021AB60(p, buf);
+    dst->h26 = 0;
+    for (i = 0; i < 6; i++) {
+        dst->h28[i] = fn_8021AA48(p, buf, i);
+        dst->h34[i] = 0;
+    }
+    dst->h40 = fn_8021A880(p, buf);
+    dst->h42 = 0;
+    dst->h44 = fn_8021A83C(p, buf);
+    dst->h46 = 0;
+    dst->h48 = 0;
+    dst->h4a = 0;
+    dst->h4c = 0;
+    dst->h4e = 0;
+    dst->h50 = 0;
+    dst->h52 = 0;
+    dst->h54 = 0;
+    dst->h56 = 0;
+    PartyMembers(dst->mem, p, buf);
+    PartyMask(&dst->flags, buf);
+    dst->x5c = 0;
 }
 
 void* fn_8013558C(void) {
@@ -1374,15 +1513,15 @@ void fn_8012FF48(s8 mode)
 {
     lbl_80346F40->x24->x94 = mode;
     if (mode == 3) {
-        *(void **)(lbl_80346F40->x28 + 0x0) = fn_801D68C4(lbl_80346F04, 0x64);
-        *(void **)(lbl_80346F40->x28 + 0x10) = fn_801D68C4(lbl_80346F04, 0x68);
-        *(void **)(lbl_80346F40->x28 + 0x18) = fn_801D68C4(lbl_80346F04, 0x84);
-        *(void **)(lbl_80346F40->x28 + 0x4) = fn_801D68C4(lbl_80346F04, 0x83);
+        lbl_80346F40->x28[0] = fn_801D68C4(lbl_80346F04, 0x64);
+        lbl_80346F40->x28[4] = fn_801D68C4(lbl_80346F04, 0x68);
+        lbl_80346F40->x28[6] = fn_801D68C4(lbl_80346F04, 0x84);
+        lbl_80346F40->x28[1] = fn_801D68C4(lbl_80346F04, 0x83);
     } else {
-        *(void **)(lbl_80346F40->x28 + 0x0) = fn_801D68C4(lbl_80346F08, 0x64);
-        *(void **)(lbl_80346F40->x28 + 0x10) = fn_801D68C4(lbl_80346F08, 0x68);
-        *(void **)(lbl_80346F40->x28 + 0x18) = fn_801D68C4(lbl_80346F08, 0x84);
-        *(void **)(lbl_80346F40->x28 + 0x4) = fn_801D68C4(lbl_80346F08, 0x83);
+        lbl_80346F40->x28[0] = fn_801D68C4(lbl_80346F08, 0x64);
+        lbl_80346F40->x28[4] = fn_801D68C4(lbl_80346F08, 0x68);
+        lbl_80346F40->x28[6] = fn_801D68C4(lbl_80346F08, 0x84);
+        lbl_80346F40->x28[1] = fn_801D68C4(lbl_80346F08, 0x83);
     }
 }
 
@@ -1456,13 +1595,13 @@ void fn_80134900(void)
     }
 }
 
-void fn_80134C24(Dst *p, Src *src, const char *name)
+void fn_80134C24(Member *p, Src *src, const char *name)
 {
     if (p != NULL) {
         if (src == NULL) {
             if (p != NULL) {
                 memset(p, 0, 0x11);
-                p->s12 = -1;
+                p->id = -1;
                 p->b14 = -1;
                 p->b15 = -1;
                 p->s16 = 0;
@@ -1480,7 +1619,7 @@ void fn_80134C24(Dst *p, Src *src, const char *name)
                 strncpy(p->name, name, 0x10);
                 p->name[0x10] = 0;
             }
-            p->s12 = -1;
+            p->id = -1;
             p->b14 = src->v0;
             p->b15 = src->v8;
             p->s16 = src->v2;
@@ -1745,13 +1884,13 @@ void fn_801303D0(Task_801303D0 *t) {
     case 0:
     case 0xFE:
         lbl_80346F40->x28 = fn_801E1C7C(0x1c);
-        lbl_80346F40->tbl->w[0] = (s32)fn_801D68C4(lbl_80346F04, 0x64);
-        lbl_80346F40->tbl->w[2] = (s32)fn_801D68C4(lbl_80346F04, 0x66);
-        lbl_80346F40->tbl->w[5] = (s32)fn_801D68C4(lbl_80346F04, 0x67);
-        lbl_80346F40->tbl->w[3] = (s32)fn_801D68C4(lbl_80346F04, 0x65);
-        lbl_80346F40->tbl->w[4] = (s32)fn_801D68C4(lbl_80346F04, 0x68);
-        lbl_80346F40->tbl->w[1] = (s32)fn_801D68C4(lbl_80346F04, 0x83);
-        lbl_80346F40->tbl->w[6] = (s32)fn_801D68C4(lbl_80346F04, 0x84);
+        lbl_80346F40->x28[0] = fn_801D68C4(lbl_80346F04, 0x64);
+        lbl_80346F40->x28[2] = fn_801D68C4(lbl_80346F04, 0x66);
+        lbl_80346F40->x28[5] = fn_801D68C4(lbl_80346F04, 0x67);
+        lbl_80346F40->x28[3] = fn_801D68C4(lbl_80346F04, 0x65);
+        lbl_80346F40->x28[4] = fn_801D68C4(lbl_80346F04, 0x68);
+        lbl_80346F40->x28[1] = fn_801D68C4(lbl_80346F04, 0x83);
+        lbl_80346F40->x28[6] = fn_801D68C4(lbl_80346F04, 0x84);
         fn_80131254();
         lbl_80305FA0[0] = (s32)fn_801D68C4(lbl_80346F04, 0x84);
         lbl_80305FA0[1] = (s32)fn_801D68C4(lbl_80346F04, 0x85);
@@ -2594,3 +2733,184 @@ void fn_80133750(void)
         TextSetZ(z);
     }
 }
+
+#ifdef NONMATCHING
+#include "game/util.h"
+extern const CannonData lbl_802D7E4C[40];
+extern s32 fn_8021A0FC(s32 i);
+extern s32 fn_8021A0DC(s32 id);
+extern s16 fn_8021A6E8(Save1568* t, void* b, const CannonData* c);
+extern s16 fn_8021A620(Save1568* t, void* b, const CannonData* c);
+extern u8 fn_8021A608(Save1568* t, void* b, const CannonData* c);
+extern u8 fn_8021A5F0(Save1568* t, void* b, const CannonData* c);
+
+inline void ClearOut(Member* o)
+{
+    if (o != 0) {
+        memset(o, 0, 0x11);
+        o->id = -1;
+        o->b14 = -1;
+        o->b15 = -1;
+        o->s16 = 0;
+        o->s18 = 0;
+        o->s1a = 0;
+        o->s1c = 0;
+        o->b1e = 0;
+        o->b1f = 0;
+        o->b20 = 0;
+    }
+}
+#endif
+
+#ifdef NONMATCHING
+void fn_80134D1C(Member* out, Save1568* t, void* b, s32 idx)
+{
+    if (out != 0) {
+        if (t == 0 || b == 0 || fn_8021A0FC(idx) == 0 || fn_8021A0DC(t->s1580[idx]) == 0) {
+            ClearOut(out);
+        } else {
+            const CannonData* info;
+            s32 id = t->s1580[idx];
+            info = &lbl_802D7E4C[id - 0x190];
+            MemCopy(out, info, 0x11);
+            out->id = id;
+            out->b14 = info->type;
+            out->b15 = info->element;
+            out->s16 = fn_8021A6E8(t, b, info);
+            out->s18 = 0;
+            out->s1a = fn_8021A620(t, b, info);
+            out->s1c = 0;
+            out->b1e = fn_8021A608(t, b, info);
+            out->b1f = fn_8021A5F0(t, b, info);
+            out->b20 = 0;
+        }
+    }
+}
+#endif
+
+#ifdef NONMATCHING
+static inline s32 NameCount(void) {
+    s32 n = 0;
+    s8 *p = fn_80135598()->order;
+    if (p != NULL) {
+        n = 0;
+        if (p[0] >= 0) {
+            n = 1;
+            if (p[1] >= 0) {
+                n = 2;
+                if (p[2] >= 0) {
+                    n = 3;
+                    if (p[3] >= 0) {
+                        n = 4;
+                    }
+                }
+            }
+        }
+    }
+    return n;
+}
+
+static inline s32 Valid(Party *p, s32 a) {
+    s32 ok = 0;
+    if (p != NULL && a >= 0 && a < 5 && p->mem[a].b14 >= 0) {
+        ok = 1;
+    }
+    return ok;
+}
+
+static inline s32 GetX(s32 a) {
+    Party *p = &fn_80135598()->party;
+    s32 x = -1;
+    if (Valid(p, a) != 0) {
+        x = p->mem[a].b1e;
+    }
+    return x;
+}
+
+static inline s32 MemSum(Member *m) {
+    s32 w = 100;
+    if (m != NULL) {
+        w = m->b1f + m->b20;
+    }
+    return w;
+}
+
+static inline s32 GetW(s32 a) {
+    s32 w = 100;
+    Big *base = fn_80135598();
+    if (Valid(&base->party, a) != 0) {
+        w = MemSum(&base->party.mem[a]);
+    }
+    return w;
+}
+#endif
+
+
+
+#ifdef NONMATCHING
+s32 fn_8013A538(s32 a, s32 b, s32 c, s32 d, s32 e) {
+    s32 x;
+    s32 w;
+    s32 lim;
+    s32 res;
+    s32 t;
+    s32 n;
+    s32 q;
+    s32 ee;
+    s32 ff;
+
+    x = GetX(a);
+    w = GetW(a);
+    lim = NameCount() * 2;
+    if (b < 0 || x < 0 || lim <= 0) {
+        res = c;
+    } else {
+        res = lim - 1;
+        if (b + x < res) {
+            res = b + x;
+        }
+        t = c + d;
+        t = t > 0 ? t : 0;
+        if (t < res) {
+            res = t;
+        }
+        if (res < b || res >= lim) {
+            res = c;
+        }
+    }
+    n = NameCount();
+    t = res;
+    if (res > n - 1) {
+        t = n - 1;
+    }
+    q = t - b + 1;
+    if (q < 0) {
+        q = 0;
+    }
+    ee = e < 0 ? 0 : e;
+    ff = w < 0 ? 0 : w;
+    if (q * ff > ee) {
+        res = b + ee / ff - 1;
+    }
+    return res;
+}
+#endif
+
+#ifdef NONMATCHING
+static inline void Shift(s32 i)
+{
+    s32 m = i;
+    for (; i < 8; i++)
+        lbl_80346F40->x24->dst[i] = lbl_80346F40->x24->src[i - m];
+}
+#endif
+
+#ifdef NONMATCHING
+void fn_801300E0(s32* in)
+{
+    s32 i;
+    for (i = 0; i < 8; i++)
+        lbl_80346F40->x24->src[i] = in[i];
+    Shift(lbl_80346F40->x24->x94);
+}
+#endif

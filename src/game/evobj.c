@@ -2459,13 +2459,13 @@ int fn_801F039C(int a, s16 kind)
     switch (kind) {
     case 0x64:
         g->x1568.x157c += it->power * 10;
-        if (g->x1568.x157c > cfg->limit) {
-            g->x1568.x157c = cfg->limit;
+        if (g->x1568.x157c > cfg->ship.limit) {
+            g->x1568.x157c = cfg->ship.limit;
         }
         ItemChance(a);
         break;
     case 0x65:
-        g->x1568.x157c = cfg->limit;
+        g->x1568.x157c = cfg->ship.limit;
         ItemChance(a);
         break;
     case 0x73:
@@ -2672,11 +2672,11 @@ void fn_801F11C8(int unused, int kind, int idx) {
         if (e->effect == 0x1F) {
             s32 t = big->c + e->ship_power * 10;
             big->c = t;
-            if (t > oth->limit) {
-                big->c = oth->limit;
+            if (t > oth->ship.limit) {
+                big->c = oth->ship.limit;
             }
         } else {
-            big->c = oth->limit;
+            big->c = oth->ship.limit;
         }
     } else {
         Sm* sm = (Sm*)((u8*)&lbl_8030B7F4 + kind * 0x5C);

@@ -1515,3 +1515,76 @@ s32 fn_80007528(ArcPack* pk) {
     return 1;
 }
 
+#ifdef NONMATCHING
+typedef struct HitEnt {
+    s32 x0;
+    void* x4;
+    u8 pad8[0x14];
+} HitEnt;
+typedef struct HitWork {
+    u8 pad0[0x50];
+    u32 flags;
+} HitWork;
+typedef struct HitDef {
+    u8 pad0[0x30];
+    void* tbl;
+} HitDef;
+typedef struct HitInner {
+    u8 pad0[0x10];
+    HitDef* def;
+    u8 pad14[0x38];
+    HitWork* work;
+} HitInner;
+typedef struct HitObj {
+    u8 pad0[0x24];
+    HitInner* inner;
+} HitObj;
+extern s32 fn_8001C7E8(HitObj* obj);
+extern void fn_800093C0(HitEnt* out, s16 a, s16 b, void* tbl);
+extern int fn_80020700(s16 a, s16 b, void* obj);
+extern s32 fn_8001C7B8(HitObj* obj, s16 a, s16 b);
+extern void fn_8006DCFC(HitObj* obj, s16 a, s16 b);
+#endif
+
+/* Matches, but it uses the result of fn_8001C7B8, which unit_8000A38C defines as returning void
+ * (and calls with an s32 last argument); kept here until those agree. */
+#ifdef NONMATCHING
+s32 fn_800091E0(HitObj* obj, HitEnt* out, s16 a, s16 b) {
+    s16 n = 0;
+    HitInner* in = obj->inner;
+    void* tbl = in->def->tbl;
+    HitWork* work = in->work;
+    s32 ok;
+    s32 r;
+    HitEnt* e;
+    GS* g;
+
+    out->x0 = -1;
+    ok = fn_8001C7E8(obj);
+    if (ok == 0) work->flags |= 0x800000;
+    else work->flags &= ~0x800000;
+    fn_800093C0(out, a, b, tbl);
+    switch (a) {
+    case 0x1D:
+        fn_800093C0(out, a, b + 0x12C, tbl);
+        break;
+    }
+    if (ok != 0) fn_800093C0(out, a, b, lbl_8030A10C.x10);
+    if (ok != 0) {
+        g = &lbl_8030A10C;
+        fn_800093C0(out, a, b, g->xc);
+        fn_800093C0(out, a, b + 0x64, g->xc);
+    }
+    if (fn_80020700(a, b, obj) != 0) fn_800093C0(out, 0x15, -1, lbl_8030A10C.x10);
+    for (e = out; e->x0 > 0; e++) n++;
+    if (n == 0) return 0;
+    if (ok == 0) return 0;
+    r = fn_8001C7B8(obj, a, b);
+    if (r != 0) fn_8006DCFC(obj, a, b);
+    if (r != 0) {
+        for (e = out; e->x0 > 0; e++) e->x4 = &e->x4;
+        return 0;
+    }
+    return 1;
+}
+#endif

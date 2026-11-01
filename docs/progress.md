@@ -2395,3 +2395,98 @@ Held for the owner (match in isolation, not merged):
 - fn_800308FC / fn_80030280 (readonly_strings pair, battle.c) and the `void *` hops kept out earlier, as before.
 - Note: fn_8005BF30 sits ahead of fn_800594CC in unit_80055E94 (out of address order) so its .rodata initialisers come first;
   revisit if that unit is ever linked.
+
+## Partial matches kept as NONMATCHING C (2026-11-01, worktree build/wt-fuzzy, from 70e9e8b)
+
+6,000 to 6,001 of 7,117 in the default build (`main.dol` SHA OK), 62.59% fuzzy; with `configure.py --non-matching`
+6,003 and 63.72% fuzzy. 56 game functions that don't match yet are now in their units as C inside `#ifdef NONMATCHING`
+(rule in CONTRIBUTING.md): `configure.py --non-matching` adds `-DNONMATCHING`, the default build never compiles them, and
+`tools/check_game_src.py` allows that guard and no other use of the name. Every touched unit's default object is
+section-for-section identical to 70e9e8b's (`.text` included, except unit_801C09A4, which gained a real match), checked
+against a build of 70e9e8b. Ninja partials were left out: the patched-compiler work is expected to turn most of them into
+full matches.
+
+Kept: code-exact apart from register numbers ("r": the same instruction sequence once r/f numbers are masked) or at least
+90% (1 - original lines in removed hunks / original count, the scoring of the untried pass), scored in the unit with
+`-DNONMATCHING`, no pointer casts. Candidates were the best of all saved attempt files (about 11,300 files over the batches,
+rescored against today's tree; 238 qualified among the 1,349 near files, about 450 among all of them), folded
+with u1_fix (the unit's other functions must still match), then the declarations, types and helpers only the guarded code
+uses were moved inside guards. Most candidates did not fold: their attempt files use struct views and prototypes from
+older headers that clash with the units (the same bottleneck as the held-back matches). 28 of the 56 are register-only.
+
+Also:
+- fn_801C2CF4 (unit_801C09A4) matches and is plain C now; unit_80199B9C's extern for it returns s32 (the result is unused
+  there, same code).
+- fn_800091E0 (unit_80005B50) and fn_801F57F8 (unit_801F5334) match but are guarded: fn_800091E0 uses the result of
+  fn_8001C7B8, which unit_8000A38C defines as void (its extern there also passes an s32 last argument where the definition
+  takes s16); fn_801F57F8 passes a name pointer to fn_802114AC, defined with an s32 parameter in unit_8020EEE8.
+- Guarded code can carry callee prototypes that disagree with the callee's definition elsewhere (the attempt's own
+  guesses); they are inside the guards, so the default build doesn't see them. Fix them when matching the function.
+- Several guarded functions sit at the end of their unit rather than in address order (where the merge put them).
+
+Guarded functions (score in the unit; r = register-only):
+- unit_80005B50: fn_800091E0 100.0% r
+- unit_80009800: fn_80009E5C 98.9% r
+- unit_8000A38C: fn_8000F8F8 93.6%, fn_80010E68 87.0% r, fn_800207C8 97.3%
+- unit_80055E94: fn_80055F0C 99.3%, fn_80064E38 93.4%, fn_80072B3C 93.4%
+- unit_80074D9C: fn_80078D24 97.5%, fn_8007D42C 97.5% r, fn_80088CE8 95.5%, fn_8008A280 95.2%
+- unit_8008B4A0: fn_8008F8FC 93.9%, fn_800914D8 79.3% r
+- unit_8009623C: fn_80096814 44.4% r
+- unit_800972AC: fn_80097A1C 96.4%, fn_80098A68 96.8%, fn_80098C58 98.8%
+- unit_800D2048: fn_800D8014 97.4%
+- unit_800D81E8: fn_800E9424 99.4% r
+- unit_8010E164: fn_801195E4 98.9% r, fn_8011A994 99.4% r
+- unit_8012F6C4: fn_801300E0 93.8% r, fn_80134D1C 97.7%, fn_8013A538 97.3% r
+- unit_8013D400: fn_8013FF50 96.5% r, fn_801477A8 95.7%, fn_8014A1FC 90.5%
+- unit_8014F970: fn_80155B78 97.7%, fn_801560FC 91.8%, fn_80157948 98.7% r, fn_80159948 95.9%
+- unit_8015DC6C: fn_8015E470 87.0% r, fn_80174A18 98.8%, fn_80174E18 87.8% r, fn_8017AB38 98.2% r, fn_80183D90 98.2%
+- unit_801C09A4: fn_801C09F8 95.7%
+- unit_801D24D0: fn_801D289C 89.5% r, fn_801D2934 89.5% r, fn_801D29CC 89.5% r, fn_801D44B0 96.1% r, fn_801D732C 93.9% r, fn_801DBCD4 70.0% r, fn_801DCDC0 59.1% r
+- unit_801F224C: fn_801F3B90 62.5% r, fn_801F3FD0 97.7%
+- unit_801F5334: fn_801F57F8 100.0% r, fn_8020527C 93.4% r, fn_802074B0 97.6%, fn_80207554 98.2%
+- unit_802159E0: fn_80215F94 97.4% r
+- unit_80219378: fn_8021A940 93.9%, fn_8021A9C4 93.9%, fn_8022ABEC 97.9%, fn_8022BDD0 95.0% r
+
+## Struct-type fold of the held exact matches (2026-11-01, worktree build/wt-tf, branch typefold, from d50997c)
+
+6,001 to 6,032 of 7,117 (`main.dol` SHA OK). The input was the 144 saved attempt files that match exactly on their own
+but were held back (fz_cand.json/fz_cand2.json of the NONMATCHING pass); 31 of them are merged now, all by hand, each
+checked with the whole unit (fdiff + floatcheck) and a `-DNONMATCHING` compile of the unit. No agents.
+
+Finding: the held matches are not blocked by one shared header. Most clashes are either a second private view of a
+struct the unit already has (folded where the layouts agree), or callers in one `unit_*` file that disagree about a
+callee's prototype, which means the file spans several original files. Those got data-backed splits:
+- **unit_801719D0** (0x801719D0-0x80193F28, from unit_8015DC6C): `.sdata2` 0x8034ADE0 repeats -5850.0f, 1.0f, 272.0f,
+  328.0f, 668.0f, -348.0f and 189.0f of the 0x8034AD90 block. Released fn_801705B8, which passes fn_80171B64 an extended
+  id and a slot (the definition there takes one s8).
+- **unit_80078A20** (0x80078A20-0x8007DE54) and **unit_8007DE54** (to 0x8008A8B4), from unit_80074D9C: the 8-aligned
+  0x80348A80 block and the 0x80348AA8 block, whose 0.0f/1.0f repeat 0x80348A70/74. fn_8007B958 reads fn_80078478 (a u8 in
+  unit_80074D9C) as an int.
+- **unit_80011160** (0x80011160-0x80014784) and **unit_80014784** (to 0x80020B50), from unit_8000A38C: the 0x803481B8
+  block (its 0.0f repeats 0x80348198) and the 0x80348238 block (a second 182.04445f). fn_800110C8 stays in
+  unit_8000A38C: it passes fn_800215EC a byte unextended, where unit_80011160's callers pass an s8 id.
+- tools: build/agents/S1/splitc.py fixed for multi-line `#define`s (no longer split or mistaken for functions).
+
+Shared types completed on the way:
+- `include/game/chr.h` (new): ChrRec, ChrInfo, ChrWork, GS, ChrAnim/Key, CondLink, the condition id records; used by
+  unit_8000A38C, unit_80011160, unit_80014784 (their identical copies removed). The next lever is to move unit_80005B50,
+  unit_80020B50, unit_8004DE48 and unit_80055E94 onto it: their character views (Dat/Wk/Tsk, Unit/Chr/GameState) hold
+  fn_80020B8C, fn_800250F4, fn_8004E474 and others. Open question there: ChrInfo 0x154 is a Joint* in unit_8000A38C but
+  fn_80021FCC passes its address.
+- `EvHit` 0x28 is an EvHitKey (two u16, copied as one word: fn_80114138, fn_801144A4); unit_80199B9C now includes
+  game/evobj.h (its EvObj/EvExt/EvHit copies removed) and the sparkle info record is `EvInfoSpark`.
+- StatBlock's ship stats at 0x2DC are one `ShipStat` (fn_8021AF94/fn_8021B1CC take it); Slot8.b is the name pointer
+  (fn_801F57F8 unguarded); Party/Member full layouts in unit_8012F6C4; one Mover (camp cursor); one model node, Box,
+  HitOut, Ellipsoid in unit_801D24D0; Xf/EvHit replace PosBlk/HitObj in unit_8010E164; the shop part constructors return
+  ShopPart.
+
+Not merged (the reason per function is in build/agents/skip.txt of the worktree; the main ones):
+- prototype disagreements with no data boundary between caller and definition: fn_80016234/fn_80018398 (s8 vs s32
+  return), fn_800670E4, fn_80168E54/fn_801684E8 (fn_80168BD4 read as s32), fn_8022E068, fn_8022F408, fn_801B995C (callers
+  pass an extended int to an s16 parameter, which looks like an unprototyped original), fn_80176B3C (calls
+  fn_80187F90 with no argument).
+- would need a cast, union or frame-padding local: fn_801F4EA0 (qsort comparator), fn_80109E7C, fn_8022AE04,
+  fn_80222224, fn_801331AC, fn_801BCFD0 (ShopTask passed as MenuTask), and the attempt files that cast throughout.
+- big views not yet folded: the ship-battle command/state (fn_80143928, fn_8014EF34), the EvObj per-kind records in
+  unit_8010E164/unit_800B2DA0/unit_800A3ED4/unit_800D81E8, the save menu (fn_801A038C, fn_801A4070), battle.c's
+  readonly strings (fn_80030280, fn_800308FC).

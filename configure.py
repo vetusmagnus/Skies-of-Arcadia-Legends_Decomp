@@ -260,6 +260,11 @@ cflags_base = [
     f"-DVERSION_{config.version}",
 ]
 
+# Functions kept as C that doesn't match yet sit in #ifdef NONMATCHING blocks; only --non-matching
+# compiles them, so the default build takes those functions from the original instructions.
+if config.non_matching:
+    cflags_base.append("-DNONMATCHING")
+
 # Debug flags
 if args.debug:
     # Or -sym dwarf-2 for Wii compilers
@@ -410,6 +415,11 @@ config.libs = [
             Object(NonMatching, "game/unit_80055E94.c", extra_cflags=["-str reuse,readonly"]),
             Object(NonMatching, "game/unit_80073D18.c"),
             Object(NonMatching, "game/unit_80074D9C.c"),
+            # Starts at the 8-aligned 0x80348A80 .sdata2 block; fn_8007B958 reads fn_80078478 (a u8 in
+            # unit_80074D9C) as an int.
+            Object(NonMatching, "game/unit_80078A20.c"),
+            # Starts at the 0x80348AA8 .sdata2 block, whose 0.0f and 1.0f repeat 0x80348A70/74.
+            Object(NonMatching, "game/unit_8007DE54.c"),
             Object(NonMatching, "game/unit_8008A8B4.c"),
             Object(NonMatching, "game/unit_8008B4A0.c"),
             Object(NonMatching, "game/unit_8009623C.c"),
@@ -435,6 +445,9 @@ config.libs = [
             Object(NonMatching, "game/unit_8013D400.c"),
             Object(NonMatching, "game/unit_8014F970.c"),
             Object(NonMatching, "game/unit_8015DC6C.c"),
+            # Starts at the 0x8034ADE0 .sdata2 block, which repeats -5850.0f, 1.0f, 272.0f, 328.0f, 668.0f,
+            # -348.0f and 189.0f from the 0x8034AD90 block of the file before.
+            Object(NonMatching, "game/unit_801719D0.c"),
             Object(NonMatching, "game/unit_80193F28.c"),
             Object(NonMatching, "game/unit_80199B9C.c"),
             # Batch 4: 56-88 byte functions, one unit per agent run and gap (guessed ranges).
@@ -447,6 +460,12 @@ config.libs = [
             Object(NonMatching, "game/unit_80009800.c", extra_cflags=["-str reuse,readonly"]),
             # Starts at the 0x803480E0 .sdata2 block (its own 0.0f), .rodata 0x802ACCB8 and .data 0x802DAEB0.
             Object(NonMatching, "game/unit_8000A38C.c"),
+            # Its .sdata2 block starts at 0x803481B8 (8-aligned; its 0.0f repeats 0x80348198 of the file before).
+            # fn_800110C8 stays before it: it passes fn_800215EC a byte unextended, where this file's callers pass
+            # an s8 id.
+            Object(NonMatching, "game/unit_80011160.c"),
+            # Starts at the 0x80348238 .sdata2 block (a second 182.04445f after 0x8034816C).
+            Object(NonMatching, "game/unit_80014784.c"),
             Object(NonMatching, "game/unit_80020B50.c"),
             Object(NonMatching, "game/unit_800553B4.c"),
             Object(NonMatching, "game/unit_801C09A4.c"),

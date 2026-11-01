@@ -779,6 +779,8 @@ typedef struct Item_8010C5BC {
     s16 len;
     char text[1];
 } Item_8010C5BC;
+extern void fn_800EA4A8(ResSpr* spr);
+extern void fn_801D4F0C(Sprite* it, s32 a, s32 b, s32 c, f32 f1, f32 f2, f32 f3, f32 f4);
 
 static inline void ResEvMark(s16 id) {
     s16 m;
@@ -6756,7 +6758,7 @@ void fn_800FF908(void)
         lbl_8030A764[1] = c->ang[1];
         lbl_8030A764[2] = c->ang[2];
         if (c->hit != 0) {
-            lbl_803474AC[0] = c->hit->id;
+            lbl_803474AC[0] = c->hit->key.id;
         } else {
             lbl_803474AC[0] = -1;
         }
@@ -6769,7 +6771,7 @@ void fn_800FF908(void)
         lbl_8030A764[4] = c->ang[1];
         lbl_8030A764[5] = c->ang[2];
         if (c->hit != 0) {
-            lbl_803474AC[1] = c->hit->id;
+            lbl_803474AC[1] = c->hit->key.id;
         } else {
             lbl_803474AC[1] = -1;
         }
@@ -10195,8 +10197,8 @@ void fn_800FF7A0(void) {
         lbl_80347450->ang[0] = lbl_8030A764[0];
         lbl_80347450->ang[1] = lbl_8030A764[1];
         lbl_80347450->ang[2] = lbl_8030A764[2];
-        lbl_80347450->hit->id = lbl_803474AC[0];
-        lbl_80347450->hit->x28 = 0xFFFF;
+        lbl_80347450->hit->key.id = lbl_803474AC[0];
+        lbl_80347450->hit->key.x28 = 0xFFFF;
         lbl_80347450->hit->x2e = -1;
         lbl_80347450->hit->x2c = -1;
     } else if (lbl_803474B0[1] == 1) {
@@ -10206,8 +10208,8 @@ void fn_800FF7A0(void) {
         lbl_80347450->ang[0] = lbl_8030A764[3];
         lbl_80347450->ang[1] = lbl_8030A764[4];
         lbl_80347450->ang[2] = lbl_8030A764[5];
-        lbl_80347450->hit->id = lbl_803474AC[1];
-        lbl_80347450->hit->x28 = 0xFFFF;
+        lbl_80347450->hit->key.id = lbl_803474AC[1];
+        lbl_80347450->hit->key.x28 = 0xFFFF;
         lbl_80347450->hit->x2e = -1;
         lbl_80347450->hit->x2c = -1;
     }
@@ -10917,7 +10919,7 @@ inline s32 SavePlayer_80101828(void) {
         lbl_80347484 = lbl_80347450->pos.y;
         lbl_80347480 = lbl_80347450->pos.z;
         lbl_8034747C = lbl_80347450->ang[1];
-        lbl_80347478 = lbl_80347450->hit->id;
+        lbl_80347478 = lbl_80347450->hit->key.id;
         ok = 1;
     } else {
         ok = 0;
@@ -11753,3 +11755,42 @@ void fn_8010C5BC(f32 a, s16 x, s16 y, Item_8010C5BC *p, s16 n)
         q = q->next;
     }
 }
+
+#ifdef NONMATCHING
+void fn_800E9424(f32 z, s16 row, u32 exp, s32 next, s16 idx) {
+    f32 z0;
+    ResPanel* pan;
+    s16 x;
+    s16 y;
+    s16 tx;
+    s16 ry;
+    s16 nx;
+    s16 ny;
+
+    z0 = TextGetZ();
+    TextPushColor();
+    TextSetColor(0xFF160800);
+    fn_800EA4A8(&lbl_80346DCC->spr[idx]);
+    pan = &lbl_80346DCC->obj[idx];
+    UiObjUpdate(&pan->o);
+    x = pan->o.x;
+    y = pan->o.y;
+    z = ResDrawPart(9, x + 0x148, y + (row * 64 + 0x58), z);
+    z = ResDrawPart(0x16, x + 0x148, y + (row * 64 + 0x58), z);
+    TextSetZ(z);
+    ry = row * 64;
+    tx = x + 0x160;
+    TextPrint(tx, y + (ry + 0x5e), "Total Exp.");
+    TextPrint(tx, y + (ry + 0x76), "Next");
+    TextPrintNumber(x + 0x1f8, y + (ry + 0x5e), exp, 0xC008);
+    nx = x + 0x204;
+    ny = y + (ry + 0x76);
+    if (next >= 0) {
+        TextPrintNumber(nx, ny, next, 0xC007);
+    } else {
+        TextPrint(nx, ny, "-------");
+    }
+    TextPopColor(1);
+    TextSetZ(z0);
+}
+#endif

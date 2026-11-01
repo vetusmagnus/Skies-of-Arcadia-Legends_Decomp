@@ -79,12 +79,11 @@ typedef struct { u8 pad[4]; f32 x, y, z; u8 pad2[0x1c - 0x10]; } Ent_801DFA9C;
 typedef struct { Hdr* stream; Ent_801DFA9C* ent; u8 pad[4]; } Item_801DFA9C;
 extern s32 fn_801CB0A4(s32 type);
 s32 fn_801DFA9C(Item_801DFA9C* items, s32 count);
-typedef struct Mo { u8 pad0[4]; u8 m4[0x28]; u8 m2c[0x1C]; s32 x48; void *x4c; } Mo;
+typedef struct Mo Mo;
 void njPushMatrixEx(void);
 void njPopMatrixEx(void);
 void fn_80286EE8(void);
 void fn_8028B498(void);
-void fn_801E04E8(void *m, s32 a, void *b, void *c);
 /* A heap block's 0x20-byte header (the user pointer is 0x20 past it). */
 /* A heap block header: the caller's memory follows it (data == header + 1). */
 typedef struct MemBlk {
@@ -240,34 +239,38 @@ struct Node801D {
 };
 void fn_801DA748(Node801D* n);
 typedef struct Node801DF6 Node801DF6;
-typedef struct { void* x0; } Data801DF6;
+typedef struct { u16* x0; } Data801DF6;
+/* A model tree node (a Ninja object): flags, model, position, angles, scale, child, sibling. */
 struct Node801DF6 {
     u32 flags;       /* 0x00 */
     Data801DF6* d;   /* 0x04 */
-    u8 pad08[0x24];
+    f32 pos[3];      /* 0x08 */
+    Angle ang[3];    /* 0x14 */
+    f32 scl[3];      /* 0x20 */
     Node801DF6* c1;  /* 0x2c */
     Node801DF6* c2;  /* 0x30 */
 };
 extern s32 fn_801CB1AC(void* p);
 void fn_801DF600(Node801DF6* n, s32* count, s32* total);
-typedef struct {
-    f32 dist;          /* 0x00 */
-    NJS_POINT3 pos;    /* 0x04 */
-    NJS_VECTOR dir;    /* 0x10 */
-} Hit801E;
-typedef struct {
+typedef struct HitOut {
+    f32 dist;
+    NJS_POINT3 pos; /* 4: input point */
+    NJS_POINT3 dir; /* 0x10: result direction */
+} HitOut;
+typedef struct Ellipsoid {
+    NJS_POINT3 center;
+    NJS_POINT3 scale;
+} Ellipsoid;
+/* An axis-aligned box: its two corners, then the falloff radius. */
+typedef struct Box {
     NJS_POINT3 v[2]; /* 0x00 min, 0x0C max */
     f32 r;           /* 0x18 falloff radius */
-} Box801E;
-typedef struct {
-    NJS_POINT3 c;     /* 0x00 */
-    NJS_POINT3 d;     /* 0x0C */
-} Ref801E;
+} Box;
 extern void njUnitVector(NJS_VECTOR* v);
 extern void njCalcVector(f32* m, NJS_VECTOR* v, NJS_VECTOR* out);
 extern void fn_802900C0(NJS_POINT3* p, NJS_POINT3* c, NJS_POINT3* out);
 extern f32 fn_80291A5C(f32 v);
-extern f32 fn_801DFE48(NJS_POINT3* p, Box801E* box);
+extern f32 fn_801DFE48(NJS_POINT3* p, Box* box);
 typedef struct DataEntry {
     void *base;
     s32 offset;
@@ -713,20 +716,22 @@ typedef struct KeySet_801DEDC0 {
     Key_801DEDC0* keys;
     s32 count;
 } KeySet_801DEDC0;
-typedef struct HitOut {
-    f32 dist;
-    NJS_POINT3 pos; /* 4: input point */
-    NJS_POINT3 dir; /* 0x10: result direction */
-} HitOut;
-typedef struct Ellipsoid {
-    NJS_POINT3 center;
-    NJS_POINT3 scale;
-} Ellipsoid;
-typedef struct Box {
-    NJS_POINT3 min;
-    NJS_POINT3 max;
-    f32 extra; /* 0x18 */
-} Box;
+/* One collision result slot of a model walk (fn_801E04E8/fn_801E0AC0). */
+typedef struct Slot801E {
+    void* key;       /* 0x00 */
+    HitOut* hit;     /* 0x04 */
+    s32 n;           /* 0x08 */
+} Slot801E;
+struct Mo {
+    u8 pad0[4];
+    Ellipsoid m4;    /* 0x04 */
+    u8 pad1c[0x2c - 0x1c];
+    Box m2c;         /* 0x2C */
+    Node801DF6* x48; /* 0x48 the model */
+    Slot801E* x4c;   /* 0x4C */
+};
+Slot801E* fn_801E04E8(Ellipsoid* ref, Node801DF6* obj, Slot801E* slot, Box* box);
+Slot801E* fn_801E0AC0(Ellipsoid* ref, Node801DF6* obj, Slot801E* slot, Box* box);
 extern void fn_8028FEA4(NJS_POINT3* p, Ellipsoid* e, NJS_POINT3* out);
 typedef struct Tri {
     NJS_POINT3 a;
@@ -775,6 +780,10 @@ struct Layout {
 };
 void fn_801D81C0(Layout* sprite, Rec23* req, f32 z, f32 a, f32 b, u32 attr, u32 blend, NJS_TEXLIST* texlist);
 void fn_801D4A2C(Layout* lay, u32 flags, u32 mode, NJS_TEXLIST* tex, s32 vmode, f32 f1, f32 f2, f32 base, f32 f4, f32 a, f32 b);
+typedef struct Vec3 { f32 x, y, z; } Vec3;
+typedef struct Line3 { Vec3 pos; Vec3 dir; } Line3;
+extern f32 fn_8028F9B0(Line3* a, Line3* b, Vec3* hit, Vec3* aux);
+extern s32 lbl_80347578;
 
 void fn_801D49E4(Layout* a, u32 b, u32 c, s32 d, f32 p1, f32 p2, f32 p3, f32 p4) {
     fn_801D4A2C(a, b, c, &lbl_80347568, d, 1.0f, 1.0f, p1, p2, p3, p4);
@@ -2154,7 +2163,7 @@ void fn_801DF94C(Ob *o) {
 
 extern Plane lbl_802F66B8[6];
 
-f32 fn_801DFE48(NJS_POINT3* p, Box801E* b) {
+f32 fn_801DFE48(NJS_POINT3* p, Box* b) {
     Ray ray;
     NJS_POINT3 out;
     Plane* pl = lbl_802F66B8;
@@ -2209,6 +2218,63 @@ f32 fn_801DFE48(NJS_POINT3* p, Box801E* b) {
     return 0.0f;
 }
 
+void fn_801E0204(HitOut* hit, Ellipsoid* ref, f32* mtx, Box* box);
+extern void* fn_801CB12C(u16* p);
+Slot801E* fn_801E04E8(Ellipsoid* ref, Node801DF6* obj, Slot801E* slot, Box* box) {
+    s32 cnt;
+    HitOut* hit;
+    s32 size;
+    s32 n;
+    s32 type;
+    u16* p;
+    u16* data;
+    Ellipsoid r;
+    NJS_MATRIX m;
+
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    if (!(obj->flags & 1)) njTranslate(0, obj->pos[0], obj->pos[1], obj->pos[2]);
+    if (!(obj->flags & 2)) njRotateXYZ(0, obj->ang[0], obj->ang[1], obj->ang[2]);
+    if (!(obj->flags & 4)) njScale(0, obj->scl[0], obj->scl[1], obj->scl[2]);
+    if (!(obj->flags & 8) && obj->d != 0) {
+        p = fn_801CB12C(obj->d->x0);
+        if (slot->key == p) {
+            fn_80291C44(m);
+            njInvertMatrix(m);
+            r.center.x = ref->center.x;
+            r.center.y = ref->center.y;
+            r.center.z = ref->center.z;
+            r.scale.x = ref->scale.x;
+            r.scale.y = ref->scale.y;
+            r.scale.z = ref->scale.z;
+            hit = slot->hit;
+            slot->n = 0;
+            do {
+                size = p[0];
+                type = (u8)p[1];
+                data = p + 2;
+                n = fn_801CB0A4(type);
+                if (n >= 0) cnt = data[0];
+                if (!(0 <= n)) size = n & 0xffff;
+                if (n > 0) {
+                    slot->n += cnt;
+                    do {
+                        fn_801E0204(hit, &r, m, box);
+                        hit++;
+                    } while (--cnt > 0);
+                }
+                p = data + size * 2;
+            } while (type != 0xff);
+            slot++;
+        }
+    }
+    if (obj->c1 != 0 && !(obj->flags & 0x10)) slot = fn_801E04E8(ref, obj->c1, slot, box);
+    njPopMatrixEx();
+    if (obj->c2 != 0) slot = fn_801E04E8(ref, obj->c2, slot, box);
+    return slot;
+}
+
 void fn_801E06E0(Mo *o) {
     njPushMatrixEx();
     fn_80286EE8();
@@ -2216,6 +2282,63 @@ void fn_801E06E0(Mo *o) {
     njUnitMatrix(0);
     fn_801E04E8(&o->m4, o->x48, o->x4c, &o->m2c);
     njPopMatrixEx();
+}
+
+void fn_801E0734(HitOut* o, Ellipsoid* e, NJS_MATRIX m, Box* b);
+extern void* fn_801CB12C(u16* p);
+Slot801E* fn_801E0AC0(Ellipsoid* ref, Node801DF6* obj, Slot801E* slot, Box* box) {
+    s32 cnt;
+    HitOut* hit;
+    s32 size;
+    s32 n;
+    s32 type;
+    u16* p;
+    u16* data;
+    Ellipsoid r;
+    NJS_MATRIX m;
+
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    if (!(obj->flags & 1)) njTranslate(0, obj->pos[0], obj->pos[1], obj->pos[2]);
+    if (!(obj->flags & 2)) njRotateXYZ(0, obj->ang[0], obj->ang[1], obj->ang[2]);
+    if (!(obj->flags & 4)) njScale(0, obj->scl[0], obj->scl[1], obj->scl[2]);
+    if (!(obj->flags & 8) && obj->d != 0) {
+        p = fn_801CB12C(obj->d->x0);
+        if (slot->key == p) {
+            fn_80291C44(m);
+            njInvertMatrix(m);
+            r.center.x = ref->center.x;
+            r.center.y = ref->center.y;
+            r.center.z = ref->center.z;
+            r.scale.x = ref->scale.x;
+            r.scale.y = ref->scale.y;
+            r.scale.z = ref->scale.z;
+            hit = slot->hit;
+            slot->n = 0;
+            do {
+                size = p[0];
+                type = (u8)p[1];
+                data = p + 2;
+                n = fn_801CB0A4(type);
+                if (n >= 0) cnt = data[0];
+                if (!(0 <= n)) size = n & 0xffff;
+                if (n > 0) {
+                    slot->n += cnt;
+                    do {
+                        fn_801E0734(hit, &r, m, box);
+                        hit++;
+                    } while (--cnt > 0);
+                }
+                p = data + size * 2;
+            } while (type != 0xff);
+            slot++;
+        }
+    }
+    if (obj->c1 != 0 && !(obj->flags & 0x10)) slot = fn_801E0AC0(ref, obj->c1, slot, box);
+    njPopMatrixEx();
+    if (obj->c2 != 0) slot = fn_801E0AC0(ref, obj->c2, slot, box);
+    return slot;
 }
 
 void fn_801E0CB8(Mo *o) {
@@ -2927,7 +3050,7 @@ void fn_801DF600(Node801DF6* n, s32* count, s32* total) {
     if (c != 0) CountNode2(c, count, total);
 }
 
-void fn_801E0204(Hit801E* hit, Ref801E* ref, f32* mtx, Box801E* box) {
+void fn_801E0204(HitOut* hit, Ellipsoid* ref, f32* mtx, Box* box) {
     NJS_POINT3 p;
     NJS_POINT3 q;
     NJS_VECTOR v;
@@ -2935,18 +3058,18 @@ void fn_801E0204(Hit801E* hit, Ref801E* ref, f32* mtx, Box801E* box) {
     njCalcPoint(NULL, &hit->pos, &p);
     if (p.x > box->v[0].x && p.y > box->v[0].y && p.z > box->v[0].z && p.x < box->v[1].x && p.y < box->v[1].y &&
         p.z < box->v[1].z) {
-        fn_802900C0(&p, &ref->c, &q);
-        v.x = q.x - ref->c.x;
-        v.y = q.y - ref->c.y;
-        v.z = q.z - ref->c.z;
+        fn_802900C0(&p, &ref->center, &q);
+        v.x = q.x - ref->center.x;
+        v.y = q.y - ref->center.y;
+        v.z = q.z - ref->center.z;
         hit->dist = fn_80291A5C(v.x * v.x + v.y * v.y + v.z * v.z);
         v.x = p.x - q.x;
         v.y = p.y - q.y;
         v.z = p.z - q.z;
         if (v.x == 0.0f && v.y == 0.0f && v.z == 0.0f) {
-            v.x = ref->d.x;
-            v.y = ref->d.y;
-            v.z = ref->d.z;
+            v.x = ref->scale.x;
+            v.y = ref->scale.y;
+            v.z = ref->scale.z;
         }
         njUnitVector(&v);
         njCalcVector(mtx, &v, &hit->dir);
@@ -2961,18 +3084,18 @@ void fn_801E0204(Hit801E* hit, Ref801E* ref, f32* mtx, Box801E* box) {
             hit->dir.y = 0.0f;
             hit->dir.x = 0.0f;
         } else {
-            fn_802900C0(&p, &ref->c, &q);
-            v.x = q.x - ref->c.x;
-            v.y = q.y - ref->c.y;
-            v.z = q.z - ref->c.z;
+            fn_802900C0(&p, &ref->center, &q);
+            v.x = q.x - ref->center.x;
+            v.y = q.y - ref->center.y;
+            v.z = q.z - ref->center.z;
             hit->dist = fn_80291A5C(v.x * v.x + v.y * v.y + v.z * v.z);
             v.x = p.x - q.x;
             v.y = p.y - q.y;
             v.z = p.z - q.z;
             if (v.x == 0.0f && v.y == 0.0f && v.z == 0.0f) {
-                v.x = ref->d.x;
-                v.y = ref->d.y;
-                v.z = ref->d.z;
+                v.x = ref->scale.x;
+                v.y = ref->scale.y;
+                v.z = ref->scale.z;
             }
             njUnitVector(&v);
             v.x *= s;
@@ -4742,8 +4865,8 @@ void fn_801E0734(HitOut* o, Ellipsoid* e, NJS_MATRIX m, Box* b) {
     NJS_POINT3 d;
     f32 k;
     njCalcPoint(0, &o->pos, &p);
-    if (p.x > b->min.x && p.y > b->min.y && p.z > b->min.z && p.x < b->max.x && p.y < b->max.y &&
-        p.z < b->max.z) {
+    if (p.x > b->v[0].x && p.y > b->v[0].y && p.z > b->v[0].z && p.x < b->v[1].x && p.y < b->v[1].y &&
+        p.z < b->v[1].z) {
         fn_8028FEA4(&p, e, &c);
         d.x = c.x - e->center.x;
         d.y = c.y - e->center.y;
@@ -4764,7 +4887,7 @@ void fn_801E0734(HitOut* o, Ellipsoid* e, NJS_MATRIX m, Box* b) {
             njCalcVector(m, (void *)(&d), (void *)(&o->dir));
         }
     } else {
-        if (b->extra == 0.0f) {
+        if (b->r == 0.0f) {
             o->dir.z = 0.0f;
             o->dir.y = 0.0f;
             o->dir.x = 0.0f;
@@ -5114,3 +5237,233 @@ void* fn_801E0FD4(void* dst, u32 n)
     }
     return p;
 }
+
+static inline f32 Dist2(f32 x, f32 z) { return x * x + z * z; }
+
+#define EDGE(P, Q, CHK) { \
+    l2.dir.x = tri[P].x - tri[Q].x; l2.dir.z = tri[P].z - tri[Q].z; \
+    l2.pos.x = tri[Q].x; l2.pos.z = tri[Q].z; \
+    if (fn_8028F9B0(&l1, &l2, &hit, &aux) == 0.0f \
+        && minx <= hit.x && maxx >= hit.x && minz <= hit.z && maxz >= hit.z \
+        && 0.0f >= (tri[P].x - hit.x) * (tri[Q].x - hit.x) + (tri[P].z - hit.z) * (tri[Q].z - hit.z)) { \
+        CHK \
+    } \
+}
+
+#define FIRST(IDX) { out->x = hit.x; ret = IDX; out->z = hit.z; }
+#define BEST_RET(IDX) \
+    if (ret < 0) { out->x = hit.x; ret = IDX; out->z = hit.z; } \
+    else { \
+        if (Dist2(out->x - a->x, out->z - a->z) > Dist2(hit.x - a->x, hit.z - a->z)) { \
+            out->x = hit.x; ret = IDX; out->z = hit.z; \
+        } \
+        return ret; \
+    }
+
+#define BEST(IDX) \
+    if (ret < 0) { out->x = hit.x; ret = IDX; out->z = hit.z; } \
+    else { \
+        if (Dist2(out->x - a->x, out->z - a->z) > Dist2(hit.x - a->x, hit.z - a->z)) { \
+            out->x = hit.x; ret = IDX; out->z = hit.z; \
+        } \
+    }
+
+#ifdef NONMATCHING
+#include <dolphin/os/OSFastCast.h>
+typedef struct VertexCol { f32 x, y, z; u32 colour; } VertexCol;
+extern VertexCol lbl_80308DF0[4];
+extern f32 lbl_80345878[];
+extern void GXSetColorUpdate(u8 enable);
+extern void GXSetAlphaUpdate(u8 enable);
+extern void fn_80290ED4(VertexCol* v, s32 count, s32 flag);
+#endif
+
+#ifdef NONMATCHING
+s32 fn_801D44B0(Vec3* out, Vec3* a, Vec3* b, Vec3* tri) {
+    Vec3 hit;
+    Vec3 aux;
+    Line3 l1;
+    Line3 l2;
+    s32 ret = -1;
+    f32 minx, minz, maxx, maxz;
+    l1.dir.x = b->x - a->x; l1.dir.y = 0.0f; l2.dir.y = 0.0f; l1.dir.z = b->z - a->z;
+    l1.pos.x = a->x; l1.pos.y = a->y; l2.pos.y = a->y; l1.pos.z = a->z;
+    if (a->x < b->x) { minx = a->x; maxx = b->x; } else { minx = b->x; maxx = a->x; }
+    if (a->z < b->z) { minz = a->z; maxz = b->z; } else { minz = b->z; maxz = a->z; }
+    EDGE(0, 1, FIRST(0));
+    EDGE(1, 2, BEST_RET(1));
+    EDGE(2, 0, BEST(2));
+    return ret;
+}
+#endif
+
+#ifdef NONMATCHING
+static inline s32 Abs(s16 v) { s32 r = v; if (r < 0) { r = -v; } return r; }
+static inline s32 ToAngle(f32 rad) { return 10430.381f * rad; }
+#endif
+#ifdef NONMATCHING
+s32 fn_801D732C(s32 port, s32 dead)
+{
+    Pad* p = lbl_80311A60[port];
+    s16 sx = p->sx;
+    s16 x;
+    s16 y;
+    u16 a;
+    s32 ay;
+
+    if ((sx == 0 && p->sy == 0) || lbl_80347578 != 0) {
+        return -1;
+    }
+    x = sx;
+    y = p->sy;
+    if (Abs(sx) < dead && ((ay = y) < 0 ? -ay : ay) < dead) {
+        return -2;
+    }
+    a = ToAngle(atan2(__OSs16tof32(&x), __OSs16tof32(&y))) - 0x8000;
+    return a;
+}
+#endif
+
+/* Is p inside triangle abc, projected onto the y/z plane (edge cross products >= -0.001)? */
+#ifdef NONMATCHING
+s32 fn_801D289C(Vec3* a, Vec3* b, Vec3* c, Vec3* p) {
+    f32 cy;
+    f32 cz;
+    f32 by;
+    f32 bz;
+    f32 ay;
+    f32 az;
+    f32 m1;
+    f32 m2;
+    f32 pz;
+    f32 py;
+    f32 n1;
+    f32 n2;
+    ay = a->y;
+    az = a->z;
+    by = b->y - ay;
+    cy = c->y - ay;
+    cz = c->z - az;
+    bz = b->z - az;
+    m1 = by * cz;
+    m2 = cy * bz;
+    if (-0.001f > m2 - m1) return 0;
+    py = p->y - ay;
+    pz = p->z - az;
+    n1 = py * cz;
+    n2 = cy * pz;
+    if (-0.001f > n1 - n2) return 0;
+    m1 = py * bz;
+    m2 = by * pz;
+    return !(-0.001f > m2 - m1);
+}
+#endif
+
+
+/* Is p inside triangle abc (x/y plane)? */
+/* NEAR (8 lines): p.x - a.x lands in f9 instead of reusing f1 in the second test; rest matches. */
+#ifdef NONMATCHING
+s32 fn_801D2934(Vec3 *a, Vec3 *b, Vec3 *c, Vec3 *p)
+{
+    f32 cx, cy, bx, by, ax, ay, py, m1, px, m0;
+    ax = a->x;
+    ay = a->y;
+    bx = b->x - ax;
+    cx = c->x - ax;
+    cy = c->y - ay;
+    by = b->y - ay;
+    m0 = bx * cy;
+    m1 = cx * by;
+    if (-0.001f > m1 - m0) return 0;
+    px = p->x - ax;
+    py = p->y - ay;
+    m1 = px * cy;
+    m0 = cx * py;
+    if (-0.001f > m1 - m0) return 0;
+    m0 = px * by;
+    m1 = bx * py;
+    return !(-0.001f > m1 - m0);
+}
+#endif
+
+/* Is p inside triangle abc, projected onto the x/z plane (edge cross products >= -0.001)? */
+#ifdef NONMATCHING
+s32 fn_801D29CC(Vec3* a, Vec3* b, Vec3* c, Vec3* p) {
+    f32 cx;
+    f32 cz;
+    f32 bx;
+    f32 bz;
+    f32 ax;
+    f32 az;
+    f32 m1;
+    f32 m2;
+    f32 pz;
+    f32 px;
+    f32 n1;
+    f32 n2;
+    ax = a->x;
+    az = a->z;
+    bx = b->x - ax;
+    cx = c->x - ax;
+    cz = c->z - az;
+    bz = b->z - az;
+    m1 = bx * cz;
+    m2 = cx * bz;
+    if (-0.001f > m2 - m1) return 0;
+    px = p->x - ax;
+    pz = p->z - az;
+    n1 = px * cz;
+    n2 = cx * pz;
+    if (-0.001f > n1 - n2) return 0;
+    m1 = px * bz;
+    m2 = bx * pz;
+    return !(-0.001f > m2 - m1);
+}
+#endif
+
+#ifdef NONMATCHING
+void fn_801DBCD4(void) {
+    GXSetColorUpdate(0);
+    GXSetAlphaUpdate(0);
+    GXSetZMode(1, 7, 1);
+    lbl_80308DF0[0].y = 0.0f;
+    lbl_80308DF0[0].x = 0.0f;
+    lbl_80308DF0[0].z = 0.0f;
+    lbl_80308DF0[0].colour = -1;
+    lbl_80308DF0[1].x = 0.0f;
+    lbl_80308DF0[1].y = lbl_80345878[11];
+    lbl_80308DF0[1].z = 0.0f;
+    lbl_80308DF0[1].colour = -1;
+    lbl_80308DF0[2].x = lbl_80345878[10];
+    lbl_80308DF0[2].y = 0.0f;
+    lbl_80308DF0[2].z = 0.0f;
+    lbl_80308DF0[2].colour = -1;
+    lbl_80308DF0[3].x = lbl_80345878[10];
+    lbl_80308DF0[3].y = lbl_80345878[11];
+    lbl_80308DF0[3].z = 0.0f;
+    lbl_80308DF0[3].colour = -1;
+    fn_80290ED4(lbl_80308DF0, 4, 0);
+    GXSetZMode(1, 3, 1);
+    GXSetColorUpdate(1);
+    GXSetAlphaUpdate(1);
+}
+#endif
+
+/* NEAR (18 lines, float register numbering only). Called by draw2d.c as
+   NJS_POINT3 fn_801DCDC0(f32, f32, f32): the struct return is the hidden r3 pointer here. */
+#ifdef NONMATCHING
+void fn_801DCDC0(NJS_POINT3 *out, f32 x, f32 y, f32 z) {
+    f32 *t = lbl_80345878;
+    f32 ax, ay;
+    f32 a = -1.0f * z;
+    ax = x - t[2];
+    ay = y - t[3];
+    ax = a * ax;
+    ay = a * ay;
+    ax = ax / (t[6] * t[7]);
+    ay = (-1.0f * ay) / (t[6] * t[8]);
+    out->x = ax;
+    out->y = ay;
+    out->z = z;
+}
+#endif

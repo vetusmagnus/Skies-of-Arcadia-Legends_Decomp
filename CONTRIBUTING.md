@@ -5,6 +5,7 @@ Matching decomp of the GameCube game (GEAE8P, USA Rev 0). It's built on encounte
 ## Build
 - `python configure.py && ninja`. The build must end with `build/GEAE8P/main.dol: OK`. Never commit a change that breaks the match.
 - Game code (`src/game/`, `include/game/`, `include/ninja.h`) must be plain C that compiles to the original bytes: no inline asm, `#pragma`, asm includes or fakematch markers. `tools/check_game_src.py` runs before anything compiles and stops the build on a hit. Library code under `extern/` is exempt (its asm functions are asm in the original libraries).
+- A function that is close but doesn't match yet (code-exact apart from register colouring, or at least 90% of its instructions) may be kept as C inside `#ifdef NONMATCHING ... #endif`, with the types, declarations and helpers only it uses inside the guard too. Only `python configure.py --non-matching` defines `NONMATCHING`; the default build never compiles that code, so its objects (and `main.dol`) are unchanged and the function still comes from the original instructions. The same plain-C rules apply inside the guard; the checker allows the guard and nothing else that names `NONMATCHING`. `docs/progress.md` lists each guarded function with its score.
 - The disc image in `orig/GEAE8P/` is a symlink to the user's RVZ. Never commit game data: no disc images, DOLs, extracted files, or `build/`.
 
 ## Conventions

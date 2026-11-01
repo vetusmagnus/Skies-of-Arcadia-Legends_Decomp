@@ -91,6 +91,9 @@ s32 SePlay(s32 bank, s8 arg1, s8 id);
 void fn_8020EEE8(s32 bank, s8 arg1, s8 id, s32 unused);
 void fn_80217830(s32 arg);
 float fn_801F6120(float **p);
+extern void fn_801DBE1C(const char *fmt, ...);
+extern void* fn_801E1A2C(s32 a, s32 b);
+
 /* An int argument of the script stream; FLT_MAX stands for 'unset' (0x7FFFFFFF). */
 static inline s32 ReadInt(f32** p)
 {
@@ -237,8 +240,8 @@ typedef struct Obj10A { void (*fn)(struct Obj10A *); u8 pad4[0x15]; u8 x19; u8 p
 extern Obj10A *fn_8010A164(u32 id);
 extern void *lbl_8034759C;
 extern s32 lbl_803473C0;
-extern u8 fn_8020E984(void);
-void fn_801BEA70(void *a, u32 idx, s32 mode);
+s32 fn_8020E984(void);
+void fn_801BEA70(void *a, u32 idx, u8 mode);
 extern s32 lbl_803477A8;
 extern s32 lbl_803477AC;
 void fn_800EB58C(s32 n);
@@ -907,6 +910,40 @@ void fn_801F5334(s8 n) {
     }
 }
 
+/* A string argument: its byte length (padded to words), then the characters. */
+static inline u8* StrText(void* p)
+{
+    u8* b = p;
+    return b + 4;
+}
+
+static inline void* StrSkip(void* p)
+{
+    u32* w = p;
+    return w + ((*w >> 2) + 1);
+}
+
+s32 fn_802114AC(s32 id, u8 *name);
+extern const char lbl_802D4720[];
+
+s32 fn_801F57F8(u32 flags, Scpt *cmd)
+{
+    if (flags & 1) {
+        f32* p;
+        s32 id;
+        u8* name;
+        p = cmd->cur.f + 1;
+        id = ReadInt(&p);
+        name = StrText(p);
+        p = StrSkip(p);
+        cmd->cur.f = p;
+        if (fn_802114AC(id, name) == 0) {
+            fn_801DBE1C(lbl_802D4720);
+        }
+    }
+    return 0;
+}
+
 s32 fn_801F58B0(void) {
     return 1;
 }
@@ -929,6 +966,39 @@ extern void fn_801DBE1C(const char *fmt, ...);
 int fn_801F60F0(void) {
     fn_801DBE1C("scptSTUB: code error!");
     return 0;
+}
+
+s32 fn_801F7958(void)
+{
+    u32 i;
+    const char* str = lbl_802D4720;
+    lbl_8030CEA0.x818.w = 12;
+    lbl_8030CEA0.x0 = 0;
+    lbl_8030CEA0.x4 = lbl_8030CEA0.x818.b;
+    lbl_8030CEA0.x1874 = 0;
+    lbl_8030CEA0.sp = 0;
+    lbl_8030CEA0.x1878 = 0x20;
+    lbl_8030CEA0.x1914 = 0;
+    lbl_8030CEA0.x0a = 0;
+    if (lbl_8030CEA0.x10 != 0) {
+        fn_801DBE1C(str + 0xa4);
+    }
+    lbl_8030CEA0.xc = 0x180;
+    lbl_8030CEA0.x10 = fn_801E1A2C(1, 0x4e00);
+    if (lbl_8030CEA0.x10 == 0) {
+        fn_801DBE1C(str + 0xc8);
+    }
+    lbl_8030CEA0.x14 = fn_801E1A2C(1, 0xc00);
+    if (lbl_8030CEA0.x14 == 0) {
+        fn_801DBE1C(str + 0xe8);
+    }
+    memset(lbl_8030CEA0.x10, 0, 0x4e00);
+    memset(lbl_8030CEA0.x14, 0, 0xc00);
+    for (i = 0; i < 256; i++) {
+        lbl_8030CEA0.ent[i][1] = 0;
+        lbl_8030CEA0.ent[i][0] = 0;
+    }
+    return 1;
 }
 
 s32 fn_801F7CD8(u32 a, Scpt *st) {
@@ -962,6 +1032,38 @@ s32 fn_801F9614(u32 a, Scpt *st) {
     }
     if (f & 8) return 1;
     return 0;
+}
+
+s32 fn_801FD44C(u32 flags, Scpt *c) {
+    u16 f = flags;
+    if (flags & 1) {
+        ScptCur cur;
+        s32 i;
+        s32 n;
+        s32 t;
+        Obj10A *a;
+        cur.f = c->cur.f;
+        cur.f++;
+        n = *cur.i++;
+        for (i = 0; i < n; i++) {
+            u16 id;
+            if (*cur.f == 3.4028235e38f) {
+                cur.f++;
+                t = 0x7FFFFFFF;
+            } else {
+                t = fn_801F6120(&cur.f);
+            }
+            id = t;
+            a = fn_8010A164(id);
+            if (a != 0) {
+                a->x19 = 0xff;
+                a->fn(a);
+            }
+        }
+        c->cur.f = cur.f;
+        return 0;
+    }
+    return !(f & 8);
 }
 
 s32 fn_801FD54C(u32 a, Scpt *st) {
@@ -6494,6 +6596,17 @@ static inline s32 FlagCount(u32 base, s32 cnt)
     return n;
 }
 
+s32 fn_8020E984(void)
+{
+    s32 i;
+    for (i = 19; i >= 0; i--) {
+        if (FlagTest(lbl_802D5940[i].flag) == 1 && i >= 0) {
+            return lbl_802D5940[i].val;
+        }
+    }
+    return 0;
+}
+
 void fn_8020ED58(void)
 {
     s32 n;
@@ -7766,3 +7879,134 @@ s16 fn_8020BCF4(u16 flags, Scpt *s)
     return (flags >> 3) & 1;
 }
 
+#ifdef NONMATCHING
+/* A script command's argument stream (unit_801F5334.c). */
+typedef struct Scpt_802074B0 {
+    s32 kind;       /* 0x00 */
+    s32 flags;      /* 0x04 */
+    s32 handle;     /* 0x08 */
+    void *ev;       /* 0x0c */
+    s16 cnt;        /* 0x10 */
+    u16 x12;        /* 0x12 */
+    s32 x14;        /* 0x14 */
+    s32 owner;      /* 0x18 */
+    f32 *cur;       /* 0x1c */
+} Scpt_802074B0;
+void fn_800C8E44(f32 a, f32 b, f32 c);
+typedef struct Cmd { u8 pad_00[0x1c]; float *cur; } Cmd;
+/* One running script command (unit_801F5334.c); its argument stream mixes floats, ints and
+ * length-prefixed strings, so the cursor is kept as a float pointer and the string helpers
+ * take it as void*. */
+typedef struct Track {
+    u32 kind;       /* 0x00 */
+    u8 pad04[0x14];
+    u32 total;      /* 0x18 */
+    f32 dist;       /* 0x1c */
+    u32 step;       /* 0x20 */
+    f32 start[3];   /* 0x24 */
+} Track;
+typedef struct Script {
+    u8 pad00[0x1c];
+    f32* cursor;    /* 0x1C */
+    u8 pad20[0x10];
+    Track* work;    /* 0x30 */
+} Script;
+extern f32 lbl_802F7528[4];
+extern void fn_802136A8(f32* tab, f32* out, s32 a, s32 b, s32 c);
+#endif
+
+/* Script command: reads three floats and passes them to fn_800C8E44. */
+#ifdef NONMATCHING
+s32 fn_802074B0(u32 flags, Scpt_802074B0* s)
+{
+    f32 a;
+    f32 b;
+    f32 c;
+    f32* cur;
+    u16 f = flags;
+    if (f & 1) {
+        cur = s->cur + 1;
+        a = fn_801F6120(&cur);
+        b = fn_801F6120(&cur);
+        c = fn_801F6120(&cur);
+        s->cur = cur;
+        fn_800C8E44(a, b, c);
+    }
+    if (f & 8) return 1; return 0;
+}
+#endif
+
+s32 fn_80207554(u32 flags, Scpt *c) {
+    ScptCur cur;
+    s32 i;
+    s32 n;
+    s32 v;
+    if (flags & 1) {
+        cur.f = c->cur.f;
+        cur.f++;
+        n = *cur.i++;
+        for (i = 0; i < n; i++) {
+            u16 id;
+            if (*cur.f == 3.4028235e38f) {
+                cur.f++;
+                v = 0x7FFFFFFF;
+            } else {
+                v = fn_801F6120(&cur.f);
+            }
+            id = v;
+            fn_80210EA4(id, 5);
+        }
+        c->cur.f = cur.f;
+    }
+    return 0;
+}
+
+#ifdef NONMATCHING
+s32 fn_8020527C(u32 flags, Script* s)
+{
+    f32* p;
+    f32 dist;
+    u32 n;
+    f32 out[3];
+    u16 f = flags;
+    if (f & 1) {
+        Track* w;
+        p = s->cursor + 1;
+        dist = fn_801F6120(&p);
+        n = (*p == 3.4028235e38f ? (p++, 0x7FFFFFFF) : (s32)fn_801F6120(&p));
+        if (n == 0 || n == 1) {
+            return 0;
+        }
+        lbl_8030CEA0.x15cc = 1;
+        w = fn_801E1A2C(1, 0x44);
+        if (w == NULL) fn_801DBE1C("TrackUp: malloc failed");
+        s->work = w;
+        w->kind = 0;
+        w->step = 0;
+        w->total = n;
+        w->dist = dist;
+        w->start[0] = lbl_8030CEA0.x18fc;
+        w->start[1] = lbl_8030CEA0.x1900;
+        w->start[2] = lbl_8030CEA0.x1904;
+        s->cursor = p;
+    }
+    if (f & 2) {
+        Track* w = s->work;
+        f32 t;
+        lbl_802F7528[2] = w->dist;
+        fn_802136A8(lbl_802F7528, out, lbl_8030CEA0.x1908, lbl_8030CEA0.x190c, lbl_8030CEA0.x1910);
+        t = (f32)w->step / (f32)w->total;
+        lbl_8030CEA0.x18fc = w->start[0] - out[0] * t;
+        lbl_8030CEA0.x1900 = w->start[1] - out[1] * t;
+        lbl_8030CEA0.x1904 = w->start[2] - out[2] * t;
+        if (w->step++ == w->total) {
+            lbl_8030CEA0.x15cc = 0;
+            return 0;
+        }
+    }
+    if (f & 8) {
+        lbl_8030CEA0.x15cc = 0;
+    }
+    return 1;
+}
+#endif
