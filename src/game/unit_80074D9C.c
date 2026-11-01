@@ -635,8 +635,9 @@ typedef struct Msg {
     s32 xc;
 } Msg;
 typedef struct TNode {
-    u32 flags;
-    u8 pad4[0x2c - 0x4];
+    u32 flags;          /* 8: hidden */
+    void* mesh;         /* 0x04 */
+    u8 pad8[0x2c - 0x8];
     struct TNode* child;
     struct TNode* next;
 } TNode;
@@ -835,9 +836,22 @@ void fn_80075060(TNode* n, u32 mask, u8 op) {
     }
 }
 
-extern void fn_8007578C(Msg*, s16);
-void fn_8007576C(Msg* a, s16 i) {
+void fn_8007578C(TNode* p, u8 show);
+void fn_8007576C(TNode* a, u8 i) {
     fn_8007578C(a, i);
+}
+
+/* Shows or hides every node of a tree that has a mesh. */
+inline void fn_8007578C(TNode* p, u8 show) {
+    if (p->mesh != 0) {
+        if (show == 0) {
+            p->flags |= 8;
+        } else {
+            p->flags &= ~8;
+        }
+    }
+    if (p->child != 0) fn_8007578C(p->child, show);
+    if (p->next != 0) fn_8007578C(p->next, show);
 }
 
 void fn_80075D24(Top *t) {
