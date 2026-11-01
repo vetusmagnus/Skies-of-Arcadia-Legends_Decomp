@@ -80,7 +80,21 @@ const char lbl_802C415C[20] = "/ending/staff.mld";
 const char lbl_802C4170[16] = "/sound/m04s.p16";
 void fn_801E5DF0(void *o);
 void fn_801E5148(void *o);
-extern u32 lbl_8030A6D4[36];
+/* lbl_8030A6D4: one 0x24-byte state per controller: held buttons, previous, released, repeat
+ * output, the repeat counters and delay, and the stick. */
+typedef struct Slot {
+    u32 flags;
+    u32 x4;
+    u32 x8;
+    u32 xc;
+    u32 x10;
+    u32 x14;            /* repeat delay */
+    u32 x18;
+    s16 x1c;
+    s16 x1e;
+    u8 pad[0x24 - 0x20];
+} Slot;
+extern Slot lbl_8030A6D4[4];
 void *memset(void *dst, int c, u32 n);
 extern s32 lbl_803471CC;
 extern s32 DVDGetDriveStatus(void);
@@ -502,10 +516,10 @@ void fn_801C78B4(void) {
 void fn_801C78B8(void)
 {
     memset(lbl_8030A6D4, 0, 0x90);
-    lbl_8030A6D4[5] = 6;
-    lbl_8030A6D4[14] = 6;
-    lbl_8030A6D4[23] = 6;
-    lbl_8030A6D4[32] = 6;
+    lbl_8030A6D4[0].x14 = 6;
+    lbl_8030A6D4[1].x14 = 6;
+    lbl_8030A6D4[2].x14 = 6;
+    lbl_8030A6D4[3].x14 = 6;
 }
 
 void fn_801C5BD4(u8 *p) {
@@ -548,6 +562,49 @@ void fn_801C6224(void) {
 }
 
 typedef struct { float x, y, z; } Vec3;
+/* A controller read (lbl_80311A60 holds one per port). */
+typedef struct PadState { u32 x0; u8 pad4[4]; u32 x8; u8 padc[8]; s16 x14; s16 x16; } PadState;
+typedef struct PadInfo { PadState* pads[6]; } PadInfo;
+extern PadInfo lbl_80311A60;
+
+void fn_801C7904(void)
+{
+    s8 i;
+    for (i = 0; i < 4; i++) {
+        PadState* p = lbl_80311A60.pads[i];
+        Slot* s = &lbl_8030A6D4[i];
+        s->x8 = p->x8;
+        s->x4 = s->flags;
+        s->flags = p->x0;
+        s->x1c = p->x14;
+        s->x1e = p->x16;
+        if (s->x4 == s->flags && s->flags != 0) {
+            s->x10++;
+        } else {
+            s->x10 = 0;
+            s->x18 = 0;
+        }
+        if (s->x18 >= s->x14) {
+            s->x10++;
+            if (s->x10 > s->x14 >> 1) {
+                s->xc = s->flags;
+                s->x10 = 0;
+                if (s->x14 != 0) {
+                    s->x10 = 0;
+                }
+            } else {
+                s->xc = 0;
+            }
+        } else if (s->x10 >= s->x14) {
+            s->xc = s->flags;
+            s->x10 = 0;
+            s->x18++;
+        } else {
+            s->xc = s->x8;
+        }
+    }
+}
+
 void fn_801C7A2C(Vec3 *v)
 {
     int i, j;
