@@ -1588,7 +1588,9 @@ typedef struct PadState {
 typedef struct SeqRec {
     u8 pad0[0xc];
     s32 xc;
-    u8 pad10[0x80];
+    u8 pad10;
+    s8 id;           /* 0x11 */
+    u8 pad12[0x90 - 0x12];
 } SeqRec;
 extern s32 lbl_80347288;
 extern s32 lbl_80347044;
@@ -2000,6 +2002,127 @@ void fn_80158690(s16 idx) {
     *(s16 *)((u8 *)lbl_80306DB8[idx] + 0x3c) = 0;
 }
 
+void fn_801584DC(s16 idx, u16 bits, s32 mode);
+void fn_80158650(s16 idx, s16 val);
+void fn_801583D8(s16 idx, s32 delta);
+void fn_80158590(s16 idx, s8 mode, s16 a, s16 b);
+
+typedef struct PartyMem {
+    u8 pad0[0x18];
+    s32 f18;
+    u8 pad1c[0x10c - 0x1c];
+} PartyMem;
+typedef struct Sys80135598 {
+    u8 pad0[0x238];
+    PartyMem party;
+} Sys80135598;
+typedef struct Pad80129D40 {
+    void *obj;
+    u16 h4;
+    u8 pad6[2];
+    s32 f8;
+    s32 fc;
+    s32 f10;
+} Pad80129D40;
+
+
+extern PartyMem *fn_8013558C(void);
+extern Sys80135598 *fn_80135598(void);
+
+void fn_80159F28(s32 side) {
+    SeqRec *slot = &lbl_80306E38[0];
+    SeqRec *sel = &lbl_80306E38[1];
+    s32 d;
+    s32 idx;
+    PartyMem *q;
+    Pad80129D40 *p;
+    u16 c;
+    u16 b;
+    u16 a;
+    s32 r;
+    s32 code;
+
+    if (slot->id == side) {
+        sel = slot;
+    }
+    c = b = a = 0;
+    if (side == 0) {
+        d = -sel->xc;
+        p = fn_80129D40(lbl_803472AC);
+        q = &fn_8013558C()[p->f10];
+        r = fn_80145CA4(1, lbl_802E6F58[p->f10], 2);
+        if (r) b |= 0x400;
+        if (!r) a |= 0x400;
+        r = fn_80145CA4(1, lbl_802E6F58[p->f10], 3);
+        if (r) b |= 0x200;
+        if (!r) a |= 0x200;
+        r = fn_80145CA4(1, lbl_802E6F58[p->f10], 8);
+        if (r) c |= 0x80;
+        if (!r) a |= 0x80;
+        r = fn_80145CA4(1, lbl_802E6F58[p->f10], 12);
+        if (r) c |= 0x20;
+        if (!r) a |= 0x80;
+        idx = 1;
+    } else {
+        d = -sel->xc;
+        p = fn_80129D40(lbl_803472B0);
+        q = &fn_80135598()->party;
+        r = fn_80145CA4(0, 0, 2);
+        if (r) b |= 0x400;
+        if (!r) a |= 0x400;
+        r = fn_80145CA4(0, 0, 3);
+        if (r) b |= 0x200;
+        if (!r) a |= 0x200;
+        r = fn_80145CA4(0, 0, 8);
+        if (r) c |= 0x80;
+        if (!r) a |= 0x80;
+        r = fn_80145CA4(0, 0, 12);
+        if (r) c |= 0x20;
+        if (!r) a |= 0x20;
+        idx = 0;
+    }
+    if ((p->f8 += d) < 0) {
+        p->f8 = 0;
+    }
+    if (p->f8 <= 0 || q->f18 <= 0) {
+        q->f18 = 0;
+    }
+    if (d >= 0 && c == (p->h4 & 0xa0)) {
+        return;
+    }
+    if (d < 0 && c != (p->h4 & 0xa0)) {
+        code = 4;
+    } else if (d < 0 && c == (p->h4 & 0xa0)) {
+        code = 3;
+    } else if (d >= 0 && c != (p->h4 & 0xa0)) {
+        code = 5;
+    } else {
+        code = 1;
+    }
+    if ((c & 0x80) && (c & 0x80) != (p->h4 & 0x80)) {
+        fn_8015854C(idx, 0x80);
+        fn_801584DC(idx, a, 0);
+        p->h4 &= b;
+        p->h4 |= c;
+    } else if ((c & 0x20) && (c & 0x20) != (p->h4 & 0x20)) {
+        fn_8015854C(idx, 0x20);
+        fn_801584DC(idx, a, 0);
+        p->h4 &= b;
+        p->h4 |= c;
+    } else {
+        fn_801584DC(idx, a, 0);
+        p->h4 &= b;
+        p->h4 |= c;
+        fn_8015854C(idx, p->h4);
+    }
+    if (!(lbl_80310B3C[34] & 0x40000000)) {
+        fn_80158650(idx, code);
+        fn_801583D8(idx, d);
+        fn_801586D4(idx);
+        fn_80158590(idx, 2, 10, 60);
+    }
+}
+
 void fn_8015A844(void) {
     s32 i;
     for (i = 0; i < lbl_8034729C; i++) {
@@ -2330,7 +2453,7 @@ s32 fn_80156A8C(s32 x) {
     return -1;
 }
 
-void fn_801584DC(s16 idx, u32 bits, s32 mode) {
+void fn_801584DC(s16 idx, u16 bits, s32 mode) {
     if (lbl_80306DB8[idx] == 0) {
         return;
     }
