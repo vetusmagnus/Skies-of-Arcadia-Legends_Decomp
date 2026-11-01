@@ -4389,6 +4389,122 @@ void fn_8021B4B4(s32 ship) {
     }
 }
 
+extern s32 fn_801E4BBC(s8 n);
+extern void fn_8021AF94(s32 *a, void *b, s8 *list);
+extern void fn_8021B3B4(void);
+extern void fn_801EFF0C(s16 id);
+extern void fn_801EFC88(s16 id);
+
+
+
+
+static inline void fillOwned(s8 *out) {
+    if (out != 0) {
+        s32 i = 0;
+        s8 *p = out;
+        s32 n = 0;
+        while (i < 22 && n < 22) {
+            if (fn_801E4BBC(i) != 0) {
+                *p = i;
+                n++;
+                p++;
+            }
+            i++;
+        }
+        p = out + n;
+        for (; n < 22; n++) {
+            *p++ = -1;
+        }
+    }
+}
+
+
+static inline s32 GearSlotValid(s32 v)
+{
+    s32 r = 0;
+    if (v >= 0 && v < 3) {
+        r = 1;
+    }
+    return r;
+}
+
+static inline void SetCannonSlot(Save1568* s, s32 slot, s16 id)
+{
+    if (s != NULL && InRange(slot) && CannonValid(id)) {
+        lbl_8030B7F4.x1568.s1580[slot] = id;
+        fn_801EFF0C(id);
+    }
+}
+
+static inline void SetGearSlot(Save1568* s, s32 slot, s16 id)
+{
+    if (s != NULL && GearSlotValid(slot) && GearValid(id)) {
+        lbl_8030B7F4.x1568.s1580[slot] = id;
+        fn_801EFF0C(id);
+    }
+}
+
+static inline void ClearCannons(Save1568* s)
+{
+    s32 i;
+    if (s != NULL) {
+        for (i = 0; i < 5; i++) {
+            lbl_8030B7F4.x1568.s1580[i] = -1;
+        }
+    }
+}
+
+static inline void ClearGears(Save1568* s)
+{
+    s32 i;
+    if (s != NULL) {
+        for (i = 0; i < 3; i++) {
+            lbl_8030B7F4.x1568.s158a[i] = -1;
+        }
+    }
+}
+
+static inline void SetCannons(Save1568* s, ShipData* e)
+{
+    s32 i;
+    if (s != NULL && e != NULL) {
+        for (i = 0; i < 5; i++) {
+            SetCannonSlot(s, i, e->cannon[i]);
+        }
+    }
+}
+
+static inline void SetGears(Save1568* s, ShipData* e)
+{
+    s32 i;
+    if (s != NULL && e != NULL) {
+        for (i = 0; i < 3; i++) {
+            SetGearSlot(s, i, e->acc[i]);
+        }
+    }
+}
+
+void fn_8021B644(s32 ship) {
+    s8 buf[22];
+    if (InRange(ship)) {
+        ShipData* e = GetEnt(ship);
+        Save1568* s = &lbl_8030B7F4.x1568;
+        s->b1568 = ship;
+        if (s != NULL && e != NULL) {
+            MemCopy(s->name, e->name, 0x11);
+            lbl_8030B7F4.x1568.name[0x10] = 0;
+        }
+        ClearCannons(s);
+        ClearGears(s);
+        fn_801EFC88(0x1ae);
+        SetCannons(s, e);
+        SetGears(s, e);
+        fn_8021B3B4();
+        fillOwned(buf);
+        fn_8021AF94(&lbl_8030B4D4.limit, s, buf);
+    }
+}
+
 void fn_8021B91C(s32 ship) {
     s8 buf[22];
     if (InRange(ship)) {
