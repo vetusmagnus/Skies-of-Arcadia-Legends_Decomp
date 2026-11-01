@@ -105,10 +105,6 @@ void GXInvalidateTexAll(void);
 extern u8 lbl_80311B00[];
 void fn_801E1718(void *p);
 extern u8 *lbl_80347608;
-typedef struct Holder801D { u8 pad_0[0x18];
- u8 b18; u8 b19; u8 pad1a[0x24 - 0x1a]; void *f24; } Holder801D;
-extern Holder801D *lbl_80347654;
-extern Holder801D *lbl_80347660;
 extern u32 lbl_80312D40[4];
 void *fn_801E1A74(s32 a, u32 n);
 extern s32 lbl_80347550;
@@ -191,6 +187,30 @@ typedef struct {
     s32 w244;     /* 0x244 */
 } State801D;
 extern State801D* lbl_8034765C;
+/* The save-load task (fn_801D8B94) and its 0xc-byte work. */
+typedef struct LoadWork {
+    u8 b0;
+    u8 pad1[3];
+    s32 result;   /* 0x4 */
+    u8 pad8[4];
+} LoadWork;
+typedef struct LoadTask {
+    u8 pad_0[0x18];
+    u8 flags;     /* 0x18 */
+    u8 state;     /* 0x19 */
+    u8 pad1a[0x24 - 0x1a];
+    LoadWork *work;
+} LoadTask;
+/* The task that owns lbl_8034765C (fn_801D8DBC). */
+typedef struct StateTask {
+    u8 pad_0[0x18];
+    u8 flags;     /* 0x18 */
+    u8 state;     /* 0x19 */
+    u8 pad1a[0x24 - 0x1a];
+    State801D *work;
+} StateTask;
+extern LoadTask *lbl_80347654;
+extern StateTask *lbl_80347660;
 extern f32 lbl_80311DF0[];
 extern s32 fn_801A3510(void);
 extern void fn_801D89D4(Anim* o, u32 n, s32 flag, f32 a0, f32 a1, f32 a2, f32 a3, f32 b0, f32 b1, f32 b2, f32 b3);
@@ -358,7 +378,7 @@ typedef struct {
     f32 r;
     f32 s;
 } Obj7A28;
-extern void *lbl_80347650;
+extern LoadWork *lbl_80347650;
 extern void *lbl_803475A8;
 void *fn_802268E8(void *a, void *b);
 void fn_801D8B94(void);
@@ -1354,6 +1374,74 @@ void fn_801D89D4(Anim* o, u32 n, s32 flag, f32 a0, f32 a1, f32 a2, f32 a3, f32 b
     o->flags = 1;
 }
 
+extern s32 lbl_80347508;
+extern s32 lbl_803473C4;
+void fn_801CC578(const char *path);
+void fn_80227068(s32 a);
+void fn_801CBBD8(void);
+void fn_801CBB9C(f32 t);
+void fn_801CBBAC(f32 t);
+void SaveLoadOpenLoad(void *parent, s32 b);
+void fn_80226DC4(void);
+void fn_801CC598(void);
+
+extern const char lbl_8034BE48[7]; /* "/field" */
+
+void fn_801D8B94(void) {
+    LoadTask *h = lbl_80347654;
+    switch (h->state) {
+    case 0:
+    case 0xfe:
+        fn_801CC578(lbl_8034BE48);
+        fn_80227068(0);
+        lbl_80347650->b0 = 0;
+        fn_801CBBD8();
+        h->state = 3;
+        break;
+    case 1:
+        fn_801CBB9C(10.0f);
+        h->state = 2;
+        break;
+    case 2:
+        if (lbl_80347508 != 1) {
+            h->state = 3;
+        }
+        break;
+    case 3:
+        SaveLoadOpenLoad(lbl_803475A8, 1);
+        h->state = 4;
+        break;
+    case 4:
+        if (lbl_803473C4 != 0) {
+            if (lbl_803473C4 == 1) {
+                h->work->result = 0;
+            } else {
+                h->work->result = 1;
+            }
+            h->state = 7;
+        }
+        break;
+    case 5:
+        fn_801CBBAC(10.0f);
+        h->state = 6;
+        break;
+    case 6:
+        if (lbl_80347508 != 1) {
+            h->state = 7;
+        }
+        break;
+    case 7:
+        fn_80226DC4();
+        fn_801CC598();
+        h->state = 8;
+        break;
+    case 8:
+    case 0xff:
+        h->flags |= 0x40;
+        break;
+    }
+}
+
 void fn_801D9728(s32 idx, s32 flag, f32 a, f32 b, f32 c, f32 d, f32 e, f32 f, f32 g, f32 h) {
     Light *r = &lbl_8030E830[idx + 3];
     s32 on = 0;
@@ -1910,30 +1998,30 @@ void fn_801D8818(Layout* set, u32 flags, s32 mode, s32 drawmode, NJS_TEXLIST* te
     fn_801D843C(set, flags, mode, drawmode, 0, tex, z0, unused, sa, sb);
 }
 
-void *fn_801D8D18(void)
+s32 fn_801D8D18(void)
 {
-    Holder801D *p = lbl_80347654;
-    if (p->b19 == 7) {
-        return *(void **)((u8 *)p->f24 + 4);
+    LoadTask *p = lbl_80347654;
+    if (p->state == 7) {
+        return p->work->result;
     }
-    return (void *)-1;
+    return -1;
 }
 
 void fn_801D8D3C(void)
 {
-    Holder801D *p = lbl_80347660;
+    StateTask *p = lbl_80347660;
     if (p != 0) {
-        p->b19 = 10;
+        p->state = 10;
     }
 }
 
 s32 fn_801D8EE8(void)
 {
-    Holder801D *p = lbl_80347660;
-    if (p->b19 == 10) {
-        return *(s8 *)((u8 *)p->f24 + 1);
+    StateTask *p = lbl_80347660;
+    if (p->state == 10) {
+        return p->work->st[1];
     }
-    return *(s8 *)((u8 *)p->f24 + 5);
+    return p->work->st[5];
 }
 
 void fn_801DBA58(u32 a, u32 b, u32 c)
@@ -2663,17 +2751,17 @@ void fn_801D7A28(Obj7A28* obj, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6, f
 
 void fn_801D8B2C(void) {
     lbl_80347654 = fn_802268E8(lbl_803475A8, fn_801D8B94);
-    lbl_80347654->f24 = fn_801E1C7C(0xc);
-    *(u8 *)lbl_80347654->f24 = 0;
-    lbl_80347650 = lbl_80347654->f24;
+    lbl_80347654->work = fn_801E1C7C(0xc);
+    lbl_80347654->work->b0 = 0;
+    lbl_80347650 = lbl_80347654->work;
     memset(lbl_80347650, 0, 0xc);
 }
 
 void fn_801D8D54(void) {
     lbl_80347660 = fn_802268E8(lbl_803475A8, fn_801D8DBC);
-    lbl_80347660->f24 = fn_801E1C7C(0x248);
-    *(u8 *)lbl_80347660->f24 = 0;
-    lbl_8034765C = lbl_80347660->f24;
+    lbl_80347660->work = fn_801E1C7C(0x248);
+    lbl_80347660->work->st[0] = 0;
+    lbl_8034765C = lbl_80347660->work;
     memset(lbl_8034765C, 0, 0x248);
 }
 
@@ -3666,35 +3754,35 @@ void fn_801D7A90(NJS_TEXLIST* tex, Desc* d)
 
 void fn_801D8DBC(void)
 {
-    Holder801D *p = lbl_80347660;
+    StateTask *p = lbl_80347660;
     u16 go = 1;
-    switch (p->b19) {
+    switch (p->state) {
     case 0:
     case 0xfe:
         fn_801D8F18();
         go = 0;
-        p->b19 = 1;
+        p->state = 1;
         break;
     case 1:
     case 3:
     case 4:
-        p->b19 = 5;
+        p->state = 5;
     case 5:
         if (fn_801D91F4() >= 0) {
-            p->b19 = 8;
+            p->state = 8;
         }
         break;
     case 8:
     case 9:
-        p->b19 = 10;
+        p->state = 10;
         break;
     case 10:
-        p->b19 = 11;
+        p->state = 11;
         go = 0;
         break;
     case 11:
     case 0xff:
-        p->b18 |= 0x40;
+        p->flags |= 0x40;
         lbl_80347660 = 0;
         go = 0;
         break;
