@@ -517,6 +517,7 @@ extern s32 fn_800C3518(EvObj* o);
 extern void fn_801E66E0(EvObj* o);
 extern void fn_800C3428(Task* t);
 extern void fn_80222838(EvColl* c);
+extern s32 fn_8025ECC4(void);
 
 void fn_800972AC(void)
 {
@@ -1528,3 +1529,152 @@ void fn_8009BED8(Task* t) {
         break;
     }
 }
+
+#ifdef NONMATCHING
+typedef struct Spark {
+    s32 on;
+    f32 x;
+    f32 y;
+    f32 z;
+} Spark;
+typedef struct SparkSet {
+    s16 active;
+    u8 pad2[0xa];
+    Spark s[8];
+    u8 pad8C[0xb4 - 0x8c];
+} SparkSet;
+typedef struct SparkDef {
+    s32 on;
+    f32 xr;
+    f32 xb;
+    f32 wrap;
+    f32 z;
+    f32 yr;
+    f32 yb;
+    u8 pad1C[4];
+} SparkDef;
+typedef struct DvdFile {
+    u8 pad0[0x34];
+    u32 length;         /* 0x34 */
+    u8 pad38[0x3C - 0x38];
+} DvdFile;
+typedef struct SampLoad {
+    DvdFile file[2];    /* 0x00 */
+    char path[2][0x40]; /* 0x78 */
+} SampLoad;
+extern SampLoad lbl_80303248;
+extern u32 lbl_80346C68;
+extern s32 lbl_803474A8;
+extern s32 lbl_80346C54;
+extern u32 lbl_80346C5C;
+extern s32 lbl_80346C60;
+extern void *lbl_80346C64;
+extern s8 fn_801010CC(void);
+extern int sprintf(char *buf, const char *fmt, ...);
+extern s32 DVDOpen(const char *path, DvdFile *file);
+extern void StvSampPath(char *path);
+extern void *fn_801E1C7C(u32 size);
+extern s32 DVDReadAsyncPrio(DvdFile *file, void *buf, u32 len, s32 ofs, void *cb, s32 prio);
+typedef struct Ent_80098A68 {
+    u8 pad0[2];
+    s16 h2;
+    u8 pad4[0x8c - 4];
+    f32 f8c;
+    f32 f90;
+    u8 pad94[0xb4 - 0x94];
+} Ent_80098A68;
+#endif
+
+#ifdef NONMATCHING
+void fn_80098C58(SparkSet* set, s32 n, SparkDef* def) {
+    s32 i;
+    s32 j;
+    Spark* s;
+    SparkDef* d;
+
+    d = def;
+    for (i = 0; i < n; i++, set++) {
+        set->active = 1;
+        def = d;
+        s = set->s;
+        for (j = 0; j < 8; j++, s++, def++) {
+            if (def->on != 0) {
+                s->on = 1;
+                s->x += def->xr * (3.0517578125e-05f * fn_8025ECC4()) + def->xb;
+                if (def->wrap) {
+                    if (s->x > 0.0f) {
+                        s->x += def->wrap;
+                    }
+                    if (s->x < 0.0f) {
+                        s->x -= def->wrap;
+                    }
+                }
+                s->y += def->yr * (3.0517578125e-05f * fn_8025ECC4()) + def->yb;
+                s->z = def->z;
+            }
+        }
+    }
+}
+#endif
+
+#ifdef NONMATCHING
+void fn_80097A1C(void)
+{
+    SampLoad *s = &lbl_80303248;
+
+    lbl_80346C68 = fn_801010CC();
+    if (lbl_80346C68 == 0x3C || lbl_80346C68 == 0x3E) {
+        lbl_803474A8 = 1;
+        if (lbl_80346C68 == 0x3E) {
+            lbl_80346C54 = 1;
+        } else {
+            lbl_80346C54 = 0;
+        }
+    } else {
+        lbl_803474A8 = 0;
+    }
+    sprintf(s->path[1], "/sound/m04%02d.samp", lbl_80346C68);
+    DVDOpen(s->path[1], &s->file[1]);
+    StvSampPath(s->path[0]);
+    lbl_80346C60 = 0;
+    lbl_80346C64 = NULL;
+    lbl_80346C5C = (s->file[1].length + 0x1F) & ~0x1F;
+    lbl_80346C64 = fn_801E1C7C(lbl_80346C5C);
+    DVDReadAsyncPrio(&s->file[1], lbl_80346C64, lbl_80346C5C, 0, NULL, 2);
+}
+#endif
+
+#ifdef NONMATCHING
+void fn_80098A68(Ent_80098A68* e, s32 n, f32* v) {
+    f32 c = v[2];
+    f32 a = v[0];
+    f32 d = v[3];
+    f32 b = v[1];
+    f32 sgn = 1.0f;
+    f32 zero = 0.0f;
+    f32 one = 1.0f;
+    s32 i;
+    if (a < 0.0f) {
+        sgn = -1.0f;
+        a = -a;
+    }
+    if (c < 0.0f) {
+        sgn = -1.0f;
+        c = -c;
+    }
+    for (i = 0; i < n; i++, e++) {
+        if (c != zero) {
+            e->h2 += (s32)((one * e->f90 + 256.0f) / c);
+        }
+        if (d != zero) {
+            e->h2 += (s32)(d * (0.000030517578f * (f32)fn_8025ECC4()));
+        }
+        if (a != zero) {
+            e->h2 += (s32)((sgn * e->f8c + 256.0f) / a);
+        }
+        if (b != zero) {
+            e->h2 += (s32)(b * (0.000030517578f * (f32)fn_8025ECC4()));
+        }
+    }
+}
+#endif

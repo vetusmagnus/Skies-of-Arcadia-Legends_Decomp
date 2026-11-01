@@ -90,6 +90,23 @@ extern void fn_801959D4(s32 n);
 typedef struct Node_8018DD24 { s32 x0, x4; u8 ui[0x8c - 8]; f32 f8c; } Node_8018DD24;
 typedef struct Obj_8018DD24 { u8 pad0[0x18]; u8 flags; u8 state; u8 pad1a[0x24 - 0x1a]; Node_8018DD24 *node; } Obj_8018DD24;
 extern void fn_80199F38(void *ui);
+extern const char* fn_801F48AC(s16 n);
+extern void fn_801954D0(const char* help);
+extern void fn_80174CB0(void);
+extern s32 fn_801929B8(s32 idx);
+extern s32 fn_8019A21C(u32 mask, s32 d, s32 n, s32 unused, s32 max);
+extern void CampMenuHideAllPanels(void);
+extern void fn_8017B0F8(void);
+extern void fn_8017B19C(void);
+extern void fn_8017B2AC(void);
+extern void fn_8017B3BC(void);
+extern void fn_8017B4E4(void);
+extern void fn_8017B5EC(void);
+extern s32 fn_801953B8(void);
+extern SaveData lbl_8030B7F4;
+extern void fn_80199BB8(UiObj *o, f32 x, f32 y);
+extern void fn_80199BAC(UiObj *o, f32 x, f32 y);
+extern s32 fn_8015F298(u32 *a, u32 *b);
 
 /* Hide camp panel k (its window's first word is the hidden flag). */
 static inline void Hide(CampWork *a, s32 k) {
@@ -1104,6 +1121,9 @@ typedef struct {
     Obj *x8;
     u8 padc[2];
     s16 hE;
+    s32 x10;
+    s16 h14;
+    s16 h16;
 } Hold;
 typedef struct {
     u8 pad0[0x1c];
@@ -13879,3 +13899,423 @@ void fn_8018DD24(Obj_8018DD24 *self) {
         break;
     }
 }
+
+#ifdef NONMATCHING
+extern void fn_801957D8(s8 v);
+extern s32 fn_8017AFA0(void);
+extern void fn_80195B38(s8 idx, s32 id, s8 flag);
+typedef struct Query {
+    s32 type;
+    s32 val;
+    s32 mask;
+    s32 pad;
+} Query;
+typedef struct Entry {
+    u8 pad0[8];
+    u32 key;
+    struct { u8 pad[0x1c]; s32 x1c; } *xc;
+} Entry;
+typedef s32 (*QueryFn)(u32 *, u32 *);
+extern void *fn_800CCAE4(QueryFn cb, void *arg, u32 best);
+extern s32 fn_800E0AD0(s32 mode, s32 a, s32 b);
+#endif
+
+#ifdef NONMATCHING
+s32 fn_80174A18(void)
+{
+    CampCtrl* ctrl;
+    CampPnl** objs;
+    SaveChar* chr;
+    s32 id;
+    s32 slot;
+    s32 i;
+
+    ctrl = lbl_8034710C->holder->ctrl;
+    id = lbl_8030B7F4.party[lbl_80307638[1].cur[0].sel];
+    fn_801957D8(id);
+    chr = &lbl_8030B7F4.chr[id];
+    switch (ctrl->cur[0].sel) {
+    case 0:
+        slot = chr->slot0;
+        break;
+    case 1:
+        slot = chr->slot1;
+        break;
+    case 2:
+        slot = chr->slot2;
+        break;
+    }
+    if (slot != -1) {
+        fn_801954D0(fn_801F48AC(slot));
+    } else {
+        fn_801954D0(0);
+    }
+    switch (ctrl->cur[6].mask) {
+    case 6:
+        fn_80174CB0();
+        break;
+    default:
+        if (fn_801C09F8(lbl_80347154, 5)) {
+            ctrl->cur[0].x8 = ctrl->cur[0].sel;
+            ctrl->cur[0].sel++;
+            if (ctrl->cur[0].sel >= 3) ctrl->cur[0].sel = 0;
+        } else if (fn_801C09F8(lbl_80347154, 4)) {
+            ctrl->cur[0].x8 = ctrl->cur[0].sel;
+            ctrl->cur[0].sel--;
+            if (ctrl->cur[0].sel < 0) ctrl->cur[0].sel = 2;
+        } else if (fn_801C09F8(lbl_80347154, 2)) {
+            fn_801929B8(2);
+            return 1;
+        } else if (fn_801C09F8(lbl_80347154, 1)) {
+            fn_801929B8(5);
+            return -1;
+        } else if (fn_801C09F8(lbl_80347154, 0x11)) {
+            ctrl->cur[2].x8 = ctrl->cur[2].sel;
+            ctrl->cur[2].sel = fn_8019A21C(ctrl->cur[2].mask, -1, ctrl->cur[2].sel, 0, 7);
+            goto setmode;
+        } else if (fn_801C09F8(lbl_80347154, 0x10)) {
+            ctrl->cur[2].x8 = ctrl->cur[2].sel;
+            ctrl->cur[2].sel = fn_8019A21C(ctrl->cur[2].mask, 1, ctrl->cur[2].sel, 0, 7);
+            goto setmode;
+        } else {
+            break;
+        }
+        objs = camp_work.pnl;
+        i = ctrl->cur[0].sel + 0x5a;
+        UiObjSetCommand(&objs[i]->win->obj, 0x15, 0);
+        fn_801929B8(4);
+        i = ctrl->cur[0].x8 + 0x5a;
+        UiObjSetCommand(&objs[i]->win->obj, 0x14, 0);
+        break;
+    setmode:
+        ctrl->cur[6].mask = 6;
+    }
+    return 0;
+}
+#endif
+
+#ifdef NONMATCHING
+s32 fn_8017AB38(void)
+{
+    CampWork* cw;
+    UiObj* o;
+    s32 i;
+    CampCtrl* c;
+
+    cw = &camp_work;
+    switch (cw->state[15]) {
+    case 0:
+        CampMenuHideAllPanels();
+        camp_work.pnl[0x1a]->win->x0 = 1;
+        camp_work.pnl[0x87]->win->x0 = 1;
+        camp_work.pnl[0x88]->win->x0 = 1;
+        camp_work.pnl[0x87]->win->f74 = -5290.0f;
+        camp_work.pnl[0x88]->win->f74 = -5140.0f;
+        fn_8017B5EC();
+        c = lbl_8034710C->holder->ctrl;
+        for (i = 0; i < 2; i++) {
+            o = &camp_work.pnl[0x87 + i]->win->obj;
+            UiObjMoveTo(o, 6, 4, -8.0f, (i + 1) * 64 + 61);
+            if (c->cur[0].sel == i) {
+                UiObjSetCommand(o, 10, i);
+            } else {
+                UiObjSetCommand(o, 0xf, i + 1);
+            }
+        }
+        fn_8017B0F8();
+        cw->state[15] = 2;
+        break;
+    case 1:
+        CampMenuHideAllPanels();
+        camp_work.pnl[0x1a]->win->x0 = 1;
+        camp_work.pnl[0x87]->win->x0 = 1;
+        camp_work.pnl[0x88]->win->x0 = 1;
+        camp_work.pnl[0x87]->win->f74 = -5290.0f;
+        camp_work.pnl[0x88]->win->f74 = -5140.0f;
+        fn_8017B4E4();
+        fn_8017B19C();
+        fn_8017B0F8();
+        cw->state[15] = 2;
+        break;
+    case 2:
+        if (CampMenuAnyPanelBusy() == 0) {
+            cw->state[15] = 3;
+        } else if (fn_801C09F8(lbl_80347154, 2) != 0 || fn_801C09F8(lbl_80347154, 1) != 0) {
+            CampMenuFinishAllPanels();
+            cw->state[15] = 3;
+        }
+        break;
+    case 3:
+        switch (fn_8017AFA0()) {
+        case -1:
+            cw->state[15] = 0x18;
+            break;
+        case 0:
+            break;
+        case 1:
+            cw->state[15] = 0xc;
+            break;
+        }
+        break;
+    case 12:
+        fn_8017B3BC();
+        cw->state[15] = 0x12;
+        break;
+    case 18:
+        if (CampMenuAnyPanelBusy() == 0) {
+            switch (lbl_8034710C->holder->ctrl->cur[0].sel) {
+            case 0:
+                camp_work.state[16] = 0;
+                camp_screen = 0x10;
+                fn_801959D4(0x10);
+                break;
+            case 1:
+                camp_work.state[16] = 0;
+                camp_screen = 0x10;
+                fn_801959D4(0x10);
+                break;
+            default:
+                camp_work.state[2] = 0;
+                camp_screen = 2;
+                fn_801959D4(2);
+                break;
+            }
+        } else if (fn_801C09F8(lbl_80347154, 2) != 0 || fn_801C09F8(lbl_80347154, 1) != 0) {
+            CampMenuFinishAllPanels();
+            switch (lbl_8034710C->holder->ctrl->cur[0].sel) {
+            case 0:
+                camp_work.state[16] = 0;
+                camp_screen = 0x10;
+                fn_801959D4(0x10);
+                break;
+            case 1:
+                camp_work.state[16] = 0;
+                camp_screen = 0x10;
+                fn_801959D4(0x10);
+                break;
+            default:
+                camp_work.state[2] = 0;
+                camp_screen = 2;
+                fn_801959D4(2);
+                break;
+            }
+        }
+        break;
+    case 24:
+        fn_8017B2AC();
+        cw->state[15] = 0x13;
+        break;
+    case 19:
+        if (CampMenuAnyPanelBusy() == 0) {
+            camp_work.state[2] = 0;
+            camp_screen = 2;
+            fn_801959D4(2);
+        } else if (fn_801C09F8(lbl_80347154, 2) != 0 || fn_801C09F8(lbl_80347154, 1) != 0) {
+            CampMenuFinishAllPanels();
+            camp_work.state[2] = 0;
+            camp_screen = 2;
+            fn_801959D4(2);
+        }
+        break;
+    }
+    return 0;
+}
+#endif
+
+#ifdef NONMATCHING
+s32 fn_80183D90(void)
+{
+    UiObj* o;
+    s32 k;
+    s32 y;
+    s32 i;
+    CampCtrl* c;
+
+    c = lbl_8034710C->holder->ctrl;
+
+    if (fn_801C09F8(lbl_80347154, 5)) {
+        c->cur[0].x8 = c->cur[0].sel;
+        c->cur[0].sel = fn_8019A21C(c->cur[0].mask, 1, c->cur[0].sel, 0, 7);
+        goto upd;
+    } else if (fn_801C09F8(lbl_80347154, 4)) {
+        c->cur[0].x8 = c->cur[0].sel;
+        c->cur[0].sel = fn_8019A21C(c->cur[0].mask, -1, c->cur[0].sel, 0, 7);
+        goto upd;
+    } else if (fn_801C09F8(lbl_80347154, 7)) {
+        c->cur[4].x8 = c->cur[4].sel;
+        c->cur[4].sel++;
+        if (c->cur[4].sel >= 5) {
+            c->cur[4].sel = 0;
+        }
+        c->cur[1].x8 = c->cur[1].sel;
+        c->cur[1].sel++;
+        if (c->cur[1].sel >= 2) {
+            c->cur[1].sel = 0;
+        }
+        goto anim;
+    } else if (fn_801C09F8(lbl_80347154, 6)) {
+        c->cur[4].x8 = c->cur[4].sel;
+        c->cur[4].sel--;
+        if (c->cur[4].sel < 0) {
+            c->cur[4].sel = 4;
+        }
+        c->cur[1].x8 = c->cur[1].sel;
+        c->cur[1].sel--;
+        if (c->cur[1].sel < 0) {
+            c->cur[1].sel = 1;
+        }
+        goto anim;
+    } else if (fn_801C09F8(lbl_80347154, 2)) {
+        fn_801929B8(2);
+        return 1;
+    } else if (fn_801C09F8(lbl_80347154, 1)) {
+        return -1;
+    } else if (fn_801C09F8(lbl_80347154, 0x11) || fn_801C09F8(lbl_80347154, 0x10)) {
+        c->cur[0].x8 = c->cur[0].sel;
+        c->cur[0].sel = 5;
+        fn_801929B8(2);
+        return 1;
+    }
+    goto end;
+upd:
+    UiObjSetCommand(&camp_work.pnl[c->cur[0].sel]->win->obj, 0x15, 0);
+    fn_801929B8(4);
+    UiObjSetCommand(&camp_work.pnl[c->cur[0].x8]->win->obj, 0x14, 0);
+    goto end;
+anim:
+    for (i = 0, k = 6, y = 0x3d; i < camp_work.count; k += 5, y += 0x40, i++) {
+        o = &camp_work.pnl[c->cur[4].x8 + k]->win->obj;
+        UiObjFinish(o);
+        if (i == 0) {
+            UiObjMoveTo(o, 6, 4, 668.0f, y);
+        } else {
+            UiObjMoveTo(o, 6, -1, 668.0f, y);
+        }
+        UiObjSetCommand(o, 10, 0);
+        o = &camp_work.pnl[c->cur[4].sel + k]->win->obj;
+        UiObjFinish(o);
+        UiObjMoveTo(o, 6, -1, 328.0f, y);
+        UiObjSetCommand(o, 5, 0);
+    }
+    if (fn_801953B8()) {
+        o = &camp_work.pnl[c->cur[1].x8 + 0x6c]->win->obj;
+        UiObjFinish(o);
+        UiObjMoveTo(o, 6, -1, 668.0f, 317.0f);
+        UiObjSetCommand(o, 10, 0);
+        o = &camp_work.pnl[c->cur[1].sel + 0x6c]->win->obj;
+        UiObjFinish(o);
+        UiObjMoveTo(o, 6, -1, 328.0f, 317.0f);
+        UiObjSetCommand(o, 5, 0);
+    }
+end:
+    return 0;
+}
+#endif
+
+#ifdef NONMATCHING
+void fn_80174E18(void)
+{
+    SaveChar *c;
+    s32 i;
+    s32 id;
+    s32 j;
+    UiObj *obj;
+    s32 v;
+    s32 k;
+
+    i = lbl_8034710C->holder->ctrl->cur[2].sel;
+    lbl_80307638[1].cur[0].sel = i;
+    v = lbl_8030B7F4.party[i];
+    obj = &camp_work.pnl[i]->win->obj;
+    fn_80199BB8(obj, -348.0f, 61.0f);
+    fn_80199BAC(obj, -348.0f, 61.0f);
+    UiObjSetRaised(obj);
+    c = &lbl_8030B7F4.chr[v];
+    for (j = 0; j < 3; j++) {
+        switch (j) {
+        case 0:
+            id = c->slot0;
+            k = 0;
+            break;
+        case 1:
+            id = c->slot1;
+            k = 1;
+            break;
+        case 2:
+            id = c->slot2;
+            k = 2;
+            break;
+        }
+        fn_80195B38(k, id, j + 1);
+    }
+}
+#endif
+
+#ifdef NONMATCHING
+void fn_8015E470(Ent *self) {
+    Query q2;
+    Query q1;
+    Query q3;
+    Hold *h;
+    s32 c1;
+    s32 c2;
+    s32 c3;
+    Entry *e;
+    QueryFn cb;
+    s16 v;
+    s32 r;
+    u16 id;
+    u32 best;
+
+    best = 0xffff;
+    c3 = 0;
+    c2 = 0;
+    c1 = 0;
+    h = self->x1d8;
+    cb = fn_8015F298;
+    q3.type = 7;
+    q2.type = 7;
+    q1.type = 7;
+    q3.val = h->h14;
+    q2.val = h->h14;
+    q1.val = h->h14;
+    q1.mask = 0x40000;
+    q2.mask = 0;
+    q3.mask = 0x10000;
+    do {
+        e = fn_800CCAE4(fn_8015F298, &q1, best);
+        if (e != 0) {
+            r = fn_800E0AD0(h->x10, h->h16, e->xc->x1c);
+            v = 1;
+            if (r == 1) v = 2;
+            h->hE = v;
+            id = e->key;
+            best = id - 1;
+        } else {
+            c1++;
+        }
+        e = fn_800CCAE4(cb, &q2, best);
+        if (e != 0) {
+            r = fn_800E0AD0(h->x10, h->h16, e->xc->x1c);
+            v = 1;
+            if (r == 1) v = 2;
+            h->hE = v;
+            id = e->key;
+            best = id - 1;
+        } else {
+            c2++;
+        }
+        e = fn_800CCAE4(cb, &q3, best);
+        if (e != 0) {
+            r = fn_800E0AD0(h->x10, h->h16, e->xc->x1c);
+            v = 2;
+            if (r == 1) v = 1;
+            h->hE = v;
+            id = e->key;
+            best = id - 1;
+        } else {
+            c3++;
+        }
+    } while (c1 == 0 || c2 == 0 || c3 == 0);
+}
+#endif

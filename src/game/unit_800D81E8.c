@@ -779,6 +779,8 @@ typedef struct Item_8010C5BC {
     s16 len;
     char text[1];
 } Item_8010C5BC;
+extern void fn_800EA4A8(ResSpr* spr);
+extern void fn_801D4F0C(Sprite* it, s32 a, s32 b, s32 c, f32 f1, f32 f2, f32 f3, f32 f4);
 
 static inline void ResEvMark(s16 id) {
     s16 m;
@@ -11753,3 +11755,42 @@ void fn_8010C5BC(f32 a, s16 x, s16 y, Item_8010C5BC *p, s16 n)
         q = q->next;
     }
 }
+
+#ifdef NONMATCHING
+void fn_800E9424(f32 z, s16 row, u32 exp, s32 next, s16 idx) {
+    f32 z0;
+    ResPanel* pan;
+    s16 x;
+    s16 y;
+    s16 tx;
+    s16 ry;
+    s16 nx;
+    s16 ny;
+
+    z0 = TextGetZ();
+    TextPushColor();
+    TextSetColor(0xFF160800);
+    fn_800EA4A8(&lbl_80346DCC->spr[idx]);
+    pan = &lbl_80346DCC->obj[idx];
+    UiObjUpdate(&pan->o);
+    x = pan->o.x;
+    y = pan->o.y;
+    z = ResDrawPart(9, x + 0x148, y + (row * 64 + 0x58), z);
+    z = ResDrawPart(0x16, x + 0x148, y + (row * 64 + 0x58), z);
+    TextSetZ(z);
+    ry = row * 64;
+    tx = x + 0x160;
+    TextPrint(tx, y + (ry + 0x5e), "Total Exp.");
+    TextPrint(tx, y + (ry + 0x76), "Next");
+    TextPrintNumber(x + 0x1f8, y + (ry + 0x5e), exp, 0xC008);
+    nx = x + 0x204;
+    ny = y + (ry + 0x76);
+    if (next >= 0) {
+        TextPrintNumber(nx, ny, next, 0xC007);
+    } else {
+        TextPrint(nx, ny, "-------");
+    }
+    TextPopColor(1);
+    TextSetZ(z0);
+}
+#endif

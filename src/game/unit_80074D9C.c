@@ -245,7 +245,14 @@ typedef struct R16 {
 } R16;
 extern R16 lbl_80309730[];
 extern s32 fn_80078610(s8 idx);
-extern void fn_8007D42C(void);
+typedef struct Obj_8007DE54_8007D42C {
+    u8 pad[0x18];
+    u8 flags18;
+    u8 state;
+    u8 pad1a[0x24 - 0x1a];
+    s32* buf;
+} Obj_8007DE54_8007D42C;
+void fn_8007D42C(Obj_8007DE54_8007D42C* p);
 typedef struct Obj_8007DE54 {
     u8 pad[0x18];
     u8 flags18;
@@ -5734,3 +5741,331 @@ void fn_80087844(Slot *t)
         break;
     }
 }
+
+#ifdef NONMATCHING
+
+
+typedef struct EnemyData {
+    u8 pad[0x24];
+    s32 x24;    /* max HP */
+} EnemyData;
+extern s16 lbl_80302BD8[12];
+extern s32 lbl_803472E8;
+extern s32 fn_801F4D14(void);
+extern EnemyData* fn_80077B88(u8 id);
+extern s32 fn_802182F4(s32 unused, s32 n, s8 a, s8 b, ...);
+extern char lbl_802B0C90[];
+extern char lbl_802B0CB8[];
+extern s8 lbl_80346C00[4];
+#endif
+
+/* fn_8007D42C (unit_80074D9C): the battle music task (fn_80078658 mode 1). It snapshots the enemy
+ * slots, then keeps comparing the party's and the enemies' remaining HP and switches between the
+ * calm (state 2), pinch (3) and winning (4) phrase sets of the battle track (fn_802182F4). */
+#ifdef NONMATCHING
+void fn_8007D42C(Obj_8007DE54_8007D42C* p)
+{
+    s32 i;
+    s32 max;
+    s32 hp;
+    s32 h;
+    s32 m;
+    s32 ehp;
+    s32 emax;
+
+    switch (p->state) {
+    case 0:
+        p->state = 1;
+        p->buf = fn_801E1C7C(4);
+        {
+            int k;
+            for (k = 0; k < 12; k++) {
+                lbl_80302BD8[k] = lbl_80309DCC[k];
+            }
+        }
+    case 1:
+        if (fn_801F4D14()) {
+            p->state = 2;
+        } else {
+            p->state = 3;
+        }
+        break;
+    case 3:
+        max = 0;
+        hp = 0;
+        for (i = 0; i < 4; i++) {
+            if (lbl_80309DE4[i] != NULL) {
+                m = lbl_80309DE4[i]->x18;
+                h = lbl_80309DE4[i]->score;
+                if ((f32)h / (f32)m < 0.25f) {
+                    return;
+                }
+                max += m;
+                hp += h;
+            }
+        }
+        if ((f32)hp / (f32)max < 0.75) {
+            return;
+        }
+        emax = 1;
+        ehp = 0;
+        for (i = 4; i <= 11; i++) {
+            if (lbl_80302BD8[i] != -1 && lbl_80302BD8[i] >= 0x80) {
+                emax += fn_80077B88(lbl_80302BD8[i])->x24;
+                if (fn_80078610(i)) {
+                    ehp += lbl_80309DE4[i]->score;
+                }
+            }
+        }
+        if ((f32)ehp / (f32)emax >= 0.3) {
+            goto calm3;
+        }
+        p->state = 4;
+        if (lbl_803472E8 == 1) {
+            p->buf[0] = fn_802182F4(0, 5, 4, 0xe, 4, 8, 4, 9, 4, 0xa, 4, 0xb);
+        } else {
+            p->buf[0] = fn_802182F4(0, 3, 4, 0xb, 4, 6, 4, 7);
+        }
+        break;
+    calm3:
+        p->state = 2;
+        if (lbl_803472E8 != 1) {
+            p->buf[0] = fn_802182F4(0, 5, 4, 0xa, 4, 0, 4, 1, 4, 2, 4, 3);
+        }
+        break;
+    case 4:
+        hp = 0;
+        max = 0;
+        for (i = 0; i < 4; i++) {
+            if (lbl_80309DE4[i] != NULL) {
+                m = lbl_80309DE4[i]->x18;
+                h = lbl_80309DE4[i]->score;
+                if ((f32)h / (f32)m < 0.25f) {
+                    goto pinch4;
+                }
+                max += m;
+                hp += h;
+            }
+        }
+        if ((f32)hp / (f32)max < 0.4) {
+            goto pinch4;
+        }
+        emax = 1;
+        ehp = 0;
+        for (i = 4; i <= 11; i++) {
+            if (lbl_80302BD8[i] != -1 && lbl_80302BD8[i] >= 0x80) {
+                emax += fn_80077B88(lbl_80302BD8[i])->x24;
+                if (fn_80078610(i)) {
+                    ehp += lbl_80309DE4[i]->score;
+                }
+            }
+        }
+        if ((f32)ehp / (f32)emax >= 0.5) {
+            goto calm4;
+        }
+        break;
+    pinch4:
+        p->state = 3;
+        if (lbl_803472E8 == 1) {
+            p->buf[0] = fn_802182F4(0, 9, 4, 0xd, 4, 0, 4, 1, 4, 2, 4, 3, 4, 4, 4, 5, 4, 6, 4, 7);
+        } else {
+            p->buf[0] = fn_802182F4(0, 3, 4, 8, 4, 4, 4, 5);
+        }
+        break;
+    calm4:
+        p->state = 2;
+        if (lbl_803472E8 == 1) {
+            p->buf[0] = fn_802182F4(0, 9, 4, 0xd, 4, 0, 4, 1, 4, 2, 4, 3, 4, 4, 4, 5, 4, 6, 4, 7);
+        } else {
+            p->buf[0] = fn_802182F4(0, 5, 4, 9, 4, 0, 4, 1, 4, 2, 4, 3);
+        }
+        break;
+    default:
+        hp = 0;
+        max = 0;
+        for (i = 0; i < 4; i++) {
+            if (lbl_80309DE4[i] != NULL) {
+                m = lbl_80309DE4[i]->x18;
+                h = lbl_80309DE4[i]->score;
+                if ((f32)h / (f32)m < 0.25f) {
+                    goto pinch;
+                }
+                max += m;
+                hp += h;
+            }
+        }
+        if ((f32)hp / (f32)max < 0.4) {
+            goto pinch;
+        }
+        emax = 1;
+        ehp = 0;
+        for (i = 4; i <= 11; i++) {
+            if (lbl_80302BD8[i] != -1 && lbl_80302BD8[i] >= 0x80) {
+                emax += fn_80077B88(lbl_80302BD8[i])->x24;
+                if (fn_80078610(i)) {
+                    ehp += lbl_80309DE4[i]->score;
+                }
+            }
+        }
+        if ((f32)ehp / (f32)emax < 0.5) {
+            goto win;
+        }
+        break;
+    pinch:
+        p->state = 3;
+        if (lbl_803472E8 != 1) {
+            p->buf[0] = fn_802182F4(0, 3, 4, 0xc, 4, 4, 4, 5);
+        }
+        break;
+    win:
+        p->state = 4;
+        if (lbl_803472E8 == 1) {
+            p->buf[0] = fn_802182F4(0, 5, 4, 0xe, 4, 8, 4, 9, 4, 0xa, 4, 0xb);
+        } else {
+            p->buf[0] = fn_802182F4(0, 3, 4, 0xd, 4, 6, 4, 7);
+        }
+        break;
+    case 0xff:
+        fn_80217830(1);
+        p->flags18 |= 0x40;
+        lbl_8034736C = 0;
+        break;
+    }
+}
+#endif
+
+#ifdef NONMATCHING
+s32 fn_80088CE8(s32 i)
+{
+    s32 k;
+    Chr_UNIT0000** sp;
+    s32 n;
+    s32* list = lbl_80302C98;
+    s32* out2;
+    s32* out;
+    s32 j;
+    s32 res;
+    s8 c;
+    sp = lbl_80309DE4;
+    lbl_80302C98[0] = -1;
+    lbl_80302C98[1] = -1;
+    lbl_80302C98[2] = -1;
+    lbl_80302C98[3] = -1;
+    out = list;
+    n = 0;
+    for (j = 0; j <= 3; j++, sp++) {
+        if (fn_80078610(j) && !((*sp)->w1c & 0x4000)) {
+            *out++ = j;
+            n++;
+        }
+    }
+    if (n != 0) {
+        c = lbl_80309174[i].b4;
+        if (c > 3) {
+            res = lbl_80302C98[rand() % n];
+            return res;
+        }
+        return c;
+    } else {
+        lbl_80309174[i].x0 = 0x226;
+        lbl_80302C98[0] = -1;
+        lbl_80302C98[1] = -1;
+        lbl_80302C98[2] = -1;
+        lbl_80302C98[3] = -1;
+        out2 = list;
+        n = 0;
+        for (k = n; k <= 3; k++) {
+            if (fn_80078610(k)) {
+                *out2++ = k;
+                n++;
+            }
+        }
+        return lbl_80302C98[rand() % n];
+    }
+}
+#endif
+
+#ifdef NONMATCHING
+s32 fn_8008A280(s32 i)
+{
+    s8* pc;
+    s8 c;
+    s8 r;
+    s32 v;
+    pc = &lbl_80309174[i].b4;
+    c = *pc;
+    if (lbl_80309DE4[i]->w1c & 0x800) {
+        r = fn_80083BAC(i, 3);
+        if (r == -1) {
+            for (;;) fn_801DBE1C(lbl_802B0C90);
+        }
+        *pc = r;
+        return 2;
+    }
+    v = fn_80078478(i);
+    if (v == 3 || (v >= 0x20 && v < 0x40)) {
+        if (c != -1 && c > 3 && fn_80078610(c)) {
+            return 1;
+        }
+        r = fn_80083BAC(i, 2);
+        if (r == -1) {
+            *pc = i;
+            return 2;
+        }
+        *pc = r;
+        return 2;
+    }
+    if (v == 1 || (v >= 0x60 && v < 0xC8)) {
+        if (c != -1 && c <= 3 && fn_80078610(c)) {
+            *pc = c;
+            return 1;
+        }
+        r = fn_80083BAC(i, 1);
+        if (r == -1) {
+            for (;;) fn_801DBE1C(lbl_802B0CB8);
+        }
+        *pc = r;
+        return 2;
+    }
+    return 1;
+}
+#endif
+
+#ifdef NONMATCHING
+int fn_80078D24(int arg)
+{
+    int i;
+    int v;
+    s8 kind = fn_80081FEC(arg);
+
+    v = arg;
+
+    switch (kind) {
+    case 0x1d:
+    case 0x1e:
+        for (i = 0; i < 4; i++) {
+            if (lbl_80309DE4[i] != 0 && (lbl_80309DE4[i]->w1c & 0x85E80) != 0) {
+                v = i;
+                break;
+            }
+        }
+        break;
+    case 0x1b:
+    case 0x1c:
+    case 0x2f:
+        for (i = 0; i < 4; i++) {
+            if (lbl_80309DE4[i] != 0 && (lbl_80309DE4[i]->w1c & 0x2100) != 0) {
+                v = i;
+                break;
+            }
+        }
+        break;
+    }
+    for (i = 0; i < 4; i++) {
+        if (lbl_80346C00[i] == v) {
+            return i;
+        }
+    }
+    return 0;
+}
+#endif

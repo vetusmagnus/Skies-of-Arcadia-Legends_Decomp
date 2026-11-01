@@ -11,7 +11,6 @@
 #include "game/gamedata.h"
 #include "game/sprite.h"
 #include <stdio.h>
-
 /* Digit glyph codes for the ones, tens, hundreds and thousands places. These are the start of
  * the original file's .data (lbl_802F8A20, 0x58 bytes): separate arrays, addressed from one
  * pooled base register, so they have to be defined here (in this order, first in .data). */
@@ -19,7 +18,6 @@ u16 lbl_802F8A20[10] = { 0x0000, 0x6800, 0x7800, 0x1800, 0x1400, 0x0100, 0x1200,
 u16 lbl_802F8A34[12] = { 0x0000, 0x0001, 0x0002, 0x0003, 0x0004, 0x0005, 0x0006, 0x0007, 0x0008, 0x0009, 0x0000, 0x0000 };
 u16 lbl_802F8A4C[8] = { 0x0000, 0x0010, 0x0020, 0x0030, 0x0040, 0x0050, 0x0060, 0x0000 };
 u16 lbl_802F8A5C[14] = { 0x0000, 0x8000, 0x8200, 0x8400, 0x8600, 0x8800, 0x8A00, 0x8C00, 0x8E00, 0x9000, 0x0000, 0x0000, 0x0000, 0x0000 };
-
 extern void fn_802193BC(s32 a, s32 b);
 extern s32 fn_801D168C(void);
 extern void fn_801D150C(s32 v);
@@ -535,6 +533,8 @@ typedef struct Xf_80224F28 {
     s16 nnear;          /* 0x8c */
     u16 key;            /* 0x8e */
 } Xf_80224F28;
+extern ShipData lbl_802D6740[5];
+
 static inline s16 XfFind(Xf_80224F28 *r, u16 key, s16 n) {
     int i;
     for (i = 0; i < n; r++, i++) {
@@ -6011,3 +6011,168 @@ void fn_80226984(void) {
     if (c || a || b) fn_801D0F80(0);
     lbl_803477F0 = -1;
 }
+
+#ifdef NONMATCHING
+#include <math.h>
+extern char* strstr(const char* str, const char* pat);
+extern char* lbl_802F91F8[16];
+typedef struct AngObj_8022BDD0 {
+    u8 pad0[0xc];
+    Angle x;    /* 0x0c */
+    Angle y;    /* 0x10 */
+    Angle z;    /* 0x14 */
+} AngObj_8022BDD0;
+typedef struct Lim_8022BDD0 {
+    u8 pad0[8];
+    f32 step;   /* 0x08 */
+} Lim_8022BDD0;
+f32 fn_802917A0(f32 x);
+
+static inline void StrLower(char* dst, const char* src) {
+    if (dst != NULL && src != NULL) {
+        for (;;) {
+            if (*src == '\0') {
+                break;
+            }
+            if (*src >= 'A' && *src <= 'Z') {
+                *dst = *src + 0x20;
+            } else {
+                *dst = *src;
+            }
+            src++;
+            dst++;
+        }
+        *dst = '\0';
+    }
+}
+#endif
+
+#ifdef NONMATCHING
+s32 fn_8022ABEC(char* name) {
+    char buf[0x40];
+    u32 i;
+
+    StrLower(buf, name);
+    for (i = 0; i < 16; i++) {
+        if (strstr(lbl_802F91F8[i], buf) != NULL) {
+            return i;
+        }
+    }
+    return -1;
+}
+#endif
+
+#ifdef NONMATCHING
+s32 fn_8022BDD0(AngObj_8022BDD0* dst, AngObj_8022BDD0* a, AngObj_8022BDD0* b, Lim_8022BDD0* lim) {
+    f32 dx, dy, dz;
+    f32 nbx, nax, nay, nby, naz, nbz;
+    f32 bx, by, bz;
+    f32 ax, ay, az;
+    s32 ok;
+
+    ok = 1;
+    ax = 0.005493164f * (a->x & 0xffff);
+    ay = 0.005493164f * (a->y & 0xffff);
+    az = 0.005493164f * (a->z & 0xffff);
+    bx = 0.005493164f * (b->x & 0xffff);
+    by = 0.005493164f * (b->y & 0xffff);
+    bz = 0.005493164f * (b->z & 0xffff);
+    nax = ax;
+    nbx = bx;
+    if (nax >= 360.0f || nax <= -360.0f) {
+        nax = (s32)nax % 360 + fn_802917A0(nax);
+    }
+    if (nbx >= 360.0f || nbx <= -360.0f) {
+        nbx = (s32)nbx % 360 + fn_802917A0(nbx);
+    }
+    dx = nax - nbx;
+    nby = by;
+    nay = ay;
+    if (nay >= 360.0f || nay <= -360.0f) {
+        nay = (s32)nay % 360 + fn_802917A0(nay);
+    }
+    if (nby >= 360.0f || nby <= -360.0f) {
+        nby = (s32)nby % 360 + fn_802917A0(nby);
+    }
+    dy = nay - nby;
+    nbz = bz;
+    naz = az;
+    if (naz >= 360.0f || naz <= -360.0f) {
+        naz = (s32)naz % 360 + fn_802917A0(naz);
+    }
+    if (nbz >= 360.0f || nbz <= -360.0f) {
+        nbz = (s32)nbz % 360 + fn_802917A0(nbz);
+    }
+    dz = naz - nbz;
+    if (fabsf(dx) > lim->step) {
+        if (dx > 0.0f) {
+            ax = bx + lim->step;
+        } else {
+            ax = bx - lim->step;
+        }
+        ok = 0;
+    }
+    if (fabsf(dy) > lim->step) {
+        if (dy > 0.0f) {
+            ay = by + lim->step;
+        } else {
+            ay = by - lim->step;
+        }
+        ok = 0;
+    }
+    if (fabsf(dz) > lim->step) {
+        if (dz > 0.0f) {
+            az = bz + lim->step;
+        } else {
+            az = bz - lim->step;
+        }
+        ok = 0;
+    }
+    dst->x = 182.04445f * ax;
+    dst->y = 182.04445f * ay;
+    dst->z = 182.04445f * az;
+    return ok;
+}
+#endif
+
+/* NEAR (4 lines): the original copies the zero for GetEnt's e and InRange's r from the
+   result register (mr r4,r6 / mr r0,r6); we get li r4,0 / mr r0,r4. */
+#ifdef NONMATCHING
+s32 fn_8021A940(s8* p, void* q)
+{
+    s32 r = 0;
+    if (p != NULL && q != NULL) {
+        ShipData* e = GetEnt(p[0]);
+        if (e != NULL) {
+            s32 v;
+            r = 0x63;
+            v = e->sp; v += p[1] * e->sp_up;
+            if (v < 0x63) {
+                r = v;
+            }
+        }
+    }
+    return r;
+}
+#endif
+
+/* NEAR (4 lines): the original copies the zero for GetEnt's e and InRange's r from the
+   result register (mr r4,r6 / mr r0,r6); we get li r4,0 / mr r0,r4. */
+#ifdef NONMATCHING
+s32 fn_8021A9C4(s8* p, void* q)
+{
+    s32 r = 0;
+    if (p != NULL && q != NULL) {
+        ShipData* e = GetEnt(p[0]);
+        if (e != NULL) {
+            s32 v;
+            r = 0x63;
+            v = e->sp_max; v += p[1] * e->sp_max_up;
+            if (v < 0x63) {
+                r = v;
+            }
+        }
+    }
+    return r;
+}
+#endif

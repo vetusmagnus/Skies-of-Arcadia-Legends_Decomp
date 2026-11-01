@@ -764,17 +764,6 @@ typedef struct Task_800BE6EC {
 } Task_800BE6EC;
 extern struct NJS_MOTION;
 extern struct NJS_MOTION;
-
-
-
-
-
-
-
-
-
-
-
 #define FREE(p) if ((p) != NULL) { fn_801E1784(p); (p) = NULL; }
 extern struct NJS_MOTION;
 
@@ -2768,3 +2757,78 @@ s32 fn_800D701C(EvObj* o) {
     }
     return ret;
 }
+
+#ifdef NONMATCHING
+typedef struct Menu_800D8014 {
+    s16 s0;
+    s16 s2;
+    s32 p4;
+    f32 alpha;
+    s16 on[3];
+    u8 pad12[2];
+    f32 pos[3][2];
+    f32 d[3][2];
+} Menu_800D8014;
+extern char lbl_802B15BC[];
+extern char lbl_802B15CC[];
+extern s32 fn_800CE4B4(void);
+#endif
+
+#ifdef NONMATCHING
+void fn_800D8014(Menu_800D8014* o) {
+    s32 d = lbl_80310A1C[0x11];
+    s32 i;
+    s32 found;
+    switch (d) {
+    case 0:
+        if (fn_800CE4B4() == 0) {
+            fn_801DBE1C(lbl_802B15BC, lbl_80310A1C[6], d);
+        }
+        o->on[2] = 1;
+        o->on[1] = 1;
+        o->on[0] = 1;
+        o->s2 = 3;
+        break;
+    case 1:
+        o->on[0] = 1;
+        o->on[1] = 0;
+        o->on[2] = 1;
+        o->s2 = 2;
+        break;
+    case 2:
+        if (fn_800CE4B4() == 0) {
+            fn_801DBE1C(lbl_802B15BC, lbl_80310A1C[6], d);
+        }
+        o->on[0] = 0;
+        o->on[1] = 1;
+        o->on[2] = 0;
+        o->s2 = 1;
+        break;
+    default:
+        fn_801DBE1C(lbl_802B15CC, d);
+        break;
+    }
+    found = 0;
+    o->s0 = 0;
+    o->p4 = 0;
+    i = 0;
+    do {
+        if (found == 0 && o->on[i] != 0) {
+            o->pos[i][0] = -3.0f;
+            found++;
+            o->pos[i][1] = -6.0f;
+            o->d[i][0] = 1.0f;
+            o->d[i][1] = 2.0f;
+        } else {
+            o->d[i][1] = 0.0f;
+            o->d[i][0] = 0.0f;
+            o->pos[i][1] = 0.0f;
+            o->pos[i][0] = 0.0f;
+        }
+        i++;
+    } while (i < 3);
+    lbl_80311A14[lbl_8034757C].b3 = 0;
+    lbl_80311A14[lbl_8034757C].b2 = 0;
+    o->alpha = 0.0f;
+}
+#endif

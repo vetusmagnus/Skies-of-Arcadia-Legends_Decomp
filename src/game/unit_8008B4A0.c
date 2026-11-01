@@ -3200,3 +3200,93 @@ s32 fn_800916A8(f32* out, void* a, Seg* seg) {
     }
     return 0;
 }
+
+#ifdef NONMATCHING
+typedef struct ModelMotionTable {
+    s32 count;
+    NJS_MOTION* list[1];
+} ModelMotionTable;
+typedef struct ModelExt {
+    u8 pad0[0x1C];
+    ModelMotionTable* motions; /* 0x1C */
+} ModelExt;
+typedef struct ModelObj {
+    u8 pad0[0x1C8];
+    ModelExt* ext;             /* 0x1C8 */
+    u8 pad1CC[4];
+    struct ModelObj* next;     /* 0x1D0 */
+} ModelObj;
+
+static inline NJS_MOTION* ModelMotion(ModelObj* obj, s32 i)
+{
+    ModelMotionTable* t = obj->ext->motions;
+    NJS_MOTION* m;
+    if (t->count > i) {
+        m = t->list[i];
+    } else {
+        m = NULL;
+    }
+    return m;
+}
+#endif
+
+/* Motion i of obj, else of the first object down its 0x1D0 chain that has one. */
+#ifdef NONMATCHING
+NJS_MOTION* fn_8008F8FC(ModelObj* obj, s32 i)
+{
+    NJS_MOTION* m = ModelMotion(obj, i);
+    ModelObj* p;
+    if (m != NULL) {
+        return m;
+    }
+    for (p = obj->next; p != NULL; p = p->next) {
+        m = ModelMotion(p, i);
+        if (m != NULL) {
+            return m;
+        }
+    }
+    return NULL;
+}
+#endif
+
+#ifdef NONMATCHING
+s32 fn_800914D8(f32* cur, f32* tgt, f32 speed, f32 range) {
+    f32 d[3];
+    s32 n;
+    d[0] = tgt[0] - cur[0];
+    d[1] = tgt[1] - cur[1];
+    d[2] = tgt[2] - cur[2];
+    if (0.0f != d[0] || 0.0f != d[1] || 0.0f != d[2]) {
+        f32 t = fn_80291A5C(d[2] * d[2] + (d[0] * d[0] + d[1] * d[1])) / range;
+        if (1.0f > t) {
+            speed *= t;
+            if (0.2f > speed) {
+                speed = 0.2f;
+            }
+        }
+        njUnitVector(d);
+        n = 0;
+        cur[0] = d[0] * speed + cur[0];
+        if (0.0f >= (tgt[0] - cur[0]) * d[0]) {
+            cur[0] = tgt[0];
+            n = 1;
+        }
+        cur[1] = d[1] * speed + cur[1];
+        if (0.0f >= (tgt[1] - cur[1]) * d[1]) {
+            cur[1] = tgt[1];
+            n++;
+        }
+        cur[2] = d[2] * speed + cur[2];
+        if (0.0f >= (tgt[2] - cur[2]) * d[2]) {
+            cur[2] = tgt[2];
+            n++;
+        }
+        return n == 3;
+    } else {
+        cur[0] = tgt[0];
+        cur[1] = tgt[1];
+        cur[2] = tgt[2];
+        return 1;
+    }
+}
+#endif

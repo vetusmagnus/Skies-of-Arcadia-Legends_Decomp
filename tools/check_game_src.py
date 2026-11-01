@@ -9,7 +9,11 @@ without that:
   - inline assembly (`asm`, `__asm`, `asm { }` blocks, `nofralloc`)
   - `#pragma` of any kind (optimization, scheduling, register and peephole pragmas included)
   - assembly or binary includes (`#include "*.s"`, `.incbin`, `INCLUDE_ASM`)
-  - fakematch markers (`FAKEMATCH`, `NONMATCHING`, `fakematch`)
+  - fakematch markers (`FAKEMATCH`, `fakematch`)
+  - any use of `NONMATCHING` other than an `#ifdef NONMATCHING` guard (with its `#else`/`#endif`)
+A function that doesn't match yet may be kept as C inside `#ifdef NONMATCHING ... #endif`. Only
+`configure.py --non-matching` defines it; the default build never compiles that code, so the DOL still
+comes from the original instructions. Code inside the guard is checked by the same rules.
 Library code under extern/ is not checked: its asm functions are asm in the original libraries.
 The Ninja library (src/ninja/) may use per-function optimizer pragmas (`optimization_level`, `opt_*`,
 `scheduling`) where the original build used a different optimization level and no plain-C form matches.
@@ -23,8 +27,10 @@ RULES = [
     (re.compile(r"^\s*#\s*pragma\b"), "#pragma"),
     (re.compile(r"^\s*#\s*include\s*[<\"][^>\"]*\.(?:s|S|inc|bin)[>\"]"), "assembly or binary include"),
     (re.compile(r"\.incbin\b|\bINCLUDE_ASM\b|\bINCLUDE_RODATA\b"), "assembly or binary include"),
-    (re.compile(r"\b(?:FAKEMATCH|NONMATCHING|fakematch)\b"), "fakematch marker"),
+    (re.compile(r"\b(?:FAKEMATCH|fakematch)\b"), "fakematch marker"),
+    (re.compile(r"\bNONMATCHING\b"), "NONMATCHING outside an #ifdef NONMATCHING guard"),
 ]
+GUARD = re.compile(r"^\s*#\s*ifdef\s+NONMATCHING\s*$")
 EXTS = (".c", ".cpp", ".h", ".hpp", ".inc")
 NINJA_PRAGMA = re.compile(r"^\s*#\s*pragma\s+(?:optimization_level|opt_\w+|scheduling)\b")
 
@@ -78,6 +84,8 @@ def main():
             lines = strip(f.read()).splitlines()
         for no, line in enumerate(lines, 1):
             if "src/ninja/" in path.replace("\\", "/") and NINJA_PRAGMA.search(line):
+                continue
+            if GUARD.match(line):
                 continue
             for rx, what in RULES:
                 if rx.search(line):

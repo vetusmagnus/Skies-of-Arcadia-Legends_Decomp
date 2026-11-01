@@ -83,8 +83,9 @@ extern f32 lbl_80346EE4;
 /* The current map. */
 typedef struct {
     s32 map;
-    s32 unk4;
-    char room;
+    s32 id;
+    s8 sub;
+    u8 pad_9[0x3];
 } MapInfo;
 extern MapInfo lbl_80311AC0;
 s32 fn_802238E4(NJS_POINT3 *dst, NJS_POINT3 *src, EvHit *hit);
@@ -1402,6 +1403,7 @@ extern f32 fn_8011660C(EvObj *o, NJS_POINT3 *t);
 extern void fn_80116898(NJS_POINT3 *in, NJS_POINT3 *out);
 extern s32 MemEqual(const void *a, const void *b, s32 size);
 extern f32 lbl_80347430;
+
 /* 1 while the player's input is locked (event, camera or menu). */
 static inline s32 PlayerBusy(void)
 {
@@ -3014,7 +3016,7 @@ s32 fn_8011768C(void) {
     s32 r;
     u16 m;
 
-    if (lbl_80347464 == 1 || lbl_80311AC0.unk4 >= 500) {
+    if (lbl_80347464 == 1 || lbl_80311AC0.id >= 500) {
         return 0;
     }
     r = -1;
@@ -3454,7 +3456,7 @@ void fn_80123CBC(Task* t) {
             id = t;
         }
         SaveLoadOpenSave(lbl_803475A0, id);
-        if (lbl_80311AC0.unk4 != 0x63) {
+        if (lbl_80311AC0.id != 0x63) {
             fn_8022697C(t->x14);
         }
         t->state = 4;
@@ -3469,7 +3471,7 @@ void fn_80123CBC(Task* t) {
         break;
     case 5:
         fn_80217134();
-        if (lbl_80311AC0.unk4 != 0x63) {
+        if (lbl_80311AC0.id != 0x63) {
             fn_8022697C(0x7FFFFFFF);
         }
         lbl_803473B4 = 0;
@@ -3703,7 +3705,7 @@ static inline ShipEntry *FindShip(s32 id) {
 void fn_80129AA4(void)
 {
     s32 ready;
-    ready = lbl_80311AC0.unk4 >= 500;
+    ready = lbl_80311AC0.id >= 500;
     if (ready != 0) {
         s32 v = lbl_80310A1C[0x10b];
         if (v != lbl_80346EE0) {
@@ -3730,7 +3732,7 @@ void fn_80129AA4(void)
 }
 
 s32 fn_8012A8DC(void) {
-    s32 v = lbl_80311AC0.unk4;
+    s32 v = lbl_80311AC0.id;
     return v >= 500;
 }
 
@@ -4493,7 +4495,7 @@ s32 fn_80128A1C(FormTbl *t)
 void fn_801299B4(void)
 {
     s32 ready;
-    ready = lbl_80311AC0.unk4 >= 500;
+    ready = lbl_80311AC0.id >= 500;
     if (ready != 0) {
         lbl_80346EE4 = lbl_803472E0;
         if (lbl_80347294 == 1) {
@@ -4683,7 +4685,7 @@ s32 fn_80114B24(s32 a, NJS_POINT3 *p, Src *src, f32 y) {
             break;
         }
     }
-    if (lbl_80311AC0.unk4 != 99) {
+    if (lbl_80311AC0.id != 99) {
         return r;
     }
     w = row->flags;
@@ -8101,7 +8103,7 @@ void fn_8012A26C(void)
     s32 ready;
     s32 i;
 
-    ready = lbl_80311AC0.unk4 >= 500;
+    ready = lbl_80311AC0.id >= 500;
     if (ready == 0) {
         lbl_80347280 = 0;
         return;
@@ -9276,3 +9278,87 @@ void fn_8011A2D4(Task *task)
         break;
     }
 }
+
+#ifdef NONMATCHING
+typedef struct Key {
+    s32 id;
+    s8 sub;
+} Key;
+typedef struct Ent {
+    s32 id;
+    s8 sub;
+    u8 pad[3];
+} Ent;
+extern Key lbl_80346790;
+extern Ent lbl_802E4FB8[];
+extern s32 lbl_80346EA8;
+
+/* Uniform clamped knot j of a B-spline with control points 0..n and order `order`. */
+static inline f32 Knot_8011A994(int j, int n, int order) {
+    if (j < order) {
+        return 0.0f;
+    }
+    if (j <= n) {
+        return j - order + 1;
+    }
+    return n - order + 2;
+}
+#endif
+
+/* Cox-de Boor basis function N(i, k) at t. */
+#ifdef NONMATCHING
+f32 fn_8011A994(int i, int n, int k, s32 order, f32 t) {
+    f32 d;
+    f32 a;
+    f32 b;
+    int m;
+
+    if (k == 1) {
+        if (Knot_8011A994(i, n, order) <= t && t < Knot_8011A994(i + 1, n, order)) {
+            return 1.0f;
+        }
+        if (t == n - order + 2) {
+            if (Knot_8011A994(i, n, order) <= t && t <= Knot_8011A994(i + 1, n, order)) {
+                return 1.0f;
+            }
+        }
+        return 0.0f;
+    }
+    m = i + k;
+    d = Knot_8011A994(m - 1, n, order) - Knot_8011A994(i, n, order);
+    if (d == 0.0f) {
+        a = 0.0f;
+    } else {
+        d = 1.0f / d;
+        a = (t - Knot_8011A994(i, n, order)) * fn_8011A994(i, n, k - 1, order, t) * d;
+    }
+    d = Knot_8011A994(m, n, order) - Knot_8011A994(i + 1, n, order);
+    if (d == 0.0f) {
+        b = 0.0f;
+    } else {
+        d = 1.0f / d;
+        b = (Knot_8011A994(m, n, order) - t) * fn_8011A994(i + 1, n, k - 1, order, t) * d;
+    }
+    return a + b;
+}
+#endif
+
+#ifdef NONMATCHING
+void fn_801195E4(void) {
+    s32 id = lbl_80311AC0.id;
+    s8 sub = lbl_80311AC0.sub;
+    int i;
+    Key *k = &lbl_80346790;
+    if (id == k->id && sub == k->sub) {
+        lbl_80346EA8 = 2;
+        return;
+    }
+    for (i = 0; i < 24; i++) {
+        if (id == lbl_802E4FB8[i].id && sub == lbl_802E4FB8[i].sub) {
+            lbl_80346EA8 = 1;
+            return;
+        }
+    }
+    lbl_80346EA8 = 0;
+}
+#endif

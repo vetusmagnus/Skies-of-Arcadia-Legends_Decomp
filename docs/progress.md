@@ -2395,3 +2395,54 @@ Held for the owner (match in isolation, not merged):
 - fn_800308FC / fn_80030280 (readonly_strings pair, battle.c) and the `void *` hops kept out earlier, as before.
 - Note: fn_8005BF30 sits ahead of fn_800594CC in unit_80055E94 (out of address order) so its .rodata initialisers come first;
   revisit if that unit is ever linked.
+
+## Partial matches kept as NONMATCHING C (2026-11-01, worktree build/wt-fuzzy, from 70e9e8b)
+
+6,000 to 6,001 of 7,117 in the default build (`main.dol` SHA OK), 62.59% fuzzy; with `configure.py --non-matching`
+6,003 and 63.72% fuzzy. 56 game functions that don't match yet are now in their units as C inside `#ifdef NONMATCHING`
+(rule in CONTRIBUTING.md): `configure.py --non-matching` adds `-DNONMATCHING`, the default build never compiles them, and
+`tools/check_game_src.py` allows that guard and no other use of the name. Every touched unit's default object is
+section-for-section identical to 70e9e8b's (`.text` included, except unit_801C09A4, which gained a real match), checked
+against a build of 70e9e8b. Ninja partials were left out: the patched-compiler work is expected to turn most of them into
+full matches.
+
+Kept: code-exact apart from register numbers ("r": the same instruction sequence once r/f numbers are masked) or at least
+90% (1 - original lines in removed hunks / original count, the scoring of the untried pass), scored in the unit with
+`-DNONMATCHING`, no pointer casts. Candidates were the best of all saved attempt files (about 11,300 files over the batches,
+rescored against today's tree; 238 qualified among the 1,349 near files, about 450 among all of them), folded
+with u1_fix (the unit's other functions must still match), then the declarations, types and helpers only the guarded code
+uses were moved inside guards. Most candidates did not fold: their attempt files use struct views and prototypes from
+older headers that clash with the units (the same bottleneck as the held-back matches). 28 of the 56 are register-only.
+
+Also:
+- fn_801C2CF4 (unit_801C09A4) matches and is plain C now; unit_80199B9C's extern for it returns s32 (the result is unused
+  there, same code).
+- fn_800091E0 (unit_80005B50) and fn_801F57F8 (unit_801F5334) match but are guarded: fn_800091E0 uses the result of
+  fn_8001C7B8, which unit_8000A38C defines as void (its extern there also passes an s32 last argument where the definition
+  takes s16); fn_801F57F8 passes a name pointer to fn_802114AC, defined with an s32 parameter in unit_8020EEE8.
+- Guarded code can carry callee prototypes that disagree with the callee's definition elsewhere (the attempt's own
+  guesses); they are inside the guards, so the default build doesn't see them. Fix them when matching the function.
+- Several guarded functions sit at the end of their unit rather than in address order (where the merge put them).
+
+Guarded functions (score in the unit; r = register-only):
+- unit_80005B50: fn_800091E0 100.0% r
+- unit_80009800: fn_80009E5C 98.9% r
+- unit_8000A38C: fn_8000F8F8 93.6%, fn_80010E68 87.0% r, fn_800207C8 97.3%
+- unit_80055E94: fn_80055F0C 99.3%, fn_80064E38 93.4%, fn_80072B3C 93.4%
+- unit_80074D9C: fn_80078D24 97.5%, fn_8007D42C 97.5% r, fn_80088CE8 95.5%, fn_8008A280 95.2%
+- unit_8008B4A0: fn_8008F8FC 93.9%, fn_800914D8 79.3% r
+- unit_8009623C: fn_80096814 44.4% r
+- unit_800972AC: fn_80097A1C 96.4%, fn_80098A68 96.8%, fn_80098C58 98.8%
+- unit_800D2048: fn_800D8014 97.4%
+- unit_800D81E8: fn_800E9424 99.4% r
+- unit_8010E164: fn_801195E4 98.9% r, fn_8011A994 99.4% r
+- unit_8012F6C4: fn_801300E0 93.8% r, fn_80134D1C 97.7%, fn_8013A538 97.3% r
+- unit_8013D400: fn_8013FF50 96.5% r, fn_801477A8 95.7%, fn_8014A1FC 90.5%
+- unit_8014F970: fn_80155B78 97.7%, fn_801560FC 91.8%, fn_80157948 98.7% r, fn_80159948 95.9%
+- unit_8015DC6C: fn_8015E470 87.0% r, fn_80174A18 98.8%, fn_80174E18 87.8% r, fn_8017AB38 98.2% r, fn_80183D90 98.2%
+- unit_801C09A4: fn_801C09F8 95.7%
+- unit_801D24D0: fn_801D289C 89.5% r, fn_801D2934 89.5% r, fn_801D29CC 89.5% r, fn_801D44B0 96.1% r, fn_801D732C 93.9% r, fn_801DBCD4 70.0% r, fn_801DCDC0 59.1% r
+- unit_801F224C: fn_801F3B90 62.5% r, fn_801F3FD0 97.7%
+- unit_801F5334: fn_801F57F8 100.0% r, fn_8020527C 93.4% r, fn_802074B0 97.6%, fn_80207554 98.2%
+- unit_802159E0: fn_80215F94 97.4% r
+- unit_80219378: fn_8021A940 93.9%, fn_8021A9C4 93.9%, fn_8022ABEC 97.9%, fn_8022BDD0 95.0% r

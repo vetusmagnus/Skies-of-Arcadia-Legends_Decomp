@@ -344,7 +344,10 @@ typedef struct BtlTrack {
     Rec_80157684 rec[0x3AD];  /* 0x0000 */
     Angle aim[0x3AD][3];      /* 0x5838 */
     s8 f[4];                  /* 0x8454 */
-    u8 pad8458[0x8468 - 0x8458];
+    s32 count;                /* 0x8458 */
+    s32 head;                 /* 0x845C */
+    s32 tail;                 /* 0x8460 */
+    s32 total;                /* 0x8464 */
 } BtlTrack;
 typedef struct {
     BtlTrack ent[4];
@@ -712,7 +715,9 @@ typedef struct {
     Hold_8015D768 *x1d8;
 } Ent_8015D768;
 typedef struct {
-    u8 pad0[0x1c];
+    u8 pad_0[0x8];
+    u32 f8;
+    u8 pad_c[0x10];
     f32 x1c, x20, x24, x28, x2c, x30;
     s32 x34;
 } Arg;
@@ -874,7 +879,9 @@ typedef struct {
     u16 type;
 } Anim_80157EA8;
 typedef struct {
-    u8 pad0[0x44];
+    u8 pad_0[0x10];
+    struct Mode_80157948* mode;
+    u8 pad_14[0x30];
     f32 pos[3];
     f32 rot[3];
 } Part_80157EA8;
@@ -1115,7 +1122,6 @@ struct Pose {
     f32 tx, ty, tz;
     s32 rx, ry, rz;
 };
-
 /* Defined ahead of the file's other .rodata users: its three initializers are read through the
  * section base, and in the original they start that base (lbl_802B3F00 + 0). */
 extern void *lbl_80346FD8[2];
@@ -1129,6 +1135,21 @@ void fn_80154B04(void);
 void fn_801539D0(void);
 void fn_80149070(void);
 void fn_8010A094(void);
+typedef struct Mode_80157948 {
+    s32 n;
+    s32 v[8];
+} Mode_80157948;
+s32 fn_80157EA8(Out_80157EA8 *out, Obj_80157EA8 *obj, f32 frame);
+extern s32 fn_8015AAF0(s32 x);
+extern s32 fn_8015AA88(u32 x);
+extern void* lbl_80346FD8[2];
+extern void fn_80153A04(void);
+extern void fn_80154B38(void);
+extern void fn_80155910(void);
+extern void fn_801534E8(void);
+extern void fn_80155F80(void);
+extern void fn_80155D2C(void);
+extern void fn_801539CC(void);
 
 /* Frees the 32 resource slots of lbl_80306B14. As an inline its counter's zero is copied for the
  * NULL store (li r30 / mr r31), as the original has. */
@@ -5368,3 +5389,324 @@ void fn_8015184C(Fx *o)
     }
 }
 
+#ifdef NONMATCHING
+extern void fn_801E735C(s32 a, Obj_80157EA8 *o, f32 f);
+extern char lbl_802B3EBC[];
+extern void* fn_80215F14(s32, s32, s32, s32, s32, s32, char*);
+extern void printf(const char*, ...);
+typedef struct Cmd {
+    s8 type;
+    u8 pad1[3];
+    s8 f4;
+    u8 pad5[2];
+    s8 f7;
+    s16 h8;
+    u8 padA[2];
+    u32 fc;
+} Cmd;
+extern void fn_8012F6C4(s8 idx, u32 val);
+extern char lbl_802B40D4[];
+extern s8 lbl_802E7018[0x11];
+extern s8 lbl_802E7008[0xf];
+extern s32 lbl_8034700C;
+extern s32 lbl_8034701C[2];
+extern s32 lbl_80347014[2];
+extern s32 lbl_80347010;
+extern void fn_8010A0C0(void);
+extern void fn_801490F4(void);
+extern void fn_8014FDFC(void);
+#endif
+
+#ifdef NONMATCHING
+void fn_80157948(BtlTracks *base, s32 side, s32 idx, Obj_80157EA8 *obj, s32 unused, s32 n)
+{
+    s32 ang[3];
+    f32 v[3];
+    Out_80157EA8 out;
+    BtlTrack *t;
+    Rec_80157684 *prev;
+    Rec_80157684 *cur;
+    Mode_80157948 *m;
+    s8 mode;
+    s32 cnt;
+    u32 ret;
+    s32 i;
+
+    fn_801E735C(idx, obj, 1.0f);
+    t = &base->side[side].ent[idx];
+    prev = &t->rec[120];
+    ret = fn_80157EA8(&out, obj, 0.0f);
+    prev->pos[0] = out.pos[0];
+    prev->pos[1] = out.pos[1];
+    prev->pos[2] = out.pos[2];
+    cur = &t->rec[121];
+    m = obj->part->mode;
+    cnt = m->n;
+    mode = (s8)cnt < 8 ? 0 : (s8)(cnt > 7 ? m->v[7] : 0);
+    for (i = 1; i < n; i++, cur++, prev++) {
+        fn_80157EA8(&out, obj, i);
+        cur->pos[0] = out.pos[0];
+        cur->pos[1] = out.pos[1];
+        cur->pos[2] = out.pos[2];
+        switch (mode) {
+        case 0:
+            if (ret & 1) {
+                v[0] = -(cur->pos[0] - prev->pos[0]);
+                v[1] = -(cur->pos[1] - prev->pos[1]);
+                v[2] = -(cur->pos[2] - prev->pos[2]);
+                fn_801580A4(ang, v);
+                prev->v[0] = ang[0];
+                prev->v[1] = ang[1];
+                prev->v[2] = ang[2];
+                break;
+            }
+        case 1:
+            cur->v[0] = out.ang[0];
+            cur->v[1] = out.ang[1];
+            cur->v[2] = out.ang[2];
+            break;
+        }
+    }
+    prev = &t->rec[n + 0x76];
+    cur = &t->rec[n + 0x77];
+    cur->v[0] = prev->v[0];
+    cur->v[1] = prev->v[1];
+    cur->v[2] = prev->v[2];
+    t->count = n;
+
+    {
+    f32 x, y, z;
+    s32 a, b, c;
+    x = t->rec[120].pos[0];
+    y = t->rec[120].pos[1];
+    z = t->rec[120].pos[2];
+    a = t->rec[120].v[0];
+    b = t->rec[120].v[1];
+    c = t->rec[120].v[2];
+    v[0] = x - t->rec[121].pos[0];
+    v[1] = y - t->rec[121].pos[1];
+    v[2] = z - t->rec[121].pos[2];
+    cur = &t->rec[119];
+    for (i = 1; i < 121; i++, cur--) {
+        cur->pos[0] = v[0] * i + x;
+        cur->pos[1] = v[1] * i + y;
+        cur->pos[2] = v[2] * i + z;
+        cur->v[0] = a;
+        cur->v[1] = b;
+        cur->v[2] = c;
+    }
+    }
+    t->head = 120;
+
+    {
+    Rec_80157684 *p;
+    f32 x, y, z;
+    s32 a, b, c;
+    x = t->rec[n + 119].pos[0];
+    y = t->rec[n + 119].pos[1];
+    z = t->rec[n + 119].pos[2];
+    a = t->rec[n + 119].v[0];
+    b = t->rec[n + 119].v[1];
+    c = t->rec[n + 119].v[2];
+    v[0] = x - t->rec[n + 118].pos[0];
+    v[1] = y - t->rec[n + 118].pos[1];
+    v[2] = z - t->rec[n + 118].pos[2];
+    p = &t->rec[n + 120];
+    for (i = 0; i < 120; i++, p++) {
+        p->pos[0] = v[0] * i + x;
+        p->pos[1] = v[1] * i + y;
+        p->pos[2] = v[2] * i + z;
+        p->v[0] = a;
+        p->v[1] = b;
+        p->v[2] = c;
+    }
+    }
+    t->tail = 120;
+    t->total = t->count + t->head + t->tail;
+    base->ready = 1;
+}
+#endif
+
+#ifdef NONMATCHING
+s32 fn_80155B78(s32 n)
+{
+    char name[0x15] = "/SOUND/f7100000s.p04";
+    Ent_80155AB4* slot;
+
+    slot = &lbl_80346FF8[lbl_80346FF4];
+    if (slot->p != NULL) {
+        fn_80217830(slot->p);
+        slot->p = NULL;
+    }
+    slot->id = n;
+    name[13] = '0' + n % 100 / 10;
+    name[14] = '0' + n % 10;
+    slot->p = fn_80215F14(2, 0x5622, 2, 0, 0, 0, name);
+    if (slot->p == NULL) {
+        printf(lbl_802B3EBC, name);
+        return 0;
+    }
+    lbl_80346FF4++;
+    if (lbl_80346FF4 >= 1) {
+        lbl_80346FF4 = 0;
+    }
+    return 1;
+}
+#endif
+
+#ifdef NONMATCHING
+s32 fn_80159948(s8 a, Arg *b, Cmd *c)
+{
+    s32 k;
+    s32 t;
+    u32 i;
+
+    if (c->type == 4) {
+        if (c->f7 == 0) {
+            return 0;
+        } else if (c->f7 == 4) {
+            return 1;
+        } else if (c->f7 != 3) {
+            fn_8012F6C4(a, c->fc);
+            return 2;
+        } else {
+            if (c->f4 != 2) {
+                fn_801DBE1C(lbl_802B40D4, c->f4);
+            }
+            return -1;
+        }
+    } else if (c->type == 5) {
+        k = fn_8015AAF0(c->h8);
+        if (k == 1) {
+            if (c->f7 == 0) {
+                return 0;
+            } else if (c->f7 == 4) {
+                return 1;
+            } else if (c->h8 == 4 || c->h8 == 5 || c->h8 == 2) {
+                return -1;
+            } else {
+                fn_8012F6C4(a, c->fc);
+                return 2;
+            }
+        } else if (k == 11 || k == 12 || k == 13) {
+            if (c->f7 == 0) {
+                return 0;
+            } else if (c->f7 == 4) {
+                return 1;
+            } else {
+                return -1;
+            }
+        } else {
+            fn_8012F6C4(a, b->f8);
+            return 3;
+        }
+    } else if (c->type == 1) {
+        k = fn_8015AA88(c->h8);
+        if (k != -1 || c->h8 == 0x1e0 || c->h8 == 0x1e1 || c->h8 == 0x1e2 || c->h8 == 0x1e3) {
+            if (c->f7 == 0) {
+                return 0;
+            } else if (c->f7 == 4) {
+                return 1;
+            } else {
+                fn_8012F6C4(a, c->fc);
+                return 2;
+            }
+        } else {
+            i = c->h8 - 0x1ea;
+            if (i >= 0x11) {
+                t = 1;
+            } else {
+                t = lbl_802E7018[i];
+            }
+            if (t == 7 || (t >= 8 && t <= 9) || t == 10) {
+                fn_8012F6C4(a, b->f8);
+                return 3;
+            } else if ((t == 11 || t == 12 || t == 13) && c->f7 == 0) {
+                return 0;
+            } else {
+                return -1;
+            }
+        }
+    } else if (c->type == 2) {
+        return -1;
+    } else if (c->type == 7) {
+        i = c->h8 - 7;
+        if (i >= 0xf) {
+            t = 1;
+        } else {
+            t = lbl_802E7008[i];
+        }
+        if (t == 10) {
+            fn_8012F6C4(a, b->f8);
+            return 3;
+        } else if (t == 11 && c->f7 == 0) {
+            return 0;
+        } else {
+            return -1;
+        }
+    } else {
+        return -1;
+    }
+}
+#endif
+
+#ifdef NONMATCHING
+static inline void* AllocClear(u32 size)
+{
+    void* p = fn_801E1A74(1, size);
+    memset(p, 0, size);
+    return p;
+}
+
+static inline void InitObjs(void)
+{
+    int i;
+    for (i = 0; i < 2; i++) {
+        lbl_80346FC8[i] = fn_801E1A74(1, 0x62C);
+    }
+}
+#endif
+
+#ifdef NONMATCHING
+void fn_801560FC(void)
+{
+    int i;
+    int j;
+    E12* s;
+    void* p;
+
+    fn_80153978();
+    fn_80153978();
+    fn_8010A0C0();
+    fn_801490F4();
+    lbl_80346FD0 = fn_801E1A74(1, 0x200);
+    fn_80153A04();
+    fn_80154B38();
+    fn_8014FDFC();
+    fn_80155910();
+    fn_801534E8();
+    InitObjs();
+    lbl_80347024 = 50000;
+    lbl_80347008 = 0;
+    lbl_8034700C = 0;
+    fn_80155F80();
+    fn_80155D2C();
+    fn_801539CC();
+    lbl_8034701C[0] = 0;
+    lbl_8034701C[1] = 0;
+    lbl_80347014[0] = 0;
+    lbl_80347014[1] = 0;
+    p = fn_801E1A74(1, 0x4234C);
+    memset(p, 0, 0x4234C);
+    lbl_80346FD8[0] = p;
+    p = fn_801E1A74(1, 0x4234C);
+    memset(p, 0, 0x4234C);
+    lbl_80346FD8[1] = p;
+    lbl_80347010 = j = 0;
+    s = lbl_80306B14;
+    lbl_80346FD4 = lbl_80346FD8[0];
+    for (; j < 32; j++, s++) {
+        s->p = fn_801E1A74(1, 0x160);
+    }
+}
+#endif

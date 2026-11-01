@@ -550,3 +550,136 @@ void fn_80096570(Node* node, Obj_80096570* o) {
     o->b16c = 0;
     lbl_80346C3C = 2;
 }
+
+#ifdef NONMATCHING
+#include "ninja.h"
+typedef struct Ang3_80096814 {
+    Angle x, y, z;
+} Ang3_80096814;
+typedef struct Cam_80096814 {
+    u8 pad0[4];
+    s16 state;           /* 0x04 */
+    s16 next;            /* 0x06 */
+    u8 pad8[0x24 - 0x8];
+    NJS_VECTOR x24;      /* 0x24 */
+    u8 pad30[0x40 - 0x30];
+    Ang3_80096814 ang;   /* 0x40 */
+    NJS_VECTOR tgt;      /* 0x4c */
+    u8 pad58[0x7c - 0x58];
+    NJS_VECTOR cur;      /* 0x7c */
+    Ang3_80096814 cang;  /* 0x88 */
+    u8 pad94[0xa0 - 0x94];
+    u8 xa0[0x3c];        /* 0xa0 */
+    f32 spd;             /* 0xdc */
+    s32 aspd;            /* 0xe0 */
+    s16 timer;           /* 0xe4 */
+    u8 pade6[0x12c - 0xe6];
+    u8 x12c[0x28];       /* 0x12c */
+    s32 x154;            /* 0x154 */
+} Cam_80096814;
+extern s32 fn_8022BA10(Ang3_80096814* ang, void* p);
+extern s32 fn_8022BAA0(Ang3_80096814* ang, NJS_VECTOR* a, NJS_VECTOR* b, void* p);
+extern void fn_8022DAE8(NJS_VECTOR* v, Ang3_80096814* ang, void* p);
+extern s32 fn_800914D8(NJS_VECTOR* a, NJS_VECTOR* b, f32 p, f32 q);
+
+static inline s32 AngApproach(s32 cur, s32 spd, s32 tgt) {
+    u16 c = cur;
+    u16 w = tgt + (0x8000 - c);
+    s32 d = w - 0x8000;
+    if (d == 0) {
+        return tgt;
+    }
+    if (d < 0) {
+        d = -d;
+        spd = -spd;
+    }
+    if (d >= 0x1000) {
+        return cur + spd;
+    }
+    d = spd * d / 4096;
+    if (d != 0) {
+        return cur + d;
+    }
+    return tgt;
+}
+
+static inline void CamSpeed(Cam_80096814* c) {
+    if ((4.0f > c->spd || c->timer == 0) && 12.0f > c->spd) {
+        c->spd += 0.5f;
+    }
+    if (c->aspd < 0x600) {
+        c->aspd += 0x100;
+    }
+    if (c->timer > 0) {
+        c->timer--;
+    }
+}
+#endif
+
+#ifdef NONMATCHING
+void fn_80096814(Cam_80096814* c) {
+    switch (c->state) {
+    case 0:
+        break;
+    case 1:
+        c->x154 = fn_8022BA10(&c->ang, c->xa0);
+        fn_8022DAE8(&c->tgt, &c->ang, c->x12c);
+        c->cur.x = c->tgt.x;
+        c->cur.y = c->tgt.y;
+        c->cur.z = c->tgt.z;
+        break;
+    case 2:
+        c->cang.x = AngApproach(c->cang.x, c->aspd, c->ang.x);
+        c->cang.y = AngApproach(c->cang.y, c->aspd, c->ang.y);
+        if (fn_800914D8(&c->cur, &c->tgt, c->spd, 8.0f) != 0 && c->cang.x == c->ang.x &&
+            c->cang.y == c->ang.y) {
+            c->state = c->next;
+        }
+        c->x154 = fn_8022BA10(&c->cang, c->xa0);
+        fn_8022DAE8(&c->cur, &c->cang, c->x12c);
+        CamSpeed(c);
+        break;
+    case 3:
+        if (fn_800914D8(&c->cur, &c->tgt, c->spd, 8.0f) != 0) {
+            c->state = c->next;
+        }
+        c->x154 = fn_8022BAA0(&c->cang, &c->x24, &c->cur, c->xa0);
+        fn_8022DAE8(&c->cur, &c->cang, c->x12c);
+        CamSpeed(c);
+        break;
+    case 4: {
+        s32 done;
+        Ang3_80096814 a;
+        done = fn_800914D8(&c->cur, &c->tgt, c->spd, 8.0f);
+        c->x154 = fn_8022BAA0(&a, &c->x24, &c->cur, c->xa0);
+        c->cang.x = AngApproach(c->cang.x, c->aspd, a.x);
+        c->cang.y = AngApproach(c->cang.y, c->aspd, a.y);
+        if (done != 0 && a.x == c->cang.x && a.y == c->cang.y) {
+            c->state = c->next;
+        }
+        fn_8022DAE8(&c->cur, &c->cang, c->x12c);
+        CamSpeed(c);
+        break;
+    }
+    case 5:
+        c->x154 = fn_8022BA10(&c->cang, c->xa0);
+        fn_8022DAE8(&c->cur, &c->cang, c->x12c);
+        break;
+    case 6:
+        c->cur.x = c->tgt.x;
+        c->cur.y = c->tgt.y;
+        c->cur.z = c->tgt.z;
+        c->x154 = fn_8022BAA0(&c->cang, &c->x24, &c->cur, c->xa0);
+        fn_8022DAE8(&c->cur, &c->cang, c->x12c);
+        break;
+    case 7:
+        if (fn_800914D8(&c->cur, &c->tgt, c->spd, 8.0f) != 0) {
+            c->state = c->next;
+        }
+        c->x154 = fn_8022BAA0(&c->cang, &c->x24, &c->cur, c->xa0);
+        fn_8022DAE8(&c->cur, &c->cang, c->x12c);
+        CamSpeed(c);
+        break;
+    }
+}
+#endif

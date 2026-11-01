@@ -92,13 +92,11 @@ extern void fn_801DBE6C(s32);
 extern void fn_80228014(void);
 extern void fn_80217830(s32);
 extern void fn_80100178(char*);
-
 void fn_8000AA58(void);
 s32 fn_8000ACE8(void);
 void fn_80009FBC(void *p);
 extern void (*lbl_802DAE50[])(void);
 void fn_80009FD8(void);
-
 extern s32 lbl_803475D8;
 extern s32 lbl_80346A94;
 extern s16 lbl_80347368;
@@ -109,7 +107,6 @@ extern s32 lbl_80347508;
 extern s32 lbl_80347518;
 extern f32 lbl_80347510;
 extern char lbl_803480D8[8];
-
 extern void fn_8002F35C(void);
 extern void StvSampLoadBlocking(void);
 extern void fn_801DBA58(u32 a, u32 b, u32 c);
@@ -136,6 +133,7 @@ extern void fn_8002F6D4(void);
 extern void fn_801CBBAC(f32 v);
 extern void fn_801CBBD8(void);
 extern void fn_80009874(void);
+extern s32 lbl_80346A80;
 
 void fn_8000A118(void) {
     if (lbl_803475D8 == 1) {
@@ -517,3 +515,49 @@ void fn_80009FD8(void) {
     }
 }
 
+#ifdef NONMATCHING
+#include <dolphin/os/OSFastCast.h>
+typedef struct VertexCol {
+    f32 x, y, z;
+    u32 colour;
+} VertexCol;
+extern f32 fn_801DBD9C(f32 z);
+extern void fn_80290ED4(VertexCol* v, s32 count, s32 flag);
+#endif
+
+#ifdef NONMATCHING
+void fn_80009E5C(f32 alpha, f32 z) {
+    VertexCol v[4];
+    u32 col;
+    f32 zz;
+    u8 a, c;
+
+    njColorBlendingMode(0, 8);
+    njColorBlendingMode(1, 8);
+    if (alpha == 0.0f) {
+        col = 0;
+    } else {
+        a = __OSf32tou8(255.0f * alpha);
+        c = __OSf32tou8(64.0f * alpha);
+        col = (a << 24) | (c << 16) | (c << 8) | c;
+    }
+    zz = fn_801DBD9C(z);
+    v[0].z = zz;
+    v[0].colour = col;
+    v[1].z = zz;
+    v[1].colour = col;
+    v[2].z = zz;
+    v[2].colour = col;
+    v[3].z = zz;
+    v[3].colour = col;
+    v[0].x = 160.0f;
+    v[0].y = 24.0f * lbl_80346A80 + 360.0f;
+    v[1].x = v[0].x;
+    v[1].y = 24.0f + v[0].y;
+    v[2].x = 204.0f + v[0].x;
+    v[2].y = v[0].y;
+    v[3].x = v[2].x;
+    v[3].y = v[1].y;
+    fn_80290ED4(v, 4, 1);
+}
+#endif

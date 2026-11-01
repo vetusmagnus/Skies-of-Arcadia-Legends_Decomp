@@ -244,6 +244,11 @@ cflags_base = [
     f"-DVERSION_{config.version}",
 ]
 
+# Functions kept as C that doesn't match yet sit in #ifdef NONMATCHING blocks; only --non-matching
+# compiles them, so the default build takes those functions from the original instructions.
+if config.non_matching:
+    cflags_base.append("-DNONMATCHING")
+
 # Debug flags
 if args.debug:
     # Or -sym dwarf-2 for Wii compilers

@@ -91,6 +91,9 @@ s32 SePlay(s32 bank, s8 arg1, s8 id);
 void fn_8020EEE8(s32 bank, s8 arg1, s8 id, s32 unused);
 void fn_80217830(s32 arg);
 float fn_801F6120(float **p);
+extern void fn_801DBE1C(const char *fmt, ...);
+extern void* fn_801E1A2C(s32 a, s32 b);
+
 /* An int argument of the script stream; FLT_MAX stands for 'unset' (0x7FFFFFFF). */
 static inline s32 ReadInt(f32** p)
 {
@@ -7766,3 +7769,178 @@ s16 fn_8020BCF4(u16 flags, Scpt *s)
     return (flags >> 3) & 1;
 }
 
+#ifdef NONMATCHING
+/* A script command's argument stream (unit_801F5334.c). */
+typedef struct Scpt_802074B0 {
+    s32 kind;       /* 0x00 */
+    s32 flags;      /* 0x04 */
+    s32 handle;     /* 0x08 */
+    void *ev;       /* 0x0c */
+    s16 cnt;        /* 0x10 */
+    u16 x12;        /* 0x12 */
+    s32 x14;        /* 0x14 */
+    s32 owner;      /* 0x18 */
+    f32 *cur;       /* 0x1c */
+} Scpt_802074B0;
+void fn_800C8E44(f32 a, f32 b, f32 c);
+typedef struct Cmd { u8 pad_00[0x1c]; float *cur; } Cmd;
+/* One running script command (unit_801F5334.c); its argument stream mixes floats, ints and
+ * length-prefixed strings, so the cursor is kept as a float pointer and the string helpers
+ * take it as void*. */
+s32 fn_802114AC(s32 id, u8 *name);
+extern const char lbl_802D4720[];
+typedef struct Track {
+    u32 kind;       /* 0x00 */
+    u8 pad04[0x14];
+    u32 total;      /* 0x18 */
+    f32 dist;       /* 0x1c */
+    u32 step;       /* 0x20 */
+    f32 start[3];   /* 0x24 */
+} Track;
+typedef struct Script {
+    u8 pad00[0x1c];
+    f32* cursor;    /* 0x1C */
+    u8 pad20[0x10];
+    Track* work;    /* 0x30 */
+} Script;
+extern f32 lbl_802F7528[4];
+extern void fn_802136A8(f32* tab, f32* out, s32 a, s32 b, s32 c);
+#endif
+
+/* Script command: reads three floats and passes them to fn_800C8E44. */
+#ifdef NONMATCHING
+s32 fn_802074B0(u32 flags, Scpt_802074B0* s)
+{
+    f32 a;
+    f32 b;
+    f32 c;
+    f32* cur;
+    u16 f = flags;
+    if (f & 1) {
+        cur = s->cur + 1;
+        a = fn_801F6120(&cur);
+        b = fn_801F6120(&cur);
+        c = fn_801F6120(&cur);
+        s->cur = cur;
+        fn_800C8E44(a, b, c);
+    }
+    if (f & 8) return 1; return 0;
+}
+#endif
+
+#ifdef NONMATCHING
+s32 fn_80207554(u32 flags, Cmd *c) {
+    float *p;
+    s32 i;
+    s32 n;
+    s32 v;
+    if (flags & 1) {
+        p = c->cur;
+        p++;
+        {
+            /* the count is an integer word in the float stream */
+            void* q = p++;
+            s32* w = q;
+            n = *w;
+        }
+        for (i = 0; i < n; i++) {
+            if (*p == 3.4028235e38f) {
+                p++;
+                v = 0x7FFFFFFF;
+            } else {
+                v = fn_801F6120(&p);
+            }
+            fn_80210EA4(v, 5);
+        }
+        c->cur = p;
+    }
+    return 0;
+}
+#endif
+
+#ifdef NONMATCHING
+/* A string argument: its byte length (padded to words), then the characters. */
+static inline u8* StrText(void* p)
+{
+    u8* b = p;
+    return b + 4;
+}
+
+static inline void* StrSkip(void* p)
+{
+    u32* w = p;
+    return w + ((*w >> 2) + 1);
+}
+#endif
+
+/* Matches, but it passes the name pointer to fn_802114AC, which unit_8020EEE8 defines with an s32
+ * second parameter (stored in Slot8.b); kept here until that slot gets its real type. */
+#ifdef NONMATCHING
+s32 fn_801F57F8(u32 flags, Scpt *cmd)
+{
+    if (flags & 1) {
+        f32* p;
+        s32 id;
+        u8* name;
+        p = cmd->cur.f + 1;
+        id = ReadInt(&p);
+        name = StrText(p);
+        p = StrSkip(p);
+        cmd->cur.f = p;
+        if (fn_802114AC(id, name) == 0) {
+            fn_801DBE1C(lbl_802D4720);
+        }
+    }
+    return 0;
+}
+#endif
+
+#ifdef NONMATCHING
+s32 fn_8020527C(u32 flags, Script* s)
+{
+    f32* p;
+    f32 dist;
+    u32 n;
+    f32 out[3];
+    u16 f = flags;
+    if (f & 1) {
+        Track* w;
+        p = s->cursor + 1;
+        dist = fn_801F6120(&p);
+        n = (*p == 3.4028235e38f ? (p++, 0x7FFFFFFF) : (s32)fn_801F6120(&p));
+        if (n == 0 || n == 1) {
+            return 0;
+        }
+        lbl_8030CEA0.x15cc = 1;
+        w = fn_801E1A2C(1, 0x44);
+        if (w == NULL) fn_801DBE1C("TrackUp: malloc failed");
+        s->work = w;
+        w->kind = 0;
+        w->step = 0;
+        w->total = n;
+        w->dist = dist;
+        w->start[0] = lbl_8030CEA0.x18fc;
+        w->start[1] = lbl_8030CEA0.x1900;
+        w->start[2] = lbl_8030CEA0.x1904;
+        s->cursor = p;
+    }
+    if (f & 2) {
+        Track* w = s->work;
+        f32 t;
+        lbl_802F7528[2] = w->dist;
+        fn_802136A8(lbl_802F7528, out, lbl_8030CEA0.x1908, lbl_8030CEA0.x190c, lbl_8030CEA0.x1910);
+        t = (f32)w->step / (f32)w->total;
+        lbl_8030CEA0.x18fc = w->start[0] - out[0] * t;
+        lbl_8030CEA0.x1900 = w->start[1] - out[1] * t;
+        lbl_8030CEA0.x1904 = w->start[2] - out[2] * t;
+        if (w->step++ == w->total) {
+            lbl_8030CEA0.x15cc = 0;
+            return 0;
+        }
+    }
+    if (f & 8) {
+        lbl_8030CEA0.x15cc = 0;
+    }
+    return 1;
+}
+#endif

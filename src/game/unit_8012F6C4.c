@@ -11,6 +11,9 @@ typedef struct {
 typedef struct {
     u8 pad0[0x94];
     s8 x94;
+    u8 pad_95[0x13];
+    s32 dst[0x8];
+    s32 src[0x8];
 } Sys_8012FF48;
 typedef struct {
     u8 pad[0x24];
@@ -2594,3 +2597,201 @@ void fn_80133750(void)
         TextSetZ(z);
     }
 }
+
+#ifdef NONMATCHING
+#include "game/util.h"
+typedef struct Out {
+    u8 pad0[0x12];
+    s16 id;   /* 0x12 */
+    s8 x14;
+    s8 x15;
+    s16 x16;
+    s16 x18;
+    s16 x1a;
+    s16 x1c;
+    u8 x1e;
+    u8 x1f;
+    u8 x20;
+} Out;
+typedef struct Tbl {
+    u8 pad0[0x18];
+    s16 ids[1];
+} Tbl;
+extern const CannonData lbl_802D7E4C[40];
+extern s32 fn_8021A0FC(s32 i);
+extern s32 fn_8021A0DC(s32 id);
+extern s16 fn_8021A6E8(Tbl* t, void* b, const CannonData* c);
+extern s16 fn_8021A620(Tbl* t, void* b, const CannonData* c);
+extern u8 fn_8021A608(Tbl* t, void* b, const CannonData* c);
+extern u8 fn_8021A5F0(Tbl* t, void* b, const CannonData* c);
+
+inline void ClearOut(Out* o)
+{
+    if (o != 0) {
+        memset(o, 0, 0x11);
+        o->id = -1;
+        o->x14 = -1;
+        o->x15 = -1;
+        o->x16 = 0;
+        o->x18 = 0;
+        o->x1a = 0;
+        o->x1c = 0;
+        o->x1e = 0;
+        o->x1f = 0;
+        o->x20 = 0;
+    }
+}
+#endif
+
+#ifdef NONMATCHING
+void fn_80134D1C(Out* out, Tbl* t, void* b, s32 idx)
+{
+    if (out != 0) {
+        if (t == 0 || b == 0 || fn_8021A0FC(idx) == 0 || fn_8021A0DC(t->ids[idx]) == 0) {
+            ClearOut(out);
+        } else {
+            const CannonData* info;
+            s32 id = t->ids[idx];
+            info = &lbl_802D7E4C[id - 0x190];
+            MemCopy(out, info, 0x11);
+            out->id = id;
+            out->x14 = info->type;
+            out->x15 = info->element;
+            out->x16 = fn_8021A6E8(t, b, info);
+            out->x18 = 0;
+            out->x1a = fn_8021A620(t, b, info);
+            out->x1c = 0;
+            out->x1e = fn_8021A608(t, b, info);
+            out->x1f = fn_8021A5F0(t, b, info);
+            out->x20 = 0;
+        }
+    }
+}
+#endif
+
+#ifdef NONMATCHING
+static inline s32 NameCount(void) {
+    s32 n = 0;
+    s8 *p = fn_80135598()->order;
+    if (p != NULL) {
+        n = 0;
+        if (p[0] >= 0) {
+            n = 1;
+            if (p[1] >= 0) {
+                n = 2;
+                if (p[2] >= 0) {
+                    n = 3;
+                    if (p[3] >= 0) {
+                        n = 4;
+                    }
+                }
+            }
+        }
+    }
+    return n;
+}
+
+static inline s32 Valid(Party *p, s32 a) {
+    s32 ok = 0;
+    if (p != NULL && a >= 0 && a < 5 && p->mem[a].b14 >= 0) {
+        ok = 1;
+    }
+    return ok;
+}
+
+static inline s32 GetX(s32 a) {
+    Party *p = &fn_80135598()->party;
+    s32 x = -1;
+    if (Valid(p, a) != 0) {
+        x = p->mem[a].b1e;
+    }
+    return x;
+}
+
+static inline s32 MemSum(Member *m) {
+    s32 w = 100;
+    if (m != NULL) {
+        w = m->b1f + m->b20;
+    }
+    return w;
+}
+
+static inline s32 GetW(s32 a) {
+    s32 w = 100;
+    Big *base = fn_80135598();
+    if (Valid(&base->party, a) != 0) {
+        w = MemSum(&base->party.mem[a]);
+    }
+    return w;
+}
+#endif
+
+
+
+#ifdef NONMATCHING
+s32 fn_8013A538(s32 a, s32 b, s32 c, s32 d, s32 e) {
+    s32 x;
+    s32 w;
+    s32 lim;
+    s32 res;
+    s32 t;
+    s32 n;
+    s32 q;
+    s32 ee;
+    s32 ff;
+
+    x = GetX(a);
+    w = GetW(a);
+    lim = NameCount() * 2;
+    if (b < 0 || x < 0 || lim <= 0) {
+        res = c;
+    } else {
+        res = lim - 1;
+        if (b + x < res) {
+            res = b + x;
+        }
+        t = c + d;
+        t = t > 0 ? t : 0;
+        if (t < res) {
+            res = t;
+        }
+        if (res < b || res >= lim) {
+            res = c;
+        }
+    }
+    n = NameCount();
+    t = res;
+    if (res > n - 1) {
+        t = n - 1;
+    }
+    q = t - b + 1;
+    if (q < 0) {
+        q = 0;
+    }
+    ee = e < 0 ? 0 : e;
+    ff = w < 0 ? 0 : w;
+    if (q * ff > ee) {
+        res = b + ee / ff - 1;
+    }
+    return res;
+}
+#endif
+
+#ifdef NONMATCHING
+static inline void Shift(s32 i)
+{
+    s32 m = i;
+    for (; i < 8; i++)
+        lbl_80346F40->x24->dst[i] = lbl_80346F40->x24->src[i - m];
+}
+#endif
+
+#ifdef NONMATCHING
+void fn_801300E0(s32* in)
+{
+    s32 i;
+    for (i = 0; i < 8; i++)
+        lbl_80346F40->x24->src[i] = in[i];
+    Shift(lbl_80346F40->x24->x94);
+}
+#endif

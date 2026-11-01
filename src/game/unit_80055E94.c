@@ -1589,6 +1589,49 @@ extern s16 fn_8002188C(U5C188 *);
 extern void fn_800208F4(s16 *, s16 *, T5C188 *);
 extern s16 fn_800670E4(W5C188 *, s16, s16, s32);
 extern s32 fn_801F52AC(void);
+/* A particle-cloud effect task (unit_80055E94; the point-sprite sibling of fn_80057038's wobble). */
+typedef NJS_POINT3 V3;
+extern void fn_80061C80(NJS_POINT3 *out, s8 mode, f32 a, f32 b, f32 z);
+typedef struct Obj { void* base; u8 pad4[4]; u16 x8; u16 xa; } Obj;
+extern char lbl_80348A50[4];
+extern int strncmp(const char*, const char*, u32);
+extern void fn_800071D8(Obj* o, f32 f);
+extern void fn_80007080(void* a, int bit);
+extern void fn_80006F1C(void* a, int bit);
+extern void fn_80006DA0(void* a, int bit);
+#define BODY \
+        { int ok; \
+        if (p == 0) return 0; \
+        ok = !!strncmp(p, lbl_80348A50, 4); \
+        if (ok == 0) return 0; \
+        o->base = p; \
+        idx = 0; \
+        bit = (o->xa >> 6) & 1; \
+        fn_800071D8(o, f); \
+        if (o->x8 & 1) { \
+            if (a != 0 && v[0] != 0) { \
+                fn_80007080(a, bit); \
+            } else { \
+                flags &= 0xfffe; \
+            } \
+            idx = 1; \
+        } \
+        if (flags & 2) { \
+            if (b != 0 && v[idx] != 0) { \
+                fn_80006F1C(b, bit); \
+            } else { \
+                flags &= 0xfffd; \
+            } \
+            idx++; \
+        } \
+        if (flags & 4) { \
+            if (c != 0 && v[idx] != 0) { \
+                fn_80006DA0(c, bit); \
+            } else { \
+                flags &= 0xfffb; \
+            } \
+        } \
+        o->base = base; }
 
 void fn_80055E94(u8 *p) {
     p[0x18] |= 0x40;
@@ -11113,3 +11156,335 @@ void fn_8006F4B0(void)
         break;
     }
 }
+
+#ifdef NONMATCHING
+typedef struct PtCmd {
+    u8 pad0[8];
+    s32 x8;          /* 0x08 texture/model key */
+    u8 padc[4];
+    u32 x10;         /* 0x10 flags; low nibble = attach mode */
+    s16 start;       /* 0x14 */
+    s16 end;         /* 0x16 */
+    s16 fadeOut;     /* 0x18 */
+    s16 fadeIn;      /* 0x1a */
+    f32 sclStart;    /* 0x1c */
+    f32 sclMax;      /* 0x20 */
+    f32 sclStep;     /* 0x24 */
+    s16 s28;         /* 0x28 */
+    u8 pad2a[0x12e - 0x2a];
+    s16 n;           /* 0x12e point count */
+    f32 radius;      /* 0x130 */
+    f32 y0;          /* 0x134 */
+    f32 yRange;      /* 0x138 */
+    u8 pad13c[0x144 - 0x13c];
+    s16 alpha;       /* 0x144 */
+    u8 pad146[2];
+    f32 ofsX;        /* 0x148 */
+    f32 ofsY;        /* 0x14c */
+    f32 ofsZ;        /* 0x150 */
+    f32 waveAmp;     /* 0x154 */
+    f32 waveStep;    /* 0x158 */
+} PtCmd;
+typedef struct PtSt {
+    s16 cnt;         /* 0x00 */
+    u8 pad2[2];
+    void *chr;       /* 0x04 */
+    void *m;         /* 0x08 */
+    u8 a;            /* 0x0c */
+    u8 step;         /* 0x0d */
+    u8 step2;        /* 0x0e */
+    u8 padf[0x1c - 0xf];
+    s16 frame;       /* 0x1c */
+    u8 pad1e[2];
+    V3 *pts;         /* 0x20 */
+    f32 *phase;      /* 0x24 */
+    f32 scl;         /* 0x28 */
+    PtCmd *cfg;      /* 0x2c */
+} PtSt;
+typedef struct PtWork {
+    u8 pad0[8];
+    NJS_TEXLIST *tex;    /* 0x08 */
+    u8 padc[0x1c - 0xc];
+    V3 pos;          /* 0x1c */
+    u8 pad28[0x4c - 0x28];
+    PtSt *st;        /* 0x4c */
+} PtWork;
+typedef struct PtTask {
+    u8 pad0[0x18];
+    u8 flags;        /* 0x18 */
+    u8 state;        /* 0x19 */
+    u8 pad1a[0x24 - 0x1a];
+    PtWork *work;    /* 0x24 */
+} PtTask;
+extern void fn_800354DC(NJS_TEXLIST *t, s16 frame);
+extern void fn_801D0DCC(void);
+extern void fn_80296EEC(s32 a, s32 b, s32 c);
+extern void fn_80296B60(s16 frame, u32 col, s32 a);
+extern void fn_80296918(V3 *pts, s16 n, f32 size);
+extern void fn_80296B34(void);
+extern void fn_802A8F40(s32 a);
+extern void fn_801D0D70(s32 a, f32 b);
+typedef struct U80064E38 {
+    u8 pad0[6];
+    s16 kind;
+} U80064E38;
+typedef struct W80064E38 {
+    u8 pad0[0x24];
+    struct { u8 pad[0x4c]; U80064E38 *u; } *work;
+} W80064E38;
+typedef struct S80064E38 {
+    W80064E38 *p0;
+    u8 pad4[0x3c - 4];
+    f32 v[3];
+    u8 pad48[0x80 - 0x48];
+    s16 s80;
+} S80064E38;
+typedef struct O80064E38 {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 state;
+    u8 pad1A[10];
+    S80064E38 *s;
+} O80064E38;
+typedef struct Rec16_80072B3C { void* w[4]; } Rec16_80072B3C;
+typedef struct Rec24_80072B3C { void* w[6]; } Rec24_80072B3C;
+#endif
+
+#ifdef NONMATCHING
+void fn_80055F0C(PtTask *t) {
+    PtWork *w = t->work;
+    PtSt *s = w->st;
+    s16 i;
+    f32 r;
+    u32 col;
+    V3 tmp;
+    DrawState ds;
+
+    switch (t->state) {
+    case 0:
+        fn_80061F58(&s->pts, s->cfg->n * 12, 0);
+        if (s->cfg->waveAmp) {
+            fn_80061F58(&s->phase, s->cfg->n * 4, 0);
+        }
+        fn_8006D954(s->cfg->x8);
+        fn_80040150(s->cfg->x10, s->chr, s->cfg->s28, &s->m);
+        t->state = 1;
+        break;
+    case 1:
+        if (s->cnt < s->cfg->start) {
+            break;
+        }
+        t->state = 2;
+        if (s->cfg->alpha == 0 || s->cfg->alpha > 0xff) {
+            s->cfg->alpha = 0xff;
+        }
+        s->a = s->cfg->alpha;
+        s->step = s->a / s->cfg->fadeOut;
+        if (s->cfg->fadeIn != 0) {
+            s->step2 = s->a / s->cfg->fadeIn;
+            s->a = 0;
+        }
+        s->scl = s->cfg->sclStart;
+        break;
+    case 2:
+        for (i = 0; i < s->cfg->n; i++) {
+            r = s->cfg->radius * (3.0517578e-5f * rand());
+            fn_80061C80(&tmp, 0, 0.0f, 360.0f * (3.0517578e-5f * rand()), r);
+            s->pts[i].x = tmp.x + s->cfg->ofsX;
+            s->pts[i].y = s->cfg->yRange * (3.0517578e-5f * rand()) + s->cfg->y0;
+            s->pts[i].z = tmp.z + s->cfg->ofsZ;
+            s->phase[i] = 360.0f * (3.0517578e-5f * rand());
+            tmp.x = s->pts[i].x;
+            tmp.y = s->pts[i].y;
+            tmp.z = s->pts[i].z;
+            if (s->m == 0) {
+                switch (s->cfg->x10 & 0xf) {
+                case 0:
+                    fn_8001E4A0(&tmp, &w->pos, s->chr);
+                    s->pts[i].x = w->pos.x;
+                    s->pts[i].y = w->pos.y;
+                    s->pts[i].z = w->pos.z;
+                    break;
+                }
+            } else {
+                fn_80061518(&tmp, &w->pos, s->m);
+                s->pts[i].x = w->pos.x;
+                s->pts[i].y = w->pos.y;
+                s->pts[i].z = w->pos.z;
+            }
+        }
+        t->state = 3;
+    case 3:
+        if (s->cfg->end >= 0 && s->cnt >= s->cfg->end) {
+            t->state = 0xfa;
+            break;
+        }
+        if (s->cnt >= s->cfg->end - s->cfg->fadeOut) {
+            if (s->a >= s->step) {
+                s->a -= s->step;
+            } else {
+                s->a = 0;
+                t->state = 0xfa;
+            }
+        }
+        if (s->cnt < s->cfg->start + s->cfg->fadeIn) {
+            if (s->a + s->step2 < s->cfg->alpha) {
+                s->a += s->step2;
+            } else {
+                s->a = s->cfg->alpha;
+            }
+        }
+        s->scl += s->cfg->sclStep;
+        if (s->scl >= s->cfg->sclMax) {
+            s->scl = s->cfg->sclMax;
+        }
+        if (s->cfg->waveAmp) {
+            for (i = 0; i < s->cfg->n; i++) {
+                r = njSin(182.04445f * s->phase[i]);
+                s->pts[i].x += s->cfg->waveAmp * r;
+                s->phase[i] += s->cfg->waveStep;
+                if (s->phase[i] > 360.0f) {
+                    s->phase[i] = 0.0f;
+                }
+            }
+        }
+        DrawStateDefault2D(&ds);
+        if (s->cfg->x10 & 0x20000000) {
+            ds.blend_src = 8;
+            ds.blend_dst = 10;
+        }
+        if (DrawStatePush(&ds)) {
+            col = s->a | 0xffffff00;
+            s->frame++;
+            if (s->frame >= w->tex->nbTexture) {
+                s->frame = 0;
+            }
+            fn_80299040(w->tex);
+            fn_800354DC(w->tex, s->frame);
+            fn_801D0DCC();
+            fn_80296EEC(1, 3, 0);
+            fn_80296B60(s->frame, col, 1);
+            fn_80296918(s->pts, s->cfg->n, 0.01f + s->scl);
+            fn_80296B34();
+            fn_80296EEC(1, 3, 1);
+            fn_802A8F40(1);
+            fn_801D0D70(7, 100.0f);
+            fn_802A8F40(0);
+            DrawStatePop(NULL);
+        }
+        break;
+    case 0xf9:
+    case 0xfa:
+        fn_801E17E0(s->pts);
+        if (s->phase != NULL) {
+            fn_801E17E0(s->phase);
+        }
+        fn_800400D8(s->cfg->x10, s->chr, s->cfg->s28, &s->m);
+        fn_8006D8DC(s->cfg->x8);
+        fn_801E17E0(s);
+        t->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    s->cnt++;
+    fn_80037FD8(s->cfg, &t->state);
+}
+#endif
+
+#ifdef NONMATCHING
+void fn_80064E38(O80064E38 *o) {
+    S80064E38 *s = o->s;
+    U80064E38 *u = s->p0->work->u;
+    if (o->state != 3) {
+        if (u->kind != s->s80) {
+            o->state = 2;
+        }
+    }
+    switch (o->state) {
+    case 0: {
+        s32 i;
+        s32 n = 0;
+        for (i = 0; i < 3; i++) {
+            f32 x = lbl_80346BD8->v[i];
+            if (x > s->v[i]) {
+                lbl_80346BD8->v[i] = x - 5.0f;
+                if (lbl_80346BD8->v[i] <= s->v[i]) {
+                    lbl_80346BD8->v[i] = s->v[i];
+                    n++;
+                }
+            } else {
+                lbl_80346BD8->v[i] += 5.0f;
+                if (lbl_80346BD8->v[i] >= s->v[i]) {
+                    lbl_80346BD8->v[i] = s->v[i];
+                    n++;
+                }
+            }
+        }
+        if (n == 3) {
+            o->state = 1;
+        }
+        break;
+    }
+    case 2: {
+        s32 n;
+        s32 i;
+        for (i = n = 0; i < 3; i++) {
+            f32 x = lbl_80346BD8->v[i];
+            if (x > 0.0f) {
+                lbl_80346BD8->v[i] = x - 5.0f;
+                if (lbl_80346BD8->v[i] <= 0.0f) {
+                    lbl_80346BD8->v[i] = 0.0f;
+                    n++;
+                }
+            } else {
+                lbl_80346BD8->v[i] += 5.0f;
+                if (lbl_80346BD8->v[i] >= 0.0f) {
+                    lbl_80346BD8->v[i] = 0.0f;
+                    n++;
+                }
+            }
+        }
+        if (n == 3) {
+            o->state = 3;
+        }
+        break;
+    }
+    case 3:
+        o->flags |= 0x40;
+        break;
+    }
+}
+#endif
+
+#ifdef NONMATCHING
+int fn_80072B3C(f32 f, void* unused, Obj* o, void** a, void** b, void** c, s16 i) {
+    int idx;
+    int bit;
+    int type = o->xa & 0xf;
+    int flags = o->x8 & 7;
+    void** v;
+    void* p;
+    void* base;
+    if (type == 1) {
+        return 0;
+    }
+    if (type == 2) {
+        Rec16_80072B3C* r;
+        base = o->base;
+        r = base;
+        p = &r[i];
+        v = p;
+        BODY
+    } else if (type == 3) {
+        Rec24_80072B3C* r;
+        base = o->base;
+        r = base;
+        p = &r[i];
+        v = p;
+        BODY
+    } else {
+        return 0;
+    }
+    return flags;
+}
+#endif

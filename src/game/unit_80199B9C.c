@@ -3181,7 +3181,7 @@ Task_801B1104* fn_801B1104(void* a)
 /* The two stat buffers the item and equip windows fill from an item id. */
 typedef struct CmpEq { s16 id; s16 x2; s16 col; s16 v[9]; } CmpEq;
 extern void fn_801C2E48(CmpEq* out, s16 id);
-extern void fn_801C2CF4(CmpEq* out, s16 id);
+extern s32 fn_801C2CF4(CmpEq* out, s16 id);
 /* The item window of the shop: the item's name, "x" and how many are held, then its stats. */
 typedef struct Task_801B11EC {
     u8 pad00[0x18];

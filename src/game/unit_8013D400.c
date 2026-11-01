@@ -1009,6 +1009,7 @@ extern void *fn_801C8930(void *h);
 extern void *fn_80167244(void *a, u32 mask);
 extern s32 fn_8025ECC4(void);
 typedef struct Arg { u8 pad[4]; s16 mode; } Arg;
+#define DECAY(v, d) { d = -v / 4; v += d; }
 
 void fn_8013D400(s32 a, s32 b) {
     fn_80136A28(a, b, 3, -1, -1, -1);
@@ -4300,3 +4301,399 @@ inline void fn_80148EDC(Node* n)
         fn_801E17E0(n);
     }
 }
+
+#ifdef NONMATCHING
+#include "game/drawstate.h"
+#include <math.h>
+s32 fn_8013A538(s32 a, s32 b, s32 cur, s32 step, s32 d);
+void fn_80131630(s8 a, s8 b, u8 v);
+/* Config record of an effect emitter (Link.cfg). */
+typedef struct Cfg_8014A1FC {
+    u8 pad0[0x50];
+    u32 mode;      /* 0x50 */
+    s32 r, g, b;   /* 0x54 */
+    u32 x60;       /* 0x60 */
+    s32 x64;       /* 0x64 */
+    u8 pad68[4];
+    f32 x6c;       /* 0x6c */
+    u8 pad70[0x7c - 0x70];
+    s32 count;     /* 0x7c */
+    u8 pad80[4];
+    f32 x84, x88, x8c, x90, x94, x98, x9c;
+    s32 xa0;
+    u8 pada4[4];
+    s32 xa8, xac, xb0;
+    u8 padb4[4];
+    u32 xb8;
+    s32 xbc;
+    u8 padc0[4];
+    f32 xc4;
+    u8 padc8[0xd0 - 0xc8];
+    f32 xd0;
+    u32 xd4;
+    u32 xd8;
+    u8 xdc[1];
+} Cfg_8014A1FC;
+typedef struct Link_8014A1FC {
+    u8 pad[0x10];
+    Cfg_8014A1FC* cfg;
+} Link_8014A1FC;
+typedef struct Slot18 {
+    u8 pad0[0x14];
+    f32 x14;
+    u8 pad18[4];
+} Slot18;
+/* Per-emitter state, 0x108 bytes */
+typedef struct Emit {
+    u32 flags;     /* 0x00 */
+    f32 x4, x8;
+    s32 xc, x10;
+    s16 x14, x16, x18, x1a;
+    f32 x1c, x20, x24;
+    s32 x28;
+    void* x2c;
+    f32 x30, x34;
+    s32 x38;
+    f32 x3c;
+    u8 pad40[0x4a - 0x40];
+    s16 x4a;
+    s32 x4c;
+    s32 x50;
+    u8 pad54;
+    u8 cr, cg, cb;
+    s16 x58, x5a;
+    s32 x5c;
+    DrawState ds;  /* 0x60 */
+    u8 pad88[0xac - 0x88];
+    f32 xac, xb0;
+    s32 xb4;
+    s16 xb8, xba;
+    s32 xbc;
+    u8 padc0[0x100 - 0xc0];
+    f32 x100;
+} Emit;
+typedef struct Fx {
+    u8 pad0[0x20];
+    f32 x20, x24, x28;
+    s32 x2c;
+    u8 pad30[0x50 - 0x30];
+    f32 x50, x54;
+    u8 pad58[0xe4 - 0x58];
+    void* xe4;
+    u8 padE8[0x100 - 0xe8];
+    void* x100;
+    u8 pad104[0x176 - 0x104];
+    s16 x176;
+    u8 pad178[0x1c8 - 0x178];
+    Link_8014A1FC* link;
+    u8 pad1cc[0x202 - 0x1cc];
+    s16 x202;
+    u8 pad204[0x22c - 0x204];
+    u16 x22c;
+    u8 pad22e[0x236 - 0x22e];
+    u16 x236;
+    u8 pad238[0x258 - 0x238];
+    f32 x258;
+    Slot18* x25c;
+    u8 pad260[4];
+    void* x264;
+} Fx;
+extern void fn_801E1784(void* p);
+extern void fn_8009E910(DrawState* o, s32 mode, u8* out);
+extern f32 fn_8009E4F8(u8 v);
+extern f32 njSin(s32 a);
+extern f32 njCos(s32 a);
+extern s32 fn_800A1AE8(void* o, s32 idx);
+extern s32 fn_800A10A8(void* base, s32 i, s32 n);
+extern s32 fn_800BE430(Fx* o);
+extern f32 fn_80291A5C(f32 x);
+extern f32 fn_8009E3D0(s32 kind, void* model, f32* v);
+extern void* fn_8009E8B0(s32 n);
+
+static inline void DecayAll(Party* f) {
+    s32 k;
+    DECAY(f->x1c, f->x1e);
+    DECAY(f->x20, f->x22);
+    DECAY(f->x40, f->x42);
+    for (k = 0; k < 5; k++) {
+        DECAY(f->mem[k].x16, f->mem[k].x18);
+        DECAY(f->mem[k].x1a, f->mem[k].x1c);
+    }
+}
+#endif
+
+#ifdef NONMATCHING
+void fn_801477A8(Slot_8014359C *c) {
+    Party *f;
+    s16 *flags;
+    const s8* t;
+
+    if (c->x1 == 0) {
+        f = lbl_8034727C->x24;
+        flags = &lbl_8034727C->flag[1];
+    } else {
+        f = lbl_8034727C->x20;
+        flags = &lbl_8034727C->flag[0];
+    }
+    switch (c->x0) {
+    case 5:
+        if (c->x7 == 0) {
+            return;
+        }
+        if (c->x7 == 4) {
+            return;
+        }
+        if (f->x54 > lbl_802C4BF0[c->x8].ship_turns) {
+            c->x7 = 0;
+            return;
+        }
+        if (f->x54 == 0) {
+            DecayAll(f);
+        }
+        c->x7 = 1;
+        f->x54 = lbl_802C4BF0[c->x8].ship_turns;
+        *flags &= ~3;
+        f->x52 = 0;
+        f->x50 = 0;
+        *flags |= 4;
+        break;
+    case 1:
+        t = &lbl_802D8A2C[c->x8 - 0x1e0].turns;
+        if (f->x54 > *t) {
+            c->x7 = 0;
+            return;
+        }
+        if (f->x54 == 0) {
+            DecayAll(f);
+        }
+        c->x7 = 1;
+        f->x54 = *t;
+        *flags &= ~3;
+        f->x52 = 0;
+        f->x50 = 0;
+        *flags |= 4;
+        break;
+    case 2:
+        break;
+    case 7:
+        break;
+    }
+}
+#endif
+
+#ifdef NONMATCHING
+inline s32 PartyCount(void) {
+    s32 i = 0;
+    s8* p = fn_80135598()->order;
+    if (p != NULL) {
+        for (i = 0; i < 4; i++) {
+            if (p[i] < 0) {
+                break;
+            }
+        }
+    }
+    return i;
+}
+
+inline s32 Valid(Party* p, s32 m) {
+    s32 ok = 0;
+    if (p != NULL && m >= 0 && m < 5 && p->mem[m].state >= 0) {
+        ok = 1;
+    }
+    return ok;
+}
+
+inline s32 Status(s32 m) {
+    s32 st;
+    Party* p = &fn_80135598()->party;
+    st = 4;
+    if (Valid(p, m)) {
+        st = p->mem[m].state;
+    }
+    return st;
+}
+
+inline s32 Span(s32 m) {
+    Party* p = &fn_80135598()->party;
+    s32 st = -1;
+    if (Valid(p, m)) {
+        st = p->mem[m].b1e;
+    }
+    return st;
+}
+
+inline s32 Range(s32 lo, s32 k, s32 n, s32 hi) {
+    s32 r;
+    s32 m;
+    if (lo + 1 < 0 || k - 1 < 0 || n <= 0) {
+        r = hi;
+    } else {
+        r = n - 1;
+        if (k + lo < r) r = k + lo;
+        m = hi > 0 ? hi : 0;
+        if (m < r) r = m;
+        if (r < lo + 1 || r >= n) r = hi;
+    }
+    return r;
+}
+#endif
+
+#ifdef NONMATCHING
+void fn_8013FF50(s32 who, s32 lo, s32 mem, s32 pts)
+{
+    s32 hi;
+    s32 n;
+    s32 k;
+    s32 end;
+
+    hi = PartyCount() * 2 - 1;
+    switch (Status(who)) {
+    case 1:
+        hi = fn_8013A538(who, lo, hi, 0, pts);
+        break;
+    case 2:
+        k = Span(who);
+        n = PartyCount() * 2;
+        hi = Range(lo, k, n, hi);
+        break;
+    }
+    end = PartyCount() - 1;
+    n = hi;
+    if (hi > end) n = end;
+    lo++;
+    for (; lo <= n; lo++) {
+        if (lbl_80308E90[lo + 4].kind != -1 && mem != lbl_80308E90[lo + 4].key) {
+            fn_80131630(lo, mem, 0x11);
+        }
+    }
+    for (; lo <= hi; lo++) {
+        fn_80131630(lo, mem, 0x11);
+    }
+
+}
+#endif
+
+#ifdef NONMATCHING
+void fn_8014A1FC(Fx* o, Emit* s)
+{
+    Cfg_8014A1FC* c = o->link->cfg;
+    u8 col[4];
+    f32 v;
+    u8 r, g, b;
+    s32 ang, deg;
+    s32 n;
+    s16 sh;
+    f32 inv, a;
+
+    if (o->x25c != NULL) {
+        fn_801E1784(o->x25c);
+        o->x25c = NULL;
+    }
+    DrawStateDefault2D(&s->ds);
+    fn_8009E910(&s->ds, c->mode, col);
+    s->cr = r = c->r;
+    s->cg = g = c->g;
+    s->cb = b = c->b;
+    if (s->cr == 0 && s->cg == 0 && s->cb == 0) {
+        s->x50 = 0;
+    } else {
+        s->x50 = 1;
+    }
+    o->x20 = fn_8009E4F8(r);
+    o->x24 = fn_8009E4F8(g);
+    o->x28 = fn_8009E4F8(b);
+    if (o->x20 == -1.0f && o->x24 == -1.0f && o->x28 == -1.0f) {
+        o->x20 = o->x24 = o->x28 = 0.0f;
+    }
+    if (c->x60 != 0) {
+        o->x176 = 0;
+    } else {
+        o->x176 = 3;
+    }
+    s->x1a = c->x64;
+    { f32 t = c->x6c; v = t == 0.0f ? 360.0f : t; }
+    o->x22c = c->count;
+    if (o->x22c != 0) {
+        o->x25c = fn_801E1A2C(1, o->x22c * 0x18);
+    } else {
+        o->x25c = NULL;
+    }
+    if (o->x25c != NULL) {
+        o->x25c->x14 = v;
+        o->x258 = c->x84;
+        s->xac = c->x88;
+        s->x4 = c->x8c;
+        s->xb0 = c->x90;
+        s->x8 = c->x94;
+        s->xb4 = 182.04445f * c->x98;
+        s->xc = 182.04445f * c->x9c;
+        s->x10 = 182.04445f * -(f32)c->xa0;
+        s->x14 = c->xa8;
+        s->x16 = c->xac;
+        s->x18 = c->xb0;
+        s->x1c = s->x14 == 0 ? 1.0f : 1.0f / s->x14;
+        s->x20 = s->x18 == 0 ? 1.0f : 1.0f / s->x18;
+        s->x24 = c->xc4;
+        if (s->x24 == 0.0f) {
+            s->x24 = 1.0f;
+        }
+        s->x38 = 182.04445f * c->xd0;
+        if (c->xd4 != 0) {
+            s->flags |= 1;
+        }
+        ang = 182.04445f * (f32)c->xa0;
+        s->x30 = njCos(ang);
+        s->x34 = njSin(ang);
+        s->x2c = c->xdc;
+        s->x28 = fn_800A1AE8(o, 0x36);
+        s->xbc = 0;
+        s->xb8 = 0;
+        s->xba = fn_800A10A8(s->x2c, s->xbc, s->x28);
+        if (s->x28 >= 1) {
+            s->flags |= 4;
+        }
+        s->x5a = 0;
+        s->x58 = 0;
+        s->x5c = (s32)o->x100;
+        s->x4a = 0;
+        s->x3c = 0.003921569f * col[0];
+        c = o->link->cfg;
+        s->ds.fog = o->x2c;
+        if (c->mode == 3) {
+            s->x4c = 1;
+        } else {
+            s->x4c = 0;
+        }
+        if (fn_800BE430(o)) {
+            s->flags |= 2;
+        }
+        if (s->flags & 2) {
+            s->x100 = fn_80291A5C((f32)pow(o->x50, 2.0) + (f32)pow(o->x54, 2.0));
+        } else {
+            s->x100 = fn_8009E3D0(7, fn_801C8930(o->xe4), &o->x50);
+        }
+        sh = c->xbc;
+        o->x202 = sh;
+        inv = c->xb8;
+        if ((s32)inv <= 0) {
+            inv = 1.0f;
+        }
+        inv = 1.0f / inv;
+        if (c->xd8 != 0) {
+            if ((u32)s->x16 > c->xd8) {
+                a = c->xd8;
+            } else {
+                a = s->x16;
+            }
+        } else {
+            a = s->x16;
+        }
+        n = 1.0f + (f32)ceil(inv * ((f32)(o->x22c + 1) * (2.0f + ((f32)sh + a))));
+        if (n < o->x22c) {
+            n = o->x22c;
+        }
+        o->x264 = fn_8009E8B0(n);
+        o->x236 = n;
+    }
+}
+#endif

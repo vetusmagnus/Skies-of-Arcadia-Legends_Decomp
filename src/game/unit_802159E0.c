@@ -101,9 +101,7 @@ typedef struct MapInfo {
     char room;      /* 0x08 */
 } MapInfo;
 extern MapInfo lbl_80311AC0;
-
 float fn_801F6120(float **p);
-
 #define FREEALL(s, v) \
     for (v = 0; v < s->n; v++) { \
         if (s->xc[v] != NULL) { \
@@ -160,11 +158,8 @@ float fn_801F6120(float **p);
         s->x20 = NULL; \
     } \
     lbl_8030CEA0.x15cc = 0;
-
 float fn_801F6120(float **p);
-
 float fn_801F6120(float **p);
-
 #define FREEALL_802034B0(s, v) \
 if (s->xc[0] != NULL) { \
     fn_801E1784(s->xc[0]); \
@@ -225,9 +220,7 @@ if (s->times != NULL) { \
     s->times = NULL; \
 } \
 lbl_8030CEA0.x15cc = 0;
-
 float fn_801F6120(float **p);
-
 #define FREEALL_80203FFC(s, v) \
 if (s->xc[0] != NULL) { \
     fn_801E1784(s->xc[0]); \
@@ -284,30 +277,24 @@ if (s->times != NULL) { \
     s->times = NULL; \
 } \
 lbl_8030CEA0.x15cc = 0;
-
 float fn_801F6120(float **p);
-
 extern s32 lbl_803477E8;
 extern struct NJS_MOTION;
-
 typedef struct {
     void* model;          /* 0x00 */
     u32 pad4;
     NJS_TEXLIST texlist;  /* 0x08 */
 } ModelFile;
-
 typedef struct {
     u8 pad0[8];
     ModelFile* body;    /* 0x08 */
     ModelFile* extra;   /* 0x0C */
     ModelFile* spark;   /* 0x10 */
 } ModelFiles;
-
 typedef struct {
     s32 count;
     void* items[1]; /* count entries */
 } ItemList;
-
 typedef struct {
     u8 pad0[0x14];
     u32 flags;     /* 0x14 */
@@ -320,7 +307,6 @@ typedef struct {
     s32 mode;      /* 0x38 */
     u32 flag;      /* 0x3C story flag */
 } EvInfo;
-
 typedef struct {
     u8 pad0[0x10];
     EvInfo* info;          /* 0x10 */
@@ -339,11 +325,9 @@ typedef struct {
     u8 pad0c[0x18 - 0xc];
     s16 h18;      /* 0x18 */
 } EvSub;
-
 typedef struct {
     s32 mode;     /* 0x00 */
 } EvMode;
-
 typedef struct {
     u8 pad0[0x28];
     u16 x28;      /* 0x28 */
@@ -351,7 +335,6 @@ typedef struct {
     s16 x2c;      /* 0x2C */
     s16 x2e;      /* 0x2E */
 } EvHit;
-
 typedef struct EvObj {
     u8 pad0[4];
     s32 kind;                /* 0x04 */
@@ -440,6 +423,7 @@ typedef struct EvObj {
     EvMode* mapMode;         /* 0x260 */
 } EvObj;
 float fn_801F6120(float **p);
+extern u32 lbl_803477C8[2];
 
 s32 fn_80215F8C(void) {
     return 1;
@@ -1011,3 +995,33 @@ void fn_802173F4(u32 mode, s8 vol8, s16 time) {
      (lbl_80311AC0.area == 0x7d && lbl_80311AC0.room == 'b') ||      \
      (lbl_80311AC0.area == 0x7d && lbl_80311AC0.room == 'd'))
 
+#ifdef NONMATCHING
+/* Near miss (2 lines): the original schedules `li r0, 0` after the `stwx` of the call result.
+   fn_80216D98 has the same body for id = lbl_803477B8 (also 2 lines, same cause). */
+
+typedef struct Ent60 {
+    u32 x00;
+    u8 pad04[0x2c];
+    u8 x30[0x30];
+} Ent60;
+extern Ent60 lbl_80314940[2];
+extern u32 fn_802168CC(void *p, void *q, s32 n);
+#endif
+
+#ifdef NONMATCHING
+void fn_80215F94(u32 id)
+{
+    u32 idx;
+
+    if (id == 0x10 || id == 0x11) {
+        idx = id - 0x10;
+        if (lbl_803477C8[idx] == 0xffffffff) {
+            if (lbl_80314940[idx].x00 != 0) {
+                lbl_803477C8[idx] = fn_802168CC(&lbl_80314940[idx], lbl_80314940[idx].x30, 0x78);
+                lbl_803477C0 = 0;
+                lbl_80314940[idx].x00 = 0;
+            }
+        }
+    }
+}
+#endif

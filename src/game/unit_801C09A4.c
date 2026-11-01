@@ -70,6 +70,8 @@ typedef struct Info {
     s16 xe;
     s16 x10;
     s16 x12;
+    s16 x14;
+    s16 x16;
 } Info;
 extern s16 fn_801EE344(s16 id, s32 stat);
 extern s8 fn_801F4A60(void);
@@ -370,4 +372,83 @@ void fn_801C1148(s16 id, s8 amount) {
         i++;
         p++;
     } while (i < n);
+}
+
+#ifdef NONMATCHING
+typedef struct Pad {
+    u32 held;     /* 0x00 */
+    u32 x4;       /* 0x04 */
+    u32 pressed;  /* 0x08 */
+} Pad;
+extern Pad* lbl_80311A60[];
+extern const u32 lbl_802C3A68[18];
+#endif
+
+#ifdef NONMATCHING
+s32 fn_801C09F8(s32 port, s32 btn) {
+    Pad* p;
+    u32 m;
+
+    if (btn < 18 && btn >= 0) {
+        p = lbl_80311A60[port];
+        m = lbl_802C3A68[btn];
+        if (p->held & m) {
+            if (p->pressed & m) {
+                lbl_8030A2F4[btn] = 10;
+                return 1;
+            }
+            if (lbl_8030A2F4[btn] != 0) {
+                lbl_8030A2F4[btn]--;
+                return 0;
+            }
+            lbl_8030A2F4[btn] = 2;
+            return 1;
+        }
+        lbl_8030A2F4[btn] = 0;
+    }
+    return 0;
+}
+#endif
+
+s32 fn_801C2CF4(Info* o, s16 id) {
+    s32 cat;
+    if (id == -1) {
+        goto clear;
+    }
+    cat = fn_801F4C24(id);
+    switch (cat) {
+    case 4:
+    default:
+    clear:
+        o->cat = -1;
+        o->id = id;
+        o->x14 = 0;
+        o->x12 = 0;
+        o->x10 = 0;
+        o->xe = 0;
+        o->xc = 0;
+        o->xa = 0;
+        o->x8 = 0;
+        o->x6 = 0;
+        return 0;
+    case 5:
+    case 6:
+        o->cat = cat;
+        o->id = id;
+        o->x6 = fn_801EE344(id, 0x10);
+        o->xc = fn_801EE344(id, 0x13);
+        o->x8 = fn_801EE344(id, 2);
+        o->xa = fn_801EE344(id, 3);
+        o->xe = fn_801EE344(id, 6);
+        o->x10 = lbl_802D7E4C[id - 0x190].cost;
+        o->x12 = lbl_802D7E4C[id - 0x190].limit;
+        o->x14 = fn_801EE344(id, 4);
+        o->x16 = 0;
+        break;
+    case 0: case 1: case 2: case 3: case 7:
+        o->cat = cat;
+        o->id = id;
+        break;
+    }
+    return 1;
 }
