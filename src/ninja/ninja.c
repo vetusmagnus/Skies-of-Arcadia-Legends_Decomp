@@ -2832,6 +2832,30 @@ void fn_80299078(NjTexRef* a, s32 b, NjTexMem* c, s32 d) {
     fn_8029833C(c, d);
 }
 
+/* Twiddles an n x n block of 16-bit texels: texel (x, y) goes to the index whose even bits are y's and
+ * odd bits are x's (the Dreamcast twiddled layout). */
+void fn_802990BC(u16* dst, s16* src, s32 n) {
+    s32 y;
+    s16* s;
+    s32 x;
+    u32 ty;
+    u32 tx;
+
+    for (y = 0; y < n; y++) {
+        ty = (y & 1) | ((y & 2) << 1) | ((y & 4) << 2) | ((y & 8) << 3) | ((y & 0x10) << 4) |
+             ((y & 0x20) << 5) | ((y & 0x40) << 6) | ((y & 0x80) << 7) | ((y & 0x100) << 8) |
+             ((y & 0x200) << 9);
+        s = &src[y * n];
+        for (x = 0; x < n; x++) {
+            tx = (x & 1) | ((x & 2) << 1) | ((x & 4) << 2) | ((x & 8) << 3) | ((x & 0x10) << 4) |
+                 ((x & 0x20) << 5) | ((x & 0x40) << 6) | ((x & 0x80) << 7) | ((x & 0x100) << 8) |
+                 ((x & 0x200) << 9);
+            dst[ty | (tx << 1)] = *s++;
+        }
+    }
+    DCFlushRange(dst, n);
+}
+
 void njClipZ(f32 near, f32 far) {
     if (near > -1.0f) near = -1.0f;
     if (far > -1.0f) far = -1.0f;

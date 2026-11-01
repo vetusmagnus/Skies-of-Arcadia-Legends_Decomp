@@ -380,10 +380,23 @@ Logged, not integrated as matches. Functions marked * are in the unit as NonMatc
     `build/agents/fifo/` (local).
 - `fn_802A1160` (duplicate group 12, the second renderer's chunk-model callback): 38 lines, the per-use copy
   shape for `&lbl_80300760` like `fn_802873BC`; best source and what was tried in `docs/near/fn_802A1160.c`.
+  With GC/1.3.2nj the walk as one `static inline void walk(u32* v, u32* base)` is 35 lines: the `v` and
+  NjEnvState copies now come out as in the original, and only `mr r10,r4` (the copy of `base`) is missing.
+  Parameter types (`void*`, `u8*`, `u32`), passing `lbl_80347EFC` directly, a local copy inside the
+  helper, a state-pointer parameter, loop shapes and declaration order all keep it at 35 or worse.
 - Ambient colour setters `fn_802871D8` / `fn_8028B784` (duplicate group 74, one per light table):
   instructions exact, but the original scales each argument in its own register (`fmuls f1,f1,f4`) where
   MWCC picks a fresh one (24 lines, registers only). Plain, `*=`-in-condition, temp, inline-helper and
   macro forms all give the same diff; no GC compiler from 1.0 to 3.0a5.2 matches it.
+  The light colour setter `fn_80287124` (scale 128.0f, clamp 255.0f, alpha 0xff first, light `n - 1` held in
+  a local index) has the same float-register difference and nothing else (24 lines with 1.3.2nj).
+- Other near misses from 2026-11-01 (1.3.2nj, drafts kept out of the source): `fn_802978F4` (texlist release,
+  26 lines: the loop index and its strength-reduced byte offset swap registers), `fn_802992F8` (perspective
+  from an angle, same frustum call as `njClipZ`; 32 lines of float scheduling), `fn_80296C00` (copy-clear
+  colour from ARGB; 17 lines, the original copies the argument and keeps the blue store last),
+  `fn_80291458` (Bezier point via `pow` and the binomial `fn_802915C8`; 52 lines with the first `pow` result
+  in an `f64` temp, which gives the right instruction count). None responds to declaration order or the
+  approved optimizer pragmas.
 - `fn_80286EE8` / `fn_8028B498` (light update, duplicate group 40): 23 lines: the walker/base copy of the table
   address goes the other way and `base + 0x30c` isn't hoisted; best form in `docs/near/fn_80286EE8.c`.
 - Register allocation or scheduling only: `fn_80288C68`,
