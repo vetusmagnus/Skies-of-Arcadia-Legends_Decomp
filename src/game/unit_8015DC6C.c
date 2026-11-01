@@ -2683,6 +2683,81 @@ static inline s32 AngStep(s32 to, s32 from, s32 n)
     return d / n;
 }
 
+extern void fn_80225930(u16 a, u16 b, void *c);
+void fn_8016058C(s32 n, Key *ents, EvObj *obj)
+{
+    Key *e = ents;
+    s32 j;
+    s32 id;
+    s32 flag = 0;
+    s32 mask;
+    s32 saved;
+    EvHit *hit;
+    Vec v;
+    Probe pr;
+
+    for (j = 0; j < n; e++, j++) {
+        if (e->x28 == 0x7fffffff) {
+            if (j == 0) {
+                if (obj->hit != 0) {
+                    e->x28 = obj->hit->x2e;
+                } else {
+                    e->x28 = 0;
+                }
+            } else {
+                e->x28 = e[-1].x28;
+            }
+        }
+        if (1.17549435e-38f == e->p0.y) {
+            switch (e->x28) {
+            case -1:
+                e->p0.y = j == 0 ? obj->pos.y : e[-1].p0.y;
+                break;
+            default:
+                if (obj->hit != 0) {
+                    id = obj->hit->id;
+                    flag = 1;
+                    mask = obj->hit->x28;
+                } else {
+                    mask = 0xffff;
+                }
+                v.x = e->p0.x;
+                v.y = obj->pos.y;
+                v.z = e->p0.z;
+                hit = obj->hit;
+                if (hit != 0) {
+                    saved = hit->x30;
+                    fn_80225930(0xffff, e->x28, hit);
+                    if (fn_802256A0(&v, obj->hit, 0xffff, e->x28) == 0) {
+                        v.y = obj->pos.y;
+                    }
+                    obj->hit->x30 = saved;
+                } else {
+                    pr.x = v.x;
+                    pr.y = v.y;
+                    pr.z = v.z;
+                    if (fn_80224588(0xffff, &pr, 1) != 0) {
+                        if (pr.a != 0) {
+                            v.y = pr.h;
+                        } else {
+                            v.y = obj->pos.y;
+                        }
+                    }
+                }
+                e->p0.y = v.y;
+                v.x = obj->pos.x;
+                v.z = obj->pos.z;
+                if ((mask != 0xffff || flag != 0) && obj->hit != 0) {
+                    fn_802256A0(&v, obj->hit, 0xffff, id);
+                } else {
+                    obj->pos.y = v.y;
+                }
+                break;
+            }
+        }
+    }
+}
+
 s32 fn_80160A4C(Ent_8015EBF4 *self, Arg_8016679C *a)
 {
     Hold_8015EB8C *h = self->x1d8;
