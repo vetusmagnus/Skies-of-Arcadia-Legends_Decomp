@@ -197,9 +197,7 @@ game_src = sorted(
     for d in ("src/game", "include/game", "src/ninja")
     for p in Path(d).rglob("*")
     if p.suffix in (".c", ".cpp", ".h", ".hpp", ".inc")
-    # Hand-written asm in the original Ninja library (docs/ninja.md), checked like extern/.
-    and p.as_posix() != "src/ninja/ninja_asm.c"
-) + ["include/ninja.h", "include/ninja_lib.h"]
+) + ["include/ninja.h", "include/ninja_lib.h", "include/ninja_blend.h"]
 config.custom_build_rules = [
     {
         "name": "check_game_src",
@@ -489,9 +487,10 @@ config.libs = [
             Object(NonMatching, "game/unit_8022D34C.c"),
         ],
     ),
-    # Sega's Ninja graphics library, compiled like the game (docs/ninja.md). One unit for the whole
-    # region until the real file boundaries show up. Built with GC/1.3.2nj, stock 1.3.2 with the
-    # late copy propagation made block-local (tools/patch_mwcc_ninja.py, docs/mwcc_ninja/README.md).
+    # Sega's Ninja graphics library, compiled like the game (docs/ninja.md). Units are cut at the
+    # .sdata2 pool edges ("Strip drawer files"); ninja.c and ninja_802A7680.c still cover stretches
+    # whose file edges aren't known. Built with GC/1.3.2nj, stock 1.3.2 with the late copy
+    # propagation made block-local (tools/patch_mwcc_ninja.py, docs/mwcc_ninja/README.md).
     {
         "lib": "ninja",
         "mw_version": "GC/1.3.2nj",
@@ -499,6 +498,26 @@ config.libs = [
         "progress_category": "ninja",
         "objects": [
             Object(NonMatching, "ninja/ninja.c"),
+            Object(NonMatching, "ninja/ninja_8029D698.c"),
+            Object(NonMatching, "ninja/ninja_8029DEDC.c"),
+            Object(NonMatching, "ninja/ninja_8029E40C.c"),
+            Object(NonMatching, "ninja/ninja_8029E5CC.c"),
+            Object(NonMatching, "ninja/ninja_8029EA5C.c"),
+            Object(NonMatching, "ninja/ninja_8029EC1C.c"),
+            Object(NonMatching, "ninja/ninja_8029EE28.c"),
+            Object(NonMatching, "ninja/ninja_802A1160.c"),
+            Object(Matching, "ninja/ninja_802A20DC.c"),
+            Object(NonMatching, "ninja/ninja_802A21C4.c"),
+            Object(NonMatching, "ninja/ninja_802A3D08.c"),
+            Object(NonMatching, "ninja/ninja_802A3EDC.c"),
+            Object(NonMatching, "ninja/ninja_802A44F0.c"),
+            Object(NonMatching, "ninja/ninja_802A4C20.c"),
+            Object(NonMatching, "ninja/ninja_802A4E4C.c"),
+            Object(NonMatching, "ninja/ninja_802A5530.c"),
+            Object(Matching, "ninja/ninja_802A5A58.c"),
+            Object(NonMatching, "ninja/ninja_802A6184.c"),
+            Object(Matching, "ninja/ninja_802A7598.c"),
+            Object(NonMatching, "ninja/ninja_802A7680.c"),
             # The game's strong OSReport (overrides the SDK's weak one); built with the SDK compiler.
             Object(Matching, "ninja/osreport.c", mw_version="GC/1.2.5n"),
         ],

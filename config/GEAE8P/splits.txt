@@ -1032,7 +1032,90 @@ musyx/runtime/Chorus/chorus_fx.c:
 	.sdata2     start:0x8034CEE0 end:0x8034CEE8
 
 ninja/ninja.c:
-	.text       start:0x80286EE8 end:0x802AC75C
+	.text       start:0x80286EE8 end:0x8029D698
+	.sdata2     start:0x8034CEE8 end:0x8034D328
+	.sbss2      start:0x8034D488 end:0x8034D4A8
+
+ninja/ninja_8029D698.c:
+	.text       start:0x8029D698 end:0x8029DEDC
+	.sdata2     start:0x8034D328 end:0x8034D330
+
+ninja/ninja_8029DEDC.c:
+	.text       start:0x8029DEDC end:0x8029E40C
+	.sdata2     start:0x8034D330 end:0x8034D338
+
+ninja/ninja_8029E40C.c:
+	.text       start:0x8029E40C end:0x8029E5CC
+	.sdata2     start:0x8034D338 end:0x8034D340
+
+ninja/ninja_8029E5CC.c:
+	.text       start:0x8029E5CC end:0x8029EA5C
+	.sdata2     start:0x8034D340 end:0x8034D348
+
+ninja/ninja_8029EA5C.c:
+	.text       start:0x8029EA5C end:0x8029EC1C
+	.sdata2     start:0x8034D348 end:0x8034D350
+
+ninja/ninja_8029EC1C.c:
+	.text       start:0x8029EC1C end:0x8029EE28
+	.sdata2     start:0x8034D350 end:0x8034D358
+
+ninja/ninja_8029EE28.c:
+	.text       start:0x8029EE28 end:0x802A1160
+
+ninja/ninja_802A1160.c:
+	.text       start:0x802A1160 end:0x802A20DC
+	.sdata2     start:0x8034D358 end:0x8034D380
+	.sbss2      start:0x8034D4A8 end:0x8034D4B0
+
+ninja/ninja_802A20DC.c:
+	.text       start:0x802A20DC end:0x802A21C4
+	.sdata2     start:0x8034D380 end:0x8034D388
+
+ninja/ninja_802A21C4.c:
+	.text       start:0x802A21C4 end:0x802A3D08
+	.sdata2     start:0x8034D388 end:0x8034D390
+
+ninja/ninja_802A3D08.c:
+	.text       start:0x802A3D08 end:0x802A3EDC
+	.sdata2     start:0x8034D390 end:0x8034D398
+
+ninja/ninja_802A3EDC.c:
+	.text       start:0x802A3EDC end:0x802A44F0
+	.sdata2     start:0x8034D398 end:0x8034D3A0
+
+ninja/ninja_802A44F0.c:
+	.text       start:0x802A44F0 end:0x802A4C20
+	.sdata2     start:0x8034D3A0 end:0x8034D3A8
+
+ninja/ninja_802A4C20.c:
+	.text       start:0x802A4C20 end:0x802A4E4C
+	.sdata2     start:0x8034D3A8 end:0x8034D3B0
+
+ninja/ninja_802A4E4C.c:
+	.text       start:0x802A4E4C end:0x802A5530
+	.sdata2     start:0x8034D3B0 end:0x8034D3B8
+
+ninja/ninja_802A5530.c:
+	.text       start:0x802A5530 end:0x802A5A58
+
+ninja/ninja_802A5A58.c:
+	.text       start:0x802A5A58 end:0x802A6184
+	.sdata2     start:0x8034D3B8 end:0x8034D3C0
+
+ninja/ninja_802A6184.c:
+	.text       start:0x802A6184 end:0x802A7598
+	.sdata2     start:0x8034D3C0 end:0x8034D3E8
+	.sbss2      start:0x8034D4B0 end:0x8034D4B8
+
+ninja/ninja_802A7598.c:
+	.text       start:0x802A7598 end:0x802A7680
+	.sdata2     start:0x8034D3E8 end:0x8034D3F0
+
+ninja/ninja_802A7680.c:
+	.text       start:0x802A7680 end:0x802AC75C
+	.sdata2     start:0x8034D3F0 end:0x8034D44C
+	.sbss2      start:0x8034D4B8 end:0x8034D4C4
 
 ninja/osreport.c:
 	.text       start:0x802AC75C end:0x802AC7DC

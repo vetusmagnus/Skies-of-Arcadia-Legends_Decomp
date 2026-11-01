@@ -17,6 +17,9 @@ comes from the original instructions. Code inside the guard is checked by the sa
 Library code under extern/ is not checked: its asm functions are asm in the original libraries.
 The Ninja library (src/ninja/) may use per-function optimizer pragmas (`optimization_level`, `opt_*`,
 `scheduling`) where the original build used a different optimization level and no plain-C form matches.
+Its hand-written assembly routines (docs/ninja.md) are whole `asm` functions in place, in address order:
+a definition that starts with `asm` at column 0 is skipped up to its closing `}` at column 0. An `asm`
+block inside a C function is still rejected.
 Comments and string literals are ignored. With --stamp, FILE is touched on success (for ninja).
 """
 import os, re, sys
@@ -33,6 +36,7 @@ RULES = [
 GUARD = re.compile(r"^\s*#\s*ifdef\s+NONMATCHING\s*$")
 EXTS = (".c", ".cpp", ".h", ".hpp", ".inc")
 NINJA_PRAGMA = re.compile(r"^\s*#\s*pragma\s+(?:optimization_level|opt_\w+|scheduling)\b")
+NINJA_ASM_FN = re.compile(r"^asm\s+[A-Za-z_][^;]*\(")
 
 
 def strip(text):
@@ -82,8 +86,16 @@ def main():
     for path in files(args):
         with open(path, encoding="utf-8", errors="replace") as f:
             lines = strip(f.read()).splitlines()
+        ninja = "src/ninja/" in path.replace("\\", "/")
+        in_asm = False
         for no, line in enumerate(lines, 1):
-            if "src/ninja/" in path.replace("\\", "/") and NINJA_PRAGMA.search(line):
+            if ninja and in_asm:
+                in_asm = not line.startswith("}")
+                continue
+            if ninja and NINJA_ASM_FN.match(line):
+                in_asm = True
+                continue
+            if ninja and NINJA_PRAGMA.search(line):
                 continue
             if GUARD.match(line):
                 continue

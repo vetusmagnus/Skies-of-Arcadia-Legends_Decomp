@@ -1,7 +1,7 @@
 #ifndef NINJA_LIB_H
 #define NINJA_LIB_H
 
-/* Types and declarations shared by the Sega Ninja library code in src/ninja/ninja.c. Layouts are
+/* Types and declarations shared by the Sega Ninja library code in src/ninja/. Layouts are
  * inferred from the asm (docs/ninja.md); Ninja matrices are Float[16] while the SDK takes Mtx, so
  * the PSMTX/PSVEC routines are declared here with flat pointers. */
 
@@ -361,6 +361,20 @@ s32 fn_8029959C(NjTexBody* b);
 s32 fn_8029954C(void* dst, NjTexBody* b);
 void fn_80298144(NjTexRef* r);
 
+/* ---- Vertex arrays (the drawers' vertex layouts) ---- */
+
+typedef struct { f32 x, y, z; u32 col; } NjColVtx;
+typedef struct { f32 x, y, z; f32 u, v; u32 col; } NjTexVtx;
+typedef struct { NJS_POINT3 pos; NJS_POINT3 nrm; } NjPosNrm;
+typedef struct { NJS_POINT3 pos; NJS_POINT3 nrm; u32 col; } NjPosNrmCol;
+
+/* Vertex descriptor setups the drawers call before GXBegin (ninja.c): position, then colour and/or
+ * normal. */
+void fn_8029AF68(GXAttrType t);
+void fn_8029AFA0(GXAttrType p, GXAttrType c);
+void fn_8029AFF0(GXAttrType p, GXAttrType n, GXAttrType c);
+void fn_8029B058(GXAttrType p, GXAttrType n);
+
 /* ---- GX render state ---- */
 
 /* Render state (lbl_803457A8, 0x50 bytes; the texture error status follows it). */
@@ -411,7 +425,6 @@ extern u32 lbl_80347EF0;
 extern f32 lbl_80347F30;
 extern f32 lbl_80347F34;
 f32 fn_80291978(f64 x);
-extern f64 lbl_8034D3B8;
 f32 fn_802974E4(f32 x);
 extern u32 lbl_803005A0[8];
 extern u32 lbl_80300710[8];

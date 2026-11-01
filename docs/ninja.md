@@ -4,8 +4,8 @@ Sega Ninja library (GameCube)
 `0x80286EE8`–`0x802AC7E0` (~150 KB, 452 functions), the last part of `.text`, is Sega's **Ninja**
 graphics library in its GameCube form, built on GX. There's no decomp or symbol map of GC Ninja to
 match against, so functions are named here by behavior, using Ninja's public API (Dreamcast
-documentation, Sonic Adventure PC symbols). The region is one NonMatching unit, `src/ninja/ninja.c`
-(shared types in `include/ninja_lib.h`); see "Matching status" below.
+documentation, Sonic Adventure PC symbols). The region is 21 units in `src/ninja/`, cut at the `.sdata2`
+pool edges ("Strip drawer files" below; shared types in `include/ninja_lib.h`); see "Matching status".
 
 Evidence that it's Ninja
 ------------------------
@@ -106,12 +106,11 @@ Where things are
 Matching status
 ---------------
 
-The matched functions (count in the README status block) match byte for byte (`src/ninja/ninja.c`, objdiff and `tools/match/fdiff.py`
-plus `floatcheck.py` agree; main.dol still hashes OK). The unit covers the whole region
-(`0x80286EE8`-`0x802AC75C`) because no real file boundary has turned up: the `.sdata2` pool is
-contiguous in text order, so the data gives no edge, and no edge has been checked against
-padding yet. Add a split only when evidence shows one (padding, a data pool edge, a known Ninja file
-layout).
+The matched functions (count in the README status block) match byte for byte (`src/ninja/`, objdiff and `tools/match/fdiff.py`
+plus `floatcheck.py` agree; main.dol still hashes OK). The units are cut where `.sdata2` padding shows a
+file edge ("Strip drawer files" below). `ninja.c` (`0x80286EE8`-`0x8029D698`) and `ninja_802A7680.c`
+(`0x802A7680`-`0x802AC75C`) still hold stretches with no known edge. Add a split only when evidence
+shows one (padding, a data pool edge, a known Ninja file layout).
 
 **Compiler.** The library builds with the game's flags (GC/1.3.2, `-O4,p`, `-inline noauto`).
 `-O1` makes `njSin`/`njCos`/`njTan` match but breaks about half of the other functions, so that is
@@ -184,6 +183,8 @@ Game code stays cast-free.
 - Nine routines are hand-written assembly in the original (paired-single colour quantizers that set GQR1,
   `ps_madd`/`ps_sum0` vertex transforms with `dcbt`, a `dcbz` memory copy whose `bne; blr` a compiler would fold):
   `src/ninja/ninja_asm.c`, included at the end of `ninja.c` and kept out of the plain-C check like extern/.
+  (Since the split they sit in their own units in address order; `tools/check_game_src.py` skips a whole
+  `asm` function in `src/ninja/` and still rejects `asm` blocks inside C.)
 - The per-use register copies behind the FIFO blocker are not specific to the FIFO: the same "first two uses share,
   later uses get an `mr`/`fmr` copy" shape shows up for a zero constant (`fn_8029833C`, `fn_80298544` remainder
   loops), a float constant (0.025f in `fn_8028DD5C`, `fn_8028CF20`) and a data address (`&lbl_80346620` in
@@ -234,7 +235,7 @@ Game code stays cast-free.
   already. `#pragma opt_dead_assignments off` (or `opt_propagation off`, equally) over fn_802A2394..fn_802A58DC
   makes all 11 match and keeps every other ninja.c function matching. The same setting over the whole unit fixes
   the 11 but breaks 16-18 functions outside that stretch (fn_80289EC8..fn_80291064, fn_8029681C, fn_802A1374,
-  fn_802A7D74, njProjectScreen). It is a pragma block in ninja.c until the split.
+  fn_802A7D74, njProjectScreen). Since the split it is a file-level pragma in each strip file (below).
 
   Evidence for the files (step 1 of a split; nothing in splits.txt changed yet). In .sdata2 several constants are
   a lone float followed by 4 zero bytes, i.e. a file's whole pool padded to the next 8-byte start:
@@ -270,6 +271,37 @@ Game code stays cast-free.
   after the function that uses the lone constant, or after the constant-free functions that follow it.
   The indexed drawers before the block don't depend on the setting either way (none changes with it on), so
   whether those files shared it can't be told from the code matched so far.
+
+  The split (step 2). One unit per pool, each cut right after the last function that uses its pool, so the
+  constant-free functions before a pool user go into its file (the files end with their textured variant).
+  Where text twins or the table above name a file, the cut follows them. `.sdata2` ranges include the 4-byte
+  pad; the `.sbss2` slots at 0x8034D4A8, 0x8034D4B0 and 0x8034D4B8- follow the chunk-model files.
+
+  | unit (`src/ninja/`) | .text | .sdata2 | pragma |
+  |---|---|---|---|
+  | ninja.c | 0x80286EE8-0x8029D698 | 0x8034CEE8-0x8034D328 | |
+  | ninja_8029D698.c | -0x8029DEDC | 0x8034D328 | |
+  | ninja_8029DEDC.c, _8029E40C, _8029E5CC, _8029EA5C, _8029EC1C | one per pool to 0x8029EE28 | 0x8034D330-0x8034D358 | |
+  | ninja_8029EE28.c | -0x802A1160 (indexed drawers, inner edges unknown) | none | |
+  | ninja_802A1160.c | -0x802A20DC (renderer 1 chunk model) | 0x8034D358-0x8034D380 | |
+  | ninja_802A20DC.c | -0x802A21C4 | 0x8034D380 | Matching (linked) |
+  | ninja_802A21C4.c, _802A3D08, _802A3EDC, _802A44F0, _802A4C20, _802A4E4C | one per pool to 0x802A5530 | 0x8034D388-0x8034D3B8 | `opt_dead_assignments off` |
+  | ninja_802A5530.c | -0x802A5A58 (strip drawers, no pool) | none | `opt_dead_assignments off` |
+  | ninja_802A5A58.c | -0x802A6184 | 0x8034D3B8 | Matching (linked) |
+  | ninja_802A6184.c | -0x802A7598 (renderer 2 chunk model) | 0x8034D3C0-0x8034D3E8 | |
+  | ninja_802A7598.c | -0x802A7680 | 0x8034D3E8 | Matching (linked) |
+  | ninja_802A7680.c | -0x802AC75C (the rest) | 0x8034D3F0-0x8034D44C | |
+
+  Cuts with no pool behind them, chosen from the code: 0x8029EE28/0x802A1160 (indexed drawers versus the
+  chunk-model file, whose renderer 2 twin starts right after fn_802A5F2C), 0x802A20DC (the light setters,
+  twinned at 0x802A7598) and 0x802A5A58 (end of the pragma stretch; the paired-single transforms aren't
+  drawers). fn_802A21C4 (asm) sits in the first strip file because the cut follows fn_802A210C's pool.
+  Helpers shared across units moved to headers: the vertex types and the vertex-descriptor setups
+  (fn_8029AF68..fn_8029B058) to `ninja_lib.h`; `set_blend` to `ninja_blend.h`, because MWCC emits its
+  table's 48-byte initializer in every file that sees the inline, used or not. fn_802A5F2C's 2^52 constant
+  is defined in its unit (`lbl_8034D3B8`), loaded through `r2` as in the original. Every function still matches:
+  `tools/verify_mwcc_ninja.py` now runs over all Ninja units (326 C/asm functions,
+  286 with stock 1.3.2, 40 more with 1.3.2nj).
 - Copy pattern, a minimal case (2026-11-01): `docs/near/fn_80298544.c`. With GC/1.3.2 the whole function is
   identical (prologue, 8x unroll, trip count, the unrolled body sharing one `li r5,0`) except the leftover loop
   MWCC builds for n % 8: the original hoists `li r9,0` plus `mr` copies for the third and later zero stores,
