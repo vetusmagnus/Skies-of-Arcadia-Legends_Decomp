@@ -2675,6 +2675,47 @@ void fn_80061F3C(f32 *src, f32 *dst) {
     dst[2] = src[2];
 }
 
+void fn_80064AC8(O80064CA4 *o) {
+    S80064CA4 *s = o->s;
+    U80064CA4 *u = s->p0->work->u;
+    if (o->state != 3) {
+        if (u->kind != s->s80) {
+            o->state = 2;
+        }
+    }
+    if (lbl_80346BD8->f7c & 0x40000000) {
+        return;
+    }
+    switch (o->state) {
+    case 0:
+        o->state = 1;
+    case 1: {
+        s32 i;
+        for (i = 0; i < 3; i++) {
+            f32 x;
+            lbl_80346BD8->ang[i] += s->ang[i];
+            x = s->ang[i];
+            if (x > 0.0f) {
+                while (lbl_80346BD8->ang[i] >= 360.0f) {
+                    lbl_80346BD8->ang[i] -= 360.0f;
+                }
+            } else {
+                while (lbl_80346BD8->ang[i] < 0.0f) {
+                    lbl_80346BD8->ang[i] += 360.0f;
+                }
+            }
+        }
+        break;
+    }
+    case 2:
+        o->state = 3;
+        break;
+    case 3:
+        o->flags |= 0x40;
+        break;
+    }
+}
+
 s32 fn_80065490(void) {
     return 1;
 }
