@@ -2052,6 +2052,221 @@ typedef struct O581B8 {
 extern s8 fn_8001D628(T5C188 *, s16 *, s8, s8, void *, s32);
 extern s32 fn_8025ECC4(void);
 
+void fn_80061ABC(NJS_POINT3 *out, f32 ay, f32 az, NJS_POINT3 *p, NJS_POINT3 *q);
+/* ---- unit_80055E94.c-style local types ---- */
+/* ADD: wobble-effect command */
+typedef struct WobCmd {
+    u8 pad0[8];
+    s32 x8;
+    u8 padc[4];
+    u32 x10;
+    u8 pad14[0x1a - 0x14];
+    s16 s1a;
+    s16 s1c;
+    u8 pad1e[0x24 - 0x1e];
+    f32 f24;
+    f32 f28;
+    f32 f2c;
+    f32 f30;
+    u8 pad34[0x42 - 0x34];
+    s16 t42[128];
+    s16 s142;
+    s16 s144;
+    u8 pad146[0x160 - 0x146];
+    s16 s160;
+    u8 pad162[2];
+    V3 v164;
+    f32 f170;
+    f32 f174;
+} WobCmd;
+typedef struct WobSt {
+    s16 cnt;
+    s16 start;           /* 0x02 */
+    s16 end;             /* 0x04 */
+    u8 pad6[2];
+    f32 f8;              /* 0x08 */
+    f32 fc;              /* 0x0c */
+    s16 s10;             /* 0x10 */
+    u8 pad12[2];
+    f32 f14;             /* 0x14 */
+    f32 f18;             /* 0x18 */
+    f32 f1c;             /* 0x1c */
+    s16 frame;           /* 0x20 */
+    u8 pad22[2];
+    void* chr;           /* 0x24 */
+    u8 pad28[4];
+    u8 a;                /* 0x2c */
+    u8 step2;            /* 0x2d */
+    u8 step;             /* 0x2e */
+    u8 pad2f;
+    f32 f30;             /* 0x30 */
+    f32 f34;             /* 0x34 */
+    f32 f38;             /* 0x38 */
+    s16 s3c;             /* 0x3c */
+    u8 pad3e[2];
+    WobCmd* cfg;         /* 0x40 */
+} WobSt;
+typedef struct WobWork {
+    u8 pad0[0x1c];
+    V3 pos;
+    u8 pad28[0x34 - 0x28];
+    f32 scl;             /* 0x34 */
+    u8 pad38[0x4c - 0x38];
+    WobSt* st;
+    s32 x50;
+    s32 x54;
+} WobWork;
+typedef struct WobTask {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 state;
+    u8 pad1a[0x24 - 0x1a];
+    WobWork* work;
+} WobTask;
+extern void fn_8001E3D8(V3*, V3*, void*);
+extern void fn_8001E308(V3*, V3*, void*);
+extern s32 fn_800358F8(void);
+extern void fn_80035900(s32);
+extern s16 fn_800403AC(s16, s16*, s16, s16);
+extern s32 fn_80040010(u32);
+extern void fn_80032E78(s32, void*, s16, s32, s16, s32, f32);
+
+void fn_80057038(WobTask* t)
+{
+    WobWork* w = t->work;
+    WobSt* s = w->st;
+    f32 save = 0.0f;
+    f32 sign;
+    s32 flag;
+    s32 saved;
+    V3 a;
+    V3 b;
+
+    switch (t->state) {
+    case 0:
+        fn_8006D954(s->cfg->x8);
+        t->state = 1;
+        t->work->x50 = s->cfg->x8;
+        t->work->x54 = -1;
+    case 1:
+        if (s->cnt < s->start) {
+            break;
+        }
+        if (s->cfg->s160 == 0 || s->cfg->s160 > 0xff) {
+            s->cfg->s160 = 0xff;
+        }
+        s->a = s->cfg->s160;
+        s->step = s->a / s->cfg->s1c;
+        if (s->cfg->s1a != 0) {
+            s->step2 = s->a / s->cfg->s1a;
+            s->a = 0;
+        }
+        switch (s->cfg->x10 & 0xf) {
+        case 1:
+            fn_80071CF0(&s->cfg->v164, &a);
+            fn_80071CF0(&s->cfg->v164, &b);
+            break;
+        case 0:
+            fn_8001E4A0(&s->cfg->v164, &a, s->chr);
+            fn_8001E4A0(&s->cfg->v164, &b, s->chr);
+            break;
+        case 4:
+            fn_8001E3D8(&s->cfg->v164, &a, s->chr);
+            fn_8001E3D8(&s->cfg->v164, &b, s->chr);
+            break;
+        case 5:
+            fn_8001E308(&s->cfg->v164, &a, s->chr);
+            fn_8001E308(&s->cfg->v164, &b, s->chr);
+            break;
+        }
+        a.z = a.z - s->f8;
+        b.z = b.z + s->f8;
+        a.y = a.y + s->fc;
+        b.y = b.y + s->fc;
+        fn_80061ABC(&w->pos, s->f30, s->f34, &a, &b);
+        s->f34 = 360.0f * (3.0517578e-5f * rand());
+        s->f38 = s->cfg->f2c;
+        t->state = 3;
+        break;
+    case 3:
+        if (s->end >= 0 && s->cnt >= s->end) {
+            t->state = 0xfa;
+        } else {
+            if (s->cnt >= s->end - s->cfg->s1c) {
+                if (s->a >= s->step) {
+                    s->a -= s->step;
+                } else {
+                    s->a = 0;
+                    t->state = 0xfa;
+                }
+            }
+            if (s->cnt < s->start + s->cfg->s1a) {
+                if (s->a + s->step2 < s->cfg->s160) {
+                    s->a += s->step2;
+                } else {
+                    s->a = s->cfg->s160;
+                }
+            } else if (s->cnt == s->start + s->cfg->s1a) {
+                s->a = s->cfg->s160;
+            }
+            s->f14 += s->f1c;
+            if (s->f14 >= s->f18) {
+                s->f14 = s->f18;
+            }
+            sign = 1.0f;
+            if (3.0517578e-5f * rand() >= 0.5f) {
+                sign *= -1.0f;
+            }
+            w->pos.x = sign * (s->cfg->f28 * (3.0517578e-5f * rand())) + w->pos.x;
+            w->pos.y = w->pos.y + s->f38;
+            if (3.0517578e-5f * rand() >= 0.5f) {
+                sign *= -1.0f;
+            }
+            w->pos.z = sign * (s->cfg->f30 * (3.0517578e-5f * rand())) + w->pos.z;
+            s->f38 += s->cfg->f24;
+            if (s->cfg->f170) {
+                save = w->pos.y;
+                w->pos.y = s->cfg->f170 * njSin(182.04445f * s->f34) + w->pos.y;
+                s->f34 += s->cfg->f174;
+                if (s->f34 > 360.0f) {
+                    s->f34 = 0.0f;
+                }
+            }
+            flag = 0;
+            if (t->work->x50 == 0x170175) {
+                saved = fn_800358F8();
+                fn_80035900(0x4000);
+            }
+            s->s3c = fn_800403AC(s->frame, s->cfg->t42, s->cfg->s142, s->cfg->s144);
+            if (s->cfg->x10 & 0x20000000) {
+                flag = 1;
+            }
+            if (s->s3c < 0) {
+                s->s3c = 0;
+            }
+            w->scl = s->f14;
+            fn_80032E78(flag, w, s->s3c, 0, s->s10, fn_80040010(s->cfg->x10), -1.0f + s->a / 255.0f);
+            if (w->x50 == 0x170175) {
+                fn_80035900(saved);
+            }
+            if (s->cfg->f170) {
+                w->pos.y = save;
+            }
+        }
+        s->frame++;
+        break;
+    case 0xf9:
+    case 0xfa:
+        fn_8006D8DC(s->cfg->x8);
+        fn_801E17E0(s);
+        t->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    s->cnt = s->cnt + 1;
+    fn_80037FD8(s->cfg, &t->state);
+}
+
 void fn_800581B8(O581B8 *o) {
     D581B8 *d;
     T5C188 *t;
