@@ -189,15 +189,16 @@ void *fn_801E1C7C(u32 size);
 /* A model's collision parts (lbl_8034752C: the live ones, keyed by key8). */
 typedef struct Slot {
     struct Xf_80224F28 *p0;
-    void *ptr4;
+    struct Shape_80224F28 *ptr4;   /* the shape table the parts index */
     u16 key8;
     s16 count;
-    u8 pad[4];
+    s16 lim;            /* 0x0c: shapes in ptr4 */
+    u8 pade[2];
 } Slot;
 extern Slot *lbl_8034752C;
 extern s16 lbl_8034752A;
 extern s16 lbl_80347528;
-s16 fn_80225E58(Slot *tbl, s16 n, u32 key);
+s16 fn_80225E58(Slot *tbl, s16 n, u16 key);
 typedef struct Sub802281DC { s32 a; s32 b[8]; u8 pad[0x44 - 0x24]; s32 z44; } Sub802281DC;
 typedef struct Ctx802281DC { s32 a0; s32 a4; s32 a8; Sub802281DC *sub; s32 a10; s32 a14; } Ctx802281DC;
 typedef struct C2 { u8 pad[0x20]; NJS_TEXLIST *p20; } C2;
@@ -533,7 +534,8 @@ typedef struct Shape_80224F28 {
     s16 kind;
 } Shape_80224F28;
 typedef struct Xf_80224F28 {
-    u8 pad0[6];
+    s32 base;           /* 0x00: first shape index */
+    s16 cur;            /* 0x04 */
     u16 flags;          /* 0x06 */
     Shape_80224F28 *shape;
     u8 padc[0x10];
@@ -1162,6 +1164,52 @@ Xf_80224F28 *fn_80225958(Cmp *k) {
                     }
                 }
             }
+        }
+    }
+    return rec;
+}
+
+Xf_80224F28 *fn_80225CAC(u16 gid, u16 key, s16 n) {
+    Slot *g = lbl_8034752C;
+    Xf_80224F28 *rec = 0;
+    Xf_80224F28 *base;
+    int gi;
+    int ri;
+    s32 i;
+    s32 sum;
+
+    if (gid != 0xffff) {
+        gi = fn_80225E58(g, lbl_8034752A, gid);
+        if (gi >= 0) {
+            g += gi;
+            base = g->p0;
+            ri = XfFind(base, key, g->count);
+            if (ri >= 0) rec = &base[ri];
+        }
+    } else {
+        for (i = 0; i < lbl_8034752A; g++, i++) {
+            base = g->p0;
+            if (base != 0) {
+                ri = XfFind(base, key, g->count);
+                if (ri >= 0) {
+                    rec = &base[ri];
+                    break;
+                }
+            }
+        }
+    }
+    if (rec != 0) {
+        if (n >= 0) {
+            sum = rec->base + n;
+            if (sum < g->lim) {
+                rec->cur = sum;
+                rec->shape = g->ptr4 + sum;
+            } else {
+                rec = 0;
+            }
+        } else {
+            rec->cur = -1;
+            rec->shape = 0;
         }
     }
     return rec;
@@ -1826,7 +1874,7 @@ void fn_80225EDC(void)
     lbl_80347528 = 0;
 }
 
-s16 fn_80225F58(u32 key)
+s16 fn_80225F58(u16 key)
 {
     Slot *s;
     s16 idx = fn_80225E58(lbl_8034752C, lbl_8034752A, key);
@@ -3386,9 +3434,8 @@ void fn_80222838(void *p)
     }
 }
 
-s16 fn_80225E58(Slot *tbl, s16 n, u32 key_)
+s16 fn_80225E58(Slot *tbl, s16 n, u16 key)
 {
-    u16 key = key_;
     s32 i;
     if (key != 0xFFFF) {
         for (i = 0; i < n; tbl++, i++) {
