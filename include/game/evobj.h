@@ -218,6 +218,17 @@ typedef struct {
     s32 x54;       /* 0x54 */
 } EvInfoPath;
 
+/* Model-draw record (count 11 and up): draw size and chunk records. */
+typedef struct {
+    u32 count;     /* 0x00 */
+    u8 pad4[0x20 - 4];
+    s32 v20;       /* 0x20 */
+    s32 v24;       /* 0x24 */
+    s32 v28;       /* 0x28 */
+    s32 v2c;       /* 0x2C */
+    s16 recs[1];   /* 0x30 chunk records (fn_800D51C0) */
+} EvInfoDraw;
+
 typedef struct {
     u8 pad0[4];
     u32 x04;               /* 0x04 */
@@ -251,9 +262,17 @@ typedef struct {
     void* x31c;   /* 0x31C callback */
 } EvSub;
 
+/* The 0x20-byte draw handle at EvObj+0x1AC. */
 typedef struct {
-    s32 mode;     /* 0x00 */
-} EvMode;
+    void* w0;     /* 0x00 */
+    u8 pad4[0x10 - 4];
+    void* w10;    /* 0x10 */
+    u32 w14;      /* 0x14 */
+    u8 pad18[2];
+    s16 s1a;      /* 0x1A */
+    s16 s1c;      /* 0x1C */
+    s16 s1e;      /* 0x1E */
+} EvDraw;
 
 typedef struct {
     u8 pad0[0x24];
@@ -349,7 +368,7 @@ typedef struct EvObj {
     f32 x1a0;                /* 0x1A0 */
     f32 x1a4;                /* 0x1A4 */
     f32 x1a8;                /* 0x1A8 */
-    void* x1ac;              /* 0x1AC */
+    EvDraw* x1ac;            /* 0x1AC */
     EvSlot* x1b0;            /* 0x1B0 */
     void* x1b4;              /* 0x1B4 */
     EvHit* hit;              /* 0x1B8 */
@@ -399,7 +418,7 @@ typedef struct EvObj {
     NJS_POINT3 x24c;         /* 0x24C */
     f32 x258;                /* 0x258 fade */
     void* x25c;             /* 0x25C per-kind record (EvScript for map objects) */
-    EvMode* mapMode;         /* 0x260 */
+    s32* x260;               /* 0x260 per-kind word record: the mode word of a map object, a chunk body */
     f32* x264;               /* 0x264 */
     void* x268;              /* 0x268 per-kind record */
     u8 x26c;                 /* 0x26C */
@@ -431,6 +450,10 @@ static inline EvInfoBox* BoxInfo(EvObj* e) {
 }
 
 static inline EvInfoPath* PathInfo(EvObj* e) {
+    return e->ext->info;
+}
+
+static inline EvInfoDraw* DrawInfo(EvObj* e) {
     return e->ext->info;
 }
 

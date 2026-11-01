@@ -2805,7 +2805,7 @@ void fn_800D8924(Task* t) {
     } else {
         return;
     }
-    if (e->mapMode->mode != 0) {
+    if (e->x260[0] != 0) {
         t->state = 0xFF;
     } else if (lbl_80347450 == 0) {
         return;
@@ -2921,7 +2921,7 @@ void fn_800D8E1C(Task* t) {
     } else {
         return;
     }
-    if (e->mapMode->mode != 0) {
+    if (e->x260[0] != 0) {
         t->state = 0xFF;
     } else if (lbl_80347450 == 0) {
         return;
@@ -3050,7 +3050,7 @@ void fn_800D934C(Task* t) {
     } else {
         return;
     }
-    if (e->mapMode->mode != 0) {
+    if (e->x260[0] != 0) {
         t->state = 0xFF;
     } else if (lbl_80347450 == 0) {
         return;
@@ -3246,7 +3246,7 @@ void fn_800DBB4C(Task* t) {
     } else {
         return;
     }
-    if (w->mapMode->mode != 0) {
+    if (w->x260[0] != 0) {
         t->state = 0xFF;
     } else if (lbl_80347450 == 0) {
         return;
@@ -3347,7 +3347,7 @@ void fn_800DC828(Task *self)
     } else {
         return;
     }
-    if (e->mapMode->mode != 0) {
+    if (e->x260[0] != 0) {
         self->state = 0xff;
     } else {
         ev = lbl_80347450;
@@ -3529,7 +3529,7 @@ void fn_800DD5B4(Task* t) {
     } else {
         return;
     }
-    if (e->mapMode->mode != 0) {
+    if (e->x260[0] != 0) {
         t->state = 0xFF;
     } else if (lbl_80347450 == 0) {
         return;
@@ -3678,7 +3678,7 @@ s32 fn_800DE664(EvObj* p) {
                     ret = 10;
                     break;
                 case 2:
-                    if (p->mapMode == 0) {
+                    if (p->x260 == 0) {
                         BIND();
                         ret = 2;
                     } else {
@@ -3687,7 +3687,7 @@ s32 fn_800DE664(EvObj* p) {
                     break;
                 case 3:
                     UNBIND();
-                    if (p->mapMode == 0) ret = 4;
+                    if (p->x260 == 0) ret = 4;
                     break;
                 case 4:
                     UNBIND();
@@ -3695,7 +3695,7 @@ s32 fn_800DE664(EvObj* p) {
                     break;
                 case 5:
                     if (p->x264 == 0) {
-                        if (p->mapMode != 0) {
+                        if (p->x260 != 0) {
                             BIND();
                             ret = 6;
                         } else {
@@ -8059,7 +8059,7 @@ void fn_800D9BA0(Task* o) {
     } else {
         return;
     }
-    if (w->mapMode->mode != 0) {
+    if (w->x260[0] != 0) {
         o->state = 0xFF;
     } else if (lbl_80347450 == 0) {
         return;
@@ -8784,7 +8784,7 @@ void fn_800D9E00(Task* o) {
     } else {
         return;
     }
-    if (w->mapMode->mode != 0) {
+    if (w->x260[0] != 0) {
         o->state = 0xFF;
     } else if (lbl_80347450 == 0) {
         return;
@@ -10537,7 +10537,7 @@ void fn_800DCB78(Task* t)
     } else {
         return;
     }
-    if (w->mapMode->mode != 0) {
+    if (w->x260[0] != 0) {
         t->state = 0xff;
     } else if (lbl_80347450 == NULL) {
         return;

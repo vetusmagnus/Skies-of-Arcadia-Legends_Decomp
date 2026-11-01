@@ -2110,29 +2110,6 @@ typedef struct {
     f32 f258;
 } Obj_800D3A20;
 typedef struct {
-    u32 count;
-    u8 pad4[0x20 - 4];
-    s32 v20;
-    s32 v24;
-    s32 v28;
-    s32 v2c;
-} Tbl_800D5584;
-typedef struct {
-    u8 pad0[0x10];
-    Tbl_800D5584* c10;
-    u8 pad14[0x20 - 0x14];
-    s32 v20;
-} Src_800D5584;
-typedef struct {
-    u32 w0;
-    u8 pad4[0x14 - 4];
-    u32 w14;
-    u8 pad18[2];
-    s16 s1a;
-    s16 s1c;
-    s16 s1e;
-} Hnd_800D5584;
-typedef struct {
     s16 n;
     s16 pad2;
     s32 b;
@@ -2146,25 +2123,6 @@ typedef struct {
     s16 d1;
     s16 d2;
 } BlkB_800D5584;
-typedef struct {
-    u8 pad0[0xE4];
-    s32 e4;
-    u8 pade8[0x100 - 0xE8];
-    s32 p100;
-    u8 pad104[0x1AC - 0x104];
-    Hnd_800D5584* h1ac;
-    void* h1b0;
-    u8 pad1b4[0x1C8 - 0x1B4];
-    Src_800D5584* p1c8;
-    u8 pad1cc[0x1FC - 0x1CC];
-    s16 s1fc;
-    s16 s1fe;
-    s16 s200;
-    s16 s202;
-    u8 pad204[0x25C - 0x204];
-    s16* p25c;
-    s32* p260;
-} Work_800D5584;
 typedef struct {
     u8 pad0[0x20];
     s32 v20;
@@ -2562,7 +2520,7 @@ typedef struct Work_800C7744 {
     u8 pad110[0x16a - 0x110];
     u8 b16a, b16b;
     u8 pad16c[0x260 - 0x16c];
-    EvMode* p260;
+    s32* p260;
 } Work_800C7744;
 typedef struct Obj_800C7744 {
     u8 pad0[0x19];
@@ -4097,7 +4055,7 @@ void fn_800C6B04(MapTask *t)
     njClipZ(near, far);
     switch (t->state) {
     case 0:
-        if (w->mapMode->mode != 1) {
+        if (w->x260[0] != 1) {
         if (w->texlist != NULL) {
             w->x1ec = 1;
             fn_80227810(w->texlist);
@@ -4123,7 +4081,7 @@ void fn_800C6B04(MapTask *t)
         }
         break;
     case 1:
-        if (w->mapMode->mode != 1) {
+        if (w->x260[0] != 1) {
             s32 dx = (s32)((8400.0f - lbl_80347450->pos.x) / 2400.0f);
             s32 dz = (s32)((7200.0f - lbl_80347450->pos.z) / 2400.0f);
             f32 ox = 8400.0f + (-(2400.0f * (f32)dx) - 1200.0f);
@@ -4187,7 +4145,7 @@ void fn_800C7398(MapTask *t)
     switch (t->state) {
     case 0xfe:
     case 0:
-        if (w->mapMode->mode != 1) {
+        if (w->x260[0] != 1) {
             if (w->texlist != NULL) {
                 w->x1ec = 1;
                 fn_80227810(w->texlist);
@@ -4213,7 +4171,7 @@ void fn_800C7398(MapTask *t)
         break;
     case 1:
         w->id = w->id | 0x2000;
-        if (w->mapMode->mode != 1) {
+        if (w->x260[0] != 1) {
             s32 dx = (s32)((8400.0f - lbl_80347450->pos.x) / 2400.0f);
             s32 dz = (s32)((7200.0f - lbl_80347450->pos.z) / 2400.0f);
             f32 ox = 8400.0f + (-(2400.0f * (f32)dx) - 1200.0f);
@@ -4993,6 +4951,91 @@ void fn_800D5348(Task* o) {
             fn_80100B74(o);
             break;
         }
+    }
+}
+
+extern void fn_801E8004(void* a, s32 b);
+extern void fn_801E7E5C(void* a, s32 b);
+extern void GXInvalidateVtxCache(void);
+extern void fn_801DDE5C(void* h);
+void fn_800D5584(EvObj* w);
+
+/* A looping frame sequence: count, loop flag, then (frame, hold) pairs (EvObj.x25c). */
+typedef struct {
+    s16 count;
+    s16 loop;
+    s16 ent[2];
+} EvFrameSeq;
+
+static inline EvFrameSeq* FrameSeq(EvObj* e) {
+    return e->x25c;
+}
+
+void fn_800D57E8(Task* o) {
+    EvObj* w = o->work;
+    switch (o->state) {
+    case 0:
+    case 0xFE:
+        fn_800D5584(w);
+        if (w->x1ac != 0) {
+            o->state = 1;
+        } else {
+            o->state = 2;
+        }
+        break;
+    case 1:
+        if (fn_800D2924(w) != 0) {
+            fn_801E6438(w);
+            if (w->x1ac != 0 && w->x202 != 0) {
+                w->x1ac->s1a = -1;
+                if (w->x1fc == 0) {
+                    fn_801E8004(w->x1ac->w0, w->x202);
+                } else {
+                    fn_801E7E5C(w->x1ac->w0, w->x202);
+                }
+            }
+            if (w->x260 != 0) {
+                fn_801DD7D8(w->x1b0);
+            }
+            if (FrameSeq(w) != 0) {
+                if (w->x200 <= 1) {
+                    s16* ent = FrameSeq(w)->ent;
+                    w->x1fe = w->x1fe + 1;
+                    {
+                        s16 n = FrameSeq(w)->count;
+                        if (n <= w->x1fe) {
+                            if (FrameSeq(w)->loop == 0) {
+                                w->x1fe = 0;
+                            } else {
+                                w->x1fe = n - 1;
+                            }
+                        }
+                    }
+                    ent = ent + w->x1fe * 2;
+                    w->x202 = ent[0];
+                    w->x200 = ent[1];
+                } else {
+                    w->x200 = w->x200 - 1;
+                }
+            }
+            GXInvalidateVtxCache();
+        }
+        break;
+    case 2:
+        break;
+    default:
+        if (w->x1ac != 0) {
+            fn_802275A4(w->x1ac->w10, 0);
+            fn_801DDE5C(w->x1ac);
+            fn_801E17E0(w->x1ac);
+            w->x1ac = 0;
+        }
+        if (w->x1b0 != 0) {
+            fn_801DD95C(w->x1b0);
+            w->x1b0 = 0;
+        }
+        fn_80100B74(o);
+        break;
     }
 }
 
@@ -8420,22 +8463,22 @@ void fn_800D3A20(Obj_800D3A20* o) {
     }
 }
 
-void fn_800D5584(Work_800D5584* w) {
+void fn_800D5584(EvObj* w) {
     extern s32 fn_800C34C8(void* w);
     extern s32 fn_800C3518(void* w);
-    extern void fn_801E7DF0(s32 v);
+    extern void fn_801E7DF0(void* p);
     extern void* fn_801E1C7C(u32 size);
-    extern void fn_801DDECC(void* h, s32 a, s32 b, s32 c);
+    extern void fn_801DDECC(EvDraw* h, void* model, NJS_TEXLIST* a, NJS_TEXLIST* b);
     extern void* fn_801DD984(void);
     extern void fn_801DDE5C(void* h);
     extern void fn_801E17E0(void* p);
     extern void* fn_800D51C0(void* p, s32 k);
     extern void fn_801DD8EC(void* a, s32* b, s32 c, s32 d);
-    Src_800D5584* t;
-    Tbl_800D5584* tbl;
+    EvExt* t;
+    EvInfoDraw* tbl;
     s32 flag = 0;
-    t = w->p1c8;
-    tbl = t->c10;
+    t = w->ext;
+    tbl = t->info;
     if (fn_800C34C8(w) != 0) {
         flag = 1;
     } else if (fn_800C3518(w) != 0) {
@@ -8443,39 +8486,39 @@ void fn_800D5584(Work_800D5584* w) {
         t = 0;
     }
     if (flag != 0) {
-        fn_801E7DF0(w->e4);
-        w->h1ac = fn_801E1C7C(0x20);
-        if (w->h1ac != 0) {
-            w->h1ac->w0 = 0;
+        fn_801E7DF0(w->model);
+        w->x1ac = fn_801E1C7C(0x20);
+        if (w->x1ac != 0) {
+            w->x1ac->w0 = 0;
             if (tbl->count > 10) {
-                w->s1fc = tbl->v2c;
-                w->s202 = 1;
-                w->h1ac->s1c = tbl->v24;
-                w->h1ac->s1e = tbl->v28;
-                if (w->h1ac->s1c > 0 && w->h1ac->s1e > 0) {
+                w->x1fc = tbl->v2c;
+                w->x202 = 1;
+                w->x1ac->s1c = tbl->v24;
+                w->x1ac->s1e = tbl->v28;
+                if (w->x1ac->s1c > 0 && w->x1ac->s1e > 0) {
                     if (t != 0) {
-                        fn_801DDECC(w->h1ac, w->e4, w->p100, t->v20);
+                        fn_801DDECC(w->x1ac, w->model, w->texlist, t->texlist);
                     } else {
-                        fn_801DDECC(w->h1ac, w->e4, w->p100, w->p100);
+                        fn_801DDECC(w->x1ac, w->model, w->texlist, w->texlist);
                     }
                 }
             }
-            w->h1b0 = 0;
-            if (w->h1ac->w0 != 0 && w->h1ac->w14 != 0) {
-                w->h1b0 = fn_801DD984();
+            w->x1b0 = 0;
+            if (w->x1ac->w0 != 0 && w->x1ac->w14 != 0) {
+                w->x1b0 = fn_801DD984();
             }
-            if (w->h1b0 == 0) {
-                fn_801DDE5C(w->h1ac);
-                fn_801E17E0(w->h1ac);
-                w->h1ac = 0;
+            if (w->x1b0 == 0) {
+                fn_801DDE5C(w->x1ac);
+                fn_801E17E0(w->x1ac);
+                w->x1ac = 0;
             }
         }
     }
     {
-        Tbl_800D5584* t2 = w->p1c8->c10;
+        EvInfoDraw* t2 = w->ext->info;
         BlkA_800D5584* e;
         if (t2->count > 11) {
-            e = fn_800D51C0((u8*)t2 + 0x30, 2);
+            e = fn_800D51C0(t2->recs, 2);
         } else {
             e = 0;
         }
@@ -8483,18 +8526,18 @@ void fn_800D5584(Work_800D5584* w) {
             s32* d = &e->b;
             s32 n = e->n;
             if (n == ((*d - 1) * 4 + 8) / 4) {
-                if (w->h1b0 != 0) {
-                    w->p260 = d;
-                    fn_801DD8EC(w->h1b0, d + 1, *d, 1);
+                if (w->x1b0 != 0) {
+                    w->x260 = d;
+                    fn_801DD8EC(w->x1b0, d + 1, *d, 1);
                 }
             }
         }
     }
     {
-        Tbl_800D5584* t3 = w->p1c8->c10;
+        EvInfoDraw* t3 = w->ext->info;
         BlkB_800D5584* e;
         if (t3->count > 11) {
-            e = fn_800D51C0((u8*)t3 + 0x30, 3);
+            e = fn_800D51C0(t3->recs, 3);
         } else {
             e = 0;
         }
@@ -8502,10 +8545,10 @@ void fn_800D5584(Work_800D5584* w) {
             s32 n = e->n;
             s16* d = &e->b;
             if (n == ((*d - 1) * 4 + 8) / 4) {
-                w->p25c = d;
-                w->s1fe = 0;
-                w->s202 = d[2];
-                w->s200 = d[3];
+                w->x25c = d;
+                w->x1fe = 0;
+                w->x202 = d[2];
+                w->x200 = d[3];
             }
         }
     }
@@ -9628,7 +9671,7 @@ void fn_800C7744(Obj_800C7744* o) {
     switch (o->state) {
     case 0:
     case 0xfe:
-        if (w->p260->mode != 1) {
+        if (w->p260[0] != 1) {
             w->f38 -= fx;
             w->f40 -= fz;
             w->f104 = w->f38;
@@ -9640,7 +9683,7 @@ void fn_800C7744(Obj_800C7744* o) {
         }
         break;
     case 1:
-        if (w->p260->mode != 1) {
+        if (w->p260[0] != 1) {
             EvObj* t = lbl_80347450;
             f32 px = 8400.0f + (-(2400.0f * (f32)(s32)((8400.0f - t->pos.x) / 2400.0f)) - 1200.0f);
             f32 pz = 7200.0f + (-(2400.0f * (f32)(s32)((7200.0f - t->pos.z) / 2400.0f)) - 1200.0f);
@@ -10799,7 +10842,7 @@ void fn_800B88F8(Obj_800B88F8* o) {
             fn_802275A4((void *)(w->texlist), 0);
         }
         w->x264 = NULL;
-        w->mapMode = NULL;
+        w->x260 = NULL;
         w->x25c = NULL;
         fn_80100B74((void *)(o));
         break;
