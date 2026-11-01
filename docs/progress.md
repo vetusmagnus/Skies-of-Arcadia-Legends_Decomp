@@ -2289,3 +2289,15 @@ Splits made where the data layout shows an original file boundary, so that held 
   functions between (fn_8020EEE8, fn_8020EF30, fn_8020EFD4) use no data, so the exact start within 0x8020EEE8-0x8020F078 is
   a choice. Released fn_802088D8 (unit_801F5334), which passes fn_80210860 an `s32` id where every caller in this range
   passes a `u16`.
+- Held matches folded without a split (same pass): fn_80207830, fn_80209028, fn_80209330 (unit_801F5334: the agents' private
+  Scpt copies replaced by the unit's Scpt/Work801F8; the fallback callers fn_80207738/fn_80208F30/fn_80209238 declare the
+  handlers with the u16/u32 flags they are defined with, and fn_80209330 returns s16), fn_8020E984 (returns s32; this file
+  declares fn_801BEA70 with the u8 mode it passes, while unit_80199B9C defines it with an s32 read as a byte),
+  fn_8020F3D4 (unit_8020EEE8: the actor view gains its position at 0x38 and x168, and Sub.x8 is the riding Actor).
+- Still held, with the reason found: fn_8009F22C and the other unit_800972AC EvObj handlers (fn_800A3C68, fn_800A9708,
+  fn_800AB280, fn_800AB934, fn_800AC474, fn_800AD330) need per-kind EvObj work types (x260 used as a Task link); fn_800A0028
+  needs the file's .rodata pool (0x802B0E30-0x802B0F88) defined in C, which needs const-correct njCalcPoint/fn_802AC710
+  inputs and readonly strings; fn_801590F4 returns u8 to a same-file caller (fn_80159020) that reads an s32;
+  fn_80015138 and fn_80014BA8 (adjacent) disagree on fn_8002923C's id (int vs s8 view); fn_801705B8 calls fn_80171B64
+  with two arguments in the file that defines it with one (only a K&R definition would allow it); fn_8020AF8C reads
+  lbl_80310A1C as s8 where fn_8020ED58 in the same file reads it as u8.
