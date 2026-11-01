@@ -9120,3 +9120,159 @@ void fn_80126354(Obj_80126354 *e, MtxPair_80126354 *mp) {
     }
     fn_801566B4(1, mp->m0, mp->m1);
 }
+
+/* Darkening area (fn_8011A2D4): fades the screen while the player is inside the box. */
+typedef struct EvInfoArea {
+    u32 x0;
+    f32 x4, x8;    /* 0x04 area centre (x, z) */
+    f32 xc;        /* 0x0C half size */
+    f32 x10, x14;  /* 0x10 height range */
+    f32 x18;       /* 0x18 sound chance */
+    u32 x1c;       /* 0x1C max alpha */
+    s32 x20;
+    s32 x24;       /* 0x24 alpha step */
+} EvInfoArea;
+typedef struct {
+    f32 x, y, z;
+    u32 colour;
+} VertexCol;
+extern EvObj *lbl_80347450;
+extern VertexCol lbl_80305E78[4];
+extern const char lbl_802B31B8[];
+extern f32 fn_801DBD9C(f32 z);
+extern void fn_80290ED4(VertexCol* v, s32 count, s32 flag);
+extern s32 rand(void);
+
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define ABS(a) ((a) < 0.0f ? -(a) : (a))
+
+/* the fade quad's draw, the same in every state */
+#define DRAW_8011A2D4(col)                                                        v[0].colour = v[1].colour = v[2].colour = v[3].colour = (col);                DrawStateDefault2D(&st);                                                      DrawStatePush(&st);                                                           if (w->x210 != 0) {                                                               st.blend_src = 8;                                                             st.blend_dst = 10;                                                        }                                                                             fn_80290ED4(v, 4, 1);                                                         DrawStatePop(NULL)
+
+void fn_8011A2D4(Task *task)
+{
+    DrawState st;
+    EvInfoArea *in;
+    EvObj *w;
+    VertexCol *v;
+    EvObj *pl;
+    f32 dx, dz, ax, az;
+    u32 col;
+
+    w = task->work;
+    v = lbl_80305E78;
+    pl = lbl_80347450;
+    in = w->ext->info;
+    if (pl == NULL) {
+        return;
+    }
+    dx = in->x4 - pl->pos.x;
+    dz = in->x8 - pl->pos.z;
+    ax = ABS(MIN(dx, 16800.0f - dx));
+    az = ABS(MIN(dz, 14400.0f - dz));
+    switch (task->state) {
+    case 0:
+        if (in->x0 < 10) {
+            fn_801DBE1C(lbl_802B31B8);
+        }
+        v[0].x = 0.0f;
+        v[0].y = 0.0f;
+        v[1].x = 0.0f;
+        v[1].y = 480.0f;
+        v[2].x = 640.0f;
+        v[2].y = 0.0f;
+        v[3].x = 640.0f;
+        v[3].y = 480.0f;
+        v[0].z = v[1].z = v[2].z = v[3].z = fn_801DBD9C(-2.0f);
+        v[0].colour = v[1].colour = v[2].colour = v[3].colour = -1;
+        task->f20 = -15.0f;
+        task->state++;
+        break;
+    case 1:
+        if (ax < in->xc && az < in->xc && pl->pos.y < in->x10 && pl->pos.y > in->x14) {
+            task->state = 2;
+        }
+        break;
+    case 2:
+        if (ax > in->xc || az > in->xc || pl->pos.y > in->x10 || pl->pos.y < in->x14) {
+            task->state = 3;
+        }
+        if (w->x210 != 0) {
+            w->x214 -= in->x24;
+            if (w->x214 < 0) {
+                w->x214 = 0;
+                w->x210 = 0;
+            }
+            col = (w->x214 << 24) | 0xFFFFFF;
+        } else {
+            if (w->x214 + in->x24 < in->x1c) {
+                w->x214 += in->x24;
+            } else {
+                w->x214 = in->x1c;
+                task->state = 4;
+            }
+            col = (w->x214 << 24) | 0x202020;
+        }
+        DRAW_8011A2D4(col);
+        break;
+    case 3:
+        if (ax < in->xc && az < in->xc && pl->pos.y < in->x10 && pl->pos.y > in->x14) {
+            task->state = 2;
+        }
+        if (w->x210 != 0) {
+            w->x214 -= in->x24;
+            if (w->x214 < 0) {
+                w->x214 = 0;
+                w->x210 = 0;
+                task->state = 1;
+            }
+            col = (w->x214 << 24) | 0xFFFFFF;
+        } else {
+            if (w->x214 - in->x24 > 0) {
+                w->x214 -= in->x24;
+            } else {
+                w->x214 = 0;
+                task->state = 1;
+            }
+            col = (w->x214 << 24) | 0x202020;
+        }
+        DRAW_8011A2D4(col);
+        break;
+    case 4:
+        if (ax > in->xc || az > in->xc || pl->pos.y > in->x10 || pl->pos.y < in->x14) {
+            task->state = 3;
+        }
+        switch (w->x20c) {
+        case 0:
+            if (w->x214 < in->x1c) {
+                w->x214 += in->x24;
+            }
+            if (3.0517578125e-05f * rand() < in->x18) {
+                SePlay(8, 5, 12);
+                w->x20c = 1;
+            }
+            col = (w->x214 << 24) | 0x202020;
+            break;
+        case 1:
+            w->x210 = 1;
+            col = 0;
+            w->x214 = in->x20;
+            w->x20c = 2;
+            break;
+        case 2:
+            w->x214 -= in->x24;
+            if (w->x214 < 0) {
+                w->x214 = 0;
+                w->x210 = 0;
+                w->x20c = 0;
+            }
+            col = (w->x214 << 24) | 0xFFFFFF;
+            break;
+        }
+        DRAW_8011A2D4(col);
+        break;
+    case 0xFF:
+        fn_80100B74(task);
+        break;
+    }
+}
