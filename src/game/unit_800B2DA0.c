@@ -357,21 +357,6 @@ extern void fn_801DD9AC(void *a, void *b);
 extern void fn_801DD95C(void *p);
 extern void fn_80100B74(void *self);
 extern s32 lbl_803474EC;
-typedef struct Node_800C3428 {
-    u8 pad0[0x4];
-    u32 w4;
-} Node_800C3428;
-typedef struct Sub_800C3428 {
-    u8 pad0[0x100];
-    Node_800C3428 *p100; /* 0x100 */
-    u8 pad104[0x1ac - 0x104];
-    void *p1ac; /* 0x1ac */
-    void *p1b0; /* 0x1b0 */
-} Sub_800C3428;
-typedef struct Self_800C3428 {
-    u8 pad0[0x24];
-    Sub_800C3428 *sub; /* 0x24 */
-} Self_800C3428;
 extern void fn_80091040(void *a, void *b);
 extern s32 fn_80095110(void);
 extern s32 fn_800912A8(s32 a, s32 b, s32 c, s32 d);
@@ -505,12 +490,6 @@ extern void fn_801E5E7C();
 extern void fn_801DD7D8(void* p);
 s32 fn_800C5D78(Obj_800C5D78* o);
 extern void fn_800C5EE8(void *p);
-typedef struct Obj_800C6310 {
-    u8 pad0[0x19];
-    u8 b19;
-    u8 pad1a[0x24 - 0x1a];
-    void *p24;
-} Obj_800C6310;
 void fn_80226AE8();
 typedef struct Ent_800C86EC {
     void (*fn)(struct Ent_800C86EC *);
@@ -1018,7 +997,7 @@ typedef struct {
 extern int rand(void);
 extern void fn_800C35C4(void* e, s32 n);
 extern void fn_801E7E14(void* model, s32 a, s32 b, s32 c);
-extern void fn_800C3428(Self_800C3428* self);
+void fn_800C3428(Task* self);
 typedef struct {
     f32 x, y, z;
 } V3;
@@ -2637,7 +2616,9 @@ typedef struct E270 {
 typedef struct Hnd {
     u8 pad0[6]; u16 flags; u8 pad8[0xc - 8];
     NJS_MOTION *motion; f32 frame; u8 pad14[0x1c - 0x14];
-    void *p1c; u8 pad20[4]; void *p24, *p28, *p2c; u8 pad30[0x48 - 0x30];
+    void *p1c; u8 pad20[4]; void *p24, *p28, *p2c;
+    NJS_POINT3 pos; /* 0x30 */
+    u8 pad3c[0x48 - 0x3c];
     u8 v48[0xc]; u8 v54[0xc]; u8 v60[0xc];
 } Hnd;
 typedef struct Scr { u8 pad[4]; s32 i4; } Scr;
@@ -5338,22 +5319,22 @@ void fn_800C3348(void)
     fn_801D6998(lbl_80346D3C, a);
 }
 
-void fn_800C3428(Self_800C3428 *self)
+void fn_800C3428(Task *self)
 {
-    Sub_800C3428 *s = self->sub;
-    if (s != 0 && s->p100 != 0) {
-        if (s->p100->w4 != 0) {
-            fn_802275A4((NJS_TEXLIST *)s->p100, 0);
+    EvObj *s = self->work;
+    if (s != 0 && s->texlist != 0) {
+        if (s->texlist->nbTexture != 0) {
+            fn_802275A4(s->texlist, 0);
         }
-        s->p100 = 0;
+        s->texlist = 0;
     }
-    if (s->p1ac != 0) {
-        fn_801DD9AC((void *)&lbl_803474EC, s->p1ac);
-        s->p1ac = 0;
+    if (s->x1ac != 0) {
+        fn_801DD9AC(&lbl_803474EC, s->x1ac);
+        s->x1ac = 0;
     }
-    if (s->p1b0 != 0) {
-        fn_801DD95C(s->p1b0);
-        s->p1b0 = 0;
+    if (s->x1b0 != 0) {
+        fn_801DD95C(s->x1b0);
+        s->x1b0 = 0;
     }
     fn_80100B74(self);
 }
@@ -5432,15 +5413,15 @@ void fn_800C5B58(EvObj *self, Ctl_800C5B58 *c)
     }
 }
 
-void fn_800C6310(Obj_800C6310 *self)
+void fn_800C6310(Task *self)
 {
-    s32 t = self->b19;
-    void *sub = self->p24;
+    s32 t = self->state;
+    void *sub = self->work;
     switch (t) {
     case 0:
     case 0xfe:
         fn_800C5EE8(sub);
-        self->b19 = 1;
+        self->state = 1;
         break;
     case 1:
         if (fn_800D2924(sub) != 0) {
@@ -5448,7 +5429,7 @@ void fn_800C6310(Obj_800C6310 *self)
         }
         break;
     default:
-        fn_800C3428((Self_800C3428 *)self);
+        fn_800C3428(self);
         break;
     }
 }
@@ -6343,7 +6324,7 @@ void fn_800CD924(Task* task) {
         fn_801E7E14(e->model, 0, -8, 1);
         break;
     default:
-        fn_800C3428((Self_800C3428*)task);
+        fn_800C3428(task);
         break;
     }
 }
