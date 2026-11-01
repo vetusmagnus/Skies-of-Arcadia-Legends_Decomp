@@ -378,110 +378,11 @@ typedef struct {
 } Node_8004E474;
 extern Tgt_8004DE48* lbl_80309E24[12];
 extern Vec_8004A40C lbl_802AD3A8;
-extern f32 lbl_80348708;
-extern f32 lbl_80348718;
-extern f32 lbl_8034871C;
 extern void fn_80020B50(void*, s16*, s16*);
 extern void fn_80020B8C(void*, s16, s16, int);
 extern int fn_80018498(Vec*);
 extern int fn_8001D944(s8, void*);
 extern void fn_8001D14C(void*);
-
-void fn_8004E474(Node_8004E474* node)
-{
-    Tgt_8004DE48* t;
-    Work_8004E474* w;
-    Unit_8004DE48* c;
-    s8 b;
-    s16 i;
-    s16 k;
-
-    w = node->work;
-    c = w->task->work->w;
-    switch (node->state) {
-    case 0:
-        c->xec |= 0x80000;
-        c->xec |= 0x40000;
-        fn_80020B50(w->task, &w->x16, &w->x18);
-        for (i = 0; i < 14; i++) {
-            w->slot[i] = -1;
-        }
-        node->state = 1;
-    case 1:
-        if (w->cnt < w->params->x10) {
-            break;
-        }
-        if (w->params->x18 == lbl_80348708) {
-            w->x28 = lbl_80348718;
-        }
-        node->state = 2;
-    case 2:
-        w->x28 = w->x28 + w->params->x18;
-        w->v.x = w->x28;
-        if (fn_80018498(&w->v) == 0) {
-            w->x28 = w->x28 * lbl_8034871C;
-            node->state = 0xFA;
-        }
-        for (i = 0; i < 12; i++) {
-            t = lbl_80309E24[i];
-            if (t != 0) {
-                Vec_8004A40C v = lbl_802AD3A8;
-                Unit_8004DE48* c2 = t->work->w;
-                if (fn_8001D944(c2->id, w->task) != 0) {
-                    if (fn_80071E9C(&v, &t->work->pos) < w->x28) {
-                        for (k = 0; k < 12; k++) {
-                            b = w->slot[k];
-                            if (b < 0) {
-                                w->slot[k] = c2->id;
-                                c->x5a = c2->id;
-                                c->xec |= 0x80;
-                                fn_80020B8C(w->task, w->x16, w->x18,
-                                            (w->params->x14 >> 31) ^ 1);
-                                c->xec &= ~0x80;
-                                break;
-                            } else if (b == c2->id) {
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        break;
-    case 3:
-        if (lbl_8030A10C.flags & 0x20) {
-            node->state = 1;
-            w->cnt = w->params->x10;
-        }
-        break;
-    case 0xFA:
-        fn_8001D14C(c);
-        node->flags |= 0x40;
-        lbl_8030A10C.count--;
-        return;
-    }
-    w->cnt++;
-    if (w->params->x6 & 0x2000) {
-        switch (node->state) {
-        case 1:
-            break;
-        default:
-            lbl_8030A10C.flags |= 0x10;
-            break;
-        }
-        if (lbl_8030A10C.flags & 0x80) {
-            if (!(lbl_8030A10C.flags & 0x20)) {
-                switch (node->state) {
-                case 1:
-                    node->state = 3;
-                    break;
-                default:
-                    break;
-                }
-            }
-        }
-    }
-}
 
 void fn_8004F84C(NJS_VECTOR* v) {
     v->x = -1.16f;
