@@ -15,11 +15,13 @@ extern void *lbl_803476AC;
 extern u32 *lbl_803476C0;
 void fn_801D4A2C(s32 a, s32 b, s32 c, void *d, s32 e, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
 extern NJS_TEXLIST lbl_80347568;
-typedef struct Sub { u8 pad[0x20]; s32 val; } Sub;
+typedef struct Sub { u8 pad[0x20]; NJS_TEXLIST *texlist; } Sub;
 typedef struct Outer { u8 pad[4]; Sub *sub; } Outer;
-void fn_801D5A50(s32 a, s32 b, s32 c, s32 d, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
+void fn_801D5A50(s32 a, s32 b, s32 c, NJS_TEXLIST *d, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
 extern Outer *lbl_80347618;
-void fn_802275A4(s32 v, s32 flag);
+void fn_802275A4(NJS_TEXLIST *texlist, s32 flag);
+s32 fn_80227810(NJS_TEXLIST *texlist);
+Outer *fn_801DB1A4(s32 idx);
 void fn_801E17E0(void *p);
 extern Outer *lbl_80347614;
 void *fn_801E1BDC(s32 size);
@@ -327,13 +329,6 @@ typedef struct {
     f32 f;
     f32 g;
 } Rec28;
-typedef struct {
-    s32 a0;
-    s32 a4;
-    u32 a8;
-    void* ac;
-    void* b0;
-} Obj68DC;
 extern PADStatus* lbl_8034763C;
 extern u32 lbl_802F6558[];
 extern u32 lbl_80311A00[];
@@ -922,32 +917,32 @@ void fn_801D4F54(Layout* lay, u32 flags, u32 mode, NJS_TEXLIST* tex, s32 vmode, 
 }
 
 void fn_801D51C4(s32 a, s32 b, s32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
-    fn_801D5A50(a, b, c, lbl_80347618->sub->val, 1.0f, 1.0f, p1, p2, p3, p4);
+    fn_801D5A50(a, b, c, lbl_80347618->sub->texlist, 1.0f, 1.0f, p1, p2, p3, p4);
 }
 
-void fn_801D538C(s32 a, s32 b, s32 c, s32 d, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
+void fn_801D538C(s32 a, s32 b, s32 c, NJS_TEXLIST *d, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
 void fn_801D5210(s32 a, s32 b, s32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
-    fn_801D538C(a, b, c, lbl_80347614->sub->val, 1.0f, 1.0f, p1, p2, p3, p4);
+    fn_801D538C(a, b, c, lbl_80347614->sub->texlist, 1.0f, 1.0f, p1, p2, p3, p4);
 }
 
-void fn_801D56C8(s32 a, s32 b, s32 c, s32 d, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
+void fn_801D56C8(s32 a, s32 b, s32 c, NJS_TEXLIST *d, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
 void fn_801D525C(s32 a, s32 b, s32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
-    fn_801D56C8(a, b, c, lbl_80347614->sub->val, 1.0f, 1.0f, p1, p2, p3, p4);
+    fn_801D56C8(a, b, c, lbl_80347614->sub->texlist, 1.0f, 1.0f, p1, p2, p3, p4);
 }
 
 void fn_801D52A8(s32 a, s32 b, s32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
-    fn_801D5A50(a, b, c, lbl_80347614->sub->val, 1.0f, 1.0f, p1, p2, p3, p4);
+    fn_801D5A50(a, b, c, lbl_80347614->sub->texlist, 1.0f, 1.0f, p1, p2, p3, p4);
 }
 
 extern Outer *lbl_80347610;
-void fn_801D5DD8(s32 a, s32 b, s32 c, s32 d, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
+void fn_801D5DD8(s32 a, s32 b, s32 c, NJS_TEXLIST *d, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
 void fn_801D52F4(s32 a, s32 b, s32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
-    fn_801D5DD8(a, b, c, lbl_80347610->sub->val, 1.0f, 1.0f, p1, p2, p3, p4);
+    fn_801D5DD8(a, b, c, lbl_80347610->sub->texlist, 1.0f, 1.0f, p1, p2, p3, p4);
 }
 
 extern Outer *lbl_8034760C;
 void fn_801D5340(s32 a, s32 b, s32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
-    fn_801D5DD8(a, b, c, lbl_8034760C->sub->val, 1.0f, 1.0f, p1, p2, p3, p4);
+    fn_801D5DD8(a, b, c, lbl_8034760C->sub->texlist, 1.0f, 1.0f, p1, p2, p3, p4);
 }
 
 /* The Dolphin SDK wrapper, missing from our OSFastCast.h (it has the u16/s16 ones, same shape). */
@@ -978,10 +973,59 @@ void fn_801D65B4(u32 colour, u8* out, f32 a, f32 b)
 
 void fn_801D668C(void) {
     if (lbl_80347614 != 0) {
-        fn_802275A4(lbl_80347614->sub->val, 1);
+        fn_802275A4(lbl_80347614->sub->texlist, 1);
         fn_801E17E0(lbl_80347614);
         lbl_80347614 = 0;
     }
+}
+
+extern DataTable *lbl_80347628;
+extern DataTable *lbl_8034762C;
+void fn_801D68DC(DataTable *o);
+
+void *fn_801DB244(const char *name);
+
+void fn_801D66D4(void)
+{
+    char name[] = "/field/Sprite00.mld";
+    Outer *o = fn_801DB244(name);
+
+    lbl_80347614 = o;
+    fn_80227810(o->sub->texlist);
+}
+
+void fn_801D6738(void) {
+    if (lbl_8034760C != 0) {
+        fn_802275A4(lbl_8034760C->sub->texlist, 1);
+        fn_801E17E0(lbl_8034760C);
+        lbl_8034760C = 0;
+    }
+    if (lbl_80347628 != 0) {
+        fn_801D68DC(lbl_80347628);
+        lbl_80347628 = 0;
+    }
+    if (lbl_8034762C != 0) {
+        fn_801D68DC(lbl_8034762C);
+        lbl_8034762C = 0;
+    }
+    if (lbl_80347610 != 0) {
+        fn_802275A4(lbl_80347610->sub->texlist, 1);
+        fn_801E17E0(lbl_80347610);
+        lbl_80347610 = 0;
+    }
+}
+
+void fn_801D6A74(DataTable *t, s32 id);
+
+void fn_801D67DC(void) {
+    lbl_8034760C = fn_801DB1A4(0);
+    fn_80227810(lbl_8034760C->sub->texlist);
+    lbl_80347628 = fn_801E1C7C(0x14);
+    fn_801D6A74(lbl_80347628, 1);
+    lbl_8034762C = fn_801E1C7C(0x14);
+    fn_801D6A74(lbl_8034762C, 2);
+    lbl_80347610 = fn_801DB1A4(3);
+    fn_80227810(lbl_80347610->sub->texlist);
 }
 
 void fn_801D6850(void) {
@@ -2513,19 +2557,19 @@ void* fn_801D497C(Rec28* src) {
     return dst;
 }
 
-void fn_801D68DC(Obj68DC* o) {
+void fn_801D68DC(DataTable* o) {
     if (o == 0) {
         return;
     }
-    if (o->a8 != 0) {
-        o->a8 = 0;
+    if (o->offsets != 0) {
+        o->offsets = 0;
     }
-    if (o->ac != 0) {
-        fn_801E17E0(o->ac);
-        o->ac = 0;
+    if (o->work != 0) {
+        fn_801E17E0(o->work);
+        o->work = 0;
     }
-    fn_801E17E0(o->b0);
-    o->b0 = 0;
+    fn_801E17E0(o->data);
+    o->data = 0;
 }
 
 void fn_801D71C4(void) {
