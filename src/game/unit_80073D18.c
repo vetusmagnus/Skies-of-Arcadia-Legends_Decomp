@@ -11,7 +11,7 @@ typedef struct TNode {
 void fn_800740D0(TNode* n, s16* count);
 void* fn_801E1A74(s32 n, s32 size);
 void fn_80074394(void* a, s16* b);
-void fn_800743BC(void* obj, void* p, s16* out);
+void fn_800743BC(TNode* arr, TNode* src, s16* count);
 typedef struct Node {
     u8 pad0[0xC];
     f32 len;
@@ -58,6 +58,49 @@ void fn_80073DD0(TNode* a, TNode* b, s8 mode, s32* arr, s16* idx) {
 void fn_80074394(void* a, s16* b) {
     *b = 0;
     fn_800740D0(a, b);
+}
+
+static inline void copy2(TNode* arr, TNode* src, s16* count) {
+    s16 m = *count + 1;
+    TNode* dst = &arr[*count];
+    *dst = *src;
+    *count = m;
+    if (src->child) {
+        dst->child = &arr[*count];
+        fn_800743BC(arr, src->child, count);
+    }
+    if (src->next) {
+        dst->next = &arr[*count];
+        fn_800743BC(arr, src->next, count);
+    }
+}
+static inline void copy1(TNode* arr, TNode* src, s16* count) {
+    s16 m = *count + 1;
+    TNode* dst = &arr[*count];
+    *dst = *src;
+    *count = m;
+    if (src->child) {
+        dst->child = &arr[*count];
+        copy2(arr, src->child, count);
+    }
+    if (src->next) {
+        dst->next = &arr[*count];
+        copy2(arr, src->next, count);
+    }
+}
+void fn_800743BC(TNode* arr, TNode* src, s16* count) {
+    s16 m = *count + 1;
+    TNode* dst = &arr[*count];
+    *dst = *src;
+    *count = m;
+    if (src->child) {
+        dst->child = &arr[*count];
+        copy1(arr, src->child, count);
+    }
+    if (src->next) {
+        dst->next = &arr[*count];
+        copy1(arr, src->next, count);
+    }
 }
 
 void fn_80074968(void* p, void** out) {
