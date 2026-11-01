@@ -17,7 +17,13 @@ dolphin/os/OSAlloc.c:
 	.sdata      start:0x80346720 end:0x80346728
 
 game/unit_80005B50.c:
-	.text       start:0x80005D98 end:0x80020B50
+	.text       start:0x80005D98 end:0x80009800
+
+game/unit_80009800.c:
+	.text       start:0x80009800 end:0x8000A38C
+
+game/unit_8000A38C.c:
+	.text       start:0x8000A38C end:0x80020B50
 
 game/unit_80020B50.c:
 	.text       start:0x80020B50 end:0x8002A034
@@ -51,7 +57,10 @@ game/sound.c:
 	.sdata2     start:0x80348618 end:0x80348638
 
 game/effect.c:
-	.text       start:0x80040010 end:0x800506B0
+	.text       start:0x80040010 end:0x8004DE48
+
+game/unit_8004DE48.c:
+	.text       start:0x8004DE48 end:0x800506B0
 
 game/unit_800506B0.c:
 	.text       start:0x800506B0 end:0x800540DC
@@ -84,10 +93,25 @@ game/unit_8009623C.c:
 	.text       start:0x8009623C end:0x800972AC
 
 game/unit_800972AC.c:
-	.text       start:0x800972AC end:0x800B2DA0
+	.text       start:0x800972AC end:0x8009D274
+
+game/unit_8009D274.c:
+	.text       start:0x8009D274 end:0x800A3ED4
+
+game/unit_800A3ED4.c:
+	.text       start:0x800A3ED4 end:0x800AE300
+
+game/unit_800AE300.c:
+	.text       start:0x800AE300 end:0x800B2DA0
 
 game/unit_800B2DA0.c:
-	.text       start:0x800B2DA0 end:0x800D81E8
+	.text       start:0x800B2DA0 end:0x800CE2B4
+
+game/unit_800CE2B4.c:
+	.text       start:0x800CE2B4 end:0x800D2048
+
+game/unit_800D2048.c:
+	.text       start:0x800D2048 end:0x800D81E8
 
 game/unit_800D81E8.c:
 	.text       start:0x800D81E8 end:0x8010E164
@@ -178,7 +202,13 @@ game/unit_801F224C.c:
 	.text       start:0x801F224C end:0x801F5334
 
 game/unit_801F5334.c:
-	.text       start:0x801F5334 end:0x80219378
+	.text       start:0x801F5334 end:0x8020EEE8
+
+game/unit_8020EEE8.c:
+	.text       start:0x8020EEE8 end:0x802159E0
+
+game/unit_802159E0.c:
+	.text       start:0x802159E0 end:0x80219378
 
 game/unit_80219378.c:
 	.text       start:0x80219378 end:0x8022D34C

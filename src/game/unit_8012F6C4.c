@@ -359,10 +359,16 @@ typedef struct {
     s8 b2;         /* row */
     u8 pad3;
     s8 b4;
-    u8 pad5[3];
+    u8 pad5;
+    s8 b6;         /* page */
+    s8 b7;         /* cursor on the page */
     s8 b8;         /* chosen column */
     s8 b9;
     u8 ba;
+    u8 padb[5];
+    s8 x10[6];     /* crew ids on the page */
+    s16 x16;       /* money */
+    s16 x18[4];    /* cost paid per row */
 } MenuStep;
 extern s32 fn_801358A0(s32 pos, s32 y, s32 k, s32 x4, s32 n);
 extern void fn_8013FB48(s32 a, s32 b);
@@ -977,7 +983,7 @@ void fn_80136FDC(s32 a, s32 b, s8 *tbl, s32 idx) {
     }
 }
 
-void fn_80137058(s32 a, s32 b, s8 *tbl, s32 idx) {
+s32 fn_80137058(s32 a, s32 b, s8 *tbl, s32 idx) {
     s32 ok = 0;
     s32 v = 0x16;
     if (idx >= 0 && idx < 6) {
@@ -986,7 +992,272 @@ void fn_80137058(s32 a, s32 b, s8 *tbl, s32 idx) {
     if (ok != 0) {
         v = tbl[idx];
     }
-    fn_801365D8(a, b, 7, v, 0xe);
+    return fn_801365D8(a, b, 7, v, 0xe);
+}
+
+inline s32 ValidIdx(s32 i)
+{
+    return i >= 0 && i < 0x16;
+}
+
+inline s32 HasFlag(s32 i)
+{
+    Party* p;
+    s32 r = 0;
+    p = &fn_80135598()->party;
+    if (p != 0) {
+        if (ValidIdx(i)) {
+            r = (p->flags & (1 << i)) != 0;
+        }
+    }
+    return r;
+}
+
+static inline s32 InRange(s32 v, s32 n) {
+    s32 r = 0;
+    if (v >= 0 && v < n) {
+        r = 1;
+    }
+    return r;
+}
+
+extern char *lbl_802F7298[];
+extern void fn_8012ADE8(s32 v);
+extern void fn_801370B0(MenuStep *o);
+extern void fn_8012E5B0(s8 v);
+extern void fn_8012E580(s8 v);
+extern void fn_8012E404(u8 v);
+extern void fn_8012E560(s8 v);
+extern void fn_8012E5A0(u16 v);
+extern void fn_8012E590(s8 v);
+extern void fn_8012E5C0(s8 v);
+s32 fn_80137414(s8* out, s32 n);
+void fn_801375A0(s32 a0, s32 a1, s8 *src);
+
+
+
+
+
+
+/* Whether the crew member under the cursor has joined. */
+static inline s32 CurJoined(MenuStep *o)
+{
+    s32 r;
+    s32 ok = 0;
+    s32 id = 0x16;
+    if (InRange(o->b7, 6)) {
+        id = o->x10[o->b7];
+    }
+    if (InRange(id, 0x16)) {
+        Party *p;
+        r = 0;
+        p = &fn_80135598()->party;
+        if (p != 0) {
+            if (ValidIdx(id)) {
+                r = (p->flags & (1 << id)) != 0;
+            }
+        }
+        if (r) {
+            ok = 1;
+        }
+    }
+    return ok;
+}
+
+static inline void ShowDesc(MenuStep *o)
+{
+    s32 flag;
+    char *str = NULL;
+    s32 id;
+    s32 idx;
+
+    if (o != NULL) {
+        idx = o->b7;
+        flag = idx >= 3;
+        if (CurJoined(o)) {
+            id = 0x16;
+            if (InRange(o->b7, 6)) {
+                id = o->x10[o->b7];
+            }
+            if (InRange(id, 0x16)) {
+                str = lbl_802F7298[id];
+            }
+        }
+        if (str == NULL) {
+            str = "\n";
+        }
+        fn_8012F458(flag);
+        fn_8012F468(str);
+    }
+}
+
+static inline s32 FindPost(MenuStep *o)
+{
+    s32 cy;
+    s32 id = 0x16;
+    s32 i;
+    s32 n;
+    s32 t;
+    s32 r;
+    if (InRange(o->b7, 6)) {
+        id = o->x10[o->b7];
+    }
+    cy = o->b2;
+    n = PartyCount();
+    i = 0;
+    while (i >= 0 && i < n && fn_801358A0(i, cy, 7, id, n) == 0) {
+        i++;
+    }
+    t = i > -1 ? i : -1;
+    r = n;
+    if (t < n) r = t;
+    if (r < 0 || r >= n) r = -1;
+    return r;
+}
+
+static inline s32 JoinedCount(void)
+{
+    s32 n = 0;
+    s32 i;
+    for (i = 0; i < 0x16; i++) {
+        if (HasFlag(i)) {
+            n++;
+        }
+    }
+    return n;
+}
+
+/* The crew member under the cursor's cost into v (100 when there is none). A macro: it
+ * works on the caller's v. */
+#define CUR_COST(o, v)                              {                                                   const CrewData *tbl_ = lbl_802D8E64;            s32 id_ = 0x16;                                 v = 100;                                        if (InRange((o)->b7, 6)) {                          id_ = (o)->x10[(o)->b7];                    }                                               if (InRange(id_, 0x16)) {                           const CrewData *e_ = &tbl_[id_];                v = 100;                                        if (e_ != NULL) {                                   v = e_->cost;                               }                                           }                                           }
+
+static inline void Close(MenuStep *o)
+{
+    if (o != NULL) o->ba = 0;
+    fn_8012F478(1);
+}
+
+static inline s32 AnyKey(MenuStep *o)
+{
+    s32 r = 0;
+    if (lbl_80311A60.pad->x8 & 0xf0f) {
+        Close(o);
+        SePlay(0xf, 1, 7);
+        r = 1;
+    }
+    return r;
+}
+
+static inline void BuildPage(MenuStep *o)
+{
+    s32 n;
+    s32 pages;
+    s32 sel = o->b7;
+    s32 page = o->b6;
+    s32 money = o->x16;
+
+    fn_8012E5B0(3);
+    pages = 1;
+    n = JoinedCount();
+    if (n != 0) {
+        pages = (n + 5) / 6;
+    }
+    fn_8012E580(pages);
+    fn_8012E404(1);
+    fn_8012E560(sel);
+    fn_8012E5A0(0);
+    fn_8012E590(0);
+    fn_801375A0(money, page, o->x10);
+    fn_8012E5C0(0);
+}
+
+s32 fn_801377C0(MenuStep *o)
+{
+    s32 ret;
+    s32 v;
+    u32 pad;
+
+    ret = 0;
+    switch (o->state) {
+    case 0:
+        o->state = 1;
+    case 1:
+        fn_80137414(o->x10, o->b6);
+        BuildPage(o);
+        fn_80130304(-1);
+        Close(o);
+        o->state = 2;
+    case 2:
+        fn_801370B0(o);
+        pad = lbl_80311A60.pad->x8;
+        if (pad & 0x200) {
+            fn_8012E5C0(1);
+            Close(o);
+            SePlay(0xf, 1, 7);
+            ret = 1;
+        } else if (pad & 0x100) {
+            if (fn_80136C14(o->x10, o->b7, o->x16) == 0) {
+                SePlay(0xf, 1, 3);
+            } else {
+                fn_801315FC(0);
+                CUR_COST(o, v);
+                fn_8012ADE8(o->x16 - v);
+                SePlay(0xf, 1, 2);
+                o->state = 4;
+            }
+        } else if (pad & 0x400) {
+            if (CurJoined(o)) {
+                ShowDesc(o);
+                if (o != NULL) o->ba = 1;
+                fn_8012F478(0);
+                SePlay(0xf, 1, 6);
+                o->state = 3;
+            }
+        }
+        break;
+    case 3:
+        if (AnyKey(o)) {
+            o->state = 2;
+        }
+        break;
+    case 4:
+        o->b8 = FindPost(o);
+        o->state = 5;
+    case 5:
+        o->b8 = fn_80137058(o->b8, o->b2, o->x10, o->b7);
+        pad = lbl_80311A60.pad->x8;
+        if (pad & 0x200) {
+            fn_8012ADE8(o->x16);
+            MarkChosen(o);
+            fn_80130304(-1);
+            fn_801315FC(1);
+            SePlay(0xf, 1, 7);
+            o->state = 1;
+        } else if (pad & 0x100) {
+            if (fn_80136C14(o->x10, o->b7, o->x16) == 0) {
+                SePlay(0xf, 1, 3);
+            } else {
+                fn_80136FDC(o->b2, o->b8, o->x10, o->b7);
+                fn_80130304(-1);
+                fn_801315FC(1);
+                SePlay(0xf, 1, 2);
+                o->state = 6;
+            }
+        }
+        break;
+    case 6:
+        fn_8012E5C0(1);
+        CUR_COST(o, v);
+        if (o != NULL && v > 0 && v != 100) {
+            o->x16 -= v;
+            o->x18[o->b2] = v;
+            fn_8012ADE8(o->x16);
+        }
+        Close(o);
+        ret = 2;
+        break;
+    }
+    return ret;
 }
 
 s32 fn_80138848(s32 r3)
@@ -1873,23 +2144,7 @@ void fn_80135290(Item *v, s32 slot, s32 add)
     v->s1a = 0;
 }
 
-inline s32 ValidIdx(s32 i)
-{
-    return i >= 0 && i < 0x16;
-}
 
-inline s32 HasFlag(s32 i)
-{
-    Party* p;
-    s32 r = 0;
-    p = &fn_80135598()->party;
-    if (p != 0) {
-        if (ValidIdx(i)) {
-            r = (p->flags & (1 << i)) != 0;
-        }
-    }
-    return r;
-}
 
 s32 fn_80137414(s8* out, s32 n)
 {
@@ -2005,13 +2260,6 @@ static inline void Clear(void **p, s8 *a, s8 *b, s8 *c) {
     }
 }
 
-static inline s32 InRange(s32 v, s32 n) {
-    s32 r = 0;
-    if (v >= 0 && v < n) {
-        r = 1;
-    }
-    return r;
-}
 
 static inline s32 Bits(s8 *c) {
     s32 r = 0;

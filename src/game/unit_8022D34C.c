@@ -2,17 +2,25 @@
 #include <dolphin/gx.h>
 #include <dolphin/os/OSFastCast.h>
 #include "ninja.h"
+#include "game/camera_803119E0.h"
+/* lbl_80311970: the active camera mode. */
 typedef struct {
-    s32 f0;
+    s32 f0;           /* 0x00 mode */
     s32 f4;
-    void* f8;
-    void* fc;
-    u8 pad_10[0x28];
-    f32 f38;
-    u8 pad_3c[0x10];
-    s32 a;
-    f32 b;
-    f32 c;
+    NJS_POINT3 *f8;   /* 0x08 target position (mode 0: the camera block itself) */
+    Angle *fc;        /* 0x0C target angles */
+    NJS_POINT3 pos;   /* 0x10 */
+    Angle ang[3];     /* 0x1C */
+    u8 pad28[0xc];
+    s32 f34;          /* 0x34 */
+    f32 f38;          /* 0x38 */
+    f32 amp1;         /* 0x3C */
+    s32 ang1;
+    f32 amp2;
+    s32 ang2;
+    s32 a;            /* 0x4C fov tween frames left */
+    f32 b;            /* 0x50 current fov */
+    f32 c;            /* 0x54 target fov */
 } Unk8022D34C;
 extern Unk8022D34C lbl_80311970;
 extern f32 lbl_80347570;
@@ -28,7 +36,6 @@ s32 fn_80230FCC(Res230 *r);
 extern void fn_80288DE4(void *p, s32 (*f)(Res230 *));
 extern void fn_80296F28(void);
 extern s32 fn_8022E734(u8 kind, void *p, void *a, void *b, s32 f1, s32 f2, s32 f3);
-typedef struct Pt { f32 x; f32 y; f32 z; } Pt;
 typedef struct Rng {
     f32 x0;
     u8 pad4[4];
@@ -36,7 +43,7 @@ typedef struct Rng {
     u8 padc[0xc];
     f32 lo;
     f32 hi;
-    Pt *pts;
+    NJS_POINT3 *pts;
     u8 pad24[0xc];
     f32 ylo;
     f32 yhi;
@@ -125,8 +132,8 @@ extern LightParam lbl_802F93C8[2];
 typedef struct {
     s32 f0;
     s32 f4;
-    void *f8;
-    void *fc;
+    NJS_POINT3 *f8;
+    Angle *fc;
     f32 f38_src;
 } Src8031195C;
 extern Src8031195C lbl_8031195C;
@@ -134,14 +141,18 @@ extern Src8031195C lbl_8031195C;
 typedef struct {
     s16 pri;
     s16 kind;
-    u8 pad4[0x28 - 4];
-    s32 f28;
-    u8 pad2c[0x40 - 0x2c];
+    u8 pad4[8];
+    f32 xc;           /* 0x0C */
+    u8 pad10[0xc];
+    NJS_POINT3 ofs;   /* 0x1C */
+    s32 f28;          /* 0x28 */
+    f32 fov;          /* 0x2C */
+    u8 pad30[0x10];
 } Blk40;
 extern Blk40 lbl_803118DC;
 extern Blk40 lbl_8031191C;
-extern f32 lbl_803119D4[3];
-extern s32 lbl_803119C8[3];
+extern NJS_POINT3 lbl_803119D4;
+extern Angle lbl_803119C8[3];
 extern s32 lbl_80347574;
 extern s32 fn_8022D384(void);
 typedef struct Out_80230634 {
@@ -181,13 +192,155 @@ void fn_8022D34C(s32 a, f32 b) {
     }
 }
 
+typedef struct {
+    u8 pad00[0x18];
+    f32 z;
+    u8 pad1c[0xc];
+    f32 x28;
+    u8 pad2c[4];
+} Screen8022BC64;
+
+/* The result block fn_8022C9D4/fn_8022C56C/fn_8022CE28 fill: eye position and angles; the frame
+ * shows two more words after them (unused here). */
+typedef struct {
+    NJS_POINT3 pos;
+    Angle ang[3];
+    f32 x18;
+    f32 x1c;
+} CamOut;
+
+extern Screen8022BC64 lbl_803118AC;
+extern s32 lbl_80347EA8;
+extern s32 lbl_80347EB0;
+extern s32 lbl_80347EB4;
+
+extern void fn_8028BAEC(void *p);
+extern void fn_80293690(void *a, void *b, f32 c);
+extern double atan2(double y, double x);
+extern f32 njTan(Angle a);
+extern void njSetScreen(Screen8022BC64 *s);
+extern s32 fn_8022C9D4(CamOut *o, NJS_POINT3 *pos, Angle *ang, Blk40 *req);
+extern s32 fn_8022C56C(CamOut *o, NJS_POINT3 *pos, Angle *ang, Blk40 *req);
+extern void fn_8022CE28(CamOut *o, NJS_POINT3 *pos, Angle *ang, Blk40 *req);
+extern void fn_8022C46C(CamOut *o, NJS_POINT3 *base, f32 r);
+extern void fn_8022D1F8(NJS_POINT3 *out, Unk8022D34C *s, Angle *rot);
+extern void fn_801DD460(NJS_POINT3 *out, Angle *rot);
+
+#define SET_FOV() \
+    if (fov != lbl_80347570) { \
+        lbl_80347570 = fov; \
+        if (fov <= 0.0f) { \
+            fov = 1.0f; \
+        } else if (fov >= 90.0f) { \
+            fov = 89.9f; \
+        } \
+        lbl_803118AC.z = lbl_803118AC.x28 / 2.0f / njTan(182.04445f * (fov / 2.0f)); \
+        njSetScreen(&lbl_803118AC); \
+        lbl_803119E0.x1a = 182.04445f * fov; \
+    }
+
+#define TAKE(o)                                             rot[0] = lbl_80311970.ang[0] = o.ang[0];                rot[1] = lbl_80311970.ang[1] = o.ang[1];                rot[2] = lbl_80311970.ang[2] = o.ang[2];                px = lbl_80311970.pos.x = o.pos.x;                      py = lbl_80311970.pos.y = o.pos.y;                      pz = lbl_80311970.pos.z = o.pos.z;
+
+static inline void CamApply(void *cam) {
+    lbl_80347EB4 = lbl_80347EB0;
+    lbl_80347EA8 = 1;
+    njUnitMatrix(NULL);
+    fn_8028BAEC(cam);
+}
+
+s32 fn_8022D384(void) {
+    Angle rot[3];
+    CamOut o;
+    f32 fov;
+    f32 px, py, pz;
+    s32 ret = 1;
+
+    switch (lbl_80311970.f0) {
+    case 0:
+        CamApply(lbl_80311970.f8);
+        break;
+    case 1:
+        fn_80293690(lbl_80311970.f8, lbl_80311970.fc, lbl_80311970.f38);
+        break;
+    case 2:
+        rot[0] = lbl_80311970.ang[0] = lbl_80311970.fc[0];
+        rot[1] = lbl_80311970.ang[1] = lbl_80311970.fc[1];
+        rot[2] = lbl_80311970.ang[2] = lbl_80311970.fc[2];
+        px = lbl_80311970.pos.x = lbl_80311970.f8->x;
+        py = lbl_80311970.pos.y = lbl_80311970.f8->y;
+        pz = lbl_80311970.pos.z = lbl_80311970.f8->z;
+        fov = lbl_803118DC.fov;
+        SET_FOV();
+        break;
+    case 3:
+        px = (lbl_80311970.f8->x + lbl_803118DC.ofs.x) - lbl_80311970.pos.x;
+        py = (lbl_80311970.f8->y + lbl_803118DC.ofs.y) - lbl_80311970.pos.y;
+        pz = (lbl_80311970.f8->z + lbl_803118DC.ofs.z) - lbl_80311970.pos.z;
+        o.ang[0] = 0x4000 - (Angle)(10430.381f * (f32)atan2(fn_80291A5C(px * px + pz * pz), py));
+        o.ang[1] = -0x4000 - (Angle)(10430.381f * (f32)atan2(pz, px));
+        o.ang[2] = 0;
+        ret = 1;
+        px = lbl_80311970.pos.x;
+        py = lbl_80311970.pos.y;
+        pz = lbl_80311970.pos.z;
+        rot[0] = lbl_80311970.ang[0] = o.ang[0];
+        rot[1] = lbl_80311970.ang[1] = o.ang[1];
+        rot[2] = lbl_80311970.ang[2] = o.ang[2];
+        break;
+    case 4:
+    case 5:
+    case 6:
+        ret = fn_8022C9D4(&o, lbl_80311970.f8, lbl_80311970.fc, &lbl_803118DC);
+        TAKE(o);
+        break;
+    case 7:
+        ret = fn_8022C9D4(&o, lbl_80311970.f8, lbl_80311970.fc, &lbl_803118DC);
+        fn_8022C46C(&o, lbl_80311970.f8, lbl_803118DC.xc);
+        TAKE(o);
+        break;
+    case 8:
+        ret = fn_8022C56C(&o, lbl_80311970.f8, lbl_80311970.fc, &lbl_803118DC);
+        TAKE(o);
+        break;
+    case 9:
+        break;
+    case 10:
+        fn_8022CE28(&o, lbl_80311970.f8, lbl_80311970.fc, &lbl_803118DC);
+        TAKE(o);
+        break;
+    }
+
+    if (lbl_80311970.f0 >= 2) {
+        if (lbl_80311970.a >= 0) {
+            if (lbl_80311970.a > 0) {
+                lbl_80311970.b += (lbl_80311970.c - lbl_80311970.b) / lbl_80311970.a;
+                lbl_80311970.a--;
+            } else {
+                lbl_80311970.b = lbl_80311970.c;
+            }
+            fov = lbl_80311970.b;
+            SET_FOV();
+        }
+        lbl_803119E0.pos.x = px;
+        lbl_803119E0.pos.y = py;
+        lbl_803119E0.pos.z = pz;
+        fn_8022D1F8(&lbl_803119E0.pos, &lbl_80311970, rot);
+        fn_801DD460(&lbl_803119E0.dir, rot);
+        lbl_80311970.f34 = lbl_803118DC.f28;
+        lbl_803119E0.x18 = lbl_803118DC.f28;
+        CamApply(&lbl_803119E0);
+        lbl_80311970.f38 = lbl_803118DC.fov;
+    }
+    return ret;
+}
+
 void fn_8022E964(Node *n, s32 mask);
 extern void fn_8022EF58(Node *n, s32 mask);
 extern char lbl_8034C750;
 extern void* memcpy(void* dst, const void* src, unsigned long n);
-extern Pt lbl_80316830;
+extern NJS_POINT3 lbl_80316830;
 
-s32 fn_8022DAE8(Pt* pos, void* id, Blk40* req) {
+s32 fn_8022DAE8(NJS_POINT3* pos, Angle* id, Blk40* req) {
     s32 ret = 1;
     s32 pri = req->pri;
     s32 kind = req->kind;
@@ -508,7 +661,7 @@ void fn_8022F580(void *node, s32 mask, u8 op)
 }
 
 s32 fn_80230E48(Rng *r, f32 t, u16 i) {
-    Pt *p;
+    NJS_POINT3 *p;
     s32 ok = 1;
     f32 d;
     if (t < r->lo || t > r->hi) {
@@ -884,7 +1037,7 @@ void fn_8022D9C4(void)
     lbl_80347574 = fn_8022D384();
     lbl_8031195C.f4 = 2;
     lbl_8031195C.f0 = 8;
-    lbl_8031195C.f8 = lbl_803119D4;
+    lbl_8031195C.f8 = &lbl_803119D4;
     lbl_8031195C.fc = lbl_803119C8;
     lbl_803118DC = lbl_8031191C;
 }

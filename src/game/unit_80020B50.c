@@ -77,7 +77,8 @@ typedef struct Ent {
     u32 w0;
     s32 w4;
     s32 w8;
-    u8 pad_c[0x6];
+    u8 pad_c[0x4];
+    s16 s10;         /* 0x10 slot */
     s16 x12;
     s32 x14;
     u8 pad_18[0x8];
@@ -92,17 +93,24 @@ typedef struct Ent {
     s16 h44;
     s16 h46;
     s16 h48;
-    u8 pad_4a[0xe];
-    f32 f58;
-    f32 f5c;
-    u8 pad_60[0xc];
+    u8 pad_4a[0x2];
+    NJS_POINT3 pos;  /* 0x4C */
+    f32 f58;         /* 0x58 screen x */
+    f32 f5c;         /* 0x5C screen y */
+    f32 f60;         /* 0x60 */
+    f32 f64;         /* 0x64 overlap shift */
+    f32 f68;         /* 0x68 height */
     s16 x6c;
     s16 h6e;
     s16 s70;
-    u8 pad_72[0x17c];
+    u8 pad_72[0x88 - 0x72];
+    f32 f88;         /* 0x88 */
+    f32 f8c;         /* 0x8C */
+    u8 pad_90[0x1ee - 0x90];
     s16 x1ee;
     u8 pad_1f0[0x4];
     Ob* x1f4;
+    s16 s1f8;        /* 0x1F8 */
 } Ent;
 extern Ent *lbl_80302AB0[];
 extern Ob* lbl_80346BAC;
@@ -962,12 +970,12 @@ void fn_80029364(s16 idx, s8 mode, s16 a, s16 b) {
     }
 }
 
-void fn_80029980(Obj* p) {
+void fn_80029980(Ent* p) {
     s32 i;
     f32 dx;
     f32 dz;
 
-    if (p->s12 != 2 && p->w4 == 1) {
+    if (p->x12 != 2 && p->w4 == 1) {
         for (i = 0; i < 12; i++) {
             Ent* e = lbl_80302AB0[i];
             if (e != 0 && i != p->s10 && p->s70 < e->s70 && e->w8 == 1 && e->w4 == 1) {
@@ -1003,6 +1011,135 @@ void fn_80029980(Obj* p) {
             }
         }
         p->f5c = p->f5c + p->f64;
+    }
+}
+
+extern s32 lbl_80347328;
+void fn_80012130(NJS_POINT3* p);
+void fn_80012100(NJS_POINT3* p);
+f32 fn_8000ACF0(NJS_POINT3* v);
+f32 njInnerProduct(NJS_POINT3* a, NJS_POINT3* b);
+void njProjectScreen(void* m, NJS_POINT3* p, f32* out);
+
+static inline s32 LabelFacing(Ent* e) {
+    NJS_POINT3 v;
+    NJS_POINT3 d;
+    NJS_POINT3 a;
+    NJS_POINT3 b;
+    f32 len;
+    f32 ac;
+    Angle ang;
+
+    if (e->w4 == 0) {
+        return 1;
+    }
+    fn_80012130(&a);
+    fn_80012100(&b);
+    d.x = b.x - a.x;
+    d.y = b.y - a.y;
+    d.z = b.z - a.z;
+    v.x = e->pos.x - a.x;
+    v.y = e->pos.y - a.y;
+    v.z = e->pos.z - a.z;
+    
+    ac = acos(njInnerProduct(&d, &v) / (fn_8000ACF0(&d) * fn_8000ACF0(&v)));
+    ang = 10430.381f * ac;
+    if (0.005493164f * ang <= 90.0f) {
+        return 1;
+    }
+    return 0;
+}
+
+void BattleLabelPlace(Ent* e, s8 mode, u32 c) {
+    NJS_POINT3 p;
+    f32 scr[2];
+    s32 vis;
+    s16 x;
+    s16 y;
+    s32 i;
+
+    e->w0 &= 0x7fffffff;
+    switch (mode) {
+    case 1:
+        e->pos.y += e->f68;
+    case 0:
+        vis = LabelFacing(e);
+        if (vis == 1 || ((e->w0 & 0x40000000) && e->s1f8 != 1) || (e->w0 & 0x3fe00000) || e->w8 == 0) {
+            p.x = e->pos.x;
+            p.y = e->pos.y + e->f68 / 4;
+            p.z = e->pos.z;
+            njProjectScreen(0, &p, scr);
+            x = floorf(scr[0]);
+            y = floorf(scr[1]);
+            if (mode == 1) {
+                y -= ((c >> 2) & 0x3f) * 0x18 + 8;
+            }
+        } else {
+            e->w0 |= 0x80000000;
+            if (e->w0 & 0x40000000) {
+                e->x1f4->mode = 1;
+            }
+            break;
+        }
+            if (((e->w0 & 0x40000000) && e->s1f8 != 1) || (e->w0 & 0x3fe00000) || e->w8 == 0) {
+                if (y > 400) {
+                    y = 400;
+                } else if (y < 0x60) {
+                    y = 0x60;
+                }
+            } else {
+                if (y > 400 && y < 500) {
+                    y = 400;
+                }
+            }
+            x -= 0x30;
+            e->f58 = x;
+            e->f5c = y;
+            fn_80029980(e);
+            if ((e->w0 & 0x40000000) || e->w0 != 0 || e->w8 == 0) {
+                if (e->f58 <= 0.0f) {
+                    e->f58 = 0.0f;
+                } else if (e->f58 >= 544.0f) {
+                    e->f58 = 544.0f;
+                }
+            } else {
+                if (-96.0f <= e->f58 && e->f58 <= 0.0f) {
+                    e->f58 = 0.0f;
+                } else if (544.0f <= e->f58 && e->f58 <= 640.0f) {
+                    e->f58 = 544.0f;
+                }
+            }
+        break;
+    case 2:
+        if (e->s10 < 4) {
+            y = e->s10 * 0x28 + 0x4a;
+            if (e->s10 == lbl_8034732C && lbl_80347328 != e->s10) {
+                e->w4 = 0;
+            }
+        } else {
+            y = 0x4a;
+            for (i = 0; i < e->s10 - 4; i++) {
+                if (lbl_80302AB0[i + 4] == 0) {
+                    y += 0x1e;
+                } else if (lbl_80302AB0[i + 4]->s1f8 == 3) {
+                    y += 0x26;
+                } else {
+                    y += 0x1e;
+                }
+            }
+        }
+        e->f58 = 502.0f;
+        e->f5c = y;
+        break;
+    }
+    e->f88 = e->f58;
+    e->f8c = e->f5c;
+    if (e->w4 == 0) {
+        e->f58 = 0.0f;
+        e->f5c = 0.0f;
+        e->f60 = 0.0f;
+        e->f64 = 0.0f;
+        e->x14 = 0;
     }
 }
 

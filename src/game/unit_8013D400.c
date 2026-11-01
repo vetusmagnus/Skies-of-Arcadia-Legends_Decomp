@@ -685,7 +685,7 @@ s32 fn_8013D718(s32 kind, InvEnt *tbl, s32 idx);
 extern void fn_8012AEB8(s32 a);
 extern void fn_8012AED0(s32 a);
 extern void fn_8012C648(s32 a);
-extern void fn_8012E5C0(s32 a);
+extern void fn_8012E5C0(s8 a);
 extern void fn_80130350(s32 a);
 extern void fn_801316B4(s32 a);
 extern void fn_8013312C(s32 a);

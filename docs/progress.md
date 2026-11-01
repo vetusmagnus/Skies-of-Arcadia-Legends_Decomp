@@ -2261,3 +2261,137 @@ local fixed it twice), callee-saved colouring swaps no declaration order changes
 that need their unit's .rodata/.bss defined in C in first-use order (fn_80217554, fn_8009D190, fn_80097720, fn_801A3A10, fn_800D3464,
 fn_80073164, fn_800A7860, fn_800A6F30, fn_801B6E5C, fn_800EAAAC), and about 170 functions of 1 KB and up with no attempt yet.
 `#pragma optimization_level 1` (which fixed the r0-result pattern in Ninja) did not turn up as the only fix for any game function.
+
+## Unit splits for the held-back matches (2026-11-01, branch s1-split)
+
+Splits made where the data layout shows an original file boundary, so that held matches can go into their own unit:
+- **unit_800AE300** (0x800AE300-0x800B2DA0, from unit_800972AC): its `.sdata2` starts at 0x80348E70 (8-aligned) with a
+  1.0f that repeats 0x80348E64's, and its 0.0f at 0x80348E88 is a second 0.0f after 0x80348E60; every function from
+  0x800AE300 on uses only constants from 0x80348E70 up, everything before only below it. The file's `.bss` blocks
+  0x80303618/0x80303634/0x80303650 are addressed from one pooled base in the original (base register + 0x1c/+0x38), which
+  MWCC only does for data defined in the same file, so they are defined in the unit (first use is 0x80303618, which makes it
+  the base). Released fn_800B0900, fn_800B0F54 and fn_800B0278 (the 0x80303634 block is the wave-strip state).
+- **unit_8004DE48** (0x8004DE48-0x800506B0, from effect.c): `.sdata2` 0x80348700 (8-aligned) starts with 182.04445f, 1.0f
+  and 0.0f, all three repeating constants of effect.c's block (0x803486C0, 0x8034869C, 0x803486A0); every function from
+  0x8004DE48 on uses only constants from 0x80348700 up. Released fn_8004E474, which calls fn_8001D944 with an `s8` id
+  (callee-extended) where effect.c's fn_8004B7C4/fn_8004DD54 pass an `int`. Its three constants stay extern labels as in
+  the isolated match (literals load in the other order).
+- **unit_802159E0** (0x802159E0-0x80219378, from unit_801F5334): the sound/stream control file. Its `.sdata2` starts at
+  0x8034C398 (8-aligned, its own "_L.dsp"/"/sound/" strings) right after the 3.4e38f block that only the functions before
+  0x802159E0 use, and its `.bss` starts at 0x803148C0 (everything before uses `.bss` below 0x80314740; 0x802159E0 to the
+  end share the 0x803148C0 and 0x80315484 blocks). Released fn_8021730C, which takes an `s16` time while fn_801FA290
+  (unit_801F5334) calls it with an `s32`. (0x8034C390/94 hold two function pointers used by fn_80219D78; they sit
+  before this block, so they are taken to be a const table of the previous file.)
+- **unit_8020EEE8** (0x8020EEE8-0x802159E0, from unit_801F5334): `.sdata2` 0x8034C2B8 (8-aligned) holds 182.04445f, 100.0f
+  and 0.0f again (unit_801F5334 has them at 0x8034C28C, 0x8034C264, 0x8034C250); fn_8020F078 uses the new 182.04445f, so it
+  cannot share a file with the users of 0x8034C28C, and fn_8020ED58 still uses 0x8034C264-0x8034C270. The first `.rodata`
+  this range uses (0x802D6658) comes after unit_801F5334's C-defined `.rodata` (0x802D5648-0x802D64B8). The three small
+  functions between (fn_8020EEE8, fn_8020EF30, fn_8020EFD4) use no data, so the exact start within 0x8020EEE8-0x8020F078 is
+  a choice. Released fn_802088D8 (unit_801F5334), which passes fn_80210860 an `s32` id where every caller in this range
+  passes a `u16`.
+- Held matches folded without a split (same pass): fn_80207830, fn_80209028, fn_80209330 (unit_801F5334: the agents' private
+  Scpt copies replaced by the unit's Scpt/Work801F8; the fallback callers fn_80207738/fn_80208F30/fn_80209238 declare the
+  handlers with the u16/u32 flags they are defined with, and fn_80209330 returns s16), fn_8020E984 (returns s32; this file
+  declares fn_801BEA70 with the u8 mode it passes, while unit_80199B9C defines it with an s32 read as a byte),
+  fn_8020F3D4 (unit_8020EEE8: the actor view gains its position at 0x38 and x168, and Sub.x8 is the riding Actor).
+- Still held, with the reason found: fn_8009F22C and the other unit_800972AC EvObj handlers (fn_800A3C68, fn_800A9708,
+  fn_800AB280, fn_800AB934, fn_800AC474, fn_800AD330) need per-kind EvObj work types (x260 used as a Task link); fn_800A0028
+  needs the file's .rodata pool (0x802B0E30-0x802B0F88) defined in C, which needs const-correct njCalcPoint/fn_802AC710
+  inputs and readonly strings; fn_801590F4 returns u8 to a same-file caller (fn_80159020) that reads an s32;
+  fn_80015138 and fn_80014BA8 (adjacent) disagree on fn_8002923C's id (int vs s8 view); fn_801705B8 calls fn_80171B64
+  with two arguments in the file that defines it with one (only a K&R definition would allow it); fn_8020AF8C reads
+  lbl_80310A1C as s8 where fn_8020ED58 in the same file reads it as u8.
+
+Second pass (same branch):
+- **unit_800CE2B4** (0x800CE2B4-0x800D2048) and **unit_800D2048** (0x800D2048-0x800D81E8), from unit_800B2DA0: the
+  `.sdata2` run 0x803492A8-0x803492F0 has its own int-to-float double (0x803492B8) and 0.0f (0x803492DC); a second pair
+  follows at 0x80349308/0x80349310, so a new block starts at 0x803492F8 (8-aligned), and every function from 0x800CE2B4 on
+  uses only constants from there up. Its `.data` is 0x802E1118-0x802E1450: the wind vector, the gust, the ambient sound
+  table (17 rows of 0x20, then a V3[8] box at 0x802E1374) and fn_800CF554's jump table at 0x802E13D4 (strings and tables
+  before the jump table, as the rule wants); nothing before 0x800CE2B4 touches that `.data` and nothing after 0x800D2048
+  does. The next file starts at the 0x803493C8 block, whose first constant is a 0.0f, with `.data` from 0x802E1450 and
+  `.rodata` from 0x802B1578. The wind vector lbl_802E1118 became a V3 (it was read as `f32[]` with casts to V3).
+  Nothing released yet: fn_800D0970 matches with the file's `.data` defined in C (the table typed with its sound id/arg
+  and four `.sct` names), but fn_800CE4B4 then has to read the first name as an integer (`(v | -v) >> 31` on a `u32`;
+  `p != 0` on the pointer gives the other operand order of `or`), which needs a pointer cast: owner's call. fn_800D1324
+  needs fn_800C355C to return a pointer (unit_800B2DA0 defines it `s32`), the per-kind EvExt.info record, lbl_803474EC
+  as the `Pool` and EvObj.x218.
+- **unit_80009800** (0x80009800-0x8000A38C) and **unit_8000A38C** (0x8000A38C-0x80020B50), from unit_80005B50:
+  `.sdata2` blocks at 0x80348080 (after ".STD") and 0x803480E0 (8-aligned; 0.0f at 0x80348098 and again at 0x803480E0),
+  `.rodata` 0x802ACC50 (the first file's strings, two pooled blocks of 0x48 and 0x20 holding "/sound/m0367.mlt", the
+  retry prompt, "ME090A.sct" and "/sound/m04%02d.samp") and 0x802ACCB8, `.data` 0x802DAE50 and 0x802DAEB0, all monotone.
+  The first file's short string "I quit." sits in `.sdata2`, so it was built with read-only strings; configure.py gives
+  unit_80009800 `-str reuse,readonly` (check it with `XF="-str reuse,readonly" sc_chk.py`). Released fn_80009874 (its
+  literals land at the start of the file's `.rodata`, as the pooled base wants).
+  fn_8000ABCC went in before the split, with the head of its file's `.rodata` defined in C (lbl_802ACCB8, twelve zero
+  bytes, then "s%03d.sml", "s%03d.sst", "stsicon.mld"; fdiff names the pooled references by symbol, so only the order
+  of the C definitions matters); SlotTable gets the three name buffers.
+  fn_8001D944 folded into unit_8000A38C: fn_800163A4 takes the character Task (its private F163A4 views were
+  ChrWork/ChrInfo), SysObj gets x3c. battle.c and effect.c still declare fn_8001D944 with their own (u8/int, void *)
+  prototypes, as before.
+- **unit_8009D274** (0x8009D274-0x800A3ED4) and **unit_800A3ED4** (0x800A3ED4-0x800AE300), from unit_800972AC:
+  `.sdata2` 0x80348D70 starts with 0.0f and has its own int-to-float double (0x80348D90, after 0x80348D68), and carries
+  short strings ("Mtrain", "train", "fldShip", "eff_man"), so the file was built with read-only strings (configure.py
+  gives it `-str reuse,readonly`); 0x80348DD0 starts the next block with a second 182.04445. `.rodata` 0x802B0E30 and
+  0x802B0F88 (8-aligned, monotone). unit_8009D274 now defines its `.rodata` in C in the original order (identity matrix,
+  the axis pairs, six zero points, the two particle messages and the six model names); njCalcPoint/njCalcVectors and
+  fn_802AC710 take `const` input for it. fn_800A0028 is still held: its EvObj view needs folding (pivotAng/tgt as Ang3
+  against EvObj's `Angle[3]`, `EvSub` at 0x1D8 with x178/x17c/x180/pos/ang, x1dc as s32, lbl_80303468's State record
+  replacing State_UNIT0000, fn_8010A164 returning the item Task).
+- Not split, with the reason: fn_801A4070 (card `.bss` pooled from 0x803080F8: MWCC lays it out by first use, and the
+  first users fn_8019F930/fn_801A038C are not in C yet); fn_800091E0 folds only with private Hit* views of Task/ChrWork,
+  and unit_8000A38C's caller declares it `(Task *, void *, s16, s32)`; fn_80109E7C needs fn_801CC2A0's real
+  `(const char *, callback, void *)` prototype against the agent's `(obj, cb, u16)` and a void * return into fn_80100424's s32.
+  The other unit_80005B50/unit_800B2DA0/unit_8010E164/unit_8013D400/unit_800D81E8/unit_80020B50/unit_80055E94/
+  unit_8012F6C4 holds fail on type folding (agent views of Task/EvObj/BtlWork, `EvInfo` redefinitions, typed callees),
+  not on a file boundary.
+
+## File splits and the untried functions of 1 KB and up (2026-11-01, worktree build/wt-split, from 77f7e56)
+
+5,965 to 6,000 of 7,117 (+35), `main.dol` SHA OK; every game unit fdiff and floatcheck clean except the failures that were already
+there at 77f7e56 (units built with `-str reuse,readonly`, now also unit_80009800 and unit_8009D274, are checked with
+`XF="-str reuse,readonly"`; fn_800C9144's "not initialized" warning still shows as 6 lines in sc_chk). No new pointer casts or pragmas.
+
+Duplicates: against 77f7e56 only one unmatched function was an exact copy of a matched one (Ninja fn_802A9040 = fn_80293C2C, now
+matched); 18 groups have no matched member (6 game groups, 13 functions; they went to the front of the untried lists).
+
+File splits (one agent, then a fresh one; evidence per split in "Unit splits for the held-back matches" above): unit_800AE300,
+unit_8004DE48, unit_802159E0, unit_8020EEE8, unit_800CE2B4 + unit_800D2048, unit_80009800 + unit_8000A38C, unit_8009D274 +
+unit_800A3ED4 (10 new NonMatching units). They released fn_800B0900, fn_800B0F54, fn_800B0278, fn_8021730C, fn_802088D8,
+fn_80009874, fn_8000ABCC and fn_8001D944; fn_80207830, fn_80209028, fn_80209330 and fn_8020F3D4 folded without a split. Most of the
+other held matches turned out to need type folding (per-kind EvObj records, Task/BtlWork views), not a file boundary.
+Correction to the notes above: fn_8004E474 and fn_8020E984 were taken back out (see "Held" below).
+
+Untried functions (152 game functions of 1,004-5,220 bytes never attempted, plus the 13 duplicate-group members; four Opus agents
+by size quarter, each continued by fresh agents as it ran out of context, stopped by the owner before the end): about 135
+attempted, about 31 matched in isolation, 22 of them merged plus fn_800594CC, a neighbour not on the list (BattleIconColumnDraw, BattleLabelPlace, fn_8001CAA8, fn_80059788 +
+fn_800594CC, fn_8006F4B0, fn_80085CE0, fn_80087844, fn_80095910, fn_8009BED8, fn_800A2830, fn_8011A2D4, fn_80175EE8, fn_8018A2D8,
+fn_8019D678, fn_801377C0, fn_801BECA8, fn_801BFC84, fn_801D56C8, fn_801D5A50, fn_8022D384, fn_800743BC, ...). The owner judged
+this part poor value for its usage (about 1 match in 4-5 from scratch at this size); future passes should prefer type fixes,
+data-backed splits and folds.
+
+Verified in isolation, not merged yet (need unit type work; files in build/wt-U*/build/agents/U*/): fn_8000CFFC (unit_8000A38C:
+CE8State/CE8Prm sub-struct, task view with work->st), fn_80129DD0 (unit_8010E164: its three helpers must be both inlined and
+emitted out of line), fn_800CDA38 (unit_800B2DA0), fn_80181318 (unit_8015DC6C: fn_80195EA4 prototype), fn_800FFB24
+(unit_800D81E8: lbl_802B2374 split into its four strings, fn_8010A270 returns s16).
+
+Misses of the untried pass (77 with a best `.near.c`, scored per instruction as 1 - orig lines in removed hunks / orig count, so a
+register-only difference counts as a miss): mean 83.1%, median 88.9%; >=99%: 5, 95-99%: 19, 90-95%: 11, 80-90%: 17, <80%: 25.
+37 of the 77 are identical once register numbers are masked (code-exact, colouring/scheduling only); 54 have the original's
+instruction count. Candidates for a later register-colouring pass (>=95%; * = not register-only): fn_801C1FC0 99.8%,
+fn_8011A994 99.4%, fn_800125A8 99.3%, fn_80055F0C 99.3%, fn_8002468C 99.1%*, fn_800BDF14 98.8%, fn_80157948 98.7%, fn_8015E600
+98.6%, fn_80133BE0 98.5%, fn_8005E42C 98.3%* (frame 0x10 too small), fn_8017AB38 98.2%, fn_80183D90 98.2%*, fn_8014A1FC 97.9%,
+fn_80078EFC 97.6%*, fn_8019F930 97.6%, fn_8007D42C 97.5%, fn_80087F6C 97.0%*, fn_801477A8 96.9%, fn_8006782C 96.9%, fn_801CC6BC
+96.6%, fn_800544C4 96.5%*, fn_800949BC 95.5% (and its duplicate fn_80094CEC), fn_802193BC 95.5%*, fn_80221328 95.0%.
+
+Held for the owner (match in isolation, not merged):
+- fn_801E04E8 / fn_801E0AC0 (duplicate pair): need `(u8)p[1]` on the chunk header's low byte, the form the unit's matched
+  fn_801CB12C already uses; no cast-free form matches.
+- fn_800ADA60: three casts that go away if `EvObj.x260` becomes `void *` (a per-kind record pointer) in evobj.h.
+- Conflicting prototypes (a callee declared differently from its definition elsewhere): fn_8020E984 (fn_801BEA70 u8 mode),
+  CampScreenStatus (fn_80171B64's first parameter), fn_80186F58 (fn_801D4F0C floats first), fn_800091E0, fn_80069B58.
+- fn_8004E474: reads its .sdata2 floats through extern labels instead of literals (the literals load in the other order).
+- fn_800D0970: matches once unit_800CE2B4's .data is defined in C, but its neighbour fn_800CE4B4 then needs a `(u32)` cast.
+- fn_800308FC / fn_80030280 (readonly_strings pair, battle.c) and the `void *` hops kept out earlier, as before.
+- Note: fn_8005BF30 sits ahead of fn_800594CC in unit_80055E94 (out of address order) so its .rodata initialisers come first;
+  revisit if that unit is ever linked.

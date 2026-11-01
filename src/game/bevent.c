@@ -45,11 +45,17 @@ typedef struct {
     s16 a;
     s16 b;
 } Ent;
+/* An enemy's data record (BUnit +0x110). */
 typedef struct {
-    u8 pad[0x72];
-    Ent e[4];
+    u8 pad0[0x17];
+    s8 x17;         /* 0x17 icon colour */
+    u8 pad18[0x1e - 0x18];
+    u16 a;          /* 0x1E */
+    u16 b;          /* 0x20 */
+    u8 pad22[0x72 - 0x22];
+    Ent e[4];       /* 0x72 drops */
 } Blk;
-/* Battle unit record lbl_80309DE4[n]; +0x110 is read as a Blk* in fn_8002BA8C and a Stat* in fn_8002BC4C. */
+/* Battle unit record lbl_80309DE4[n]. */
 typedef struct BUnit {
     s16 x0;
     s16 x2;
@@ -61,18 +67,15 @@ typedef struct BUnit {
     s32 cnt;
     u8 pad18[4];
     u32 flags;
-    u8 pad20[0x106 - 0x20];
+    u8 pad20[0x100 - 0x20];
+    s8 x100;        /* 0x100 icon colour (party) */
+    u8 pad101[0x106 - 0x101];
     u8 b106;
     u8 pad107;
     s16 s108;
     u8 pad10a[6];
-    void* p110;
+    Blk* p110;
 } BUnit;
-typedef struct {
-    u8 pad0[0x1e];
-    u16 a;
-    u16 b;
-} Stat;
 typedef struct {
     u8 pad0[0xc];
     s16 c;
@@ -253,18 +256,26 @@ u8 fn_8002A034(Obj* o, s32 flag) {
 
 typedef struct { u8 pad[0x40c]; void* cur; u8 pad2[0xf4]; } T98;
 extern T98 lbl_803098C8;
-extern u32 lbl_80302AB0[12];
+/* Battle actor lbl_80302AB0[n] (unit_80020B50's Ent): portrait texture and index. */
+typedef struct BActor {
+    u8 pad0[0x72];
+    s16 tex_id;           /* 0x72 */
+    NJS_TEXLIST* tex;     /* 0x74 */
+    u8 pad78[0x1f8 - 0x78];
+    s16 x1f8;             /* 0x1F8 */
+} BActor;
+extern BActor* lbl_80302AB0[12];
 typedef struct EvC { u8 pad[0x20]; void* v; } EvC;
 typedef struct EvB { u8 pad[4]; EvC* c; } EvB;
 typedef struct EvA { u8 pad[8]; EvB* b; } EvA;
-extern void* lbl_80346BB0;
+extern NJS_TEXLIST* lbl_80346BB0;
+extern s32 fn_80227810(NJS_TEXLIST* texlist);
 extern char lbl_802AD0DC[];
 extern char lbl_802AD0E8[];
 
 extern void fn_8006EA90(char* a, char* b, void* out);
 extern void fn_8006EA70(char* a, char* b, void* out, void* arg);
 extern void fn_801E1DF8(s32 a, void* b);
-extern void fn_80227810(void* p);
 
 void fn_8002B124(void) {
     EvA* out;
@@ -437,6 +448,149 @@ void fn_8002B970(f32 z, f32* pos, f32* uv, u32 col) {
     fn_80291064(v, 4, tex);
 }
 
+typedef struct {
+    u32 a;
+    u32 b;
+} ColPair;
+extern s16 lbl_80309DCC[12];
+extern const char* lbl_802DBAD8[5];
+extern const ColPair lbl_802AD0AC[6];
+extern s16 fn_80015C30(NJS_TEXLIST* t, const char* str);
+extern void fn_800354DC(NJS_TEXLIST* t, s16 i);
+
+void BattleIconColumnDraw(s32 side)
+{
+    DrawState ds;
+    f32 uv[8];
+    f32 pos[4];
+    f32 w;
+    f32 a;
+    f32 b;
+    s32 i;
+    s32 start;
+    s32 end;
+    s32 v;
+    s32 k;
+
+    DrawStateDefault2D(&ds);
+    if (DrawStatePush(&ds) == 0) {
+        return;
+    }
+    if (side == 0) {
+        start = 0;
+        end = 4;
+    } else {
+        start = 4;
+        end = 12;
+    }
+    pos[0] = 74.0f;
+    w = 0.0f;
+    for (i = start; i < end; i++) {
+        if (lbl_80309DCC[i] == -1) {
+            continue;
+        }
+        pos[0] += w;
+        if (lbl_80302AB0[i]->x1f8 == 1 || lbl_80302AB0[i]->x1f8 == 3) {
+            pos[2] = 598.0f;
+            pos[1] = 32.0f + pos[0];
+            if (i < 4) {
+                w = 40.0f;
+            } else {
+                w = 38.0f;
+            }
+            if (lbl_80309DCC[i] == -3) {
+                continue;
+            }
+            uv[0] = 0.0f;
+            uv[1] = 0.0f;
+            uv[2] = 0.0f;
+            uv[3] = 0.5f;
+            uv[4] = 0.5f;
+            uv[5] = 0.0f;
+            uv[6] = 0.5f;
+            uv[7] = 0.5f;
+            a = 0.5019608f;
+            b = 1.0f;
+            v = fn_80015C30(lbl_80346BB0, lbl_802DBAD8[3]);
+        } else {
+            pos[2] = 606.0f;
+            pos[1] = 24.0f + pos[0];
+            w = 30.0f;
+            if (lbl_80309DCC[i] == -3) {
+                continue;
+            }
+            a = 0.37647063f;
+            uv[0] = 0.5019608f;
+            uv[1] = 0.0f;
+            uv[2] = 0.5019608f;
+            uv[3] = a;
+            uv[4] = 0.87843144f;
+            uv[5] = 0.0f;
+            uv[6] = 0.87843144f;
+            uv[7] = a;
+            b = 0.75294125f;
+            v = fn_80015C30(lbl_80346BB0, lbl_802DBAD8[4]);
+        }
+        pos[3] = 630.0f;
+        if (lbl_80309DCC[i] == -2) {
+            fn_80299040(lbl_80346BB0);
+            fn_800354DC(lbl_80346BB0, fn_80015C30(lbl_80346BB0, lbl_802DBAD8[2]));
+            fn_8002B970(fn_801DBD9C(-1.3f), pos, uv, 0xFEFFFFFF);
+        }
+        fn_80299040(lbl_80346BB0);
+        fn_800354DC(lbl_80346BB0, v);
+        if (side == 0) {
+            k = lbl_80309DE4[i]->x100;
+        } else {
+            k = lbl_80309DE4[i]->p110->x17;
+        }
+        if (k > 5 || k < 0) {
+            k = 5;
+        }
+        if (lbl_80309DCC[i] == -2) {
+            v = lbl_802AD0AC[k].a;
+        } else {
+            v = lbl_802AD0AC[k].b;
+        }
+        uv[0] = 0.0f;
+        uv[1] = 0.0f;
+        uv[2] = 0.0f;
+        uv[3] = b;
+        uv[4] = b;
+        uv[5] = 0.0f;
+        uv[6] = b;
+        uv[7] = b;
+        fn_8002B970(fn_801DBD9C(-1.5f), pos, uv, v);
+        if (lbl_80302AB0[i] != NULL) {
+            if (lbl_80302AB0[i]->tex != NULL) {
+                fn_80299040(lbl_80302AB0[i]->tex);
+                fn_800354DC(lbl_80302AB0[i]->tex, lbl_80302AB0[i]->tex_id);
+            } else {
+                fn_80299040(lbl_80302AB0[0]->tex);
+                fn_800354DC(lbl_80302AB0[0]->tex, lbl_80302AB0[0]->tex_id);
+            }
+        } else {
+            fn_80299040(lbl_80302AB0[0]->tex);
+            fn_800354DC(lbl_80302AB0[0]->tex, lbl_80302AB0[0]->tex_id);
+        }
+        v = -1;
+        if (lbl_80309DCC[i] == -2) {
+            v = 0xFE808080;
+        }
+        uv[0] = 0.0f;
+        uv[1] = 0.0f;
+        uv[2] = 0.0f;
+        uv[3] = a;
+        uv[4] = a;
+        uv[5] = 0.0f;
+        uv[6] = a;
+        uv[7] = a;
+        fn_8002B970(fn_801DBD9C(-2.0f), pos, uv, v);
+    }
+    DrawStatePop(0);
+}
+
+
 void fn_8002BA8C(s16 idx) {
     Blk* base = lbl_80309DE4[idx]->p110;
     s32 i = 0;
@@ -489,7 +643,7 @@ void fn_8002BC4C(s16 idx) {
         u->b6 = 0;
         u->xc = 1;
         if (idx >= 4) {
-            Stat* st = u->p110;
+            Blk* st = u->p110;
             if (((Glob*)lbl_80347390)->c < 0x7fff) {
                 ((Glob*)lbl_80347390)->c++;
             }

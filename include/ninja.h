@@ -86,7 +86,7 @@ void njColorBlendingMode(s32 target, s32 mode);
 void njMemCopy(void* dst, const void* src, s32 count); /* count in 32-bit words */
 void njUnitMatrix(NJS_MATRIX m);
 void njRotateXYZ(NJS_MATRIX m, Angle x, Angle y, Angle z);
-void njCalcPoint(NJS_MATRIX m, NJS_POINT3* p, NJS_POINT3* out);
+void njCalcPoint(NJS_MATRIX m, const NJS_POINT3* p, NJS_POINT3* out);
 
 extern u32 _nj_control_3d_flag_;
 extern u32 _nj_constant_attr_and_;

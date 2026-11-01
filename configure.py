@@ -362,6 +362,9 @@ config.libs = [
             # Effect and particle tasks (a new 0.0f at 0x80348638). The end is a guess. 60 of 62
             # match; fn_80041E64 and fn_800470F0 are near misses.
             Object(NonMatching, "game/effect.c"),
+            # Split off effect.c at a new .sdata2 block (0x80348700: a second 182.04445f, 1.0f and
+            # 0.0f); its fn_8004E474 calls fn_8001D944 with an s8 id where effect.c passes an int.
+            Object(NonMatching, "game/unit_8004DE48.c"),
             # 40 of 44 match; UiDrawNumber, UiLayoutDrawPart, UiLayoutDraw and UiSpriteDraw are
             # register allocation / scheduling away.
             Object(NonMatching, "game/uiobj.c"),
@@ -395,7 +398,20 @@ config.libs = [
             Object(NonMatching, "game/unit_8008B4A0.c"),
             Object(NonMatching, "game/unit_8009623C.c"),
             Object(NonMatching, "game/unit_800972AC.c"),
+            # Starts at the 0x80348D70 .sdata2 block (0.0f first; its own int-to-float double) and .rodata
+            # 0x802B0E30; its short strings sit in .sdata2, so it was built with read-only strings.
+            Object(NonMatching, "game/unit_8009D274.c", extra_cflags=["-str reuse,readonly"]),
+            # Starts at the 0x80348DD0 .sdata2 block (a second 182.04445) and .rodata 0x802B0F88.
+            Object(NonMatching, "game/unit_800A3ED4.c"),
+            # Split at a new .sdata2 block (0x80348E70: a second 1.0f and 0.0f); its .bss blocks
+            # 0x80303618/34/50 are addressed from one pooled base, so they are defined here.
+            Object(NonMatching, "game/unit_800AE300.c"),
             Object(NonMatching, "game/unit_800B2DA0.c"),
+            # Split at the 0x803492F8 .sdata2 block (a second int-to-float double and 0.0f) and the
+            # .data block 0x802E1118 (pooled from one base); ends at the 0x803493C8 block (starts with 0.0f).
+            Object(NonMatching, "game/unit_800CE2B4.c"),
+            # Starts at the 0x803493C8 .sdata2 block and the .data block 0x802E1450.
+            Object(NonMatching, "game/unit_800D2048.c"),
             Object(NonMatching, "game/unit_800D81E8.c"),
             Object(NonMatching, "game/unit_8010E164.c"),
             Object(NonMatching, "game/unit_8012ADB4.c"),
@@ -410,6 +426,11 @@ config.libs = [
             Object(NonMatching, "game/unit_800506B0.c"),
             Object(NonMatching, "game/unit_801BEB10.c"),
             Object(NonMatching, "game/unit_80005B50.c"),
+            # Starts at the 0x80348080 .sdata2 block, .rodata 0x802ACC50 (its strings, addressed from one
+            # pooled base) and .data 0x802DAE50; built with read-only strings like the original.
+            Object(NonMatching, "game/unit_80009800.c", extra_cflags=["-str reuse,readonly"]),
+            # Starts at the 0x803480E0 .sdata2 block (its own 0.0f), .rodata 0x802ACCB8 and .data 0x802DAEB0.
+            Object(NonMatching, "game/unit_8000A38C.c"),
             Object(NonMatching, "game/unit_80020B50.c"),
             Object(NonMatching, "game/unit_800553B4.c"),
             Object(NonMatching, "game/unit_801C09A4.c"),
@@ -423,6 +444,12 @@ config.libs = [
             Object(NonMatching, "game/unit_801E1A74.c"),
             Object(NonMatching, "game/unit_801F224C.c"),
             Object(NonMatching, "game/unit_801F5334.c"),
+            # Sound and stream control split off at its own .sdata2 (0x8034C398, the "_L.dsp" strings)
+            # and .bss (0x803148C0 up); fn_8021730C takes an s16 time where fn_801FA290 passes an s32.
+            # Script commands from 0x8020EEE8: a new .sdata2 block at 0x8034C2B8 (second 182.04445f, 100.0f,
+            # 0.0f) and .rodata after unit_801F5334's 0x802D64B8; they pass fn_80210860 a u16 id.
+            Object(NonMatching, "game/unit_8020EEE8.c"),
+            Object(NonMatching, "game/unit_802159E0.c"),
             Object(NonMatching, "game/unit_80219378.c"),
             Object(NonMatching, "game/unit_8022D34C.c"),
         ],

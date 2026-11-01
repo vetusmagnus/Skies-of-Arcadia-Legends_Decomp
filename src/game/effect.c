@@ -1003,14 +1003,6 @@ static inline void AllocMtx(void* a, u32 b, void** out)
     fn_80076478(*out, a, b, 0);
 }
 
-static inline void FreeMtx2(void* a, u32 b, void** out)
-{
-    if (*out != NULL) {
-        fn_8007638C(*out, a, b);
-        fn_801E17E0(*out);
-    }
-}
-
 void fn_80041664(Node* node)
 {
     PWork_80041664* w = node->work;
@@ -4077,7 +4069,6 @@ typedef struct I80048E58 {
     u8 pad48[0xaa - 0x48];
     s16 xaa;            /* 0xaa */
 } I80048E58;
-typedef struct { u8 pad[0x24]; void* work; } Node_80048E58;
 typedef struct { u8 pad[0x24]; W80048E58_80048E58* work; } Node2_80048E58;
 typedef struct NodeSrc { u8 pad[0x24]; struct { u8 pad[0x4c]; I80048E58* e; }* work; } NodeSrc;
 typedef struct {
@@ -4242,10 +4233,6 @@ typedef struct {
     s16 step;           /* 0x42 */
     void* buf;          /* 0x44 */
 } Draw;
-typedef struct {
-    u8 pad[0x1C4];
-    s32 nodes;          /* 0x1C4 */
-} GameState_80049464;
 typedef Col4 Col4_800498F0;
 
 typedef struct {
@@ -4301,12 +4288,6 @@ typedef struct {
     Data_800498F0* data;
 } Node_800498F0;
 typedef struct {
-    u8 pad0[0x6C];
-    u32 input;          /* 0x6C */
-    u8 pad70[0x1C4 - 0x70];
-    s32 count;          /* 0x1C4 */
-} GameState_800498F0;
-typedef struct {
     u8 pad[0x68];
     f32 x68;            /* 0x68 */
     u8 pad6c[0x158 - 0x6C];
@@ -4359,10 +4340,6 @@ typedef struct {
     u8 pad1a[0x24 - 0x1A];
     struct Data_80049DC0* work;
 } Node_80049DC0;
-typedef struct {
-    u8 pad[0x1C4];
-    s32 count;
-} GameState_80049DC0;
 extern int fn_80056FC4(void*, s16);
 typedef struct {
     u16 timer;          /* 0x00 */
@@ -4385,12 +4362,6 @@ typedef struct {
     u8 pad1a[0x24 - 0x1A];
     Data_8004A028* data;
 } Node_8004A028;
-typedef struct {
-    u8 pad[0x6C];
-    u32 input;          /* 0x6C */
-    u8 pad70[0x1C4 - 0x70];
-    s32 count;          /* 0x1C4 */
-} GameState_8004A028;
 extern void fn_8007E3A8(u16);
 extern void fn_8007E2D8(u16);
 extern void fn_8007E344(u16);
@@ -4528,7 +4499,6 @@ typedef struct {
 } Child_8004A40C;
 typedef struct { u8 pad[0x10]; void* x10; u8 pad14[0x4C - 0x14]; Child_8004A40C* sub; } ChildNode_8004A40C;
 typedef struct { u8 pad[0x24]; ChildNode_8004A40C* work; } CNode_8004A40C;
-typedef struct { u8 pad[0x1C4]; s32 count; } ObjStats_8004A40C;
 extern Vec_8004A40C lbl_802AD360;
 extern void fn_80060DFC(Vec_8004A40C*, Vec_8004A40C*, Vec_8004A40C*, f32, f32, f32);
 typedef struct { u8 pad[0xF0]; u32 flags; u8 padF4[0x164 - 0xF4]; f32 gauge; } Body_8004AD38;
@@ -4552,7 +4522,6 @@ typedef struct {
     u8 pad1a[0x24 - 0x1A];
     Work_8004AD38* work;
 } Node_8004AD38;
-typedef struct { u8 pad[0x1C4]; s32 count; } ObjStats_8004AD38;
 extern int fn_8000F208(void*);
 typedef Buf Buf_8004AFD8;
 typedef struct { Hdr hdr; Vec_8004A40C org; f32 alpha; u8 pad[0xC]; } Blk_8004AFD8;
@@ -4597,12 +4566,6 @@ typedef struct {
     Work_8004AFD8* work;
 } Node_8004AFD8;
 typedef struct {
-    u8 pad[0xC];
-    void* parent;       /* 0x0C */
-    void* copy;         /* 0x10 */
-    s32 id;             /* 0x14 */
-} _unused;
-typedef struct {
     u8 pad0[2];
     s16 count;          /* 0x02 */
     s16 x4;             /* 0x04 */
@@ -4614,16 +4577,8 @@ typedef struct {
 } Child_8004AFD8;
 typedef struct { u8 pad[0x10]; void* x10; u8 pad14[0x4C - 0x14]; Child_8004AFD8* sub; } ChildNode_8004AFD8;
 typedef struct { u8 pad[0x24]; ChildNode_8004AFD8* work; } CNode_8004AFD8;
-typedef struct { u8 pad[0x1C4]; s32 count; } ObjStats_8004AFD8;
 extern int fn_8000FB4C(void*, void*, s16);
 extern void fn_80076344(void*);
-typedef struct {
-    u8 pad[0x1C4];
-    s32 count;
-    s16 x1c8;
-    s16 x1ca;
-    u32 flags;
-} ObjStats_8004B458;
 typedef struct {
     u8 pad[0x18];
     u8 flags;
@@ -4673,13 +4628,6 @@ typedef struct {
     s32 x50;
     s32 x54;
 } Work_8004B458;
-typedef struct {
-    u8 pad[0x1C4];
-    s32 count;
-    s16 x1c8;
-    s16 x1ca;
-    u32 flags;          /* 0x1CC */
-} ObjStats_8004B7C4;
 typedef struct {
     u8 pad[0x18];
     u8 flags;
@@ -4769,10 +4717,6 @@ typedef struct {
     Work_8004C070* work;
 } Node_8004C070;
 typedef struct {
-    u8 pad[0x1C4];
-    s32 count;
-} ObjStats_8004C070;
-typedef struct {
     s16 timer;              /* 0x00 */
     s16 count;              /* 0x02 */
     f32 dir[3];             /* 0x04 */
@@ -4807,10 +4751,6 @@ typedef struct {
     u8 pad1a[0x24 - 0x1A];
     Work_8004CF14* work;
 } Node_8004CF14;
-typedef struct {
-    u8 pad[0x1C4];
-    s32 count;
-} ObjStats_8004CF14;
 extern void fn_800472DC(void*, s16, s32, void*);
 typedef struct { u8 pad[0x24]; void* data; } TaskRef_8004D378;
 typedef struct {
@@ -4861,19 +4801,7 @@ typedef struct {
     u8 pad1a[0x24 - 0x1A];
     Work_8004D378* work;
 } Node_8004D378;
-typedef struct {
-    u8 pad[0x1C4];
-    s32 count;
-} ObjStats_8004D378;
 extern void fn_800339B0(void* out, s16 idx);
-typedef struct {
-    u8 pad0[0x6C];
-    u32 flags;                  /* 0x06C */
-    u8 pad70[0x188 - 0x70];
-    u32 col;                    /* 0x188 */
-    u8 pad18c[0x1C4 - 0x18C];
-    s32 count;                  /* 0x1C4 */
-} GState;
 typedef struct {
     u8 pad0[6];
     s16 flags;                  /* 0x06 */
@@ -4924,74 +4852,6 @@ typedef struct { u8 pad0[8]; s32 src; } Cmd_8004DB90;
 typedef struct { TkN_8004DB90* t; Cmd_8004DB90* cmd; } Own_8004DB90;
 typedef struct { u8 pad0[8]; V3** v; u8 padc[0x4C - 0xC]; Own_8004DB90* own; s32 x50; s32 x54; } Wk_8004DB90;
 typedef struct { u8 pad0[0x18]; u8 flags; u8 state; u8 pad1a[0xA]; Wk_8004DB90* work; } Node_8004DB90;
-s32 x1c4;
-typedef struct { u8 a, b, c, d; } Col4_8004DE48;
-typedef ObjSrc ObjSrc_8004DE48;
-typedef struct {
-    s8 id;
-    u8 pad1[3];
-    s8 x4;
-    u8 pad5[0xEC - 5];
-    u32 xec;                /* 0x0EC */
-    u8 padf0[0x1EC - 0xF0];
-    u32 x1ec;               /* 0x1EC */
-} Unit_8004DE48;
-typedef struct { u8 pad0[0x1C]; Vec_8004A40C pos; u8 pad28[0x4C - 0x28]; Unit_8004DE48* w; } TWk_8004DE48;
-typedef struct { u8 pad[0x24]; TWk_8004DE48* work; } Tgt_8004DE48;
-typedef struct {
-    u8 pad0[0x10];
-    u32 flags;              /* 0x10 */
-    s16 start;              /* 0x14 */
-    s16 id;                 /* 0x16 */
-    u8 pad18[4];
-    Vec_8004A40C pos;                /* 0x1C */
-    f32 rot[3];             /* 0x28 */
-    Vec_8004A40C vel;                /* 0x34 */
-    f32 rotVel[3];          /* 0x40 */
-    s16 rotStart;           /* 0x4C */
-    s16 rotEnd;             /* 0x4E */
-    s16 end;                /* 0x50 */
-    s16 fx;                 /* 0x52 */
-    s16 interval;           /* 0x54 */
-} Cmd_8004DE48;
-typedef struct {
-    s16 timer;              /* 0x00 */
-    u8 pad2[2];
-    Tgt_8004DE48* tgt;               /* 0x04 */
-    Motion* mtx;            /* 0x08 */
-    Motion* src;            /* 0x0C */
-    f32 frame;              /* 0x10 */
-    s16 x14;                /* 0x14 */
-    s16 x16;                /* 0x16 */
-    s16 count;              /* 0x18 */
-    u8 pad1a[2];
-    Cmd_8004DE48* c;                 /* 0x1C */
-} Sub_8004DE48;
-typedef struct {
-    u8 pad0[8];
-    void* texlist;          /* 0x08 */
-    Motion* motion;         /* 0x0C */
-    ObjSrc_8004DE48* src;            /* 0x10 */
-    u8 pad14[2];
-    s16 x16;                /* 0x16 */
-    u8 pad18[4];
-    Vec_8004A40C pos;                /* 0x1C */
-    s32 ang[3];             /* 0x28 */
-    Vec_8004A40C scl;                /* 0x34 */
-    u8 pad40[4];
-    u8 kind;                /* 0x44 */
-    u8 pad45[7];
-    Sub_8004DE48* sub;               /* 0x4C */
-} Wk_8004DE48;
-typedef struct {
-    u8 pad[0x18];
-    u8 flags;
-    u8 state;
-    u8 pad1a[0x24 - 0x1A];
-    Wk_8004DE48* work;
-} Node_8004DE48;
-extern f32 fn_80071E9C(void*, Vec_8004A40C*);
-extern void fn_80032FC4(Vec_8004A40C*, Vec_8004A40C*, void*, void*);
 
 void fn_80047214(u32 flags);
 void fn_8004754C(Line* l, f32 a1, f32 a2);
@@ -5024,8 +4884,6 @@ void fn_8004CF14(Node_8004CF14* node);
 void fn_8004D378(Node_8004D378* node);
 void fn_8004D828(Node_8004D828* node);
 void fn_8004DB90(Node_8004DB90* node);
-void fn_8004DE48(Node_8004DE48* node);
-void fn_8004F84C(NJS_VECTOR* v);
 void fn_80047214(u32 flags) {
     u32 hi = flags & 0x80000000;
     u32 mid;
@@ -7307,206 +7165,6 @@ void fn_8004DD54(s16 a, s16 b, Tk_8004DD54* task, s8 flag, int d) {
                 fn_80020B8C(task, a, b, d);
                 u->xec &= ~0x80;
             }
-        }
-    }
-}
-
-void fn_8004DE48(Node_8004DE48* node) {
-    Wk_8004DE48* w = node->work;
-    Sub_8004DE48* s = w->sub;
-    Unit_8004DE48* u = s->tgt->work->w;
-    u8 kind;
-    int r;
-    f32 d;
-    Col4_8004DE48 ca;
-    Col4_8004DE48 cb;
-    Vec_8004A40C b;
-    Vec_8004A40C a;
-    DrawState st;
-
-    switch (node->state) {
-    case 0:
-        node->state = 1;
-    case 1:
-        fn_80040150(2, (TaskRef*)s->tgt, s->c->id, (void**)&s->src);
-        node->state = 2;
-        break;
-    case 2:
-        if (s->timer < s->c->start) {
-            break;
-        }
-        node->state = 3;
-        if (s->src != NULL) {
-            s->mtx = fn_801E1C7C(0x40);
-            if (s->mtx != NULL) {
-                memcpy(s->mtx, s->src, 0x40);
-            }
-        }
-        w->ang[0] = 182.04445f * s->c->rot[0];
-        w->ang[1] = 182.04445f * s->c->rot[1];
-        w->ang[2] = 182.04445f * s->c->rot[2];
-        w->scl.x = 1.0f;
-        w->scl.y = 1.0f;
-        w->scl.z = 1.0f;
-        fn_80071CF0(&s->c->pos, &w->pos);
-        fn_8006CEEC(w->src->x8, &w->motion, 0, w->x16);
-    case 3: case 4: case 5: case 6:
-        if (s->timer == s->c->end) {
-            u->xec |= 0x20000000;
-        }
-        switch (s->c->fx) {
-        case 1:
-            u->x1ec |= 0x80000000;
-            break;
-        case 2:
-            u->x1ec |= 0x40000000;
-            break;
-        }
-        if (w->motion != NULL) {
-            s->frame += 1.0f;
-            if (s->frame >= (f32)w->motion->nbFrame - 1.0f) {
-                s->frame = 0.0f;
-            }
-        }
-        switch (node->state) {
-        case 3:
-            w->pos.x += s->c->vel.x;
-            w->pos.y += s->c->vel.y;
-            w->pos.z += s->c->vel.z;
-            break;
-        case 4:
-            w->pos.x -= s->c->vel.x;
-            w->pos.y -= s->c->vel.y;
-            w->pos.z -= s->c->vel.z;
-            s->x14--;
-            if (s->x14 <= 1) {
-                u->xec &= ~0x20000000;
-                node->state = 6;
-            }
-            break;
-        case 5:
-            if (s->c->rotStart == s->c->rotEnd || (s->c->rotEnd > s->timer && s->c->rotStart <= s->timer)) {
-                w->ang[0] += (s32)(182.04445f * s->c->rotVel[0]);
-                w->ang[1] += (s32)(182.04445f * s->c->rotVel[1]);
-                w->ang[2] += (s32)(182.04445f * s->c->rotVel[2]);
-            }
-            s->x16--;
-            if (s->x16 <= 0) {
-                if (s->timer >= s->c->end) {
-                    node->state = 4;
-                } else {
-                    s->x16 = 0;
-                }
-            }
-            break;
-        case 6:
-            node->state = 7;
-            switch (s->c->fx) {
-            case 1:
-                u->x1ec &= 0x7FFFFFFF;
-                break;
-            case 2:
-                u->x1ec &= ~0x40000000;
-                break;
-            }
-            break;
-        }
-        DrawStateDefault2D(&st);
-        kind = w->kind;
-        fn_80040044(&st, 1.0f, s->c->flags, &w->kind);
-        if (DrawStatePush(&st) != 0) {
-            fn_80299040(w->texlist);
-            fn_80034E6C(w, -1, s->mtx, w->motion, s->frame);
-            DrawStatePop(NULL);
-        }
-        w->kind = kind;
-        if (node->state == 3) {
-            fn_8001DF44(s->tgt, &a);
-            fn_80061518(&w->pos, &b, s->mtx);
-            r = fn_80018398(&b, 0);
-            d = fn_80071E9C(&s->tgt->work->pos, &a);
-            b.y = 0.0f;
-            if (d < fn_80071E9C(&s->tgt->work->pos, &b) || (s8)r == u->x4) {
-                s->x16 = 30;
-                node->state = 5;
-            }
-            s->x14++;
-        }
-        fn_80061518(&w->pos, &b, s->mtx);
-        fn_80061518(&s->c->pos, &a, s->src);
-        ca.a = 0xFF;
-        ca.b = 0;
-        ca.c = 0;
-        ca.d = 0;
-        cb.a = 0;
-        cb.b = 0;
-        cb.c = 0;
-        cb.d = 0;
-        fn_80032FC4(&b, &a, &ca, &cb);
-        if (s->c->interval != 0 && s->count % s->c->interval == 0) {
-            fn_80049130((Node_80049130*)node);
-        }
-        s->count++;
-        break;
-    case 7:
-        if (s->mtx != NULL) {
-            fn_801E17E0(s->mtx);
-        }
-        fn_800400D8(2, (TaskRef*)s->tgt, s->c->id, (void**)&s->src);
-        fn_801E17E0(s);
-        node->flags |= 0x40;
-        lbl_8030A10C.count--;
-        return;
-    }
-    s->timer++;
-}
-
-void fn_8004F84C(NJS_VECTOR* v) {
-    v->x = -1.16f;
-    v->y = -0.23f;
-    v->z = -0.71f;
-}
-
-void fn_8004F664(f32 *base, f32 *out1, f32 *out2, f32 *src, s16 div, s8 mode) {
-    f32 *p;
-    s8 i;
-
-    if (base != 0) {
-        switch (mode) {
-        case 0:
-        default:
-            p = base + 15;
-            break;
-        case 1:
-            p = base + 12;
-            break;
-        case 2:
-            p = base + 3;
-            break;
-        case 4:
-            p = out2;
-            break;
-        }
-    }
-    if (base != 0) {
-        for (i = 0; i < 3; i++) {
-            out1[i] = (src[i] - p[i]) / (f32)div;
-            if (mode < 3) {
-                out2[i] = p[i];
-            } else {
-                out2[i] += out1[i];
-            }
-        }
-    } else {
-        for (i = 0; i < 3; i++) {
-            *out1 = *src++ / (f32)div;
-            if (mode < 3) {
-                *out2 = *out1;
-            } else {
-                *out2 += *out1;
-            }
-            out1++;
-            out2++;
         }
     }
 }
