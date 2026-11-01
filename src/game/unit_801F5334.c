@@ -195,10 +195,15 @@ typedef struct Actor {
     u8 pad1dc[0x26c - 0x1dc];
     u8 b26c;
 } Actor;
+/* lbl_80311970: the free camera. */
 typedef struct {
-    u8 pad00[0x10];
-    f32 f[3];
-    s32 w[3];
+    u8 pad00[8];
+    f32* f8;            /* 0x08: eye point */
+    u8 pad0c[4];
+    f32 f[3];           /* 0x10 */
+    s32 w[3];           /* 0x1c */
+    u8 pad28[0x50 - 0x28];
+    f32 x50;            /* 0x50: field of view */
 } Cam8020C;
 typedef struct {
     u8 pad00[0x7c];
@@ -1252,7 +1257,6 @@ s32 fn_80201458(u32 flags, Scpt *st) {
 }
 
 float fn_801F6120(float **p);
-#define RDI(p) (*(p) == 3.4028235e38f ? ((p)++, 0x7FFFFFFF) : (s32)fn_801F6120(&(p)))
 
 void fn_8021331C(s32 n, f32 **in, f32 **out);
 void fn_80213718(f32 *pt, s32 *ang, f32 *out, f32 d);
@@ -1424,6 +1428,121 @@ s32 fn_802023BC(u16 f, Scpt *c)
         FREEALL(s, k)
     }
     return 1;
+}
+
+float fn_801F6120(float **p);
+
+void fn_8021331C(s32 n, f32 **in, f32 **out);
+void fn_80213718(f32 *pt, s32 *ang, f32 *out, f32 d);
+f32 fn_80212A78(s32 kind, f32 t, f32 dur);
+extern f32 njTan(s32 a);
+
+s32 fn_80202DEC(u32 flags, Scpt *c)
+{
+    Script_801F773C *s;
+    ScptCur cur;
+    f32 out[3];
+    s32 ang[3];
+    s32 i;
+    s32 m;
+
+    if (flags & 1) {
+        cur = c->cur;
+        fn_801F7500();
+        cur.f++;
+        s = fn_801E1A2C(1, 0x20);
+        lbl_8030CEA0.x1914 = s;
+        if (s == NULL) {
+            fn_801DBE1C("scptMVCALP: malloc failed");
+        }
+        c->work.p = s;
+        m = *cur.u++ + 1;
+        s->n = m + 2;
+        s->idx = 0;
+        s->xc = fn_801E1A2C(1, s->n * 4);
+        s->x10 = fn_801E1A2C(1, s->n * 8);
+        s->x14 = fn_801E1A2C(1, s->n * 4);
+        s->x18 = fn_801E1A2C(1, s->n * 8);
+        s->times = fn_801E1A2C(1, s->n * 4);
+        s->angles = fn_801E1A2C(1, s->n * 4);
+        s->xc[0] = fn_801E1A2C(1, 0xc);
+        s->x14[0] = fn_801E1A2C(1, 0xc);
+        s->xc[0][0] = lbl_80311970.f[0];
+        s->xc[0][1] = lbl_80311970.f[1];
+        s->xc[0][2] = lbl_80311970.f[2];
+        fn_80213718(s->xc[0], &lbl_8030CEA0.x1908, s->x14[0],
+                    320.0f / njTan(182.04445f * (0.5f * lbl_80311970.x50)));
+        s->angles[0] = 0.005493164f * lbl_8030CEA0.x1910;
+        for (i = 0; i < s->n - 3; i++) {
+            s->xc[i + 1] = fn_801E1A2C(1, 0xc);
+            s->x14[i + 1] = fn_801E1A2C(1, 0xc);
+            s->x10[2 * i] = fn_801E1A2C(1, 0xc);
+            s->x10[2 * i + 1] = fn_801E1A2C(1, 0xc);
+            s->x18[2 * i] = fn_801E1A2C(1, 0xc);
+            s->x18[2 * i + 1] = fn_801E1A2C(1, 0xc);
+            s->xc[i + 1][0] = fn_801F6120(&cur.f);
+            if (0.0f == s->xc[i + 1][0]) {
+                s->xc[i + 1][0] = 0.1f;
+            }
+            s->xc[i + 1][1] = fn_801F6120(&cur.f);
+            if (0.0f == s->xc[i + 1][1]) {
+                s->xc[i + 1][1] = 0.1f;
+            }
+            s->xc[i + 1][2] = fn_801F6120(&cur.f);
+            if (0.0f == s->xc[i + 1][2]) {
+                s->xc[i + 1][2] = 0.1f;
+            }
+            ang[0] = 182.04445f * fn_801F6120(&cur.f);
+            ang[1] = 182.04445f * fn_801F6120(&cur.f);
+            s->angles[i + 1] = fn_801F6120(&cur.f);
+            ang[2] = 182.04445f * s->angles[i + 1];
+            s->times[i] = RDI(cur.f);
+            if (s->times[i] <= 0) {
+                s->times[i] = 1;
+            }
+            fn_80213718(s->xc[i + 1], ang, out, 100.0f);
+            s->x14[i + 1][0] = out[0];
+            if (0.0f == s->x14[i + 1][0]) {
+                s->x14[i + 1][0] = 0.1f;
+            }
+            s->x14[i + 1][1] = out[1];
+            if (0.0f == s->x14[i + 1][1]) {
+                s->x14[i + 1][1] = 0.1f;
+            }
+            s->x14[i + 1][2] = out[2];
+            if (0.0f == s->x14[i + 1][2]) {
+                s->x14[i + 1][2] = 0.1f;
+            }
+        }
+        c->cur = cur;
+        s->x10[2 * i] = fn_801E1A2C(1, 0xc);
+        s->x10[2 * i + 1] = fn_801E1A2C(1, 0xc);
+        s->x18[2 * i] = fn_801E1A2C(1, 0xc);
+        s->x18[2 * i + 1] = fn_801E1A2C(1, 0xc);
+        for (i = 0; i < 2; i++) {
+            s32 k;
+            f32* p = fn_801E1A2C(1, 0xc);
+            k = i + m;
+            s->xc[k] = p;
+            s->x14[k] = fn_801E1A2C(1, 0xc);
+            s->x10[2 * k] = fn_801E1A2C(1, 0xc);
+            s->x10[2 * k + 1] = fn_801E1A2C(1, 0xc);
+            s->x18[2 * k] = fn_801E1A2C(1, 0xc);
+            s->x18[2 * k + 1] = fn_801E1A2C(1, 0xc);
+            s->xc[k][0] = s->xc[i + 1][0];
+            s->xc[k][1] = s->xc[i + 1][1];
+            s->xc[k][2] = s->xc[i + 1][2];
+            s->x14[k][0] = s->x14[i + 1][0];
+            s->x14[k][1] = s->x14[i + 1][1];
+            s->x14[k][2] = s->x14[i + 1][2];
+            s->times[k - 1] = s->times[i];
+        }
+        fn_8021331C(s->n, s->xc, s->x10);
+        fn_8021331C(s->n, s->x14, s->x18);
+        lbl_8030CEA0.x15cc = 1;
+        lbl_8030CEA0.x1918 = 0;
+    }
+    return 0;
 }
 
 s32 fn_802051D0(u16 flags, Scpt *s)
