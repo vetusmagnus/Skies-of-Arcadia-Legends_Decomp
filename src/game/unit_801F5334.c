@@ -967,6 +967,38 @@ s32 fn_801F9614(u32 a, Scpt *st) {
     return 0;
 }
 
+s32 fn_801FD44C(u32 flags, Scpt *c) {
+    u16 f = flags;
+    if (flags & 1) {
+        ScptCur cur;
+        s32 i;
+        s32 n;
+        s32 t;
+        Obj10A *a;
+        cur.f = c->cur.f;
+        cur.f++;
+        n = *cur.i++;
+        for (i = 0; i < n; i++) {
+            u16 id;
+            if (*cur.f == 3.4028235e38f) {
+                cur.f++;
+                t = 0x7FFFFFFF;
+            } else {
+                t = fn_801F6120(&cur.f);
+            }
+            id = t;
+            a = fn_8010A164(id);
+            if (a != 0) {
+                a->x19 = 0xff;
+                a->fn(a);
+            }
+        }
+        c->cur.f = cur.f;
+        return 0;
+    }
+    return !(f & 8);
+}
+
 s32 fn_801FD54C(u32 a, Scpt *st) {
     if (a & 1) {
         u8 *c = st->cur.b;
@@ -7828,35 +7860,30 @@ s32 fn_802074B0(u32 flags, Scpt_802074B0* s)
 }
 #endif
 
-#ifdef NONMATCHING
-s32 fn_80207554(u32 flags, Cmd *c) {
-    float *p;
+s32 fn_80207554(u32 flags, Scpt *c) {
+    ScptCur cur;
     s32 i;
     s32 n;
     s32 v;
     if (flags & 1) {
-        p = c->cur;
-        p++;
-        {
-            /* the count is an integer word in the float stream */
-            void* q = p++;
-            s32* w = q;
-            n = *w;
-        }
+        cur.f = c->cur.f;
+        cur.f++;
+        n = *cur.i++;
         for (i = 0; i < n; i++) {
-            if (*p == 3.4028235e38f) {
-                p++;
+            u16 id;
+            if (*cur.f == 3.4028235e38f) {
+                cur.f++;
                 v = 0x7FFFFFFF;
             } else {
-                v = fn_801F6120(&p);
+                v = fn_801F6120(&cur.f);
             }
-            fn_80210EA4(v, 5);
+            id = v;
+            fn_80210EA4(id, 5);
         }
-        c->cur = p;
+        c->cur.f = cur.f;
     }
     return 0;
 }
-#endif
 
 #ifdef NONMATCHING
 /* A string argument: its byte length (padded to words), then the characters. */

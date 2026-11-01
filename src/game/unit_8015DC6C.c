@@ -419,7 +419,9 @@ typedef struct Mover {
 typedef struct Sys_80310A1C {
     u8 pad0[6];
     s8 f6;      /* 0x06 */
-    u8 pad7[0x120 - 7];
+    u8 pad7[0x30 - 7];
+    s8 x30;     /* 0x30 */
+    u8 pad31[0x120 - 0x31];
 } Sys_80310A1C;
 extern Sys_80310A1C lbl_80310A1C;
 extern void fn_8016B638(s8 k);
@@ -3962,6 +3964,57 @@ void fn_8016D114(u8 v) {
         return;
     }
     p->sub->x2 = v;
+}
+
+extern char lbl_802B4378[];
+extern char lbl_802B4390[];
+extern void fn_8016D12C(u32 a, s32 b, u32* bits);
+
+static inline s32 FlagTest_8016D904(u32 b) {
+    return (lbl_80310B3C[b >> 5] & (1 << (b & 31))) != 0;
+}
+
+static inline void FlagClear_8016D904(u32 b) {
+    lbl_80310B3C[b >> 5] &= ~(1 << (b & 31));
+}
+
+void fn_8016D904(u32 n) {
+    u32 bits[6];
+    s32 i;
+    s32 cur = lbl_80310A1C.x30;
+    if (cur == 0 && n == 0) {
+        i = 0;
+        do {
+            FlagClear_8016D904(0x520 + i);
+            i++;
+        } while (i < 168);
+        return;
+    }
+    if ((u32)cur >= n) {
+        fn_801DBE1C(lbl_802B4378, cur, n);
+        return;
+    }
+    if (n >= 3) {
+        fn_801DBE1C(lbl_802B4390, n);
+        return;
+    }
+    i = 0;
+    do {
+        s32 on = FlagTest_8016D904(0x520 + i);
+        if (on != 0) {
+            bits[i / 32] |= 1 << (i % 32);
+        } else {
+            bits[i / 32] &= ~(1 << (i % 32));
+        }
+        i++;
+    } while (i < 168);
+    i = 0;
+    do {
+        FlagClear_8016D904(0x520 + i);
+        i++;
+    } while (i < 168);
+    fn_8016D12C(n, cur, bits);
+    lbl_80310A1C.x30 = n;
 }
 
 s32 fn_8016E1D8(void *p) {
