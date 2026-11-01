@@ -155,7 +155,7 @@ typedef struct Party {
     s16 x54;
     s16 x56;
     u32 flags;      /* 0x58 */
-    u8 pad5c[0x60 - 0x5c];
+    u32 x5c;        /* 0x5C */
     Member mem[5];  /* 0x60 */
     u8 pad10a[2];
 } Party;
