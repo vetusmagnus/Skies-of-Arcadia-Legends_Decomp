@@ -553,6 +553,20 @@ static inline void DrawBufFlushRoom(void)
     }
 }
 
+void fn_801D0D70(s32 a, f32 f)
+{
+    if (DRAWBUF_PENDING()) {
+        fn_801D0BC0(a, 10000.0f + f);
+    }
+}
+
+void fn_801D0DCC(void) {
+    if (DRAWBUF_PENDING()) {
+        DrawBufFlushPending(3);
+        DrawStateApplyFog();
+    }
+}
+
 /* Clip distance for layer k: far (1410055424) or near (100) in modes 1 and 2, otherwise the
  * squared view-space distance of the object's position (+8), capped at the far value. */
 static inline void SetLayerClip(s32 k, s32 obj)
