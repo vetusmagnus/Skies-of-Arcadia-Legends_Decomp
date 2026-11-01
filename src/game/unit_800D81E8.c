@@ -51,19 +51,25 @@ typedef struct {
     u8 pad[0x110];
     s32 tgt[3];
 } TgtObj;
+typedef struct { u32 a0; u32 a4; } TblA;
+typedef struct { u32 b0; s32 id; } TblB;
+/* One entry of a map's object table (0x68). */
 typedef struct {
-    u8 pad0[4];
-    u32 id;
-    u8 rest[0x60];
+    s32 f0;
+    u32 id;               /* 0x04 */
+    u8 pad8[8];
+    TblB* b;              /* 0x10 */
+    u8 pad14[4];
+    TblA* a;              /* 0x18 */
+    u8 pad1c[0x24 - 0x1c];
+    char name[0x14];      /* 0x24 */
+    u32 f38;              /* 0x38 */
+    u8 pad3c[0x68 - 0x3c];
 } TblEntry;
 typedef struct {
     s32 count;
     TblEntry* entries;
 } Tbl_UNIT0000;
-typedef struct {
-    u8 pad[4];
-    s32 idx;
-} IdxObj;
 typedef struct {
     u8 pad0[0xE8];
     void* motion;
@@ -94,7 +100,7 @@ extern s32 lbl_8034757C;
 extern void fn_801CC434(const void* p, s32 zero, void* out);
 extern void fn_80109A94(const char *name);
 extern void fn_800D2CA8(s32 x);
-extern void fn_80100E68(void* p, s32 zero, s32 a, s32 b);
+extern void* fn_80100E68(void* p, void* parent, s32 i, Tbl_UNIT0000* list);
 extern void fn_801E17E0(void* p);
 extern void *fn_801E1C7C(u32 size);
 extern s32 fn_800F7D6C(EvObj *e);
@@ -2293,7 +2299,7 @@ extern void fn_800DA744(s32 id, s32* out);
 extern s32 fn_801CC62C(char *name);
 extern void *fn_801DB244(char *path);
 extern void fn_80224040(u16 id, void *p);
-extern void fn_8010A278(void *p);
+void fn_8010A278(Tbl_UNIT0000* p);
 typedef struct { u8 pad0[0x28]; s32 w28; s32 w2c; } Info_80101E64;
 typedef struct { u8 pad0[0x10]; Info_80101E64* info; } Sub_80101E64;
 typedef struct {
@@ -4433,12 +4439,12 @@ void fn_80100B74(Task* t) {
     }
 }
 
-void fn_80101060(void* p, s32 a, s32 b) {
-    fn_80100E68(p, 0, a, b);
+void fn_80101060(void* p, s32 a, Tbl_UNIT0000* b) {
+    fn_80100E68(p, NULL, a, b);
 }
 
-void fn_8010108C(s32 a, s32 b, s32 c) {
-    fn_80100E68((void*)0, a, b, c);
+void* fn_8010108C(void* a, s32 b, Tbl_UNIT0000* c) {
+    return fn_80100E68(NULL, a, b, c);
 }
 
 extern void fn_801073B4(Task*);
@@ -4935,13 +4941,13 @@ void* fn_8010A214(u32 idx) {
     return NULL;
 }
 
-void fn_8010A240(IdxObj* o) {
+void fn_8010A240(TblEntry* o) {
     void** tbl = (void**)lbl_80346E58;
     s32 idx;
     if (tbl == NULL) {
         return;
     }
-    idx = o->idx;
+    idx = o->id;
     if (idx < 0) {
         return;
     }
@@ -4953,6 +4959,105 @@ void fn_8010A240(IdxObj* o) {
 
 s32 fn_8010A270(void) {
     return 0x9E;
+}
+
+typedef struct { void* f0; TblEntry* e; void* r; } TblOut;
+extern void* lbl_8034758C;
+extern void* lbl_80347594;
+extern char lbl_80349C18[4], lbl_80349C1C[8], lbl_80349C24[8];
+extern char lbl_802B3048[];
+void* fn_8010108C(void* a, s32 b, Tbl_UNIT0000* c);
+
+static inline TblOut *FindTblOut(TblOut *o, s32 n, u16 id) {
+    while (n-- > 0) {
+        u16 eid = o->e->id;
+        if (id == eid) return o;
+        o++;
+    }
+    return 0;
+}
+
+void fn_8010A278(Tbl_UNIT0000 *p) {
+    TblOut *buf;
+    TblOut *o;
+    TblEntry *e;
+    s32 n;
+    s32 i;
+    s32 nres;
+    s32 nout;
+    n = p->count;
+    buf = fn_801E1C7C(n * sizeof(TblOut));
+    if (buf == 0) return;
+    e = p->entries;
+    o = buf;
+    nout = 0;
+    nres = 0;
+    for (i = 0; i < n; e++, i++) {
+        TblA *a;
+        TblB *b;
+        s32 found;
+        e->f38 = 0;
+        e->id &= 0xffff;
+        fn_8010A240(e);
+        a = e->a;
+        b = e->b;
+        found = 0;
+        if (a->a0 != 0 && b->b0 != 0 && a->a4 != 0) {
+            s32 bid;
+            o->f0 = 0;
+            o->e = e;
+            bid = b->id;
+            if (bid == -1 || bid == e->id) {
+                o->r = fn_8010108C(lbl_80347594, i, p);
+                nres++;
+            } else {
+                o->r = 0;
+            }
+            found = 1;
+            o++;
+            nout++;
+        }
+        if (!found) {
+            if (strncmp(e->name, lbl_80349C18, 3) == 0) {
+                if (strncmp(e->name, lbl_80349C1C, 7) == 0 || strncmp(e->name, lbl_802B3048, 8) == 0) {
+                    fn_8010108C(lbl_80347590, i, p);
+                } else if (strncmp(e->name, lbl_80349C24, 7) == 0) {
+                    fn_8010108C(lbl_80347594, i, p);
+                } else {
+                    fn_8010108C(lbl_80347594, i, p);
+                }
+            } else if (e->id >= 0xc3b4 && e->id <= 0xc737) {
+                fn_8010108C(lbl_8034758C, i, p);
+            } else {
+                fn_8010108C(lbl_80347590, i, p);
+            }
+        }
+    }
+    if (nout != nres) {
+        do {
+            TblOut *q = buf;
+            s32 c = nout;
+            for (; c > 0; q++, c--) {
+                TblEntry *qe = q->e;
+                TblB *b = qe->b;
+                if (q->r == 0) {
+                    u32 id = b->id;
+                    TblOut *f = FindTblOut(buf, nout, id);
+                    if (f != 0) {
+                        if (f->r != 0) {
+                            q->f0 = f->r;
+                            q->r = fn_8010108C(f->r, qe->f0, p);
+                            nres++;
+                        }
+                    } else {
+                        q->r = fn_8010108C(lbl_80347594, qe->f0, p);
+                        nres++;
+                    }
+                }
+            }
+        } while (nres != nout);
+    }
+    fn_801E17E0(buf);
 }
 
 s32 fn_8010A530(MotCtx* ctx, MotObj* src) {
