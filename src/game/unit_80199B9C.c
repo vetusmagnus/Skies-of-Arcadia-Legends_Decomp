@@ -2049,7 +2049,11 @@ typedef struct EvObj {
     u8 padE8[0x100 - 0xE8];
     NJS_TEXLIST* texlist;    /* 0x100 */
     NJS_POINT3 home;         /* 0x104 */
-    u8 pad110[0x1B8 - 0x110];
+    u8 pad110[0x158 - 0x110];
+    NJS_POINT3 x158;         /* 0x158 */
+    u8 pad164[0x17A - 0x164];
+    u16 x17a;                /* 0x17A */
+    u8 pad17c[0x1B8 - 0x17C];
     EvHit* hit;              /* 0x1B8 */
     u8 pad1BC[0x1C8 - 0x1BC];
     EvExt* ext;              /* 0x1C8 */
@@ -2058,7 +2062,9 @@ typedef struct EvObj {
     s32 x210;                /* 0x210 */
     u8 pad214[0x23C - 0x214];
     s32 x23c;                /* 0x23C ADD: the loop sound's handle */
-    u8 pad240[0x25C - 0x240];
+    u8 pad240[0x24C - 0x240];
+    NJS_POINT3 x24c;         /* 0x24C */
+    f32 x258;                /* 0x258 */
     void* x25c;              /* 0x25C per-kind record (the trail of fn_8019D678) */
 } EvObj;
 extern EvObj *lbl_80347450;

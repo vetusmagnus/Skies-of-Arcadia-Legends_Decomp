@@ -444,6 +444,12 @@ config.libs = [
             Object(NonMatching, "game/unit_80009800.c", extra_cflags=["-str reuse,readonly"]),
             # Starts at the 0x803480E0 .sdata2 block (its own 0.0f), .rodata 0x802ACCB8 and .data 0x802DAEB0.
             Object(NonMatching, "game/unit_8000A38C.c"),
+            # Its .sdata2 block starts at 0x803481B8 (8-aligned; its 0.0f repeats 0x80348198 of the file before).
+            # fn_800110C8 stays before it: it passes fn_800215EC a byte unextended, where this file's callers pass
+            # an s8 id.
+            Object(NonMatching, "game/unit_80011160.c"),
+            # Starts at the 0x80348238 .sdata2 block (a second 182.04445f after 0x8034816C).
+            Object(NonMatching, "game/unit_80014784.c"),
             Object(NonMatching, "game/unit_80020B50.c"),
             Object(NonMatching, "game/unit_800553B4.c"),
             Object(NonMatching, "game/unit_801C09A4.c"),
