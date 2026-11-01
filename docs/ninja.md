@@ -191,6 +191,14 @@ Game code stays cast-free.
   optimizer pragmas, inline and wrapper forms) all merge the copies, so this looks like a compiler build we don't
   have rather than a source form. `-O1` matches only njSin/njCos/njTan (checked over the whole unit: no file
   boundary there). A ready test case for other compilers is two FIFO drawers, fn_8029681C and fn_8028A0F4.
+- Copy pattern, a minimal case (2026-11-01): `docs/near/fn_80298544.c`. With GC/1.3.2 the whole function is
+  identical (prologue, 8x unroll, trip count, the unrolled body sharing one `li r5,0`) except the leftover loop
+  MWCC builds for n % 8: the original hoists `li r9,0` plus `mr` copies for the third and later zero stores,
+  every available compiler hoists one shared `li`. Since the unroller's own output agrees everywhere else, this
+  is the strongest sign yet that Ninja was built with a compiler build that isn't in the decomp.dev bundle
+  (probably an early CodeWarrior for Dolphin/GameCube from Sega's 2001 port, older than GC/1.0 build 144),
+  not a source form. That file lists what was ruled out, including every recognised optimizer pragma and a
+  permuter run.
 - Copy pattern, more ruled out (2026-11-01, cloud session; test case in `docs/near/fifo_8029681C.c`, which
   needs no headers): every Wii compiler in the decomp.dev bundle (`Wii/0x4201_127` to `Wii/1.7`) at `-O4,p`,
   `-O4,s`, `-O3` and `-O2`; pairs of `-opt` switches (no cse, deadcode, deadstore, lifetimes, loop, prop,
