@@ -847,7 +847,7 @@ f32 njTan(Angle a) {
 }
 #pragma optimization_level reset
 
-void njCalcPoint(NJS_MATRIX m, NJS_POINT3* p, NJS_POINT3* out) {
+void njCalcPoint(NJS_MATRIX m, const NJS_POINT3* p, NJS_POINT3* out) {
     PSMTXMultVec(m ? m : lbl_80347EB4, p, out);
 }
 
@@ -859,7 +859,7 @@ void njCalcVector(NJS_MATRIX m, NJS_POINT3* src, NJS_POINT3* dst) {
     calc_vector(m, src, dst);
 }
 
-void njCalcVectors(NJS_MATRIX m, NJS_POINT3* src, NJS_POINT3* dst, s32 n) {
+void njCalcVectors(NJS_MATRIX m, const NJS_POINT3* src, NJS_POINT3* dst, s32 n) {
     PSMTXMultVecArraySR(m ? m : lbl_80347EB4, src, dst, n);
 }
 

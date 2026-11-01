@@ -6,6 +6,29 @@
 #include "game/task.h"
 #include "game/evobj.h"
 #include <dolphin/os/OSFastCast.h>
+/* The file's .rodata, in the original order: fn_800A0028 reaches it from one pooled base. */
+const f32 lbl_802B0E30[16] = {
+    1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f,
+};
+const NJS_POINT3 lbl_802B0E70[2] = { { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
+const NJS_POINT3 lbl_802B0E88[2] = { { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
+const NJS_POINT3 lbl_802B0EA0 = { 0.0f, 0.0f, 0.0f };
+const NJS_POINT3 lbl_802B0EAC = { 0.0f, 0.0f, 0.0f };
+const NJS_POINT3 lbl_802B0EB8 = { 0.0f, 0.0f, 0.0f };
+const NJS_POINT3 lbl_802B0EC4 = { 0.0f, 0.0f, 0.0f };
+const NJS_POINT3 lbl_802B0ED0 = { 0.0f, 0.0f, 0.0f };
+const NJS_POINT3 lbl_802B0EDC = { 0.0f, 0.0f, 0.0f };
+const char lbl_802B0EE8[] = "Effect: Particle task make failed.";
+const char lbl_802B0F0C[0x24] = "Effect: Particle table get failed.";
+const char lbl_802B0F30[0x10] = "eff_putmodel3";
+const char lbl_802B0F40[0x10] = "eff_putmodelEx";
+const char lbl_802B0F50[0x10] = "eff_putmodel2";
+const char lbl_802B0F60[0xC] = "trainPic";
+const char lbl_802B0F6C[0xC] = "modlight";
+const char lbl_802B0F78[0x10] = "eff_man2";
 typedef struct Pair {
     s32 a;
     s32 b;
@@ -89,7 +112,6 @@ typedef struct {
     TNode8009D760** slots;
     s32 count;
 } Pool;
-extern char lbl_802B0F0C[];
 void* fn_801E1A2C(s32 a, u32 size);
 void fn_801DD76C(void *m);
 extern void njScale(NJS_MATRIX m, f32 x, f32 y, f32 z);
@@ -331,7 +353,6 @@ extern s32 lbl_80346CFC;
 extern u32 lbl_80346CF4;
 extern u32 lbl_80346CF8;
 extern Node_8009E9D8* lbl_80346D00;
-extern NJS_POINT3 lbl_802B0EDC;
 extern void njSetMatrix(NJS_MATRIX dst, NJS_MATRIX src);
 extern s32 fn_80007080(void* dst, s32 flag);
 extern s32 fn_80006F1C(void* dst, s32 flag);
@@ -365,7 +386,6 @@ struct Obj_800A0BA0 {
     u8 pad218[0x24C - 0x218];
     NJS_POINT3 outPos;   /* 0x24C */
 };
-extern NJS_POINT3 lbl_802B0EAC;
 extern s32 fn_8015F1F0(void);
 extern void njUnitTransPortion(NJS_MATRIX m);
 typedef struct Obj_800A0E1C Obj_800A0E1C;
@@ -395,17 +415,14 @@ struct Obj_800A0E1C {
     u8 pad218[0x24C - 0x218];
     NJS_POINT3 outPos;   /* 0x24C */
 };
-extern NJS_POINT3 lbl_802B0EA0;
 typedef struct {
     NJS_POINT3 v[2];
 } Pair_800A13D8;
-extern NJS_POINT3 lbl_802B0E88[2];
 extern Pair_800A13D8 lbl_80303438;
-extern u8 lbl_802B0E30[0x40];
 extern f32* lbl_80346784;
 extern f32* lbl_80346780;
-extern void* fn_802AC710(void* dst, void* src, int n);
-extern void njCalcVectors(NJS_MATRIX m, NJS_POINT3* src, NJS_POINT3* dst, s32 n);
+extern void* fn_802AC710(void* dst, const void* src, u32 n);
+extern void njCalcVectors(NJS_MATRIX m, const NJS_POINT3* src, NJS_POINT3* dst, s32 n);
 extern void njCalcPoints(NJS_MATRIX m, NJS_POINT3* src, NJS_POINT3* dst, s32 n);
 extern void njRotateX(NJS_MATRIX m, Angle a);
 extern void njRotateY(NJS_MATRIX m, Angle a);
@@ -462,7 +479,6 @@ extern void fn_802135B4(NJS_POINT3 *v, Ang3_800A1998 *out);
 typedef struct {
     NJS_POINT3 v[2];
 } Pair_800A1690;
-extern NJS_POINT3 lbl_802B0E70[2];
 extern Pair_800A1690 lbl_80303450;
 extern f32* lbl_80346778;
 extern f32* lbl_8034677C;
@@ -656,7 +672,6 @@ void fn_8009E804(ItemList_8009E804 *list, s32 idx) {
 
 typedef struct { s16 type; s16 pad; u32 w4, w8, wc; } ModelRec;
 
-extern NJS_POINT3 lbl_802B0ED0;
 extern ModelRec* fn_801CB5F4(void* p, s32 lo, s32 hi);
 
 #define BSW(x) ((((x) >> 24) & 0xff) | (((x) >> 8) & 0xff00) | (((x) << 8) & 0xff0000) | ((x) << 24))
@@ -1135,7 +1150,7 @@ TNode8009D760* fn_8009D760(TNode8009D760* parent, void* cb, u16 a, Obj8009D760* 
     Work8009D760* w;
 
     if (t == 0) {
-        fn_801DBE1C("Effect: Particle task make failed.");
+        fn_801DBE1C(lbl_802B0EE8);
     }
     t->flags |= 1;
     t->work = (Work8009D760*)((u8*)t + 0x40);
