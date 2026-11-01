@@ -1,8 +1,8 @@
 #include "types.h"
 #include "game/save_8030B7F4.h"
 #include "game/gamedata.h"
-extern u8 lbl_8030B4D4[];
-void fn_801EF7E0(void *p);
+#include "game/stat_8030B4D4.h"
+void fn_801EF7E0(void);
 typedef struct {
     u8 pad[0x2c];
     s8 bits[1];
@@ -21,12 +21,14 @@ s32 fn_801F2508(void *a, void *b)
 
 s32 fn_801F2894(s32 a, s32 b)
 {
-    return *(s32 *)(lbl_8030B4D4 + a * 0x78 + (b << 2) + 0x60);
+    StatRec *r = &lbl_8030B4D4.chr[a];
+    return r->x60[b];
 }
 
 s32 fn_801F28B4(s32 a)
 {
-    return *(s32 *)(lbl_8030B4D4 + a * 0x78 + 0x18);
+    StatRec *r = &lbl_8030B4D4.chr[a];
+    return r->x18;
 }
 
 extern s8 lbl_802C9628[][4];
@@ -72,25 +74,56 @@ void fn_801F28CC(s32 code) {
     }
 }
 
+extern u32 lbl_80310B3C[];
+
+s32 fn_801F39EC(s32 idx) {
+    SaveChar* c;
+    s32 i;
+    u32 b, d;
+    b = idx + 0x408;
+    d = idx + 0x402;
+    lbl_80310B3C[b >> 5] &= ~(1 << (b & 31));
+    lbl_80310B3C[d >> 5] |= 1 << (d & 31);
+    c = &lbl_8030B7F4.chr[idx];
+    for (i = 0; i < 4; i++) {
+        if (lbl_8030B7F4.party[i] == idx) {
+            for (; i < 3; i++) {
+                lbl_8030B7F4.party[i] = lbl_8030B7F4.party[i + 1];
+            }
+            lbl_8030B7F4.party[i] = -1;
+            lbl_8030B4D4.x2d4--;
+            fn_801EFFD8(c->slot0);
+            c->slot1 = -1;
+            c->slot2 = -1;
+            fn_801EF7E0();
+            if (idx == 2) {
+                lbl_8030B7F4.xb50 &= ~4;
+            }
+            return 1;
+        }
+    }
+    return 0;
+}
+
 void fn_801F4E04(s32 i, s16 v) {
     SaveChar *p = lbl_8030B7F4.chr;
     p += i;
     p->slot2 = v;
-    fn_801EF7E0(p);
+    fn_801EF7E0();
 }
 
 void fn_801F4E38(s32 i, s16 v) {
     SaveChar *p = lbl_8030B7F4.chr;
     p += i;
     p->slot1 = v;
-    fn_801EF7E0(p);
+    fn_801EF7E0();
 }
 
 void fn_801F4E6C(s32 i, s16 v) {
     SaveChar *p = lbl_8030B7F4.chr;
     p += i;
     p->slot0 = v;
-    fn_801EF7E0(p);
+    fn_801EF7E0();
 }
 
 s32 fn_801F3F88(BitOwner *p, s8 i)
