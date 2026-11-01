@@ -357,6 +357,17 @@ s32 fn_802890A4(NjModel* m) {
     return 0;
 }
 
+void fn_80289EC8(NJS_POINT3* p, s32 n) {
+    s32 i;
+    s32 lines = n >> 1;
+    fn_8029CB1C();
+    GXBegin(GX_LINES, GX_VTXFMT0, n);
+    for (i = 0; i < lines; i++, p += 2) {
+        GXPosition3f32(p[0].x, p[0].y, p[0].z);
+        GXPosition3f32(p[1].x, p[1].y, p[1].z);
+    }
+}
+
 void fn_8028A054(void) {
 }
 
@@ -373,6 +384,9 @@ void fn_8028A058(u32 argb, s32 p, f32 w) {
 #pragma optimization_level reset
 
 typedef struct { f32 x, y, z; u32 col; } NjColVtx;
+typedef struct { f32 x, y, z; f32 u, v; u32 col; } NjTexVtx;
+typedef struct { NJS_POINT3 pos; NJS_POINT3 nrm; } NjPosNrm;
+typedef struct { NJS_POINT3 pos; NJS_POINT3 nrm; u32 col; } NjPosNrmCol;
 
 void fn_8028A0F4(NjColVtx* v, s32 n) {
     s32 i;
@@ -394,9 +408,39 @@ void fn_8028A26C(s32 p) {
 void fn_8028A2A4(void) {
 }
 
+void fn_8028A2A8(NjColVtx* v, s32 n) {
+    s32 i;
+    GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, n);
+    for (i = 0; i < n; i++, v++) {
+        GXPosition3f32(v->x, v->y, v->z);
+        GXColor1u32(__rlwinm(v->col, 8, 0, 31));
+    }
+}
+
 void fn_8028A3E0(s32 p) {
     fn_8029CB1C();
     fn_8029B248(4, p);
+}
+
+void fn_8028A418(NjColVtx* v, s32 n, s32 flag) {
+    s32 i;
+    fn_8029CB1C();
+    fn_8029B248(4, flag);
+    GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, n);
+    for (i = 0; i < n; i++, v++) {
+        GXPosition3f32(v->x, v->y, v->z);
+        GXColor1u32(__rlwinm(v->col, 8, 0, 31));
+    }
+}
+
+void fn_8028A56C(NjTexVtx* v, s32 n) {
+    s32 i;
+    GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, n);
+    for (i = 0; i < n; i++, v++) {
+        GXPosition3f32(v->x, v->y, v->z * lbl_80347F30 + lbl_80347F34);
+        GXColor1u32(__rlwinm(v->col, 8, 0, 31));
+        GXTexCoord2f32(v->u, v->v);
+    }
 }
 
 void fn_8028A6B8(void) {
@@ -410,9 +454,31 @@ void fn_8028A6BC(s32 p) {
 void fn_8028A6F4(void) {
 }
 
+void fn_8028A6F8(NjTexVtx* v, s32 n) {
+    s32 i;
+    GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, n);
+    for (i = 0; i < n; i++, v++) {
+        GXPosition3f32(v->x, v->y, v->z);
+        GXColor1u32(__rlwinm(v->col, 8, 0, 31));
+        GXTexCoord2f32(v->u, v->v);
+    }
+}
+
 void fn_8028A888(s32 p) {
     fn_8029CB1C();
     fn_8029B248(0, p);
+}
+
+void fn_8028A8C0(NjTexVtx* v, s32 n, s32 flag) {
+    s32 i;
+    fn_8029B248(0, flag);
+    fn_8029CB1C();
+    GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, n);
+    for (i = 0; i < n; i++, v++) {
+        GXPosition3f32(v->x, v->y, v->z);
+        GXColor1u32(__rlwinm(v->col, 8, 0, 31));
+        GXTexCoord2f32(v->u, v->v);
+    }
 }
 
 void fn_8028AA60(NjObj* obj) {
@@ -751,7 +817,16 @@ void fn_80290EA8(u16 x) {
 }
 #pragma optimization_level reset
 
-typedef struct { f32 x, y, z; f32 u, v; u32 col; } NjTexVtx;
+void fn_80290ED4(NjColVtx* v, s32 n, s32 flag) {
+    s32 i;
+    fn_8029CB74();
+    fn_8029B248(4, flag);
+    GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, n);
+    for (i = 0; i < n; i++, v++) {
+        GXPosition3f32(v->x, v->y, v->z * lbl_80347F30 + lbl_80347F34);
+        GXColor1u32(__rlwinm(v->col, 8, 0, 31));
+    }
+}
 
 void fn_80291064(NjTexVtx* v, s32 n, s32 flag) {
     s32 i;
@@ -3833,6 +3908,287 @@ void fn_802A210C(f32 x, f32 y, f32 z) {
     lbl_80300760.dir[2] = z;
     GXInitLightPos(&lbl_80346560, 1048576.0f * -(f32)dx, 1048576.0f * -(f32)dy, 1048576.0f * -(f32)dz);
     GXInitSpecularDir(&lbl_80346520, x, y, z);
+}
+
+void fn_802A2604(s16* p, NjColVtx* v, u32 hdr, s32 side) {
+    s32 len;
+    s32 total;
+    u32 cull = -1;
+    s32 nuv;
+    u32 mode;
+    NjColVtx* q;
+    f32 x, y, z;
+
+    fn_8029B058(1, 1);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_NRM, GX_NRM_XYZ, GX_F32, 0);
+    total = 0;
+    nuv = (hdr >> 14) & 3;
+    hdr &= 0x3fff;
+    do {
+        len = *p++;
+        if (len < 0) {
+            len = -len;
+            mode = lbl_80300898[side][lbl_80347E20];
+            if (cull != mode) {
+                cull = mode;
+                GXSetCullMode(mode);
+            }
+        } else {
+            mode = lbl_803008C0[side][lbl_80347E20];
+            if (cull != mode) {
+                cull = mode;
+                GXSetCullMode(mode);
+            }
+        }
+        total += len;
+        GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, len);
+        do {
+            q = &v[*p++];
+            p += nuv;
+            x = q->x;
+            y = q->y;
+            z = q->z;
+            GXPosition3f32(x, y, z);
+            GXNormal3f32(x, y, z);
+        } while (--len);
+    } while (--hdr);
+    lbl_80347EF0 += total;
+}
+
+void fn_802A2C84(s16* p, NjColVtx* v, u32 hdr, s32 side) {
+    s32 len;
+    s32 total;
+    u32 cull = -1;
+    s32 nuv;
+    u32 mode;
+    NjColVtx* q;
+    f32 x, y, z;
+    u32 c;
+
+    fn_8029AFF0(1, 1, 1);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_NRM, GX_NRM_XYZ, GX_F32, 0);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
+    total = 0;
+    nuv = (hdr >> 14) & 3;
+    hdr &= 0x3fff;
+    do {
+        len = *p++;
+        if (len < 0) {
+            len = -len;
+            mode = lbl_80300898[side][lbl_80347E20];
+            if (cull != mode) {
+                cull = mode;
+                GXSetCullMode(mode);
+            }
+        } else {
+            mode = lbl_803008C0[side][lbl_80347E20];
+            if (cull != mode) {
+                cull = mode;
+                GXSetCullMode(mode);
+            }
+        }
+        total += len;
+        GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, len);
+        do {
+            q = &v[*p++];
+            p += nuv;
+            x = q->x;
+            y = q->y;
+            z = q->z;
+            c = q->col;
+            GXPosition3f32(x, y, z);
+            GXNormal3f32(x, y, z);
+            GXColor1u32(c);
+        } while (--len);
+    } while (--hdr);
+    lbl_80347EF0 += total;
+}
+
+void fn_802A2E18(s16* p, NJS_POINT3* v, u32 hdr, s32 side) {
+    s32 len;
+    s32 total;
+    u32 cull = -1;
+    s32 nuv;
+    u32 mode;
+    NJS_POINT3* q;
+    f32 x, y, z;
+    fn_8029B058(1, 1);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_NRM, GX_NRM_XYZ, GX_F32, 0);
+    total = 0;
+    nuv = (hdr >> 14) & 3;
+    hdr &= 0x3fff;
+    do {
+        len = *p++;
+        if (len < 0) {
+            len = -len;
+            mode = lbl_80300898[side][lbl_80347E20];
+            if (cull != mode) {
+                cull = mode;
+                GXSetCullMode(mode);
+            }
+        } else {
+            mode = lbl_803008C0[side][lbl_80347E20];
+            if (cull != mode) {
+                cull = mode;
+                GXSetCullMode(mode);
+            }
+        }
+        total += len;
+        GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, len);
+        do {
+            q = &v[*p++];
+            p += nuv;
+            x = q->x;
+            y = q->y;
+            z = q->z;
+            GXPosition3f32(x, y, z);
+            GXNormal3f32(x, y, z);
+        } while (--len);
+    } while (--hdr);
+    lbl_80347EF0 += total;
+}
+
+void fn_802A3EDC(s16* p, NjColVtx* v, u32 hdr, s32 side) {
+    s32 len;
+    s32 total;
+    u32 cull = -1;
+    s32 nuv;
+    u32 mode;
+    NjColVtx* q;
+    f32 x, y, z;
+    fn_8029B058(1, 1);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_NRM, GX_NRM_XYZ, GX_F32, 0);
+    total = 0;
+    nuv = (hdr >> 14) & 3;
+    hdr &= 0x3fff;
+    do {
+        len = *p++;
+        if (len < 0) {
+            len = -len;
+            mode = lbl_80300898[side][lbl_80347E20];
+            if (cull != mode) {
+                cull = mode;
+                GXSetCullMode(mode);
+            }
+        } else {
+            mode = lbl_803008C0[side][lbl_80347E20];
+            if (cull != mode) {
+                cull = mode;
+                GXSetCullMode(mode);
+            }
+        }
+        total += len;
+        GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, len);
+        do {
+            q = &v[*p++];
+            p += nuv + 2;
+            x = q->x;
+            y = q->y;
+            z = q->z;
+            GXPosition3f32(x, y, z);
+            GXNormal3f32(x, y, z);
+        } while (--len);
+    } while (--hdr);
+    lbl_80347EF0 += total;
+}
+
+void fn_802A46EC(s16* p, NjColVtx* v, u32 hdr, s32 side) {
+    s32 len;
+    s32 total;
+    u32 cull = -1;
+    s32 nuv;
+    u32 mode;
+    NjColVtx* q;
+    f32 x, y, z;
+    u32 c;
+
+    fn_8029AFF0(1, 1, 1);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_NRM, GX_NRM_XYZ, GX_F32, 0);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
+    total = 0;
+    nuv = (hdr >> 14) & 3;
+    hdr &= 0x3fff;
+    do {
+        len = *p++;
+        if (len < 0) {
+            len = -len;
+            mode = lbl_80300898[side][lbl_80347E20];
+            if (cull != mode) {
+                cull = mode;
+                GXSetCullMode(mode);
+            }
+        } else {
+            mode = lbl_803008C0[side][lbl_80347E20];
+            if (cull != mode) {
+                cull = mode;
+                GXSetCullMode(mode);
+            }
+        }
+        total += len;
+        GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, len);
+        do {
+            q = &v[*p++];
+            p += nuv + 2;
+            x = q->x;
+            y = q->y;
+            z = q->z;
+            c = q->col;
+            GXPosition3f32(x, y, z);
+            GXNormal3f32(x, y, z);
+            GXColor1u32(c);
+        } while (--len);
+    } while (--hdr);
+    lbl_80347EF0 += total;
+}
+
+void fn_802A4884(s16* p, NJS_POINT3* v, u32 hdr, s32 side) {
+    s32 len;
+    s32 total;
+    u32 cull = -1;
+    s32 nuv;
+    u32 mode;
+    NJS_POINT3* q;
+    f32 x, y, z;
+    fn_8029B058(1, 1);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_NRM, GX_NRM_XYZ, GX_F32, 0);
+    total = 0;
+    nuv = (hdr >> 14) & 3;
+    hdr &= 0x3fff;
+    do {
+        len = *p++;
+        if (len < 0) {
+            len = -len;
+            mode = lbl_80300898[side][lbl_80347E20];
+            if (cull != mode) {
+                cull = mode;
+                GXSetCullMode(mode);
+            }
+        } else {
+            mode = lbl_803008C0[side][lbl_80347E20];
+            if (cull != mode) {
+                cull = mode;
+                GXSetCullMode(mode);
+            }
+        }
+        total += len;
+        GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, len);
+        do {
+            q = &v[*p++];
+            p += nuv + 2;
+            x = q->x;
+            y = q->y;
+            z = q->z;
+            GXPosition3f32(x, y, z);
+            GXNormal3f32(x, y, z);
+        } while (--len);
+    } while (--hdr);
+    lbl_80347EF0 += total;
 }
 
 void fn_802A5EF8(s32 count, NJS_POINT3* dst, NJS_POINT3* src) {
