@@ -376,8 +376,8 @@ typedef struct Sys_UNIT0000 { s32 f0; s16 f4; s16 f6; f32 f8; f32 fc; u8 p10[4];
 typedef struct Slot_80219998 { u8 pad_00[0x38]; u8 x38; u8 pad39[3]; } Slot_80219998;
 extern Slot_80219998 lbl_80315120[];
 typedef struct { s16 x0; s16 x2; s8 x4; s8 x5; } Out;
-s32 fn_8021A6E8(Save1568* a, void* b, CannonData* c);
-s32 fn_8021A620(Save1568* a, void* b, CannonData* c);
+s32 fn_8021A6E8(Save1568* a, void* b, const CannonData* c);
+s32 fn_8021A620(Save1568* a, void* b, const CannonData* c);
 typedef struct { Vec pos; f32 r; } Sphere_80221AAC;
 typedef struct { Vec b; Vec a; f32 r; } Capsule_80221AAC;
 typedef struct {
@@ -865,7 +865,7 @@ static inline s32 StatValid(s32 v)
     return r;
 }
 
-static inline s32 ModValue(StatMod* m, s32 stat)
+static inline s32 ModValue(const StatMod* m, s32 stat)
 {
     s32 r = 0;
     if (m != NULL && StatValid(stat) && m->stat == stat) {
@@ -913,7 +913,7 @@ static inline s32 GearValid(s32 id)
 static inline s32 CannonMod(s32 id, s32 stat)
 {
     s32 r = 0;
-    StatMod* m;
+    const StatMod* m;
     if (CannonValid(id) && StatValid(stat)) {
         m = lbl_802D7E4C[id - 0x190].mod;
         r = ModValue(m, stat);
@@ -1282,7 +1282,7 @@ s32 fn_8021A0FC(s32 v) {
     return r;
 }
 
-s32 fn_8021A5F0(s32 a, s32 b, CannonData *p) {
+s32 fn_8021A5F0(s32 a, s32 b, const CannonData *p) {
     s32 r = 0;
     if (p != 0) {
         r = p->cost;
@@ -1290,7 +1290,7 @@ s32 fn_8021A5F0(s32 a, s32 b, CannonData *p) {
     return r;
 }
 
-s32 fn_8021A608(s32 a, s32 b, CannonData *p) {
+s32 fn_8021A608(s32 a, s32 b, const CannonData *p) {
     s32 r = 0;
     if (p != 0) {
         r = p->limit;
@@ -2210,7 +2210,7 @@ static inline s32 valid_id(s32 i) { return i >= 0x190 && i <= 0x1b7; }
 void fn_8021AE68(Out* out, Save1568* src, void* b, s32 slot)
 {
     s32 id;
-    CannonData* t;
+    const CannonData* t;
     if (out == 0) return;
     if (src == 0 || !valid_slot(slot) || !valid_id(id = src->s1580[slot])) {
         if (out != 0) {
@@ -2296,7 +2296,7 @@ void fn_80221EDC(f32* out, Shape* a, Shape* b)
 
 extern s32 fn_8021A2B0(Save1568* a, void* b, s32 code);
 
-s32 fn_8021A620(Save1568* a, void* b, CannonData* c)
+s32 fn_8021A620(Save1568* a, void* b, const CannonData* c)
 {
     s32 ret = 0;
     if (c != NULL) {
@@ -2331,7 +2331,7 @@ s32 fn_8021A620(Save1568* a, void* b, CannonData* c)
 
 extern s32 fn_8021A2B0(Save1568* a, void* b, s32 code);
 
-s32 fn_8021A6E8(Save1568* a, void* b, CannonData* c)
+s32 fn_8021A6E8(Save1568* a, void* b, const CannonData* c)
 {
     s32 ret = 0;
     if (c != NULL) {

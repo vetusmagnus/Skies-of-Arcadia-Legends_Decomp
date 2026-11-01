@@ -389,7 +389,7 @@ typedef struct Ent {
     u8 pad2[2];
     s16 type;   /* 0x4 */
     u8 pad6[2];
-    void* p;    /* 0x8 */
+    const SkillData* p; /* 0x8 */
     u32 w;      /* 0xC */
 } Ent;
 typedef struct List {
@@ -781,7 +781,7 @@ extern Flags_80310B3C lbl_80310B3C;
 extern void *fn_801F52AC(void);
 extern s32 fn_801F4C24(s16 id);
 extern s8 fn_801F452C(s16 id);
-void fn_80078AD4(char* src);
+void fn_80078AD4(const char* src);
 
 void fn_80075040(TNode* n, u32 mask, u8 op) {
     fn_80075060(n, mask, op);
@@ -2298,7 +2298,7 @@ Rec74E2C *fn_80074E2C(void *a, void *b, Out74E2C *out, s16 id, u8 kind) {
     return rec;
 }
 
-void fn_80078AD4(char* src)
+void fn_80078AD4(const char* src)
 {
     int n;
     int left;
@@ -4786,7 +4786,7 @@ s32 fn_80077E60(s32 p, s16 id) {
 }
 
 void fn_80078A20(s32 a, s32 b, s32 kind) {
-    char* s;
+    const char* s;
     switch (kind) {
     case 11:
         s = lbl_802AD440[b + 0x24].name;

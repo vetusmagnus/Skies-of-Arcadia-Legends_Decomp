@@ -227,7 +227,7 @@ s32 fn_801F52AC(void)
     return cnt;
 }
 
-void* fn_801F4AE4(s16 id) {
+const void* fn_801F4AE4(s16 id) {
     if (id == -1) return 0;
     switch (fn_801F4C24(id)) {
     case 0: return &lbl_802C5790[id];

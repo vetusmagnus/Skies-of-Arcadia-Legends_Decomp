@@ -327,7 +327,7 @@ typedef struct ShopData {
 
 extern CharParam lbl_802C4860[6];
 extern EnemySkill lbl_802AD440[345];
-extern SkillData lbl_802C4BF0[62];
+extern const SkillData lbl_802C4BF0[62];
 extern WeaponData lbl_802C5790[80];
 extern GearData lbl_802C6190[80];
 extern GearData lbl_802C6E10[80];
@@ -340,7 +340,7 @@ extern ExpBonus lbl_802D4638[3];
 extern const ChestData lbl_802D59E8[119];
 extern ShipData lbl_802D6740[5];
 extern EnemyShipData lbl_802D6934[45];
-extern CannonData lbl_802D7E4C[40];
+extern const CannonData lbl_802D7E4C[40];
 extern ShipGearData lbl_802D83EC[40];
 extern ShipItemData lbl_802D8A2C[30];
 extern CrewData lbl_802D8E64[22];

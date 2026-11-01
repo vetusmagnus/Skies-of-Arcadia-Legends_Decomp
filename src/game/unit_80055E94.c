@@ -2890,7 +2890,7 @@ void fn_8006A3E4(s16 a, s16 b, s32 kind, s8 c) {
         break;
     case 1:
         if (a < 4) {
-            SkillData *sk = &lbl_802C4BF0[lbl_80309174[a].x6];
+            const SkillData *sk = &lbl_802C4BF0[lbl_80309174[a].x6];
             r28 = A->stat[7];
             r27 = B->x98;
             r26 = sk->status_rate;
@@ -6743,7 +6743,7 @@ s32 fn_80068640(s16 a, s16 b) {
         return 0;
     }
     if (a <= 3) {
-        SkillData *t = &lbl_802C4BF0[lbl_80309174[a].x6];
+        const SkillData *t = &lbl_802C4BF0[lbl_80309174[a].x6];
         if (t->cost > lbl_80347390->x8) {
             lbl_80309730[b].x8 = 6;
             lbl_80309730[a].x8 = 6;
@@ -7653,7 +7653,7 @@ s32 fn_800683D8(s16 a, s16 b, s32 c, s8 d) {
         lbl_80309730[a].x8 = 1;
         k = lbl_80309174[a].x6;
         if (a < 4) {
-            SkillData *r = &lbl_802C4BF0[k];
+            const SkillData *r = &lbl_802C4BF0[k];
             if (r->speed == 0 && fn_80068640(a, b) == 0) {
                 return 0;
             }

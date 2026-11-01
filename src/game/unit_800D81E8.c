@@ -907,7 +907,7 @@ typedef struct Ctx3594_800E88FC {
 } Ctx3594_800E88FC;
 extern void fn_801D4F0C(Sprite* s, s32 a, s32 b, s32 c, f32 f1, f32 f2, f32 f3, f32 f4);
 extern char lbl_802B1B34[];
-extern SkillData lbl_802C4BF0[];
+extern const SkillData lbl_802C4BF0[];
 extern void fn_800EA4A8(ResSpr* spr);
 /* A map creature (the EvObj layout, with the fields this one uses). */
 typedef struct Mob {

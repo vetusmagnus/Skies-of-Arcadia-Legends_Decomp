@@ -2130,7 +2130,7 @@ s16 fn_801EE344(s16 id, s32 stat) {
         break;
     }
     case 5: {
-        StatMod* m = lbl_802D7E4C[id - 0x190].mod;
+        const StatMod* m = lbl_802D7E4C[id - 0x190].mod;
         do {
             if (m->stat == stat) total += m->val;
             i++;
@@ -2665,7 +2665,7 @@ int fn_801F0588(int who, int idx, s8 kind)
 }
 
 void fn_801F11C8(int unused, int kind, int idx) {
-    SkillData* e = &lbl_802C4BF0[idx];
+    const SkillData* e = &lbl_802C4BF0[idx];
     if (kind == 6) {
         Big* big = (Big*)&lbl_8030B7F4;
         StatBlock* oth = &lbl_8030B4D4;
