@@ -293,7 +293,6 @@ typedef struct Pl { u8 pad[0xe]; s16 xe; } Pl;
 extern s32 lbl_80346FC0;
 extern s32 lbl_803472BC;
 extern u8 *lbl_80346FD0;
-extern u8 *lbl_80346FD4;
 extern s32 lbl_803472B8;
 typedef struct Fx {
     s32 mode;            /* 0x000 */
@@ -330,11 +329,27 @@ extern s32 lbl_803472D0;
 extern s32 lbl_80346FC4;
 s32 fn_80153BBC(void);
 void fn_801541D8(s32 a);
-void fn_801577CC(u8 *base, s32 a, s32 b, s32 i);
 void fn_80150258(void);
 void fn_80154404(void);
 void fn_801539C8(void);
 typedef struct { f32 pos[3]; s32 v[3]; } Rec_80157684;
+/* One unit's precomputed track (0x8468): a pose per frame, the aim angles per frame, lane flags. */
+typedef struct BtlTrack {
+    Rec_80157684 rec[0x3AD];  /* 0x0000 */
+    Angle aim[0x3AD][3];      /* 0x5838 */
+    s8 f[4];                  /* 0x8454 */
+    u8 pad8458[0x8468 - 0x8458];
+} BtlTrack;
+typedef struct {
+    BtlTrack ent[4];
+    s32 x211a0;
+} BtlTrackSide;
+/* *lbl_80346FD4: both sides' tracks. */
+typedef struct {
+    BtlTrackSide side[2];
+    s32 ready;                /* 0x42348 */
+} BtlTracks;
+void fn_801577CC(BtlTracks *base, s32 a, s32 b, s32 i);
 /* What fn_80157684 fills (unit_8010E164.c's Rec_80125820): position and angles of a frame. */
 typedef struct Rec_80125820 {
     f32 pos[3];
@@ -342,7 +357,7 @@ typedef struct Rec_80125820 {
     f32 extra[3];
 } Rec_80125820;
 typedef struct { Rec_80157684 r[1]; } Dummy_80157684;
-extern u8* lbl_80346FD4;
+extern BtlTracks* lbl_80346FD4;
 typedef struct { s32 f0; s32 f4; s16 h8; s16 ha; s16 hc; s16 he; s32 f10; } Dst;
 typedef struct { u8 pad[0x1ef]; s8 b1ef; u8 pad2[0x40]; u16 h230; } In_80158250;
 typedef struct { u8 pad[0x24]; In_80158250 *p24; } Mid_80158250;
@@ -534,6 +549,12 @@ typedef struct {
     Model* model;     /* 0x0C */
     u8 x10[0x24 - 0x10];
 } Obj_80153060;
+/* One lane of the battle field: a cell row indexed by position + 0x54, and its bounds. */
+typedef struct {
+    s8 cell[0xA0];   /* 0x00 */
+    s32 min;         /* 0xA0 */
+    s32 max;         /* 0xA4 */
+} Lane;
 /* A side's state (BtlSide.ship, 0xA00 bytes, set up by fn_8014FCF0). */
 struct BtlShip {
     u8* x0;                  /* 0x000 */
@@ -541,7 +562,9 @@ struct BtlShip {
     u32 x8;                  /* 0x008 */
     s16 xc;                  /* 0x00C */
     s16 idx;                 /* 0x00E side index */
-    u8 pad10[0x95C - 0x10];
+    u8 pad10[0x38 - 0x10];
+    Lane lane[2];            /* 0x038 */
+    u8 pad188[0x95C - 0x188];
     Obj_80153060 fx[2];      /* 0x95C */
     s32 x9a4;                /* 0x9A4 */
     u8 pad9a8[0x9C0 - 0x9A8];
@@ -762,10 +785,6 @@ extern Node *fn_802268E8(void *, void *);
 extern void *fn_801E1C7C(s32);
 void fn_801589BC(Obj_8015887C *t);
 extern void fn_801580A4(s32 *out, f32 *v);
-typedef struct {
-    f32 pos[3];
-    s32 ang[3];
-} Rec;
 typedef struct {
     s32 f0;
     u8 pad4[0x34 - 4];
@@ -1763,6 +1782,42 @@ s32 fn_80156A3C(void) {
 }
 
 extern void fn_80150014(Msg*, s16);
+void fn_80157360(s32 idx) {
+    BtlShip *fld = lbl_80346FC8[idx]->ship;
+    Lane *p = &fld->lane[0];
+    Lane *q = &fld->lane[1];
+    s32 i;
+    s32 n;
+    if (lbl_803472A8 == 0) {
+        return;
+    }
+    n = lbl_803472A8->count;
+    for (i = 0; i < n; i++) {
+        BtlTrack *e = &lbl_80346FD4->side[idx].ent[i];
+        s32 iy;
+        s32 ix;
+        s32 x;
+        s32 y;
+        s8 *f = e->f;
+        f[0] = 0;
+        f[1] = 0;
+        f[2] = 0;
+        f[3] = 0;
+        ix = (e->aim[199][1] << 7) / 0x10000;
+        iy = (e->aim[439][1] << 7) / 0x10000;
+        if (p->cell[ix + 0x54] == 0) e->f[0] |= 1;
+        if (q->cell[ix + 0x54] == 0) e->f[1] |= 1;
+        if (p->cell[iy + 0x54] == 0) e->f[2] |= 1;
+        if (q->cell[iy + 0x54] == 0) e->f[3] |= 1;
+        x = e->aim[199][0];
+        y = e->aim[439][0];
+        if (x < p->min || x > p->max) e->f[0] |= 1;
+        if (x < q->min || x > q->max) e->f[1] = 1;
+        if (y < p->min || y > p->max) e->f[2] = 1;
+        if (y < q->min || y > q->max) e->f[3] = 1;
+    }
+}
+
 void fn_80157510(Msg* a, s16 i) {
     fn_80150014(a, i);
 }
@@ -2580,7 +2635,7 @@ s32 fn_8014FB58(void *p, s32 which) {
     Pl *pl = p;
     s16 a = pl->xe;
     u8 *p1 = lbl_80346FD0 + lbl_803472BC * 16 + a * 8 + lbl_80346FC0 * 2;
-    s8 *p2 = (s8 *)(lbl_80346FD4 + a * 0x211a4 + lbl_80346FC0 * 0x8468 + 0x10000 - 0x7bac);
+    s8 *p2 = lbl_80346FD4->side[a].ent[lbl_80346FC0].f;
     s32 flag = lbl_803472B8;
     s32 r = 0;
 
@@ -2738,10 +2793,10 @@ void fn_80156588(void)
 
 void fn_80157684(Rec_80125820 *out, s32 a, f32 t)
 {
-    u8 *base = lbl_80346FD4;
+    BtlTracks *base = lbl_80346FD4;
     f32 f = t + (120.0f + (lbl_803472E0 - (f32)lbl_80346FC4));
-    if (base != 0 && *(s32 *)(base + 0x42348) != 0) {
-        Rec_80157684 *src = (Rec_80157684 *)(base + a * 0x211a4 + lbl_80346FC0 * 0x8468 + (s32)f * 0x18);
+    if (base != 0 && base->ready != 0) {
+        Rec_80157684 *src = &base->side[a].ent[lbl_80346FC0].rec[(s32)f];
         out->pos[0] = src->pos[0];
         out->pos[1] = src->pos[1];
         out->pos[2] = src->pos[2];
@@ -3572,20 +3627,20 @@ void fn_80158708(In *in) {
     o->h1d4 = in->h8;
 }
 
-void fn_801577CC(u8 *base, s32 a, s32 b, s32 i) {
+void fn_801577CC(BtlTracks *base, s32 a, s32 b, s32 i) {
     NJS_MATRIX m;
     f32 v[3];
     f32 p[3];
     BtlSide *o = lbl_80346FC8[b];
     s32 k = 0;
-    u8 *pa = base + a * 0x211a4 + i * 0x8468;
-    Rec *A = (Rec *)pa;
-    Rec *B = (Rec *)(base + b * 0x211a4 + i * 0x8468);
-    s32 *out = (s32 *)(pa + 0x5838);
+    BtlTrack *pa = &base->side[a].ent[i];
+    Rec_80157684 *A = pa->rec;
+    Rec_80157684 *B = base->side[b].ent[i].rec;
+    s32 *out = pa->aim[0];
     s32 t;
     for (; k < 0x3ad; k++) {
         njUnitMatrix(m);
-        njRotateZXY(m, B->ang[0], B->ang[1], B->ang[2]);
+        njRotateZXY(m, B->v[0], B->v[1], B->v[2]);
         njCalcPoint(m, &o->centre, (NJS_POINT3 *)p);
         v[0] = B->pos[0] + p[0] - A->pos[0];
         v[1] = B->pos[1] + p[1] - A->pos[1];
@@ -3594,8 +3649,8 @@ void fn_801577CC(u8 *base, s32 a, s32 b, s32 i) {
         v[1] = -v[1];
         v[2] = -v[2];
         fn_801580A4(out, v);
-        out[0] -= A->ang[0];
-        out[1] -= A->ang[1];
+        out[0] -= A->v[0];
+        out[1] -= A->v[1];
         t = out[0] & 0xffff;
         if (t >= 0x8000) {
             t = -(0x10000 - t);
@@ -3747,7 +3802,7 @@ void fn_80157150(s32 a)
     s32 n;
     Ent_80157150 *e;
     s32 f;
-    s8 *q;
+    BtlTrack *q;
 
     if ((*(Cnt_80157150 **)&lbl_803472A8) == 0) {
         return;
@@ -3755,30 +3810,30 @@ void fn_80157150(s32 a)
     n = (*(Cnt_80157150 **)&lbl_803472A8)->count;
     e = (*(Cnt_80157150 **)&lbl_803472A8)->ents;
     for (i = 0; i < n; i++) {
-        q = (s8 *)(lbl_80346FD4 + a * 0x211a4 + i * 0x8468);
+        q = &lbl_80346FD4->side[a].ent[i];
         if (a == 0) {
             f = 0;
             if ((*(s8 **)&lbl_80346FD0) != 0) {
                 f = (*(s8 **)&lbl_80346FD0)[lbl_803472BC * 16 + i * 2 + a * 8];
             }
-            f |= q[0x8455] | (q[0x8454] << 1);
+            f |= q->f[1] | (q->f[0] << 1);
             e->f34 = f;
             if ((*(s8 **)&lbl_80346FD0) != 0) {
                 f = (*(s8 **)&lbl_80346FD0)[lbl_803472BC * 16 + i * 2 + a * 8 + 1];
             }
-            f |= q[0x8457] | (q[0x8456] << 1);
+            f |= q->f[3] | (q->f[2] << 1);
             e->f38 = f;
         } else {
             f = 0;
             if ((*(s8 **)&lbl_80346FD0) != 0) {
                 f = (*(s8 **)&lbl_80346FD0)[lbl_803472BC * 16 + i * 2 + a * 8];
             }
-            f |= q[0x8455] | (q[0x8454] << 1);
+            f |= q->f[1] | (q->f[0] << 1);
             e->f3c = f;
             if ((*(s8 **)&lbl_80346FD0) != 0) {
                 f = (*(s8 **)&lbl_80346FD0)[lbl_803472BC * 16 + i * 2 + a * 8 + 1];
             }
-            f |= q[0x8457] | (q[0x8456] << 1);
+            f |= q->f[3] | (q->f[2] << 1);
             e->f40 = f;
         }
         e++;
