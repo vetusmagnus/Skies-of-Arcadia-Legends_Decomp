@@ -484,8 +484,23 @@ extern s32 fn_8016C888(void);
 extern u8 lbl_802E7D5C[], lbl_802E8390[], lbl_802E83E0[], lbl_802E8464[], lbl_802E84E8[];
 void fn_8016CED8(Task* task);
 extern void* lbl_803475A8;
-typedef struct { u8 mode; u8 flag1; u8 pad02[2]; f32 f4; f32 f8; u8 pad0C[0x20]; f32 f2c; f32 f30; f32 f34; } Sub_8016D034;
-typedef struct { u8 pad00[0x24]; Sub_8016D034* sub; } Owner_8016D034;
+typedef struct {
+    u8 mode;
+    u8 flag1;
+    u8 x2;
+    u8 pad03;
+    f32 f4;
+    f32 f8;
+    u8 pad0C[0x20 - 0xc];
+    f32 f20;
+    f32 f24;
+    s8 stage;           /* 0x28 */
+    u8 pad29[3];
+    f32 f2c;
+    f32 f30;
+    f32 f34;
+} Sub_8016D034;
+typedef struct { u8 pad00[0x19]; u8 state; u8 pad1a[0xa]; Sub_8016D034* sub; } Owner_8016D034;
 extern Owner_8016D034* lbl_803470B8;
 extern f32 fn_80291888(f32 x);
 typedef struct {
@@ -3179,20 +3194,82 @@ void fn_8016C870(u8 v) {
     (*(u8**)((u8*)lbl_803470B0 + 0x24))[1] = v;
 }
 
+/* Declared int (as the original, implicitly): no value is returned and the caller ignores r3, but MWCC then keeps r3 (mode) out of the allocation. */
+s32 fn_8016CCD8(s32 mode) {
+    Sub_8016D034* s = lbl_803470B8->sub;
+    Sub_8016D034* p;
+    f32 t;
+    switch (mode) {
+    case 1:
+        s->f34 = 1.0f;
+        s->f2c = 0.5f;
+        s->f20 = s->f20 - 3.0f;
+        if (s->f20 < -5.0f) {
+            lbl_803470B8->sub->stage = 2;
+        }
+        break;
+    case 2:
+        s->f34 = 1.0f;
+        s->f2c = 0.5f;
+        break;
+    case 3:
+        s->f34 = 1.0f;
+        s->f2c = 0.5f;
+        s->f20 += 1.0f;
+        if (s->f20 >= 0.0f) {
+            lbl_803470B8->sub->stage = 0;
+        }
+        break;
+    case 0:
+        if (165.0f < s->f20 && s->f20 < 194.0f) {
+            s->f34 = 0.69f;
+            lbl_803470B8->sub->stage = 4;
+        } else {
+            s->f34 = 0.24f;
+        }
+        s->f2c = 1.0f;
+        p = lbl_803470B8->sub;
+        p->f20 = p->f24;
+        if (p->f20 > 194.0f) {
+            p->f20 = 194.0f;
+        }
+        break;
+    case 4:
+        if (165.0f >= s->f20) {
+            s->f34 = 0.24f;
+            lbl_803470B8->sub->stage = 0;
+        } else {
+            t = s->f34 + 0.46f * s->f30 / 10.0f;
+            if (t < 0.24f || 0.7f < t) {
+                s->f30 *= -1.0f;
+                t += 0.46f * s->f30 / 10.0f;
+            }
+            s->f34 = t;
+        }
+        s->f2c = 1.0f;
+        p = lbl_803470B8->sub;
+        p->f20 = p->f24;
+        if (p->f20 > 194.0f) {
+            p->f20 = 194.0f;
+        }
+        break;
+    }
+}
+
 void fn_8016D01C(void) {
-    u8* p = (u8*)lbl_803470B8;
+    Owner_8016D034* p = lbl_803470B8;
     if (p == NULL) {
         return;
     }
-    p[0x19] = 2;
+    p->state = 2;
 }
 
 void fn_8016D114(u8 v) {
-    u8* p = (u8*)lbl_803470B8;
+    Owner_8016D034* p = lbl_803470B8;
     if (p == NULL) {
         return;
     }
-    *(u8*)(*(u8**)((u8*)p + 0x24) + 0x2) = v;
+    p->sub->x2 = v;
 }
 
 s32 fn_8016E1D8(void *p) {
