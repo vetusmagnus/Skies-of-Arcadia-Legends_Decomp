@@ -171,12 +171,12 @@ typedef struct SpCurve {
 typedef struct EnemySkill {
     char name[17];
     u8 pad11[4];
-    u8 kind;                /* 0x15 */
+    s8 kind;                /* 0x15 */
     s8 effect;              /* 0x16 */
     u8 target;              /* 0x17 */
     s16 param;              /* 0x18 */
     u16 power;              /* 0x1A */
-    s8 element;             /* 0x1C */
+    u8 element;             /* 0x1C */
     s8 type;                /* 0x1D */
     s8 inflict;             /* 0x1E */
     s8 resist;              /* 0x1F */
