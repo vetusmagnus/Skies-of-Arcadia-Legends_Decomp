@@ -723,21 +723,6 @@ typedef struct {
     f32 f1a4;
     f32 f1a8;
 } Obj_8015FBE4;
-typedef struct {
-    u8 pad[0xe8];
-    Mo *fe8;
-    u8 padec[4];
-    Mo *ff0;
-    u8 padf4[0x18c - 0xf4];
-    f32 f18c;
-    f32 f190;
-    u8 pad194[4];
-    s32 f198;
-    s32 f19c;
-    f32 f1a0;
-    f32 f1a4;
-    f32 f1a8;
-} Obj_8015FE60;
 typedef struct Mot { u32 w0, frames; } Mot;
 typedef struct Obj_8015FF98 {
     u8 pad[0xe8];
@@ -3129,6 +3114,150 @@ s32 fn_801614E0(Ent_8015EBF4 *self, Arg_8016679C *a)
 }
 
 /* Integer-time variant of fn_80160424: find the segment holding t and evaluate it into out. */
+typedef struct Cmd_801649BC {
+    u8 pad0[0x1c];
+    u32 code;            /* 0x1C */
+    s32 shape;           /* 0x20 */
+    f32 scale;           /* 0x24 */
+} Cmd_801649BC;
+extern s32 fn_801E78C8(NJS_MOTION *m, NJS_POINT3 *pos, Angle *rot, NJS_POINT3 *d4, f32 frame);
+extern void fn_800A13D8(s32 m, Angle *out);
+s32 fn_8015FE60(s32 idx, EvObj *o, f32 a);
+
+s32 fn_801649BC(EvObj *self, Cmd_801649BC *cmd) {
+    Angle ax, ay, az;
+    EvObj *c = self->sub->target;
+    NJS_POINT3 pos;
+    NJS_POINT3 d4;
+    Angle rot[3];
+    f32 t;
+    f32 inv;
+    u16 flags;
+    s32 r;
+    f32 px, py, pz;
+    u32 code;
+
+    switch (c->state) {
+    case 0:
+        code = cmd->code;
+        c->motionId = code;
+        c->x24c.x = c->pos.x;
+        c->x24c.y = c->pos.y;
+        c->x24c.z = c->pos.z;
+        c->x20c = c->ang[0];
+        c->x210 = c->ang[1];
+        c->x214 = c->ang[2];
+        t = cmd->scale;
+        if (t == 3.4028235e38f) {
+            t = 1.0f;
+        }
+        if (t == 0.0f) {
+            return 0;
+        }
+        inv = 1.0f / t;
+        if (code == 0xffffffff) {
+            c->motion2 = c->motion;
+            c->x1a0 = c->x18c;
+            c->motion = 0;
+            c->x18c = 0.0f;
+            c->speed = 0.0f;
+            c->x19c = 1;
+            c->x198 = 1;
+            return 0;
+        }
+        if (fn_8015FE60(c->motionId, c, inv) == 0) {
+            return 0;
+        }
+        if (cmd->shape == 0x7fffffff) {
+            c->shape2 = c->shape;
+            c->shape = 0;
+        } else {
+            void *m = fn_8008F8FC(c, cmd->shape);
+            if (m != c->shape) {
+                c->shape2 = c->shape;
+                c->shape = m;
+            }
+        }
+        c->state = 1;
+    case 1:
+        if (cmd->code == 0x7fffffff) {
+            c->x18c = 0.0f;
+        } else if (cmd->code == 0x7ffffffe) {
+            c->x18c = c->motion->nbFrame - 1.0f;
+        }
+        r = fn_801E78C8(c->motion, &pos, rot, &d4, c->x18c);
+        if (c->coll != 0) {
+            px = c->pos.x;
+            py = c->pos.y;
+            pz = c->pos.z;
+            ax = c->ang[0];
+            ay = c->ang[1];
+            az = c->ang[2];
+            {
+                NJS_POINT3 zero = {0.0f, 0.0f, 0.0f};
+                njPushMatrixEx();
+                fn_80286EE8();
+                fn_8028B498();
+                njUnitMatrix(0);
+                pos.x = pos.x * c->scl.x;
+                pos.y = pos.y * c->scl.y;
+                pos.z = pos.z * c->scl.z;
+                njTranslate(0, c->x24c.x, c->x24c.y, c->x24c.z);
+                njRotateXYZ(0, c->x20c, c->x210, c->x214);
+                flags = r;
+                if (flags & 1) {
+                    njTranslate(0, pos.x, pos.y, pos.z);
+                }
+                if (flags & 2) {
+                    njRotateXYZ(0, rot[0], rot[1], rot[2]);
+                }
+                njCalcPoint(0, &zero, &pos);
+                fn_800A13D8(0, rot);
+                c->coll->pos[0] = pos.x;
+                c->coll->pos[1] = pos.y;
+                c->coll->pos[2] = pos.z;
+                c->coll->ang[0] = rot[0];
+                c->coll->ang[1] = rot[1];
+                c->coll->ang[2] = rot[2];
+                njPopMatrixEx();
+                fn_80222838(c->coll);
+            }
+            c->pos.x = px;
+            c->pos.y = py;
+            c->pos.z = pz;
+            c->ang[0] = ax;
+            c->ang[1] = ay;
+            c->ang[2] = az;
+        }
+        if (0.0f < c->speed) {
+            if (c->x18c >= c->motion->nbFrame - 1.001f) {
+                c->speed = 0.0f;
+                c->x18c = c->motion->nbFrame - 1.0f;
+                return 0;
+            }
+            if (c->x18c + c->speed > c->motion->nbFrame - 1.0f) {
+                cmd->code = 0x7ffffffe;
+            }
+        } else {
+            if (c->x18c < fabsf(c->speed)) {
+                if (c->x18c != 0.0f) {
+                    cmd->code = 0x7fffffff;
+                } else {
+                    c->speed = 0.0f;
+                    c->x18c = 0.0f;
+                    return 0;
+                }
+            } else if (c->x18c + c->speed < 0.0f) {
+                cmd->code = 0x7fffffff;
+            }
+        }
+        break;
+    default:
+        break;
+    }
+    return 1;
+}
+
 s32 fn_80165DE8(Spl *sp, s32 t, void *out) {
     u32 n;
     u32 k;
@@ -6525,37 +6654,37 @@ s32 fn_8015FBE4(Mo *m, Obj_8015FBE4 *o, f32 a, f32 b)
     return 1;
 }
 
-s32 fn_8015FE60(s32 idx, Obj_8015FE60 *o, f32 a)
+s32 fn_8015FE60(s32 idx, EvObj *o, f32 a)
 {
-    Mo *m = fn_8008F8FC(o, idx);
+    NJS_MOTION *m = fn_8008F8FC(o, idx);
     if (m == 0) {
-        o->ff0 = o->fe8;
-        o->fe8 = 0;
-        o->f190 = 0.0f;
-        o->f19c = 1;
-        o->f198 = 1;
+        o->motion2 = o->motion;
+        o->motion = 0;
+        o->speed = 0.0f;
+        o->x19c = 1;
+        o->x198 = 1;
         return 0;
     }
     {
-        f32 prev = o->f190;
-        o->f198 = 0;
-        o->f190 = a;
-        o->ff0 = o->fe8;
-        o->fe8 = m;
-        o->f1a0 = o->f18c;
-        o->f18c = 0.0f;
-        o->f1a4 = 0.0f;
-        o->f1a8 = 0.2f;
-        if (prev != 0.0f && o->f1a0 != 0.0f) {
-            o->f19c = 0;
-        } else if (o->ff0 != 0 && m != o->ff0) {
-            o->f19c = 0;
+        f32 prev = o->speed;
+        o->x198 = 0;
+        o->speed = a;
+        o->motion2 = o->motion;
+        o->motion = m;
+        o->x1a0 = o->x18c;
+        o->x18c = 0.0f;
+        o->x1a4 = 0.0f;
+        o->x1a8 = 0.2f;
+        if (prev != 0.0f && o->x1a0 != 0.0f) {
+            o->x19c = 0;
+        } else if (o->motion2 != 0 && m != o->motion2) {
+            o->x19c = 0;
         } else {
-            o->f19c = 1;
+            o->x19c = 1;
         }
     }
     if (0.0f > a) {
-        o->f18c = (f32)o->fe8->f4 - 1.0f;
+        o->x18c = (f32)o->motion->nbFrame - 1.0f;
     }
     return 1;
 }

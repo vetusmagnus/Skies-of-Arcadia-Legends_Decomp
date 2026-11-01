@@ -304,7 +304,8 @@ typedef struct EvObj {
     NJS_MOTION* motion;      /* 0xE8 */
     void* shape;             /* 0xEC */
     NJS_MOTION* motion2;     /* 0xF0 */
-    u8 padF4[0x100 - 0xF4];
+    void* shape2;            /* 0xF4 */
+    u8 padF8[0x100 - 0xF8];
     NJS_TEXLIST* texlist;    /* 0x100 */
     NJS_POINT3 home;         /* 0x104 */
     Angle tgt[3];            /* 0x110 */
