@@ -61,8 +61,8 @@ typedef struct {
     void **x28;
 } HolderB;
 extern HolderB *lbl_80346F20;
-typedef struct SysC { u8 pad0[2]; s8 x2; u8 pad3; u16 x4; s8 x6; u8 x7; u8 x8; u8 x9; u8 pad1[0x30 - 0xa]; u8 x30; u8 x31; s8 x32; s8 x33; f32 x34; } SysC;
-typedef struct HolderC { u8 pad[0x24]; SysC* x24; } HolderC;
+typedef struct SysC { u8 pad0[2]; s8 x2; u8 pad3; s16 x4; s8 x6; char x7; u8 x8; s8 x9; u8 pad1[0x30 - 0xa]; u8 x30; char x31; s8 x32; s8 x33; f32 x34; } SysC;
+typedef struct HolderC { u8 pad[0x24]; SysC* x24; struct Spr** x28; } HolderC;
 extern HolderC* lbl_80346F28;
 typedef struct {
     s8 x0;
@@ -143,9 +143,13 @@ void fn_8012B308(s8 n);
 extern void fn_8012BD34(void);
 extern void fn_8012B47C(void);
 extern void fn_8012F61C(void);
-typedef struct {
+typedef struct SprColor {
+    u8 pad0[0x14];
+    u32 color;
+} SprColor;
+typedef struct Spr {
     u8 pad0[4];
-    u32 x4;
+    SprColor *x4;
     u8 pad8[0x14 - 8];
     f32 f14;
     f32 f18;
@@ -659,6 +663,138 @@ void fn_8012E6EC(void) {
     }
 }
 
+static inline s32 BitSet(s32 mask, s32 bit) {
+    return (mask & (1 << bit)) != 0;
+}
+
+void fn_8012ECF8(void) {
+    Req r;
+    s32 i;
+    s32 off;
+    s32 aux;
+    f32 sy;
+
+    off = 0;
+    for (i = 0; i < 16; i++, off += 4) {
+        if (i >= 0 && i < 9) {
+        } else if (i >= 9 && i < 11) {
+            r.obj = lbl_80346F28->x28[i];
+            if (i == 9) {
+                if (lbl_80346F28->x24->x2 == 2) {
+                    continue;
+                }
+                switch (lbl_80346F28->x24->x6) {
+                case 0:
+                    if (lbl_80346F28->x24->x2 == 3) {
+                        r.obj->x4->color = 0xc8101010;
+                    } else {
+                        r.obj->x4->color = 0xc8004000;
+                    }
+                    break;
+                case 1:
+                    r.obj->x4->color = 0xc8400000;
+                    break;
+                case 2:
+                    r.obj->x4->color = 0xc820002a;
+                    break;
+                case 3:
+                    r.obj->x4->color = 0xc8000040;
+                    break;
+                case 4:
+                    r.obj->x4->color = 0xc82a2000;
+                    break;
+                case 5:
+                    r.obj->x4->color = 0xdc101820;
+                    break;
+                case 6:
+                case 7:
+                    r.obj->x4->color = 0xc8101010;
+                    break;
+                case 8:
+                case 9:
+                default:
+                    r.obj->x4->color = 0xc8101010;
+                    break;
+                }
+                r.x = 0.001f * i + -1.3f;
+                r.y = 1.0f;
+                r.z0 = 0;
+                r.z1 = 0;
+                r.one = 1.0f;
+                r.w = 1.0f;
+                fn_8012A9A8(&r);
+            } else {
+                switch (lbl_80346F28->x24->x2) {
+                case 2:
+                    r.obj = fn_801D68C4(lbl_80346F04, 0x2b);
+                    break;
+                default:
+                    r.obj = fn_801D68C4(lbl_80346F04, 0x20);
+                    break;
+                }
+                r.x = 0.001f * i + -1.3f;
+                r.y = 1.0f;
+                r.z0 = 0;
+                r.z1 = 0;
+                r.one = 1.0f;
+                r.w = 1.0f;
+                fn_8012A9A8(&r);
+            }
+        } else if (i >= 11 && i < 12) {
+        } else if (i >= 12 && i < 15) {
+            if (lbl_80346F28->x24->x31 == 1 && lbl_80346F28->x24->x7 != 1) {
+                r.obj = lbl_80346F28->x28[i];
+                r.x = 2.0f * (0.0001f * i) + -1.288f;
+                if (i != 14) {
+                    aux = 0;
+                    sy = 1.0f;
+                } else {
+                    aux = 1;
+                    sy = lbl_80346F28->x24->x34;
+                }
+                r.y = 1.0f;
+                r.z0 = 0;
+                r.z1 = aux;
+                r.one = 1.0f;
+                r.w = sy;
+                fn_8012A9A8(&r);
+            }
+        } else if (i >= 15) {
+            s8 idx = lbl_80346F28->x24->x9;
+            if (idx != -1) {
+                r.obj = lbl_80346F28->x28[i];
+                r.obj->f18 = (idx * 0x18 + 0x12a);
+                r.x = -1.1989f;
+                r.y = 1.0f;
+                r.z0 = 0;
+                r.z1 = 1;
+                r.one = 1.0f;
+                r.w = 1.0f;
+                fn_8012A9A8(&r);
+            }
+        }
+    }
+    off = 0;
+    for (i = 0; i < 16; i++, off += 4) {
+        if (i >= 0 && i < 9) {
+            if (BitSet(lbl_80346F28->x24->x4, i) == 1) {
+                r.obj = lbl_80346F28->x28[i];
+                if (i == lbl_80346F28->x24->x6) {
+                    r.x = -1.2f;
+                } else {
+                    r.x = -1.3f;
+                }
+                r.y = 1.0f;
+                r.z0 = 0;
+                r.z1 = 0;
+                r.one = 1.0f;
+                r.w = 1.0f;
+                fn_8012A9A8(&r);
+            }
+        }
+    }
+}
+
 void fn_8012F458(u8 v) { lbl_80346F30->x24->x2 = v; }
 
 void fn_8012F468(void* p) { lbl_80346F30->x24->x4 = p; }
@@ -920,7 +1056,7 @@ void fn_8012BAA8(Num* n)
         r.obj = fn_8012BC48(tens);
         r.obj->f14 = (f32)n->x0;
         r.obj->f18 = (f32)n->x2;
-        *(u32*)((u8*)r.obj->x4 + 0x14) = n->x10;
+        r.obj->x4->color = n->x10;
         r.x = n->f8;
         r.y = 0.0f;
         r.z0 = 0;
@@ -932,7 +1068,7 @@ void fn_8012BAA8(Num* n)
     r.obj = fn_8012BC48((s8)(n->cnt % 10));
     r.obj->f14 = (f32)(n->x0 + 0x10);
     r.obj->f18 = (f32)n->x2;
-    *(u32*)((u8*)r.obj->x4 + 0x14) = n->x10;
+    r.obj->x4->color = n->x10;
     r.x = n->f8;
     r.y = 0.0f;
     r.z0 = 0;
