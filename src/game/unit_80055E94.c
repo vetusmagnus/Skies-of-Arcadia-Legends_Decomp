@@ -2593,10 +2593,10 @@ void fn_80060950(u8 *p) {
     fn_800D208C(*(void **)(p + 0x34), *(f32 *)(p + 0x38));
 }
 
-void fn_80061014(f32 *a, f32 *b, f32 *out) {
-    out[0] = b[0] - a[0];
-    out[1] = b[1] - a[1];
-    out[2] = b[2] - a[2];
+void fn_80061014(Vec3f *a, Vec3f *b, Vec3f *out) {
+    out->x = b->x - a->x;
+    out->y = b->y - a->y;
+    out->z = b->z - a->z;
 }
 
 void fn_800614FC(s32 *src, s32 *dst) {
@@ -3690,6 +3690,25 @@ void fn_8006E75C(Ent6EB88 *t, char *name, s32 v) {
 
 void fn_8006EA70(char* path, char* name, Node** out, void* key) {
     fn_8006E924(path, name, out, key);
+}
+
+void fn_80071A78(Vec3f *a, Vec3f *b, f32 s) {
+    Vec3f v1;
+    Vec3f v2;
+    fn_80061014(a, b, &v1);
+    fn_80061014(b, a, &v2);
+    v1.x = 0.5f * (s * v1.x);
+    v2.x = 0.5f * (s * v2.x);
+    v1.y = 0.5f * (s * v1.y);
+    v2.y = 0.5f * (s * v2.y);
+    v1.z = 0.5f * (s * v1.z);
+    v2.z = 0.5f * (s * v2.z);
+    a->x = a->x + v1.x;
+    a->y = a->y + v1.y;
+    a->z = a->z + v1.z;
+    b->x = b->x + v2.x;
+    b->y = b->y + v2.y;
+    b->z = b->z + v2.z;
 }
 
 void fn_80071B98(f32 *a, f32 *b, f32 *out) {
