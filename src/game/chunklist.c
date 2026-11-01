@@ -1,3 +1,4 @@
+#include "types.h"
 /* Resource chunk lists (0x80035918-0x80036520): freeing, merging and loading the 16-byte chunk
  * headers (ChunkHdr) that task resources are made of, and fn_8003617C, which gives each chunk type
  * its data size. The end is a guess: the .data jump table at 0x802DD0C8 belongs to this file and
@@ -13,9 +14,10 @@ extern ChunkHdr* fn_8006DAF8(void* obj);
 extern void* fn_801CC69C(void* name);
 extern void fn_801CC608(void* h, void* buf, u32 size);
 extern void fn_801CC65C(void* h);
-
 int fn_8003617C(ChunkHdr* p);
 int fn_800377FC(ChunkHdr* m);
+typedef struct Ent { s16 id; s16 type; u8 pad[8]; void* data; } Ent;
+extern void fn_801E17E0(void*);
 
 /* Free every chunk's data block (type 1 chunks don't own theirs). */
 inline void FreeChunkData(ChunkHdr* list)
@@ -44,10 +46,6 @@ inline void FreeChunks(ChunkHdr* list)
     fn_801E17E0(list);
 }
 
-void fn_80035918(ChunkHdr* p)
-{
-    FreeChunkData(p);
-}
 inline s16 CountChunks(ChunkHdr* p)
 {
     int i;
@@ -480,4 +478,28 @@ void fn_800364B8(void* p)
 s16 fn_800364F4(ChunkHdr* e)
 {
     return CountChunks(e);
+}
+
+void fn_80035918(Ent* p)
+{
+    Ent* e;
+    s16 id, type;
+
+    if (p != 0) goto set;
+    return;
+loop:
+    for (;;) {
+        id = e->id;
+        type = e->type;
+        if (id < 0) break;
+        if (type != 1) {
+            fn_801E17E0(e->data);
+            e->data = 0;
+        }
+        e++;
+    }
+    return;
+set:
+    e = p;
+    goto loop;
 }

@@ -494,7 +494,13 @@ void fn_8002C4A0(Msg* a, s16 i) {
 
 void fn_8002C51C(Msg* a, s16 i) {
     AccB(lbl_80309DE4[i], a->xc);
-    Acc2B(lbl_80309DE4[i], a->x8);
+    {
+        Chr* e = lbl_80309DE4[i];
+        s32 v = e->x14;
+        v += a->x8;
+        if (e->x18 < v) v = e->x18;
+        e->x14 = v;
+    }
     fn_80010474(i);
 }
 
@@ -2214,6 +2220,15 @@ void fn_80030280(s32 id) {
     }
 }
 
+static inline void ClearId(s32* ids, s32 id)
+{
+    s16 k;
+    s32* p;
+    for (k = 0, p = ids; k < 128; p++, k++) {
+        if (id == *p) *p = 0;
+    }
+}
+
 s16 fn_800303EC(s32* ids, s32 flag) {
     s32* ip = ids;
     s16 i;
@@ -2228,13 +2243,8 @@ s16 fn_800303EC(s32* ids, s32 flag) {
             }
             if (j == 128) {
                 if (flag != 0) {
-                    s32* p;
-                    s16 k;
                     fn_80030280(id);
-                    k = 0;
-                    for (p = ids; k < 128; p++, k++) {
-                        if (id == *p) *p = 0;
-                    }
+                    ClearId(ids, id);
                 }
             } else {
                 count++;
