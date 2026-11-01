@@ -3323,6 +3323,102 @@ void fn_800DBB4C(Task* t) {
     ClipZPop();
 }
 
+extern void fn_801D9BFC(void);
+extern void fn_801D9CF0(f32 a, f32 b, f32 c);
+extern void fn_801D9B34(void);
+extern void fn_8029CE6C(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f);
+
+void fn_800DC828(Task *self)
+{
+    EvObj *e = self->work;
+    IVec_800D9BA0 k;
+    Vec_800D9BA0 v;
+    u32 type;
+    u16 hw;
+    EvObj *ev;
+    ItemList *l;
+
+    k.x = e->b16a;
+    k.y = 0;
+    k.z = e->b16b;
+    fn_80090B68(&k, &v);
+    if (lbl_80347450 != 0) {
+        fn_80090BE4(&lbl_80347450->pos.x, &k);
+    } else {
+        return;
+    }
+    if (e->mapMode->mode != 0) {
+        self->state = 0xff;
+    } else {
+        ev = lbl_80347450;
+        hw = ev->hit->h24;
+        type = (hw & 0x7f00) >> 8;
+        if (ev == 0) return;
+        if (((hw >> 8) & 0xff) != 0 && (type == 5 || type == 7) &&
+            ev->pos.y > -180.0f && ev->pos.y < 180.0f) {
+            if (e->colour.a > -1.0f) {
+                e->colour.a -= 0.1f;
+            }
+        } else {
+            if (e->colour.a < 0.0f) {
+                e->colour.a += 0.1f;
+            }
+        }
+    }
+    ClipZPush();
+    lbl_80346788 = lbl_80347560;
+    lbl_8034678C = -1200.0f;
+    njClipZ(lbl_80347560, -1200.0f);
+    switch (self->state) {
+    case 0:
+        e->x1ec = 1;
+        if (e->texlist != 0) {
+            fn_80227810(e->texlist);
+        }
+        e->clipNear = -1100.0f;
+        e->clipFar = -1200.0f;
+        e->x08 = 1;
+        e->x2c = 1;
+        e->id = 0;
+        e->pos.x = e->pos.x - v.x;
+        e->pos.z = e->pos.z - v.z;
+        e->home.x = e->pos.x;
+        e->home.y = e->pos.y;
+        e->home.z = e->pos.z;
+        self->f20 = -20000.0f;
+        e->id |= 0x2000;
+        self->state = 1;
+        break;
+    case 1:
+        fn_80090A7C(&lbl_80347450->pos.x, &v);
+        e->pos.x = (e->home.x + v.x) - 2400.0f * k.x;
+        e->pos.y = e->home.y;
+        e->pos.z = (e->home.z + v.z) - 2400.0f * k.z;
+        fn_801D9BFC();
+        fn_801D9CF0(1.0f, 1.0f, 1.0f);
+        fn_8029CE6C(6, 0x80, 0, 6, 0x80, 1);
+        l = e->ext->items;
+        e->shape = (l->count > 0) ? l->items[0] : 0;
+        if (e->motion == 0) {
+            fn_801E66E0(e);
+        } else {
+            l = e->ext->items;
+            e->shape = (l->count > 1) ? l->items[1] : 0;
+            fn_801E5DF0(e);
+        }
+        fn_8029CE6C(4, 0, 0, 7, 0, 1);
+        fn_801D9B34();
+        break;
+    case 0xff:
+        if (e->x1ec != 0 && e->texlist != 0) {
+            fn_802275A4(e->texlist, 0);
+        }
+        fn_80100B74(self);
+        break;
+    }
+    ClipZPop();
+}
+
 void fn_800DCF18(Task* t) {
     EvInfoBox* info;
     EvObj* e = t->work;
