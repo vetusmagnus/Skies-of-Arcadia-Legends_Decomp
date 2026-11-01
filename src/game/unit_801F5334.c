@@ -1162,6 +1162,27 @@ s32 fn_80201458(u32 flags, Scpt *st) {
     return 1;
 }
 
+s32 fn_8020726C(u16 flags, Scpt *s)
+{
+    u8 *c;
+    if (flags & 1) {
+        c = s->cur.b;
+        fn_801F7500();
+        s->cur.b = c + 4;
+        lbl_8030CEA0.x18fc = lbl_80311970.f[0];
+        lbl_8030CEA0.x1900 = lbl_80311970.f[1];
+        lbl_8030CEA0.x1904 = lbl_80311970.f[2];
+        lbl_8030CEA0.x1908 = lbl_80311970.w[0];
+        lbl_8030CEA0.x190c = lbl_80311970.w[1];
+        lbl_8030CEA0.x1910 = lbl_80311970.w[2];
+        fn_80097294(0);
+    }
+    if (flags & 8) {
+        return 1;
+    }
+    return 0;
+}
+
 s32 fn_8020731C(u32 a, Scpt *st) {
     if (a & 1) {
         u8 *c = st->cur.b;
