@@ -344,33 +344,13 @@ typedef struct Obj {
     u8 pad14[8];
     s32 x1c;
 } Obj;
-typedef struct V3f_80224768 { f32 x, y, z; } V3f_80224768;
-typedef struct V3i_80224768 { s32 x, y, z; } V3i_80224768;
-typedef struct Mdl_80224768 { s32 x0; s16 x4; } Mdl_80224768;
-typedef struct Obj_80224768 {
-    u8 pad0[8];
-    Mdl_80224768 *mdl;
-    u8 padc[0x1c - 0xc];
-    V3f_80224768 *pos;
-    V3f_80224768 *scl;
-    V3i_80224768 *rot;
-    V3f_80224768 *pos2;
-    V3i_80224768 *rot2;
-    u8 pad_30[0x5e];
-    u16 x8e;
-} Obj_80224768;
-typedef struct B_80224768 { u8 pad[0x24]; u16 x24;
-    u8 pad_26[0x4];
-    u16 x2a;
-    u16 x2c;
-    u16 x2e; } B_80224768;
 extern void njPushMatrixEx(void);
 extern void njPopMatrixEx(void);
 extern void fn_80286EE8(void);
 extern void fn_8028B498(void);
 extern void njTranslate(void *m, f32 x, f32 y, f32 z);
 extern void njScale(void *m, f32 x, f32 y, f32 z);
-extern s32 fn_801D2A64(void *a, void *c, s32 d, void *b);
+extern s32 fn_801D2A64(void *a, void *c, struct ModelNode *d, struct Cmp *b);
 u32 fn_80223228(u16 n);
 extern void fn_80297DB4(void *a, void *b, s32 c, s32 d, s32 e);
 extern void fn_80297DA4(void *a, void *b, void *c, s32 d);
@@ -758,7 +738,6 @@ extern s32 fn_80223A34(s32, u16 *);
 extern void fn_801DBE1C(const char *, ...);
 extern char lbl_802D9608[];
 extern char lbl_802D95D4[];
-typedef struct List_80224674 { Obj_80224768 *head; u8 pad4[6]; s16 count; } List_80224674;
 extern Ctx802281DC *lbl_803475EC;
 extern s32 lbl_803477F8;
 extern s32 lbl_80347EC4;
@@ -778,6 +757,11 @@ extern void fn_801DA1C0(void);
 extern void fn_8028BB90(Camera803119E0 *cam);
 extern void njClipZ(f32 n, f32 f);
 extern void TextReset(void);
+/* A line query: from a to b. */
+typedef struct Line {
+    NJS_POINT3 a;
+    NJS_POINT3 b;
+} Line;
 typedef struct Seg {
     NJS_POINT3 pos;
     f32 y;          /* the ground height found */
@@ -1108,6 +1092,115 @@ s32 fn_8022377C(NJS_POINT3* out, NJS_POINT3* in, Xf_80224F28* o, Cmp* c)
         }
     }
     return ret;
+}
+
+s32 fn_80224674(NJS_POINT3 *out, Cmp *obj, Line *pos, Slot *list);
+s32 fn_80224768(void *a, Cmp *b, void *c, Xf_80224F28 *o);
+
+static inline s16 SlotFind(Slot* l, u16 id) {
+    Xf_80224F28* p = l->p0;
+    s32 i;
+    for (i = 0; i < l->count; i++) {
+        if (p->key == id) {
+            return i;
+        }
+        p++;
+    }
+    return -1;
+}
+
+s32 fn_80224884(NJS_POINT3* a, Cmp* s, Line* b, Slot* l) {
+    u16 id = s->key;
+    s16 j;
+    s32 k;
+    s32 r;
+    s16 idx;
+    Xf_80224F28* e;
+    if (id == 0xffff) {
+        return fn_80224674(a, s, b, l);
+    }
+    if (s->idx < 0) {
+        s->idx = SlotFind(l, id);
+    }
+    idx = s->idx;
+    if (idx < 0) {
+        r = 0;
+    } else {
+        e = l->p0 + idx;
+        r = fn_80224768(a, s, b, e);
+    }
+    if (r == 0 && s->idx >= 0 && !(s->flags & 2)) {
+        for (k = 0; k < e->nnear; k++) {
+            j = e->near[k];
+            r = fn_80224768(a, s, b, l->p0 + j);
+            if (r != 0) {
+                s->key = l->p0[j].key;
+                s->idx = j;
+                break;
+            }
+        }
+    }
+    return r;
+}
+
+s32 fn_80224884(NJS_POINT3* a, Cmp* s, Line* b, Slot* l);
+
+s32 fn_80224D08(NJS_POINT3 *a, NJS_POINT3 *p, NJS_POINT3 *q, Cmp *s) {
+    s32 res;
+    s32 c;
+    Slot *e;
+    s32 i;
+    Cmp loc;
+    Line v;
+    u16 id;
+
+    e = lbl_8034752C;
+    loc = *s;
+    c = lbl_80347528;
+    v.a.x = p->x;
+    v.a.y = p->y;
+    v.a.z = p->z;
+    v.b.x = q->x;
+    v.b.y = q->y;
+    v.b.z = q->z;
+    id = loc.group;
+    i = 0;
+    if (id == 0xffff) {
+        res = 0;
+        do {
+            if (e->p0 != 0) {
+                loc.idx = -1;
+                res = fn_80224884(a, &loc, &v, e);
+                if (res) {
+                    loc.group = e->key8;
+                    loc.slot = i;
+                    break;
+                }
+                c--;
+            }
+            i++;
+            e++;
+        } while (c > 0);
+    } else if (loc.slot < 0) {
+        res = 0;
+        do {
+            if (e->p0 != 0) {
+                if (e->key8 == id) {
+                    loc.slot = i;
+                    loc.idx = -1;
+                    res = fn_80224884(a, &loc, &v, e);
+                    break;
+                }
+                c--;
+            }
+            i++;
+            e++;
+        } while (c > 0);
+    } else {
+        res = fn_80224884(a, &loc, &v, &e[loc.slot]);
+    }
+    if (res) *s = loc;
+    return res;
 }
 
 Xf_80224F28 *fn_80225958(Cmp *k) {
@@ -2300,26 +2393,26 @@ void fn_8022B6F4(Obj *o) {
     }
 }
 
-s32 fn_80224768(void *a, B_80224768 *b, void *c, Obj_80224768 *o) {
-    Mdl_80224768 *m = o->mdl;
+s32 fn_80224768(void *a, Cmp *b, void *c, Xf_80224F28 *o) {
+    Shape_80224F28 *m = o->shape;
     s32 r;
     if (m == 0) {
         return 0;
     }
-    if (m->x4 == 2) {
+    if (m->kind == 2) {
         njPushMatrixEx();
         fn_80286EE8();
         fn_8028B498();
         njUnitMatrix(0);
         njTranslate(0, o->pos->x, o->pos->y, o->pos->z);
         njRotateZXY(0, o->rot->x, o->rot->y, o->rot->z);
-        njScale(0, o->scl->x, o->scl->y, o->scl->z);
+        njScale(0, o->scale->x, o->scale->y, o->scale->z);
         njTranslate(0, o->pos2->x, o->pos2->y, o->pos2->z);
         njRotateZXY(0, o->rot2->x, o->rot2->y, o->rot2->z);
-        r = fn_801D2A64(a, c, m->x0, b);
+        r = fn_801D2A64(a, c, m->p0, b);
         njPopMatrixEx();
         if (r != 0) {
-            b->x24 = fn_80223228(b->x24);
+            b->id = fn_80223228(b->id);
         }
     } else {
         r = 0;
@@ -3881,28 +3974,28 @@ void fn_802285AC(Item *it, f32 u) {
     if (it->active != 0 && it->target != 0) *it->target = it->cur;
 }
 
-s32 fn_80224674(NJS_POINT3 *out, B_80224768 *obj, NJS_POINT3 *pos, List_80224674 *list) {
-    Obj_80224768 *e;
+s32 fn_80224674(NJS_POINT3 *out, Cmp *obj, Line *pos, Slot *list) {
+    Xf_80224F28 *e;
     s32 i;
     s32 found;
     f32 best;
     s32 r;
 
-    e = list->head;
+    e = list->p0;
     r = 0;
     found = 0;
     for (i = 0; i < list->count; e++, i++) {
         NJS_POINT3 hit;
         r = fn_80224768(&hit, obj, pos, e);
         if (r == 1) {
-            f32 dx = pos->x - hit.x;
-            f32 dy = pos->y - hit.y;
-            f32 dz = pos->z - hit.z;
+            f32 dx = pos->a.x - hit.x;
+            f32 dy = pos->a.y - hit.y;
+            f32 dz = pos->a.z - hit.z;
             f32 d = dx * dx + dy * dy + dz * dz;
             if (found == 0 || best > d) {
-                obj->x2e = i;
+                obj->idx = i;
                 best = d;
-                obj->x2a = e->x8e;
+                obj->key = e->key;
                 out->x = hit.x;
                 out->y = hit.y;
                 out->z = hit.z;
