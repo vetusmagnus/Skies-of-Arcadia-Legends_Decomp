@@ -4597,6 +4597,17 @@ void fn_8001D1D8(Tk_8001D1D8* t, void *v) {
     fn_80071CF0((u8*)t->work + 0x1C, v);
 }
 
+void fn_8001F814(s8 a, s8 b) {
+    Task* t1 = FindChrOr0(a);
+    Task* t2;
+    Angle ang;
+    if (fn_80017A14(ChrW(t1)->st) == 0) {
+        t2 = FindChrOr0(b);
+        ang = fn_80071C74(ChrW(t1), ChrW(t2)->pos.x, ChrW(t2)->pos.z);
+        ChrW(t1)->ry = ang;
+    }
+}
+
 s32 fn_80020060(ChrAnim* p) {
     s32 i = 0;
     for (;;) {
