@@ -1,7 +1,13 @@
 #include "types.h"
-typedef struct TNode { u8 pad_0[0x4];
- u32 f4;
- u8 pad_8[0x24]; struct TNode* child; struct TNode* next; } TNode;
+/* The two words a node's x4 points at (fn_80073DD0 saves and copies them). */
+typedef struct TPair { s32 x0; s32 x4; } TPair;
+typedef struct TNode {
+    u8 pad_0[0x4];
+    TPair* f4;
+    u8 pad_8[0x24];
+    struct TNode* child;
+    struct TNode* next;
+} TNode;
 void fn_800740D0(TNode* n, s16* count);
 void* fn_801E1A74(s32 n, s32 size);
 void fn_80074394(void* a, s16* b);
@@ -14,7 +20,7 @@ typedef struct Node {
     u8 pad30[4];
 } Node;
 extern void fn_80061F58(void *p, u32 n, s32 c);
-extern void fn_80073DD0(void *a, void *b, s32 c, s32 e, s16 *m);
+void fn_80073DD0(TNode* a, TNode* b, s8 mode, s32* arr, s16* idx);
 extern s16 fn_80060F6C(s32 i, void *c, s32 k);
 typedef struct E34 { u32 flags; u8 pad[0x30]; } E34;
 void ReverbSTDFree(TNode *n, TNode **out);
@@ -23,6 +29,30 @@ void fn_80073D18(u8* a, u8* b, s16 idx) {
     s32 off = idx * 0x34;
     *(u32*)(a + off) |= 8;
     *(u32*)(b + off) |= 8;
+}
+
+void fn_80073DD0(TNode* a, TNode* b, s8 mode, s32* arr, s16* idx) {
+    if (b->f4 != 0 && a->f4 != 0) {
+        switch (mode) {
+        case 0:
+            arr[*idx] = b->f4->x4;
+            b->f4->x4 = a->f4->x4;
+            break;
+        case 1:
+            arr[*idx] = b->f4->x0;
+            b->f4->x0 = a->f4->x0;
+            break;
+        case 2:
+            b->f4->x4 = arr[*idx];
+            break;
+        case 3:
+            b->f4->x0 = arr[*idx];
+            break;
+        }
+        (*idx)++;
+    }
+    if (a->child != 0 && b->child != 0) fn_80073DD0(a->child, b->child, mode, arr, idx);
+    if (a->next != 0 && b->next != 0) fn_80073DD0(a->next, b->next, mode, arr, idx);
 }
 
 void fn_80074394(void* a, s16* b) {
@@ -95,10 +125,10 @@ void fn_800740D0(TNode* n, s16* count) {
     }
 }
 
-void fn_80073D3C(void *a, void *b, s32 c, s32 *d) {
+void fn_80073D3C(TNode *a, TNode *b, s8 c, s32 **d) {
     s16 m = 0;
     s16 n;
-    if ((s8)c < 2) {
+    if (c < 2) {
         fn_80074394(a, &n);
         fn_80061F58(d, n * 4, 0);
     }
