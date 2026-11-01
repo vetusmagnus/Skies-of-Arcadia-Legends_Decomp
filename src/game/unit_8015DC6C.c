@@ -164,10 +164,12 @@ typedef struct {
     u8 pad[0x24];
     InnerA_UNIT0000* inner;
 } OwnerA_UNIT0000;
-extern void* lbl_803470A0;
 extern f32 lbl_8034ABDC;
 typedef struct {
-    u8 pad0[0x14];
+    u8 pad0[8];
+    f32 f8;
+    u8 padc[4];
+    f32 f10;
     u32 word;
 } Mat_8016CAB4;
 typedef struct {
@@ -1623,9 +1625,10 @@ typedef struct {
     f32 f8;
     u8 padc[0x20 - 0xc];
     f32 f20;
-    u8 pad24[0x2c - 0x24];
+    f32 f24;
+    f32 f28;
     f32 f2c;
-    u8 pad30[4];
+    f32 f30;
     f32 f34;
 } St_8016CAB4;
 typedef struct {
@@ -1633,6 +1636,7 @@ typedef struct {
     St_8016CAB4* st;
     Item_8016CAB4** items;
 } Obj_8016CAB4;
+extern Obj_8016CAB4* lbl_803470A0;
 typedef struct {
     Item_8016CAB4* item;
     f32 a;
@@ -3614,6 +3618,61 @@ void fn_8016ABEC(void)
     fn_8016C4B0();
     fn_8016B620();
     fn_8016AD08();
+}
+
+extern void fn_8016AB98(Arg_8016CAB4 *p);
+extern void fn_8016AAF0(Arg_8016CAB4 *p);
+extern void fn_8016AA9C(Arg_8016CAB4 *p);
+
+void fn_8016B1E4(void)
+{
+    s32 i;
+    Arg_8016CAB4 q;
+    f32 f31;
+    f32 f30;
+    f32 a;
+
+    for (i = 0; i < 3; i++) {
+        q.item = lbl_803470A0->items[i];
+        f31 = q.item->x;
+        f30 = q.item->y;
+        q.item->x = lbl_803470A0->st->f4 + f31;
+        if (i == 1) {
+            q.item->y = lbl_803470A0->st->f8 + lbl_803470A0->items[i]->y
+                - lbl_803470A0->st->f24 * (lbl_803470A0->st->f30 / lbl_803470A0->st->f28)
+                - lbl_803470A0->st->f24;
+        } else if (i == 2) {
+            Mat_8016CAB4 *s = q.item->mat;
+            f32 h;
+            a = 2.0f * lbl_803470A0->st->f28;
+            h = (a * ((lbl_803470A0->st->f30 + lbl_803470A0->st->f28) / a)) / 2.0f;
+            s->f10 = s->f8 - (1.0f + h);
+        } else {
+            q.item->y = lbl_803470A0->st->f8 + lbl_803470A0->items[i]->y;
+        }
+        q.a = 0.001f * i + -1.3f;
+        q.b = 1.0f;
+        q.c = 0;
+        q.d = 0;
+        q.e = 1.0f;
+        q.f = 1.0f;
+        switch (lbl_803470A0->st->kind) {
+        case 0:
+            fn_8016AB98(&q);
+            break;
+        case 1:
+            fn_8016AB44(&q);
+            break;
+        case 2:
+            fn_8016AAF0(&q);
+            break;
+        case 3:
+            fn_8016AA9C(&q);
+            break;
+        }
+        q.item->x = f31;
+        q.item->y = f30;
+    }
 }
 
 void fn_8016B620(void) {
