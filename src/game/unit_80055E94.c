@@ -525,7 +525,7 @@ typedef struct O800624FC {
 } O800624FC;
 extern G800624FC *lbl_80346BD8;
 s16 fn_80015C30(MotTbl *t, const char *str);
-extern void fn_80075FF0(void *, s32, s32);
+extern s32 fn_80075FF0(void *, s32, s32);
 typedef struct U80064CA4 {
     u8 pad0[6];
     s16 kind;
@@ -2008,6 +2008,96 @@ extern int fn_8007E264(f32* out, f32 x, f32 z);
 extern void fn_80040044(DrawState* s, f32 alpha, u32 mask, u8* flag);
 extern s32 fn_80035908(void);
 extern void fn_80035910(s32);
+
+typedef struct D581B8 {
+    u8 pad0[0x14];
+    s16 s14;
+    s16 s16;
+    s16 s18;
+    s16 s1a;
+    s16 s1c;
+    u8 pad1e[2];
+    u8 f20[4];
+} D581B8;
+typedef struct S581B8 {
+    s16 cnt;
+    u8 pad2[2];
+    T5C188 *p4;
+    u8 pad8[8];
+    D581B8 *d;
+    s16 a14[8];
+    s16 a24[8];
+    s8 n;
+} S581B8;
+typedef struct O581B8 {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 state;
+    u8 pad1A[10];
+    S581B8 *s;
+} O581B8;
+extern s8 fn_8001D628(T5C188 *, s16 *, s8, s8, void *, s32);
+extern s32 fn_8025ECC4(void);
+
+void fn_800581B8(O581B8 *o) {
+    D581B8 *d;
+    T5C188 *t;
+    S581B8 *s;
+    U5C188 *u;
+    s8 cnt = 0;
+    s8 i;
+    s = o->s;
+    switch (o->state) {
+    case 0:
+        s->n = fn_8001D628(s->p4, s->a14, s->d->s1a, s->d->s1c, s->d->f20, 0);
+        if (s->n == 0) {
+            o->state = 0xfa;
+            break;
+        }
+        o->state = 1;
+    case 1:
+        for (i = 0; i < s->n; i++) {
+            d = s->d;
+            s->a24[i] = d->s18 + fn_8025ECC4() % d->s16;
+        }
+        o->state = 2;
+    case 2:
+        if (s->cnt < s->d->s18) {
+            break;
+        }
+        for (i = 0; i < s->n; i++) {
+            if (s->a24[i] == s->cnt) {
+                if (s->a14[i] >= 0) {
+                    t = fn_80021658(s->a14[i]);
+                    if (t != 0) {
+                        u = t->work->u;
+                        if (u->kind != 0xe) {
+                            u->xec |= 1;
+                            if (fn_80075FF0(t, s->d->s14, -1) == 0) {
+                                u->xec &= ~1;
+                            }
+                        }
+                    }
+                    s->a14[i] = -1;
+                }
+            }
+            if (s->a14[i] >= 0) {
+                cnt++;
+            }
+        }
+        if (cnt == 0) {
+            o->state = 0xfa;
+        }
+        break;
+    case 0xf9:
+    case 0xfa:
+        o->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    s->cnt = s->cnt + 1;
+    fn_80037FD8(s->d, &o->state);
+}
 
 void fn_8005A7B8(PartTask* node)
 {
