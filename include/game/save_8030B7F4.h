@@ -19,19 +19,19 @@ typedef struct SaveChar {
     s16 hp;                 /* 0x18 */
     s16 hpMax;
     s16 x1c;                /* 0x1c */
-    u8 pad1e[2];
+    s16 x1e;
     s16 x20;
     s16 x22;
-    u8 pad24[4];
+    s32 x24;                /* 0x24 experience */
     f32 x28;
     u8 stat[8];             /* 0x2c: copied to the battle menu's party view (fn_80135290) */
-    u8 pad34[6];
+    u8 x34[6];              /* 0x34 */
     s16 s3a;
     s16 s3c;
     s16 s3e;
     s16 s40;
     s16 s42;
-    u8 pad44[0x18];
+    s32 x44[6];             /* 0x44 */
 } SaveChar;
 /* 0x5c */
 typedef struct { s16 id; s8 cnt; u8 pad; } InvEnt;
