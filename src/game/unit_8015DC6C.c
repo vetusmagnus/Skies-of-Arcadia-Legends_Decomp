@@ -1438,9 +1438,16 @@ typedef struct {
     s8 b;                 /* 0x01 */
     s8 c;                 /* 0x02 */
     s8 ch;                /* 0x03 */
-    u8 pad4[4];
+    s8 lv;                /* 0x04 level */
+    u8 pad5[3];
     StatCmpEnt stat[7];   /* 0x08 */
     s32 a40, a44, a48;    /* 0x40: the character's equip slots */
+    const char* name[3];  /* 0x4c */
+    s32 x58, x5c;         /* 0x58 level values */
+    s32 x60[7];           /* 0x60 */
+    s32 x7c;
+    s32 x80[6];           /* 0x80 */
+    s32 x98[6];           /* 0x98 */
 } Sub_8018A16C;
 typedef struct {
     s32 kind;   /* 0x00 */
@@ -1459,7 +1466,7 @@ typedef struct {
     Inner_8018A16C* inner; /* 0x24 */
 } Self_8018A16C;
 extern void fn_80296EEC(s32 a, s32 b, s32 c);
-extern void fn_8018A2D8(void* p);
+void fn_8018A2D8(Inner_8018A16C *self);
 extern void fn_8018D250(void* p);
 extern void fn_8018C8B4(Inner_8018A16C* p);
 extern void fn_80194F88(void* p);
@@ -5533,6 +5540,133 @@ extern void fn_8018DABC(Sub_8018A16C *d, s8 id, s8 b, s8 c, s8 kind);
 extern void fn_8018D7F0(Sub_8018A16C *d);
 
 #define SLOT(K, ID, SX, SY, TY, TX)     s = fn_801D68C4(lbl_803470F4, ID);     s->x = x + (SX);     s->y = y + (SY);     fn_801D52A8(s, 10.0f + self->pos.f0, self->pos.f4, 1.0f, 1.0f, self->pos.ic, self->pos.i8);     if (d->stat[K].st == 1) {         TextPrint(x + (TX), y + (TY), "-");     } else {         switch (d->stat[K].st) {         case 2:             col = 0xff2b5000;             break;         case 3:             col = 0xff800000;             break;         case 0:             col = 0xff201008;             break;         }         fn_8019A374(d->stat[K].cur, x + (TX), y + (TY), 10.0f + self->pos.f0, col, 0);     }
+
+extern char* lbl_803467C0[2];
+extern char lbl_802B45CC[];
+extern char lbl_802EBB20[];
+extern char lbl_8034B3D8[5];
+
+#define NUM(V, DX, DY) fn_8019A374(V, x + (DX), y + (DY), 100.0f + self->pos.f0, 0xff201008, 0)
+
+#define NAME(S, DY)                                 \
+    if (S != NULL) {                                \
+        TextPrint(x + 0x32, y + (DY), S);           \
+    } else {                                        \
+        TextPrint(x + 0x32, y + (DY), lbl_802EBB20); \
+    }
+
+#define BONUS(K)                                    \
+    NUM(d->x80[K], 0x104, 0xa);                     \
+    if (d->x98[K] > 0) {                            \
+        NUM(d->x98[K], 0x104, 0x22);                \
+    } else {                                        \
+        TextPrint(x + 0xe0, y + 0x22, lbl_8034B3D8); \
+    }
+
+#define LEVEL()                                     \
+    TextPrint(x + 0x1c, y + 6, lbl_803467C0[0]);    \
+    TextPrint(x + 0x1c, y + 0x1e, lbl_803467C0[1]); \
+    NUM(d->x58, 0x110, 0xa);                        \
+    if (d->lv != 99) {                              \
+        NUM(d->x5c, 0x110, 0x22);                   \
+    } else {                                        \
+        TextPrint(x + 0xbc, y + 0x22, lbl_802B45CC); \
+    }
+
+void fn_8018A2D8(Inner_8018A16C *self)
+{
+    s16 x;
+    s16 y;
+    Sub_8018A16C *d;
+    f32 savez;
+
+    d = self->sub;
+    if (self->obj.rdy > 0.0f) {
+        self->pos.f0 = 600.0f + (150.0f * d->b + -6940.0f);
+    } else {
+        self->pos.f0 = 150.0f * d->b + -6940.0f;
+    }
+    fn_8018DABC(d, d->ch, d->b, d->c, d->mode);
+    x = self->obj.rect[0];
+    y = self->obj.rect[1];
+    savez = TextGetZ();
+    TextPushColor();
+    TextSetColor(0xff201008);
+    TextSetZ(50.0f + (100.0f + self->pos.f0));
+    switch (d->c) {
+    case 0:
+        switch (d->b) {
+        case 0:
+            NUM(d->x60[0], 0x8b, 0xa);
+            NUM(d->x60[1], 0x10d, 0xa);
+            NUM(d->x60[2], 0x8b, 0x22);
+            NUM(d->x60[3], 0x10d, 0x22);
+            break;
+        case 1:
+            NUM(d->x60[4], 0x8b, 0xa);
+            NUM(d->x60[5], 0x10d, 0xa);
+            NUM(d->stat[2].cur, 0x8b, 0x22);
+            break;
+        case 2:
+            NUM(d->x60[6], 0x8b, 0xa);
+            NUM(d->stat[6].cur, 0x8b, 0x22);
+            break;
+        case 3:
+            LEVEL();
+            break;
+        }
+        break;
+    case 1:
+        switch (d->b) {
+        case 0:
+            NAME(d->name[0], 6);
+            NAME(d->name[1], 0x1e);
+            break;
+        case 1:
+            NAME(d->name[2], 6);
+            break;
+        case 2:
+            NUM(d->stat[0].cur, 0x8b, 0xa);
+            NUM(d->stat[1].cur, 0x10d, 0xa);
+            NUM(d->stat[2].cur, 0x8b, 0x22);
+            NUM(d->stat[3].cur, 0x10d, 0x22);
+            break;
+        case 3:
+            NUM(d->stat[4].cur, 0x8b, 0xa);
+            NUM(d->stat[5].cur, 0x10d, 0xa);
+            NUM(d->stat[6].cur, 0x8b, 0x22);
+            break;
+        case 4:
+            LEVEL();
+            break;
+        }
+        break;
+    case 2:
+        switch (d->b) {
+        case 0:
+            BONUS(0);
+            break;
+        case 1:
+            BONUS(1);
+            break;
+        case 2:
+            BONUS(2);
+            break;
+        case 3:
+            BONUS(3);
+            break;
+        case 4:
+            BONUS(4);
+            break;
+        case 5:
+            BONUS(5);
+            break;
+        }
+        break;
+    }
+    TextPopColor(1);
+    TextSetZ(savez);
+}
 
 void fn_8018C8B4(Inner_8018A16C *self)
 {
