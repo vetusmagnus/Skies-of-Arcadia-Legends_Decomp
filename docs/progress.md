@@ -2194,7 +2194,7 @@ Stream-read casts (owner-approved, Ninja only, commented): 8 more Ninja function
 
 ## Near misses and held-back matches, wave 3 (2026-11-01, worktree build/wt-nearheld, from 2dd276c)
 
-5,666 to 5,964 of 7,117 (+298: 158 held-back matches folded, 132 new near-miss matches, 8 merged on the owner's decisions), `main.dol` SHA OK; every game unit fdiff and
+5,666 to 5,965 of 7,117 (+299: 158 held-back matches folded, 132 new near-miss matches, 9 merged on the owner's decisions), `main.dol` SHA OK; every game unit fdiff and
 floatcheck clean except the failures that were already there at 2dd276c (battle.c, btlchar.c, chunk.c, chunklist.c, draw2d.c, evobj.c,
 flags.c, gp_check.c, motion.c, tasks.c and the known fn_801BE608; battle.c, chunklist.c and flags.c have fewer now). Pointer casts in
 src/game went from 2,871 to 2,713 and value casts from 1,109 to 1,078 (the merges replaced old views with real types).
@@ -2225,15 +2225,16 @@ Type fixes that released the most:
 Owner decisions: the implicit-int form (declared `s32`, no return statement, as accepted for fn_80168908) is accepted for fn_80136A28
 and fn_8016CCD8; fn_80192B04's `goto done` find loop is merged.
 
-Owner decisions on the held-back groups (same day; 5,956 to 5,964 of 7,117):
+Owner decisions on the held-back groups (same day; 5,956 to 5,965 of 7,117):
 - Merged, each cast with a short comment: the address alignment tests fn_80008194, fn_80007BFC (unit_80005B50, which now uses the
   SDK DVD calls and real stream global types), fn_801E0FD4; fn_801DBE88's `*(u32 *)0x800000F8` bus-clock read (the SDK's
   OS_TIMER_CLOCK reschedules the code); fn_8009D400's `((u32)start - (u32)stream) >> 1` byte offset; fn_800AC728's `(s32)w->x22e`
   (EvInfoRing per-kind record); fn_80087074's `(s8)fn_8008210C()` low-byte compares; fn_800C9144's uninitialised `ready` (the
   compiler's "not initialized" warning shows up as 6 lines in sc_chk; the code matches).
-- Kept out: the `void *` hops (fn_80207554, fn_801FD44C, fn_801F57F8, fn_8022AE04, fn_8000C7C0, fn_800C1A50, fn_800CB6D0) and
-  fn_80061F58, whose alignment test merges cleanly but whose `void *dst` parameter is reassigned to a `void **` slot (about 300
-  callers pass the address of differently typed pointers; a `void **` parameter needs a cast at each call); waiting on the owner.
+- Kept out: the `void *` hops (fn_80207554, fn_801FD44C, fn_801F57F8, fn_8022AE04, fn_8000C7C0, fn_800C1A50, fn_800CB6D0).
+- Merged on the owner's OK: fn_80061F58, whose `void *dst` parameter is reassigned to a `void **` slot (about 300 callers in 14
+  units pass the address of differently typed pointers, so a `void **` parameter would need a cast at each call), with its
+  commented alignment test.
 - Held: fn_80069B58 (it would need fn_800108EC declared `s32 (s32, s32, ChrRec*, ChrRec*)` while unit_80005B50 defines it
   `s16 (s32, s32, s32, Fn108EC*)`; it sits inside a run of same-style handlers, so there is no file boundary to split it off), and
   the `#pragma readonly_strings` pair fn_800308FC/fn_80030280 (to be fixed by building battle.c with `-str reuse,readonly` once
