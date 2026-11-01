@@ -291,13 +291,14 @@ typedef struct TaskWork_80169294 {
     Task* link;
 } TaskWork_80169294;
 extern u32 lbl_80347088;
+typedef struct Sub_80168BD4 { u8 pad[0x24]; void *x24; } Sub_80168BD4;
 typedef struct Sub_80168A04 {
     u32 w0;
     s32 id;
     u8 pad8[4];
     u8 fc;
     u8 fd;
-    u8 pade;
+    s8 f0e;
     s8 bF;
     u8 pad10[8];
     u32 f18;            /* 0x18: id << 16 | ... | low byte */
@@ -305,7 +306,7 @@ typedef struct Sub_80168A04 {
     f32 x20;
     f32 x24;
     f32 x28;            /* 0x28 range */
-    u8 pad2c[4];
+    Sub_80168BD4* x2c;
     struct Obj_80168A04* x30;   /* previous sound task */
     struct Obj_80168A04* x34;   /* next */
 } Sub_80168A04;
@@ -917,7 +918,7 @@ typedef struct Obj_80169144 {
     u8 pad[0x24];
     Sub_80169144* sub;
 } Obj_80169144;
-void fn_80168E54(void);
+void fn_80168E54(Obj_80168A04 *t);
 typedef struct Spr_8016E52C {
     u8 pad[0x14];
     f32 x;
@@ -1422,16 +1423,6 @@ typedef struct { u8 pad[0x24]; Nd* n; } Elem2;
 #define ND(i) (((Elem2*)camp_work.pnl[i])->n)
 #define CW(off, T) (*(T*)((u8*)&camp_work + (off)))
 typedef struct Vec3_80168BD4 { f32 x, y, z; } Vec3_80168BD4;
-typedef struct Sub_80168BD4 { u8 pad[0x24]; void *x24; } Sub_80168BD4;
-typedef struct W_80168BD4 {
-    u8 pad0[0xe];
-    s8 f0e;
-    u8 pad0f[0x18 - 0xf];
-    u32 f18;
-    Vec3_80168BD4 p1c;
-    f32 f28;
-    Sub_80168BD4 *x2c;
-} W_80168BD4;
 extern void *fn_8015F1A0(u32 id);
 extern f32 njSin(s32 a);
 typedef struct {
@@ -5828,7 +5819,7 @@ s32 fn_801673D8(Obj_801673D8 *o, s32 id)
     return 0;
 }
 
-s8 fn_80168BD4(W_80168BD4 *w)
+s8 fn_80168BD4(Sub_80168A04 *w)
 {
     void *h;
     Vec3_80168BD4 o;
@@ -5849,9 +5840,9 @@ s8 fn_80168BD4(W_80168BD4 *w)
         return -0x7f;
     }
     h = fn_8015F180((void *)(h));
-    p.x = w->p1c.x;
-    p.y = w->p1c.y;
-    p.z = w->p1c.z;
+    p.x = w->x1c;
+    p.y = w->x20;
+    p.z = w->x24;
     fn_8009FDA0((void *)(h), 3, (void *)(&o), 0, (void *)(&p), 0, 1);
     dy2 = (f32)pow(lbl_803119E0.pos.y - o.y, 2.0);
     dx2 = (f32)pow(lbl_803119E0.pos.x - o.x, 2.0);
@@ -5868,11 +5859,11 @@ s8 fn_80168BD4(W_80168BD4 *w)
         }
     }
     r = (u8)w->f18;
-    if (d2 >= 0.0f && w->f28 >= 0.0f) {
-        if (d2 > (f32)pow(w->f28, 2.0)) {
+    if (d2 >= 0.0f && w->x28 >= 0.0f) {
+        if (d2 > (f32)pow(w->x28, 2.0)) {
             r = -0x7f;
         } else {
-            g = w->f28;
+            g = w->x28;
             r = (s32)((f32)(r + 0x7e) * ((g - fn_80291A5C(d2)) / g) + 1.0f - 127.0f);
         }
     }
