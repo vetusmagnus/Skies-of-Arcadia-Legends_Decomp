@@ -5014,6 +5014,55 @@ done:
     return 0;
 }
 
+void fn_80181D94(void) {
+    CampPnl **arr;
+    s32 i;
+    s32 idx;
+    CampCtrl *c;
+    s32 k;
+    u32 mask;
+    CampReq req;
+
+    c = &lbl_80307638[7];
+    lbl_80307638[7].cur[1].sel = 0;
+    c->cur[1].mask = 0;
+    c->cur[4].sel = 0;
+    idx = lbl_8030B7F4.party[lbl_80307638[1].cur[0].sel];
+    fn_80195EA4(&req, idx, 0, 0, 0);
+    arr = camp_work.pnl;
+    arr[0x34]->win->f74 = -4000.0f;
+    arr[0x35]->win->f74 = -4000.0f;
+    arr[0x36]->win->f74 = -4000.0f;
+    arr[0x37]->win->f74 = -4000.0f;
+    arr[0x38]->win->f74 = -4000.0f;
+    arr[0x39]->win->f74 = -4000.0f;
+    i = 0;
+    do {
+        fn_80195EA4(&req, idx, i, 0, 0);
+        if (req.b != -1) {
+            c->cur[1].sel = i;
+            c->cur[4].sel = 0;
+            break;
+        }
+        i++;
+    } while (i < 6);
+    k = c->cur[1].sel + 0x34;
+    arr[k]->win->f74 += 150.0f;
+    arr[k]->win->f74 += 150.0f;
+    c->cur[4].mask = req.x0a;
+    mask = 0;
+    for (i = 0; i < 6; i++) {
+        fn_80195EA4(&req, idx, i, 0, 0);
+        if (req.b != -1) {
+            mask |= 1 << i;
+        }
+    }
+    c->cur[1].mask = mask;
+    c->cur[6].mask = 0;
+    fn_80195A68(c, 0, 1, 0, 0, 0);
+    fn_801954D0(0);
+}
+
 void fn_80181F58(void) {
     s32 i;
     UiObj* ui;
