@@ -10,14 +10,24 @@
 typedef struct Lim { u8 pad_0[0x4];
  s8 x4;
  u8 pad_5[0x1]; s16 x6; s16 x8; s16 xa; } Lim;
+/* A loaded model file's materials (fn_8006D080 frees them). */
+typedef struct MdlMat { u32 x0; u32 x4; u32 x8; } MdlMat;
+typedef struct MdlRec {
+    u8 pad0[0x14];
+    struct { u32 x0; MdlMat* x4; }* x14;
+    u8 pad18[8];
+    u32* x20;
+    u8 pad24[0x68 - 0x24];
+} MdlRec;
+typedef struct MdlBlk { u32 n; MdlRec* r; } MdlBlk;
 typedef struct Node {
-    u8 pad0[4];
+    u32 x0;
     s16 count;           /* 0x04 reference count */
     u8 pad6[2];
-    u32 x8;              /* 0x08 */
+    MdlBlk *blk;         /* 0x08 */
     char name[0x20];     /* 0x0C */
     void *x2c;           /* 0x2C */
-    u8 pad30[4];
+    void *x30;           /* 0x30 */
     struct Node* prev;   /* 0x34 */
     struct Node* x38;    /* 0x38 next */
     u8 pad3c[8];
@@ -1191,11 +1201,7 @@ extern void fn_80009500(Ent6EB88 *, s32, s32);
 extern void fn_8006E75C(Ent6EB88 *, char *, s32);
 typedef struct { s32 pad; s32 v[1]; } Tab_8006801C;
 typedef struct { u8 pad0[0x24]; Tab_8006801C *tab; } O_8006801C;
-typedef struct Ctr_8006D02C {
-    u8 pad0[4];
-    s16 x4;
-} Ctr_8006D02C;
-extern void fn_8006D080(void *p, s32 free);
+void fn_8006D080(Node *o, s32 f);
 typedef struct U5B094 {
     u8 id;
 } U5B094;
@@ -3655,11 +3661,11 @@ static inline s32 AllIdle(Node_8006D888 *p) {
 
 static inline Node *FindRec(char *name) {
     Node *s = lbl_803473A0;
-    if (s->x8 == 0) {
+    if (s->blk == 0) {
         return 0;
     }
     for (;;) {
-        if (s->x8 != 0 && strcmp(name, s->name) == 0) {
+        if (s->blk != 0 && strcmp(name, s->name) == 0) {
             return s;
         }
         if (s->x38 == 0) {
@@ -3668,6 +3674,44 @@ static inline Node *FindRec(char *name) {
         s = s->x38;
     }
     return 0;
+}
+
+extern void fn_80009800(void*);
+extern void fn_802273E0(void*, s32);
+extern s32 fn_802275A4(void *texlist, s32 a);
+
+void fn_8006D080(Node* o, s32 f) {
+    MdlMat* m;
+    s32 i;
+    MdlBlk* b;
+    u16 k;
+    Node* prev;
+    Node* next;
+    if (o->x2c != 0) fn_801E17E0(o->x2c);
+    if (o->x30 != 0) fn_80009800(o->x30);
+    if (f != 0) {
+        b = o->blk;
+        for (i = 0; (k = i) < b->n; i++) {
+            MdlRec* r = b->r;
+            if (r->x14->x0 != 0) {
+                m = r[k].x14->x4;
+            }
+            if (r->x20 != 0 && *r->x20 != 0) fn_802275A4(r->x20, 0);
+            if (m != 0 && m->x8 != 0) fn_802275A4(&m->x8, 0);
+        }
+        fn_802273E0(b, 0);
+    }
+    prev = o->x38;
+    next = o->prev;
+    if (prev != 0) {
+        prev->prev = next;
+    } else if (f != 0) {
+        if (next != 0) lbl_8030A10C.f0 = next->x0;
+        else lbl_8030A10C.f0 = 0x100;
+    }
+    if (next != 0) next->x38 = prev;
+    fn_801E17E0(o->blk);
+    fn_801E17E0(o);
 }
 
 s32 fn_8006D524(void) {
@@ -4014,11 +4058,11 @@ Node* fn_8006E810(s32 n) {
     Node* nx;
     fn_8003DBAC(n, buf);
     p = lbl_803473A0;
-    if (p->x8 == 0) {
+    if (p->blk == 0) {
         return 0;
     }
     for (;;) {
-        if (p->x8 != 0 && fn_8025EF88(buf, (char*)p->name) == 0) {
+        if (p->blk != 0 && fn_8025EF88(buf, (char*)p->name) == 0) {
             return p;
         }
         nx = p->x38;
@@ -4033,11 +4077,11 @@ Node* fn_8006E810(s32 n) {
 s32 fn_8006E898(char* s) {
     Node* p = lbl_803473A0;
     Node* nx;
-    if (p->x8 == 0) {
+    if (p->blk == 0) {
         return 0;
     }
     for (;;) {
-        if (p->x8 != 0 && fn_8025EF88(s, (char*)p->name) == 0) {
+        if (p->blk != 0 && fn_8025EF88(s, (char*)p->name) == 0) {
             return 1;
         }
         nx = p->x38;
@@ -5827,11 +5871,11 @@ extern void* fn_801E1C7C(s32 size);
 s16 fn_8006E924(char* path, char* name, Node** out, void* key) {
     Node* m;
     Node* n = lbl_803473A0;
-    if (n->x8 == 0) {
+    if (n->blk == 0) {
         if (key == 0) {
             fn_8006EB88(path, name, (Out6EB88*)n);
         } else {
-            n->x8 = (u32)fn_801DB124(key);
+            n->blk = fn_801DB124(key);
             fn_8006CF54((Out6EB88*)n);
         }
         strcpy((char*)n->name, name);
@@ -5840,7 +5884,7 @@ s16 fn_8006E924(char* path, char* name, Node** out, void* key) {
         return n->count;
     }
     while (1) {
-        if (n->x8 != 0 && fn_8025EF88(name, (char*)n->name) == 0) {
+        if (n->blk != 0 && fn_8025EF88(name, (char*)n->name) == 0) {
             *out = n;
             n->count++;
             return n->count;
@@ -5857,7 +5901,7 @@ s16 fn_8006E924(char* path, char* name, Node** out, void* key) {
     if (key == 0) {
         fn_8006EB88(path, name, (Out6EB88*)m);
     } else {
-        m->x8 = (u32)fn_801DB124(key);
+        m->blk = fn_801DB124(key);
         fn_8006CF54((Out6EB88*)m);
     }
     strcpy((char*)m->name, name);
@@ -6426,7 +6470,7 @@ s32 fn_8006EAB4(Node *target)
 {
     Node *p = lbl_803473A0;
 
-    if (p->x8 == 0) {
+    if (p->blk == 0) {
         return 0;
     }
     for (;;) {
@@ -7043,15 +7087,15 @@ s16 fn_8006801C(O_8006801C *o, s32 n) {
     return n;
 }
 
-s32 fn_8006D02C(Ctr_8006D02C *p, s32 free)
+s32 fn_8006D02C(Node *p, s32 free)
 {
     s16 n;
 
-    if (p->x4 == 0) {
+    if (p->count == 0) {
         return 0;
     }
-    p->x4--;
-    n = p->x4;
+    p->count--;
+    n = p->count;
     if (n == 0) {
         fn_8006D080(p, free);
         return 0;
