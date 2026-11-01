@@ -2191,3 +2191,70 @@ docs/ninja.md "Per-function optimization levels".
 Pass 3 (4 Opus agents, register near misses and large functions): 6 more, all with `optimization_level 1` +
 `opt_common_subs on` (5,658 of 7,117).
 Stream-read casts (owner-approved, Ninja only, commented): 8 more Ninja functions (5,666 of 7,117).
+
+## Near misses and held-back matches, wave 3 (2026-11-01, worktree build/wt-nearheld, from 2dd276c)
+
+5,666 to 5,956 of 7,117 (+290: 158 held-back matches folded, 132 new near-miss matches), `main.dol` SHA OK; every game unit fdiff and
+floatcheck clean except the failures that were already there at 2dd276c (battle.c, btlchar.c, chunk.c, chunklist.c, draw2d.c, evobj.c,
+flags.c, gp_check.c, motion.c, tasks.c and the known fn_801BE608; battle.c, chunklist.c and flags.c have fewer now). Pointer casts in
+src/game went from 2,871 to 2,713 and value casts from 1,109 to 1,078 (the merges replaced old views with real types).
+
+Lists (build/nh in the worktree, gitignored): every agent file of every earlier batch for the 1,285 unmatched game functions was
+re-verified against the current headers (`collect.py`, `verify_all.py`): 207 matched in isolation with no casts (the held list), 192
+matched only with a cast and 523 were near. The 711 near misses (logged ones plus the cast-only files) were split by size into four
+quarters for four Opus agents (N1 52-432 B, N2 432-824 B, N3 828-1,360 B, N4 1,364 B and up), each later continued by a fresh agent on
+its untried part (N1b-N4b); two Opus merge agents (H1/H2, then H1b/H2b, H1c/H2c, each pair split by unit) folded the held matches and
+the new near-miss matches into the units. The automatic fold (`u1_fix.py`) placed 18 first; stale non-matching bodies were replaced
+by hand in battle.c (fn_8002C51C, fn_800303EC, fn_8002F6D4), chunklist.c (fn_80035918) and flags.c (fn_801E4AB0).
+
+Type fixes that released the most:
+- unit_80005B50: one Task/ChrWork/ChrInfo/CamWork/SysObj family (the agents' Wk/Unit/Tk views are ChrWork/ChrInfo; ChrWork's offset 0
+  is the model pointer), CondLink, SeqWork: about 60 functions.
+- `lbl_80346FC8` is `BtlSide *[2]` (new include/game/btlside.h: per-frame callback at 8, five BtlSlot tables at 0x9C, the four-unit
+  target table at 0x174), plus BtlShip/BtlTracks/BtlCam in unit_8014F970: about 15 cast views gone, 11 functions.
+- `lbl_802C4BF0` and `lbl_802D7E4C` are `const` (gamedata.h) with const pointers into them in evobj.c, unit_80055E94, unit_800D81E8,
+  unit_80074D9C, unit_801F224C and unit_80219378.
+- unit_80219378 collision part/slot types (Xf_80224F28, Cmp, Slot), unit_801D24D0 Payload, unit_8013D400 BtlCmd/BtlSlot/Node and
+  typed slot/menu tables, unit_8015DC6C camp panels as `camp_work.pnl[]->win` and `CampCtrl.cur[k]` (all 12 waiting camp functions),
+  unit_801F5334 script point arrays as `f32**`, EvObj per-kind draw/trail/emit info records (EvInfoDraw, TrailInfo, EmitInfo, EffCfg)
+  replacing local views in unit_800B2DA0.
+- Shared headers changed (each re-checked against every includer): gamedata.h, save_8030B7F4.h (SaveChar xb s8, x1c, lvMax, x32e u8,
+  xb4f/xb50), evobj.h (EvHit x30, EvSub idx/x20/x1a0/x260/x31c, EvObj x178/x11c/x264/shape2/x1ac EvDraw*/x1c4, x260 `s32*`,
+  EvMode removed), task.h (`s32 x14`), sprite.h (fn_802275A4 returns s32), work_8030CEA0.h (named fields), btlside.h (new).
+
+Owner decisions: the implicit-int form (declared `s32`, no return statement, as accepted for fn_80168908) is accepted for fn_80136A28
+and fn_8016CCD8; fn_80192B04's `goto done` find loop is merged.
+
+Held back for the owner (they match, but not merged):
+- `void *` hops that read data as another type (type punning without cast syntax): fn_80207554, fn_801FD44C, fn_801F57F8 (script
+  handlers reading a mixed float/int/string argument stream), fn_8022AE04 (byte checksum over a block), fn_8000C7C0, fn_800C1A50,
+  fn_800CB6D0.
+- Pointer/int casts for alignment tests or byte offsets: fn_80008194, fn_801DBE88 (`*(u32*)0x800000F8`), fn_80061F58, fn_801E0FD4,
+  fn_8009D400, fn_80007BFC; cast-only near misses fn_802273E0/fn_801DB2C8 (2 lines without the cast).
+- fn_800AC728 (`(s32)` on a u16 field; the original converts it through the signed path), fn_800C9144 (tests an uninitialised local),
+  fn_80087074 (`(s8)fn_8008210C()` call-result casts), fn_80069B58 (needs fn_800108EC declared `s32 (s32, s32, ChrRec*, ChrRec*)`
+  while unit_80005B50 defines it `s16 (s32, s32, s32, Fn108EC*)`).
+- fn_800308FC and fn_80030280 match only with `#pragma readonly_strings`; the real fix is battle.c built with `-str reuse,readonly`
+  (the rest of battle.c is unchanged by that flag), but their string offsets still depend on fn_8002F598 and the other battle.c
+  string users matching first. No pragma is used in game code.
+
+Remaining held-back matches (49) and their blockers: cross-caller prototype conflicts that point to separate original TUs
+(fn_80015138/fn_80014BA8 on fn_8002923C, fn_800086BC, fn_8021730C, fn_8020AF8C, fn_802088D8 vs fn_80210860, fn_801B4F78 vs the unit's
+TextPrint(s32, s32), fn_80153790 on fn_801677D0, fn_801590F4, fn_8010B258, fn_800D7190, fn_8014337C/fn_80143928 vs fn_80146BF4 on
+BtlCmd.x0, fn_801A038C on fn_801A64B4, fn_80144400 vs evobj's fn_801F0284 on const tables, fn_80084A08 vs ItemChance); the EvHit
+0x28 word (agents copy one u32 where EvHit has two u16: probably a 4-byte `{u16 x28; u16 id;}` copied whole; touches ~15 users in 6
+units: fn_801144A4, fn_80114138, fn_8010250C, fn_802229F8); per-kind EvObj slots (x23c sound handle vs pointer, 0x22C-0x248 ship
+work, x260/x264 chunk bodies, ext->files as an array); the save party block as one 0x82C/0x920-byte type with a backup at 0xC48
+(fn_801F35A0, fn_801F0020); ChrWork split into a 0x4C head (fn_8001FE44); ShopTask/ShopWork into MenuTask/MenuWork (fn_801BCFD0);
+cast views of lbl_80346F48/lbl_80346F58 (unit_8012F6C4) and the battle actor views in unit_8013D400; .bss/.data pooling that needs
+a config split (fn_800D0970, fn_800B0900, fn_800B0F54, fn_801A4070, fn_8000ABCC, fn_80009874, fn_800A0028, fn_8009F22C,
+fn_801F7958); fn_801DC62C (u32 arena prototypes vs the SDK's void*).
+
+Near misses left (about 580): reports and best files in build/agents/N1..N4, N1b..N4b of build/wt-N1..N4. Recurring blockers: the
+"mr copy of a zero/constant" (ship stat getters fn_8021A880/A940/A9C4/AB60/AC20/ACE0, fn_80135474; a static inline with its own
+local fixed it twice), callee-saved colouring swaps no declaration order changes, float clamps with a `bge; b; fmr` shape
+(fn_800C9E40, fn_800C926C, fn_800FB6F4, fn_800D8584, fn_801052A8), `lbzu` forms that only come with a byte-pointer cast
+(fn_8008571C, fn_8008A280), switch trees that keep empty-case compares (fn_8014E0E4, fn_800EA79C, fn_8015C95C), code-exact functions
+that need their unit's .rodata/.bss defined in C in first-use order (fn_80217554, fn_8009D190, fn_80097720, fn_801A3A10, fn_800D3464,
+fn_80073164, fn_800A7860, fn_800A6F30, fn_801B6E5C, fn_800EAAAC), and about 170 functions of 1 KB and up with no attempt yet.
+`#pragma optimization_level 1` (which fixed the r0-result pattern in Ninja) did not turn up as the only fix for any game function.
