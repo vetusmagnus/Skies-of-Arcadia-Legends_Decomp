@@ -1,20 +1,28 @@
 #!/usr/bin/env python3
-"""Build GC/1.3.2nj: GC/1.3.2 with the copy propagation Sega's Ninja library was built with.
+"""Build GC/1.3.2nj: GC/1.3.2 with the late copy propagation the Ninja library was built with.
 
 usage: tools/patch_mwcc_ninja.py [SRC_DIR] [DST_DIR]
        (defaults: build/compilers/GC/1.3.2 -> build/compilers/GC/1.3.2nj)
 
-Stock 1.3.2 propagates a copy into any later block where it's still available. The Ninja code in
-main.dol shows the original compiler did not propagate a copy into a block with a higher loop
-weight than the copy's own block, so hoisted loop invariants keep their `mr` copies:
+What it models. 1.3.2's PCode optimizer runs copy propagation (AddPropagation.c) eleven times.
+The run right after VALUE NUMBERING 2 (driver call at 0x4FFA18) removes the `mr` copies value
+numbering makes of loop invariants that code motion and the loop transformations re-created in
+a loop's preheader. The Ninja code in main.dol keeps those copies, and the register allocator
+then gives every use after the second its own register:
     lis r30,0xcc01 ; mr r31,r30 ; stfs ..(r30) ; stfs ..(r30) ; stfs ..(r31)
-See docs/ninja.md, "Copy pattern solved".
+Everything else Ninja needs from that run is propagation within a block. So in the compiler
+Ninja was built with, copy propagation after VALUE NUMBERING 2 was block-local. All other runs
+are stock. Evidence and the method (pass knock-outs, PCode dumps under gdb): docs/ninja.md,
+"Copy pattern".
 
-The patch, in the copy-propagation legality callback (0x5698A0, AddPropagation.c): the
-different-block path at 0x5699B0 jumps to a stub in the unused tail of .text (0x57D5C0) that
-returns "can't propagate" when use_block->loop_weight (+0x24) > copy_block->loop_weight, then
-runs the two overwritten instructions and jumps back. .text's VirtualSize is raised to its raw
-size so the stub is mapped. 43 bytes change in all (39 of code, 4 in the section header).
+The patch:
+  * 0x4FFA15: that one call passes mode 2 instead of 1 (`push 1` -> `push 2`). The mode is
+    stored in 0x5E1C00, which the rest of copy propagation only tests for zero, so 2 behaves
+    exactly like 1 everywhere else.
+  * 0x5699B0, the cross-block path of the legality callback (0x5698A0): jump to a stub in the
+    unused tail of .text (0x57D5C0) that answers "can't propagate" when the mode is 2, otherwise
+    runs the two overwritten instructions and jumps back. .text's VirtualSize is raised to its
+    raw size so the stub is mapped.
 """
 import hashlib
 import os
@@ -22,10 +30,12 @@ import shutil
 import struct
 import sys
 
-STOCK_SHA1 = "d8f9c36d62f66c2a044d5a20a132b79eeb2f36e5"
+STOCK_SHA1 = "d8f9c36d62f66c2a044d5a20a132b79eeb2f36e5"  # GC/1.3.2, Version 2.4.2 build 81
 
 TEXT_VA, TEXT_RAW = 0x401000, 0x400  # .text virtual address and file offset in this build
+LATE_CALL_MODE = 0x4FFA15              # push 1 ; push ebx ; call 0x569780 (after VALUE NUMBERING 2)
 SITE, CAVE, RET0, BACK = 0x5699B0, 0x57D5C0, 0x5699DA, 0x5699B7
+MODE = 0x5E1C00                        # copy propagation's mode, set by 0x569780 from its argument
 
 
 def off(va):
@@ -38,19 +48,19 @@ def rel32(next_va, dst):
 
 def patch(data):
     d = bytearray(data)
+    o = off(LATE_CALL_MODE)
+    if d[o:o + 8] != bytes.fromhex("6a0153e8639d0600"):
+        sys.exit("unexpected bytes at the late copy-propagation call: not GC/1.3.2 build 81?")
+    d[o + 1] = 2
     o = off(SITE)
     if d[o:o + 7] != bytes.fromhex("8b6c241cc1fd05"):
-        sys.exit("unexpected bytes at the patch site: not GC/1.3.2 (2.4.2 build 81)?")
+        sys.exit("unexpected bytes at the patch site: not GC/1.3.2 build 81?")
     stub = bytearray()
-    stub += bytes.fromhex("8b0424")    # mov eax,[esp]        ; the copy instruction
-    stub += bytes.fromhex("8b4008")    # mov eax,[eax+8]      ; its block
-    stub += bytes.fromhex("8b4c2404")  # mov ecx,[esp+4]      ; the use's block
-    stub += bytes.fromhex("8b4024")    # mov eax,[eax+0x24]   ; copy block loop weight
-    stub += bytes.fromhex("394124")    # cmp [ecx+0x24],eax
-    stub += b"\x0f\x8f" + rel32(CAVE + len(stub) + 6, RET0)  # jg: use is deeper -> don't propagate
-    stub += bytes.fromhex("8b6c241c")  # mov ebp,[esp+0x1c]   ; overwritten instructions
-    stub += bytes.fromhex("c1fd05")    # sar ebp,5
-    stub += b"\xe9" + rel32(CAVE + len(stub) + 5, BACK)
+    stub += b"\x83\x3d" + struct.pack("<I", MODE) + b"\x02"   # cmp dword [MODE],2
+    stub += b"\x0f\x84" + rel32(CAVE + len(stub) + 6, RET0)   # je  -> "can't propagate"
+    stub += bytes.fromhex("8b6c241c")                         # mov ebp,[esp+0x1c] (overwritten)
+    stub += bytes.fromhex("c1fd05")                           # sar ebp,5          (overwritten)
+    stub += b"\xe9" + rel32(CAVE + len(stub) + 5, BACK)       # jmp back
     co = off(CAVE)
     if any(d[co:co + len(stub)]):
         sys.exit("code cave is not empty")
@@ -77,8 +87,9 @@ def main():
     for name in os.listdir(src):
         if name != "mwcceppc.exe":
             shutil.copy(os.path.join(src, name), dst)
-    open(os.path.join(dst, "mwcceppc.exe"), "wb").write(patch(data))
-    print(f"wrote {dst}/mwcceppc.exe")
+    out = patch(data)
+    open(os.path.join(dst, "mwcceppc.exe"), "wb").write(out)
+    print(f"wrote {dst}/mwcceppc.exe (sha1 {hashlib.sha1(out).hexdigest()})")
 
 
 if __name__ == "__main__":
