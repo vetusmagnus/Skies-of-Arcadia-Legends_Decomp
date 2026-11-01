@@ -208,7 +208,8 @@ typedef struct ChrInfo {
     s16 x16;            /* 0x16 */
     s16 x18;            /* 0x18 */
     s16 x1a;            /* 0x1a */
-    u8 pad_1c[4];
+    s16 x1c;            /* 0x1c previous action */
+    u8 pad_1e[2];
     s16 x20;            /* 0x20 */
     u8 pad22[6];
     s8 x28[10];         /* 0x28 recent ids, -1 = free */
@@ -5415,6 +5416,45 @@ inline int Hit(CamWork* w, CamState* u, f32 xc)
 }
 
 extern s32 fn_80075D64(Task*);
+
+extern s32 fn_800091E0(Task*, void*, s16, s32);
+extern void fn_8006DC6C(void);
+void fn_8001C348(Task* t);
+extern void* lbl_80347398;
+s32 fn_80020250(Task* t, s16 a, s8 b) {
+    ChrWork* w = t->work;
+    ChrInfo* u = w->st;
+    ChrInfo* o;
+    s16 k;
+    if (u->xec & 0x100) {
+        if (a != 0xF) return 0;
+        u->xec &= ~0x100;
+    }
+    k = fn_80020094(w, a, 0, 0);
+    if (k >= 0) {
+        if (u->x6 != a || (u->anims[k].flags & 0x4000000)) {
+            u->x1c = u->x6;
+            u->x6 = a;
+            u->x8 = -1;
+            u->state = 0;
+            u->xe8 = u->xe4;
+            u->xe4 = k;
+            u->x134 = 0;
+            u->x20c = a;
+            u->x20e = -1;
+            u->x48 = b;
+            o = ChrW(FindChrOr0(b))->st;
+            u->x4a = o->x6;
+            u->x4c = o->x8;
+            if (lbl_8034733C == 7 && !(u->xf0 & 0x8000)) {
+                if (fn_800091E0(t, lbl_80347398, a, -1) != 0) fn_8006DC6C();
+            }
+            fn_8001C348(t);
+            return 1;
+        }
+    }
+    return 0;
+}
 
 s32 fn_80020470(Task* t, s16 x) {
     ChrWork* cw = t->work;
