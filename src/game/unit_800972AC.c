@@ -193,8 +193,18 @@ extern s32 lbl_80346C90;
 void fn_801E7DF0(void *);
 void fn_801DD76C(void *m);
 extern void njScale(NJS_MATRIX m, f32 x, f32 y, f32 z);
-f32 fn_8009DEF0(u8 *obj, void *m, void *p, f32 *s, f32 z);
-void fn_801DD71C(s32 a);
+/* A model hierarchy node (NJS_OBJECT layout). */
+typedef struct ModelNode {
+    u32 pad0;
+    void* model;              /* 0x04 */
+    NJS_POINT3 pos;           /* 0x08 */
+    Angle ang[3];             /* 0x14 */
+    NJS_POINT3 scl;           /* 0x20 */
+    struct ModelNode* child;  /* 0x2C */
+    struct ModelNode* next;   /* 0x30 */
+} ModelNode;
+f32 fn_8009DEF0(u32 flags, NJS_MATRIX m, ModelNode* n, f32* s, f32 best);
+void fn_801DD71C(void* m);
 void fn_801E1784(void *p);
 typedef struct Node {
     void (*fn)(struct Node *);
@@ -1388,6 +1398,74 @@ void fn_8009DC58(Obj8009DC58 *o) {
     o->flags23a |= 4;
 }
 
+extern void njTranslate(NJS_MATRIX m, f32 x, f32 y, f32 z);
+f32 fn_8009DDA8(u32 flags, NJS_MATRIX m, void* model, f32* s);
+static inline f32 walk2(u32 flags, NJS_MATRIX m, ModelNode* n, f32* s, f32 best) {
+    f32 r;
+    njUnitMatrix(m);
+    njTranslate(m, n->pos.x, n->pos.y, n->pos.z);
+    njRotateXYZ(m, n->ang[0], n->ang[1], n->ang[2]);
+    njScale(m, n->scl.x, n->scl.y, n->scl.z);
+    if (n->model != 0) {
+        r = fn_8009DDA8(flags, m, n->model, s);
+        if (r > best) {
+            best = r;
+        }
+    }
+    if (n->child != 0) {
+        best = fn_8009DEF0(flags, m, n->child, s, best);
+    }
+    fn_801DD71C(m);
+    if (n->next != 0) {
+        best = fn_8009DEF0(flags, m, n->next, s, best);
+    }
+    return best;
+}
+
+static inline f32 walk1(u32 flags, NJS_MATRIX m, ModelNode* n, f32* s, f32 best) {
+    f32 r;
+    njUnitMatrix(m);
+    njTranslate(m, n->pos.x, n->pos.y, n->pos.z);
+    njRotateXYZ(m, n->ang[0], n->ang[1], n->ang[2]);
+    njScale(m, n->scl.x, n->scl.y, n->scl.z);
+    if (n->model != 0) {
+        r = fn_8009DDA8(flags, m, n->model, s);
+        if (r > best) {
+            best = r;
+        }
+    }
+    if (n->child != 0) {
+        best = walk2(flags, m, n->child, s, best);
+    }
+    fn_801DD71C(m);
+    if (n->next != 0) {
+        best = walk2(flags, m, n->next, s, best);
+    }
+    return best;
+}
+
+f32 fn_8009DEF0(u32 flags, NJS_MATRIX m, ModelNode* n, f32* s, f32 best) {
+    f32 r;
+    njUnitMatrix(m);
+    njTranslate(m, n->pos.x, n->pos.y, n->pos.z);
+    njRotateXYZ(m, n->ang[0], n->ang[1], n->ang[2]);
+    njScale(m, n->scl.x, n->scl.y, n->scl.z);
+    if (n->model != 0) {
+        r = fn_8009DDA8(flags, m, n->model, s);
+        if (r > best) {
+            best = r;
+        }
+    }
+    if (n->child != 0) {
+        best = walk1(flags, m, n->child, s, best);
+    }
+    fn_801DD71C(m);
+    if (n->next != 0) {
+        best = walk1(flags, m, n->next, s, best);
+    }
+    return best;
+}
+
 f32 fn_8009E4F8(u8 v) {
     return (s32)(v - 255) * 0.003921569f;
 }
@@ -1714,7 +1792,7 @@ void fn_8009D6C0(u8 *obj, s32 idx, f32 f) {
     }
 }
 
-f32 fn_8009E3D0(u8 *obj, void *p, f32 *s) {
+f32 fn_8009E3D0(u32 flags, ModelNode *p, f32 *s) {
     void *m;
     f32 r;
     if (p == 0) {
@@ -1724,7 +1802,7 @@ f32 fn_8009E3D0(u8 *obj, void *p, f32 *s) {
     njUnitMatrix(m);
     fn_801DD76C(m);
     njScale(m, s[0], s[1], s[2]);
-    r = fn_8009DEF0(obj, m, p, s, 0.0f);
+    r = fn_8009DEF0(flags, m, p, s, 0.0f);
     fn_801DD71C(0);
     if (m != 0) {
         fn_801E1784(m);
@@ -4441,3 +4519,33 @@ void fn_800A12D8(Vec3_800A12D8 *p, Vec3_800A12D8 *c, Angle a)
         p->z += c->z;
     }
 }
+void fn_800A3744(EvObj *obj)
+{
+    Task *r;
+    EvNameRef *e;
+    s32 i;
+    EvInfoNames *t;
+    s32 n;
+    u8 *base;
+    EvObj *sub;
+
+    t = NamesInfo(obj);
+    if (t != NULL) {
+        n = t->count;
+        base = obj->x1dc;
+        e = t->refs;
+        obj->x1fc = 0;
+        for (i = 1; i < n - 1; e++, i += 2) {
+            r = fn_8010A164(base + e->off);
+            if (r != NULL) {
+                sub = r->work;
+                if (sub->x26c == 1 && fn_800A35E0(sub) == 1) {
+                    EvObj *s2 = r->work;
+                    s2->x1fb = 1;
+                    r->state = 1;
+                }
+            }
+        }
+    }
+}
+

@@ -720,14 +720,34 @@ const u32 lbl_802D5648[190] = {
     0x6F6E2C5C, 0x6E617320, 0x69742077, 0x61732077, 0x68656E20, 0x68697320,
     0x77696665, 0x20646965, 0x642E5C63, 0x00000000,
 };
-const u32 lbl_802D5940[42] = {
-    0x00000000, 0x00000001, 0x00000001, 0x0000003E, 0x00000002, 0x0000007A,
-    0x00000003, 0x000000A2, 0x00000004, 0x000000C9, 0x00000005, 0x000000D5,
-    0x00000006, 0x000000DE, 0x00000007, 0x00000104, 0x00000008, 0x00000116,
-    0x00000009, 0x0000013C, 0x0000000A, 0x00000140, 0x0000000B, 0x00000147,
-    0x0000000C, 0x0000017B, 0x0000000D, 0x00000190, 0x0000000E, 0x00000199,
-    0x0000000F, 0x0000019C, 0x00000010, 0x000001D7, 0x00000011, 0x000001FB,
-    0x00000012, 0x00000209, 0x00000013, 0x00000236, 0x00000014, 0x00000000,
+/* lbl_802D5940: (value, event flag) pairs; fn_8020E984 returns the value of the last pair whose
+ * flag is set. */
+typedef struct {
+    s32 val;
+    u32 flag;
+} FlagVal;
+const FlagVal lbl_802D5940[21] = {
+    {0, 0x1},
+    {1, 0x3E},
+    {2, 0x7A},
+    {3, 0xA2},
+    {4, 0xC9},
+    {5, 0xD5},
+    {6, 0xDE},
+    {7, 0x104},
+    {8, 0x116},
+    {9, 0x13C},
+    {10, 0x140},
+    {11, 0x147},
+    {12, 0x17B},
+    {13, 0x190},
+    {14, 0x199},
+    {15, 0x19C},
+    {16, 0x1D7},
+    {17, 0x1FB},
+    {18, 0x209},
+    {19, 0x236},
+    {20, 0x0},
 };
 const ChestData lbl_802D59E8[119] = {
     {0xF0, 3},
@@ -1162,6 +1182,27 @@ s32 fn_80201458(u32 flags, Scpt *st) {
     return 1;
 }
 
+s32 fn_8020726C(u16 flags, Scpt *s)
+{
+    u8 *c;
+    if (flags & 1) {
+        c = s->cur.b;
+        fn_801F7500();
+        s->cur.b = c + 4;
+        lbl_8030CEA0.x18fc = lbl_80311970.f[0];
+        lbl_8030CEA0.x1900 = lbl_80311970.f[1];
+        lbl_8030CEA0.x1904 = lbl_80311970.f[2];
+        lbl_8030CEA0.x1908 = lbl_80311970.w[0];
+        lbl_8030CEA0.x190c = lbl_80311970.w[1];
+        lbl_8030CEA0.x1910 = lbl_80311970.w[2];
+        fn_80097294(0);
+    }
+    if (flags & 8) {
+        return 1;
+    }
+    return 0;
+}
+
 s32 fn_8020731C(u32 a, Scpt *st) {
     if (a & 1) {
         u8 *c = st->cur.b;
@@ -1271,6 +1312,50 @@ void fn_8020EEE8(s32 bank, s8 arg1, s8 id, s32 unused) {
     } else {
         lbl_8030CEA0.x157c = 0;
     }
+}
+
+s32 fn_8020EF30(s32 a)
+{
+    Scpt s;
+    Fx_801F9120 *w;
+
+    w = fn_801E1A2C(1, 0x44);
+    if (w == 0) {
+        return 0;
+    }
+    s.work.fx_801F9120 = w;
+    w->x18 = a;
+    w->x1c = w->x18;
+    w->ev.hd.kind = 0;
+    fn_80211058(&s, 9, w->x18, 2, lbl_8030CEA0.x08, &w->ev);
+    s.owner = 0x63;
+    s.kind = 1;
+    s.cur.i = 0;
+    s.cnt = 0;
+    fn_80210F74(&s);
+    return 1;
+}
+
+s32 fn_8020EFD4(s32 a)
+{
+    Scpt s;
+    Fx_801F9120 *w;
+
+    w = fn_801E1A2C(1, 0x44);
+    if (w == 0) {
+        return 0;
+    }
+    s.work.fx_801F9120 = w;
+    w->x18 = a;
+    w->x1c = w->x18;
+    w->ev.hd.kind = 0;
+    fn_80211058(&s, 9, w->x18, 1, lbl_8030CEA0.x08, &w->ev);
+    s.owner = 0x62;
+    s.kind = 1;
+    s.cur.i = 0;
+    s.cnt = 0;
+    fn_80210F74(&s);
+    return 1;
 }
 
 s32 fn_8020F154(s16 a, s32 b)
@@ -1698,6 +1783,32 @@ void fn_80212084(void) {
     lbl_8030CEA0.pat.e = 0;
     lbl_8030CEA0.pat.d = 0;
     lbl_8030CEA0.pat.c = 0;
+}
+
+/* The offset fn_80213718 rotates (0x10 bytes of .data; z is set per call). */
+extern NJS_POINT3 lbl_802F85B8;
+
+void fn_80213718(f32 *src, Angle *rot, f32 *dst, f32 z)
+{
+    NJS_MATRIX m;
+    NJS_POINT3 p;
+    Angle rx;
+    Angle ry;
+    Angle rz;
+    if (rot != 0) {
+        lbl_802F85B8.z = z;
+        rz = rot[2];
+        ry = rot[1];
+        rx = rot[0];
+        if (&lbl_802F85B8 != 0 && &p != 0) {
+            njUnitMatrix(m);
+            njRotateXYZ(m, rx, ry, rz);
+            njCalcPoint(m, &lbl_802F85B8, &p);
+        }
+        dst[0] = src[0] - p.x;
+        dst[1] = src[1] - p.y;
+        dst[2] = src[2] - p.z;
+    }
 }
 
 s32 fn_802138A0(u32 a, Scpt *st) {

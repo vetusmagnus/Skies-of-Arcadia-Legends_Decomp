@@ -33,10 +33,19 @@ typedef struct ShopWork {
     u8 b36;          /* 0x36 */
     u8 b37;          /* 0x37 */
     ShopMember m[4];     /* 0x38: the party, in order */
-    u8 padc8[0xd8 - 0xc8];
-    struct { s16 v; u8 pad[8]; } d8[4]; /* 0xD8 */
-    u8 pad100[0x10a - 0x100];
+    char* xc8;           /* 0xC8: the ship's name */
+    u8 xcc;
+    u8 padcd;
+    s16 xce;
+    s16 xd0;
+    u8 padd2[2];
+    s32 xd4;
+    struct { s16 v; s16 z; s16 a; s16 b; u8 c; u8 d; } d8[5]; /* 0xD8 */
     s16 h10a[3];         /* 0x10A */
+    u8 pad110[2];
+    s16 x112;
+    s16 x114;
+    s16 x116;
 } ShopWork;
 typedef struct ShopTask {
     u8 pad0[0x24];
@@ -119,6 +128,20 @@ s32 fn_801C0B88(s16 id, u8 who)
         return 1;
     }
     return id == lbl_803471B8->w->h10a[who];
+}
+
+extern s32 fn_801F3FD0(s32 slot, s16 id);
+
+u8 fn_801C0C14(s16 id)
+{
+    u32 i = 0;
+    do {
+        if (fn_801F3FD0(lbl_803471B8->w->m[i].id, id)) {
+            return i;
+        }
+        i++;
+    } while (i < lbl_803471B8->w->count);
+    return 0;
 }
 
 u8 fn_801C0D34(s16 id)

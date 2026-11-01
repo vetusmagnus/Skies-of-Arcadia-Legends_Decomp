@@ -258,6 +258,7 @@ typedef struct {
     u16 id;       /* 0x2A */
     s16 x2c;      /* 0x2C */
     s16 x2e;      /* 0x2E */
+    u16 x30;      /* 0x30: saved around fn_80225930 (fn_8016058C) */
 } EvHit;
 
 /* The object's collision record (0x1BC), refreshed by fn_80222838. */

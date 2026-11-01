@@ -43,7 +43,12 @@ extern void fn_80100270();
 extern void fn_801F7B04(s32 n);
 extern char lbl_802E5E68[];
 extern f32 lbl_803472E0;
-extern void* lbl_803472CC;
+/* lbl_803472CC: 0xf00 (hi, lo) pairs (fn_80148E08 allocates them). */
+typedef struct Pair_80148464 {
+    s16 a;
+    s16 b;
+} Pair_80148464;
+extern Pair_80148464* lbl_803472CC;
 extern void fn_801E17E0(void* p);
 typedef struct {
     u8 pad0[0x7C];
@@ -76,7 +81,6 @@ extern void SePlay(s32 id, s32 a, s32 b);
 extern void fn_80097294(s32 a);
 extern s32 lbl_80346F80;
 extern s32 lbl_80347290;
-extern void* lbl_80346F88;
 extern void* memset(void* dst, s32 c, u32 n);
 typedef struct Slot {
     u32 flags;
@@ -88,7 +92,6 @@ typedef struct Slot {
 extern Slot lbl_8030A6D4[];
 extern s32 lbl_8034757C;
 extern s32 fn_8013E730(s32 i);
-extern u8 lbl_80306738[];
 extern u8 lbl_80346F61;
 extern u8 lbl_80346F60;
 typedef struct {
@@ -169,8 +172,8 @@ typedef struct Big {
     s16 x8;
     u8 padA[2];
     s16 xc;
-    u8 xe[0x140];       /* 0x00E: 0x50 4-byte records (fn_8013D718 kind 1) */
-    u8 x14e[0x78];      /* 0x14E: 0x1E 4-byte records (kind 0) */
+    InvEnt xe[0x50];    /* 0x00E: usable items (fn_8013D718 kind 1) */
+    InvEnt x14e[0x1e];  /* 0x14E: ship items (kind 0) */
     MenuItem items[4];  /* 0x1C6 */
     u8 pad236[2];
     Party party;        /* 0x238 */
@@ -249,19 +252,24 @@ typedef struct StrPool_8013D400 {
     char startDup[0x34];      /* "sbSceneTableStart Error : Scene Duplicate Set !! %d" */
 } StrPool_8013D400;
 extern const StrPool_8013D400 lbl_802B3578;
-extern u32 lbl_80346F74;
+extern s32* lbl_80346F74;
 extern s32 lbl_8034728C;
 extern s32 lbl_80347294;
 extern void fn_80143060(s32* p);
 extern u8 lbl_80310A1C[];
 typedef struct Node {
-    u8 pad0[4];
+    s32 x0;
     struct Node* x4;
     struct Node* x8;
     struct Node* xc;
     struct Node* x10;
     struct Node* x14;
 } Node;
+/* lbl_80346F88: 500 node slots (fn_801490F4 allocates them). */
+extern Node** lbl_80346F88;
+void fn_80148E4C(Node *p);
+extern void fn_801E17E0(void*);
+void fn_80148EDC(Node* n);
 extern void fn_80131500(s8 a);
 extern void fn_80131658(Cell *c);
 extern void fn_80140264(void);
@@ -566,11 +574,20 @@ typedef union {
     Rows_80143FA4 r5;
 } G_80143FA4;
 typedef struct {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 pad19[0x24 - 0x19];
+    s32 x24;
+    s32 x28;
+} Task;
+/* lbl_80306738: cleared by fn_80142F18; the task at 0xc is stopped when a menu closes. */
+typedef struct {
     u8 b[0xc];
-    s32 xc;
+    Task* task;
     u8 b2[6];
     u16 h[5];
 } Struct80306738;
+extern Struct80306738 lbl_80306738;
 extern void fn_80142F18(void);
 typedef struct {
     u8 pad0;
@@ -596,8 +613,6 @@ typedef struct Ent_80143200 {
     u8 pad0[0x20];
     Stat *stat;
 } Ent_80143200;
-typedef struct Node_80149070 Node_80149070;
-void fn_80148EDC(Node_80149070 *n);
 typedef struct {
     u8 b0;
     u8 b1;
@@ -657,18 +672,7 @@ typedef struct {
     u8 b29;
     u8 b2a;
 } Sys_8014654C;
-extern s32 fn_8013D718(s32 kind, u8 *tbl, s32 id);
-typedef struct {
-    u8 pad0[0x18];
-    u8 flags;
-    u8 pad19[0x24 - 0x19];
-    s32 x24;
-    s32 x28;
-} Task;
-typedef struct {
-    u8 pad0[0xc];
-    Task *task;
-} Struct80306738_80143060;
+s32 fn_8013D718(s32 kind, InvEnt *tbl, s32 idx);
 extern void fn_8012AEB8(s32 a);
 extern void fn_8012AED0(s32 a);
 extern void fn_8012C648(s32 a);
@@ -1006,6 +1010,98 @@ s32 fn_8013D708(u8* p) {
     return 2;
 }
 
+static inline s32 party_count(void) {
+    s32 n = 0;
+    Big *p = fn_80135598();
+    if (p != 0) {
+        for (n = 0; n < 4; n++) {
+            if (p->order[n] < 0) {
+                break;
+            }
+        }
+    }
+    return n;
+}
+
+static inline s32 fn_used(s32 kind, InvEnt *tbl, s32 idx) {
+    s32 used = 0;
+    s32 n;
+    s32 want;
+    s32 i;
+    if (tbl != 0) {
+        n = party_count();
+        want = -1;
+        switch (kind) {
+        case 0:
+            want = 1;
+            break;
+        case 1:
+            want = 2;
+            break;
+        }
+        if (n > 0 && n <= 4 && want != -1) {
+            for (i = 0; i < n; i++) {
+                if (want == lbl_80308E90[i + 4].kind && idx == lbl_80308E90[i + 4].member) {
+                    used++;
+                }
+            }
+        }
+        used = tbl[idx].cnt - used;
+    }
+    return used;
+}
+
+s32 fn_8013D718(s32 kind, InvEnt *tbl, s32 idx) {
+    s32 limit = 0;
+    s32 res = -1;
+    s32 used;
+    s32 j;
+    s32 ok;
+    s32 id;
+
+    switch (kind) {
+    case 0:
+        limit = 0x1e;
+        break;
+    case 1:
+        limit = 0x50;
+        break;
+    }
+    if (tbl != 0 && idx >= 0 && idx < limit) {
+        used = fn_used(kind, tbl, idx);
+        if (used > 0) {
+            id = tbl[idx].id;
+            switch (kind) {
+            case 0:
+                ok = 0;
+                if (id >= 0x1e0 && id <= 0x1fd) {
+                    j = id - 0x1e0;
+                    if (lbl_802D8A2C[j].use_mask & 1) {
+                        ok = 1;
+                    }
+                }
+                if (ok != 0) {
+                    res = id;
+                }
+                break;
+            case 1:
+                ok = 0;
+                if (id >= 0xf0 && id <= 0x13f) {
+                    j = id - 0xf0;
+                    if (lbl_802C7C34[j].use_mask & 1) {
+                        ok = 1;
+                    }
+                }
+                if (ok != 0) {
+                    res = id;
+                }
+                break;
+            }
+        }
+    }
+    return res;
+}
+
 void fn_8013DB64(void) {
     fn_8013DA50(0, 1);
 }
@@ -1152,6 +1248,137 @@ void fn_80146480(IdxArg* a) {
     }
 }
 
+void fn_80146EF4(Slot_8014359C* r, s32 idx) {
+    Blk* dst;
+    s32 d;
+    if (r->x1 == 0) {
+        dst = &lbl_8034727C->a[idx];
+    } else {
+        dst = &lbl_8034727C->b[idx];
+    }
+    switch (r->x0) {
+    case 5:
+        d = lbl_802C4BF0[r->x8].ship_power;
+        break;
+    case 1:
+        d = lbl_802D8A2C[r->x8 - 480].power;
+        break;
+    case 2:
+        d = lbl_802C7C34[r->x8 - 240].power;
+        break;
+    case 7:
+        d = lbl_802D8E64[r->x8].power;
+        break;
+    }
+    dst->w8 = d * 10;
+}
+
+void fn_80147184(Slot_8014359C *c) {
+    Party *f;
+    s16 *flags;
+    s32 k;
+
+    if (c->x1 == 0) {
+        f = lbl_8034727C->x20;
+        flags = &lbl_8034727C->flag[0];
+    } else {
+        f = lbl_8034727C->x24;
+        flags = &lbl_8034727C->flag[1];
+    }
+    if (*flags & 4) {
+        c->x7 = 0;
+        return;
+    }
+    switch (c->x0) {
+    case 2:
+        break;
+    case 5:
+        if (f->x54 > 0) {
+            c->x7 = 0;
+            return;
+        }
+        if (f->x50 > lbl_802C4BF0[c->x8].ship_turns) {
+            c->x7 = 0;
+            return;
+        }
+        if (f->x50 == 0) {
+            f->x1e = f->x1c / 2;
+            f->x1c = f->x1c + f->x1e;
+            f->mem[0].x18 = f->mem[0].x16 / 2;
+            f->mem[0].x16 = f->mem[0].x16 + f->mem[0].x18;
+            f->mem[1].x18 = f->mem[1].x16 / 2;
+            f->mem[1].x16 = f->mem[1].x16 + f->mem[1].x18;
+            f->mem[2].x18 = f->mem[2].x16 / 2;
+            f->mem[2].x16 = f->mem[2].x16 + f->mem[2].x18;
+            f->mem[3].x18 = f->mem[3].x16 / 2;
+            f->mem[3].x16 = f->mem[3].x16 + f->mem[3].x18;
+            f->mem[4].x18 = f->mem[4].x16 / 2;
+            f->mem[4].x16 = f->mem[4].x16 + f->mem[4].x18;
+        }
+        f->x50 = lbl_802C4BF0[c->x8].ship_turns;
+        *flags |= 1;
+        c->x7 = 1;
+        break;
+    case 1:
+        k = c->x8 - 0x1e0;
+        if (f->x54 > 0) {
+            c->x7 = 0;
+            return;
+        }
+        if (f->x50 > lbl_802D8A2C[k].turns) {
+            c->x7 = 0;
+            return;
+        }
+        if (f->x50 == 0) {
+            f->x1e = f->x1c / 2;
+            f->x1c = f->x1c + f->x1e;
+            f->mem[0].x18 = f->mem[0].x16 / 2;
+            f->mem[0].x16 = f->mem[0].x16 + f->mem[0].x18;
+            f->mem[1].x18 = f->mem[1].x16 / 2;
+            f->mem[1].x16 = f->mem[1].x16 + f->mem[1].x18;
+            f->mem[2].x18 = f->mem[2].x16 / 2;
+            f->mem[2].x16 = f->mem[2].x16 + f->mem[2].x18;
+            f->mem[3].x18 = f->mem[3].x16 / 2;
+            f->mem[3].x16 = f->mem[3].x16 + f->mem[3].x18;
+            f->mem[4].x18 = f->mem[4].x16 / 2;
+            f->mem[4].x16 = f->mem[4].x16 + f->mem[4].x18;
+        }
+        f->x50 = lbl_802D8A2C[k].turns;
+        *flags |= 1;
+        c->x7 = 1;
+        break;
+    case 7:
+        if (f->x54 > 0) {
+            c->x7 = 0;
+            return;
+        }
+        if (f->x50 > lbl_802D8E64[c->x8].turns) {
+            c->x7 = 0;
+            return;
+        }
+        if (f->x50 == 0) {
+            f->x1e = f->x1c / 2;
+            f->x1c = f->x1c + f->x1e;
+            f->mem[0].x18 = f->mem[0].x16 / 2;
+            f->mem[0].x16 = f->mem[0].x16 + f->mem[0].x18;
+            f->mem[1].x18 = f->mem[1].x16 / 2;
+            f->mem[1].x16 = f->mem[1].x16 + f->mem[1].x18;
+            f->mem[2].x18 = f->mem[2].x16 / 2;
+            f->mem[2].x16 = f->mem[2].x16 + f->mem[2].x18;
+            f->mem[3].x18 = f->mem[3].x16 / 2;
+            f->mem[3].x16 = f->mem[3].x16 + f->mem[3].x18;
+            f->mem[4].x18 = f->mem[4].x16 / 2;
+            f->mem[4].x16 = f->mem[4].x16 + f->mem[4].x18;
+        }
+        f->x50 = lbl_802D8E64[c->x8].turns;
+        *flags |= 1;
+        c->x7 = 1;
+        break;
+    default:
+        break;
+    }
+}
+
 void fn_80147CC4(void) {
 }
 
@@ -1216,6 +1443,24 @@ void fn_801481B0(Msg* a, s16 i) {
     fn_80129988(a, i);
 }
 
+typedef struct Obj_80148464 {
+    s32 idx;
+    u8 lo[8];
+    u8 hi[8];
+} Obj_80148464;
+extern const char lbl_802B3640[];
+
+void fn_80148464(Obj_80148464* o) {
+    s32 i;
+    if (o->idx > 0xef8) {
+        fn_801DBE1C(lbl_802B3640);
+    }
+    for (i = 0; i < 8; i++) {
+        lbl_803472CC[o->idx + i].a = o->hi[i];
+        lbl_803472CC[o->idx + i].b = o->lo[i];
+    }
+}
+
 void fn_80148DDC(void) {
     if (lbl_803472CC != 0) {
         fn_801E17E0(lbl_803472CC);
@@ -1229,10 +1474,39 @@ void fn_80148E08(void) {
     lbl_803472A8 = 0;
 }
 
+void fn_80148E80(Node* n);
+
+void fn_80148E4C(Node *p) {
+    fn_80148E80(p);
+    p->x0 = 0;
+}
+
 void fn_801490F4(void) {
     void* p = fn_801E1A74(0x1f4, 4);
     lbl_80346F88 = p;
     memset(p, 0, 0x7d0);
+}
+
+extern void *fn_8010A214(u32 idx);
+static inline void FreeSlot(s32 i)
+{
+    if (lbl_80346F88 != NULL) {
+        if (lbl_80346F88[i] != NULL) {
+            fn_80148EDC(lbl_80346F88[i]);
+        }
+        lbl_80346F88[i] = NULL;
+    }
+}
+void fn_8014912C(void)
+{
+    u32 i;
+    if (lbl_80346F88 != NULL) {
+        for (i = 0; i < 500; i++) {
+            if (lbl_80346F88[i] != NULL && fn_8010A214(i * 100) == NULL) {
+                FreeSlot(i);
+            }
+        }
+    }
 }
 
 void fn_8014E0B0(u8 *p) {
@@ -1295,31 +1569,31 @@ s32 fn_80141078(void)
 
 void fn_80142F18(void)
 {
-    u8* p = lbl_80306738;
-    p[0] = 0;
+    Struct80306738* p = &lbl_80306738;
+    p->b[0] = 0;
     lbl_80346F61 = 0;
-    p[0x1] = 0;
-    p[0x2] = 0;
-    p[0x3] = 0;
-    p[0x4] = 0;
-    p[0x5] = 0;
-    p[0x6] = 0;
-    p[0x7] = 0;
-    p[0x8] = 0;
-    p[0x9] = 0;
-    p[0xa] = 0;
-    p[0xb] = 0;
-    p[0x10] = 0;
-    p[0x11] = 0;
-    p[0x12] = 0;
-    p[0x13] = 0;
-    p[0x14] = 0;
-    p[0x15] = 0;
-    *(u16*)(p + 0x16) = 0;
-    *(u16*)(p + 0x18) = 0;
-    *(u16*)(p + 0x1a) = 0;
-    *(u16*)(p + 0x1c) = 0;
-    *(u16*)(p + 0x1e) = 0;
+    p->b[1] = 0;
+    p->b[2] = 0;
+    p->b[3] = 0;
+    p->b[4] = 0;
+    p->b[5] = 0;
+    p->b[6] = 0;
+    p->b[7] = 0;
+    p->b[8] = 0;
+    p->b[9] = 0;
+    p->b[10] = 0;
+    p->b[11] = 0;
+    p->b2[0] = 0;
+    p->b2[1] = 0;
+    p->b2[2] = 0;
+    p->b2[3] = 0;
+    p->b2[4] = 0;
+    p->b2[5] = 0;
+    p->h[0] = 0;
+    p->h[1] = 0;
+    p->h[2] = 0;
+    p->h[3] = 0;
+    p->h[4] = 0;
     lbl_80346F60 = 0;
 }
 
@@ -2162,7 +2436,7 @@ void fn_80147DA8(s32 a, s32 b) {
 void fn_80143158(void)
 {
     lbl_80346F74 = 0;
-    (*(Struct80306738*)&lbl_80306738).xc = 0;
+    lbl_80306738.task = 0;
     lbl_80346F70 = -1;
     lbl_80346F6C = -1;
     lbl_80346F68 = -1;
@@ -2208,19 +2482,19 @@ s32 fn_80143200(void) {
 static inline void FreeSlots(s32 n) {
     s32 i;
     for (i = 0; i < n; i++) {
-        if ((*(Node_80149070 ***)&lbl_80346F88) != NULL) {
-            if ((*(Node_80149070 ***)&lbl_80346F88)[i] != NULL) {
-                fn_80148EDC((*(Node_80149070 ***)&lbl_80346F88)[i]);
+        if (lbl_80346F88 != NULL) {
+            if (lbl_80346F88[i] != NULL) {
+                fn_80148EDC(lbl_80346F88[i]);
             }
-            (*(Node_80149070 ***)&lbl_80346F88)[i] = NULL;
+            lbl_80346F88[i] = NULL;
         }
     }
 }
 
 void fn_80149070(void) {
     FreeSlots(500);
-    fn_801E17E0((void *)((*(Node_80149070 ***)&lbl_80346F88)));
-    (*(Node_80149070 ***)&lbl_80346F88) = NULL;
+    fn_801E17E0(lbl_80346F88);
+    lbl_80346F88 = NULL;
 }
 
 static inline void copyrec(Rec *d, Rec *s)
@@ -2399,7 +2673,7 @@ static inline s32 KindMode(s32 kind)
 
 static inline int KindUsable(s32 kind, s8 *list, s32 idx)
 {
-    u8 *tbl;
+    InvEnt *tbl;
     s32 res;
     int ok;
     Big *p;
@@ -2510,11 +2784,11 @@ static inline void TaskStop(Task *t)
 
 static inline void Close(s32 *p)
 {
-    Struct80306738_80143060 *w;
+    Struct80306738 *w;
 
     if (p != NULL) {
         *p = -1;
-        (*(s32 **)&lbl_80346F74) = NULL;
+        lbl_80346F74 = NULL;
         fn_8012AEB8(1);
         fn_8012AED0(1);
         fn_8012C648(1);
@@ -2524,7 +2798,7 @@ static inline void Close(s32 *p)
         fn_8013312C(1);
         fn_8015A844();
         fn_8012C048(0x16);
-        w = &(*(Struct80306738_80143060*)&lbl_80306738);
+        w = &lbl_80306738;
         if (w != NULL && w->task != NULL) {
             TaskStop(w->task);
             w->task = NULL;
@@ -2539,10 +2813,10 @@ static inline void Close(s32 *p)
 
 void fn_80143060(s32 *p)
 {
-    if ((*(s32 **)&lbl_80346F74) != NULL) {
-        Close((*(s32 **)&lbl_80346F74));
+    if (lbl_80346F74 != NULL) {
+        Close(lbl_80346F74);
     }
-    (*(s32 **)&lbl_80346F74) = p;
+    lbl_80346F74 = p;
     *p = 0;
     fn_80142F18();
 }
@@ -3934,4 +4208,34 @@ s16 fn_80147CC8(Arg* a) {
         break;
     }
     return res;
+}
+void fn_80142F88(void) {
+    Close(lbl_80346F74);
+}
+
+void fn_80142C78(void)
+{
+    Struct80306738 *h;
+    fn_80130350(1);
+    h = &lbl_80306738;
+    if (h != 0) {
+        if (h->task != 0) {
+            TaskStop(h->task);
+            h->task = 0;
+        }
+    }
+}
+
+/* Frees a node chain. Declared inline, so MWCC expands the self-call eight levels deep in
+ * this (out-of-line, since its callers come first) copy. */
+inline void fn_80148EDC(Node* n)
+{
+    if (n != NULL) {
+        if (n->x4 != NULL) {
+            fn_80148EDC(n->x4);
+            n->x4 = NULL;
+        }
+        fn_80148E4C(n);
+        fn_801E17E0(n);
+    }
 }
