@@ -179,7 +179,7 @@ extern void* lbl_80347394;
 extern void BattleHudDraw(void);
 extern void fn_80061F58(void*, s32, s32);
 extern void* memset(void*, int, u32);
-extern f32 fn_800177C0(s32, void*);
+extern f32 fn_800177C0(u8, void*);
 extern s32 fn_80015B94(s32, void*);
 extern s32 fn_80020FF0(s32 idx);
 /* lbl_80302A38: the scrolling state fn_80028E28 runs. */
@@ -198,6 +198,8 @@ typedef struct Ent80025518 {
     s32 *out_ptr;
 } Ent80025518;
 extern s32 lbl_8034732C;
+struct Tsk;
+typedef struct Res2c { u8 pad[0x2c]; void* p2c; } Res2c;
 /* A character's record (its task work's 0x4C). */
 typedef struct Dat {
     s8 kind;
@@ -212,7 +214,10 @@ typedef struct Dat {
     s16 x18;
     s16 x1a;
     s16 x1c;
-    u8 pad_1e[0xe4 - 0x1e];
+    u8 pad_1e[0x50 - 0x1e];
+    u32 x50;
+    u8 pad54[0xe0 - 0x54];
+    void (*xe0)(struct Tsk*);
     s16 xe4;
     s16 xe6_pad;
     s16 xe8;
@@ -220,9 +225,30 @@ typedef struct Dat {
     u32 xec;
     u8 pad_f0[0x134 - 0xf0];
     s32 x134;
+    u8 pad138[0x154 - 0x138];
+    u8 x154[4];
+    u8 x158[4];
+    f32 x15c;
+    u8 pad160[0x1dc - 0x160];
+    u32 x1dc;
 } Dat;
-typedef struct Wk { u8 pad_00[0x4c]; Dat *x4c; } Wk;
-typedef struct Tsk { u8 pad_00[0x24]; Wk *work; } Tsk;
+typedef struct Wk {
+    u8 pad_00[0x10];
+    Res2c* x10;
+    u8 pad14[0x1c - 0x14];
+    f32 px;             /* 0x1C */
+    u8 pad20[4];
+    f32 pz;             /* 0x24 */
+    u8 pad28[0x4c - 0x28];
+    Dat *x4c;
+} Wk;
+typedef struct Tsk {
+    u8 pad_00[0x18];
+    u8 flags;           /* 0x18 */
+    u8 state;           /* 0x19 */
+    u8 pad1a[0x24 - 0x1a];
+    Wk *work;
+} Tsk;
 extern s32 fn_80020470(Tsk *t, s16 st);
 extern s16 fn_80020094(Wk *w, s16 a, s16 b, s16 c);
 typedef struct Rec_80021AE0 { u8 pad[0x30]; struct Std_80021AE0* std; } Rec_80021AE0;
@@ -360,6 +386,127 @@ void fn_80021784(Top *t) {
     i->f8 = i->f16;
   }
   fn_8002E5D0(t);
+}
+
+void fn_80020D50(Tsk* t);
+s32 fn_80021EB8(Tsk *t);
+
+extern void fn_80074968(void* a, void* b);
+
+inline s8 FindSlot(Tsk* task) {
+    s8 i;
+    for (i = 0; i < 14; i++) {
+        if (lbl_80309E24[i] == task) return i;
+        if (lbl_80309E24[i] == 0) return i;
+    }
+    return i;
+}
+
+inline void InitSlotPos(Tsk* task) {
+    s8 idx = 0;
+    Wk* w2 = task->work;
+    Dat* d2 = w2->x4c;
+    if (d2->x1dc == 0) {
+        idx = FindSlot(task);
+        if (d2->kind != idx && d2->kind < 12) {
+            d2->kind = idx;
+        }
+    }
+    w2->px = (f32)(s8)(idx % 3) * 15.0f * 3.0f;
+    w2->pz = (f32)(s8)(idx / 3) * 15.0f * 3.0f;
+    w2->px -= 60.0f;
+    w2->pz -= 60.0f;
+}
+
+void fn_80021FCC(Tsk* task) {
+    Wk* w = task->work;
+    Dat* d = w->x4c;
+
+    switch (task->state) {
+    case 0:
+        task->state = 1;
+        InitSlotPos(task);
+        fn_80074968(w->x10->p2c, d->x154);
+        fn_80074968(w->x10->p2c, d->x158);
+        d->x6 = 1;
+        {
+            Dat* d3 = w->x4c;
+            s16 k = fn_80020094(w, d3->x6, 0, 0);
+            if (k >= 0) {
+                d3->x1c = d3->x6;
+                d3->x12 = 0;
+                d3->xe8 = d3->xe4;
+                d3->xe4 = k;
+                d3->x134 = 0;
+            }
+        }
+        d->x134 = 0;
+        break;
+    case 1:
+        fn_80021EB8(task);
+        d->xe0(task);
+        if (d->xec & 0x400000) {
+            task->state = 2;
+        }
+        break;
+    case 2:
+        fn_80020D50(task);
+        fn_801E17E0(d);
+        task->flags |= 0x40;
+        break;
+    }
+}
+
+void fn_80020D50(Tsk* t);
+s32 fn_80021EB8(Tsk *t);
+
+extern s32 fn_800221FC(Tsk* t);
+
+extern void fn_80074968(void* a, void* b);
+
+
+
+
+
+void fn_80022850(Tsk* task) {
+    Wk* w = task->work;
+    Dat* d = w->x4c;
+    s32 tmp[4];
+
+    switch (task->state) {
+    case 0:
+        task->state = 1;
+        InitSlotPos(task);
+        fn_80074968(w->x10->p2c, d->x154);
+        fn_80074968(w->x10->p2c, d->x158);
+        d->x15c = fn_800177C0(d->kind, tmp);
+        d->x6 = 1;
+        {
+            Dat* d3 = w->x4c;
+            s16 k = fn_80020094(w, d3->x6, 0, 0);
+            if (k >= 0) {
+                d3->x1c = d3->x6;
+                d3->x12 = 0;
+                d3->xe8 = d3->xe4;
+                d3->xe4 = k;
+                d3->x134 = 0;
+            }
+        }
+        d->x134 = 0;
+        break;
+    case 1:
+        fn_800221FC(task);
+        d->xe0(task);
+        if ((d->xec & 0x400000) && !(d->x50 & 0x80000)) {
+            task->state = 2;
+        }
+        break;
+    case 2:
+        fn_80020D50(task);
+        fn_801E17E0(d);
+        task->flags |= 0x40;
+        break;
+    }
 }
 
 void fn_80022A9C(void) {
