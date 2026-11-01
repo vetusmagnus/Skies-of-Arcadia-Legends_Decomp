@@ -16,7 +16,9 @@ extern u32 *lbl_803476C0;
 extern NJS_TEXLIST lbl_80347568;
 typedef struct Sub { u8 pad[0x20]; NJS_TEXLIST *texlist; } Sub;
 typedef struct Outer { u8 pad[4]; Sub *sub; } Outer;
-void fn_801D5A50(s32 a, s32 b, s32 c, NJS_TEXLIST *d, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
+typedef struct Layout Layout;
+typedef struct Obj20 Obj20;
+void fn_801D5A50(Layout *a, u32 b, u32 c, NJS_TEXLIST *d, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
 extern Outer *lbl_80347618;
 void fn_802275A4(NJS_TEXLIST *texlist, s32 flag);
 s32 fn_80227810(NJS_TEXLIST *texlist);
@@ -24,7 +26,7 @@ Outer *fn_801DB1A4(s32 idx);
 void fn_801E17E0(void *p);
 extern Outer *lbl_80347614;
 void *fn_801E1BDC(s32 size);
-extern s32 lbl_8034761C;
+extern u32 lbl_8034761C;
 typedef struct Thing { u8 pad[8]; void *f8; void *fc; } Thing;
 typedef struct Quad {
     s32 type;  /* 0x00 */
@@ -106,7 +108,7 @@ void GXInvalidateVtxCache(void);
 void GXInvalidateTexAll(void);
 extern u8 lbl_80311B00[];
 void fn_801E1718(void *p);
-extern u8 *lbl_80347608;
+extern Obj20 *lbl_80347608;
 extern u32 lbl_80312D40[4];
 void *fn_801E1A74(s32 a, u32 n);
 extern s32 lbl_80347550;
@@ -643,14 +645,15 @@ void fn_801DFC5C(void *a, void *b, s16 c, f32 d);
 typedef struct {
     s16 w, h, hw, hh, x, y, x1, y1, z0, z1;
 } Rect14;
-typedef struct {
+/* A 0x20-byte draw slot of the lbl_80347608 ring (fn_801D665C). */
+struct Obj20 {
     f32 x, y;      /* 0x00 */
     f32 pad08;     /* 0x08 */
     f32 sx, sy;    /* 0x0C */
-    s32 colour;    /* 0x14 */
+    s32 colour;    /* 0x14 (a Ninja angle for fn_801D56C8/fn_801D5A50) */
     NJS_TEXLIST* texlist; /* 0x18 */
     Rect14* data;  /* 0x1C */
-} Obj20;
+};
 typedef struct {
     u16 enable;    /* 0x00 */
     u8 pad02[6];
@@ -763,13 +766,13 @@ typedef struct {
 } Cell;
 /* 0x14 */
 
-typedef struct {
+struct Layout {
     Cell* cells;
     Elem* elems;
     u32 count;
     u8 pad[8];
     f32 x, y;
-} Layout;
+};
 void fn_801D81C0(Layout* sprite, Rec23* req, f32 z, f32 a, f32 b, u32 attr, u32 blend, NJS_TEXLIST* texlist);
 void fn_801D4A2C(Layout* lay, u32 flags, u32 mode, NJS_TEXLIST* tex, s32 vmode, f32 f1, f32 f2, f32 base, f32 f4, f32 a, f32 b);
 
@@ -980,21 +983,21 @@ void fn_801D4F54(Layout* lay, u32 flags, u32 mode, NJS_TEXLIST* tex, s32 vmode, 
     DrawStateRestore();
 }
 
-void fn_801D51C4(s32 a, s32 b, s32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
+void fn_801D51C4(Layout *a, u32 b, u32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
     fn_801D5A50(a, b, c, lbl_80347618->sub->texlist, 1.0f, 1.0f, p1, p2, p3, p4);
 }
 
-void fn_801D538C(s32 a, s32 b, s32 c, NJS_TEXLIST *d, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
-void fn_801D5210(s32 a, s32 b, s32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
+void fn_801D538C(Layout *a, u32 b, u32 c, NJS_TEXLIST *d, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
+void fn_801D5210(Layout *a, u32 b, u32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
     fn_801D538C(a, b, c, lbl_80347614->sub->texlist, 1.0f, 1.0f, p1, p2, p3, p4);
 }
 
-void fn_801D56C8(s32 a, s32 b, s32 c, NJS_TEXLIST *d, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
-void fn_801D525C(s32 a, s32 b, s32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
+void fn_801D56C8(Layout *a, u32 b, u32 c, NJS_TEXLIST *d, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
+void fn_801D525C(Layout *a, u32 b, u32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
     fn_801D56C8(a, b, c, lbl_80347614->sub->texlist, 1.0f, 1.0f, p1, p2, p3, p4);
 }
 
-void fn_801D52A8(s32 a, s32 b, s32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
+void fn_801D52A8(Layout *a, u32 b, u32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
     fn_801D5A50(a, b, c, lbl_80347614->sub->texlist, 1.0f, 1.0f, p1, p2, p3, p4);
 }
 
@@ -1343,7 +1346,7 @@ void fn_801D8080(Msg* a, s16 i) {
 
 extern VertexTex lbl_80311D90[4];
 
-void* fn_801D665C(void);
+Obj20 *fn_801D665C(void);
 void fn_801D61C4(void* p);
 extern Rect14* fn_801D6398(Layout* s);
 
@@ -2329,6 +2332,136 @@ void fn_801D4954(void *p)
     }
 }
 
+Rect14* fn_801D61F4(Layout* s);
+
+static inline s32 LayoutValid(Layout* p) {
+    if (p == 0) {
+        return 0;
+    }
+    if (p->cells == 0) {
+        return 0;
+    }
+    if (p->elems == 0) {
+        return 0;
+    }
+    if (p->count < 1) {
+        return 0;
+    }
+    return 1;
+}
+
+static inline Obj20 *ObjAlloc(void)
+{
+    lbl_8034761C = lbl_8034761C + 1;
+    if (lbl_8034761C > 0x7cf) {
+        lbl_8034761C = 0;
+    }
+    return &lbl_80347608[lbl_8034761C];
+}
+
+static inline void OffsFree(void *p)
+{
+    if (p != lbl_80311B00) {
+        fn_801E1718(p);
+    }
+}
+
+static inline void ScaleArgb(u32 c, NJS_ARGB* out, f32 f1, f32 f2) {
+    u8 b[4];
+    f32 d;
+    f32 x3;
+    b[0] = c >> 24;
+    b[1] = (c >> 16) & 0xFF;
+    b[2] = (c >> 8) & 0xFF;
+    b[3] = c & 0xFF;
+    out->a = __OSu8tof32(&b[0]);
+    out->r = __OSu8tof32(&b[1]);
+    out->g = __OSu8tof32(&b[2]);
+    x3 = __OSu8tof32(&b[3]);
+    d = 255.0f;
+    out->b = x3;
+    out->a = f2 * (out->a / d);
+    out->r = f1 * (out->r / d);
+    out->g = f1 * (out->g / d);
+    out->b = f1 * (out->b / d);
+}
+
+void fn_801D56C8(Layout* lay, u32 flags, u32 mode, NJS_TEXLIST* tex, f32 sx, f32 sy, f32 z, f32 ang, f32 a, f32 b) {
+    DrawState st;
+    NJS_ARGB argb;
+    Obj20* obj;
+    s32 i;
+    Rect14* offs;
+    if (fn_801E7554() != 0) return;
+    if (LayoutValid(lay) == 0) return;
+    if (z > -1.0f) z = -1.0f;
+    if (a < 0.0f) a = 0.0f;
+    if (b < 0.0f) b = 0.0f;
+    if (1.0f < b) b = 1.0f;
+    offs = fn_801D61F4(lay);
+    DrawStateDefault2D(&st);
+    st.attr_or |= flags;
+    if (mode == 1) {
+        st.blend_src = 8;
+        st.blend_dst = 10;
+    }
+    DrawStatePush(&st);
+    for (i = 0; i < lay->count; i++) {
+        obj = ObjAlloc();
+        obj->texlist = tex;
+        obj->colour = 182.04445f * ang;
+        obj->sx = sx;
+        obj->sy = sy;
+        obj->data = offs;
+        obj->x = lay->x + lay->elems[i].x + offs[i].hw;
+        obj->y = lay->y + lay->elems[i].y + offs[i].hh;
+        ScaleArgb(lay->elems[i].colour, &argb, a, b);
+        njSetConstantMaterial(&argb);
+        fn_80005D98(obj, i, 0x23, fn_801DBD9C(z + 0.0001f * i));
+    }
+    DrawStatePop(NULL);
+    DrawStateRestore();
+    OffsFree(offs);
+}
+
+void fn_801D5A50(Layout* lay, u32 flags, u32 mode, NJS_TEXLIST* tex, f32 sx, f32 sy, f32 z, f32 ang, f32 a, f32 b) {
+    DrawState st;
+    NJS_ARGB argb;
+    Obj20* obj;
+    s32 i;
+    Rect14* offs;
+    if (fn_801E7554() != 0) return;
+    if (LayoutValid(lay) == 0) return;
+    if (z > -1.0f) z = -1.0f;
+    if (a < 0.0f) a = 0.0f;
+    if (b < 0.0f) b = 0.0f;
+    if (1.0f < b) b = 1.0f;
+    offs = fn_801D61F4(lay);
+    DrawStateDefault2D(&st);
+    st.attr_or |= flags;
+    if (mode == 1) {
+        st.blend_src = 8;
+        st.blend_dst = 10;
+    }
+    DrawStatePush(&st);
+    for (i = 0; i < lay->count; i++) {
+        obj = ObjAlloc();
+        obj->texlist = tex;
+        obj->colour = 182.04445f * ang;
+        obj->sx = sx;
+        obj->sy = sy;
+        obj->data = offs;
+        obj->x = lay->x + lay->elems[i].x + offs[i].hw;
+        obj->y = lay->y + lay->elems[i].y + offs[i].hh;
+        ScaleArgb(lay->elems[i].colour, &argb, a, b);
+        njSetConstantMaterial(&argb);
+        fn_80005D98(obj, i, 0x23, fn_801DBD9C(z + 0.05f * i));
+    }
+    DrawStatePop(NULL);
+    DrawStateRestore();
+    OffsFree(offs);
+}
+
 void fn_801D61C4(void *p)
 {
     if (p != lbl_80311B00) {
@@ -2336,13 +2469,13 @@ void fn_801D61C4(void *p)
     }
 }
 
-void *fn_801D665C(void)
+Obj20 *fn_801D665C(void)
 {
     lbl_8034761C = lbl_8034761C + 1;
-    if ((u32)lbl_8034761C > 0x7cf) {
+    if (lbl_8034761C > 0x7cf) {
         lbl_8034761C = 0;
     }
-    return lbl_80347608 + (lbl_8034761C << 5);
+    return &lbl_80347608[lbl_8034761C];
 }
 
 void fn_801D7A08(u8 *p, f32 a, f32 b)
