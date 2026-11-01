@@ -3149,7 +3149,7 @@ extern f32 lbl_80348F48;
 extern void fn_8015ED90(Obj_800B63A4*);
 extern void fn_800ABEB0(void);
 extern void fn_800ABE9C(void);
-extern Hk_800B63A4* fn_800A1B50(Work_800B63A4*);
+extern void* fn_800A1B50(void*);
 extern void fn_800ADF98(Work_800B63A4*);
 extern void fn_800B5A04(Work_800B63A4*);
 extern void fn_800B522C(Work_800B63A4*);
@@ -3168,55 +3168,6 @@ typedef struct Node_800B88F8 {
     u8 pad0[0x58];
     struct Node_800B88F8* next;
 } Node_800B88F8;
-typedef struct {
-    u32 count;
-    u8 pad4[0x48 - 4];
-    u32 x48;
-    u8 pad4c[0x90 - 0x4C];
-    s32 x90;
-} Cnt_800B88F8;
-typedef struct {
-    u8 pad[0x10];
-    Cnt_800B88F8* cnt;
-} Link_800B88F8;
-typedef struct {
-    Hdr* hdr;
-} Hk_800B88F8;
-typedef struct {
-    u8 pad0[0x1A0];
-    s32 x1a0;
-    u8 pad1a4[0x260 - 0x1A4];
-    void* x260;
-    u8 pad264[0x31C - 0x264];
-    void* x31c;
-} Sub_800B88F8;
-typedef struct {
-    u8 pad0[0x18];
-    u32 flags;
-    u8 pad1c[0x100 - 0x1C];
-    Hk_800B88F8* x100;
-    u8 pad104[0x184 - 0x104];
-    s32 x184;
-    u8 pad188[0x1C8 - 0x188];
-    Link_800B88F8* link;
-    u8 pad1cc[0x1D8 - 0x1CC];
-    Sub_800B88F8* x1d8;
-    u8 pad1dc[0x1FA - 0x1DC];
-    s8 x1fa;
-    s8 x1fb;
-    s16 x1fc;
-    u8 pad1fe[0x208 - 0x1FE];
-    s16 x208;
-    s16 x20a;
-    u8 pad20c[0x24C - 0x20C];
-    NJS_POINT3 x24c;
-    u8 pad258[4];
-    Node_800B88F8* x25c;
-    void* x260;
-    void* x264;
-    u8 pad268[4];
-    u8 x26c;
-} Work_800B88F8;
 typedef struct Obj_800B88F8 {
     u8 pad0[0x18];
     u8 flags;
@@ -3225,11 +3176,11 @@ typedef struct Obj_800B88F8 {
     u8 x1b;
     f32 x1c_;
     f32 x20;
-    Work_800B88F8* work;
+    EvObj* work;
 } Obj_800B88F8;
 extern f32 lbl_80348F38;
-extern void fn_800B847C(Work_800B88F8*);
-extern void fn_800B8028(Work_800B88F8*);
+extern void fn_800B847C(EvObj*);
+extern void fn_800B8028(EvObj*);
 #define FREE_CHAIN_800B88F8(w) do { \
     Node_800B88F8* p = (w)->x25c; \
     if (p != NULL) { \
@@ -3587,6 +3538,167 @@ void fn_800B2DA0(u8* p, u32 v) {
     }
     *(u32*)(q + 0x78) = v;
     *(u32*)q |= 0x200;
+}
+
+/* The game's field-map model object (see model.c and evobj.c): the player (lbl_80347450), the work of
+ * the story-event, map-object and sparkle tasks and of the field camera tasks. Only the fields the
+ * decompiled code uses are named. */
+struct NJS_MOTION;
+
+
+
+
+
+
+
+
+
+
+typedef struct TrailNode {
+    NJS_POINT3 p0;     /* 0x00 */
+    NJS_POINT3 p1;     /* 0x0C */
+    NJS_POINT3 p2;     /* 0x18 */
+    u8 pad24[0x40 - 0x24];
+    u8 alpha;          /* 0x40 */
+    u8 pad41[0x48 - 0x41];
+    s32 x48;
+    s32 x4c;
+    s16 x50;
+    s16 x52;
+    u8 pad54[4];
+    struct TrailNode* next; /* 0x58 */
+} TrailNode;
+
+typedef struct Rgba8 {
+    u8 a, r, g, b;
+} Rgba8;
+
+/* parameters of the textured strip quad (fn_800A1EB0 / fn_800A2264) */
+typedef struct TrailQuad {
+    u8 pad0[8];
+    s16 tex;        /* 0x08 */
+    s16 u0;         /* 0x0A */
+    s16 u1;         /* 0x0C */
+    s16 x0e;        /* 0x0E */
+    s16 x10;        /* 0x10 */
+    s16 x12;        /* 0x12 */
+    s32 additive;   /* 0x14 */
+    s32 tinted;     /* 0x18 */
+    Rgba8 colA;     /* 0x1C */
+    Rgba8 colB;     /* 0x20 */
+    s16 scrollU;    /* 0x24 */
+    s16 scrollV;    /* 0x26 */
+    NJS_TEXLIST* texlist; /* 0x28 */
+} TrailQuad;
+
+
+extern void fn_800A1EB0(TrailQuad* q, NJS_POINT2* pts, f32 k, u16 id, s32 flag);
+extern void fn_800A2264(TrailQuad* q, NJS_POINT3* pts, u16 id, s32 flag);
+extern void fn_80296E4C(s32 a);
+extern void fn_80296ED4(s32 a);
+
+void fn_800B8028(EvObj* obj) {
+    u8 scale = 0;
+    TrailNode* n = obj->x25c;
+    NJS_POINT2 scr[4];
+    NJS_POINT3 pts[4];
+    TrailQuad q;
+    TrailQuad* qp = &q;
+    DrawState ds;
+    EvInfoTrail* info;
+    s16 su;
+    s16 sv;
+
+    while (n != NULL && n->next != NULL) {
+        pts[0] = n->p1;
+        pts[1] = n->next->p1;
+        pts[2] = n->next->p2;
+        pts[3] = n->p2;
+        if (TrailInfo(obj)->x58 == 1) {
+            njProjectScreen(0, &pts[0], &scr[0]);
+            njProjectScreen(0, &pts[1], &scr[1]);
+            njProjectScreen(0, &pts[2], &scr[2]);
+            njProjectScreen(0, &pts[3], &scr[3]);
+        }
+        if (TrailInfo(obj)->x4c == 1 && obj->texlist != NULL) {
+            q.tex = fn_800A10C4(fn_800A1ABC(obj, 0x26), n->x4c, fn_800A1AE8(obj, 0x26));
+            q.texlist = obj->texlist;
+        } else {
+            q.texlist = NULL;
+        }
+        q.colA.a = n->alpha;
+        q.colB.a = n->next->alpha;
+        q.scrollU = obj->x208;
+        q.scrollV = obj->x20a;
+        q.x12 = 0;
+        q.u0 = n->x50;
+        q.u1 = n->next->x50;
+        q.x0e = 0;
+        q.x10 = 255;
+        if (q.u0 > q.u1) {
+            q.u1 = 255;
+        }
+        info = obj->ext->info;
+        q.colA.r = info->x5c;
+        q.colB.r = info->x5c;
+        q.colA.g = info->x60;
+        q.colB.g = info->x60;
+        q.colA.b = info->x64;
+        q.colB.b = info->x64;
+        if (q.colA.r != 0 || q.colA.g != 0 || q.colA.b != 0) {
+            q.tinted = 1;
+        } else {
+            q.tinted = 0;
+        }
+        DrawStateDefault2D(&ds);
+        fn_8009E910(&ds, TrailInfo(obj)->x50, &scale);
+        q.colA.a = 0.003921569f * (q.colA.a * scale);
+        q.colB.a = 0.003921569f * (q.colB.a * scale);
+        if (TrailInfo(obj)->x50 == 3) {
+            q.additive = 1;
+        } else {
+            q.additive = 0;
+        }
+        ds.fog = obj->x2c;
+        DrawStatePush(&ds);
+        fn_80296E4C(0);
+        fn_80296ED4(0x2000);
+        info = obj->ext->info;
+        if (info->x58 == 1) {
+            if (info->x18 & 0x80000) {
+                obj->id = info->x18;
+                fn_800A1EB0(qp, scr, -1.99f, obj->id, 1);
+            } else {
+                fn_800A1EB0(qp, scr, -1.99f, obj->id, 0);
+            }
+        } else {
+            if (info->x18 & 0x80000) {
+                obj->id = info->x18;
+                fn_800A2264(qp, pts, obj->id, 1);
+            } else {
+                fn_800A2264(qp, pts, obj->id, 0);
+            }
+        }
+        DrawStatePop(0);
+        n = n->next;
+    }
+    info = obj->ext->info;
+    su = info->scrollU;
+    sv = info->scrollV;
+    obj->x208 += su;
+    obj->x20a += sv;
+    if (obj->x208 < -0xff) {
+        obj->x208 += 0x1fe;
+    }
+    if (obj->x208 > 0xff) {
+        obj->x208 -= 0x1fe;
+    }
+    if (obj->x20a < -0xff) {
+        obj->x20a += 0x1fe;
+    }
+    if (obj->x20a > 0xff) {
+        obj->x20a -= 0x1fe;
+    }
 }
 
 void fn_800C1A34(s32 a, s32 b, s32 c, s32 d) {
@@ -10158,8 +10270,8 @@ void fn_800B63A4(Obj_800B63A4* o) {
 }
 
 void fn_800B88F8(Obj_800B88F8* o) {
-    Work_800B88F8* w = o->work;
-    Sub_800B88F8* s;
+    EvObj* w = o->work;
+    EvSub* s;
     NJS_POINT3 pt;
     s16 k;
     if (o->flags & 0x20) {
@@ -10172,25 +10284,25 @@ void fn_800B88F8(Obj_800B88F8* o) {
     case 0:
         o->x1b = 0xfa;
         w->x26c = 1;
-        if (w->link->cnt->count < 0x27) {
+        if (TrailInfo(w)->count < 0x27) {
             o->state = 4;
             break;
         }
         fn_8015ED90((void *)(o));
-        s = w->x1d8;
+        s = w->sub;
         if (s != NULL) {
             s->x1a0 = 0;
             s->x260 = fn_800ABEB0;
             s->x31c = fn_800ABE9C;
         }
-        w->x100 = ((Hk_800B88F8*)fn_800A1B50((void *)(w)));
-        if (w->x100 != NULL) {
-            fn_80227810((void *)(w->x100));
+        w->texlist = fn_800A1B50(w);
+        if (w->texlist != NULL) {
+            fn_80227810((void *)(w->texlist));
         }
         fn_800ADF98((void *)(w));
-        w->x100 = ((Hk_800B88F8*)fn_800A1B50((void *)(w)));
-        w->flags |= 0x1000;
-        if (w->link->cnt->x48 == 1) {
+        w->texlist = fn_800A1B50(w);
+        w->x18 |= 0x1000;
+        if (TrailInfo(w)->x48 == 1) {
             o->work->x1fa = 1;
             o->state = 2;
         } else {
@@ -10209,13 +10321,13 @@ void fn_800B88F8(Obj_800B88F8* o) {
             break;
         }
     case 2:
-        fn_800ADED0((void *)(w), (void *)(w->x1d8));
+        fn_800ADED0((void *)(w), (void *)(w->sub));
         fn_8015E600((void *)(w));
         fn_800A0E1C((void *)(w));
         if (w->x1fa == 1) {
             w->x1fa = 0;
             w->x1fb = 0;
-            w->x1fc = w->link->cnt->x90;
+            w->x1fc = TrailInfo(w)->x90;
             if (w->x1fc == 0) {
                 w->x1fc = -1;
             }
@@ -10226,7 +10338,7 @@ void fn_800B88F8(Obj_800B88F8* o) {
             fn_800B847C(w);
             njCalcPoint(0, &w->x24c, &pt);
             o->x20 = lbl_80348F38 + pt.z;
-            if ((w->x1d8 != NULL ? w->x1d8->x1a0 : 1) == 0 && w->x184 == 0) {
+            if ((w->sub != NULL ? w->sub->x1a0 : 1) == 0 && w->hidden == 0) {
                 fn_800B8028(w);
             }
             k = w->x1fc;
@@ -10242,16 +10354,16 @@ void fn_800B88F8(Obj_800B88F8* o) {
     case 0xff:
         fn_8015EBF4((void *)(w));
         FREE_CHAIN_800B88F8(w);
-        if (w->x100 != NULL && w->x100->hdr->x8 != 0) {
-            fn_802275A4((void *)(w->x100), 0);
+        if (w->texlist != NULL && w->texlist->textures->texaddr != 0) {
+            fn_802275A4((void *)(w->texlist), 0);
         }
         w->x264 = NULL;
-        w->x260 = NULL;
+        w->mapMode = NULL;
         w->x25c = NULL;
         fn_80100B74((void *)(o));
         break;
     case 4:
-        if (w->link->cnt->count >= 0x27) {
+        if (TrailInfo(w)->count >= 0x27) {
             o->state = 0;
         }
         break;
