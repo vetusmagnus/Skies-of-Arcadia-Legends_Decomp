@@ -53,7 +53,11 @@ typedef struct Node {
 typedef struct { u32 handle; s8 id; u8 kind; s16 s; u8 pad8[8]; } Slot_8030A10C;
 typedef struct {
     u32 f0;
-    u8 pad4[0x64];
+    u8 pad4[4];
+    struct TkRec *x8;           /* 0x08 */
+    u8 padc[4];
+    struct Ent_80008800 *x10;   /* 0x10 condition id table */
+    u8 pad14[0x68 - 0x14];
     u32 f68;
     u32 f6c;
     u8 pad70[4];
@@ -66,8 +70,9 @@ typedef struct {
     Slot_8030A10C e[2];
     u8 pad_ec[0xF8 - 0xEC];
     void *pf8;
-    u8 padfc[0x104 - 0xFC];
-    u32 a104[12];
+    void *pfc;
+    void *p100;
+    void *a104[12];
     u32 a134[12];
     u8 pad164[4];
     void *f168;
@@ -76,7 +81,9 @@ typedef struct {
     s8 b16e;
     u8 b16f;
     u8 b170;
-    u8 pad171[0x1C4 - 0x171];
+    u8 pad171[0x184 - 0x171];
+    struct CondLink *x184;      /* 0x184 condition list */
+    u8 pad188[0x1C4 - 0x188];
     s32 count;
     u8 pad1c8[4];
     u32 f1cc;
@@ -288,7 +295,7 @@ typedef struct O6DDBC {
 extern char lbl_802B069C[];
 extern void strcpy(char *, char *);
 extern u8 fn_80046BB0(char *, s32 *);
-extern u32 fn_80035C38(void *);
+extern void *fn_80035C38(void *);
 extern s32 fn_8003DBAC(s32, char *);
 int fn_8025EF88(char* a, const char* b);
 void fn_80015554(void);
@@ -669,8 +676,6 @@ typedef struct O5BF30 {
     u8 pad1A[10];
     S5BF30 *s;
 } O5BF30;
-extern V5BF30 lbl_802AD3C8;
-extern V5BF30 lbl_802AD3D4[7];
 extern void fn_80037FD8(void *, u8 *);
 extern s16 fn_8022DFFC(V5BF30 *);
 extern void fn_8022E18C(V5BF30 *, s32, f32 *);
@@ -791,7 +796,8 @@ typedef struct O6E00C {
 extern u32 fn_8022ABEC(char *);
 extern void *fn_8022ACA8(u32);
 typedef struct ChrInfo {
-    u8 pad0[0x6];
+    s8 x0;              /* 0x00 id */
+    u8 pad1[0x5];
     s16 x6;
     s16 x8;
     u8 pad_a[0xec - 0xa];
@@ -799,7 +805,9 @@ typedef struct ChrInfo {
     u32 ff0;
     u8 pad_f4[0x164 - 0xf4];
     f32 f164;
-    u8 pad_168[0x1fc - 0x168];
+    u8 pad_168[0x1dc - 0x168];
+    u32 x1dc;           /* 0x1DC */
+    u8 pad_1e0[0x1fc - 0x1e0];
     void *f1fc;
 } ChrInfo;
 typedef struct ChrModel { u8 pad0[0xc]; char name[1]; } ChrModel;
@@ -842,9 +850,16 @@ typedef struct O57BD0 {
     u8 pad1A[10];
     S57BD0 *s;
 } O57BD0;
+/* lbl_80347394's work (the battle system object). */
+typedef struct SysObj {
+    u8 pad0[0x22];
+    s16 x22;            /* 0x22 */
+    u8 pad24[0x3c - 0x24];
+    u32 f3c;            /* 0x3c */
+} SysObj;
 typedef struct G57BD0 {
     u8 pad0[0x24];
-    struct { u8 pad[0x3c]; u32 f3c; } *work;
+    SysObj *work;
 } G57BD0;
 extern G57BD0 *lbl_80347394;
 extern V3 lbl_802AD3B8;
@@ -2383,9 +2398,9 @@ s32 fn_8006E898(char* s);
 typedef struct Out_800593AC { u8 pad[0x10]; s16 x10; } Out_800593AC;
 typedef struct Nd_800593AC { u8 pad[0x24]; Out_800593AC *work; } Nd_800593AC;
 extern s32 fn_80008F08(void *, s32, s32, s32, s32, s32, void **);
-extern void fn_800308FC(char *, s16, s16);
+extern int fn_800308FC(char *, s16, s16);
 extern void fn_8025F120(void *dst, char *src);
-extern void fn_800594CC(void *);
+void fn_800594CC(Task *task);
 
 void fn_80061654(NJS_POINT3 *a, NJS_POINT3 *b, NJS_POINT3 *rot, NJS_POINT3 *out, NJS_POINT3 *extra);
 void fn_80061ABC(NJS_POINT3 *out, f32 ay, f32 az, NJS_POINT3 *p, NJS_POINT3 *q);
@@ -2880,6 +2895,329 @@ extern void fn_8001E238(V3 *, V3 *, ChrTask *);
 static inline s32 DegAng(f32 d)
 {
     return 182.04445f * d;
+}
+
+typedef struct {
+    u8 pad0[0x14];
+    s16 x14;
+    s16 x16;
+    s16 x18;
+} Cfg_80059788;
+typedef struct {
+    s8 x0;
+    s8 x1;
+    u8 pad2[2];
+    ChrTask *x4;
+    s16 x8;
+    char xa[0x12];
+    void *x1c;
+    Cfg_80059788 *x20;
+} Load_80059788;
+
+extern void fn_80021AE0(char *path, char *name);
+extern void fn_80021934(char *path, char *name);
+extern s8 fn_800365FC(void);
+extern s16 fn_80008274(s16 v);
+extern s16 fn_800085EC(ChrTask *t, s16 a, s16 b, struct Ent_80008800 *d, struct CondLink *p);
+extern s16 fn_8006D2C4(s32 a);
+s32 fn_8006E6E4(Hdr* h);
+
+void fn_8005BF30(O5BF30 *o) {
+    f32 tmp;
+    V5BF30 b = {0.0f, 0.0f, 0.0f};
+    V5BF30 a = {0.0f, 0.0f, 0.0f};
+    S5BF30 *s = o->s;
+    switch (o->state) {
+    case 0:
+        s->vc.x = s->d->v1c.x;
+        s->vc.y = s->d->v1c.y;
+        s->vc.z = s->d->v1c.z;
+        s->f18 = 0.0f;
+        s->f1c = 0.1f;
+        s->u20 = fn_8022DFFC(&s->vc);
+        if (s->u20 > 300) {
+            s->u20 = 300;
+        }
+        o->state = 1;
+    case 1:
+        if (s->cnt >= s->d->s18) {
+            if (s->s8 >= s->u20) {
+                o->state = 0xfa;
+            } else {
+                fn_8022E18C(&s->vc, s->s8, &tmp);
+                if (s->d->flags & 0x40000000) {
+                    b.x = tmp;
+                }
+                if (s->d->flags & 0x80000000) {
+                    b.y = tmp;
+                }
+                if (s->d->flags & 0x20000000) {
+                    b.z = tmp;
+                }
+                fn_80012078(&b);
+                if (s->d->flags & 0x8000000) {
+                    a.x = tmp;
+                }
+                if (s->d->flags & 0x10000000) {
+                    a.y = tmp;
+                }
+                if (s->d->flags & 0x4000000) {
+                    a.z = tmp;
+                }
+                fn_80012020(&a);
+            }
+            s->s8 = s->s8 + 1;
+        }
+        if (s->d->s18 < s->d->s1a && s->cnt >= s->d->s1a) {
+            o->state = 0xfa;
+        }
+        break;
+    case 0xf9:
+    case 0xfa:
+        fn_80012078(&b);
+        o->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    s->cnt = s->cnt + 1;
+    fn_80037FD8(s->d, &o->state);
+}
+
+typedef struct {
+    char name[0x10];
+    s16 x10;
+    u8 pad12[2];
+    void *x14;
+} Load_800594CC;
+
+void fn_800594CC(Task *task)
+{
+    char path[0x40];
+    char name[0x40];
+    char dir[0x10];
+    Load_800594CC *w;
+
+    w = task->work;
+    switch (task->state) {
+    case 0:
+        if (lbl_80309700[w->x10] != NULL) {
+            fn_8006C8DC(dir, w->name);
+            sprintf(path, "%s%s", dir, w->name);
+            w->x14 = fn_801CC1B4(path);
+            task->state = 1;
+        } else {
+            task->state = 6;
+        }
+        break;
+    case 1:
+        if (fn_801CC1A4(w->x14) == 1) {
+            lbl_8030A10C.pf8 = fn_801CC0A0(w->x14);
+            strcpy(name, w->name);
+            fn_80061048(name);
+            sprintf(path, "/BCHARA/%s.STD", name);
+            w->x14 = fn_801CC1B4(path);
+            task->state = 2;
+        }
+        break;
+    case 2:
+        if (fn_801CC1A4(w->x14) == 1) {
+            lbl_8030A10C.pfc = fn_801CC0A0(w->x14);
+            strcpy(name, w->name);
+            fn_80061048(name);
+            sprintf(path, "/BCHARA/%s0.STD", name);
+            w->x14 = fn_801CC1B4(path);
+            task->state = 3;
+        }
+        break;
+    case 3:
+        if (fn_801CC1A4(w->x14) == 1) {
+            lbl_8030A10C.p100 = fn_801CC0A0(w->x14);
+            if (lbl_80309700[w->x10] != NULL) {
+                sprintf(name, "F05000%02X.MLK", fn_80008274(lbl_80309700[w->x10]->work->x2));
+                sprintf(path, "/BEFF/%s", name);
+                if (fn_801CC62C(path) == 0) {
+                    task->state = 5;
+                } else {
+                    w->x14 = fn_801CC1B4(path);
+                    task->state = 4;
+                }
+            } else {
+                task->state = 6;
+            }
+        }
+        break;
+    case 4:
+        if (fn_801CC1A4(w->x14) == 1) {
+            fn_8006E6E4(lbl_8030A10C.a104[0] = fn_801CC0A0(w->x14));
+            fn_801E17E0(lbl_8030A10C.a104[0]);
+            task->state = 5;
+        }
+        break;
+    case 5:
+    case 6:
+        lbl_8030A10C.f6c &= ~0x80000000;
+        task->flags |= 0x40;
+        break;
+    }
+}
+
+void fn_80059788(Task *task)
+{
+    char path[0x40];
+    char name[0x40];
+    char dir[0x10];
+    Load_80059788 *w;
+    SysObj *p;
+    TkRec *t;
+    ChrInfo *c;
+
+    w = task->work;
+    switch (task->state) {
+    case 0:
+        c = w->x4->work->u;
+        w->x1 = c->x0;
+        if (c->x1dc != 0) {
+            lbl_80347378 |= 1 << c->x0;
+            w->x0 = lbl_80309730[c->x0].x4;
+            if (lbl_80309700[w->x0] != NULL) {
+                fn_800308FC(w->xa, lbl_80309700[w->x0]->work->x2, lbl_80309700[w->x0]->work->x0);
+            }
+        } else {
+            fn_800308FC(w->xa, w->x20->x18, w->x20->x16);
+        }
+        if (fn_8006E898(w->xa) != 0 || lbl_80347394 != NULL) {
+            task->state = 3;
+        } else {
+            task->state = 0xc;
+        }
+        break;
+    case 3:
+        if (w->x8 >= w->x20->x14) {
+            if (lbl_80347394 != NULL) {
+                p = lbl_80347394->work;
+                if (p->x22 < 8) {
+                    fn_80021AE0("/BCHARA/", w->xa);
+                    p->x22 = fn_800365FC();
+                    w->x0 = p->x22 - 1;
+                    task->state = 1;
+                } else {
+                    task->state = 0xfa;
+                }
+            } else {
+                t = lbl_80309700[w->x0];
+                if (t != NULL) {
+                    if (fn_800308FC(w->xa, t->work->x2, t->work->x0) != 0) {
+                        lbl_8030A10C.x8 = t;
+                        fn_80021934("/BCHARA/", w->xa);
+                    }
+                    task->state = 4;
+                } else {
+                    task->state = 0xfa;
+                }
+            }
+        }
+        break;
+    case 6:
+        if (w->x8 >= w->x20->x14) {
+            if (lbl_80309700[w->x0] != NULL) {
+                fn_8006C8DC(dir, w->xa);
+                sprintf(path, "%s%s", dir, w->xa);
+                w->x1c = fn_801CC1B4(path);
+                task->state = 7;
+            } else {
+                task->state = 0xfa;
+            }
+        }
+        break;
+    case 7:
+        if (fn_801CC1A4(w->x1c) == 1) {
+            lbl_8030A10C.pf8 = fn_801CC0A0(w->x1c);
+            strcpy(name, w->xa);
+            fn_80061048(name);
+            sprintf(path, "/BCHARA/%s.STD", name);
+            w->x1c = fn_801CC1B4(path);
+            task->state = 8;
+        }
+        break;
+    case 8:
+        if (fn_801CC1A4(w->x1c) == 1) {
+            lbl_8030A10C.pfc = fn_801CC0A0(w->x1c);
+            strcpy(name, w->xa);
+            fn_80061048(name);
+            sprintf(path, "/BCHARA/%s0.STD", name);
+            w->x1c = fn_801CC1B4(path);
+            task->state = 9;
+        }
+        break;
+    case 9:
+        if (fn_801CC1A4(w->x1c) == 1) {
+            lbl_8030A10C.p100 = fn_801CC0A0(w->x1c);
+            if (lbl_80309700[w->x0] != NULL) {
+                sprintf(name, "F05000%02X.MLK", fn_80008274(lbl_80309700[w->x0]->work->x2));
+                sprintf(path, "/BEFF/%s", name);
+                if (fn_801CC62C(path) == 0) {
+                    task->state = 0xb;
+                } else {
+                    w->x1c = fn_801CC1B4(path);
+                    task->state = 0xa;
+                }
+            } else {
+                task->state = 0xfa;
+            }
+        }
+        break;
+    case 0xa:
+        if (fn_801CC1A4(w->x1c) == 1) {
+            fn_8006E6E4(lbl_8030A10C.a104[0] = fn_801CC0A0(w->x1c));
+            fn_801E17E0(lbl_8030A10C.a104[0]);
+            task->state = 0xb;
+        }
+        break;
+    case 0xb:
+        t = lbl_80309700[w->x0];
+        if (t != NULL) {
+            if (t != NULL) {
+                lbl_8030A10C.x8 = t;
+                fn_80021934("/BCHARA/", w->xa);
+            }
+            task->state = 4;
+        } else {
+            task->state = 0xfa;
+        }
+        break;
+    case 0xc:
+        if (w->x8 >= w->x20->x14) {
+            task->state = 0xb;
+        }
+        break;
+    case 4:
+        task->state = 1;
+        break;
+    case 1:
+        {
+            ChrTask *ct = fn_800215EC(w->x0);
+            if (ct != NULL) {
+                fn_800085EC(ct, 0x1e, 0x28, lbl_8030A10C.x10, lbl_8030A10C.x184);
+            }
+        }
+        if (lbl_80347394 != NULL) {
+            task->state = 0xfa;
+        } else {
+            task->state = 5;
+        }
+        break;
+    case 5:
+        if (fn_8006D2C4(1) == 0) {
+            lbl_80347378 &= ~(1 << w->x1);
+            task->state = 0xfa;
+        }
+        break;
+    case 0xfa:
+        task->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    w->x8++;
 }
 
 void fn_80059D6C(EfNode *node)
@@ -5991,66 +6329,6 @@ void fn_8006B46C(Task* t) {
     }
 }
 
-void fn_8005BF30(O5BF30 *o) {
-    f32 tmp;
-    V5BF30 b = lbl_802AD3C8;
-    V5BF30 a = lbl_802AD3D4[0];
-    S5BF30 *s = o->s;
-    switch (o->state) {
-    case 0:
-        s->vc.x = s->d->v1c.x;
-        s->vc.y = s->d->v1c.y;
-        s->vc.z = s->d->v1c.z;
-        s->f18 = 0.0f;
-        s->f1c = 0.1f;
-        s->u20 = fn_8022DFFC(&s->vc);
-        if (s->u20 > 300) {
-            s->u20 = 300;
-        }
-        o->state = 1;
-    case 1:
-        if (s->cnt >= s->d->s18) {
-            if (s->s8 >= s->u20) {
-                o->state = 0xfa;
-            } else {
-                fn_8022E18C(&s->vc, s->s8, &tmp);
-                if (s->d->flags & 0x40000000) {
-                    b.x = tmp;
-                }
-                if (s->d->flags & 0x80000000) {
-                    b.y = tmp;
-                }
-                if (s->d->flags & 0x20000000) {
-                    b.z = tmp;
-                }
-                fn_80012078(&b);
-                if (s->d->flags & 0x8000000) {
-                    a.x = tmp;
-                }
-                if (s->d->flags & 0x10000000) {
-                    a.y = tmp;
-                }
-                if (s->d->flags & 0x4000000) {
-                    a.z = tmp;
-                }
-                fn_80012020(&a);
-            }
-            s->s8 = s->s8 + 1;
-        }
-        if (s->d->s18 < s->d->s1a && s->cnt >= s->d->s1a) {
-            o->state = 0xfa;
-        }
-        break;
-    case 0xf9:
-    case 0xfa:
-        fn_80012078(&b);
-        o->flags |= 0x40;
-        lbl_8030A10C.count--;
-        return;
-    }
-    s->cnt = s->cnt + 1;
-    fn_80037FD8(s->d, &o->state);
-}
 
 void fn_8005D8F8(O5D8F8 *o) {
     W5C188 *w;
