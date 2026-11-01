@@ -17,9 +17,19 @@ typedef struct { u32 idx; u32 a, b, c, d; } Src_UNIT0000;
 typedef struct { u32 a, b; void* p; } E12;
 typedef struct { s32 flag; u8 pad[0x10]; f32 pos[3]; s32 ints[3]; } Obj_80158200;
 typedef struct {
+    u8 pad0[0x1a];
+    s16 id;                 /* 0x1a */
+    u8 pad1c[2];
+    s16 mode;               /* 0x1e */
+    u8 pad20[2];
+    u8 v22;                 /* 0x22 */
+    u8 pad23;
+} Slot_8015854C;                     /* 0x24 */
+typedef struct {
     u32 flags;
     s32 f4;
-    u8 pad8[0xa];
+    u8 pad8[8];
+    s16 h10;
     s16 h12;
     s32 f14;
     u8 pad18[0x10];
@@ -38,7 +48,9 @@ typedef struct {
     u8 pad_4a[0x22];
     s16 h6c;
     s16 h6e;
-    u8 pad70[0x1ee - 0x70];
+    u8 pad70[0x9c - 0x70];
+    Slot_8015854C slot[8];   /* 0x9C */
+    u8 pad1bc[0x1ee - 0x1bc];
     s16 h1ee;
 } Obj_8015854C;
 typedef struct Inner_UNIT0000 { u8 pad[0x8]; void *x8; } Inner_UNIT0000;
@@ -212,13 +224,8 @@ extern void njPushMatrixEx(void);
 extern void njPopMatrixEx(void);
 extern void njMultiMatrix(s32 a, void* m);
 typedef struct {
-    u8 pad0[0x10];
-    s16 index;        /* 0x10 */
-    s16 type;         /* 0x12 */
-} Inner80159020;
-typedef struct {
     u8 pad0[0x24];
-    Inner80159020* inner; /* 0x24 */
+    Obj_8015854C* inner; /* 0x24 */
 } Obj80159020;
 typedef struct {
     u8 pad0[0xc];
@@ -226,7 +233,7 @@ typedef struct {
 } Entry80159020;
 extern f32 lbl_8034A940;
 extern f32 lbl_8034A95C;
-extern s32 fn_801590F4(Inner80159020* in, s32 v);
+extern s32 fn_801590F4(Obj_8015854C* in, s32 v);
 extern u8* lbl_8034727C;
 extern void* lbl_803472AC;
 extern void* lbl_803472B0;
@@ -2609,21 +2616,21 @@ void fn_80156DA0(Obj80156DA0* self, void* m) {
 
 s32 fn_80159020(void *p) {
     Obj80159020* self = p;
-    Inner80159020* in = self->inner;
+    Obj_8015854C* in = self->inner;
     Entry80159020* e;
     s32 r;
-    if (in->type != 9) {
+    if (in->h12 != 9) {
         r = fn_801590F4(in, 1);
-        if (in->type == 5 || in->type == 3 || in->type == 7 || in->type == 10) {
+        if (in->h12 == 5 || in->h12 == 3 || in->h12 == 7 || in->h12 == 10) {
             return 0;
         }
         if ((u8)r != 0) {
-            e = (Entry80159020 *)lbl_80306DB8[in->index];
+            e = (Entry80159020 *)lbl_80306DB8[in->h10];
             if (e != 0) {
                 e->value = lbl_8034A95C;
             }
         } else {
-            e = (Entry80159020 *)lbl_80306DB8[in->index];
+            e = (Entry80159020 *)lbl_80306DB8[in->h10];
             if (e != 0) {
                 e->value = lbl_8034A940;
             }
