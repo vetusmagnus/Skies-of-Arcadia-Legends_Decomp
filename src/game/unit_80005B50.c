@@ -3,6 +3,8 @@
 #include "game/drawstate.h"
 #include <dolphin/os.h>
 #include "game/task.h"
+#include "game/save_8030B7F4.h"
+#include "game/stat_8030B4D4.h"
 #include <string.h>
 #define PTR(p, off) (*(void**)((u8*)(p) + (off)))
 extern void fn_8007E13C(void* a);
@@ -347,7 +349,6 @@ typedef struct {
 extern u8 *lbl_80346AA4;
 typedef void (*TaskFn)(void*);
 extern TaskFn lbl_802DAFA8[];
-extern u8 lbl_8030B7F4[];
 /* The 0x70-byte objects lbl_80309EC8 keeps at 0x40/0x44 (fn_80014AB8); 0x20000000 in flags
  * releases one. */
 typedef struct SysObj {
@@ -2027,6 +2028,52 @@ s32 fn_80010B5C(void) {
     return 1;
 }
 
+/* What lbl_80347390 points at: its first byte is the level fn_80010CF4 compares with. */
+typedef struct Lim_80347390 { u8 v; } Lim_80347390;
+extern Lim_80347390* lbl_80347390;
+extern s32 lbl_80347344;
+extern s32 fn_8025ECC4(void);
+
+void fn_80010CF4(void) {
+    s32 a;
+    s32 r;
+    if (lbl_803097F0.x0 != -1) {
+        lbl_80347344 = 1;
+        return;
+    }
+    a = lbl_8030B4D4.x2d5[0];
+    r = fn_8025ECC4() % 101;
+    if (a == -1) {
+        a = lbl_8030B7F4.chr[lbl_8030B7F4.party[0]].xb * 4 + 30 - lbl_80347390->v;
+        if (a < 0) {
+            a = 0;
+        }
+        if (a > 30) {
+            a = 30;
+        }
+    }
+    if (a > r) {
+        lbl_80347344 = 2;
+        return;
+    }
+    a = lbl_8030B4D4.x2d5[1];
+    r = fn_8025ECC4() % 101;
+    if (a == -1) {
+        a = lbl_80347390->v - lbl_8030B7F4.chr[lbl_8030B7F4.party[0]].xb * 4;
+        if (a < 0) {
+            a = 0;
+        }
+        if (a > 70) {
+            a = 70;
+        }
+    }
+    if (a > r) {
+        lbl_80347344 = 0;
+        return;
+    }
+    lbl_80347344 = 1;
+}
+
 void fn_80011208(s8 a, s8 b, s32 c) {
     s8 m;
     f32 d;
@@ -2847,6 +2894,32 @@ void fn_80018084(Task* t)
     fn_80018CBC(t, u->xe8, 0, 0, u->x2);
 }
 
+s32 fn_80020060(ChrAnim* p);
+s32 fn_80017018(s8 idx);
+extern void fn_8001712C(s8 k, void *p);
+
+void fn_80018798(Task *t)
+{
+    ChrWork *w = t->work;
+    ChrInfo *d = w->st;
+    ChrAnim *tbl = d->anims;
+    s16 idx;
+    s16 idx2;
+    f32 f;
+    idx = fn_80020060(tbl);
+    d->x128 = tbl[idx].x14;
+    d->x12c = lbl_8030A10C.xec * tbl[idx].x10;
+    idx2 = fn_80020094(w, 1, -1, 1);
+    f = tbl[idx2].x10;
+    if (f) {
+        d->x130 = lbl_8030A10C.xec * f;
+    } else {
+        d->x130 = d->x12c;
+    }
+    fn_8001712C(d->id, &d->x15c);
+    fn_80017018(d->id);
+}
+
 int fn_80018B80(ChrDraw* a) {
     DrawState s;
     DrawStateGet(&s);
@@ -3076,8 +3149,8 @@ TaskFn fn_8000F0A4(s16 i)
 
 s16 fn_80010CBC(s16 i)
 {
-    s8 k = (s8)lbl_8030B7F4[i + 0x328];
-    return *(s16 *)(lbl_8030B7F4 + k * 0x5c + 0x1c);
+    s8 k = lbl_8030B7F4.party[i];
+    return lbl_8030B7F4.chr[k].x1c;
 }
 
 s32 fn_80010CE4(u8 *a, u8 *b)
