@@ -188,7 +188,8 @@ typedef struct ChrInfo {
     s16 x20;            /* 0x20 */
     u8 pad22[6];
     s8 x28[10];         /* 0x28 recent ids, -1 = free */
-    u8 pad32[0x48 - 0x32];
+    u8 pad32[0x44 - 0x32];
+    u32 x44;            /* 0x44 status bits */
     s8 x48;             /* 0x48 */
     u8 pad_49;
     s16 x4a;            /* 0x4a */
@@ -560,7 +561,7 @@ typedef struct {
     u32 x44;
 } U44;
 extern int fn_80016A18(s8);
-extern void fn_80015138(int);
+void fn_80015138(u8 flag);
 extern void fn_80032B4C(void);
 extern int fn_800168D8(int, void*, u8);
 typedef struct {
