@@ -47,7 +47,8 @@ typedef struct Light {
     NJS_POINT3 dir;  /* 0x08 */
     f32 a, b;        /* 0x14 */
     NJS_POINT3 c;    /* 0x1C */
-} Light; /* 0x28 */
+} Light;
+/* 0x28 */
 void fn_802871D8(f32 r, f32 g, f32 b);
 extern Light lbl_8030E830[12];
 typedef struct Ent { u32 key; u32 next; s16 val; s16 pad; } Ent;
@@ -375,7 +376,8 @@ typedef struct {
     s32 g;
 } PadMotor6C3C;
 extern s32 lbl_80347668;
-extern Light lbl_80311E00[][12]; /* the light stack, 8 saved copies of lbl_8030E830 */
+extern Light lbl_80311E00[][12];
+/* the light stack, 8 saved copies of lbl_8030E830 */
 extern const char lbl_802C4490[];
 extern const char lbl_802C44A8[];
 void MemCopy(void *dst, void *src, u32 n);
@@ -555,7 +557,8 @@ extern void fn_801CC3A4(void);
 extern void fn_80218678(void);
 extern void* heap_main;
 extern void* heap_font;
-extern void *volatile lbl_80346720; /* the allocator reloads it right after storing it */
+extern void *volatile lbl_80346720;
+/* the allocator reloads it right after storing it */
 extern void* lbl_8034769C;
 extern void* lbl_803476A0;
 extern void* lbl_803476A4;
@@ -748,18 +751,17 @@ extern f32 lbl_8034BEEC;
 typedef struct Src { s16 n0; s16 n2; } Src;
 typedef struct Hdr_801DF450 { void *data; s32 count; } Hdr_801DF450;
 extern s32 fn_801DEF3C(Hdr_801DF450 *h, Src *a, void *b);
-
 typedef struct {
     s32 idx;
     f32 x, y, w, h;
     u32 colour;
     u8 pad[0x34 - 0x18];
 } Elem;
-
 typedef struct {
     s32 tex;
     f32 u, v, u2, v2;
-} Cell; /* 0x14 */
+} Cell;
+/* 0x14 */
 
 typedef struct {
     Cell* cells;
@@ -769,8 +771,8 @@ typedef struct {
     f32 x, y;
 } Layout;
 void fn_801D81C0(Layout* sprite, Rec23* req, f32 z, f32 a, f32 b, u32 attr, u32 blend, NJS_TEXLIST* texlist);
-
 void fn_801D4A2C(Layout* lay, u32 flags, u32 mode, NJS_TEXLIST* tex, s32 vmode, f32 f1, f32 f2, f32 base, f32 f4, f32 a, f32 b);
+
 void fn_801D49E4(Layout* a, u32 b, u32 c, s32 d, f32 p1, f32 p2, f32 p3, f32 p4) {
     fn_801D4A2C(a, b, c, &lbl_80347568, d, 1.0f, 1.0f, p1, p2, p3, p4);
 }
@@ -4869,4 +4871,46 @@ s32 MemEqual(const void *a, const void *b, u32 size)
         }
     }
     return 1;
+}
+
+static inline void Zero16(void* q)
+{
+    u16* h = q;
+    *h = 0;
+}
+
+static inline void Zero32(void* q)
+{
+    u32* w = q;
+    *w = 0;
+}
+
+/* Clears n bytes at dst: a byte and a halfword to reach word alignment, then words, then the
+ * tail. The (u32)p tests are the address-alignment checks. Returns the end. */
+void* fn_801E0FD4(void* dst, u32 n)
+{
+    u8* p = dst;
+    u32 len = n - ((u32)p & 3); /* address alignment: bytes up to the next word */
+
+    if ((u32)p & 1) {
+        *p = 0;
+        p++;
+    }
+    if ((u32)p & 2) {
+        Zero16(p);
+        p += 2;
+    }
+    for (; len >= 4; len -= 4) {
+        Zero32(p);
+        p += 4;
+    }
+    if (len & 2) {
+        Zero16(p);
+        p += 2;
+    }
+    if (len & 1) {
+        *p = 0;
+        p++;
+    }
+    return p;
 }
