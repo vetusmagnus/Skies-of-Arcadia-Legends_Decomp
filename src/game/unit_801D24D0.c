@@ -308,27 +308,7 @@ typedef struct Cursor {
     s16 pad10;
     s16 mode;
 } Cursor;
-typedef struct Holder {
-    void *a;
-    u32 pad04;
-    u32 pad08;
-    void *c;
-    u32 pad10;
-    void *e;
-} Holder;
 void fn_801E8580(void *p);
-typedef struct Ctx_801DDECC {
-    void *r0;
-    void *a;
-    u32 b;
-    u32 zero0c;
-    void *c;
-    void *r14;
-    u8 sub[2];
-    s16 k1a;
-    s16 k1c;
-    s16 k1e;
-} Ctx_801DDECC;
 void *fn_801E84C0(void *p);
 void *fn_801DDF48(void *sub, void *c, s16 x, s16 y);
 extern s32 DVDGetDriveStatus(void);
@@ -482,13 +462,18 @@ typedef struct {
     NJS_POINT3 pos;
 } Obj_801DE8C0;
 extern void fn_801E66E0(Obj_801DE8C0* o);
+/* A pooled model resource (fn_801DDAB0 hands out &Entry.data). */
 typedef struct Payload {
-    void *x0;
-    u8 pad4[8];
-    void *xc;
-    u8 pad10[4];
-    void *x14;
-    u8 pad18[8];
+    void *x0;               /* 0x00 fn_801E84C0(key + 8), freed by fn_801E8580 */
+    u8 *key;                /* 0x04 */
+    struct KeyList *a;      /* 0x08 */
+    void *xc;               /* 0x0C */
+    struct KeyList *b;      /* 0x10 */
+    void *x14;              /* 0x14 fn_801DDF48 */
+    s16 sub;                /* 0x18 */
+    s16 k1a;                /* 0x1A */
+    s16 k1c;                /* 0x1C */
+    s16 k1e;                /* 0x1E */
 } Payload;
 typedef struct Entry {
     s32 ref;
@@ -1849,6 +1834,66 @@ void fn_801DD95C(void *p)
     }
 }
 
+s32 fn_801DDC48(KeyList *x, KeyList *y);
+
+void* fn_801DDAB0(Pool* p, u8 *key, KeyList* a, KeyList* b, s16* dims) {
+    Entry* found;
+    Entry* s;
+    s32 i;
+    s32 isNew = 1;
+    if (p->live != 0) {
+        s = p->base;
+        found = NULL;
+        for (i = 0; i < p->count; s++, i++) {
+            if (s->ref > -1) {
+                if (key == s->data.key && fn_801DDC48(s->data.b, b)) {
+                    s->ref++;
+                    found = s;
+                    isNew = 0;
+                    break;
+                }
+            } else if (found == NULL) {
+                found = s;
+            }
+        }
+    } else {
+        found = p->base;
+    }
+    if (found != NULL) {
+        if (isNew) {
+            if (dims != NULL) {
+                found->data.k1c = dims[0];
+                found->data.k1e = dims[1];
+                found->data.x0 = NULL;
+                found->data.key = key;
+                found->data.a = a;
+                found->data.b = b;
+                found->data.x14 = 0;
+                found->data.k1a = -1;
+                found->data.xc = 0;
+                found->data.x0 = fn_801E84C0(key + 8);
+                found->data.x14 = fn_801DDF48(&found->data.sub, b, found->data.k1c, found->data.k1e);
+            } else {
+                found->data.x0 = NULL;
+                found->data.key = key;
+                found->data.a = a;
+                found->data.b = b;
+                found->data.x14 = 0;
+                found->data.xc = 0;
+                found->data.x14 = 0;
+                found->data.k1e = -1;
+                found->data.k1c = -1;
+                found->data.k1a = -1;
+                found->data.sub = b->count / a->count;
+            }
+            p->live++;
+            found->ref = 1;
+        }
+        return &found->data;
+    }
+    return NULL;
+}
+
 void fn_801DF94C(Ob *o) {
     fn_801DFA9C(o->p4c, o->s2);
     fn_801E17E0(o);
@@ -2681,31 +2726,31 @@ void fn_801DD8EC(Cursor *c, TblEnt *tbl, s32 count, s32 mode) {
     }
 }
 
-void fn_801DDE5C(Holder *h) {
-    if (h->a != NULL) {
-        fn_801E8580(h->a);
-        h->a = NULL;
+void fn_801DDE5C(Payload *h) {
+    if (h->x0 != NULL) {
+        fn_801E8580(h->x0);
+        h->x0 = NULL;
     }
-    if (h->c != NULL) {
-        fn_801E17E0(h->c);
-        h->c = NULL;
+    if (h->xc != NULL) {
+        fn_801E17E0(h->xc);
+        h->xc = NULL;
     }
-    if (h->e != NULL) {
-        fn_801E17E0(h->e);
-        h->e = NULL;
+    if (h->x14 != NULL) {
+        fn_801E17E0(h->x14);
+        h->x14 = NULL;
     }
 }
 
-void fn_801DDECC(Ctx_801DDECC *o, void *a, u32 b, void *c) {
-    o->r0 = NULL;
+void fn_801DDECC(Payload *o, u8 *key, struct KeyList *a, struct KeyList *b) {
+    o->x0 = NULL;
+    o->key = key;
     o->a = a;
     o->b = b;
-    o->c = c;
-    o->r14 = NULL;
+    o->x14 = NULL;
     o->k1a = -1;
-    o->zero0c = 0;
-    o->r0 = fn_801E84C0((u8 *)a + 8);
-    o->r14 = fn_801DDF48(o->sub, c, o->k1c, o->k1e);
+    o->xc = 0;
+    o->x0 = fn_801E84C0(key + 8);
+    o->x14 = fn_801DDF48(&o->sub, b, o->k1c, o->k1e);
 }
 
 s32 fn_801D168C(void) {
