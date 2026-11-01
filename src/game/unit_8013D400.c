@@ -76,7 +76,9 @@ extern void SePlay(s32 id, s32 a, s32 b);
 extern void fn_80097294(s32 a);
 extern s32 lbl_80346F80;
 extern s32 lbl_80347290;
-extern void* lbl_80346F88;
+typedef struct Node_80149070 Node_80149070;
+/* lbl_80346F88: 500 node slots (fn_801490F4 allocates them). */
+extern Node_80149070** lbl_80346F88;
 extern void* memset(void* dst, s32 c, u32 n);
 typedef struct Slot {
     u32 flags;
@@ -88,7 +90,6 @@ typedef struct Slot {
 extern Slot lbl_8030A6D4[];
 extern s32 lbl_8034757C;
 extern s32 fn_8013E730(s32 i);
-extern u8 lbl_80306738[];
 extern u8 lbl_80346F61;
 extern u8 lbl_80346F60;
 typedef struct {
@@ -249,13 +250,13 @@ typedef struct StrPool_8013D400 {
     char startDup[0x34];      /* "sbSceneTableStart Error : Scene Duplicate Set !! %d" */
 } StrPool_8013D400;
 extern const StrPool_8013D400 lbl_802B3578;
-extern u32 lbl_80346F74;
+extern s32* lbl_80346F74;
 extern s32 lbl_8034728C;
 extern s32 lbl_80347294;
 extern void fn_80143060(s32* p);
 extern u8 lbl_80310A1C[];
 typedef struct Node {
-    u8 pad0[4];
+    s32 x0;
     struct Node* x4;
     struct Node* x8;
     struct Node* xc;
@@ -566,11 +567,20 @@ typedef union {
     Rows_80143FA4 r5;
 } G_80143FA4;
 typedef struct {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 pad19[0x24 - 0x19];
+    s32 x24;
+    s32 x28;
+} Task;
+/* lbl_80306738: cleared by fn_80142F18; the task at 0xc is stopped when a menu closes. */
+typedef struct {
     u8 b[0xc];
-    s32 xc;
+    Task* task;
     u8 b2[6];
     u16 h[5];
 } Struct80306738;
+extern Struct80306738 lbl_80306738;
 extern void fn_80142F18(void);
 typedef struct {
     u8 pad0;
@@ -596,7 +606,6 @@ typedef struct Ent_80143200 {
     u8 pad0[0x20];
     Stat *stat;
 } Ent_80143200;
-typedef struct Node_80149070 Node_80149070;
 void fn_80148EDC(Node_80149070 *n);
 typedef struct {
     u8 b0;
@@ -658,17 +667,6 @@ typedef struct {
     u8 b2a;
 } Sys_8014654C;
 extern s32 fn_8013D718(s32 kind, u8 *tbl, s32 id);
-typedef struct {
-    u8 pad0[0x18];
-    u8 flags;
-    u8 pad19[0x24 - 0x19];
-    s32 x24;
-    s32 x28;
-} Task;
-typedef struct {
-    u8 pad0[0xc];
-    Task *task;
-} Struct80306738_80143060;
 extern void fn_8012AEB8(s32 a);
 extern void fn_8012AED0(s32 a);
 extern void fn_8012C648(s32 a);
@@ -1229,10 +1227,39 @@ void fn_80148E08(void) {
     lbl_803472A8 = 0;
 }
 
+void fn_80148E80(Node* n);
+
+void fn_80148E4C(Node *p) {
+    fn_80148E80(p);
+    p->x0 = 0;
+}
+
 void fn_801490F4(void) {
     void* p = fn_801E1A74(0x1f4, 4);
     lbl_80346F88 = p;
     memset(p, 0, 0x7d0);
+}
+
+extern void *fn_8010A214(u32 idx);
+static inline void FreeSlot(s32 i)
+{
+    if (lbl_80346F88 != NULL) {
+        if (lbl_80346F88[i] != NULL) {
+            fn_80148EDC(lbl_80346F88[i]);
+        }
+        lbl_80346F88[i] = NULL;
+    }
+}
+void fn_8014912C(void)
+{
+    u32 i;
+    if (lbl_80346F88 != NULL) {
+        for (i = 0; i < 500; i++) {
+            if (lbl_80346F88[i] != NULL && fn_8010A214(i * 100) == NULL) {
+                FreeSlot(i);
+            }
+        }
+    }
 }
 
 void fn_8014E0B0(u8 *p) {
@@ -1295,31 +1322,31 @@ s32 fn_80141078(void)
 
 void fn_80142F18(void)
 {
-    u8* p = lbl_80306738;
-    p[0] = 0;
+    Struct80306738* p = &lbl_80306738;
+    p->b[0] = 0;
     lbl_80346F61 = 0;
-    p[0x1] = 0;
-    p[0x2] = 0;
-    p[0x3] = 0;
-    p[0x4] = 0;
-    p[0x5] = 0;
-    p[0x6] = 0;
-    p[0x7] = 0;
-    p[0x8] = 0;
-    p[0x9] = 0;
-    p[0xa] = 0;
-    p[0xb] = 0;
-    p[0x10] = 0;
-    p[0x11] = 0;
-    p[0x12] = 0;
-    p[0x13] = 0;
-    p[0x14] = 0;
-    p[0x15] = 0;
-    *(u16*)(p + 0x16) = 0;
-    *(u16*)(p + 0x18) = 0;
-    *(u16*)(p + 0x1a) = 0;
-    *(u16*)(p + 0x1c) = 0;
-    *(u16*)(p + 0x1e) = 0;
+    p->b[1] = 0;
+    p->b[2] = 0;
+    p->b[3] = 0;
+    p->b[4] = 0;
+    p->b[5] = 0;
+    p->b[6] = 0;
+    p->b[7] = 0;
+    p->b[8] = 0;
+    p->b[9] = 0;
+    p->b[10] = 0;
+    p->b[11] = 0;
+    p->b2[0] = 0;
+    p->b2[1] = 0;
+    p->b2[2] = 0;
+    p->b2[3] = 0;
+    p->b2[4] = 0;
+    p->b2[5] = 0;
+    p->h[0] = 0;
+    p->h[1] = 0;
+    p->h[2] = 0;
+    p->h[3] = 0;
+    p->h[4] = 0;
     lbl_80346F60 = 0;
 }
 
@@ -2162,7 +2189,7 @@ void fn_80147DA8(s32 a, s32 b) {
 void fn_80143158(void)
 {
     lbl_80346F74 = 0;
-    (*(Struct80306738*)&lbl_80306738).xc = 0;
+    lbl_80306738.task = 0;
     lbl_80346F70 = -1;
     lbl_80346F6C = -1;
     lbl_80346F68 = -1;
@@ -2208,19 +2235,19 @@ s32 fn_80143200(void) {
 static inline void FreeSlots(s32 n) {
     s32 i;
     for (i = 0; i < n; i++) {
-        if ((*(Node_80149070 ***)&lbl_80346F88) != NULL) {
-            if ((*(Node_80149070 ***)&lbl_80346F88)[i] != NULL) {
-                fn_80148EDC((*(Node_80149070 ***)&lbl_80346F88)[i]);
+        if (lbl_80346F88 != NULL) {
+            if (lbl_80346F88[i] != NULL) {
+                fn_80148EDC(lbl_80346F88[i]);
             }
-            (*(Node_80149070 ***)&lbl_80346F88)[i] = NULL;
+            lbl_80346F88[i] = NULL;
         }
     }
 }
 
 void fn_80149070(void) {
     FreeSlots(500);
-    fn_801E17E0((void *)((*(Node_80149070 ***)&lbl_80346F88)));
-    (*(Node_80149070 ***)&lbl_80346F88) = NULL;
+    fn_801E17E0(lbl_80346F88);
+    lbl_80346F88 = NULL;
 }
 
 static inline void copyrec(Rec *d, Rec *s)
@@ -2510,11 +2537,11 @@ static inline void TaskStop(Task *t)
 
 static inline void Close(s32 *p)
 {
-    Struct80306738_80143060 *w;
+    Struct80306738 *w;
 
     if (p != NULL) {
         *p = -1;
-        (*(s32 **)&lbl_80346F74) = NULL;
+        lbl_80346F74 = NULL;
         fn_8012AEB8(1);
         fn_8012AED0(1);
         fn_8012C648(1);
@@ -2524,7 +2551,7 @@ static inline void Close(s32 *p)
         fn_8013312C(1);
         fn_8015A844();
         fn_8012C048(0x16);
-        w = &(*(Struct80306738_80143060*)&lbl_80306738);
+        w = &lbl_80306738;
         if (w != NULL && w->task != NULL) {
             TaskStop(w->task);
             w->task = NULL;
@@ -2539,10 +2566,10 @@ static inline void Close(s32 *p)
 
 void fn_80143060(s32 *p)
 {
-    if ((*(s32 **)&lbl_80346F74) != NULL) {
-        Close((*(s32 **)&lbl_80346F74));
+    if (lbl_80346F74 != NULL) {
+        Close(lbl_80346F74);
     }
-    (*(s32 **)&lbl_80346F74) = p;
+    lbl_80346F74 = p;
     *p = 0;
     fn_80142F18();
 }
@@ -3935,3 +3962,20 @@ s16 fn_80147CC8(Arg* a) {
     }
     return res;
 }
+void fn_80142F88(void) {
+    Close(lbl_80346F74);
+}
+
+void fn_80142C78(void)
+{
+    Struct80306738 *h;
+    fn_80130350(1);
+    h = &lbl_80306738;
+    if (h != 0) {
+        if (h->task != 0) {
+            TaskStop(h->task);
+            h->task = 0;
+        }
+    }
+}
+
