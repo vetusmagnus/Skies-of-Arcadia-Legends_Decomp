@@ -1810,6 +1810,61 @@ void fn_8000B5F4(W *o, f32 frame) {
     njPopMatrixEx();
 }
 
+/* The work parameters of the effect task fn_8000BE28 starts (fn_8000F0A4(12)), 0x50 bytes. */
+typedef struct Par_8000BE28 {
+    Work_BB28* x0;       /* the first of the current table's works */
+    void* x4;
+    s16 x8;
+    s16 xa;
+    f32 xc;
+    f32 x10;
+    f32 x14;
+    u8 pad18[0x24 - 0x18];
+    s16 x24;
+    s16 x26;
+    s16 x28;
+    u8 pad2a[0x50 - 0x2a];
+} Par_8000BE28;
+typedef struct Work_8000BE28 { u8 pad0[0x4c]; Par_8000BE28* x4c; u8 pad50[8]; } Work_8000BE28;
+typedef struct Src_8000BE28 {
+    s16 x0;
+    u8 pad2[2];
+    s16 x4;
+    s16 x6;
+    f32 x8;
+    f32 xc;
+    f32 x10;
+    u8 pad14[0x20 - 0x14];
+    s16 x20;
+    s16 x22;
+    s16 x24;
+} Src_8000BE28;
+typedef struct Owner_8000BE28 { u8 pad[0xc]; Src_8000BE28* src; } Owner_8000BE28;
+
+void fn_8000BE28(Owner_8000BE28 *a) {
+    Src_8000BE28 *s = a->src;
+    Task *n;
+    Work_8000BE28 *w;
+    Par_8000BE28 *d;
+    if (s->x0 < lbl_80309E5C.tbl[lbl_80309E5C.cur].xc && s->x20 != 0) {
+        n = fn_802268E8(lbl_803475A8, fn_8000F0A4(0xc));
+        fn_80061F58(&n->work, 0x58, 0);
+        w = n->work;
+        fn_80061F58(&w->x4c, 0x50, 0);
+        d = w->x4c;
+        d->x26 = s->x22;
+        d->x8 = s->x4;
+        d->x24 = s->x20;
+        d->xa = s->x6;
+        d->x28 = s->x24;
+        d->xc = s->x8;
+        d->x10 = s->xc;
+        d->x14 = s->x10;
+        d->x0 = *lbl_80309E5C.tbl[lbl_80309E5C.cur].ptrs;
+        d->x4 = lbl_80309E5C.tbl[lbl_80309E5C.cur].x10;
+    }
+}
+
 void fn_8000BF48(Owner_8000BF48* ow) {
     Src_8000BF48* s = ow->src;
     if (s->x0 < lbl_80309E5C.tbl[lbl_80309E5C.cur].xc && s->x14 != 0) {
@@ -2897,6 +2952,19 @@ void fn_80018084(Task* t)
 s32 fn_80020060(ChrAnim* p);
 s32 fn_80017018(s8 idx);
 extern void fn_8001712C(s8 k, void *p);
+
+void fn_80018700(s8 id) {
+    s16 i;
+    s16 j;
+    for (i = 0; i < 9; i++) {
+        for (j = 0; j < 9; j++) {
+            s8 v = lbl_8030A10C.x14[i][j];
+            if (v == id) {
+                lbl_8030A10C.x14[i][j] = -1;
+            }
+        }
+    }
+}
 
 void fn_80018798(Task *t)
 {
