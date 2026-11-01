@@ -14,7 +14,7 @@ extern void fn_8007DEE0(void* a);
 extern void fn_8001FE44(void* a);
 s32 fn_800090F8(s32 packed, s16* p);
 extern void* lbl_803475A8;
-extern void* fn_802268E8(void* a, void (*cb)(void*));
+extern void* fn_802268E8(void* a, void* cb);
 extern void* fn_801E1C7C(u32 size);
 extern void fn_8000A3FC(void* p);
 extern u32 lbl_803474E4[2];
@@ -708,52 +708,33 @@ extern s8 lbl_80347334;
 extern int fn_80078610(u8);
 extern void fn_80290EA8(int);
 extern void fn_80290E98(u32);
-typedef struct {
-    u8 pad0[0x48];
-    u32 x48;
-    u8 x4c[12];
-    u8 x58[12];
-    u8 x64[0xc0 - 0x64];
-    f32 xc0[3];
-    u8 padcc[0x110 - 0xcc];
-    f32 x110;
-    u8 pad114[0x160 - 0x114];
-    f32 x160;
-    u8 pad164[0x19a - 0x164];
-    s16 x19a;
-} G_80014474;
-typedef struct {
-    u8 pad0[8];
+/* The camera task's state block (its work's x6c). */
+typedef struct CamState {
+    s8 mode;            /* 0x00 camera mode */
+    s8 prev;            /* 0x01 previous mode */
+    s16 x2;             /* 0x02 current character */
+    s16 x4;             /* 0x04 second character */
+    u8 pad6[2];
     f32 x8;
     f32 xc;
-    u8 pad10[0x30 - 0x10];
-    s16 state;
-} U_80014474;
-typedef struct {
+    u8 pad10[0x2c - 0x10];
+    s16 x2c;
+    u8 x2e;
+    s8 x2f;             /* 0x2f camera kind */
+    s16 state;          /* 0x30 */
+    u8 pad32[2];
+    u32 x34;
+} CamState;
+/* The camera task's work: eye at 0x20, angles at 0x2c, target at 0x38. */
+typedef struct CamWork {
     u8 pad0[0x20];
     f32 x20[3];
     f32 x2c[3];
     f32 x38[3];
-    u8 pad44[0x6c - 0x44];
-    U_80014474* u;
-} W_80014474;
-typedef struct {
-    u8 pad[0x164];
-    f32 x164;
-    u8 pad168[0x1ec - 0x168];
-    u32 x1ec;
-} Unit_80014474;
-typedef struct {
-    u8 pad[0x4c];
-    Unit_80014474* w;
-} UW_80014474;
-typedef struct Tk_80014474 {
-    u8 pad[0x24];
-    union {
-        W_80014474* w;
-        UW_80014474* uw;
-    } work;
-} Tk_80014474;
+    u8 pad44[0x68 - 0x44];
+    u32 x68;            /* 0x68 flags */
+    CamState* u;        /* 0x6c */
+} CamWork;
 extern int fn_8006D1C4(void);
 f32 fn_800114AC(f32* out, f32* w, f32* h, s8 flag);
 extern void fn_800608C8(void*);
@@ -906,7 +887,7 @@ typedef struct Obj_80014784 {
     u8 pad[0x24];
     SysObj* data;
 } Obj_80014784;
-extern void fn_800136DC(void*);
+void fn_800136DC(Task* t);
 typedef s32 Angle;
 typedef struct Dst { u32 x0; u8 pad4[0x20 - 4]; f32 x20; } Dst;
 typedef struct Par { f32 x0; f32 x4; f32 x8; Dst* xc; } Par;
@@ -927,16 +908,6 @@ extern void fn_80018CBC(Task*, int, int, int, int);
 s32 fn_8001C1F0(Task* o);
 typedef struct Cmd { u8 pad0[0x10]; s16 x10; s16 x12; } Cmd;
 typedef struct Item { s16 lo; s16 hi; u8 pad4[8]; Cmd* obj; } Item;
-typedef struct Sub143 { u8 pad00[0x30]; s16 state; } Sub143;
-typedef struct Wk143 {
-    u8 pad00[0x20];
-    f32 x20[3];
-    f32 x2c[3];
-    f32 x38[3];
-    u8 pad44[0x28];
-    Sub143 *sub;
-} Wk143;
-typedef struct Tk143 { u8 pad00[0x24]; Wk143 *work; } Tk143;
 extern s32 fn_8006EDA0(void);
 extern void fn_80011400(s16 a, s32 b);
 extern void fn_8005535C(void *a, void *v, void *t, f32 x);
@@ -1260,29 +1231,6 @@ typedef struct {
     u8 x64[12];
 } G;
 typedef struct {
-    u8 pad0[8];
-    f32 x8;
-    f32 xc;
-    u8 pad10[0x2c - 0x10];
-    s16 x2c;
-    u8 pad2e[2];
-    s16 state;
-    u8 pad32[2];
-    u32 x34;
-} U_80013FD0;
-typedef struct {
-    u8 pad0[0x20];
-    f32 x20[3];
-    f32 x2c[3];
-    f32 x38[3];
-    u8 pad44[0x6c - 0x44];
-    U_80013FD0* u;
-} W_80013FD0;
-typedef struct {
-    u8 pad[0x24];
-    W_80013FD0* work;
-} Tk_80013FD0;
-typedef struct {
     u16 x0;
     u8 pad2[0x2a];
 } Sys;
@@ -1290,7 +1238,8 @@ typedef struct {
     u8 pad0[0x190];
     u32 x190;
 } Gs;
-typedef struct Slot24 { u32 flags; u8 pad[0x20]; } Slot24;
+/* One controller's state: x8 held buttons, xc newly pressed buttons. */
+typedef struct Slot24 { u32 flags; u32 x4; u32 x8; u32 xc; u8 pad10[0x10]; u32 x20; } Slot24;
 /* ADD: lbl_8030A6D4 entries (0x24 bytes) */
 extern Slot24 lbl_8030A6D4[];
 extern void fn_80061048(char* s);
@@ -2238,25 +2187,6 @@ void fn_80011370(s8 a, s8 b)
     fn_80011208(a, b, 0);
 }
 
-typedef struct {
-    u8 pad_0[0x2];
-    s16 x2;
-    s16 x4;
-    u8 pad_6[0x2];
-    f32 x8;
-    f32 xc;
-    u8 pad_10[0x1f];
-    s8 x2f;
-    s16 state;
-} U_800121D8;
-typedef struct {
-    u8 pad0[0x20];
-    f32 x20[3];
-    f32 x2c[3];
-    f32 x38[3];
-    u8 pad44[0x6c - 0x44];
-    U_800121D8* u;
-} W_800121D8;
 
 extern int fn_80016B20(s8);
 void fn_80014D0C(void);
@@ -2266,7 +2196,7 @@ extern void SoundLoadStageSamp(void);
 extern Task* fn_8003DB34(void* fn);
 void fn_80016580(Tk_80016580* t);
 
-inline int HitCached(W_800121D8* w, U_800121D8* u, f32 xc)
+inline int HitCached(CamWork* w, CamState* u, f32 xc)
 {
     switch (lbl_80309EC8.mv.x19a) {
     case 10:
@@ -2508,8 +2438,8 @@ s32 fn_80011E50(f32* v, f32* out, u8 mode) {
 
 void fn_800121D8(Task* t)
 {
-    W_800121D8* w = t->work;
-    U_800121D8* u = w->u;
+    CamWork* w = t->work;
+    CamState* u = w->u;
     f32 b, a;
     f32 v[3];
     Task** p;
@@ -4187,14 +4117,14 @@ void fn_80013D58(s8 id, s8 flag)
     }
 }
 
-inline int Hit(W_80014474* w, U_80014474* u, f32 xc)
+inline int Hit(CamWork* w, CamState* u, f32 xc)
 {
-    switch ((*(G_80014474*)&lbl_80309EC8).x19a) {
+    switch (lbl_80309EC8.mv.x19a) {
     case 10:
     case 11:
-        if ((*(G_80014474*)&lbl_80309EC8).x110 == xc && (*(G_80014474*)&lbl_80309EC8).xc0[0] == w->x38[0] && (*(G_80014474*)&lbl_80309EC8).xc0[1] == w->x38[1]
-            && (*(G_80014474*)&lbl_80309EC8).xc0[2] == w->x38[2]) {
-            u->x8 = (*(G_80014474*)&lbl_80309EC8).x160;
+        if (lbl_80309EC8.mv.x110 == xc && lbl_80309EC8.mv.xc0[0] == w->x38[0] && lbl_80309EC8.mv.xc0[1] == w->x38[1]
+            && lbl_80309EC8.mv.xc0[2] == w->x38[2]) {
+            u->x8 = lbl_80309EC8.mv.x160;
             return 1;
         }
     }
@@ -4236,22 +4166,23 @@ s32 fn_80020470(Task* t, s16 x) {
 
 inline void Reset(void)
 {
-    Tk_80014474** p;
+    Task** p;
     s8 i;
-    for (i = 0, p = ((Tk_80014474**)lbl_80309E24); i < 14; p++, i++) {
+    for (i = 0, p = lbl_80309E24; i < 14; p++, i++) {
         if (*p != NULL) {
-            Unit_80014474* o = (*p)->work.uw->w;
-            o->x164 = 0.0f;
+            ChrWork* cw = (*p)->work;
+            ChrInfo* o = cw->st;
+            o->draw.a = 0.0f;
             o->x1ec |= 0x20000000;
         }
     }
     fn_80011208(-1, -1, 0);
 }
 
-void fn_80014474(Tk_80014474* t)
+void fn_80014474(Task* t)
 {
-    W_80014474* w = t->work.w;
-    U_80014474* u = w->u;
+    CamWork* w = t->work;
+    CamState* u = w->u;
     f32 b, a;
     f32 v[3];
     f32 c;
@@ -5016,10 +4947,10 @@ void fn_8001DE78(Task* t, s8 which, Item* list) {
     }
 }
 
-void fn_800143A0(Tk143 *t)
+void fn_800143A0(Task *t)
 {
-    Wk143 *w = t->work;
-    Sub143 *sub = w->sub;
+    CamWork *w = t->work;
+    CamState *sub = w->u;
     void *e;
     s32 idx;
 
@@ -6214,10 +6145,10 @@ s32 fn_8001FDD8(Obj8001FDD8 *obj, s16 a, s16 b)
     return -1;
 }
 
-void fn_80013FD0(Tk_80013FD0* t)
+void fn_80013FD0(Task* t)
 {
-    W_80013FD0* w = t->work;
-    U_80013FD0* u = w->u;
+    CamWork* w = t->work;
+    CamState* u = w->u;
 
     if (u->state != 0) {
         if ((*(G*)&lbl_80309EC8).x48 & 0x80000000) {
@@ -6661,8 +6592,8 @@ s32 fn_8000AE08(void* obj, f32* out, u8 dir) {
 
 void fn_80012F58(Task* t)
 {
-    W_800121D8* w = t->work;
-    U_800121D8* u = w->u;
+    CamWork* w = t->work;
+    CamState* u = w->u;
     Task* c;
     ChrInfo* st;
     s8 kind;
