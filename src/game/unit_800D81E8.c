@@ -4498,8 +4498,8 @@ void fn_80100684(s32 a, s32 b) {
     fn_801E1AC8((u16)lbl_80311AC0.w4, lbl_80311AC0.room, a, b);
 }
 
-void fn_801006C0(void* p) {
-    fn_800D2924(p);
+s32 fn_801006C0(EvObj* p) {
+    return fn_800D2924(p);
 }
 
 extern void fn_800D2C60(f32 a, f32 b);

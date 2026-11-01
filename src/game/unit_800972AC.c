@@ -497,6 +497,26 @@ extern struct { u8 pad[0x88]; u32 flags; u8 pad8c[0x13C - 0x8C]; u32 x13c; } lbl
 extern Pos_8009CBBC* lbl_80347450;
 extern u32 fn_80218DC4(void);
 extern void sndSeqSetMidiCtrl(u32 id, u8 ch, s32 ctrl, s32 val);
+/* Sliding object (fn_8009BED8): moves by an offset from EvExt.target when a switch entry flips. */
+typedef struct EvInfoSlide {
+    u32 count;     /* 0x00 */
+    u8 pad4[0x24 - 0x4];
+    u32 key;       /* 0x24 fn_800CCC48 switch */
+    s32 ofs[3];    /* 0x28 offset in the object's frame */
+    u32 frames;    /* 0x34 */
+} EvInfoSlide;
+typedef struct Entry_800CCC48 {
+    u32 a;
+    u32 b;
+    u32 c;
+    u32 d;
+} Entry_800CCC48;
+extern s32 fn_801006C0(EvObj* o);
+extern Entry_800CCC48* fn_800CCC48(u32 a, u32 b);
+extern s32 fn_800C3518(EvObj* o);
+extern void fn_801E66E0(EvObj* o);
+extern void fn_800C3428(Task* t);
+extern void fn_80222838(EvColl* c);
 
 void fn_800972AC(void)
 {
@@ -1391,5 +1411,120 @@ void fn_8009CFD8(void) {
             }
             }
         }
+    }
+}
+
+void fn_8009BED8(Task* t) {
+    EvObj* o;
+    EvInfoSlide* info;
+    Entry_800CCC48* e;
+    NJS_POINT3 out;
+    NJS_POINT3 v;
+    f32 f;
+    f32 n;
+
+    o = t->work;
+    if (t->state != 0 && t->state != 5 && fn_801006C0(o) == 0) {
+        return;
+    }
+    info = o->ext->info;
+    if (info->count >= 0xd) {
+        e = fn_800CCC48(2, info->key);
+        if (e == 0) {
+            e = fn_800CCC48(2, -1);
+        }
+    } else {
+        e = 0;
+        info = 0;
+    }
+    switch (t->state) {
+    case 0:
+    case 0xfe:
+        fn_800C3518(o);
+        t->state = 1;
+        break;
+    case 1:
+        if (e != 0 && e->c == 0) {
+            t->state = 3;
+            o->x180 = info->frames;
+        }
+        fn_801E66E0(o);
+        break;
+    case 2:
+        if (e != 0 && e->c == 1) {
+            t->state = 4;
+            o->x180 = info->frames;
+        }
+        fn_801E66E0(o);
+        break;
+    case 3:
+        o->x180--;
+        if (o->x180 > 0) {
+            n = info->frames;
+            f = (n - o->x180) / n;
+            v.x = info->ofs[0] * f;
+            v.y = info->ofs[1] * f;
+            v.z = info->ofs[2] * f;
+        } else {
+            v.x = info->ofs[0];
+            v.y = info->ofs[1];
+            v.z = info->ofs[2];
+            t->state = 2;
+        }
+        njPushMatrixEx();
+        fn_80286EE8();
+        fn_8028B498();
+        njUnitMatrix(0);
+        njRotateXYZ(0, o->ang[0], o->ang[1], o->ang[2]);
+        njCalcPoint(0, &v, &out);
+        njPopMatrixEx();
+        o->pos.x = o->ext->target.x + out.x;
+        o->pos.y = o->ext->target.y + out.y;
+        o->pos.z = o->ext->target.z + out.z;
+        if (o->coll != 0) {
+            o->coll->pos[0] = o->pos.x;
+            o->coll->pos[1] = o->pos.y;
+            o->coll->pos[2] = o->pos.z;
+            fn_80222838(o->coll);
+            o->coll->h14 = 0;
+        }
+        fn_801E66E0(o);
+        break;
+    case 4:
+        o->x180--;
+        if (o->x180 > 0) {
+            f = info->frames;
+            f = o->x180 / f;
+            v.x = info->ofs[0] * f;
+            v.y = info->ofs[1] * f;
+            v.z = info->ofs[2] * f;
+            njPushMatrixEx();
+            fn_80286EE8();
+            fn_8028B498();
+            njUnitMatrix(0);
+            njRotateXYZ(0, o->ang[0], o->ang[1], o->ang[2]);
+            njCalcPoint(0, &v, &out);
+            njPopMatrixEx();
+            o->pos.x = o->ext->target.x + out.x;
+            o->pos.y = o->ext->target.y + out.y;
+            o->pos.z = o->ext->target.z + out.z;
+        } else {
+            o->pos.x = o->ext->target.x;
+            o->pos.y = o->ext->target.y;
+            o->pos.z = o->ext->target.z;
+            t->state = 1;
+        }
+        if (o->coll != 0) {
+            o->coll->pos[0] = o->pos.x;
+            o->coll->pos[1] = o->pos.y;
+            o->coll->pos[2] = o->pos.z;
+            fn_80222838(o->coll);
+            o->coll->h14 = 0;
+        }
+        fn_801E66E0(o);
+        break;
+    default:
+        fn_800C3428(t);
+        break;
     }
 }

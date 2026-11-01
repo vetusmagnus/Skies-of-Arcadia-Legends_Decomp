@@ -6,6 +6,7 @@
 #include "game/task.h"
 #include "game/evobj.h"
 #include <dolphin/os/OSFastCast.h>
+#include "ninja_lib.h"
 /* The file's .rodata, in the original order: fn_800A0028 reaches it from one pooled base. */
 const f32 lbl_802B0E30[16] = {
     1.0f, 0.0f, 0.0f, 0.0f,
@@ -278,8 +279,6 @@ struct Node_8009D294 {
 };
 extern s32 fn_801CB460(s32 op);
 extern void njTranslate(NJS_MATRIX m, f32 x, f32 y, f32 z);
-extern void njPushMatrixEx(void);
-extern void njPopMatrixEx(void);
 extern void fn_80286EE8(void);
 extern void fn_8028B498(void);
 /* Scales a 0..1 float to a u8 (x * 255) with the SDK fast cast (psq_st through GQR2).
@@ -447,7 +446,6 @@ typedef struct {
     s32 count;
 } Buf;
 extern f32 fn_801DBD9C(f32 z);
-extern void fn_80298FE4(s32 i);
 extern void fn_801CCD90(Buf* b, s32 n, s32 textured, NJS_TEXLIST* tex, s32 idx, f32 z, s32 flags);
 extern s32 fn_8015E600(EvObj*);
 extern void fn_8015EBF4(EvObj*);
@@ -515,7 +513,6 @@ typedef struct Quad {
     s32 n;
 } Quad;
 extern void fn_80035518(void* tex, s32 id, Quad* src, s32 textured, s32 flags);
-
 typedef struct Msg {
     s16 x0;
     s16 x2;
@@ -525,6 +522,34 @@ typedef struct Msg {
     s32 xc;
 } Msg;
 extern void fn_801E7E14(Msg*, s16);
+typedef struct Colour4 { u8 c[4]; } Colour4;
+typedef struct VertexTex {
+    f32 x, y, z, u, v;
+    Colour4 colour;
+} VertexTex;
+typedef struct VertexCol {
+    f32 x, y, z;
+    Colour4 colour;
+} VertexCol;
+/* A billboard particle's draw parameters (fn_800BA444 fills one per particle). */
+typedef struct Emit_800BA444 {
+    f32 x;              /* 0x00 width */
+    f32 y;              /* 0x04 height */
+    s16 x8;             /* 0x08 texture index */
+    u16 xa;             /* 0x0A UV flip/rotate mode */
+    s32 xc;             /* 0x0C premultiply the colour by alpha */
+    s32 x10;            /* 0x10 use the colour below (else white) */
+    u8 x14;             /* 0x14 alpha */
+    u8 x15, x16, x17;   /* 0x15 colour */
+    s16 x18;            /* 0x18 u scroll (1/255) */
+    s16 x1a;            /* 0x1A v scroll */
+    NJS_TEXLIST* x1c;   /* 0x1C */
+} Emit_800BA444;
+extern void fn_80296EEC(s32 a, s32 b, s32 c);
+extern void fn_8028A8C0(VertexTex* v, s32 count, s32 flag);
+extern void fn_8028A418(VertexCol* v, s32 count, s32 flag);
+#define SWAP(a, b, t) { t = a; a = b; b = t; }
+#define ROT4(a, b, c, d, t) { t = a; a = b; b = c; c = d; d = t; }
 
 void fn_8009D274(Msg* a, s16 i) {
     fn_801E7E14(a, i);
@@ -2336,3 +2361,129 @@ void bss_order_stub(void);
 /* Layout stub, NOT part of the merge: MWCC lays the pooled .bss arrays out in order of first use in
  * the file. In the unit, fn_8009C518 (earlier) sets that order; this stub stands in for it here. */
 void bss_order_stub(void) { lbl_803033B0[0] = 0; lbl_803033C8[0] = 0; lbl_803033E0[0] = 0; lbl_803033F8[0] = 0; }
+
+void fn_800A2830(Emit_800BA444* e, NJS_POINT3* pos, Angle* ang) {
+    VertexCol vc[4];
+    VertexTex vt[4];
+    Colour4 col;
+    f32 w;
+    f32 h;
+    f32 k;
+    f32 du;
+    f32 dv;
+    s16 idx;
+    u8 a;
+
+    w = 0.5f * e->x;
+    h = 0.5f * e->y;
+    a = e->x14;
+    col.c[0] = a;
+    if (e->x10 == 1) {
+        col.c[1] = e->x15;
+        col.c[2] = e->x16;
+        col.c[3] = e->x17;
+    } else {
+        col.c[1] = col.c[2] = col.c[3] = 0xff;
+    }
+    if (e->xc != 0) {
+        k = 0.003921569f * a;
+        col.c[1] = col.c[1] * k;
+        col.c[2] = col.c[2] * k;
+        col.c[3] = col.c[3] * k;
+    }
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    njTranslateEx(pos);
+    njRotateEx(ang, 1);
+    if (e->x1c != 0) {
+        idx = e->x8;
+        if (e->x1c->nbTexture <= idx) {
+            idx = e->x1c->nbTexture - 1;
+        }
+        fn_80299040(e->x1c);
+        fn_80298FE4(idx);
+        if (e->x18 == 0 && e->x1a == 0) {
+            vt[0].u = vt[1].u = vt[0].v = vt[2].v = 0.0f;
+            vt[2].u = vt[3].u = vt[1].v = vt[3].v = 1.0f;
+        } else {
+            if (e->x18 < -0x100) {
+                e->x18 = 0xff;
+            } else if (e->x18 > 0xff) {
+                e->x18 = -0x100;
+            }
+            if (e->x1a < -0x100) {
+                e->x1a = 0xff;
+            } else if (e->x1a > 0xff) {
+                e->x1a = -0x100;
+            }
+            du = 0.003921569f * e->x18;
+            dv = 0.003921569f * -e->x1a;
+            vt[0].u = vt[1].u = du;
+            vt[2].u = vt[3].u = 1.0f + du;
+            vt[0].v = vt[2].v = dv;
+            vt[1].v = vt[3].v = 1.0f + dv;
+        }
+        if (e->xa != 0) switch (e->xa) {
+        case 0:
+            break;
+        case 1:
+            {
+                f32 t1, t0;
+                SWAP(vt[0].u, vt[2].u, t0);
+                SWAP(vt[3].u, vt[1].u, t1);
+            }
+            break;
+        case 2:
+            {
+                f32 t1, t0;
+                SWAP(vt[0].v, vt[1].v, t0);
+                SWAP(vt[3].v, vt[2].v, t1);
+            }
+            break;
+        case 3:
+            {
+                f32 t1, t0;
+                ROT4(vt[0].u, vt[1].u, vt[3].u, vt[2].u, t0);
+                ROT4(vt[0].v, vt[1].v, vt[3].v, vt[2].v, t1);
+            }
+            break;
+        case 4:
+            {
+                f32 t3, t2, t1, t0;
+                SWAP(vt[0].u, vt[3].u, t0);
+                SWAP(vt[1].u, vt[2].u, t1);
+                SWAP(vt[0].v, vt[3].v, t2);
+                SWAP(vt[1].v, vt[2].v, t3);
+            }
+            break;
+        case 5:
+            {
+                f32 t1, t0;
+                ROT4(vt[0].u, vt[2].u, vt[3].u, vt[1].u, t0);
+                ROT4(vt[0].v, vt[2].v, vt[3].v, vt[1].v, t1);
+            }
+            break;
+        }
+        vt[0].z = vt[2].z = vt[3].z = vt[1].z = 0.0f;
+        vt[0].x = vt[1].x = -w;
+        vt[0].y = vt[2].y = h;
+        vt[2].x = vt[3].x = w;
+        vt[3].y = vt[1].y = -h;
+        vt[0].colour = vt[1].colour = vt[2].colour = vt[3].colour = col;
+        fn_80296EEC(0, 3, 0);
+        fn_8028A8C0(vt, 4, 1);
+        fn_80296EEC(1, 3, 1);
+    } else {
+        vc[0].z = vc[2].z = vc[3].z = vc[1].z = 0.0f;
+        vc[0].x = vc[1].x = -w;
+        vc[0].y = vc[2].y = h;
+        vc[2].x = vc[3].x = w;
+        vc[3].y = vc[1].y = -h;
+        vc[0].colour = vc[1].colour = vc[2].colour = vc[3].colour = col;
+        fn_80296EEC(0, 3, 0);
+        fn_8028A418(vc, 4, 1);
+        fn_80296EEC(1, 3, 1);
+    }
+    njPopMatrixEx();
+}
