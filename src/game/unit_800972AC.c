@@ -4441,3 +4441,33 @@ void fn_800A12D8(Vec3_800A12D8 *p, Vec3_800A12D8 *c, Angle a)
         p->z += c->z;
     }
 }
+void fn_800A3744(EvObj *obj)
+{
+    Task *r;
+    EvNameRef *e;
+    s32 i;
+    EvInfoNames *t;
+    s32 n;
+    u8 *base;
+    EvObj *sub;
+
+    t = NamesInfo(obj);
+    if (t != NULL) {
+        n = t->count;
+        base = obj->x1dc;
+        e = t->refs;
+        obj->x1fc = 0;
+        for (i = 1; i < n - 1; e++, i += 2) {
+            r = fn_8010A164(base + e->off);
+            if (r != NULL) {
+                sub = r->work;
+                if (sub->x26c == 1 && fn_800A35E0(sub) == 1) {
+                    EvObj *s2 = r->work;
+                    s2->x1fb = 1;
+                    r->state = 1;
+                }
+            }
+        }
+    }
+}
+
