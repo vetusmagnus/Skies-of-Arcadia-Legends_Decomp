@@ -16,7 +16,7 @@ extern f32 lbl_80347510;
 extern u32 lbl_80347508;
 extern u32 lbl_80347504;
 extern s32 fn_8023A4B0(void);
-extern u32 lbl_803474F4;
+extern s32 lbl_803474F4;
 s32 fn_801CB0A4(s32 c);
 extern f32 lbl_80347514;
 typedef struct { u16 size; u16 type; } Hdr;
@@ -149,6 +149,64 @@ void fn_801CAE94(void) {
 
 void fn_801CB738(void) {
     lbl_803474F4 = 0;
+}
+
+/* A controller's state (lbl_80311A60): buttons, then the four stick axes. */
+typedef struct PadState {
+    u32 w0;
+    u8 pad4[0x10];
+    s16 s14;
+    s16 s16_;
+    s16 s18;
+    s16 s1a;
+} PadState;
+extern PadState* lbl_80311A60[6];
+extern s32 lbl_8034757C;
+extern s32 lbl_803474FC;
+
+void fn_801CB744(void) {
+    if (lbl_80347500 == 0) {
+        PadState* p = lbl_80311A60[lbl_8034757C];
+        if ((p->w0 != 0 || p->s14 != 0 || p->s16_ != 0 || p->s18 != 0 || p->s1a != 0) && lbl_80347518 == 0) {
+            lbl_803474F4 = 0;
+            if (lbl_803471F4 > 0.0f) {
+                lbl_803471F4 = lbl_803471F4 - 2.0f * (1.0f / lbl_803471F0);
+                if (lbl_803471F4 < 0.0f) {
+                    lbl_803471F4 = 0.0f;
+                }
+            }
+            lbl_803474FC = 0;
+        } else {
+            lbl_803474F4 = lbl_803474F4 + 1;
+            if (lbl_803474F4 >= 9000) {
+                if (lbl_803471F4 < 0.7f) {
+                    lbl_803471F4 = lbl_803471F4 + 1.0f / lbl_803471F0;
+                    if (lbl_803471F4 > 0.7f) {
+                        lbl_803471F4 = 0.7f;
+                    }
+                }
+                lbl_803474FC = 1;
+                lbl_803474F4 = 9000;
+            } else {
+                if (lbl_803471F4 > 0.0f) {
+                    lbl_803471F4 = lbl_803471F4 - 2.0f * (1.0f / lbl_803471F0);
+                    if (lbl_803471F4 < 0.0f) {
+                        lbl_803471F4 = 0.0f;
+                    }
+                }
+                lbl_803474FC = 0;
+            }
+        }
+        if (lbl_803471F4 > 0.0f && lbl_803474F8 < 4) {
+            s32 n = lbl_803474F8;
+            lbl_8030E7C0[n].a = lbl_803471F4;
+            lbl_8030E7C0[n].b = lbl_8034750C;
+            lbl_8030E7C0[n].c = -1.0f;
+            lbl_803474F8 = n + 1;
+        }
+    } else {
+        lbl_803474FC = 0;
+    }
 }
 
 void fn_801CBA60(float a, float c)
