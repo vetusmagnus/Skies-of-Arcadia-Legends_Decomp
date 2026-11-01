@@ -1846,6 +1846,28 @@ extern void fn_80154C34(s32 val, s32 delay);
 extern s32 fn_80155FF0(s32, s32, s32, s32);
 extern void fn_801677D0(s32 id, s32 x, f32 f1, f32 f2, f32 f3, f32 f4, s8 k, s32 w);
 
+static inline s32 Play_80152284(s32 bank, s32 id, s32 v, s32 n, s32 b)
+{
+    s32 h = fn_80155FF0(7, id, bank, 0);
+    f32 time = n;
+    f32 scale = lbl_802E5F28[id].b;
+    fn_801677D0(h, lbl_802E5F28[id].a + 0x1c + v, 0.0f, 0.0f, 0.0f,
+                time * scale / 1000.0f, lbl_802E5F28[id].c, b);
+    fn_80154C34(lbl_802E5F28[id].d, lbl_802E5F28[id].e);
+    return h;
+}
+
+void fn_80152284(void *p)
+{
+    Obj_801523A4 *s = p;
+    if (s->x4 == 1 && s->x18 != 0 && s->x1c != 0) {
+        fn_80155FD0(s->x24);
+        s->x24 = Play_80152284(0xf, s->xc, s->x10, s->x14, s->x8);
+        s->x20 = 1;
+        s->x18 = 0;
+    }
+}
+
 static inline s32 Play_801523A4(Obj_801523A4 *o, s32 a, s32 b, s32 c)
 {
     s32 x8 = o->x8;
