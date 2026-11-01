@@ -268,7 +268,9 @@ typedef struct ChrInfo {
     u8 pad206[0x20c - 0x206];
     s16 x20c;           /* 0x20c */
     s16 x20e;           /* 0x20e */
-    u8 pad210[0x264 - 0x210];
+    s16 x210;           /* 0x210 */
+    s16 x212;           /* 0x212 */
+    u8 pad214[0x264 - 0x214];
     f32 x264;           /* 0x264 overlay alpha (fn_80018868) */
     f32 x268;           /* 0x268 overlay scale */
     f32 x26c;
@@ -284,7 +286,7 @@ typedef struct ChrInfo {
     s16 x294;           /* 0x294 texture variant */
     s8 x296;            /* 0x296 draw kind */
     u8 pad297;
-    void* x298;         /* 0x298 voice data */
+    CondLink* x298;     /* 0x298 condition list (fn_800193B8) */
 } ChrInfo;
 /* Event-target object referenced by an id record (x0 type, x4 id, x10 result). */
 typedef struct Key {
@@ -498,17 +500,6 @@ typedef struct Entry16B {
     s8 mode;
     u8 pad2[7];
 } Entry16B;
-typedef struct Work {
-    s8 idx; /* 0x00: slot index */
-} Work;
-typedef struct Inner {
-    u8 pad[0x4c];
-    Work *work; /* 0x4C */
-} Inner;
-typedef struct Obj {
-    u8 pad[0x24];
-    Inner *inner; /* 0x24 */
-} Obj;
 typedef struct {
     f32 x0;
     u8 pad4[8];
@@ -4020,6 +4011,133 @@ void fn_80018CBC(Task* t, s16 idx, s16 mode, ChrWork* alt, s16 kind)
     fn_801D1420();
 }
 
+extern s8 VoiceRequest(Task* t, s16 act, s16 sub, s16 act2, s16 sub2);
+extern s8 VoicePoll(Task* t);
+s32 fn_80014F50(Task* o);
+extern void fn_80032BBC(s8, s32);
+extern void fn_80031580(s32 a, s8 b, s16 c, s32 d);
+extern s16 fn_8006D2C4(s32 a);
+void fn_8001DCA0(ChrInfo* o);
+extern void fn_800324B8(u8, int);
+static inline void ClearId(s8 id)
+{
+    s16 i;
+    s16 j;
+    for (i = 0; i < 9; i++) {
+        for (j = 0; j < 9; j++) {
+            if (lbl_8030A10C.x14[i][j] == id) {
+                lbl_8030A10C.x14[i][j] = -1;
+            }
+        }
+    }
+}
+
+void fn_800193B8(Task* t)
+{
+    ChrWork* w = t->work;
+    ChrInfo* u = w->st;
+    Obj_80017B18* p = w->x10;
+    Ent_80008800* v = p->x30;
+
+    switch (u->state) {
+    case 0:
+        if (fn_80020E10(p->xc) >= 0) {
+            lbl_8030A10C.x6c |= 0x400;
+        }
+        if (VoiceRequest(t, u->x20c, u->x20e, u->x210, u->x212) != -1) {
+            u->state = 1;
+        } else {
+            u->state = 2;
+        }
+        break;
+    case 1:
+        if (VoicePoll(t) == 0) {
+            break;
+        }
+        u->state = 2;
+    case 2:
+        u->state = 3;
+        break;
+    case 3:
+        if (u->xf0 & 0x2000000) {
+            break;
+        }
+        if (fn_80014F50(t)) {
+            u->state = 4;
+        } else {
+            fn_80075F2C(t);
+            u->x1f8 = 60;
+            u->state = 12;
+        }
+        if (fn_80020E10(w->x10->xc) >= 0) {
+            fn_800085EC(t, 0x14, -1, v, u->x298);
+        }
+        break;
+    case 4:
+        lbl_80347378 |= 1 << u->id;
+        u->xec |= 0x100;
+        fn_80075F2C(t);
+        if (fn_80020E10(w->x10->xc) < 0) {
+            fn_800085EC(t, 0x14, -1, lbl_8030A10C.xc, lbl_8030A10C.x180);
+            fn_80032BBC(u->id, 1);
+            fn_80031580(u->id, 3, 0x1e, 1);
+        }
+        ClearId(u->id);
+        u->state = 5;
+        break;
+    case 5:
+        if (u->xec & 0x40000) {
+            break;
+        }
+        if (fn_8006D2C4(1) == 0) {
+            u->state = 6;
+        }
+        break;
+    case 6:
+        fn_80032BBC(u->id, 0);
+        if (u->x1dc != NULL) {
+            lbl_80347378 &= ~(1 << u->id);
+            fn_8001DCA0(u);
+        }
+        u->x134 = 1;
+        u->state = 9;
+        break;
+    case 9:
+        if (fn_80020E10(p->xc) < 0 && lbl_80347394 == NULL) {
+            u->state = 11;
+            u->x1f8 = 3;
+        } else {
+            u->state = 12;
+        }
+        break;
+    case 11:
+        if (u->x1f8 == 0) {
+            u->xec |= 0x400000;
+        } else {
+            u->x1f8--;
+        }
+        return;
+    case 12:
+        if (u->x1f8 == 0x1e) {
+            fn_800324B8(u->id, 0);
+        }
+        if (u->x1f8 == 0) {
+            u->x134 = 1;
+            fn_8001DCA0(u);
+            if (fn_80020E10(w->x10->xc) >= 0) {
+                lbl_8030A10C.x6c &= ~0x400;
+            }
+        } else {
+            u->x1f8--;
+        }
+        break;
+    }
+    if (u->x138 != 0) {
+        u->x138--;
+    }
+    fn_80018CBC(t, u->xe4, 0, 0, u->x2);
+}
+
 void fn_80019E44(Task* t) {
     Work_80019D7C* w = t->work;
     Inner_80019D7C* in = w->in;
@@ -4447,9 +4565,9 @@ s32 fn_80018498(f32 *v)
     return !(v[2] < -67.5f);
 }
 
-s32 fn_80014F50(Obj *o)
+s32 fn_80014F50(Task *o)
 {
-    switch (lbl_80309730[o->inner->work->idx].mode) {
+    switch (lbl_80309730[ChrW(o)->st->id].mode) {
     case 0:
         return 0;
     default:
