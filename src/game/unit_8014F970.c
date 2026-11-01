@@ -434,7 +434,7 @@ typedef struct { u32 flags; u8 pad[4]; A_8015D234 *a; } S_8015D234;
 typedef struct { u8 pad[0x1d8]; S_8015D234 *s; } Obj_8015D234;
 typedef struct { u8 pad[0x1c]; u32 cnt; } St_8015D234;
 void fn_80222964(void *p);
-void fn_80167374(void);
+void fn_80167374(void *obj);
 typedef struct { u8 pad[0x1c]; f32 f1c; u8 pad2[0x168 - 0x20]; s16 mode; u8 pad3[0x1bc - 0x16a]; void *h1bc; } A_8015D340;
 typedef struct { u32 flags; u8 pad[4]; A_8015D340 *a; } S_8015D340;
 typedef struct { u8 pad[0x1bc]; void *h1bc; u8 pad2[0x1d8 - 0x1c0]; S_8015D340 *s; } Obj_8015D340;
@@ -1775,6 +1775,30 @@ s32 fn_8015CF8C(u8 *p, u8 *q) {
     return 0;
 }
 
+s32 fn_8015D464(Obj_8015D234 *o, St_8015D234 *a) {
+    S_8015D234 *h = o->s;
+    A_8015D234 *s = h->a;
+    h->flags |= 0x100;
+    if (a->cnt == 0) {
+        s->f1c = -1.0f;
+        return 0;
+    }
+    switch (s->mode) {
+    case 0:
+        fn_80167374(o);
+        fn_80222964(s->h1bc);
+        s->h1bc = 0;
+        s->mode = 1;
+    case 1:
+        s->f1c = s->f1c - 1.0f / a->cnt;
+        if (s->f1c < -1.0f) {
+            s->f1c = -1.0f;
+            return 0;
+        }
+    }
+    return 1;
+}
+
 s32 fn_8015D688(void *unused, u8 *q) {
     s32 v = *(s32 *)(q + 0x1c) - 1;
     *(s32 *)(q + 0x1c) = v;
@@ -2768,7 +2792,7 @@ s32 fn_8015D234(Obj_8015D234 *o, St_8015D234 *st)
     }
     switch (a->mode) {
     case 0:
-        fn_80167374();
+        fn_80167374(o);
         fn_80222964(a->h1bc);
         a->h1bc = 0;
         s->flags |= 8;
@@ -2795,7 +2819,7 @@ s32 fn_8015D340(Obj_8015D340 *o, St_8015D340 *st)
     }
     switch (a->mode) {
     case 0:
-        fn_80167374();
+        fn_80167374(o);
         if (a->h1bc == 0) {
             fn_802229F8(o->h1bc);
             a->h1bc = o->h1bc;
