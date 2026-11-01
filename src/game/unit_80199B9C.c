@@ -2224,6 +2224,41 @@ void fn_801A37C4(void) {
     lbl_8034717C[0] = 0;
 }
 
+extern const char lbl_802B4978[];   /* "SA_LEGENDS" */
+extern const char lbl_8034B6A0[6];  /* ".%03d" */
+
+
+static inline void SlotName(char* buf, u16 n)
+{
+    sprintf(buf, lbl_8034B6A0, n);
+}
+
+s32 fn_801A37D8(s32 chan) {
+    char buf[8];
+    char name[0x20];
+    s32 i;
+    s32 found;
+    s32 done;
+    s32 r;
+
+    i = 0;
+    found = 0;
+    done = 0;
+    for (; i < 7 && done == 0; i++) {
+        SlotName(buf, i);
+        strcpy(name, lbl_802B4978);
+        strcat(name, buf);
+        r = fn_801A388C(chan, name, 0);
+        if (r == 0) {
+            done = 1;
+            found = 1;
+        } else if (r != -4) {
+            done = 1;
+        }
+    }
+    return found;
+}
+
 void fn_801A4060(SaveTask* t) {
     t->w->w268 = 0;
 }

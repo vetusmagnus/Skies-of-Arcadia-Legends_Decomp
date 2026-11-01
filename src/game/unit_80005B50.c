@@ -1463,6 +1463,28 @@ void fn_80006A70(NJS_MKEY_A* keys, u32 i, u32 nbKeys, Angle* out) {
     out[2] = k1->key[2] * u + k2->key[2] * t;
 }
 
+extern u16 lbl_80347898;
+
+void fn_800071D8(NJS_MOTION* m, f32 frame) {
+    if (m != NULL) {
+        if (frame >= m->nbFrame) {
+            return;
+        }
+        lbl_8034789C = m->inp_fn & ~0xC0;
+        lbl_80347898 = (m->inp_fn & 0xC0) > 0;
+        lbl_8034789A = m->type;
+        lbl_80316940.mdata = m->mdata;
+        lbl_80316940.nbFrame = m->nbFrame;
+    } else {
+        lbl_8034789C = 0;
+        lbl_80347898 = 0;
+        lbl_8034789A = 0;
+    }
+    lbl_80316940.frame = frame;
+    lbl_80316940.unk14 = 0;
+    lbl_80316940.matrix = NULL;
+}
+
 void fn_800072A8(s32 a, s32 b, s32 c)
 {
     fn_802A9338(a, b, c, fn_8028AB48);
@@ -1591,6 +1613,40 @@ extern void fn_8002F6D4(void);
 extern void fn_801CBBAC(f32 v);
 extern void fn_801CBBD8(void);
 extern void fn_80009874(void);
+
+typedef struct Slot1C {
+    s32 id;
+    s32 x4;
+    u8 pad8[0x10];
+    s32 x18;
+} Slot1C;
+
+extern u32 fn_8006E810(s32 id);
+
+s32 fn_80009500(Slot1C* tbl, s32 id, s32 val)
+{
+    s16 i = 0;
+    Slot1C* s;
+    s32 v;
+
+    if (fn_8006E810(id) == 0) goto set;
+    return 0;
+loop:
+    while ((v = s->id) > 0) {
+        if (id == v) return 0;
+        i++;
+        s++;
+        if (i >= 0x80) return 0;
+    }
+    tbl[i].id = id;
+    tbl[i].x4 = 0;
+    tbl[i].x18 = val;
+    tbl[i + 1].id = -1;
+    return 1;
+set:
+    s = tbl;
+    goto loop;
+}
 
 void fn_8000A118(void) {
     if (lbl_803475D8 == 1) {
@@ -2650,6 +2706,25 @@ void fn_80014D1C(Task* t, s16 id) {
     u->x294 = val;
 }
 
+s32 fn_80014EC4(ChrInfo* u)
+{
+    Task* t;
+    ChrWork* w;
+
+    if (u->x48 != u->id) {
+        if (!fn_8006D1C4()) {
+            return 0;
+        }
+        t = fn_800215EC(u->x48);
+        if (t != NULL) {
+            w = t->work;
+            return w->st->x134 != 0;
+        }
+        return 1;
+    }
+    return 1;
+}
+
 s32 fn_800153A0(Pair* p) {
     if (p == 0) {
         return 0;
@@ -2993,6 +3068,20 @@ void fn_80018798(Task *t)
     }
     fn_8001712C(d->id, &d->x15c);
     fn_80017018(d->id);
+}
+
+void fn_80018AFC(void* t, ChrInfo* u, ChrWork* w)
+{
+    DrawState s;
+
+    fn_80036584(t, -1);
+    DrawStateDefault2D(&s);
+    fn_8007E678(u->x154, &s);
+    s.colour.a = -0.8f;
+    if (DrawStatePush(&s)) {
+        fn_80035380(u->x154, u->x5c, u->x68, w->x44);
+        DrawStatePop(&s);
+    }
 }
 
 int fn_80018B80(ChrDraw* a) {
