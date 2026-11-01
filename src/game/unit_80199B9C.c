@@ -592,7 +592,7 @@ typedef struct Pair_UNIT0000 {
 } Pair_UNIT0000;
 extern const Pair_UNIT0000 lbl_802EBFDC[8];
 extern const char lbl_802B8F80[];
-extern u8 lbl_80310A1C[0x120];
+extern s8 lbl_80310A1C[0x120];
 typedef struct Sub2 {
     u8 pad00[0x11C];
     u32 w11c;
@@ -2357,6 +2357,166 @@ void fn_801B6400(const char* v) {
     q->obj->text = v;
 }
 
+void fn_801BD5A4(void);
+/* ADD: the poster model object: p4 -> a block whose 0x20 word is the model handle. */
+typedef struct PosterSub { u8 pad[0x20]; void* x20; } PosterSub;
+typedef struct PosterObj { u8 pad[4]; PosterSub* p4; } PosterObj;
+
+extern s16 lbl_803471A6;
+extern s16 lbl_803471A4;
+extern PosterObj* lbl_803471A0;
+extern void fn_801BCAF4(s16 a, s16 b, f32 alpha, s16 sel, s32 n);
+extern PosterObj* fn_801DB244(char* path);
+
+void fn_801BC490(ShopTask* t)
+{
+    char buf[0x20];
+    s32 cnt;
+    s32 i;
+    u32 bit;
+    u32 held;
+
+    if (lbl_803475D8 != 0) {
+        t->w->state = 10;
+    }
+    cnt = 0;
+    for (i = 0; i < 8; i++) {
+        if (lbl_80310A1C[0x64 + i] != 0) {
+            cnt++;
+        }
+    }
+    switch (t->w->state) {
+    case 0:
+        t->w->b36 = 0;
+        t->w->state = 1;
+        lbl_803471A6 = 0x280;
+        lbl_803471A4 = -0x280;
+        SePlay(2, 1, 4);
+        break;
+    case 1:
+        fn_801BCAF4(lbl_803471A6, lbl_803471A4, 1.0f, t->w->qty, 0);
+        lbl_803471A6 -= 0x60;
+        lbl_803471A4 += 0x60;
+        if (lbl_803471A6 <= 0) {
+            lbl_803471A6 = 0;
+        }
+        if (lbl_803471A4 >= 0) {
+            lbl_803471A4 = 0;
+        }
+        if (lbl_803471A6 == 0 && lbl_803471A4 == 0) {
+            t->w->state = 2;
+        }
+        break;
+    case 2:
+        fn_801BCAF4(0, 0, 1.0f, t->w->qty, cnt);
+        bit = t->w->qty + 0xac8;
+        lbl_80310B3C[bit >> 5] |= 1 << (bit & 31);
+        held = lbl_80311A60[0]->held;
+        if ((held & 0x40) && cnt > 1) {
+            t->w->state = 3;
+            lbl_803471A6 = 0;
+            SePlay(2, 1, 4);
+        } else if ((held & 0x20) && cnt > 1) {
+            t->w->state = 4;
+            lbl_803471A6 = 0;
+            SePlay(2, 1, 4);
+        } else if (held & 0x200) {
+            t->w->state = 9;
+            SePlay(2, 1, 4);
+        }
+        break;
+    case 9:
+        fn_801BCAF4(lbl_803471A6, lbl_803471A4, 1.0f, t->w->qty, 0);
+        lbl_803471A6 += 0x60;
+        lbl_803471A4 -= 0x60;
+        if (lbl_803471A6 >= 0x280) {
+            lbl_803471A6 = 0x280;
+        }
+        if (lbl_803471A4 <= -0x280) {
+            lbl_803471A4 = -0x280;
+        }
+        if (lbl_803471A6 == 0x280 && lbl_803471A4 == -0x280) {
+            t->w->state = 10;
+        }
+        break;
+    case 10:
+        t->state = 10;
+        t->w->state = 0;
+        UiObjMoveToX(&t->w->parts[0]->obj->o, 6, 4, -8.0f);
+        UiObjSetCommand(&t->w->parts[0]->obj->o, 0xf, 0);
+        UiObjMoveToY(&t->w->parts[5]->obj->o, 6, -1, 100.0f);
+        UiObjSetCommand(&t->w->parts[5]->obj->o, 0xf, 1);
+        fn_802275A4(lbl_803471A0->p4->x20, 1);
+        fn_801E17E0(lbl_803471A0);
+        lbl_803471A0 = 0;
+        fn_801BD5A4();
+        break;
+    case 3:
+        lbl_803471A6 += 0x60;
+        lbl_803471A4 -= 0x60;
+        fn_801BCAF4(lbl_803471A6, lbl_803471A4, 1.0f, t->w->qty, 0);
+        if (lbl_803471A4 <= -0x280) {
+            lbl_803471A4 = -0x280;
+        }
+        if (lbl_803471A6 >= 0x2e0) {
+            lbl_803471A6 = 0x280;
+            do {
+                t->w->qty--;
+                if (t->w->qty < 0) {
+                    t->w->qty = 7;
+                }
+            } while (lbl_80310A1C[0x64 + t->w->qty] == 0);
+            t->w->state = 5;
+        }
+        break;
+    case 4:
+        lbl_803471A6 += 0x60;
+        lbl_803471A4 -= 0x60;
+        fn_801BCAF4(lbl_803471A6, lbl_803471A4, 1.0f, t->w->qty, 0);
+        if (lbl_803471A4 <= -0x280) {
+            lbl_803471A4 = -0x280;
+        }
+        if (lbl_803471A6 >= 0x2e0) {
+            lbl_803471A6 = 0x280;
+            do {
+                t->w->qty++;
+                if (t->w->qty > 7) {
+                    t->w->qty = 0;
+                }
+            } while (lbl_80310A1C[0x64 + t->w->qty] == 0);
+            t->w->state = 5;
+        }
+        break;
+    case 5:
+        fn_802275A4(lbl_803471A0->p4->x20, 1);
+        fn_801E17E0(lbl_803471A0);
+        lbl_803471A0 = 0;
+        sprintf(buf, "/field/wanted%02d", t->w->qty + 1);
+        if (lbl_80310A1C[0x64 + t->w->qty] < 3) {
+            strcat(buf, "a.mld");
+        } else {
+            strcat(buf, "b.mld");
+        }
+        lbl_803471A0 = fn_801DB244(buf);
+        fn_80227810(lbl_803471A0->p4->x20);
+        lbl_803471A6 = 0x280;
+        t->w->state = 6;
+        SePlay(2, 1, 4);
+    case 6:
+        fn_801BCAF4(lbl_803471A6, lbl_803471A4, 1.0f, t->w->qty, 0);
+        lbl_803471A6 -= 0x60;
+        lbl_803471A4 += 0x60;
+        if (lbl_803471A4 >= 0) {
+            lbl_803471A4 = 0;
+        }
+        if (lbl_803471A6 <= 0) {
+            lbl_803471A6 = 0;
+            t->w->state = 2;
+        }
+        break;
+    }
+}
+
 void fn_801BCFAC(u8* obj, s32 idx) {
     s32 j = *(s32*)(*(u8**)(obj + 4) + idx * 0x34);
     *(f32*)(*(u8**)obj + j * 0x14 + 0xC) = 0.59f;
@@ -3476,7 +3636,7 @@ void* fn_801A456C(void) {
     u8* p = fn_801E1A74(1, 0x3200);
     Save* s = (Save*)p;
     MemCopy(p, lbl_802EBDD0, 0x10);
-    s->x31ea = (s8)lbl_80310A1C[0x32];
+    s->x31ea = lbl_80310A1C[0x32];
     MemCopy(p + 0x10, &lbl_8030B7F4, 0x16a0);
     s->x16b0 = lbl_80311AC0.x4;
     s->x16b4 = lbl_80311AC0.x8;
@@ -3601,7 +3761,7 @@ void fn_801A68C4(void* tt) {
     ElemTask* t = tt;
     t->b = fn_801A456C();
     t->b->f31E8 = t->a->id;
-    t->b->f31EA = (s8)lbl_80310A1C[0x32];
+    t->b->f31EA = lbl_80310A1C[0x32];
     t->a->f1E0 = 0;
     t->b->f31EC = 0;
     t->a->f1D8 = 1;
@@ -6000,7 +6160,7 @@ void fn_801A6BDC(ShopTask* t) {
             break;
         case 5:
         case 6:
-            switch ((s8)lbl_80310A1C[6]) {
+            switch (lbl_80310A1C[6]) {
             case 0:
             case 1:
             case 2:
@@ -6921,7 +7081,7 @@ void* fn_801AFBE8(void* parent, u16 idx, u16 mode, f32 alpha) {
 
 void fn_801B71E8(s32 x, s32 y, s16 id) {
     extern TextNode* TextPrint(s32 x, s32 y, const char *str);
-    switch ((s8)lbl_80310A1C[0x64 + id]) {
+    switch (lbl_80310A1C[0x64 + id]) {
     case 1:
     case 2:
         TextPrint(x, y, lbl_802EBFDC[id].a);
@@ -6939,7 +7099,7 @@ void fn_801B7274(s32 x, s32 y, s32 nx, s32 ny, s16 id) {
     extern TextNode* TextPrint(s32 x, s32 y, const char *str);
     extern void TextPrintNumber(s32 x, s32 y, s32 value, u32 flags);
     char buf[32];
-    switch ((s8)lbl_80310A1C[0x64 + id]) {
+    switch (lbl_80310A1C[0x64 + id]) {
     case 0:
         strcpy(buf, lbl_802B8F94);
         break;
