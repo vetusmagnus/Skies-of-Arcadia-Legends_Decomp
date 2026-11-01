@@ -106,7 +106,7 @@ Where things are
 Matching status
 ---------------
 
-277 of 451 functions match byte for byte (`src/ninja/ninja.c`, objdiff and `tools/match/fdiff.py`
+285 of 451 functions match byte for byte (`src/ninja/ninja.c`, objdiff and `tools/match/fdiff.py`
 plus `floatcheck.py` agree; main.dol still hashes OK). The unit covers the whole region
 (`0x80286EE8`-`0x802AC75C`) because no real file boundary has turned up: the `.sdata2` pool is
 contiguous in text order, so the data gives no edge, and no edge has been checked against
@@ -170,6 +170,11 @@ The copy pattern (FIFO) does not respond to these pragmas.
 Pass 3 added six float helpers (fn_8028FD98, fn_802900C0, fn_802904E8, fn_802905C8, fn_80290668, fn_80291700) that
 match only with `optimization_level 1` plus `opt_common_subs on`. Still needing a cast: fn_802A1374 and fn_802A81B4
 (`*(u16*)p` strip size, like fn_802A7894).
+Owner-approved exception (2026-11-01): pointer casts are allowed where the original reads a raw Ninja data stream
+(an unsigned field of the s16 chunk stream, a row of a byte-strided motion key table, a byte offset in an NGDL
+header), each with a comment naming the field. That merged fn_802A1374, fn_802A7894, fn_802AB340, fn_80293AF4,
+fn_80293C2C, fn_80294100, fn_80294770 and fn_802A8AE4; NjMotState got its mdata/size/stride/nbFrame fields.
+Game code stays cast-free.
 
 ### Library pass (2026-10-31)
 

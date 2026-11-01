@@ -197,11 +197,13 @@ typedef void (*NjInterp)(void* keys, s32 n, void* out, f32 frame);
 
 /* Motion playback state (lbl_80347E64). */
 typedef struct {
-    u8 pad_00[0xc];
+    void** mdata;       /* 0x00 current NJS_MDATA record: n key-table pointers, then n key counts */
+    s32 size;           /* 0x04 byte size of the pointer half (n * 4) */
+    s32 stride;         /* 0x08 byte size of one record (size * 2) */
     void** keys;        /* 0x0c per-channel key tables */
     s32* nkeys;         /* 0x10 per-channel key counts */
     f32 frame;          /* 0x14 */
-    u8 pad_18[4];
+    u32 nbFrame;        /* 0x18 */
     s32 count;          /* 0x1c current channel */
     u32 flags;          /* 0x20 */
     NjInterp interpPos;   /* 0x24 */
@@ -621,5 +623,7 @@ void fn_8029F0F8(s16* p, u32* data, s32 n, s32 x);
 void fn_8029F2A8(s16* p, u32* data, s32 n, s32 x);
 void fn_802A1B54(u32 flags, s32 a, s32 b, u8* spc, u8* dif);
 void fn_802A1374(s16* p, s32 n, u32* data);
+
+u32 fn_80293AF4(void* table, u32 stride, u32 n, u32 key);
 
 #endif

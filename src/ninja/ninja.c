@@ -1525,10 +1525,37 @@ void fn_802938C0(void (*cb)(NjObj*)) {
 }
 
 #pragma optimization_level 1
+/* binary search for the last key whose frame is <= key; the key table is a raw motion stream of `stride`-byte rows */
+u32 fn_80293AF4(void* table, u32 stride, u32 n, u32 key) {
+    u32 lo = 0;
+    u32 mid;
+    while (n - lo > 1) {
+        mid = (lo + n) >> 1;
+        if (key >= *(u32*)((u8*)table + mid * stride)) {  /* row mid of the key table; its first field is the u32 frame */
+            lo = mid;
+        } else {
+            n = mid;
+        }
+    }
+    return lo;
+}
+
 void fn_80293B34(s32 i) {
     lbl_80347E64 = &lbl_803456D0[i];
 }
 #pragma optimization_level reset
+
+void fn_80293C2C(void) {
+    void** p;
+    /* step to the next NJS_MDATA record; records are raw motion data `stride` bytes long */
+    p = lbl_80347E64->mdata;
+    p = (void**)((u8*)p + lbl_80347E64->stride);
+    lbl_80347E64->mdata = p;
+    lbl_80347E64->keys = p;
+    /* the key counts follow the `size` bytes of key-table pointers */
+    lbl_80347E64->nkeys = (s32*)((u8*)p + lbl_80347E64->size);
+    lbl_80347E64->count = 0;
+}
 
 s32 fn_80293C68(u16* out) {
     void* k = lbl_80347E64->keys[lbl_80347E64->count];
@@ -1596,6 +1623,18 @@ s32 fn_80293EA8(f32* out) {
     return 0;
 }
 
+void fn_80294100(void* table, s32 count, u16* out, f32 t) {
+    f32 frac;
+    s16* lo;
+    s16* hi;
+    fn_802938C8(table, 4, count, t, &lo, &hi, &frac);
+    if (frac <= 1.0f) {
+        *out = *(u16*)(lo + 1);  /* the key stream is s16; this key's value is unsigned */
+    } else {
+        *out = *(u16*)(hi + 1);  /* the key stream is s16; this key's value is unsigned */
+    }
+}
+
 void fn_80294170(void* table, s32 count, s16* out, f32 t) {
     f32 frac;
     s16* lo;
@@ -1642,6 +1681,15 @@ void fn_802945C4(void* table, s32 count, s32* out, f32 t) {
     } else {
         *out = (s32)(frac * (s16)(hi[1] - lo[1]) + lo[1]);
     }
+}
+
+void fn_80294770(void* table, s32 count, f32* out, f32 t) {
+    f32 frac;
+    s32* lo;
+    s32* hi;
+    fn_802939C4(table, 20, count, t, &lo, &hi, &frac);
+    /* the key rows are a u32 frame followed by four f32 values */
+    fn_80291CF8((f32*)(lo + 1), (f32*)(hi + 1), out, frac);
 }
 
 void fn_802947CC(s32 x) {
@@ -3971,6 +4019,26 @@ void fn_802A7D74(u32 flags, s32 unused1, u8* amb, s32 unused2, u8* mat) {
 }
 
 s32 fn_802A8ADC(void) { return lbl_80346A50; }
+
+void fn_802A8AE4(NgDlHdr* h) {
+    NgGd* gd;
+    if (h->magic != 0x4E47444C) return;
+    fn_8029CA58();
+    if (h->off[0] != 0xFFFFFFFF) {
+        gd = (NgGd*)((u8*)h + h->off[0]);  /* NGGD block at a byte offset from the NGDL header */
+        if (gd->magic != 0x4E474744) return;
+        GXCallDisplayList(gd->dl.data, gd->dl.size);
+    }
+    if (h->off[1] != 0xFFFFFFFF) {
+        gd = (NgGd*)((u8*)h + h->off[1]);  /* NGGD block at a byte offset from the NGDL header */
+        if (gd->magic != 0x4E474744) return;
+        GXCallDisplayList(gd->dl.data, gd->dl.size);
+    }
+    lbl_80347F6C = 2;
+    lbl_80347F70 = 5;
+    lbl_803457A8.w48 = -1;
+    lbl_803457A8.w4c = -1;
+}
 
 void fn_802A8F40(s32 v) { lbl_80347FB4 = v; }
 

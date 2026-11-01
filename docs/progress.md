@@ -2190,3 +2190,4 @@ Ninja near-miss pass (2026-11-01, 4 Opus agents): 26 more functions (7 plain C, 
 docs/ninja.md "Per-function optimization levels".
 Pass 3 (4 Opus agents, register near misses and large functions): 6 more, all with `optimization_level 1` +
 `opt_common_subs on` (5,658 of 7,117).
+Stream-read casts (owner-approved, Ninja only, commented): 8 more Ninja functions (5,666 of 7,117).
