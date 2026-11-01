@@ -46,7 +46,8 @@ extern s32 lbl_80305FA0[8];
 extern void fn_80131254(void);
 extern s32 fn_801305E4(void);
 void fn_801303D0(Task_801303D0 *t);
-void fn_80131734(void);
+struct Mgr;
+void fn_80131734(struct Mgr *s);
 typedef struct {
     u8 pad0[0x20];
     s32 x20;
@@ -318,13 +319,18 @@ typedef struct Rec5 {
 } Rec5;
 extern Rec5 lbl_80308E90[8];
 typedef struct Inner {
-    u8 pad0[9];
+    s8 x0;              /* 0 while idle (fn_80131734) */
+    u8 pad1[8];
     u8 grid[8][4][4];
     u8 sel[8][4];
 } Inner;
 typedef struct Mgr {
-    u8 pad0[0x24];
+    u8 pad0[0x18];
+    u8 flags;           /* 0x18 */
+    u8 state;           /* 0x19 */
+    u8 pad1a[0x24 - 0x1a];
     Inner *inner;
+    void **x28;         /* 0x28: two sprites (fn_80131734) */
 } Mgr;
 extern Mgr *lbl_80346F48;
 typedef struct Pad_8013A794 {
@@ -663,6 +669,37 @@ void fn_801316CC(void) {
     ((u8*)lbl_80346F48)[0x19] = 2;
 }
 
+extern void fn_801321DC(void);
+extern void fn_80132128(void);
+extern void fn_80131A04(void);
+extern void fn_80131820(void);
+
+void fn_80131734(Mgr *s) {
+    switch (s->state) {
+    case 0:
+    case 0xfe:
+        lbl_80346F48->x28 = fn_801E1C7C(8);
+        lbl_80346F48->x28[0] = fn_801D68C4(lbl_80346F04, 0x52);
+        lbl_80346F48->x28[1] = fn_801D68C4(lbl_80346F04, 0x53);
+        fn_801321DC();
+        s->state = 1;
+        break;
+    case 1:
+        if (lbl_80346F48->inner->x0 == 0) {
+            fn_80132128();
+            fn_80131A04();
+            fn_80131820();
+        }
+        break;
+    case 2:
+        s->state = 0xff;
+        break;
+    case 0xff:
+        s->flags |= 0x40;
+        break;
+    }
+}
+
 void fn_801323F0(void) {
     ((u8*)lbl_80346F50)[0x19] = 2;
 }
@@ -746,6 +783,28 @@ void fn_80133144(void) {
 
 void* fn_8013558C(void) {
     return lbl_80305FC0;
+}
+
+extern void fn_80140460(void);
+
+/* Declared int (fn_801380E4 returns its value) though nothing is returned, as in the original. */
+s32 fn_80136A28(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f) {
+    s32 n = 0;
+    Big *p = fn_80135598();
+    if (p != 0) {
+        for (n = 0; n < 4; n++) {
+            if (p->order[n] < 0) break;
+        }
+    }
+    if (fn_801358A0(b, a, c, d, n)) {
+        lbl_80308E90[b + 4].a[0] = c;
+        lbl_80308E90[b + 4].a[1] = a;
+        lbl_80308E90[b + 4].a[2] = d;
+        lbl_80308E90[b + 4].a[3] = e;
+        lbl_80308E90[b + 4].a[4] = f;
+    }
+    fn_8013160C(b, a, 2);
+    fn_80140460();
 }
 
 s32 fn_801380D4(MenuStep *p) {
@@ -870,7 +929,7 @@ void fn_80130378(void) {
 }
 
 void fn_801316DC(void) {
-    *(void **)&lbl_80346F48 = fn_802268E8(lbl_803475A8, fn_80131734);
+    lbl_80346F48 = fn_802268E8(lbl_803475A8, fn_80131734);
     *(void **)((u8 *)lbl_80346F48 + 0x24) = fn_801E1C7C(0xb0);
     if (lbl_80346F48 != 0) {
         **(u8 **)((u8 *)lbl_80346F48 + 0x24) = 1;
