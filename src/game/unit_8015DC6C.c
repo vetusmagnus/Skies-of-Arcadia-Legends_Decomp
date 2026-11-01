@@ -283,7 +283,7 @@ typedef struct Out {
     s32 i18;
     s32 i1c;
 } Out;
-extern s32 lbl_80308088[];
+extern u32 lbl_80308088[];
 typedef struct { u8 pad[4]; u32 f4; } I1c8;
 typedef struct { u8 pad[0x1c8]; I1c8 *p1c8; } Obj_8015F218;
 typedef struct { s32 f0; void *p4; } Sub0;
@@ -396,7 +396,12 @@ typedef struct Mover {
     f32 x14;
     s32 x18;
 } Mover;
-extern u8 lbl_80310A1C[0x120];
+typedef struct Sys_80310A1C {
+    u8 pad0[6];
+    s8 f6;      /* 0x06 */
+    u8 pad7[0x120 - 7];
+} Sys_80310A1C;
+extern Sys_80310A1C lbl_80310A1C;
 extern void fn_8016B638(s8 k);
 extern void fn_8016C4C8(s8 k);
 extern void fn_8016D034(s8 k);
@@ -5081,6 +5086,202 @@ void fn_8018E81C(Rec_8018E81C* r, s8 v, u8 b)
     r->b = b;
 }
 
+/* The camp menu's controlling task: state 0/0xFE init, 1 wait for the open button, 3 wait for the
+ * menu data and start the menu task, 4/5 open, 6 close, 7 tear down, 0xFF delete. */
+/* The controller state lbl_80311A60 points to per port. */
+typedef struct PadState {
+    u8 pad0[8];
+    u32 held; /* 0x08 */
+} PadState;
+
+
+extern s32 lbl_803473EC;
+extern s8 fn_8009763C(void);
+extern s32 lbl_80347508;
+extern s32 lbl_803473E8;
+extern PadState* lbl_80311A60[];
+extern f32 fn_801CBBAC(f32);
+extern void fn_801CBB9C(f32);
+extern s32 lbl_80347130;
+extern s32 lbl_8034712C;
+extern s32 fn_800FF438(void);
+extern s32 fn_801D6C3C(s32 h);
+extern void fn_802171F0(s32 n);
+extern u32 lbl_8034714C[2];
+extern void fn_8022B9DC(void);
+extern void fn_8022DBC8(void);
+extern void fn_80192888(void);
+extern void fn_8022697C(s32 n);
+extern s32 lbl_803473E4;
+extern s32 lbl_8034713C;
+extern void fn_800C9070(void);
+extern u8 lbl_802B45F0[];
+extern void* fn_801E49B8(u8* p);
+extern void fn_8022893C(void);
+extern s32 fn_801E4998(void* p);
+extern void fn_801926B8(void);
+extern void fn_801D66D4(void);
+extern void CampMenuTask(Task* t);
+extern void fn_80194334(void);
+extern s32 fog_enabled;
+extern s32 lbl_803473E0;
+extern void fn_8022B9A8(void);
+extern void fn_80217134(void);
+extern void fn_801D668C(void);
+extern void fn_801925D8(void);
+extern void fn_80192920(void);
+extern void fn_80228930(void);
+extern void fn_800C9060(void);
+extern Task *lbl_803470FC;
+
+void fn_801920AC(Task* t)
+{
+    int i;
+    int h;
+    DrawState ds;
+    CampWork **cell;
+
+    switch (t->state) {
+    case 0:
+    case 0xfe:
+        lbl_803470FC = NULL;
+        t->state = 1;
+        lbl_80347154 = 0;
+        break;
+    case 1:
+        if (lbl_803473EC == 1) break;
+        if (lbl_80310B3C[0x21] & 0x80000000) break;
+        if (fn_8009763C() == 12) break;
+        if (lbl_80347508 == 1) break;
+        if (lbl_803473E8 != 1) break;
+        if (!(lbl_80311A60[lbl_80347154]->held & 0x400)) break;
+        fn_801CBBAC(3.0f);
+        lbl_80347130 = 0;
+        lbl_8034712C = 0;
+        h = fn_800FF438();
+        if (h != -1) {
+            s32 r;
+            do {
+                r = fn_801D6C3C(h);
+            } while (r != 0 && r != -2);
+        }
+        fn_802171F0(-0x1f);
+        for (i = 0; i < 27; i++) {
+            lbl_80308088[i] = 0;
+        }
+        lbl_8034714C[0] = 0;
+        lbl_8034714C[1] = 0;
+        fn_8022B9DC();
+        fn_8022DBC8();
+        if (lbl_80310A1C.f6 == 12 || (lbl_80310A1C.f6 >= 0 && lbl_80310A1C.f6 <= 4)) {
+            if (lbl_8030B7F4.party[0] == 0) {
+                fn_80192888();
+            }
+        }
+        fn_8022697C(t->x14);
+        lbl_803473E4 = 1;
+        lbl_8034713C = 0;
+        fn_800C9070();
+        lbl_80347100 = fn_801E49B8(lbl_802B45F0);
+        fn_8022893C();
+        if (fn_801953B8() != 0) {
+            fn_80194F3C();
+        }
+        t->state = 3;
+        break;
+    case 3:
+        if (lbl_80347508 != 1 && fn_801E4998(lbl_80347100) == 1) {
+            fn_801CBB9C(3.0f);
+            fn_801926B8();
+            fn_801D66D4();
+            lbl_803470FC = fn_802267AC(t, CampMenuTask);
+            lbl_803470FC->work = fn_801E1C7C(4);
+            cell = lbl_803470FC->work;
+            *cell = &camp_work;
+            memset(&camp_work, 0, 0x35c);
+            camp_work.f34c = 1.0f;
+            camp_work.f350 = 1.0f;
+            camp_work.f354 = 1.0f;
+            camp_work.f358 = 1.0f;
+            lbl_80347128 = 0;
+            fn_801D6C3C(0);
+            fn_80194334();
+            fn_801942A4();
+            fog_enabled = 0;
+            DrawStateDefault2D(&ds);
+            DrawStatePush(&ds);
+            t->state = 4;
+        }
+        fn_8022DBC8();
+        break;
+    case 4:
+        if (lbl_80347508 != 1) {
+            t->state = 5;
+        }
+        fn_8022DBC8();
+        break;
+    case 5:
+        if (lbl_803473EC == 1 || (lbl_80311A60[lbl_80347154]->held & 0x400)) {
+            if (lbl_803473E0 == 1) {
+                fn_801CBBAC(3.0f);
+                t->state = 6;
+            }
+        }
+        fn_8022DBC8();
+        break;
+    case 6:
+        if (lbl_80347508 != 1) {
+            lbl_803470FC->state = 3;
+            lbl_803470FC = NULL;
+            fn_801CBB9C(3.0f);
+            t->state = 7;
+            fn_8022B9A8();
+            fn_8022DBC8();
+        } else {
+            fn_8022DBC8();
+        }
+        break;
+    case 7:
+        fn_8022697C(0x7fffffff);
+        for (i = 0; i < 27; i++) {
+            if (lbl_80308088[i] != 0) {
+                fn_80217830(lbl_80308088[i]);
+                lbl_80308088[i] = 0;
+            }
+        }
+        for (i = 0; i < 2; i++) {
+            if (lbl_8034714C[i] != 0) {
+                fn_80217830(lbl_8034714C[i]);
+                lbl_8034714C[i] = 0;
+            }
+        }
+        fn_80217134();
+        lbl_803473EC = 0;
+        lbl_803473E4 = 0;
+        fn_801D668C();
+        fn_801925D8();
+        if (lbl_80310A1C.f6 == 12 || (lbl_80310A1C.f6 >= 0 && lbl_80310A1C.f6 <= 4)) {
+            if (lbl_8030B7F4.party[0] == 0) {
+                fn_80192920();
+            }
+        }
+        fn_80228930();
+        fn_801D6C3C(0);
+        fn_80194268();
+        DrawStatePop(0);
+        DrawStateRestore();
+        fn_800C9060();
+        t->state = 1;
+        break;
+    case 0xff:
+        if (lbl_803470FC != NULL) {
+            TaskDelete(lbl_803470FC);
+        }
+        t->flags |= 0x40;
+        break;
+    }
+}
+
 void fn_80192800(void)
 {
     TaskDelete(lbl_80347114);
@@ -5286,7 +5487,7 @@ s32 fn_8016AA0C(Mover* m)
 void fn_8016AC18(void)
 {
     s32 k;
-    switch ((s8)lbl_80310A1C[6]) {
+    switch (lbl_80310A1C.f6) {
     case 0:
     case 1:
     case 2:
@@ -5321,7 +5522,7 @@ void fn_8016AC18(void)
 void fn_8016ACA0(void)
 {
     s32 k;
-    switch ((s8)lbl_80310A1C[6]) {
+    switch (lbl_80310A1C.f6) {
     case 0:
     case 1:
     case 2:
