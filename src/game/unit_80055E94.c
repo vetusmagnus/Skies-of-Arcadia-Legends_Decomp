@@ -764,13 +764,22 @@ typedef struct O6E00C {
 extern u32 fn_8022ABEC(char *);
 extern void *fn_8022ACA8(u32);
 typedef struct ChrInfo {
-    u8 pad0[0xf0];
+    u8 pad0[0x6];
+    s16 x6;
+    s16 x8;
+    u8 pad_a[0xec - 0xa];
+    u32 fec;
     u32 ff0;
-    u8 pad_f4[0x1fc - 0xf4];
+    u8 pad_f4[0x164 - 0xf4];
+    f32 f164;
+    u8 pad_168[0x1fc - 0x168];
     void *f1fc;
 } ChrInfo;
+typedef struct ChrModel { u8 pad0[0xc]; char name[1]; } ChrModel;
 typedef struct ChrWork {
-    u8 pad0[0x1c];
+    u8 pad0[0x10];
+    ChrModel *model;    /* 0x10 */
+    u8 pad14[0x1c - 0x14];
     V3 v1c;
     s32 rot[3];
     u8 pad34[0x4c - 0x34];
@@ -782,7 +791,7 @@ typedef struct ChrTask {
 } ChrTask;
 typedef struct D57BD0 {
     u8 pad0[0x10];
-    void *d10;
+    u32 d10;
     s16 s14;
     s16 s16;
     s16 s18;
@@ -813,8 +822,8 @@ typedef struct G57BD0 {
 extern G57BD0 *lbl_80347394;
 extern V3 lbl_802AD3B8;
 extern ChrTask *fn_8001E05C(ChrTask *);
-extern void fn_80040150(void *, ChrTask *, s32, void **);
-extern void fn_800400D8(void *, ChrTask *, s32, void **);
+extern void fn_80040150(u32, ChrTask *, s32, void **);
+extern void fn_800400D8(u32, ChrTask *, s32, void **);
 typedef struct U6065C {
     u8 pad0[0x154];
     u8 *p154;
@@ -2131,7 +2140,7 @@ extern s32 fn_800358F8(void);
 extern void fn_80035900(s32);
 extern s16 fn_800403AC(s16, s16*, s16, s16);
 extern s32 fn_80040010(u32);
-extern void fn_80032E78(s32, void*, s16, s32, s16, s32, f32);
+extern void fn_80032E78(s32, void*, s16, f32, void*, s16, s32);
 
 void fn_80057038(WobTask* t)
 {
@@ -2247,7 +2256,7 @@ void fn_80057038(WobTask* t)
                 s->s3c = 0;
             }
             w->scl = s->f14;
-            fn_80032E78(flag, w, s->s3c, 0, s->s10, fn_80040010(s->cfg->x10), -1.0f + s->a / 255.0f);
+            fn_80032E78(flag, w, s->s3c, -1.0f + s->a / 255.0f, 0, s->s10, fn_80040010(s->cfg->x10));
             if (w->x50 == 0x170175) {
                 fn_80035900(saved);
             }
@@ -4340,10 +4349,10 @@ void fn_80071B98(f32 *a, f32 *b, f32 *out) {
     out[2] = b[2] - a[2];
 }
 
-void fn_80071CBC(f32 *a, f32 *b) {
-    b[0] = b[0] + a[0];
-    b[1] = b[1] + a[1];
-    b[2] = b[2] + a[2];
+void fn_80071CBC(V3 *a, V3 *b) {
+    b->x = b->x + a->x;
+    b->y = b->y + a->y;
+    b->z = b->z + a->z;
 }
 
 void fn_800608C8(f32* p) {
