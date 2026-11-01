@@ -3202,6 +3202,29 @@ s32 fn_8016E1D8(void *p) {
     return 1;
 }
 
+void fn_8016EA60(PanelA* o)
+{
+    o->x = -6190.0f;
+    o->y = 0.0f;
+    o->a = 1.0f;
+    o->b = 0.0f;
+    o->c = 1.0f;
+    o->d = 0.0f;
+    o->z0 = 0;
+    o->z1 = 0;
+    fn_8019A15C(o, 1, 1, 1);
+    *o->s0 = fn_801D68C4(lbl_803470F0, 7);
+    o->p0[0] = 0.0f;
+    o->p0[1] = 0.0f;
+    *o->s1 = fn_801D68C4(lbl_803470E8, 1);
+    o->p1[0] = 0.0f;
+    o->p1[1] = 0.0f;
+    *o->s2 = fn_801D68C4(lbl_803470F4, 0);
+    o->p2[0] = 85.0f;
+    o->p2[1] = 29.0f;
+    o->s3 = 0;
+}
+
 void fn_8016F0D4(Out *o, s8 idx, f32 f) {
     SaveChar *r;
     o->f0 = f;
@@ -4143,6 +4166,45 @@ void fn_801825D8(void) {
         UiObjSetCommand(ui, 10, 0);
         break;
     }
+}
+
+extern void fn_801854B8(void);
+static inline UiObj* PnlObj(s32 i) { return &camp_work.pnl[i]->win->obj; }
+
+s32 fn_801852F8(void) {
+    CampCtrl* c;
+    c = lbl_8034710C->holder->ctrl;
+    fn_801854B8();
+    if (lbl_803470C8 == 1) {
+        if (CampMenuAnyPanelBusy() == 0) {
+            lbl_803470C8 = 0;
+        }
+        goto end;
+    }
+    if (fn_801C09F8(lbl_80347154, 5) != 0) {
+        c->cur[0].x8 = c->cur[0].sel;
+        c->cur[0].sel = fn_8019A21C(c->cur[0].mask, 1, c->cur[0].sel, 0, 7);
+    } else if (fn_801C09F8(lbl_80347154, 4) != 0) {
+        c->cur[0].x8 = c->cur[0].sel;
+        c->cur[0].sel = fn_8019A21C(c->cur[0].mask, -1, c->cur[0].sel, 0, 7);
+    } else if (fn_801C09F8(lbl_80347154, 2) != 0) {
+        fn_801929B8(2);
+        return 1;
+    } else if (fn_801C09F8(lbl_80347154, 1) != 0) {
+        return -1;
+    } else if (fn_801C09F8(lbl_80347154, 0x11) != 0 || fn_801C09F8(lbl_80347154, 0x10) != 0) {
+        c->cur[0].x8 = c->cur[0].sel;
+        c->cur[0].sel = 4;
+        fn_801929B8(2);
+        return 1;
+    } else {
+        goto end;
+    }
+    UiObjSetCommand(PnlObj(c->cur[0].sel + 0x1a), 0x15, 0);
+    fn_801929B8(4);
+    UiObjSetCommand(PnlObj(c->cur[0].x8 + 0x1a), 0x14, 0);
+end:
+    return 0;
 }
 
 void fn_80185864(void) {
