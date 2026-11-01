@@ -1796,11 +1796,11 @@ typedef struct {
     s32 x8;
     u8 xc;
     u8 xd;
-    u8 xe;
+    s8 xe;
     u8 padf;
     s16 x10;
     u8 pad12[6];
-    s32 x18;
+    u32 x18;
     f32 x1c;
     f32 x20;
     f32 x24;
@@ -3451,6 +3451,69 @@ void fn_801679A4(Fx_801677D0 *t)
 
 s32 fn_80168A04(Obj_80168A04* a, s32 b);
 s8 fn_80167EF0(Sub_80168A04 *a);
+extern f32 njScalor(Vec_80167EF0 *v);
+/* Ninja NJM_RAD_ANG: radians to a 0x10000-per-turn angle. */
+static inline s32 RadToAng(f32 r) { return 10430.381f * r; }
+extern void fn_8021A094(u8 *p);
+extern f32 lbl_80347510;
+
+s32 fn_80167C34(St_801677D0 *w)
+{
+    void *h;
+    s32 base;
+    Vec_80167EF0 o;
+    Vec_80167EF0 p;
+    Vec_80167EF0 d;
+    f32 dist;
+    f32 a, b;
+    s32 n;
+    s8 id;
+    f32 g, g2;
+    s32 x, y, m;
+
+    base = w->x18 + 0x7f;
+    if (w->x2c != 0) {
+        h = w->x2c->work;
+    } else {
+        h = fn_8015F1A0(w->x18 >> 16);
+    }
+    if (h == 0 && fn_800C8D90() != 0) {
+        return -0x7f;
+    }
+    h = fn_8015F180(h);
+    p.x = w->x1c;
+    p.y = w->x20;
+    p.z = w->x24;
+    fn_8009FDA0(h, 3, &o, 0, &p, 0, 1);
+    d.x = lbl_803119E0.pos.x - o.x;
+    d.y = lbl_803119E0.pos.y - o.y;
+    d.z = lbl_803119E0.pos.z - o.z;
+    dist = njScalor(&d);
+    if (w->xe >= 0) {
+        a = atan2(o.x - lbl_803119E0.pos.x, o.z - lbl_803119E0.pos.z);
+        b = atan2(lbl_803119E0.dir.x, lbl_803119E0.dir.z);
+        n = RadToAng(b) - RadToAng(a);
+        n = 127.0f * (0.5f * (1.0f - njSin(n)));
+        id = w->xe;
+        if (id < 2) {
+            lbl_80347078[id] = lbl_80347080[id];
+            lbl_80347080[w->xe] = (n ^ 0x7f) + 0x80;
+            if (lbl_80347078[w->xe] != lbl_80347080[w->xe]) {
+                fn_8021A094(lbl_80347080);
+            }
+        }
+    }
+    if (dist >= 0.0f && w->x28 >= 0.0f) {
+        g = w->x28;
+        g2 = 2.0f * g;
+        x = base * (g2 - dist) / g2;
+        y = x * (1.0f - lbl_80347510);
+        m = y > 0x14 ? y : 0x14;
+        return m >= 0xff ? 0xff : m;
+    }
+    return 0;
+}
+
 void fn_801680B4(Obj_80168A04 *t)
 {
     Sub_80168A04 *w;
