@@ -2301,3 +2301,47 @@ Splits made where the data layout shows an original file boundary, so that held 
   fn_80015138 and fn_80014BA8 (adjacent) disagree on fn_8002923C's id (int vs s8 view); fn_801705B8 calls fn_80171B64
   with two arguments in the file that defines it with one (only a K&R definition would allow it); fn_8020AF8C reads
   lbl_80310A1C as s8 where fn_8020ED58 in the same file reads it as u8.
+
+Second pass (same branch):
+- **unit_800CE2B4** (0x800CE2B4-0x800D2048) and **unit_800D2048** (0x800D2048-0x800D81E8), from unit_800B2DA0: the
+  `.sdata2` run 0x803492A8-0x803492F0 has its own int-to-float double (0x803492B8) and 0.0f (0x803492DC); a second pair
+  follows at 0x80349308/0x80349310, so a new block starts at 0x803492F8 (8-aligned), and every function from 0x800CE2B4 on
+  uses only constants from there up. Its `.data` is 0x802E1118-0x802E1450: the wind vector, the gust, the ambient sound
+  table (17 rows of 0x20, then a V3[8] box at 0x802E1374) and fn_800CF554's jump table at 0x802E13D4 (strings and tables
+  before the jump table, as the rule wants); nothing before 0x800CE2B4 touches that `.data` and nothing after 0x800D2048
+  does. The next file starts at the 0x803493C8 block, whose first constant is a 0.0f, with `.data` from 0x802E1450 and
+  `.rodata` from 0x802B1578. The wind vector lbl_802E1118 became a V3 (it was read as `f32[]` with casts to V3).
+  Nothing released yet: fn_800D0970 matches with the file's `.data` defined in C (the table typed with its sound id/arg
+  and four `.sct` names), but fn_800CE4B4 then has to read the first name as an integer (`(v | -v) >> 31` on a `u32`;
+  `p != 0` on the pointer gives the other operand order of `or`), which needs a pointer cast: owner's call. fn_800D1324
+  needs fn_800C355C to return a pointer (unit_800B2DA0 defines it `s32`), the per-kind EvExt.info record, lbl_803474EC
+  as the `Pool` and EvObj.x218.
+- **unit_80009800** (0x80009800-0x8000A38C) and **unit_8000A38C** (0x8000A38C-0x80020B50), from unit_80005B50:
+  `.sdata2` blocks at 0x80348080 (after ".STD") and 0x803480E0 (8-aligned; 0.0f at 0x80348098 and again at 0x803480E0),
+  `.rodata` 0x802ACC50 (the first file's strings, two pooled blocks of 0x48 and 0x20 holding "/sound/m0367.mlt", the
+  retry prompt, "ME090A.sct" and "/sound/m04%02d.samp") and 0x802ACCB8, `.data` 0x802DAE50 and 0x802DAEB0, all monotone.
+  The first file's short string "I quit." sits in `.sdata2`, so it was built with read-only strings; configure.py gives
+  unit_80009800 `-str reuse,readonly` (check it with `XF="-str reuse,readonly" sc_chk.py`). Released fn_80009874 (its
+  literals land at the start of the file's `.rodata`, as the pooled base wants).
+  fn_8000ABCC went in before the split, with the head of its file's `.rodata` defined in C (lbl_802ACCB8, twelve zero
+  bytes, then "s%03d.sml", "s%03d.sst", "stsicon.mld"; fdiff names the pooled references by symbol, so only the order
+  of the C definitions matters); SlotTable gets the three name buffers.
+  fn_8001D944 folded into unit_8000A38C: fn_800163A4 takes the character Task (its private F163A4 views were
+  ChrWork/ChrInfo), SysObj gets x3c. battle.c and effect.c still declare fn_8001D944 with their own (u8/int, void *)
+  prototypes, as before.
+- **unit_8009D274** (0x8009D274-0x800A3ED4) and **unit_800A3ED4** (0x800A3ED4-0x800AE300), from unit_800972AC:
+  `.sdata2` 0x80348D70 starts with 0.0f and has its own int-to-float double (0x80348D90, after 0x80348D68), and carries
+  short strings ("Mtrain", "train", "fldShip", "eff_man"), so the file was built with read-only strings (configure.py
+  gives it `-str reuse,readonly`); 0x80348DD0 starts the next block with a second 182.04445. `.rodata` 0x802B0E30 and
+  0x802B0F88 (8-aligned, monotone). unit_8009D274 now defines its `.rodata` in C in the original order (identity matrix,
+  the axis pairs, six zero points, the two particle messages and the six model names); njCalcPoint/njCalcVectors and
+  fn_802AC710 take `const` input for it. fn_800A0028 is still held: its EvObj view needs folding (pivotAng/tgt as Ang3
+  against EvObj's `Angle[3]`, `EvSub` at 0x1D8 with x178/x17c/x180/pos/ang, x1dc as s32, lbl_80303468's State record
+  replacing State_UNIT0000, fn_8010A164 returning the item Task).
+- Not split, with the reason: fn_801A4070 (card `.bss` pooled from 0x803080F8: MWCC lays it out by first use, and the
+  first users fn_8019F930/fn_801A038C are not in C yet); fn_800091E0 folds only with private Hit* views of Task/ChrWork,
+  and unit_8000A38C's caller declares it `(Task *, void *, s16, s32)`; fn_80109E7C needs fn_801CC2A0's real
+  `(const char *, callback, void *)` prototype against the agent's `(obj, cb, u16)` and a void * return into fn_80100424's s32.
+  The other unit_80005B50/unit_800B2DA0/unit_8010E164/unit_8013D400/unit_800D81E8/unit_80020B50/unit_80055E94/
+  unit_8012F6C4 holds fail on type folding (agent views of Task/EvObj/BtlWork, `EvInfo` redefinitions, typed callees),
+  not on a file boundary.
