@@ -6,6 +6,7 @@
 #include "game/evobj.h"
 
 struct Task;
+struct BtlShip;
 
 /* One slot of a battle side (0x18): the slot kind, its index, two parameters and the unit in it.
  * Setting a unit marks it linked (its EvObj.x1ec byte). */
@@ -38,7 +39,7 @@ typedef struct BtlSide {
     EvObj* obj;             /* 0x04 */
     void (*cb)(EvObj*);     /* 0x08 called every frame with obj */
     s32 xc;                 /* 0x0C */
-    u8* ship;               /* 0x10 */
+    struct BtlShip* ship;   /* 0x10 per-side state (0xA00, fn_8014FCF0) */
     f32* m14;               /* 0x14 */
     f32* m18;               /* 0x18 */
     NJS_MATRIX m1c;         /* 0x1C */

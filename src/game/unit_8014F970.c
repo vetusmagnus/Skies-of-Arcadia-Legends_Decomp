@@ -6,6 +6,7 @@
 #include <math.h>
 #include <dolphin/types.h>
 #define AT(T, p, off) (*(T *)((u8 *)(p) + (off)))
+typedef struct BtlShip BtlShip;
 typedef struct { u8 pad0[4]; s32 f4; u8 pad8[4]; s32 fc; } Ev;
 typedef struct { u8 pad0[0x2d8]; s32 f2d8; } Ctx;
 typedef struct { u8 pad0[0x6c]; void* p6c; } Obj_8015271C;
@@ -79,10 +80,10 @@ void *memset(void *p, s32 c, u32 n);
 extern u8 lbl_803067A8[];
 extern u8 lbl_80306938[];
 typedef struct {
-    u8 v[4];
+    s8 v[4];
 } Cell;
 typedef struct {
-    u8 b0;
+    s8 active;
     s8 b1, b2, b3;
     u8 pad4[2];
     Cell cell[8][4][2];
@@ -165,7 +166,6 @@ void *fn_801CC3C4(void *p);
 Blk *fn_8016748C(void *a, u32 v);
 void *fn_8010A164(s32 a);
 s32 fn_80129CA8(void *p);
-void fn_801532B4(u8 *p);
 void *memset(void *d, s32 c, u32 n);
 void fn_8020EFD4(void *p);
 void fn_801575C4(void *a);
@@ -188,7 +188,7 @@ extern char lbl_802B3EDC[];
 s32 fn_80216CA4(void *p);
 s32 fn_80216F1C(s32 a, s32 b);
 void *memcpy(void *d, const void *s, u32 n);
-void fn_8014FCF0(u8 *dst, s32 a, s32 b);
+void fn_8014FCF0(BtlShip *dst, s32 a, s32 b);
 typedef struct {
     u8 pad0[0x1c];
     f32 scale;        /* 0x1C, must be > 0 to draw */
@@ -532,7 +532,23 @@ typedef struct {
     s32 x4;
     s32 count;        /* 0x08 */
     Model* model;     /* 0x0C */
+    u8 x10[0x24 - 0x10];
 } Obj_80153060;
+/* A side's state (BtlSide.ship, 0xA00 bytes, set up by fn_8014FCF0). */
+struct BtlShip {
+    u8* x0;                  /* 0x000 */
+    u8* x4;                  /* 0x004 */
+    u32 x8;                  /* 0x008 */
+    s16 xc;                  /* 0x00C */
+    s16 idx;                 /* 0x00E side index */
+    u8 pad10[0x95C - 0x10];
+    Obj_80153060 fx[2];      /* 0x95C */
+    s32 x9a4;                /* 0x9A4 */
+    u8 pad9a8[0x9C0 - 0x9A8];
+    u8 x9c0[0x30];           /* 0x9C0 fn_8014F72C */
+    u8 pad9f0[0xA00 - 0x9F0];
+};
+void fn_801532B4(Obj_80153060 *p);
 typedef struct {
     u8 a;
     s8 b;
@@ -1105,6 +1121,167 @@ static inline void ClearAll(void) {
 /* Shutdown: frees the slot resources and buffers and calls the subsystems' exit functions. */
 extern void fn_80154CC4(s16 id);
 
+void fn_80153060(Obj_80153060* o, f32* mtx);
+
+void fn_8014F99C(BtlShip *o, f32 *m) {
+    BtlSide *p = lbl_80346FC8[o->idx];
+    if (p->lead.target != 0) {
+        EvExt *r = p->lead.target->ext;
+        njTranslate(m, r->target.x, r->target.y, r->target.z);
+    }
+    fn_80153060(o->fx, m);
+}
+
+s32 fn_80153BBC(void)
+{
+    s8 en;
+    s32 a;
+    s32 b;
+    s32 c;
+    en = lbl_80346FB8->active;
+    if (en == 0) {
+        return 0;
+    }
+    a = lbl_803472BC;
+    b = lbl_803472C0;
+    c = lbl_803472B8;
+    if (lbl_80346FB8->b1 == a && lbl_80346FB8->b2 == b && lbl_80346FB8->b3 == c) {
+        return 0;
+    }
+    if (en != 0) {
+        lbl_80346FC8[1]->a[0] = lbl_80346FC8[1]->b[lbl_80346FB8->cell[a][b][c].v[0]];
+        lbl_80346FC8[1]->a[1] = lbl_80346FC8[1]->b[lbl_80346FB8->cell[a][b][c].v[1]];
+        lbl_80346FC8[1]->a[2] = lbl_80346FC8[1]->b[lbl_80346FB8->cell[a][b][c].v[2]];
+        lbl_80346FC8[1]->a[3] = lbl_80346FC8[1]->b[lbl_80346FB8->cell[a][b][c].v[3]];
+    }
+    lbl_80346FB8->b1 = lbl_803472BC;
+    lbl_80346FB8->b2 = lbl_803472C0;
+    lbl_80346FB8->b3 = lbl_803472B8;
+    return 1;
+}
+
+/* An angle as a signed value in [-0x8000, 0x8000). */
+static inline s32 wrap(u16 a) {
+    s32 x = a;
+    if (x >= 0x8000) {
+        x = -(0x10000 - x);
+    }
+    return x;
+}
+
+static inline s32 ToAngle(f32 deg) {
+    return 182.04445f * deg;
+}
+
+s32 fn_8015432C(s32 side, s32 ang) {
+    s32 best = 0;
+    f32 max = 0.0f;
+    s32 i;
+    s32 v;
+    s32 d;
+    f32 f;
+    f32 df;
+    for (i = 0; i < 8; i++) {
+        EvObj *t = lbl_80346FC8[side]->a[i].target;
+        if (t != 0) {
+            v = wrap(ToAngle(t->ext->rot.y));
+            d = wrap(v - ang);
+            df = d;
+            f = fabs(df);
+            if (f > max) {
+                max = f;
+                best = i;
+            }
+        }
+    }
+    return best;
+}
+
+/* A unit's info record as the gauges read it (count-prefixed, see EvInfo). */
+typedef struct {
+    s32 count;              /* 0x00 */
+    u8 pad4[0x48 - 4];
+    u32 x48;
+    u32 x4c;
+} StatInfo;
+
+typedef struct {
+    f32 f[21];
+} Gauges;
+
+
+static inline f32 HalfHi(EvObj *w) {
+    StatInfo *i = w->ext->info;
+    u32 v;
+    if (i->count > 0x12) {
+        v = i->x4c;
+    } else {
+        v = 0;
+    }
+    return v >> 1;
+}
+
+static inline f32 HalfLo(EvObj *w) {
+    StatInfo *i = w->ext->info;
+    u32 v;
+    if (i->count > 0x11) {
+        v = i->x48;
+    } else {
+        v = 0;
+    }
+    return v >> 1;
+}
+
+void fn_801545EC(s32 idx, Gauges *g) {
+    BtlSide *o = lbl_80346FC8[idx];
+
+    if (o->valid == 0) {
+        g->f[2] = 0.0f;
+        g->f[3] = 0.0f;
+        g->f[0] = 0.0f;
+        g->f[1] = 0.0f;
+        g->f[4] = 0.0f;
+        g->f[5] = 3.0f;
+        g->f[6] = 3.0f;
+        g->f[7] = 3.0f;
+        g->f[8] = 3.0f;
+        g->f[9] = 3.0f;
+        g->f[10] = 3.0f;
+        g->f[11] = 3.0f;
+        g->f[12] = 3.0f;
+        g->f[17] = 3.0f;
+        g->f[18] = 3.0f;
+        g->f[19] = 8.0f;
+        g->f[20] = 8.0f;
+        g->f[13] = 3.0f;
+        g->f[14] = 3.0f;
+        g->f[15] = 8.0f;
+        g->f[16] = 8.0f;
+    } else {
+        g->f[2] = o->a[0].target->ext->target.x;
+        g->f[3] = -o->a[1].target->ext->target.x;
+        g->f[0] = o->a[2].target->ext->target.z;
+        g->f[1] = -o->a[3].target->ext->target.z;
+        g->f[4] = o->centre.y;
+        g->f[5] = HalfHi(o->a[2].target);
+        g->f[6] = HalfHi(o->a[2].target);
+        g->f[7] = HalfLo(o->a[2].target);
+        g->f[8] = HalfLo(o->a[2].target);
+        g->f[9] = HalfHi(o->a[3].target);
+        g->f[10] = HalfHi(o->a[3].target);
+        g->f[11] = HalfLo(o->a[3].target);
+        g->f[12] = HalfLo(o->a[3].target);
+        g->f[13] = HalfHi(o->a[0].target);
+        g->f[14] = HalfHi(o->a[0].target);
+        g->f[15] = HalfLo(o->a[0].target);
+        g->f[16] = HalfLo(o->a[0].target);
+        g->f[17] = HalfHi(o->a[1].target);
+        g->f[18] = HalfHi(o->a[1].target);
+        g->f[19] = HalfLo(o->a[1].target);
+        g->f[20] = HalfLo(o->a[1].target);
+    }
+}
+
 void fn_80154B6C(void) {
     Seq_80346FE0* g = lbl_80346FE0;
     if (g != NULL) {
@@ -1155,6 +1332,55 @@ void fn_80156024(void) {
 
 void fn_80157684(Rec_80125820 *out, s32 a, f32 t);
 extern f32 njScalor(NJS_VECTOR *v);
+
+static inline s32 Wrap16(u16 x)
+{
+    s32 d = x;
+    if (d >= 0x8000) {
+        d = -(0x10000 - d);
+    }
+    return d;
+}
+
+static inline s32 AngWrap(s32 a, s32 b)
+{
+    return Wrap16(a - b);
+}
+
+/* Declared s32 with no return statement (callers ignore r3): that keeps r3 out of the
+   allocator in the tail, which is what the original's r4-r6 registers show. */
+s32 fn_80156768(s32 a, s32 b, s32* out1, s32* out2, f32 t)
+{
+    BtlSide* o = lbl_80346FC8[b];
+    NJS_MATRIX m;
+    Rec_80125820 pb;
+    Rec_80125820 pa;
+    f32 v[3];
+    Angle ang[3];
+    NJS_POINT3 p;
+
+    fn_80157684(&pb, b, t);
+    njUnitMatrix(m);
+    njRotateZXY(m, pb.v[0], pb.v[1], pb.v[2]);
+    njCalcPoint(m, &o->centre, &p);
+    pb.pos[0] += p.x;
+    pb.pos[1] += p.y;
+    pb.pos[2] += p.z;
+    fn_80157684(&pa, a, t);
+    v[0] = pb.pos[0] - pa.pos[0];
+    v[1] = 0.0f;
+    v[2] = pb.pos[2] - pa.pos[2];
+    v[0] = -v[0];
+    v[1] = -v[1];
+    v[2] = -v[2];
+    fn_801580A4(ang, v);
+    if (out1 != NULL) {
+        *out1 = AngWrap(ang[1], pa.v[1]);
+    }
+    if (out2 != NULL) {
+        *out2 = AngWrap(ang[1], pb.v[1]);
+    }
+}
 
 f32 fn_801568F8(s32 a, s32 b, f32 ta, f32 tb) {
     Rec_80125820 ra;
@@ -1285,8 +1511,8 @@ typedef struct St_8015D124 {
     u32 cnt;
 } St_8015D124;
 
-void fn_8014F970(u8 *self) {
-    fn_80153270(self + 0x95c);
+void fn_8014F970(BtlShip *self) {
+    fn_80153270(self->fx);
     fn_80155CD8();
     fn_80155D74();
 }
@@ -1370,9 +1596,9 @@ void fn_80153270(void *p) {
     }
 }
 
-void fn_801532B4(u8* p) {
+void fn_801532B4(Obj_80153060* p) {
     memset(p, 0, 0x24);
-    fn_80155A8C(p + 0x10);
+    fn_80155A8C(p->x10);
 }
 
 void fn_80153498(void) {
@@ -1769,8 +1995,8 @@ void fn_80150258(void)
 {
     memset((void*)lbl_80346FA0, 0, 0x1616);
     fn_80150A80((u8 *)lbl_80346FA8);
-    fn_8014F72C(lbl_80346FC8[0]->ship + 0x9c0, 0);
-    fn_8014F72C(lbl_80346FC8[1]->ship + 0x9c0, 1);
+    fn_8014F72C(lbl_80346FC8[0]->ship->x9c0, 0);
+    fn_8014F72C(lbl_80346FC8[1]->ship->x9c0, 1);
 }
 
 typedef struct {
@@ -2039,30 +2265,30 @@ s32 fn_8015DBE4(Self *self, Src_8015DBE4 *src) {
     return 0;
 }
 
-void fn_8014FCF0(u8 *dst, s32 a, s32 b)
+void fn_8014FCF0(BtlShip *dst, s32 a, s32 b)
 {
     s32 i;
     u8 *x = (u8 *)fn_8010A164(a);
     u8 *y = AT(u8 *, x, 0x24);
 
     memset(dst, 0, 0xa00);
-    AT(u8 *, dst, 0) = x;
-    AT(u8 *, dst, 4) = y;
-    AT(u32, dst, 8) = AT(u32, y, 0x1e4);
-    AT(s16, dst, 0xc) = fn_80129CA8(y);
-    AT(s16, dst, 0xe) = b;
+    dst->x0 = x;
+    dst->x4 = y;
+    dst->x8 = AT(u32, y, 0x1e4);
+    dst->xc = fn_80129CA8(y);
+    dst->idx = b;
     for (i = 0; i < 2; i++) {
-        fn_801532B4(dst + 0x95c + i * 0x24);
+        fn_801532B4(&dst->fx[i]);
     }
-    AT(s32, dst, 0x9a4) = 0;
+    dst->x9a4 = 0;
 }
 
 void fn_80150A80(u8 *p)
 {
     memset(p, 0, 0x6c);
-    AT(u8 *, p, 0x38) = lbl_80346FC8[0]->ship + 0x9c0;
+    AT(u8 *, p, 0x38) = lbl_80346FC8[0]->ship->x9c0;
     AT(s32, p, 0x20) = 0;
-    AT(u8 *, p, 0x54) = lbl_80346FC8[1]->ship + 0x9c0;
+    AT(u8 *, p, 0x54) = lbl_80346FC8[1]->ship->x9c0;
     AT(s32, p, 0x3c) = 1;
     AT(s32, p, 0x1c) = 0;
     AT(s32, p, 0) = -1;
@@ -2204,7 +2430,7 @@ void fn_801566B4(s32 a, void *p4, void *p5)
     lbl_80346FC8[a]->m18 = p5;
 }
 
-void fn_80156994(s32 a, EvObj *obj, u8 *b, void (*c)(EvObj *))
+void fn_80156994(s32 a, EvObj *obj, BtlShip *b, void (*c)(EvObj *))
 {
     void *r29 = fn_8010A164(obj->x17a);
 
@@ -3907,7 +4133,7 @@ void fn_80153A44(s32 unused, f32* f)
     if (v3 >= 0x20) {
         fn_8015757C((s32)lbl_802B3BD8, v3);
     }
-    lbl_80346FB8->b0 = 1;
+    lbl_80346FB8->active = 1;
     lbl_80346FB8->b1 = -1;
     lbl_80346FB8->b2 = -1;
     lbl_80346FB8->b3 = -1;
