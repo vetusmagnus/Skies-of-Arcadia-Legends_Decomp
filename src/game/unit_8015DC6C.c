@@ -1429,12 +1429,26 @@ typedef struct {
 typedef struct { s32 hide; u8 pad4[4]; UiObj obj; u8 pad_[0xbc - 8 - sizeof(UiObj)]; void* sub; } Win_8018A16C;
 typedef struct { u8 pad[0x24]; Win_8018A16C* in; } Pnl_8018A16C;
 typedef struct { u8 pad[0xc]; s8 count; u8 pad1[3]; Pnl_8018A16C* pnl[0xcf]; f32 f34c, f350, f354; } CampW_8018A16C;
-typedef struct { s8 mode; } Sub_8018A16C;
+/* One stat of the equip compare panel: the value and whether the candidate raises it
+   (2), lowers it (3) or keeps it (1). */
+typedef struct { s32 cur; s32 st; } StatCmpEnt;
+/* The equip compare panel (a camp window's xbc; fn_8018DABC fills its first bytes). */
+typedef struct {
+    s8 mode;              /* 0x00 */
+    s8 b;                 /* 0x01 */
+    s8 c;                 /* 0x02 */
+    s8 ch;                /* 0x03 */
+    u8 pad4[4];
+    StatCmpEnt stat[7];   /* 0x08 */
+    s32 a40, a44, a48;    /* 0x40: the character's equip slots */
+} Sub_8018A16C;
 typedef struct {
     s32 kind;   /* 0x00 */
     s32 type;   /* 0x04 */
     UiObj obj;  /* 0x08 */
-    u8 pad[0xbc - 8 - sizeof(UiObj)];
+    u8 pad54[0x74 - 8 - sizeof(UiObj)];
+    Pos_80188274 pos; /* 0x74 */
+    u8 pad94[0xbc - 0x94];
     Sub_8018A16C* sub;  /* 0xbc */
 } Inner_8018A16C;
 typedef struct {
@@ -1447,7 +1461,7 @@ typedef struct {
 extern void fn_80296EEC(s32 a, s32 b, s32 c);
 extern void fn_8018A2D8(void* p);
 extern void fn_8018D250(void* p);
-extern void fn_8018C8B4(void* p);
+extern void fn_8018C8B4(Inner_8018A16C* p);
 extern void fn_80194F88(void* p);
 void fn_8016C204();
 void fn_8016C61C(void);
@@ -5494,17 +5508,6 @@ void fn_80189DB0(s32* p, s8 v)
     *p = v;
 }
 
-/* One stat of the equip compare panel: the value and whether the candidate raises it
-   (2), lowers it (3) or keeps it (1). */
-typedef struct { s32 cur; s32 st; } StatCmpEnt;
-/* The equip compare panel (a camp window's xbc; fn_8018DABC fills its first bytes). */
-typedef struct {
-    u8 pad0[3];
-    s8 ch;                /* 0x03 */
-    u8 pad4[4];
-    StatCmpEnt stat[7];   /* 0x08 */
-    s32 a40, a44, a48;    /* 0x40: the character's equip slots */
-} StatCmp;
 extern s32 fn_801F4C24(s16 a);
 extern void fn_801EE5A4(s32 c);
 static inline void StatCmpSet(StatCmpEnt *s, s32 x) {
@@ -5513,7 +5516,7 @@ static inline void StatCmpSet(StatCmpEnt *s, s32 x) {
     else s->st = 2;
     s->cur = x;
 }
-static inline void StatCmpAll(StatCmp *self, StatRec *r) {
+static inline void StatCmpAll(Sub_8018A16C *self, StatRec *r) {
     s32 v7, v6, v5, v4, v3, v2, v1;
     v1 = r->x52[0]; v2 = r->x52[1]; v3 = r->x48[1]; v4 = r->x52[2]; v5 = r->x52[3]; v6 = r->x52[4]; v7 = r->x48[4];
     StatCmpSet(&self->stat[0], v1);
@@ -5524,7 +5527,73 @@ static inline void StatCmpAll(StatCmp *self, StatRec *r) {
     StatCmpSet(&self->stat[5], v6);
     StatCmpSet(&self->stat[6], v7);
 }
-void fn_8018D7F0(StatCmp* self) {
+extern void fn_801D52A8(Sprite *s, f32 f1, f32 f2, f32 f3, f32 f4, s32 a, s32 b);
+extern s32 lbl_80347128;
+extern void fn_8018DABC(Sub_8018A16C *d, s8 id, s8 b, s8 c, s8 kind);
+extern void fn_8018D7F0(Sub_8018A16C *d);
+
+#define SLOT(K, ID, SX, SY, TY, TX)     s = fn_801D68C4(lbl_803470F4, ID);     s->x = x + (SX);     s->y = y + (SY);     fn_801D52A8(s, 10.0f + self->pos.f0, self->pos.f4, 1.0f, 1.0f, self->pos.ic, self->pos.i8);     if (d->stat[K].st == 1) {         TextPrint(x + (TX), y + (TY), "-");     } else {         switch (d->stat[K].st) {         case 2:             col = 0xff2b5000;             break;         case 3:             col = 0xff800000;             break;         case 0:             col = 0xff201008;             break;         }         fn_8019A374(d->stat[K].cur, x + (TX), y + (TY), 10.0f + self->pos.f0, col, 0);     }
+
+void fn_8018C8B4(Inner_8018A16C *self)
+{
+    Sprite *s;
+    f32 savez;
+    s16 x;
+    s16 y;
+    u32 col;
+    Sub_8018A16C *d = self->sub;
+
+    fn_8018DABC(d, d->ch, 0, 0, d->mode);
+    switch (d->mode) {
+    case 2:
+        if (lbl_80347128 == 1) {
+            fn_8018D7F0(d);
+            if (d->stat[0].st == 1) {
+                d->stat[0].st = 0;
+            }
+            if (d->stat[1].st == 1) {
+                d->stat[1].st = 0;
+            }
+            if (d->stat[2].st == 1) {
+                d->stat[2].st = 0;
+            }
+            if (d->stat[3].st == 1) {
+                d->stat[3].st = 0;
+            }
+            if (d->stat[4].st == 1) {
+                d->stat[4].st = 0;
+            }
+            if (d->stat[5].st == 1) {
+                d->stat[5].st = 0;
+            }
+            if (d->stat[6].st == 1) {
+                d->stat[6].st = 0;
+            }
+        }
+        break;
+    case 3:
+        fn_8018D7F0(d);
+        break;
+    }
+    x = self->obj.rect[0];
+    y = self->obj.rect[1];
+    savez = TextGetZ();
+    TextSetZ(10.0f + self->pos.f0);
+    TextPushColor();
+    TextSetColor(0xff201008);
+    col = 0xff201008;
+    SLOT(0, 0x10, 0x10, 6, 0xa, 0x3f)
+    SLOT(1, 0x11, 0x58, 6, 0xa, 0x87)
+    SLOT(2, 0x12, 0xa0, 6, 0xa, 0xcf)
+    SLOT(3, 0x13, 0xe8, 6, 0xa, 0x117)
+    SLOT(4, 0x14, 0x10, 30, 0x22, 0x3f)
+    SLOT(5, 0x15, 0x58, 30, 0x22, 0x87)
+    SLOT(6, 0x16, 0xa0, 30, 0x22, 0xcf)
+    TextPopColor(1);
+    TextSetZ(savez);
+}
+
+void fn_8018D7F0(Sub_8018A16C* self) {
     s32 k;
     s32 old;
     SaveChar* c;
