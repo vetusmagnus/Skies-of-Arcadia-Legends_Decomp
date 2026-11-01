@@ -940,7 +940,9 @@ extern s32 fn_800300C4(s16 i);
 extern s32 rand(void);
 typedef struct SlotTable {
     s16 count;
-    u8 pad2[0x404 - 2];
+    char sml[0x20];      /* 0x002 model file name */
+    char sst[0x20];      /* 0x022 */
+    char icon[0x3c2];    /* 0x042 */
     void *buf[32];
     void *res[32];
 } SlotTable;
@@ -1976,6 +1978,30 @@ void fn_8000AA58(void) {
     fn_801DDD74(lbl_803474E4, 1);
 }
 
+/* The file's .rodata from its start, defined at the original offsets: fn_8000ABCC addresses it
+ * from one pooled base (lbl_802ACCB8 + 0xc/0x18/0x24). */
+const s32 lbl_802ACCB8[3] = { 0, 0, 0 };
+const char lbl_802ACCC4[] = "s%03d.sml";
+const char lbl_802ACCD0[] = "s%03d.sst";
+const char lbl_802ACCDC[] = "stsicon.mld";
+extern int fn_8025CB24(char* dst, const char* fmt, ...);
+extern void fn_8002F670(void);
+
+void fn_8000ABCC(s16 id) {
+    s32 i;
+    lbl_803098C8.count = 3;
+    fn_8025CB24(lbl_803098C8.sml, lbl_802ACCC4, id);
+    fn_8025CB24(lbl_803098C8.sst, lbl_802ACCD0, id);
+    fn_8025CB24(lbl_803098C8.icon, lbl_802ACCDC);
+    fn_8002F670();
+    for (i = 0; i < 32; i += 4) {
+        lbl_803098C8.buf[i] = 0;
+        lbl_803098C8.buf[i + 1] = 0;
+        lbl_803098C8.buf[i + 2] = 0;
+        lbl_803098C8.buf[i + 3] = 0;
+    }
+}
+
 s32 fn_8000ACE8(void) {
     return 1;
 }
@@ -1989,8 +2015,6 @@ typedef struct ResHandle {
     u8 pad0[0x54];
     u32 size;
 } ResHandle;
-extern char lbl_802ACCC4[];
-extern char lbl_802ACCD0[];
 extern int sprintf(char* s, const char* fmt, ...);
 extern ResHandle* fn_801CC69C(char* name);
 extern void fn_801CC608(ResHandle* h, void* buf, u32 size);
