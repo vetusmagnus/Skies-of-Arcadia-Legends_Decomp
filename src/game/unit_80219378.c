@@ -9,6 +9,8 @@
 #include "game/text.h"
 #include "game/menu.h"
 #include "game/gamedata.h"
+#include "game/sprite.h"
+#include <stdio.h>
 
 /* Digit glyph codes for the ones, tens, hundreds and thousands places. These are the start of
  * the original file's .data (lbl_802F8A20, 0x58 bytes): separate arrays, addressed from one
@@ -258,7 +260,6 @@ extern void fn_801A372C(void);
 extern u8 lbl_802D973C[];
 extern u8 lbl_802D9750[];
 extern TexRoot *fn_801DB244(void *p);
-extern void fn_80227810(void *list);
 extern void fn_801DBA58(u32 a, u32 b, u32 c);
 extern void fn_801CBC30(void);
 extern void fn_801CBBBC(void);
@@ -446,7 +447,7 @@ typedef struct {
     f32 x, y;           /* 0x00 */
     f32 z;              /* 0x08 */
     f32 sx, sy;         /* 0x0C */
-    u32 colour;         /* 0x14 */
+    s32 ang;            /* 0x14 */
     void *tex;          /* 0x18 */
     Box *data;          /* 0x1C */
 } BlockSpr;
@@ -981,6 +982,63 @@ s32 fn_8021A2B0(Save1568* a, void* crew, s32 stat)
     return r;
 }
 
+typedef struct IconInfo {
+    u32 colour;
+    u8 pad4[0x1a - 4];
+    s16 icon;
+} IconInfo;
+
+extern s32 fn_8021EE1C(NJS_TEXLIST* tex, char* name);
+
+static inline s32 FindIcon(NJS_TEXLIST* tex, char* name)
+{
+    s16 idx = fn_8021EE1C(tex, name);
+    u16 uidx = idx;
+    if (tex->nbTexture <= uidx) {
+        idx = tex->nbTexture - 1;
+    }
+    return idx;
+}
+
+void fn_8021E75C(s16 x0, s16 y0, s16 x1, s16 y1, NJS_TEXLIST* tex, IconInfo* info, s32 blend, f32 z)
+{
+    DrawState state;
+    char name[16];
+    Vertex2D v[4];
+    s32 i;
+    DrawStateDefault2D(&state);
+    if (blend != 0) {
+        state.blend_src = 8;
+        state.blend_dst = 10;
+    }
+    sprintf(name, "icon3%02d", info->icon);
+    fn_80299040(tex);
+    fn_80298FE4(FindIcon(tex, name));
+    z = fn_801DBD9C(z);
+    for (i = 0; i < 4; i++) {
+        if (i < 2) {
+            v[i].x = x0;
+            v[i].u = 0.0f;
+        } else {
+            v[i].x = x1;
+            v[i].u = 0.75f;
+        }
+        if (i % 2 != 0) {
+            v[i].y = y1;
+            v[i].v = 0.75f;
+        } else {
+            v[i].y = y0;
+            v[i].v = 0.0f;
+        }
+        v[i].z = z;
+        v[i].colour = info->colour;
+    }
+    if (DrawStatePush(&state)) {
+        fn_80291064(v, 4, 1);
+        DrawStatePop(0);
+    }
+}
+
 void fn_8021EDE0(NJS_TEXLIST *p, s16 n)
 {
     u16 k = n;
@@ -991,6 +1049,68 @@ void fn_8021EDE0(NJS_TEXLIST *p, s16 n)
 }
 
 extern void* lbl_802F89A8[];
+void fn_8021EEF4(DrawState *ds, f32 v, s16 kind);
+extern void fn_80005D98(BlockSpr *obj, s32 a, s32 b, f32 z);
+extern u32 lbl_8034702C;
+
+void fn_8021F0EC(BlockTask* o)
+{
+    DrawState st;
+    f32 z;
+    Block* e = o->task.work;
+    s32 draw = 0;
+    BlockFx* c = o->fx;
+    if (lbl_8034702C == 0 && o->task.state <= 1) {
+        o->task.state = 2;
+    }
+    switch (o->task.state) {
+    case 0:
+        if (e->tex == 0 || e->w8 == 0xFFFFFFFF) {
+            o->task.state = 2;
+            break;
+        }
+        e->timer = c->e;
+        o->task.f20 = e->f48;
+        o->task.state = 1;
+        /* fall through */
+    case 1:
+        switch (c->d) {
+        case 1:
+            e->spr.sx += c->a;
+            e->spr.sy += c->b;
+            break;
+        case 0:
+            break;
+        }
+        e->f40 = e->timer * (c->c / c->e);
+        if (e->f40 <= 0.0f) {
+            e->f40 = 0.0f;
+        }
+        e->timer--;
+        if (e->timer <= 0) {
+            o->task.state = 2;
+        }
+        draw = 1;
+        break;
+    case 2:
+        o->task.state = 3;
+        break;
+    case 3:
+        o->task.flags |= 0x40;
+        break;
+    }
+    if (draw == 1) {
+        DrawStateDefault2D(&st);
+        e->spr.ang = 182.04445f * e->f44;
+        fn_8021EEF4(&st, e->f40, e->kind);
+        z = 0.01f + e->f48 - 0.001 * e->s4e;
+        if (DrawStatePush(&st)) {
+            fn_80005D98(&e->spr, 0, 0x23, fn_801DBD9C(z));
+            DrawStatePop(0);
+        }
+    }
+}
+
 void* fn_802205C8(s16 i)
 {
     return lbl_802F89A8[i];
@@ -1298,6 +1418,46 @@ Xf_80224F28 *fn_80225958(Cmp *k) {
         }
     }
     return rec;
+}
+
+static inline s16 SlotFindKey(Xf_80224F28 *p, s32 n, u16 id)
+{
+    s32 i;
+
+    for (i = 0; i < n; p++, i++) {
+        if (p->key == id) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+Xf_80224F28 *fn_80225B74(u16 key, u16 id)
+{
+    Slot *s = lbl_8034752C;
+    s32 j;
+    s32 i;
+
+    if (key != 0xffff) {
+        j = fn_80225E58(s, lbl_8034752A, key);
+        if (j >= 0) {
+            s += j;
+            j = SlotFindKey(s->p0, s->count, id);
+            if (j >= 0) {
+                return &s->p0[j];
+            }
+        }
+    } else {
+        for (i = 0; i < lbl_8034752A; s++, i++) {
+            if (s->p0 != NULL) {
+                j = SlotFindKey(s->p0, s->count, id);
+                if (j >= 0) {
+                    return &s->p0[j];
+                }
+            }
+        }
+    }
+    return NULL;
 }
 
 Xf_80224F28 *fn_80225CAC(u16 gid, u16 key, s16 n) {
@@ -4804,12 +4964,7 @@ void fn_8021BF80(Owner_8021BF80 *o, NJS_TEXLIST *arg, s32 val, s16 count, s16 ex
     }
 }
 
-typedef struct {
-    f32 x, y, z, u, v;
-    u32 colour;
-} VertexTex;
 
-extern void fn_80291064(VertexTex* v, s32 count, s32 mode);
 
 /* fn_8021EDE0 inlined: select texture n of the list, clamped to the last one. */
 static inline void SetTexture(NJS_TEXLIST* t, s16 n)
@@ -4824,7 +4979,7 @@ static inline void SetTexture(NJS_TEXLIST* t, s16 n)
 void fn_8021D648(f32 z, s16 x, s16 y, s16 mode, NJS_TEXLIST* tex, s32 blend, u32 alpha)
 {
     DrawState st;
-    VertexTex v[4];
+    Vertex2D v[4];
     f32 zz;
     f32 u0, v0;
     f32 u1, v1;
@@ -4952,7 +5107,7 @@ void fn_80226120(void)
     fn_8022642C();
 }
 
-extern void fn_8021F0EC(Task *t);
+void fn_8021F0EC(BlockTask *t);
 extern void fn_80005D98(BlockSpr *obj, s32 a, s32 b, f32 z);
 extern u32 lbl_8034702C;
 extern f32 njSin(Angle a);
@@ -5298,7 +5453,7 @@ void fn_80220074(Task *t) {
         w->spr.x = e->x + (f32)(w->spr.data->a.x / 2);
         w->spr.y = e->y + (f32)(w->spr.data->a.y / 2);
         DrawStateDefault2D(&ds);
-        w->spr.colour = (s32)(182.04445f * w->f44);
+        w->spr.ang = 182.04445f * w->f44;
         ds.colour.a = w->f40;
         ds.colour.r = 1.0f;
         ds.colour.g = 1.0f;

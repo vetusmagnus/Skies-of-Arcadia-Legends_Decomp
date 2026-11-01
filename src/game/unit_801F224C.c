@@ -76,6 +76,39 @@ void fn_801F28CC(s32 code) {
 
 extern u32 lbl_80310B3C[];
 
+typedef struct LvPair {
+    s8 id;
+    s8 lv;
+} LvPair;
+
+/* The block lbl_803474D8 points at (lbl_80313B20, set in evobj.c): (id, level) pairs at 0xB40. */
+typedef struct EvTbl {
+    u8 pad0[0xb40];
+    LvPair pairs[0x3c - 0x24]; /* 0xB40 */
+} EvTbl;
+
+extern EvTbl *lbl_803474D8;
+
+void fn_801F2E44(s32 id)
+{
+    s8 i;
+    SaveChar *e;
+    LvPair *t;
+
+    t = lbl_803474D8->pairs;
+    e = &lbl_8030B7F4.chr[id];
+    i = 0x24;
+    do {
+        s8 a = t->id;
+        s8 b = t->lv;
+        t++;
+        if (a == id && b <= e->lvMax) {
+            e->stat[i / 8] |= 1 << (i % 8);
+        }
+        i++;
+    } while (i < 0x3c);
+}
+
 s32 fn_801F39EC(s32 idx) {
     SaveChar* c;
     s32 i;

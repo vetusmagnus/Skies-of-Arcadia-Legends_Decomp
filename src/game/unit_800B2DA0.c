@@ -952,7 +952,7 @@ typedef struct {
     u8 pad184[0x1C8 - 0x184];
     void* x1c8;       /* 0x1C8 */
 } Ent_800C69CC;
-extern void fn_802275A4(NJS_TEXLIST* texlist, s32 a);
+extern s32 fn_802275A4(NJS_TEXLIST* texlist, s32 a);
 extern Task* fn_801C6180(Task* parent, void (*func)(Task*));
 extern void fn_800C6890(Task* task);
 extern void MemCopy(void* dst, const void* src, s32 size);

@@ -4683,6 +4683,31 @@ void fn_80109A4C(void) {
     }
 }
 
+static inline Entry* FindEntryKey(void* key)
+{
+    Entry* n;
+    for (n = lbl_80347460; n != NULL; n = n->next) {
+        if (fn_801E1098(key, n->name) == 0) {
+            return n;
+        }
+    }
+    return NULL;
+}
+
+void* fn_80109EEC(void* a, void* b, u16 id)
+{
+    u8 buf[0x20];
+
+    if (id != 0x7fff) {
+        fn_80224040(id, a);
+    }
+    fn_8010A278(a);
+    fn_800D2B1C(a);
+    fn_801CC434(b, 0, buf);
+    FindEntryKey(buf)->ptr = a;
+    return a;
+}
+
 void fn_8010A094(void) {
     fn_801E17E0(lbl_80346E58);
     lbl_80346E58 = NULL;

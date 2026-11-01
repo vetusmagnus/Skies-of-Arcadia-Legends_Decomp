@@ -2073,7 +2073,7 @@ extern void *fn_801C8930(void *p);
 extern f32 fn_80291A5C(f32 x);
 extern s32 fn_802254A0(NJS_POINT3 *p, EvHit *h);
 extern s32 fn_80227810(NJS_TEXLIST *t);
-extern void fn_802275A4(NJS_TEXLIST *t, s32 a);
+extern s32 fn_802275A4(NJS_TEXLIST *t, s32 a);
 extern void fn_80217830(s32 h);
 extern void fn_80100B74(Task *t);
 #define RND() (3.0517578e-05f * rand())

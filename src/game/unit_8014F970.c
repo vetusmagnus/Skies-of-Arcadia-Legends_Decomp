@@ -309,9 +309,29 @@ extern u8 *lbl_80346FD0;
 extern u8 *lbl_80346FD4;
 extern s32 lbl_803472B8;
 typedef struct Fx {
-    u8 pad0[0x34];
+    s32 mode;            /* 0x000 */
+    u8 pad4[0x34 - 4];
     f32 x34, x38, x3c, x40, x44, x48, x4c, x50, x54, x58, x5c, x60;
     f32 x64, x68, x6c, x70, x74, x78, x7c, x80, x84, x88, x8c, x90;
+    u8 pad94[0x154 - 0x94];
+    Angle *ang;          /* 0x154 */
+    NJS_POINT3 *pos;     /* 0x158 */
+    NJS_POINT3 *ofs2;    /* 0x15c */
+    NJS_POINT3 *ofs1;    /* 0x160 */
+    NJS_POINT3 *target;  /* 0x164 */
+    s32 init;            /* 0x168 */
+    Angle prev[3];       /* 0x16c */
+    Angle dir[3];        /* 0x178 */
+    u8 pad184[0x190 - 0x184];
+    NJS_POINT3 look;     /* 0x190 */
+    NJS_POINT3 eye;      /* 0x19c */
+    NJS_POINT3 at;       /* 0x1a8 */
+    Angle rot[3];        /* 0x1b4 */
+    f32 x1c0;            /* 0x1c0 */
+    NJS_POINT3 cur;      /* 0x1c4 */
+    NJS_POINT3 old;      /* 0x1d0 */
+    NJS_POINT3 oldAt;    /* 0x1dc */
+    Angle oldRot[3];     /* 0x1e8 */
 } Fx;
 extern void fn_8015184C(Fx *o);
 extern void fn_80151610(Fx *o, s32 a);
@@ -434,7 +454,7 @@ typedef struct { u32 flags; u8 pad[4]; A_8015D234 *a; } S_8015D234;
 typedef struct { u8 pad[0x1d8]; S_8015D234 *s; } Obj_8015D234;
 typedef struct { u8 pad[0x1c]; u32 cnt; } St_8015D234;
 void fn_80222964(void *p);
-void fn_80167374(void);
+void fn_80167374(void *obj);
 typedef struct { u8 pad[0x1c]; f32 f1c; u8 pad2[0x168 - 0x20]; s16 mode; u8 pad3[0x1bc - 0x16a]; void *h1bc; } A_8015D340;
 typedef struct { u32 flags; u8 pad[4]; A_8015D340 *a; } S_8015D340;
 typedef struct { u8 pad[0x1bc]; void *h1bc; u8 pad2[0x1d8 - 0x1c0]; S_8015D340 *s; } Obj_8015D340;
@@ -1775,6 +1795,30 @@ s32 fn_8015CF8C(u8 *p, u8 *q) {
     return 0;
 }
 
+s32 fn_8015D464(Obj_8015D234 *o, St_8015D234 *a) {
+    S_8015D234 *h = o->s;
+    A_8015D234 *s = h->a;
+    h->flags |= 0x100;
+    if (a->cnt == 0) {
+        s->f1c = -1.0f;
+        return 0;
+    }
+    switch (s->mode) {
+    case 0:
+        fn_80167374(o);
+        fn_80222964(s->h1bc);
+        s->h1bc = 0;
+        s->mode = 1;
+    case 1:
+        s->f1c = s->f1c - 1.0f / a->cnt;
+        if (s->f1c < -1.0f) {
+            s->f1c = -1.0f;
+            return 0;
+        }
+    }
+    return 1;
+}
+
 s32 fn_8015D688(void *unused, u8 *q) {
     s32 v = *(s32 *)(q + 0x1c) - 1;
     *(s32 *)(q + 0x1c) = v;
@@ -1821,6 +1865,28 @@ extern Row_801523A4 lbl_802E5F28[];
 extern void fn_80154C34(s32 val, s32 delay);
 extern s32 fn_80155FF0(s32, s32, s32, s32);
 extern void fn_801677D0(s32 id, s32 x, f32 f1, f32 f2, f32 f3, f32 f4, s8 k, s32 w);
+
+static inline s32 Play_80152284(s32 bank, s32 id, s32 v, s32 n, s32 b)
+{
+    s32 h = fn_80155FF0(7, id, bank, 0);
+    f32 time = n;
+    f32 scale = lbl_802E5F28[id].b;
+    fn_801677D0(h, lbl_802E5F28[id].a + 0x1c + v, 0.0f, 0.0f, 0.0f,
+                time * scale / 1000.0f, lbl_802E5F28[id].c, b);
+    fn_80154C34(lbl_802E5F28[id].d, lbl_802E5F28[id].e);
+    return h;
+}
+
+void fn_80152284(void *p)
+{
+    Obj_801523A4 *s = p;
+    if (s->x4 == 1 && s->x18 != 0 && s->x1c != 0) {
+        fn_80155FD0(s->x24);
+        s->x24 = Play_80152284(0xf, s->xc, s->x10, s->x14, s->x8);
+        s->x20 = 1;
+        s->x18 = 0;
+    }
+}
 
 static inline s32 Play_801523A4(Obj_801523A4 *o, s32 a, s32 b, s32 c)
 {
@@ -2768,7 +2834,7 @@ s32 fn_8015D234(Obj_8015D234 *o, St_8015D234 *st)
     }
     switch (a->mode) {
     case 0:
-        fn_80167374();
+        fn_80167374(o);
         fn_80222964(a->h1bc);
         a->h1bc = 0;
         s->flags |= 8;
@@ -2795,7 +2861,7 @@ s32 fn_8015D340(Obj_8015D340 *o, St_8015D340 *st)
     }
     switch (a->mode) {
     case 0:
-        fn_80167374();
+        fn_80167374(o);
         if (a->h1bc == 0) {
             fn_802229F8(o->h1bc);
             a->h1bc = o->h1bc;
@@ -4660,3 +4726,218 @@ s32 fn_80155CD8(void) {
         s->p = NULL;
     }
 }
+extern void fn_801580A4(s32 *out, f32 *v);
+
+/* (1 - c) * d, computed in double and stored as a float. */
+static inline f32 Ease(f32 c, f32 d)
+{
+    return (1.0 - c) * d;
+}
+
+/* Degrees to an angle. */
+static inline s32 DegAng(f32 d)
+{
+    return 65536.0f * d / 360.0f;
+}
+
+static inline s32 AngNorm(u16 a)
+{
+    s32 v = a;
+
+    return v >= 0x8000 ? -(0x10000 - v) : v;
+}
+
+void fn_8015184C(Fx *o)
+{
+    f32 px;
+    f32 py;
+    f32 pz;
+    f32 da0;
+    f32 da1;
+    f32 db0;
+    f32 db1;
+    f32 d;
+    f32 c;
+    f32 b;
+    f32 a;
+    f32 lx;
+    f32 ly;
+    f32 lz;
+    s32 a2;
+    s32 a1;
+    s32 a0;
+    s32 b0;
+    s32 b1;
+    s32 b2;
+    s32 e0;
+    s32 e1;
+    NJS_POINT3 w;
+    NJS_POINT3 v;
+    s32 ang2[3];
+    s32 dir[3];
+    NJS_POINT3 dv;
+
+    d = o->x44 / 100.0f;
+    c = o->x48 / 100.0f;
+    b = o->x58 / 100.0f;
+    a = o->x40 / 100.0f;
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    px = o->pos->x;
+    py = o->pos->y;
+    pz = o->pos->z;
+    v.x = o->x38;
+    v.y = o->x3c;
+    v.z = o->x34;
+    if (o->ofs1 != NULL) {
+        v.x += o->ofs1->x;
+        v.y += o->ofs1->y;
+        v.z += o->ofs1->z;
+    }
+    if (o->ofs2 != NULL) {
+        v.x += o->ofs2->x;
+        v.y += o->ofs2->y;
+        v.z += o->ofs2->z;
+    }
+    njUnitMatrix(NULL);
+    njRotateZXY(NULL, o->ang[0], o->ang[1], o->ang[2]);
+    njCalcPoint(NULL, &v, &w);
+    px += w.x;
+    py += w.y;
+    pz += w.z;
+    if (o->target != NULL && 0.0f != a) {
+        px = a * (o->target->x - px) + px;
+        py = a * (o->target->y - py) + py;
+        pz = a * (o->target->z - pz) + pz;
+    }
+    if (o->init != 0 && 0.0 != d) {
+        if (1.0 == d) {
+            px = o->eye.x;
+            py = o->eye.y;
+            pz = o->eye.z;
+        } else {
+            px = (1.0 - d) * (px - o->eye.x) + o->eye.x;
+            py = (1.0 - d) * (py - o->eye.y) + o->eye.y;
+            pz = (1.0 - d) * (pz - o->eye.z) + o->eye.z;
+        }
+    }
+    o->eye.x = px;
+    o->eye.y = py;
+    o->eye.z = pz;
+    a0 = AngNorm(o->ang[0]);
+    a1 = AngNorm(o->ang[1]);
+    a2 = AngNorm(o->ang[2]);
+    if (o->init != 0) {
+        e0 = a0 - o->prev[0];
+        e1 = a1 - o->prev[1];
+        e0 = AngNorm(e0);
+        e1 = AngNorm(e1);
+        da0 = e0;
+        da1 = e1;
+    }
+    o->prev[0] = a0;
+    o->prev[1] = a1;
+    o->prev[2] = a2;
+    dv.x = o->target->x;
+    dv.y = o->target->y;
+    dv.z = o->target->z;
+    dv.x -= o->pos->x;
+    dv.y -= o->pos->y;
+    dv.z -= o->pos->z;
+    fn_801580A4(dir, &dv.x);
+    b0 = AngNorm(dir[0]);
+    b1 = AngNorm(dir[1]);
+    b2 = AngNorm(dir[2]);
+    if (o->init != 0) {
+        e0 = b0 - o->dir[0];
+        e1 = b1 - o->dir[1];
+        db0 = AngNorm(e0);
+        db1 = AngNorm(e1);
+    }
+    o->dir[0] = b0;
+    o->dir[1] = b1;
+    o->dir[2] = b2;
+    if (b) {
+        c *= 1.0 - b / 100.0f;
+    }
+    {
+    s32 rot[3] = {0, 0, 0};
+    NJS_POINT3 u;
+    NJS_POINT3 w2;
+    NJS_POINT3 d3;
+
+    switch (o->mode) {
+    case 0:
+        rot[0] = a0;
+        rot[1] = a1;
+        rot[2] = a2;
+        o->x4c -= 360.0f * Ease(c, da0) / 65536.0f;
+        o->x50 -= 360.0f * Ease(c, da1) / 65536.0f;
+        rot[0] = a0 + DegAng(o->x4c);
+        rot[1] = a1 + DegAng(o->x50);
+        break;
+    case 1:
+        rot[0] = b0;
+        rot[1] = b1;
+        rot[2] = b2;
+        o->x4c -= 360.0f * Ease(c, db0) / 65536.0f;
+        o->x50 -= 360.0f * Ease(c, db1) / 65536.0f;
+        rot[0] = b0 + DegAng(o->x4c);
+        rot[1] = b1 + DegAng(o->x50);
+        break;
+    }
+    njUnitMatrix(NULL);
+    njTranslate(NULL, px, py, pz);
+    njRotateZXY(NULL, rot[0], rot[1], 0);
+    if (b < 1.0) {
+        u.x = 0.0f;
+        u.y = 0.0f;
+        u.z = o->x54;
+        njCalcPoint(NULL, &u, &w2);
+        if (o->init != 0 && 0.0 != b) {
+            lx = (1.0 - b) * (w2.x - o->look.x) + o->look.x;
+            ly = (1.0 - b) * (w2.y - o->look.y) + o->look.y;
+            lz = (1.0 - b) * (w2.z - o->look.z) + o->look.z;
+        } else {
+            lx = w2.x;
+            ly = w2.y;
+            lz = w2.z;
+        }
+        o->look.x = lx;
+        o->look.y = ly;
+        o->look.z = lz;
+    } else {
+        lx = o->look.x;
+        ly = o->look.y;
+        lz = o->look.z;
+    }
+    ly += o->x5c;
+    d3.x = px - lx;
+    d3.y = py - ly;
+    d3.z = pz - lz;
+    fn_801580A4(ang2, &d3.x);
+    o->old.x = o->cur.x;
+    o->old.y = o->cur.y;
+    o->old.z = o->cur.z;
+    o->cur.x = px;
+    o->cur.y = py;
+    o->cur.z = pz;
+    o->oldAt.x = o->at.x;
+    o->oldAt.y = o->at.y;
+    o->oldAt.z = o->at.z;
+    o->at.x = lx;
+    o->at.y = ly;
+    o->at.z = lz;
+    o->oldRot[0] = o->rot[0];
+    o->oldRot[1] = o->rot[1];
+    o->oldRot[2] = o->rot[2];
+    o->rot[0] = ang2[0];
+    o->rot[1] = ang2[1];
+    o->rot[2] = ang2[2];
+    o->x1c0 = o->x60;
+    o->init = 1;
+    njPopMatrixEx();
+    }
+}
+

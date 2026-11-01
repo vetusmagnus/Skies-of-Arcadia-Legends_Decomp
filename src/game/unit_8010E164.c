@@ -8210,6 +8210,70 @@ static inline void StopSe(EvObj *o) {
     }
 }
 
+extern f32 lbl_80346E74;
+void fn_8011816C(EvObj *self, EvColl *out);
+
+void fn_80112BB4(EvObj *o)
+{
+    s32 a;
+    s32 b;
+    s32 ok;
+    s32 se;
+    f32 i;
+
+    o->speed = 1.0f;
+    fn_801189F0(o);
+    switch (o->x172) {
+    case 0:
+        lbl_80346E74 = 0.0f;
+        o->x172 = 0x10;
+    case 0x10:
+        a = lbl_80311A60[0]->x;
+        if (a > 0x20) {
+            o->ang[1] += 0x2D8;
+            o->tgt[1] = o->ang[1];
+        } else if (a < -0x20) {
+            o->ang[1] -= 0x2D8;
+            o->tgt[1] = o->ang[1];
+        }
+        b = lbl_80311A60[0]->y;
+        if (b > 10) {
+            ok = SameSe(0x1d);
+            if (!(o->x1ec == 1 && ok == 0)) {
+                if (o->x1ec == 1 && ok != 0) StopSe(o);
+                o->x23c = SePlay(15, 5, 0x1D);
+                lbl_80346E71 = 5;
+                lbl_80346E70 = 0x1D;
+                o->x1ec = 1;
+            }
+            fn_801E7414(0x20, o);
+            if (o->x19c == 1) {
+                for (i = 0.0f; i <= 1.0f; i += 0.1f) {
+                    o->pos.y -= 0.1f;
+                    fn_8011816C(o, o->coll);
+                    if (o->motionId == 0xE) {
+                        break;
+                    }
+                }
+                lbl_80346E74 = lbl_80346E74 - i;
+                if (lbl_80346E74 < -3.0f) {
+                    o->motionId = 0xD;
+                    o->x172 = 0;
+                }
+            }
+        } else if (b < -0x40) {
+            StopSe(o);
+            o->motionId = 0xD;
+            o->x172 = 0;
+        } else {
+            StopSe(o);
+            fn_801E7414(0x1E, o);
+        }
+        break;
+    }
+}
+
+
 void fn_80112868(EvObj *o) {
     f32 t, lim, step;
     s32 diff;

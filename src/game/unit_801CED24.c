@@ -1,6 +1,7 @@
 #include "types.h"
 #include <string.h>
 #include "game/drawstate.h"
+#include "game/text.h"
 extern s32 lbl_80347228;
 extern u32 lbl_80347230;
 extern u32 lbl_8034723C;
@@ -52,7 +53,8 @@ typedef struct { s32 id; u8 pad4[4]; s8 x8; } Cur;
 extern Cur lbl_80311AC0;
 extern u32 lbl_80310B3C[];
 extern f32 lbl_80308CE0[4];
-extern u8 *lbl_80308CF0[0x40]; /* the display lists drawn this frame */
+extern u8 *lbl_80308CF0[0x40];
+/* the display lists drawn this frame */
 extern s32 lbl_80347270;
 extern s32 lbl_80347274;
 extern void fn_8029CFF8(s32 a);
@@ -60,6 +62,29 @@ extern s32 lbl_8034721C;
 extern void GXResetWriteGatherPipe(void);
 extern s32 DVDGetDriveStatus(void);
 extern u32 lbl_80347268;
+typedef struct Line { s16 x; s16 y; char str[0x40]; } Line;
+extern Line lbl_802F60E8[][3];
+extern void *lbl_8034769C;
+extern void *lbl_803476A0;
+extern void *lbl_803476A4;
+void fn_801D6C3C(s32 a);
+void fn_801DC420(void);
+void fn_801DBA58(u32 a, u32 b, u32 c);
+void fn_801D6E58(void);
+void fn_801D74FC(void);
+void fn_801C7904(void);
+void fn_801DBF94(s32 a);
+void fn_801C6224(void);
+void fn_801C621C(void);
+s32 fn_801D168C(void);
+s32 fn_801DBCCC(void);
+void fn_8024E020(void);
+void fn_801CAE90(void);
+void fn_801D71C4(void);
+void fn_80217CB0(void);
+void sndQuit(void);
+void fn_80005954(void *p);
+void OSResetSystem(s32 a, s32 b, s32 c);
 
 void fn_801CED24(u32 a, u32 b, u32 c, f32 d, u32 e)
 {
@@ -1204,4 +1229,56 @@ s32 fn_801D168C(void) {
     default:
         return -1;
     }
+}
+
+s32 fn_801D150C(void) {
+    s32 sel;
+    Line *l;
+    s32 running = 1;
+    s32 i;
+    f32 z = TextGetZ();
+    TextSetZ(-1.0f);
+    TextPushColor();
+    TextSetColor(-1);
+    fn_801D6C3C(0);
+    while (running != 0) {
+        fn_801DC420();
+        fn_801DBA58(0xff000000, 0xff000000, 0xff000000);
+        fn_801D6E58();
+        fn_801D74FC();
+        fn_801C7904();
+        fn_801DBF94(1);
+        fn_801C6224();
+        fn_801C621C();
+        sel = fn_801D168C();
+        if (sel != -1) {
+            l = lbl_802F60E8[sel];
+            for (i = 0; i < 3; i++, l++) {
+                TextPrint(l->x, l->y, l->str);
+            }
+            TextFlush();
+        }
+        if (sel == -1) {
+            running = 0;
+        }
+        if (fn_801DBCCC() == 0) {
+            fn_8024E020();
+            fn_8024E020();
+            fn_8024E020();
+            fn_801CAE90();
+            fn_801D71C4();
+            fn_80217CB0();
+            sndQuit();
+            fn_80005954(heap_font);
+            fn_80005954(heap_main);
+            fn_80005954(lbl_8034769C);
+            fn_80005954(lbl_803476A0);
+            fn_80005954(lbl_803476A4);
+            OSResetSystem(1, 0, 0);
+            for (;;) {}
+        }
+    }
+    TextPopColor(1);
+    TextSetZ(z);
+    return 0;
 }
