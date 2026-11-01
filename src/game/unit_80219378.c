@@ -1623,6 +1623,31 @@ void fn_8022B808(Obj *o) {
     }
 }
 
+typedef struct Frame_802F92D8 { u8 pad0[8]; void *f8; u8 pad1[0xc]; } Frame_802F92D8;
+extern Frame_802F92D8 lbl_802F92D8;
+extern s32 fn_80212050(void);
+extern void fn_801228A0(s32 v);
+
+void fn_8022B8BC(s32 mode, void *val) {
+    if (lbl_80310B3C.f88 & 0x10) {
+        s32 r = fn_80212050();
+        switch (mode) {
+        case 0:
+            lbl_802F92D8.f8 = val;
+            fn_801228A0(r);
+            break;
+        case 1:
+            lbl_802F92D8.f8 = val;
+            fn_801228A0(r);
+            break;
+        default:
+            lbl_802F92D8.f8 = val;
+            fn_801228A0(r);
+            break;
+        }
+    }
+}
+
 void fn_8022B960(void *p)
 {
     lbl_80347EB4 = lbl_80347EB0;
