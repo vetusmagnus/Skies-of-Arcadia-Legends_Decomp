@@ -1545,6 +1545,40 @@ void fn_801DAE18(RelocTbl *t, u32 off) {
     }
 }
 
+s32 fn_801DB5F8(Task *o)
+{
+    s32 i;
+    MldWork *w;
+
+    for (i = 0; i < 16; i++) {
+        if (lbl_80312D00[i] == o) {
+            break;
+        }
+    }
+    if (i >= 16) {
+        return 0;
+    }
+    w = o->work;
+    return w->w14;
+}
+
+void fn_801DB764(Task *o)
+{
+    s32 i;
+    MldWork *w;
+
+    for (i = 0; i < 16; i++) {
+        if (lbl_80312D00[i] == o) {
+            break;
+        }
+    }
+    if (i >= 16) {
+        return;
+    }
+    w = o->work;
+    w->w10 = 1;
+}
+
 void fn_801DBA0C(void) {
     lbl_80312D00[0] = 0;
     lbl_80312D00[1] = 0;
