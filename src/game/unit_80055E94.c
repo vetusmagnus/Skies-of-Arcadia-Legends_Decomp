@@ -126,7 +126,7 @@ typedef struct {
 } Elem;
 typedef struct ChrState { s32 x0; s8 x4; u8 pad5; s16 x6; s8 x8; u8 pad9[4]; u8 xd; u8 xe; u8 padf[0x11]; } ChrState;
 extern ChrState lbl_80309174[12];
-typedef struct Row16 { u8 pad[4]; u8 x4; u8 pad5[3]; s8 x8; u8 pad9[7]; } Row16;
+typedef struct Row16 { u8 pad[4]; s8 x4; u8 pad5[3]; s8 x8; u8 pad9[7]; } Row16;
 extern Row16 lbl_80309730[12];
 typedef NJS_POINT3 Vec3;
 typedef struct Ent { s32 x0; u32 x4; s32 x8; s32 xc; } Ent;
@@ -316,7 +316,7 @@ typedef struct P_80065F1C {
     s32 x0c;
     u8 pad10[0x2c - 0x10];
     void *x2c;
-    s32 x30;
+    void *x30;
 } P_80065F1C;
 typedef struct W5C188 {
     M5D8F8 *mdl;        /* 0x00 */
@@ -1271,7 +1271,7 @@ extern s16 lbl_8034736A;
 extern s32 lbl_80346A90;
 extern u32 lbl_80347364;
 void fn_80217380(s32 a);
-extern void fn_80008308(void *o, s32 v);
+extern void fn_80008308(void *o, void *v);
 void fn_80065AB0(T5C188 *o, s16 v);
 typedef struct Src_80064C00 {
     u8 pad0[0x14];
@@ -2104,6 +2104,38 @@ void fn_800581B8(O581B8 *o) {
     }
     s->cnt = s->cnt + 1;
     fn_80037FD8(s->d, &o->state);
+}
+
+s32 fn_8006E898(char* s);
+typedef struct Out_800593AC { u8 pad[0x10]; s16 x10; } Out_800593AC;
+typedef struct Nd_800593AC { u8 pad[0x24]; Out_800593AC *work; } Nd_800593AC;
+extern s32 fn_80008F08(void *, s32, s32, s32, s32, s32, void **);
+extern void fn_800308FC(char *, s16, s16);
+extern void fn_8025F120(void *dst, char *src);
+extern void fn_800594CC(void *);
+
+s32 fn_800593AC(T5C188 *t) {
+    U5C188 *s = t->work->u;
+    void *found;
+    char buf[0x10];
+    s8 v;
+    Nd_800593AC *n;
+    if (fn_80008F08(t->work->x10->x30, s->kind, s->sub, 0x49, 3, 2, &found) != 0) {
+        v = lbl_80309730[s->id].x4;
+        if (lbl_80309700[v] != 0) {
+            fn_800308FC(buf, lbl_80309700[v]->work->x2, lbl_80309700[v]->work->x0);
+        }
+        if (fn_8006E898(buf) != 0) {
+            return 0;
+        }
+        n = fn_802268E8(lbl_803475A8, fn_800594CC);
+        fn_80061F58(&n->work, 0x18, 0);
+        fn_8025F120(n->work, buf);
+        n->work->x10 = v;
+        lbl_8030A10C.f6c |= 0x80000000;
+        return 1;
+    }
+    return 0;
 }
 
 void fn_8005A7B8(PartTask* node)
@@ -7349,7 +7381,7 @@ typedef struct PosTbl {
 } PosTbl;
 extern PosTbl lbl_803097F0;
 extern void fn_80018764(void *, f32 *, f32 *);
-extern s16 fn_80008694(T5C188 *, s32, s32, s32);
+extern s16 fn_80008694(T5C188 *, s32, s32, void *);
 extern void fn_80018798(T5C188 *);
 extern s8 fn_8001ECB4(T5C188 *, s16, s16 *, s16);
 extern void fn_8001EBA4(T5C188 *, s16);
