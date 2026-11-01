@@ -544,15 +544,8 @@ typedef struct {
     u16 flags;      /* 0x24 */
 } Src;
 extern Row lbl_802E1154[];
-typedef struct HitObj {
-    u8 pad0[0x24];
-    u16 x24;
-    u8 pad26[0xA];
-    u16 x30;
-    u8 pad32[2];
-} HitObj;
 extern u32 lbl_8030A3C8[];
-extern int fn_802256A0(f32 *pos, HitObj *obj, u32 mask, u32 id);
+extern int fn_802256A0(f32 *pos, EvHit *obj, u32 mask, u32 id);
 typedef struct Chr {
     u8 pad0[0x1B8];
     void *x1b8;
@@ -571,26 +564,20 @@ extern s32 fn_801DD4C4(f32 x, f32 z);
 extern void fn_801DCE18(f32 *in, f32 *out, s32 ang);
 s32 fn_801157E4(f32 *out, f32 *from, f32 *to, void *a);
 extern u32 fn_80222E00(s32 a, void *p);
-typedef struct PosBlk {
-    NJS_POINT3 pos;
-    u8 pad0[4];
-    Angle ang;
-    u8 pad[0x24 - 0x14];
-} PosBlk;
 extern u8 lbl_8030A35C[];
 extern void njRotateY(NJS_MATRIX m, Angle y);
-extern int fn_80116B84(int n, PosBlk *blk, void *tbl, void *p);
+extern int fn_80116B84(int n, Xf *blk, void *tbl, void *p);
 typedef struct Chr_80116F2C {
     u8 pad0[0x38];
-    PosBlk cur;
+    Xf cur;
     u8 pad5C[0x104 - 0x5C];
-    PosBlk prev;
+    Xf prev;
     u8 pad128[0x1B8 - 0x128];
     void *x1b8;
 } Chr_80116F2C;
 extern f32 lbl_80347434;
-extern int fn_801169D4(int sel, PosBlk *pos, void *p, f32 maxd, f32 step);
-extern int fn_80117088(PosBlk *a, PosBlk *b, f32 x, f32 y, f32 z, void *p);
+extern int fn_801169D4(int sel, Xf *pos, void *p, f32 maxd, f32 step);
+extern int fn_80117088(Xf *a, Xf *b, f32 x, f32 y, f32 z, void *p);
 typedef struct Tbl {
     u8 pad0[0x10];
     u32 x10;
@@ -1974,7 +1961,7 @@ typedef struct {
     u8 pad44[0x1bc - 0x44];
     void* x1bc;
 } Chr_80114950;
-extern int fn_80115A4C(f32* pos, u16* out, HitObj* obj);
+extern int fn_80115A4C(f32* pos, u16* out, EvHit* obj);
 extern f32 lbl_80305DF8[8];
 /* last 4 (x, z) samples */
 extern s32 lbl_80346EA0;
@@ -4841,10 +4828,10 @@ s32 fn_80114B24(s32 a, NJS_POINT3 *p, Src *src, f32 y) {
     return r;
 }
 
-int fn_80115A4C(f32 *pos, u16 *out, HitObj *obj) {
+int fn_80115A4C(f32 *pos, u16 *out, EvHit *obj) {
     f32 a[3];
     f32 b[3];
-    HitObj tmp;
+    EvHit tmp;
     int hit;
     int r = 1;
 
@@ -4870,14 +4857,14 @@ int fn_80115A4C(f32 *pos, u16 *out, HitObj *obj) {
         if (a[1] > pos[1]) {
             pos[1] = a[1];
             if (out != 0) {
-                *out = obj->x24;
+                *out = obj->h24;
             }
         }
     } else if (hit == 2) {
         if (b[1] < pos[1]) {
             pos[1] = b[1];
             if (out != 0) {
-                *out = tmp.x24;
+                *out = tmp.h24;
             }
         }
     } else {
@@ -4936,11 +4923,11 @@ int fn_80115EAC(Chr *chr, f32 *from, f32 *to) {
     return r;
 }
 
-int fn_801169D4(int sel, PosBlk *pos, void *p, f32 maxd, f32 step) {
+int fn_801169D4(int sel, Xf *pos, void *p, f32 maxd, f32 step) {
     f32 x = 0.0f;
     f32 z = x;
     NJS_MATRIX m;
-    PosBlk buf;
+    Xf buf;
     NJS_POINT3 v;
     NJS_POINT3 out;
     f32 d;
@@ -4957,7 +4944,7 @@ int fn_801169D4(int sel, PosBlk *pos, void *p, f32 maxd, f32 step) {
     y = 0.0f;
     for (d = step; d <= maxd; d += step) {
         njUnitMatrix(m);
-        njRotateY(m, pos->ang);
+        njRotateY(m, pos->ang[1]);
         v.x = x * d;
         v.y = y * d;
         v.z = z * d;
@@ -4976,7 +4963,7 @@ int fn_801169D4(int sel, PosBlk *pos, void *p, f32 maxd, f32 step) {
 }
 
 int fn_80116F2C(Chr_80116F2C *chr) {
-    PosBlk tmp;
+    Xf tmp;
     int r;
 
     MemCopy(&tmp, &chr->cur, 0x24);
@@ -8068,7 +8055,7 @@ void fn_8010F3A8(Obj_8010F3A8* o) {
 
 s32 fn_80114950(Chr_80114950* o) {
     f32 p[3];
-    HitObj h;
+    EvHit h;
     s32 r;
 
     p[0] = o->pos.x;
@@ -9173,10 +9160,10 @@ s32 fn_80114A44(s32 id, NJS_POINT3* p, f32 y, Flags* info)
     return 0;
 }
 
-int fn_80117088(PosBlk *a, PosBlk *b, f32 x, f32 y, f32 z, void *p) {
+int fn_80117088(Xf *a, Xf *b, f32 x, f32 y, f32 z, void *p) {
     NJS_MATRIX m;
     NJS_POINT3 v;
-    PosBlk tmp;
+    Xf tmp;
     f32 len;
     f32 ang;
 
@@ -9189,7 +9176,7 @@ int fn_80117088(PosBlk *a, PosBlk *b, f32 x, f32 y, f32 z, void *p) {
     v.y = 0.0f;
     MemCopy(&tmp, b, 0x24);
     {
-        f32 d = 0.005493164f * b->ang;
+        f32 d = 0.005493164f * b->ang[1];
         ang = x + d;
         y += d;
     }
