@@ -4502,14 +4502,14 @@ void fn_801006C0(void* p) {
     fn_800D2924(p);
 }
 
-extern void fn_800D2C60(Msg*, s16);
-void fn_801006E0(Msg* a, s16 i) {
-    fn_800D2C60(a, i);
+extern void fn_800D2C60(f32 a, f32 b);
+void fn_801006E0(f32 a, f32 b) {
+    fn_800D2C60(a, b);
 }
 
-extern void fn_800D2C74(Msg*, s16);
-void fn_80100700(Msg* a, s16 i) {
-    fn_800D2C74(a, i);
+extern void fn_800D2C74(u32 v);
+void fn_80100700(u32 v) {
+    fn_800D2C74(v);
 }
 
 void fn_80100720(s8 x) {

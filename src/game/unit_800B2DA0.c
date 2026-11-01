@@ -4876,6 +4876,72 @@ extern s32 fn_8020F934(s32 id);
 s32 fn_800CCCA4(u32 a, u32 b, u32 c);
 s32 fn_800CD0B8(s32 a, s32 b, s32 c, s32 d);
 
+s32 fn_800C8D90(void);
+extern f32 fn_80090598(f32 x, s32 cx, f32 z, s32 cz);
+extern void fn_80100700(u32 col);
+extern void fn_801006E0(f32 a, f32 b);
+
+/* The colour-zone object's info record is a float table (7 zones of 7 words, then the fallback). */
+static inline f32* ZoneInfo(EvObj* e) {
+    return e->ext->info;
+}
+
+void fn_800D5348(Task* o) {
+    EvObj* w = o->work;
+    f32* p = ZoneInfo(w) + 1;
+    if (fn_800C8D90() != 0) {
+        o->state = 0xFF;
+    }
+    if (lbl_80347450 != 0 && (o->state == 0xFF || lbl_803473A8 != 0)) {
+        switch (o->state) {
+        case 0: {
+            f32 sum = 0.0f;
+            f32 a0 = sum;
+            f32 a1 = sum;
+            f32 a2 = sum;
+            f32 a3 = sum;
+            f32 a4 = sum;
+            f32 cx = lbl_80347450->pos.x;
+            f32 cz = lbl_80347450->pos.z;
+            u32 r, g, b;
+            if (lbl_80347450->pos.y > -150.0f) {
+                s32 i = 0;
+                do {
+                    f32 wt = fn_80090598(cx, p[0], cz, p[1]);
+                    a0 = wt * p[2] + a0;
+                    sum = sum + wt;
+                    a1 = wt * p[3] + a1;
+                    a2 = wt * p[4] + a2;
+                    a3 = wt * p[5] + a3;
+                    a4 = wt * p[6] + a4;
+                    p += 7;
+                    i++;
+                } while (i < 7);
+                a0 = a0 / sum;
+                a1 = a1 / sum;
+                r = a2 / sum;
+                g = a3 / sum;
+                b = a4 / sum;
+            } else {
+                a0 = p[51];
+                a1 = p[52];
+                r = p[53];
+                g = p[54];
+                b = p[55];
+            }
+            fn_80100700(0xFF000000 | (r << 16) | (g << 8) | b);
+            fn_801006E0(a0, a1);
+            break;
+        }
+        case 1:
+            break;
+        case 0xFF:
+            fn_80100B74(o);
+            break;
+        }
+    }
+}
+
 void fn_800D6618(MapTask *t)
 {
     EvObj *e = t->work;
