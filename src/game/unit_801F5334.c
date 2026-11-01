@@ -1831,7 +1831,7 @@ s32 fn_80207368(u32 a, Scpt *st) {
     return 0;
 }
 
-extern s16 fn_80207830(s32, Scpt *);
+extern s16 fn_80207830(u16, Scpt *);
 extern s32 fn_80210F74(Scpt *s);
 extern u32 fn_802107A4(Scpt *s, s32 id);
 void fn_80207738(s32 a, s32 b)
@@ -1858,7 +1858,7 @@ void fn_80207738(s32 a, s32 b)
     }
 }
 
-extern s16 fn_80209028(s32, Scpt *);
+extern s16 fn_80209028(u16, Scpt *);
 extern void fn_801165BC(s32 v);
 
 s32 fn_80207C2C(u16 flags, Scpt *s)
@@ -1907,7 +1907,53 @@ void fn_80208F30(s32 a, s32 b)
     }
 }
 
-extern s16 fn_80209330(s32, Scpt *);
+extern s16 fn_80209330(u32, Scpt *);
+s16 fn_80209028(u16 f, Scpt* s) {
+    ScptCur cur;
+    Work801F8* w;
+    s32 b;
+    u32 n;
+    s32 a;
+    u32 i;
+    
+    if (f & 1) {
+        cur.f = s->cur.f;
+        a = *cur.u++;
+        b = ReadInt(&cur.f);
+        n = *cur.u++;
+        if (n == 0x10000) {
+            fn_80208F30(a, b);
+            return 0;
+        }
+        for (i = 0; i < n; i++) {
+            w = fn_801E1A2C(1, 0x44);
+            if (w == NULL) fn_801DBE1C("ClF malloc failed %d", i);
+            s->work.p = w;
+            w->ev.hd.kind = 0;
+            w->n = ReadInt(&cur.f);
+            w->x1c = b;
+            fn_80211058(s, 6, w->n, 30, lbl_8030CEA0.x08, &w->ev);
+            s->kind = 1;
+            s->cnt = 0;
+            fn_80210F74(s);
+        }
+        s->cur.f = cur.f;
+        return 0;
+    }
+    if (f & 2) {
+        w = s->work.p;
+        if (s->handle == 0) {
+            s->handle = fn_800CD0B8(s->a20, s->a24, s->a28, s->a2c);
+            s->cnt += 1;
+            if (s->cnt == 5) fn_801DBE1C("scptClF: message post time out");
+        } else if (w->ev.hd.kind == 2) {
+            return 0;
+        }
+    }
+    if (f & 8) return 1;
+    return 1;
+}
+
 void fn_80209238(s32 a, s32 b)
 {
     Scpt s;
@@ -2657,6 +2703,62 @@ s16 fn_8020660C(u16 f, Scpt* s) {
         else fn_80097318(0);
     }
     return (f >> 3) & 1;
+}
+
+s16 fn_80209330(u32 flags, Scpt *s)
+{
+    u16 f = flags;
+    ScptCur cur;
+    Work801F8 *w;
+    if (flags & 1) {
+        Work801F8 *w;
+        Work801F8 *lw;
+        s32 b;
+        u32 n;
+        u32 a;
+        u32 i;
+        cur = s->cur;
+        a = *cur.u++;
+        b = ReadInt(&cur.f);
+        n = *cur.u++;
+        if (n == 0x10000) {
+            fn_80209238(a, b);
+            return 0;
+        }
+        for (i = 0; i < n; i++) {
+            lw = fn_801E1A2C(1, 0x44);
+            if (lw == NULL) {
+                fn_801DBE1C("fin: malloc failed %d", i);
+            }
+            s->work.work801F8 = lw;
+            lw->ev.hd.kind = 0;
+            lw->n = ReadInt(&cur.f);
+            lw->x1c = b;
+            fn_80211058(s, 6, lw->n, 0x1d, lbl_8030CEA0.x08, &lw->ev);
+            s->kind = 1;
+            s->cnt = 0;
+            fn_80210F74(s);
+        }
+        s->cur = cur;
+        return 0;
+    }
+    if (f & 2) {
+        w = s->work.work801F8;
+        if (s->handle == 0) {
+            s->handle = fn_800CD0B8(s->a20, s->a24, s->a28, s->a2c);
+            s->cnt += 1;
+            if (s->cnt == 5) {
+                fn_801DBE1C("scptFin: message post time out");
+            }
+        }
+        if (w->ev.hd.kind == 2) {
+            return 0;
+        }
+    }
+    if (f & 8) {
+        return 1;
+    }
+    return 1;
 }
 
 s32 fn_80209548(u32 flags, Scpt* s) {
@@ -6815,6 +6917,51 @@ static inline void ReleaseAll(void)
             fn_8020F934(lbl_8030CEA0.ent[i][1]);
         }
     }
+}
+
+s16 fn_80207830(u16 f, Scpt* s) {
+    ScptCur cur;
+    Work801F8* w;
+    s32 b;
+    u32 n;
+    s32 a;
+    u32 i;
+    if (f & 1) {
+        cur.f = s->cur.f;
+        a = *cur.u++;
+        b = ReadInt(&cur.f);
+        n = *cur.u++;
+        if (n == 0x10000) {
+            fn_80207738(a, b);
+            return 0;
+        }
+        for (i = 0; i < n; i++) {
+            w = fn_801E1A2C(1, 0x44);
+            if (w == NULL) fn_801DBE1C("Cl malloc failed %d", i);
+            s->work.p = w;
+            w->ev.hd.kind = 0;
+            w->n = ReadInt(&cur.f);
+            w->x1c = b;
+            fn_80211058(s, 6, w->n, 15, lbl_8030CEA0.x08, &w->ev);
+            s->kind = 1;
+            s->cnt = 0;
+            fn_80210F74(s);
+        }
+        s->cur.f = cur.f;
+        return 0;
+    }
+    if (f & 2) {
+        w = s->work.p;
+        if (s->handle == 0) {
+            s->handle = fn_800CD0B8(s->a20, s->a24, s->a28, s->a2c);
+            s->cnt += 1;
+            if (s->cnt == 5) fn_801DBE1C("scptCl: message post time out");
+        } else if (w->ev.hd.kind == 2) {
+            return 0;
+        }
+    }
+    if (f & 8) return 1;
+    return 1;
 }
 
 s32 fn_80207A40(u32 flags, Scpt* s)
