@@ -315,7 +315,7 @@ typedef struct Out {
     u8 pad88[0x8c - 0x88];
     u32 w8c;
 } Out;
-extern u32 fn_800A1AE8(void *s, s32 a);
+extern s32 fn_800A1AE8(void *s, s32 a);
 extern void *fn_800A1ABC(void *s, s32 a);
 extern s32 fn_800A10A8(void *a, u32 b, u32 c);
 typedef struct X_800BD904 {
@@ -3698,6 +3698,125 @@ void fn_800B8028(EvObj* obj) {
     }
     if (obj->x20a > 0xff) {
         obj->x20a -= 0x1fe;
+    }
+}
+
+/* The game's field-map model object (see model.c and evobj.c): the player (lbl_80347450), the work of
+ * the story-event, map-object and sparkle tasks and of the field camera tasks. Only the fields the
+ * decompiled code uses are named. */
+struct NJS_MOTION;
+
+
+
+
+
+
+
+
+
+
+
+#define FREE(p) if ((p) != NULL) { fn_801E1784(p); (p) = NULL; }
+
+
+void fn_800B847C(EvObj* obj) {
+    TrailNode* head = obj->x25c;
+    TrailNode* n;
+    TrailNode* p;
+    TrailNode* prev;
+    NJS_POINT3 outA;
+    NJS_POINT3 outB;
+    NJS_POINT3 inA;
+    NJS_POINT3 inB;
+    NJS_MATRIX m;
+    EvInfoTrail* info;
+    s32 i;
+    u32 fade;
+    s32 seg;
+
+    n = fn_801E1A2C(1, 0x5c);
+    n->p0 = obj->x24c;
+    n->p1 = n->p0;
+    n->p2 = n->p0;
+    info = obj->ext->info;
+    inA.x = info->offA.x;
+    inA.y = info->offA.y;
+    inA.z = info->offA.z;
+    inB.x = info->offB.x;
+    inB.y = info->offB.y;
+    inB.z = info->offB.z;
+    njUnitMatrix(m);
+    njRotateXYZ(m, obj->x20c, obj->x210, obj->x214);
+    njCalcPoint(m, &inA, &outA);
+    njCalcPoint(m, &inB, &outB);
+    n->p1.x += outA.x;
+    n->p1.y += outA.y;
+    n->p1.z += outA.z;
+    n->p2.x += outB.x;
+    n->p2.y += outB.y;
+    n->p2.z += outB.z;
+    i = 1;
+    info = obj->ext->info;
+    if (info->life > i) {
+        info = obj->ext->info;
+        n->alpha = (255.0f / info->life * i);
+    } else {
+        n->alpha = 255;
+    }
+    n->x4c = 0;
+    n->x48 = fn_800A10A8(fn_800A1ABC(obj, 0x26), 0, fn_800A1AE8(obj, 0x26)) - 1;
+    n->x52 = 0;
+    n->x50 = 0;
+    n->next = head;
+    obj->x25c = n;
+    prev = n;
+    p = head;
+    i = 2;
+    while (p != NULL) {
+        info = obj->ext->info;
+        if (i > info->total) {
+            prev->next = NULL;
+            while (p != NULL) {
+                prev = p;
+                p = p->next;
+                FREE(prev);
+            }
+        } else {
+            info = obj->ext->info;
+            if (info->life > i) {
+                p->alpha = (255.0f / info->life * i);
+            } else {
+                p->alpha = 255;
+            }
+            info = obj->ext->info;
+            fade = info->total - info->fadeIn;
+            if (fade <= i) {
+                p->alpha = (255.0f / info->fadeIn * (info->fadeIn - (i - fade)));
+            }
+            info = obj->ext->info;
+            seg = 1;
+            if (info->seg != 0) {
+                seg = info->seg;
+            }
+            p->x50 = ((i - 1) % seg) * 255 / seg;
+            if (p->x48 == 0 && p->x4c < fn_800A1AE8(obj, 0x26)) {
+                p->x4c++;
+                if (p->x4c == fn_800A1AE8(obj, 0x26) && TrailInfo(obj)->x54 == 1) {
+                    p->x4c = 0;
+                }
+                if (p->x4c < fn_800A1AE8(obj, 0x26)) {
+                    p->x48 = fn_800A10A8(fn_800A1ABC(obj, 0x26), p->x4c, fn_800A1AE8(obj, 0x26)) - 1;
+                }
+            } else if (p->x4c != fn_800A1AE8(obj, 0x26)) {
+                p->x48--;
+            }
+            if (p->x4c == fn_800A1AE8(obj, 0x26) && p->x4c > 0) {
+                p->x4c = fn_800A1AE8(obj, 0x26) - 1;
+            }
+            prev = p;
+            p = p->next;
+            i++;
+        }
     }
 }
 
