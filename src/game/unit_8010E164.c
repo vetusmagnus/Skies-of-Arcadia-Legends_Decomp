@@ -151,6 +151,10 @@ typedef struct {
     u8 pad0[4];
     s32 v4;
     s32 v8;
+    u8 padc[0x20 - 0xc];
+    s32 x20;        /* 0x20 */
+    u8 pad24[0x4c - 0x24];
+    s32 x4c;        /* 0x4C */
 } Rec;
 extern Rec *lbl_803472A4;
 extern void fn_8015ED90(void *p);
@@ -3668,6 +3672,63 @@ void fn_801299A0(void) {
     lbl_80346EE4 = lbl_8034A3A4;
 }
 
+extern s32 lbl_80346EE0;
+extern s32 lbl_8034728C;
+extern s32 lbl_80347288;
+extern void fn_8015C5F4(void);
+extern void fn_8015AA18(void);
+extern void fn_80156324(void);
+
+static inline ShipEntry *FindShip(s32 id) {
+    ShipEntry *found;
+    s32 i;
+    s32 key = id;
+
+    if (id == 0xffff) {
+        key = lbl_803472B0;
+    }
+    found = 0;
+    for (i = 0; i < lbl_8034729C; i++) {
+        EvObj *e = lbl_80308EF8[i].task->work;
+        if (key == e->x17a) {
+            found = &lbl_80308EF8[i];
+        }
+    }
+    if (found == 0) {
+        fn_801DBE1C(lbl_802B33EC, key);
+    }
+    return found;
+}
+
+void fn_80129AA4(void)
+{
+    s32 ready;
+    ready = lbl_80311AC0.unk4 >= 500;
+    if (ready != 0) {
+        s32 v = lbl_80310A1C[0x10b];
+        if (v != lbl_80346EE0) {
+            ShipEntry *e;
+            s32 id;
+            lbl_80346EE0 = v;
+            if (v == 0) {
+                id = 0;
+            } else {
+                id = lbl_803472A4->x20;
+            }
+            e = FindShip(id);
+            lbl_80347454 = e->task;
+            lbl_80347450 = e->task->work;
+        }
+        if (lbl_8034728C == 1 && lbl_80347290 == 0) {
+            fn_8015C5F4();
+            lbl_8034728C = 0;
+            lbl_80347288 = 1;
+        }
+        fn_8015AA18();
+        fn_80156324();
+    }
+}
+
 s32 fn_8012A8DC(void) {
     s32 v = lbl_80311AC0.unk4;
     return v >= 500;
@@ -3881,7 +3942,7 @@ void fn_80125C90(u8 *p) {
 void fn_801278F0(u8 *p, u8 *out) {
     if (*(s32 *)(p + 0x2e4) != 0) {
         *(s16 *)(p + 0x3c) += 1;
-        if (*(s32 *)((u8 *)lbl_803472A4 + 0x4c) == 0) {
+        if (lbl_803472A4->x4c == 0) {
             s32 v = *(s32 *)(*(u8 **)(p + 0x8) + 0x24);
             *(s8 *)(out + 0x10) = -0x7f;
             out[0x11] = 0;
@@ -3894,7 +3955,7 @@ void fn_801278F0(u8 *p, u8 *out) {
         return;
     }
     *(s16 *)(p + 0x3e) += 1;
-    if (*(s32 *)((u8 *)lbl_803472A4 + 0x4c) != 0) {
+    if (lbl_803472A4->x4c != 0) {
         return;
     }
     {
@@ -3945,7 +4006,7 @@ s32 fn_801298E8(void) {
         return (lbl_803472C0 % lbl_803472D0 == 0) + 1;
     }
     if (lbl_803472A8 != 0) {
-        if (lbl_803472E0 == (f32)(*(s32 *)((u8 *)lbl_803472A4 + 0x8))) {
+        if (lbl_803472E0 == (f32)lbl_803472A4->v8) {
             return (lbl_803472C0 % lbl_803472D0 == 0) + 1;
         }
     }
