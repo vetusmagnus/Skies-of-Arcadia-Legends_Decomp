@@ -1122,7 +1122,6 @@ extern void fn_80075F2C(void *t);
 extern s32 fn_8006DB94(void);
 extern void fn_80032C68(void);
 extern void fn_80017CB8(Task *t, s16 v);
-typedef struct Self { u8 pad[0x18]; u8 flags; u8 state; } Self;
 /* lbl_80309E24: the character task table (void* in unit_80005B50.c). */
 extern Task* lbl_80309E24[];
 extern void fn_8001BE2C(Task* t);
@@ -3155,6 +3154,35 @@ s32 fn_800153A0(Pair* p) {
 }
 
 void fn_8001545C(void) {
+}
+
+s32 fn_80015728(void);
+void fn_80015640(Task* o);
+void fn_80015580(void)
+{
+    s8 n = 0;
+    s8 i;
+    Task* t;
+    ChrWork* w;
+    ChrInfo* c;
+    Task* p;
+    if (fn_80015728() != 0) {
+        for (i = 0; i < 12; i++) {
+            t = lbl_80309E24[i];
+            if (t != NULL) {
+                w = t->work;
+                c = w->st;
+                if ((c->xec & 0x100000) || (c->xec & 0x8)) {
+                    n++;
+                }
+            }
+        }
+        if (n != 0) {
+            p = fn_802268E8(lbl_803475A8, fn_80015640);
+            fn_80061F58(&p->work, 0x10, 0);
+            lbl_80309EC8.x48 |= 0x10000000;
+        }
+    }
 }
 
 s32 fn_80015728(void) {
@@ -6425,7 +6453,7 @@ s32 fn_8001DB44(Task* t, s8 mode) {
 
 /* Three-step task: on step 1 clears flags 0x100000 and 8 of every character that has them and
  * calls fn_8001BE2C on it, then marks itself done (flag 0x40). */
-void fn_80015640(Self* o) {
+void fn_80015640(Task* o) {
     s8 i;
     switch (o->state) {
     case 0:
