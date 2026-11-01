@@ -2188,3 +2188,5 @@ blockers in docs/ninja.md "Library pass".
 Ninja near-miss pass (2026-11-01, 4 Opus agents): 26 more functions (7 plain C, 19 with a per-function
 `#pragma optimization_level`/`opt_*`, allowed by the owner when nothing else matches); 5,652 of 7,117. Details in
 docs/ninja.md "Per-function optimization levels".
+Pass 3 (4 Opus agents, register near misses and large functions): 6 more, all with `optimization_level 1` +
+`opt_common_subs on` (5,658 of 7,117).

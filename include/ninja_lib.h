@@ -565,4 +565,7 @@ s32 fn_8029800C(u32 fmt);
 s32 fn_802981B8(u32 id, u32 key);
 s32 fn_80298210(NjTexRef** outB, NjTexMem** outA);
 
+s32 fn_802907D0(f32* a, f32* b);
+f32 fn_802900C0(f32* p, f32* pl, f32* out);
+
 #endif

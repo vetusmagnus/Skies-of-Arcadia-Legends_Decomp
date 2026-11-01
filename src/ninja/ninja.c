@@ -569,6 +569,28 @@ s32 fn_8028F95C(f32* a, f32* b) {
     return 0;
 }
 
+#pragma optimization_level 1
+#pragma opt_common_subs on
+f32 fn_8028FD98(f32* l, f32* pl, f32* out) {
+    f32 p[3];
+    f32 t;
+    if (fn_802907D0(l, pl)) {
+        f32 z, y, x;
+        x = l[0]; y = l[1]; z = l[2];
+        p[0] = x; p[1] = y; p[2] = z;
+        return fn_802900C0(p, pl, out);
+    }
+    if (out) {
+        t = -(-(pl[3] * pl[0] + pl[4] * pl[1] + pl[5] * pl[2]) + (pl[3] * l[0] + pl[4] * l[1] + pl[5] * l[2])) / (pl[3] * l[3] + pl[4] * l[4] + pl[5] * l[5]);
+        out[0] = l[3] * t + l[0];
+        out[1] = l[4] * t + l[1];
+        out[2] = l[5] * t + l[2];
+    }
+    return 0.0f;
+}
+#pragma opt_common_subs reset
+#pragma optimization_level reset
+
 f32 fn_80290008(f32* a, f32* b) {
     f32 x, y, z, d;
     f32 dx = a[0] - b[0];
@@ -581,6 +603,24 @@ f32 fn_80290008(f32* a, f32* b) {
     if (d < 0.025f) return 0.0f;
     return sqrtf(d);
 }
+
+#pragma optimization_level 1
+#pragma opt_common_subs on
+f32 fn_802900C0(f32* p, f32* pl, f32* out) {
+    f32 n2, d, t;
+    d = -(pl[3] * pl[0] + pl[4] * pl[1] + pl[5] * pl[2]) + (pl[3] * p[0] + pl[4] * p[1] + pl[5] * p[2]);
+    n2 = pl[3] * pl[3] + pl[4] * pl[4] + pl[5] * pl[5];
+    if (out) {
+        t = -d / n2;
+        out[0] = pl[3] * t + p[0];
+        out[1] = pl[4] * t + p[1];
+        out[2] = pl[5] * t + p[2];
+    }
+    return (f32)fabs(d) * fn_80291978(n2);
+}
+
+#pragma opt_common_subs reset
+#pragma optimization_level reset
 
 void fn_80290428(NJS_POINT3* p, NJS_POINT3* lo, NJS_POINT3* hi) {
     s32 i;
@@ -599,6 +639,55 @@ void fn_80290428(NJS_POINT3* p, NJS_POINT3* lo, NJS_POINT3* hi) {
         if (p[i].z > hi->z) hi->z = p[i].z;
     }
 }
+
+#pragma optimization_level 1
+#pragma opt_common_subs on
+void fn_802904E8(NjCapsule* c, NJS_POINT3* lo, NJS_POINT3* hi) {
+    f32 a0, a1, a2, b0, b1, b2, c0, c1, c2, d0, d1, d2;
+    a0 = c->p0.x - c->r;
+    a1 = c->p0.y - c->r;
+    a2 = c->p0.z - c->r;
+    b0 = c->p1.x - c->r;
+    b1 = c->p1.y - c->r;
+    b2 = c->p1.z - c->r;
+    c0 = c->p0.x + c->r;
+    c1 = c->p0.y + c->r;
+    c2 = c->p0.z + c->r;
+    d0 = c->p1.x + c->r;
+    d1 = c->p1.y + c->r;
+    d2 = c->p1.z + c->r;
+    lo->x = a0 < b0 ? a0 : b0;
+    lo->y = a1 < b1 ? a1 : b1;
+    lo->z = a2 < b2 ? a2 : b2;
+    hi->x = c0 > d0 ? c0 : d0;
+    hi->y = c1 > d1 ? c1 : d1;
+    hi->z = c2 > d2 ? c2 : d2;
+}
+
+#pragma opt_common_subs reset
+#pragma optimization_level reset
+
+#pragma optimization_level 1
+#pragma opt_common_subs on
+void fn_802905C8(NJS_POINT3* p, NJS_POINT3* n) {
+    n->x = (p[1].y - p[0].y) * (p[2].z - p[0].z) - (p[1].z - p[0].z) * (p[2].y - p[0].y);
+    n->y = (p[1].z - p[0].z) * (p[2].x - p[0].x) - (p[1].x - p[0].x) * (p[2].z - p[0].z);
+    n->z = (p[1].x - p[0].x) * (p[2].y - p[0].y) - (p[1].y - p[0].y) * (p[2].x - p[0].x);
+}
+
+#pragma opt_common_subs reset
+#pragma optimization_level reset
+
+#pragma optimization_level 1
+#pragma opt_common_subs on
+void fn_80290668(NJS_POINT3* p0, NJS_POINT3* p1, NJS_POINT3* p2, NJS_POINT3* n) {
+    n->x = (p1->y - p0->y) * (p2->z - p0->z) - (p1->z - p0->z) * (p2->y - p0->y);
+    n->y = (p1->z - p0->z) * (p2->x - p0->x) - (p1->x - p0->x) * (p2->z - p0->z);
+    n->z = (p1->x - p0->x) * (p2->y - p0->y) - (p1->y - p0->y) * (p2->x - p0->x);
+}
+
+#pragma opt_common_subs reset
+#pragma optimization_level reset
 
 void fn_80290708(f32* v, f32* lo, f32* hi) {
     lo[0] = v[0] - v[3];
@@ -677,6 +766,21 @@ void fn_80291428(s32 p) {
 f32 njCos(Angle a) {
     return cos(a * ANG_RAD);
 }
+#pragma optimization_level reset
+
+#pragma optimization_level 1
+#pragma opt_common_subs on
+void fn_80291700(NJS_POINT3* p, NJS_POINT3* out, f32 t) {
+    f32 u = 1.0f - t;
+    f32 b0 = u * u * u;
+    f32 b1 = u * 3.0f * u * t;
+    f32 b2 = u * 3.0f * t * t;
+    f32 b3 = t * t * t;
+    out->x = b0 * p[0].x + b1 * p[1].x + b2 * p[2].x + b3 * p[3].x;
+    out->y = b0 * p[0].y + b1 * p[1].y + b2 * p[2].y + b3 * p[3].y;
+    out->z = b0 * p[0].z + b1 * p[1].z + b2 * p[2].z + b3 * p[3].z;
+}
+#pragma opt_common_subs reset
 #pragma optimization_level reset
 
 f32 fn_802917A0(f32 x) {

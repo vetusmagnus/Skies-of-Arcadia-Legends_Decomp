@@ -106,7 +106,7 @@ Where things are
 Matching status
 ---------------
 
-271 of 451 functions match byte for byte (`src/ninja/ninja.c`, objdiff and `tools/match/fdiff.py`
+277 of 451 functions match byte for byte (`src/ninja/ninja.c`, objdiff and `tools/match/fdiff.py`
 plus `floatcheck.py` agree; main.dol still hashes OK). The unit covers the whole region
 (`0x80286EE8`-`0x802AC75C`) because no real file boundary has turned up: the `.sdata2` pool is
 contiguous in text order, so the data gives no edge, and no edge has been checked against
@@ -167,6 +167,9 @@ njInitMatrix. The original library evidently mixed optimization levels (most of 
 Also new: fn_802976F8 has a K&R definition because fn_8029CF7C calls it with only the texture body;
 NjTexBody.data is `u8*`; fn_80291CF8 passes its four arguments to C_QUATSlerp (declared with flat f32 pointers).
 The copy pattern (FIFO) does not respond to these pragmas.
+Pass 3 added six float helpers (fn_8028FD98, fn_802900C0, fn_802904E8, fn_802905C8, fn_80290668, fn_80291700) that
+match only with `optimization_level 1` plus `opt_common_subs on`. Still needing a cast: fn_802A1374 and fn_802A81B4
+(`*(u16*)p` strip size, like fn_802A7894).
 
 ### Library pass (2026-10-31)
 
