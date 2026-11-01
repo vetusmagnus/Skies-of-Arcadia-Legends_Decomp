@@ -11,8 +11,8 @@
  *       -Cpp_exceptions off -O4,p -inline auto -c docs/near/fifo_8029681C.c -o build/fifo.o
  *   build/binutils/powerpc-eabi-objdump -d build/fifo.o | grep stfs
  *
- * Apart from the address register this compiles to the original (the 6.0f point-size scale is a
- * guess: the pool constant is lbl_8034D270).
+ * Apart from the address register this compiles to the original (the point-size scale is 12.0f,
+ * the pool constant lbl_8034D270). With GC/1.3.2nj it matches; fn_8029681C is now in ninja.c.
  */
 typedef unsigned char u8;
 typedef int s32;
@@ -31,7 +31,7 @@ static inline void GXPosition3f32(f32 x, f32 y, f32 z) {
 }
 
 void fn_8029681C(NJS_POINT3* p, s32 n, f32 size) {
-    GXSetPointSize(size * 6.0f, 0);
+    GXSetPointSize(size * 12.0f, 0);
     do {
         GXBegin(0xB8, 0, 1);
         GXPosition3f32(p->x, p->y, p->z);

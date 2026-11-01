@@ -19,7 +19,11 @@
 extern u32 lbl_80347F80;
 
 inline void VtxChunk(NjEnvState* e, u32* v, void* base, u32 w) {
-    e->n = w >> 16; e->data = v; lbl_80347EF4 += w >> 16; e->dst = (u32*)base + (w & 0xFFFF);
+    e->n = w >> 16;
+    e->data = v;
+    lbl_80347EF4 += w >> 16;
+    /* base is the untyped vertex buffer (lbl_80347EFC); the chunk's low half is a word offset into it */
+    e->dst = (u32*)base + (w & 0xFFFF);
 }
 inline void VtxChunks(u32* v, void* base) {
     u32 hdr, w, flags;

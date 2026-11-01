@@ -106,7 +106,7 @@ Where things are
 Matching status
 ---------------
 
-285 of 451 functions match byte for byte (`src/ninja/ninja.c`, objdiff and `tools/match/fdiff.py`
+The matched functions (count in the README status block) match byte for byte (`src/ninja/ninja.c`, objdiff and `tools/match/fdiff.py`
 plus `floatcheck.py` agree; main.dol still hashes OK). The unit covers the whole region
 (`0x80286EE8`-`0x802AC75C`) because no real file boundary has turned up: the `.sdata2` pool is
 contiguous in text order, so the data gives no edge, and no edge has been checked against
