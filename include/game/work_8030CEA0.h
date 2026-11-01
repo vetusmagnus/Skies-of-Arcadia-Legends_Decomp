@@ -94,7 +94,8 @@ typedef struct {
     s32 x14b0;
     s32 x14b4;
     s32 x14b8[4];
-    u8 pad14c8[2];
+    u8 pad14c8;
+    u8 x14c9;
     u8 x14ca;
     u8 x14cb[0x1544 - 0x14cb];
     s32 x1544[9];
