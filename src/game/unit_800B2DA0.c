@@ -46,14 +46,6 @@ typedef struct Obj_800C34C8 {
     u8 pad0[0x1c8];
     Sub_800C34C8 *f1c8;
 } Obj_800C34C8;
-typedef struct Sub_800C3518 {
-    s32 f0;
-    u32 f4;
-} Sub_800C3518;
-typedef struct Obj_800C3518 {
-    u8 pad0[0x100];
-    Sub_800C3518 *f100;
-} Obj_800C3518;
 typedef struct Obj_800CB610 { u8 pad0[0x260]; void *f260; } Obj_800CB610;
 typedef struct Src_UNIT0000 {
     u8 pad0[0x14];
@@ -474,13 +466,6 @@ typedef struct Ctl_800C5B58 {
     s16 h0;
     s16 h2;
 } Ctl_800C5B58;
-typedef struct Obj_800C5B58 {
-    u8 pad0[0x188];
-    u32 w188;
-    u8 pad18c[0x1b0 - 0x18c];
-    u32 w1b0;
-    u8 pad1b4[0x1e4 - 0x1b4];
-} Obj_800C5B58;
 typedef struct Key_800C5D78 {
     s16 v;
     s16 frames;
@@ -1031,17 +1016,6 @@ typedef struct {
     s16 x1fc;         /* 0x1FC */
 } Ent_800CC3D4;
 extern int rand(void);
-typedef struct {
-    u8 pad0[0x38];
-    f32 x38, x3c, x40;  /* 0x38 */
-    u32 x44, x48;       /* 0x44 */
-    u8 pad4C[0xE4 - 0x4C];
-    void* model;        /* 0xE4 */
-    u8 padE8[0x16E - 0xE8];
-    s16 x16e;           /* 0x16E */
-    u8 pad170[0x184 - 0x170];
-    s32 x184;           /* 0x184 */
-} Ent_800CD924;
 extern void fn_800C35C4(void* e, s32 n);
 extern void fn_801E7E14(void* model, s32 a, s32 b, s32 c);
 extern void fn_800C3428(Self_800C3428* self);
@@ -4122,10 +4096,10 @@ s32 fn_800C34C8(Obj_800C34C8 *obj) {
     return 0;
 }
 
-s32 fn_800C3518(Obj_800C3518 *obj) {
-    Sub_800C3518 *s = obj->f100;
-    if (s != NULL && s->f4 != 0) {
-        fn_80227810((NJS_TEXLIST*)s);
+s32 fn_800C3518(EvObj *obj) {
+    NJS_TEXLIST *s = obj->texlist;
+    if (s != NULL && s->nbTexture != 0) {
+        fn_80227810(s);
         return 1;
     }
     return 0;
@@ -5437,23 +5411,23 @@ void fn_800C5108(Obj_800C5108 *self)
     fn_8022BAA0((u8 *)self + 0x40, &self->f24, &self->f4c, (u8 *)self + 0xa0);
 }
 
-void fn_800C5B58(Obj_800C5B58 *self, Ctl_800C5B58 *c)
+void fn_800C5B58(EvObj *self, Ctl_800C5B58 *c)
 {
-    if (self->w1b0 == 0) {
+    if (self->x1b0 == 0) {
         if (c->h0 != 0 || c->h2 != 0) {
             s16 a;
-            fn_801E7DF0(*(void **)((u8 *)self + 0xe4));
+            fn_801E7DF0(self->model);
             a = c->h0;
             if (a != 0 && c->h2 != 0) {
-                *(s16 *)((u8 *)self + 0x204) = 2;
+                self->x204 = 2;
             } else if (a != 0) {
-                *(s16 *)((u8 *)self + 0x204) = 0;
+                self->x204 = 0;
             } else {
-                *(s16 *)((u8 *)self + 0x204) = 1;
+                self->x204 = 1;
             }
-            *(s16 *)((u8 *)self + 0x206) = c->h0;
-            *(s16 *)((u8 *)self + 0x208) = c->h2;
-            self->w188 |= 8;
+            self->x206 = c->h0;
+            self->x208 = c->h2;
+            self->x188 |= 8;
         }
     }
 }
@@ -6338,12 +6312,12 @@ s32 fn_800CC3D4(Ent_800CC3D4* e, Table_800CC3D4* t) {
 
 void fn_800CD924(Task* task) {
     Task* parent = task->parent;
-    Ent_800CD924* e = task->work;
-    Ent_800CD924* src;
+    EvObj* e = task->work;
+    EvObj* src;
 
     if ((parent->flags & 0x40) == 0) {
         src = parent->work;
-        if (src->x184 != 0) {
+        if (src->hidden != 0) {
             task->state = 0xFF;
         }
     } else {
@@ -6354,17 +6328,17 @@ void fn_800CD924(Task* task) {
     case 0:
     case 0xFE:
         fn_800C35C4(e, 7);
-        fn_800C3518((Obj_800C3518*)e);
+        fn_800C3518(e);
         e->x16e = 0;
         fn_801E7DF0(e->model);
         task->state = 1;
         break;
     case 1:
-        e->x38 = src->x38;
-        e->x3c = src->x3c;
-        e->x40 = src->x40;
-        e->x44 = src->x44;
-        e->x48 = src->x48;
+        e->pos.x = src->pos.x;
+        e->pos.y = src->pos.y;
+        e->pos.z = src->pos.z;
+        e->ang[0] = src->ang[0];
+        e->ang[1] = src->ang[1];
         fn_801E66E0(e);
         fn_801E7E14(e->model, 0, -8, 1);
         break;
