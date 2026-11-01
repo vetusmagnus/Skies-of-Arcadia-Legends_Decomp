@@ -1089,6 +1089,25 @@ s32 fn_801FDA70(u32 a, Scpt *st) {
     return 0;
 }
 
+s32 fn_801FDFB8(u32 a, Scpt *s) {
+    u16 f = a;
+    f32 *p;
+    s32 v;
+    if (a & 1) {
+        p = s->cur.f + 1;
+        if (3.4028235e38f == *p) {
+            p++;
+            v = 0x7FFFFFFF;
+        } else {
+            v = fn_801F6120(&p);
+        }
+        s->cur.f = p;
+        lbl_8030CEA0.x15d4 = fn_801F452C(v);
+    }
+    if (f & 8) return 1;
+    return 0;
+}
+
 s32 fn_801FEB08(u32 a, Scpt *st) {
     if (a & 1) {
         u8 *c = st->cur.b;
@@ -1152,6 +1171,47 @@ s32 fn_801FF0F8(u32 a, Scpt *st) {
 
 int fn_801FF1E0(void) {
     fn_801DBE1C("scptKill: SYNTAX ERROR!!!");
+    return 0;
+}
+
+s32 fn_802000A0(u32 a, Scpt *s) {
+    f32 *p;
+    s32 v;
+    s32 w;
+    if (a & 1) {
+        p = s->cur.f + 1;
+        if (3.4028235e38f == *p) {
+            p++;
+            v = 0x7FFFFFFF;
+        } else {
+            v = fn_801F6120(&p);
+        }
+        w = fn_801F6120(&p);
+        s->cur.f = p;
+        lbl_8030CEA0.x14b0 = v;
+        lbl_8030CEA0.x14c9 = w;
+    }
+    return 0;
+}
+
+s32 fn_8020014C(u32 flags, Scpt *s)
+{
+    float *p;
+    s32 a;
+    s32 b;
+    if (flags & 1) {
+        p = s->cur.f + 1;
+        if (3.4028235e38f == *p) {
+            p++;
+            a = 0x7FFFFFFF;
+        } else {
+            a = fn_801F6120(&p);
+        }
+        b = fn_801F6120(&p);
+        s->cur.f = p;
+        lbl_8030CEA0.x14b4 = a;
+        lbl_8030CEA0.x14ca = b;
+    }
     return 0;
 }
 
