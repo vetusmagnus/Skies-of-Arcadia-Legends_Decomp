@@ -51,7 +51,10 @@ game/sound.c:
 	.sdata2     start:0x80348618 end:0x80348638
 
 game/effect.c:
-	.text       start:0x80040010 end:0x800506B0
+	.text       start:0x80040010 end:0x8004DE48
+
+game/unit_8004DE48.c:
+	.text       start:0x8004DE48 end:0x800506B0
 
 game/unit_800506B0.c:
 	.text       start:0x800506B0 end:0x800540DC

@@ -2271,3 +2271,8 @@ Splits made where the data layout shows an original file boundary, so that held 
   0x80303618/0x80303634/0x80303650 are addressed from one pooled base in the original (base register + 0x1c/+0x38), which
   MWCC only does for data defined in the same file, so they are defined in the unit (first use is 0x80303618, which makes it
   the base). Released fn_800B0900, fn_800B0F54 and fn_800B0278 (the 0x80303634 block is the wave-strip state).
+- **unit_8004DE48** (0x8004DE48-0x800506B0, from effect.c): `.sdata2` 0x80348700 (8-aligned) starts with 182.04445f, 1.0f
+  and 0.0f, all three repeating constants of effect.c's block (0x803486C0, 0x8034869C, 0x803486A0); every function from
+  0x8004DE48 on uses only constants from 0x80348700 up. Released fn_8004E474, which calls fn_8001D944 with an `s8` id
+  (callee-extended) where effect.c's fn_8004B7C4/fn_8004DD54 pass an `int`. Its three constants stay extern labels as in
+  the isolated match (literals load in the other order).

@@ -362,6 +362,9 @@ config.libs = [
             # Effect and particle tasks (a new 0.0f at 0x80348638). The end is a guess. 60 of 62
             # match; fn_80041E64 and fn_800470F0 are near misses.
             Object(NonMatching, "game/effect.c"),
+            # Split off effect.c at a new .sdata2 block (0x80348700: a second 182.04445f, 1.0f and
+            # 0.0f); its fn_8004E474 calls fn_8001D944 with an s8 id where effect.c passes an int.
+            Object(NonMatching, "game/unit_8004DE48.c"),
             # 40 of 44 match; UiDrawNumber, UiLayoutDrawPart, UiLayoutDraw and UiSpriteDraw are
             # register allocation / scheduling away.
             Object(NonMatching, "game/uiobj.c"),
