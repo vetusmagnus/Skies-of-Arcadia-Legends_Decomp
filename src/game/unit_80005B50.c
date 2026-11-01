@@ -3529,6 +3529,69 @@ void fn_80017778(void) {
 }
 
 extern Task* fn_800215EC(s8);
+extern void fn_800749DC(s16 i, Joint* nodes, f32* out);
+extern s32 fn_802300F0(void* out, Joint* node, s32 j);
+f32 fn_800177C0(s32 idx, f32* out) {
+    s8 id = idx;
+    Task* t;
+    Task* t2;
+    f32 h = 0.0f;
+    f32 tmp;
+    f32 ch;
+    f32 buf[2];
+    ChrInfo* u;
+    ChrInfo* u2;
+    Joint* n;
+    s16 i;
+    s16 k;
+    s32 j;
+    s32 ok;
+    t = fn_80021658(id);
+    ch = ChrW(t)->x10->x40;
+    if (ch) {
+        h = ch;
+    } else {
+        t2 = fn_80021658(id);
+        if (t2 == 0) {
+            ok = 0;
+        } else {
+            u = ChrW(t2)->st;
+            k = fn_80020094(ChrW(t2), 0, -1, 1);
+            if (k < 0) {
+                ok = 0;
+            } else if (u->anims[k].xe == 0) {
+                ok = 0;
+            } else {
+                h = 0.25f * (15.0f * u->anims[k].xe);
+                ok = 1;
+            }
+        }
+        if (!ok) {
+            if (t == 0) {
+                out[0] = 0.0f;
+                out[1] = 0.0f;
+                out[2] = 0.0f;
+                return 0.0f;
+            }
+            u2 = ChrW(t)->st;
+            for (i = 0; i < ChrW(t)->x14; i++) {
+                n = &u2->x154[i];
+                j = 0;
+                tmp = 0.0f;
+                fn_800749DC(i, u2->x154, &tmp);
+                for (; fn_802300F0(buf, n, j) != 0; j++) {
+                    if (tmp + buf[1] > h) h = tmp + buf[1];
+                }
+                if (tmp > h) h = tmp;
+            }
+        }
+        ChrW(t)->x10->x40 = h;
+    }
+    fn_80071CF0(&ChrW(t)->pos, out);
+    out[1] = h;
+    return h;
+}
+
 int fn_800179B4(int a) {
     return fn_800215EC((s8)a) != 0;
 }
