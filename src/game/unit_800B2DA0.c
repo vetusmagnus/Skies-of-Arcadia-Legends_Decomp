@@ -3604,6 +3604,63 @@ typedef struct Msg {
     s32 xc;
 } Msg;
 f32 fn_800C2A88(Arg_800C2650 *a);
+/* The unit's pooled .rodata strings from lbl_802B1300 (MWCC addresses them from its start). */
+typedef struct RoPool_800B2DA0 {
+    char battle[0xC];       /* 0x00 "/battle/" */
+    char notEncount[0x14];  /* 0x0C "Not Encount Ship" */
+    char ect[0x10];         /* 0x20 "%sa%03d%c.ect" */
+    char enp[0x14];         /* 0x30 "%sa%03d%c_ep.enp" */
+    char ect99[0x10];       /* 0x44 "%sa%03da.ect" */
+    char enp99[0x10];       /* 0x54 "%sa%03da_ep.enp" */
+    char patyErr[0x1C];     /* 0x64 "Paty Table is Nothing : %s" */
+    char encErr[0x20];      /* 0x80 "Encount Table is Nothing : %s" */
+} RoPool_800B2DA0;
+extern const RoPool_800B2DA0 lbl_802B1300;
+extern void *lbl_803474BC;
+extern s32 lbl_80346D28;
+extern f32 lbl_80346D1C;
+extern s32 fn_8025CB24(char* buf, const char* fmt, ...);
+extern s32 fn_801CC62C(char* path);
+extern void* fn_801CC3C4(char* path);
+
+void fn_800C24CC(void) {
+    char ect[0x40];
+    char enp[0x40];
+    const RoPool_800B2DA0 *s = &lbl_802B1300;
+
+    lbl_803474BC = 0;
+    lbl_80346D24 = 0;
+    lbl_803474B8 = 0;
+    lbl_80346D20 = 0;
+    if (lbl_80311AC0.map != 99) {
+        fn_8025CB24(ect, s->ect, lbl_8034746C, lbl_80311AC0.map, lbl_80311AC0.room);
+        fn_8025CB24(enp, s->enp, lbl_8034746C, lbl_80311AC0.map, lbl_80311AC0.room);
+    } else {
+        fn_8025CB24(ect, s->ect99, lbl_8034746C);
+        fn_8025CB24(enp, s->enp99, lbl_8034746C, lbl_80311AC0.map);
+    }
+    if (fn_801CC62C(ect) == 1) {
+        if (fn_801CC62C(enp) == 0) {
+            fn_801DBE1C(s->patyErr, enp);
+        }
+        lbl_80346D24 = fn_801CC3C4(ect);
+        lbl_80346D20 = fn_801CC3C4(enp);
+        if (lbl_80311AC0.map != 99) {
+            lbl_803474B8 = lbl_80346D20;
+            lbl_803474BC = lbl_80346D24;
+        }
+    } else if (fn_801CC62C(enp) == 1) {
+        fn_801DBE1C(s->encErr, ect);
+    }
+    lbl_80346CD0 = 0;
+    lbl_80346D28 = 0;
+    lbl_803473D4 = 0;
+    lbl_803473DC = 0;
+    lbl_803473D8 = -1;
+    lbl_80346D1C = 0.0f;
+    lbl_80310B3C[0x22] &= ~0x80;
+}
+
 f32 fn_800C285C(Arg_800C2650 *a) {
     return fn_800C2A88(a);
 }
