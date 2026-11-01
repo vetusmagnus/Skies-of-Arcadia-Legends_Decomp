@@ -59,7 +59,8 @@ typedef struct Ent_BB28 {
     Rec_BB28* recs;
     struct { u8 pad[8]; void* x8; }* x4;
     Work_BB28** ptrs;
-    int xc;
+    u8 xc;              /* 0x0c record count */
+    u8 padd[3];
     void* x10;
 } Ent_BB28;
 typedef struct {
@@ -140,6 +141,20 @@ typedef struct ChrAnim {
     f32 x10;
     f32 x14;
 } ChrAnim;
+/* A character's draw parameters (fn_80018B80 turns them into a DrawState). */
+typedef struct ChrDraw {
+    f32 a;              /* 0x00 colour */
+    f32 r;
+    f32 g;
+    f32 b;
+    u8 pad10[8];
+    s32 blend_src;      /* 0x18 */
+    s32 blend_dst;      /* 0x1c */
+    u8 pad20[8];
+    s32 x28;            /* 0x28: not 1 clears control3d 0x40 */
+    s32 fog;            /* 0x2c */
+    s32 x30;            /* 0x30: nonzero calls fn_80060950 */
+} ChrDraw;
 typedef struct ChrInfo {
     s8 id;              /* 0x00 */
     u8 pad1;
@@ -189,8 +204,8 @@ typedef struct ChrInfo {
     u8 pad158[0x15c - 0x158];
     f32 x15c;           /* 0x15c */
     f32 x160;           /* 0x160 alpha */
-    f32 x164;           /* 0x164 */
-    u8 pad168[0x1dc - 0x168];
+    ChrDraw draw;       /* 0x164 */
+    u8 pad198[0x1dc - 0x198];
     void* x1dc;         /* 0x1dc */
     u8 pad1e0[0x1ec - 0x1e0];
     u32 x1ec;           /* 0x1ec */
@@ -1600,6 +1615,30 @@ extern void fn_801CC608(ResHandle* h, void* buf, u32 size);
 extern void fn_801CC65C(ResHandle* h);
 extern void fn_801E1DF8(s32 a, void* b);
 
+/* The work of the effect task fn_8000BF48 starts (fn_8000F0A4(11)), and its 0x38-byte parameters. */
+typedef struct Par_8000BF48 { u8 pad0[8]; u32 x8; f32 xc; f32 x10; f32 x14; s16 x18; u8 pad1a[0x38 - 0x1a]; } Par_8000BF48;
+typedef struct Work_8000BF48 { u8 pad0[0x4c]; Par_8000BF48* x4c; u8 pad50[8]; } Work_8000BF48;
+typedef struct Src_8000BF48 { s16 x0; u8 pad2[2]; u32 x4; f32 x8; f32 xc; f32 x10; s16 x14; } Src_8000BF48;
+typedef struct Owner_8000BF48 { u8 pad[0xc]; Src_8000BF48* src; } Owner_8000BF48;
+
+void fn_8000BF48(Owner_8000BF48* ow) {
+    Src_8000BF48* s = ow->src;
+    if (s->x0 < lbl_80309E5C.tbl[lbl_80309E5C.cur].xc && s->x14 != 0) {
+        Task* o = fn_802268E8(lbl_803475A8, fn_8000F0A4(11));
+        Work_8000BF48* w;
+        Par_8000BF48* sub;
+        fn_80061F58(&o->work, 0x58, 0);
+        w = o->work;
+        fn_80061F58(&w->x4c, 0x38, 0);
+        sub = w->x4c;
+        sub->xc = s->x8;
+        sub->x10 = s->xc;
+        sub->x14 = s->x10;
+        sub->x8 = s->x4;
+        sub->x18 = s->x14;
+    }
+}
+
 void fn_8000C9F8(void** out1, void** out2) {
     char name[0x20];
 
@@ -1742,7 +1781,7 @@ void fn_80011208(s8 a, s8 b, s32 c) {
         t = 1.0f - d;
         n = -t;
         if (n < 0.0f) {
-            v = chr->x164;
+            v = chr->draw.a;
             if (v > 3.0f * n) {
                 v = 3.0f * n;
             }
@@ -1753,9 +1792,9 @@ void fn_80011208(s8 a, s8 b, s32 c) {
             v = 0.0f;
         }
         if (m != 1) {
-            chr->x164 = v;
-        } else if (chr->x164 > v) {
-            chr->x164 = v;
+            chr->draw.a = v;
+        } else if (chr->draw.a > v) {
+            chr->draw.a = v;
         }
     }
 }
@@ -1816,7 +1855,7 @@ inline void ResetChrs(int idle)
             ChrWork* w = (*p)->work;
             ChrInfo* o = w->st;
             if (!idle || !(o->xf0 & 0x80000000)) {
-                o->x164 = 0.0f;
+                o->draw.a = 0.0f;
                 o->x1ec |= 0x20000000;
             }
         }
@@ -2236,7 +2275,7 @@ s32 fn_800179E4(s16 a) {
 }
 
 extern s32 lbl_80346AB8;
-extern int fn_80018B80(f32*);
+int fn_80018B80(ChrDraw* a);
 extern void fn_80036584(void*, int);
 extern int fn_8007E264(f32* out, f32 x, f32 z);
 
@@ -2250,11 +2289,11 @@ void fn_80017CB8(Task* t, s16 idx)
 
     fn_80299040(w->x8);
     u->xea = idx;
-    f = u->x164;
+    f = u->draw.a;
     njPushMatrixEx();
     fn_80286EE8();
     fn_8028B498();
-    if (fn_80018B80(&u->x164)) {
+    if (fn_80018B80(&u->draw)) {
         njTranslate(0, w->pos.x, w->pos.y, w->pos.z);
         njRotateXYZ(0, w->rx, w->ry, w->rz);
         njScale(0, w->scl.x, w->scl.y, w->scl.z);
@@ -2342,6 +2381,60 @@ void fn_80017CB8(Task* t, s16 idx)
     }
 }
 
+extern void fn_80060950(void*);
+
+int fn_80018B80(ChrDraw* a) {
+    DrawState s;
+    DrawStateGet(&s);
+    s.control3d |= 0x800;
+    s.colour.a = a->a;
+    s.colour.r = a->r;
+    s.colour.g = a->g;
+    s.colour.b = a->b;
+    if (lbl_80347394 != 0) {
+        s.attr_and &= ~0x700;
+    } else {
+        s.attr_and &= ~0x700;
+    }
+    if (a->a < 0.0f) {
+        s.attr_or |= 0x800;
+    } else {
+        s.attr_and &= ~0x500;
+    }
+    if (a->x28 != 1) {
+        s.control3d &= ~0x40;
+    }
+    s.blend_src = a->blend_src;
+    s.blend_dst = a->blend_dst;
+    s.fog = a->fog;
+    if (!DrawStatePush(&s)) {
+        return 0;
+    }
+    if (a->x30 != 0) {
+        fn_80060950(a);
+    }
+    return 1;
+}
+
+void fn_80019E44(Top_80019D7C* t) {
+    Inner_80019D7C* in = t->w->in;
+    switch (in->x12) {
+    case 0: {
+        Obj_80019D7C* o = fn_802268E8(lbl_803475A8, fn_80019B70);
+        fn_80061F58(&o->blk, 0x18, 0);
+        o->blk->a = t;
+        o->blk->b = t;
+        o->blk->c = 11;
+        o->blk->d = 4;
+        in->x12 = 1;
+        break;
+    }
+    case 1:
+        break;
+    }
+    fn_80018CBC(t, in->xe8, 0, 0, in->x2);
+}
+
 s32 fn_8001BBF8(void* obj) {
     u8* p = PTR(PTR(obj, 0x24), 0x4c);
     s16 id = *(s16*)(p + 0x10);
@@ -2398,6 +2491,19 @@ static inline Task *FindChrId(s8 id) {
     return 0;
 }
 
+void fn_8001E5C8(Angle *v, s8 id) {
+    Task *t = FindChrId(id);
+    ChrWork *w;
+    t = t != NULL ? t : FindChrId(0);
+    if (t == NULL) {
+        v[0] = 0;
+        v[1] = 0;
+        v[2] = 0;
+    }
+    w = t->work;
+    fn_800614FC(&w->rx, v);
+}
+
 void fn_8001E6DC(V3 *out, s8 id) {
     Task *t = FindChrId(id);
     t = t ? t : FindChrId(0);
@@ -2408,6 +2514,29 @@ void fn_8001E6DC(V3 *out, s8 id) {
     } else {
         ChrWork *w = t->work;
         fn_80071CF0(&w->st->x13c, out);
+    }
+}
+
+/* The character task with this id, or else the one with id 0. */
+static inline Task* FindChrIdOr0(s8 idx)
+{
+    Task* t = FindChrId(idx);
+    if (t != NULL) {
+        return t;
+    }
+    return FindChrId(0);
+}
+
+void fn_8001E7F8(f32* out, s8 idx)
+{
+    Task* t = FindChrIdOr0(idx);
+    if (t == NULL) {
+        out[0] = 0.0f;
+        out[1] = 0.0f;
+        out[2] = 0.0f;
+    } else {
+        ChrWork* w = t->work;
+        fn_80071CF0(&w->pos, out);
     }
 }
 
@@ -3352,6 +3481,39 @@ inline int Hit(W_80014474* w, U_80014474* u, f32 xc)
         }
     }
     return 0;
+}
+
+extern s32 fn_80075D64(Task*);
+
+s32 fn_80020470(Task* t, s16 x) {
+    ChrWork* cw = t->work;
+    ChrInfo* w = cw->st;
+    if (fn_80075D64(t) == 0) return 0;
+    if (x == 14 && (lbl_8030A10C.x6c & 0x20000)) return 0;
+    if ((w->x134 == 0 && !(w->xec & 1)) || (w->xf0 & 0x80000)) return 0;
+    if (w->xec & 0x100) {
+        if (x != 15) return 0;
+        if (lbl_8030A10C.x6c & 0x100) return 0;
+        w->xec &= ~0x100;
+    }
+    if (lbl_8030A10C.x68 != 0) {
+        switch (x) {
+        case 2:
+        case 7:
+            break;
+        default:
+            return 0;
+        }
+    }
+    if (lbl_80347394 == 0) {
+        switch (w->x6) {
+        case 0x1a:
+        case 0x1b:
+        case 0x1c:
+            return 0;
+        }
+    }
+    return 1;
 }
 
 inline void Reset(void)
@@ -4845,7 +5007,7 @@ void fn_80017A7C(Task *t)
     fn_80017CB8(t, s->xe4);
 }
 
-extern s32 fn_800205B8(s32 id);
+extern s32 fn_800205B8(s16 id);
 extern s32 fn_8001ECB4(Task *t, s16 a, s16 *out, s16 b);
 extern void fn_8001CAA8(Task *t);
 extern s8 fn_8001E910(Task *t);
@@ -5090,7 +5252,7 @@ void fn_80011394(s8 sel) {
             ChrWork* w = n->work;
             ChrInfo* m = w->st;
             if ((!(m->xf0 & 0x80000000) && sel == 0) || sel != 0) {
-                m->x164 = 0.0f;
+                m->draw.a = 0.0f;
                 m->x1ec |= 0x20000000;
             }
         }
@@ -5626,7 +5788,7 @@ void fn_80011160(s8* ids)
                 }
             }
             if (j == 12) {
-                u->x164 = 0.0f;
+                u->draw.a = 0.0f;
             }
         }
     }
@@ -6228,3 +6390,14 @@ void fn_8001D288(f32* out, s8 id, f32 ang, f32 radius) {
     wk = t->work;
     out[2] = out[2] + wk->z;
 }
+s32 fn_800205B8(s16 id) {
+    s16 a, b;
+    if (lbl_8034733C == 7) {
+        ChrWork *w = Find3(id)->work;
+        if (!(w->st->xf0 & 0x8000)) return 1;
+    }
+    fn_8001D41C(&a, &b);
+    if (a == id) return 1;
+    return 0;
+}
+
