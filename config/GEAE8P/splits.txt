@@ -81,7 +81,13 @@ musyx/runtime/CheapReverb/creverb_fx.c:
 	.text       start:0x80074D78 end:0x80074D9C
 
 game/unit_80074D9C.c:
-	.text       start:0x80074D9C end:0x8008A8B4
+	.text       start:0x80074D9C end:0x80078A20
+
+game/unit_80078A20.c:
+	.text       start:0x80078A20 end:0x8007DE54
+
+game/unit_8007DE54.c:
+	.text       start:0x8007DE54 end:0x8008A8B4
 
 game/unit_8008A8B4.c:
 	.text       start:0x8008A8B4 end:0x8008B4A0

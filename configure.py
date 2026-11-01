@@ -399,6 +399,11 @@ config.libs = [
             Object(NonMatching, "game/unit_80055E94.c", extra_cflags=["-str reuse,readonly"]),
             Object(NonMatching, "game/unit_80073D18.c"),
             Object(NonMatching, "game/unit_80074D9C.c"),
+            # Starts at the 8-aligned 0x80348A80 .sdata2 block; fn_8007B958 reads fn_80078478 (a u8 in
+            # unit_80074D9C) as an int.
+            Object(NonMatching, "game/unit_80078A20.c"),
+            # Starts at the 0x80348AA8 .sdata2 block, whose 0.0f and 1.0f repeat 0x80348A70/74.
+            Object(NonMatching, "game/unit_8007DE54.c"),
             Object(NonMatching, "game/unit_8008A8B4.c"),
             Object(NonMatching, "game/unit_8008B4A0.c"),
             Object(NonMatching, "game/unit_8009623C.c"),
