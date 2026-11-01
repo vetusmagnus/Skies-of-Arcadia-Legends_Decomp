@@ -206,7 +206,24 @@ typedef struct Z { u8 pad[8]; NJS_TEXLIST texlist; } Z;
 typedef struct Y { u8 pad[4]; Z *p4; } Y;
 typedef struct EntA { u8 pad[0x14]; Y *y; u8 pad18[0x68 - 0x18]; } EntA;
 typedef struct TblRoot { u8 pad[4]; EntA *p4; } TblRoot;
-typedef struct C0 { u8 pad[0x358]; TblRoot *p358; C1 *p35c; } C0;
+/* A four-channel interpolator (unit_801D24D0.c's fn_801D89D4/fn_801D8AB4 set it up). */
+typedef struct Lerp4 {
+    u32 flags;
+    f32 start[4];
+    f32 end[4];
+    f32 delta[4];
+    f32 cur[4];
+    s32 total;
+    s32 count;
+    s32 delay;
+} Lerp4;
+typedef struct C0 {
+    u8 pad[0x128];
+    Lerp4 items[5];      /* 0x128 */
+    u8 pad2b8[0x358 - 0x2b8];
+    TblRoot *p358;
+    C1 *p35c;
+} C0;
 extern C0 *lbl_8034784C;
 extern f32 lbl_8034C640;
 extern f32 lbl_8034C65C;
@@ -603,14 +620,6 @@ typedef struct Cfg {
     f32 d;
     f32 e;
 } Cfg;
-typedef struct Sub {
-    u8 pad0[0x34];
-    f32 f34;
-    f32 f38;
-    f32 f3c;
-    f32 f40;
-    u8 pad44[0x50 - 0x44];
-} Sub;
 typedef struct Obj_80229BEC {
     u8 pad0[0xf4];
     u16 state;
@@ -621,15 +630,15 @@ typedef struct Obj_80229BEC {
     u8 padfc[4];
     f32 fade;
     u8 pad104[0x2b8 - 0x104];
-    Sub sub;
-    Sub sub2;
+    Lerp4 sub;
+    Lerp4 sub2;
 } Obj_80229BEC;
 extern Cfg lbl_802F915C[];
 extern f32 lbl_8034C648;
 extern f32 lbl_8034C688;
 extern f32 lbl_8034C68C;
-extern void fn_801D89D4(void *p, s32 a, s32 b, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6, f32 f7, f32 f8);
-extern void fn_801D8AB4(void *p, s32 a, s32 b, f32 f1, f32 f2);
+extern void fn_801D89D4(Lerp4 *p, u32 a, s32 b, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6, f32 f7, f32 f8);
+extern void fn_801D8AB4(Lerp4 *p, s32 a, s32 b, f32 f1, f32 f2);
 typedef struct Spec {
     u8 pad0[0x3c];
     f32 amp1;
@@ -1335,6 +1344,30 @@ void fn_80228A98(void)
 }
 
 void fn_80228AD0(void) {
+}
+
+extern f32 lbl_802F8C50[];
+
+s32 fn_802295D0(void) {
+    s32 r = 0;
+    s32 n;
+    lbl_802F8C50[5] = 172.0f;
+    fn_801D5DD8(lbl_802F8C50, 0, 0, lbl_8034784C->p35c->p4->p20, 1.0f, 1.0f, 99.99f, 0.0f, 1.0f, lbl_8034784C->items[2].cur[0]);
+    if (lbl_80311A60.p->f8 & 0x1000) {
+        if (lbl_8034784C->items[0].flags & 1) lbl_8034784C->items[0].flags |= 0x80;
+        if (lbl_8034784C->items[1].flags & 1) lbl_8034784C->items[1].flags |= 0x80;
+        if (lbl_8034784C->items[2].flags & 1) lbl_8034784C->items[2].flags |= 0x80;
+        if (lbl_8034784C->items[3].flags & 1) lbl_8034784C->items[3].flags |= 0x80;
+        if (lbl_8034784C->items[4].flags & 1) lbl_8034784C->items[4].flags |= 0x80;
+    }
+    n = 0;
+    { s32 i; for (i = 0; i < 5; i++) if (lbl_8034784C->items[i].flags & 1) n++; }
+    if (n == 0) {
+        fn_801D8AB4(&lbl_8034784C->items[2], 0x1e, 0x14, 1.0f, 0.0f);
+        r = 1;
+        lbl_8034784C->items[2].flags |= 6;
+    }
+    return r;
 }
 
 void fn_8022A25C(void)
@@ -3262,7 +3295,7 @@ s32 fn_8022842C(Anim_8022842C *a) {
 
 void fn_80229BEC(Obj_80229BEC *o) {
     u32 lim[5] = {0, 0x30c, 0xf0, 0x30c, 0x10e};
-    Sub *s;
+    Lerp4 *s;
     s32 i;
     switch (o->state) {
     case 0:
@@ -3280,8 +3313,8 @@ void fn_80229BEC(Obj_80229BEC *o) {
             o->state = 1;
             s = &o->sub;
             i = (u8)(o->cur - 1);
-            fn_801D89D4(s, 200, 10, s->f34, s->f38, s->f3c, s->f40, lbl_802F915C[i].a, lbl_802F915C[i].b, lbl_802F915C[i].c, lbl_802F915C[i].d);
-            fn_801D8AB4(&s[1], 0x104, 0x1e, s[1].f34, lbl_802F915C[i].e);
+            fn_801D89D4(s, 200, 10, s->cur[0], s->cur[1], s->cur[2], s->cur[3], lbl_802F915C[i].a, lbl_802F915C[i].b, lbl_802F915C[i].c, lbl_802F915C[i].d);
+            fn_801D8AB4(&s[1], 0x104, 0x1e, s[1].cur[0], lbl_802F915C[i].e);
         }
         break;
     case 1:
