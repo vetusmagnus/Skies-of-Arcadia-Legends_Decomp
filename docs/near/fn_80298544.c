@@ -23,6 +23,7 @@
  * A struct copy from a local template does give one register per field (r10..r5), but it loads
  * the template from memory, so it isn't the original's code.
  */
+#include "ninja_lib.h"
 
 void fn_80298544(NjTexRef* refs, s32 n) {
     s32 i;
