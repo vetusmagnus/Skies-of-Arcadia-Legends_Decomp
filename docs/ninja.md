@@ -215,9 +215,8 @@ Game code stays cast-free.
   with 1.3.2nj, none lost). fdiff on Ninja code needs `CCV=1.3.2nj`.
 - **Remaining compiler-blocked Ninja functions (2026-11-01).** With GC/1.3.2nj, 29 functions now match that no
   stock compiler matches (`tools/verify_mwcc_ninja.py` lists them). What is left of the copy-pattern list:
-  - One load out of place, 12 functions (the strip drawers that send each vertex value once): the offset-0
-    field is loaded last. It happens before the PCode passes, so it is probably a second compiler difference,
-    at the IRO level. Details, the list and a draft: `docs/near/fn_802A2F84.c`.
+  - The strip drawers that kept one load out of place (11) now match: see "Strip drawer file" below.
+    fn_802A3B34 has the same load plus register differences and is not merged.
   - Register assignment only (instructions exact, so not the compiler): fn_8029F86C, fn_802A0FD4, fn_802A09AC
     (the original keeps `nuv * 2` apart from `nuv`; every declaration order tried, 48 lines at best),
     fn_80295FEC (counter vs size in r31), fn_802AC5E8 (5 lines; `n * 3` computed twice).
@@ -226,6 +225,19 @@ Game code stays cast-free.
     fn_802A3790, fn_802A404C, fn_802A42DC, fn_802A44F0, fn_802A49F4, fn_802A4C20, fn_802A4FC8, fn_802A52C4,
     fn_802A5530), fn_8029DCD0/fn_8029E1B4/fn_8029E850/fn_8029EC1C, fn_80296918, fn_8029833C, fn_802A8BA4.
     fn_8029E40C/fn_8029EA5C have one FIFO register and no copies, so they aren't compiler-blocked.
+- **Strip drawer file (2026-11-01): a probable file boundary.** Eleven strip drawers (fn_802A2394, fn_802A24CC,
+  fn_802A292C, fn_802A2F84, fn_802A30FC, fn_802A3274, fn_802A35F0, fn_802A3994, fn_802A4E4C, fn_802A5738,
+  fn_802A58DC) send each vertex value once and keep the vertex loads in source order. With the patched 1.3.2,
+  IRO expression propagation (seen with encounter's 1.3.2 IRO-logging patch, "Found expression propagation at
+  273 from 171", then "Removing dead assignment 171") forwards the offset-0 load into the first FIFO store, past
+  the other loads, so it comes out last. The drawers that use each value twice (position as normal) can't be
+  forwarded and matched already. With `#pragma opt_dead_assignments off` (or `opt_propagation off`, equally)
+  over the stretch fn_802A20DC..fn_802A58DC, all 11 match and the other 306 ninja.c functions still do; the
+  same setting over the whole unit fixes the 11 but breaks 16-18 functions, all outside that stretch
+  (fn_80289EC8..fn_80291064, fn_8029681C, fn_802A1374, fn_802A7D74, njProjectScreen). So the stretch was most
+  likely its own source file built with a different optimizer setting. It is a pragma block in ninja.c for now;
+  edges: after fn_802A1374 (ends 0x802A1B54), before fn_802A7D74 (0x802A5EF8..0x802A7D74 untested), not yet
+  checked against .sdata2/padding. A real split is the next step for whoever handles splits.
 - Copy pattern, a minimal case (2026-11-01): `docs/near/fn_80298544.c`. With GC/1.3.2 the whole function is
   identical (prologue, 8x unroll, trip count, the unrolled body sharing one `li r5,0`) except the leftover loop
   MWCC builds for n % 8: the original hoists `li r9,0` plus `mr` copies for the third and later zero stores,
