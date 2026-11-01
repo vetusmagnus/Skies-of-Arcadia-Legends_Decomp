@@ -4047,6 +4047,45 @@ s32 fn_8017B6F4(void) {
     return 0;
 }
 
+extern s32 lbl_80347128;
+
+void fn_8017C6BC(void)
+{
+    CampReq buf;
+    CampCtrl* g = lbl_80307638;
+    CampCtrl* c;
+    s32 id;
+    s32 i, n;
+
+    c = lbl_8034710C->holder->ctrl;
+    camp_work.pnl[0x50]->win->f74 = -4000.0f;
+    camp_work.pnl[0x51]->win->f74 = -4000.0f;
+    camp_work.pnl[0x52]->win->f74 = -4000.0f;
+    camp_work.pnl[0x53]->win->f74 = -4000.0f;
+    camp_work.pnl[0x54]->win->f74 = -4000.0f;
+    camp_work.pnl[0x55]->win->f74 = -4000.0f;
+    c->cur[0].sel = 0;
+    camp_work.pnl[0x54]->win->f74 += 150.0f;
+    camp_work.pnl[0x54]->win->f74 += 150.0f;
+    c->cur[2].sel = g[4].cur[2].sel;
+    id = g[11].cur[0].sel;
+    fn_80195EA4(&buf, id, g[11].cur[2].sel + 6, c->cur[4].sel, 4);
+    c->cur[4].sel = 0;
+    c->cur[4].mask = 0;
+    for (i = 0; i < buf.count; i++) {
+        c->cur[4].mask |= 1 << i;
+    }
+    c->cur[0].sel = 0;
+    c->cur[0].mask = 0;
+    n = fn_80195D8C(id, g[11].cur[2].sel + 6, 4, c->cur[4].sel);
+    for (i = 0; i < n; i++) {
+        c->cur[0].mask |= 1 << i;
+    }
+    fn_80195A68(c, 1, 0, 0, 0, 1);
+    lbl_80347128 = 0;
+    fn_801954D0(0);
+}
+
 s32 fn_8018126C(void) {
     CampReq req;
     s32 off = lbl_80307638[1].cur[0].sel;
