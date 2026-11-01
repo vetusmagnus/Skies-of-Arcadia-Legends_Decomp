@@ -4,6 +4,7 @@
 #include <dolphin/os.h>
 #include "game/menu.h"
 #include <dolphin/vi.h>
+#include <dolphin/pad.h>
 #include <dolphin/gx.h>
 #include <dolphin/types.h>
 #include "game/task.h"
@@ -190,7 +191,7 @@ typedef struct {
 extern State801D* lbl_8034765C;
 extern f32 lbl_80311DF0[];
 extern s32 fn_801A3510(void);
-extern void fn_801D89D4(void* p, s32 a, s32 b, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6, f32 f7, f32 f8);
+extern void fn_801D89D4(Anim* o, u32 n, s32 flag, f32 a0, f32 a1, f32 a2, f32 a3, f32 b0, f32 b1, f32 b2, f32 b3);
 extern void fn_801D8AB4(Anim* p, s32 a, s32 b, f32 f1, f32 f2);
 typedef struct Pad {
     u32 held;      /* 0x00 */
@@ -333,14 +334,7 @@ typedef struct {
     void* ac;
     void* b0;
 } Obj68DC;
-typedef struct {
-    unsigned char pad[0xa];
-    s8 err;
-} PadStatus71C4;
-extern PadStatus71C4* lbl_8034763C;
-extern void PADControlMotor(s32 chan, u32 cmd);
-extern s32 PADRecalibrate(u32 mask);
-extern u32 PADRead(PadStatus71C4* status);
+extern PADStatus* lbl_8034763C;
 extern u32 lbl_802F6558[];
 extern u32 lbl_80311A00[];
 extern s32 lbl_8034757C;
@@ -549,7 +543,7 @@ extern void sndOutputMode(s32 mode);
 extern u32 OSGetSoundMode(void);
 extern void fn_80219378(char*);
 extern void fn_801DBE88(void);
-extern void fn_801D77B8(void);
+s32 fn_801D77B8(void);
 extern void fn_80228A20(void);
 extern void fn_80101828(void);
 extern void fn_8000A118(void);
@@ -1110,6 +1104,22 @@ void fn_801D74FC(void)
     lbl_80311A60[0] = &lbl_80311A44;
 }
 
+s32 fn_801D77B8(void) {
+    s32 i;
+
+    if (lbl_80347640 != 0) {
+        return 1;
+    }
+    lbl_8034757C = 0;
+    for (i = 0; i < 4; i++) {
+        if (lbl_8034763C[i].err == 0) {
+            lbl_8034757C = i;
+            return 1;
+        }
+    }
+    return 0;
+}
+
 void fn_801D7868(Quad *q, void *p, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6, f32 f7) {
     q->type = 3;
     q->f04 = f1;
@@ -1248,6 +1258,33 @@ void fn_801D843C(Layout* set, u32 flags, s32 mode, s32 drawmode, u32 shifted, NJ
     }
     DrawStatePop(NULL);
     DrawStateRestore();
+}
+
+void fn_801D89D4(Anim* o, u32 n, s32 flag, f32 a0, f32 a1, f32 a2, f32 a3, f32 b0, f32 b1, f32 b2, f32 b3) {
+    o->count = 0;
+    if (n == 0) {
+        o->total = 1;
+    } else {
+        o->total = n;
+    }
+    o->delay = flag;
+    o->start[0] = a0;
+    o->cur[0] = a0;
+    o->start[1] = a1;
+    o->cur[1] = a1;
+    o->start[2] = a2;
+    o->cur[2] = a2;
+    o->start[3] = a3;
+    o->cur[3] = a3;
+    o->end[0] = b0;
+    o->end[1] = b1;
+    o->end[2] = b2;
+    o->end[3] = b3;
+    o->delta[0] = (a0 - b0) / n;
+    o->delta[1] = (a1 - b1) / n;
+    o->delta[2] = (a2 - b2) / n;
+    o->delta[3] = (a3 - b3) / n;
+    o->flags = 1;
 }
 
 void fn_801D995C(s32 a, f32 f1, f32 f2, f32 f3) {
