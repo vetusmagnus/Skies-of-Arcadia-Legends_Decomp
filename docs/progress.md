@@ -2194,7 +2194,7 @@ Stream-read casts (owner-approved, Ninja only, commented): 8 more Ninja function
 
 ## Near misses and held-back matches, wave 3 (2026-11-01, worktree build/wt-nearheld, from 2dd276c)
 
-5,666 to 5,956 of 7,117 (+290: 158 held-back matches folded, 132 new near-miss matches), `main.dol` SHA OK; every game unit fdiff and
+5,666 to 5,964 of 7,117 (+298: 158 held-back matches folded, 132 new near-miss matches, 8 merged on the owner's decisions), `main.dol` SHA OK; every game unit fdiff and
 floatcheck clean except the failures that were already there at 2dd276c (battle.c, btlchar.c, chunk.c, chunklist.c, draw2d.c, evobj.c,
 flags.c, gp_check.c, motion.c, tasks.c and the known fn_801BE608; battle.c, chunklist.c and flags.c have fewer now). Pointer casts in
 src/game went from 2,871 to 2,713 and value casts from 1,109 to 1,078 (the merges replaced old views with real types).
@@ -2225,18 +2225,20 @@ Type fixes that released the most:
 Owner decisions: the implicit-int form (declared `s32`, no return statement, as accepted for fn_80168908) is accepted for fn_80136A28
 and fn_8016CCD8; fn_80192B04's `goto done` find loop is merged.
 
-Held back for the owner (they match, but not merged):
-- `void *` hops that read data as another type (type punning without cast syntax): fn_80207554, fn_801FD44C, fn_801F57F8 (script
-  handlers reading a mixed float/int/string argument stream), fn_8022AE04 (byte checksum over a block), fn_8000C7C0, fn_800C1A50,
-  fn_800CB6D0.
-- Pointer/int casts for alignment tests or byte offsets: fn_80008194, fn_801DBE88 (`*(u32*)0x800000F8`), fn_80061F58, fn_801E0FD4,
-  fn_8009D400, fn_80007BFC; cast-only near misses fn_802273E0/fn_801DB2C8 (2 lines without the cast).
-- fn_800AC728 (`(s32)` on a u16 field; the original converts it through the signed path), fn_800C9144 (tests an uninitialised local),
-  fn_80087074 (`(s8)fn_8008210C()` call-result casts), fn_80069B58 (needs fn_800108EC declared `s32 (s32, s32, ChrRec*, ChrRec*)`
-  while unit_80005B50 defines it `s16 (s32, s32, s32, Fn108EC*)`).
-- fn_800308FC and fn_80030280 match only with `#pragma readonly_strings`; the real fix is battle.c built with `-str reuse,readonly`
-  (the rest of battle.c is unchanged by that flag), but their string offsets still depend on fn_8002F598 and the other battle.c
-  string users matching first. No pragma is used in game code.
+Owner decisions on the held-back groups (same day; 5,956 to 5,964 of 7,117):
+- Merged, each cast with a short comment: the address alignment tests fn_80008194, fn_80007BFC (unit_80005B50, which now uses the
+  SDK DVD calls and real stream global types), fn_801E0FD4; fn_801DBE88's `*(u32 *)0x800000F8` bus-clock read (the SDK's
+  OS_TIMER_CLOCK reschedules the code); fn_8009D400's `((u32)start - (u32)stream) >> 1` byte offset; fn_800AC728's `(s32)w->x22e`
+  (EvInfoRing per-kind record); fn_80087074's `(s8)fn_8008210C()` low-byte compares; fn_800C9144's uninitialised `ready` (the
+  compiler's "not initialized" warning shows up as 6 lines in sc_chk; the code matches).
+- Kept out: the `void *` hops (fn_80207554, fn_801FD44C, fn_801F57F8, fn_8022AE04, fn_8000C7C0, fn_800C1A50, fn_800CB6D0) and
+  fn_80061F58, whose alignment test merges cleanly but whose `void *dst` parameter is reassigned to a `void **` slot (about 300
+  callers pass the address of differently typed pointers; a `void **` parameter needs a cast at each call); waiting on the owner.
+- Held: fn_80069B58 (it would need fn_800108EC declared `s32 (s32, s32, ChrRec*, ChrRec*)` while unit_80005B50 defines it
+  `s16 (s32, s32, s32, Fn108EC*)`; it sits inside a run of same-style handlers, so there is no file boundary to split it off), and
+  the `#pragma readonly_strings` pair fn_800308FC/fn_80030280 (to be fixed by building battle.c with `-str reuse,readonly` once
+  fn_8002F598 and the other battle.c string users match). No pragma is used in game code. Cast-only near misses fn_802273E0 and
+  fn_801DB2C8 (2 lines without the cast) are still near.
 
 Remaining held-back matches (49) and their blockers: cross-caller prototype conflicts that point to separate original TUs
 (fn_80015138/fn_80014BA8 on fn_8002923C, fn_800086BC, fn_8021730C, fn_8020AF8C, fn_802088D8 vs fn_80210860, fn_801B4F78 vs the unit's
