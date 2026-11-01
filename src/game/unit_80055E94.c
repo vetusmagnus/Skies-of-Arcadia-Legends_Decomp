@@ -82,7 +82,8 @@ typedef struct ChrRec {
     u32 bits;
     u8 pad20[0x20];
     s16 x40;
-    u8 pad42[4];
+    s16 x42;
+    u8 pad44[2];
     s16 x46;
     s16 x48;
     u8 pad4a[0x74 - 0x4a];
@@ -2844,6 +2845,26 @@ void fn_80068B1C(s16 a, s16 i, s32 b, s8 v)
     }
 }
 
+void fn_80068BE0(s16 a, s16 i, s32 b, s8 v) {
+    ChrRec *c = lbl_80309DE4[i];
+    WorkRec *w = lbl_80309700[i]->work;
+    u32 bits = c->bits;
+    if ((bits & 0x6950) && !(bits & 0x800)) {
+        w->x44 = -1;
+        w->x3c = -1;
+    } else {
+        fn_800696A8(a, i, b, v);
+        w->x46 = w->x44;
+    }
+    fn_8006AFD0(a, i, b, 0);
+    if (lbl_80309DE4[i]->x14 - lbl_80309700[i]->work->x3c <= 0) {
+        w->x44 = 0;
+        w->x46 = -1;
+        w->x48 = -1;
+        w->x4a = -1;
+    }
+}
+
 void fn_80068CB8(s16 a, s16 i, s32 b, s8 v)
 {
     WorkRec *w = lbl_80309700[i]->work;
@@ -3109,6 +3130,19 @@ void fn_8006AA40(s16 a, s16 i, s32 b, s8 v)
         w->x46 = -1;
         w->x48 = -1;
         w->x4a = -1;
+    }
+}
+
+void fn_8006AB6C(s16 a, s16 idx, s32 b, s8 v)
+{
+    WorkRec *w = lbl_80309700[idx]->work;
+
+    if (lbl_80309DE4[idx]->x42 != 0 && !(lbl_80309DE4[idx]->bits & 0x40)) {
+        w->x46 = v;
+        lbl_80309730[idx].x8 = 5;
+    } else {
+        fn_8006AFD0(a, idx, b, 0);
+        w->x46 = -1;
     }
 }
 
