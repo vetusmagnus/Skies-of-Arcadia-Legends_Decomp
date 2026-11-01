@@ -3201,6 +3201,121 @@ void fn_800DB9E4(Task* t) {
     }
 }
 
+/* The emitter's per-kind info record. */
+typedef struct {
+    u8 pad00[0x24];
+    f32 limit;
+    f32 scale;
+} LimInfo;
+
+
+
+extern void* fn_801C8930(void* p);
+extern void fn_800DBF5C(void* a, s32* count);
+extern void fn_800DC220(void* a, f32** buf);
+extern void fn_800DC524(void* a, f32** buf);
+extern void* fn_801E1C34(s32 size);
+extern s32 fn_8025ECC4(void);
+
+static inline f32 AbsF_800DBB4C(f32 x) {
+    if (x < 0.0f) {
+        x = -x;
+    }
+    return x;
+}
+
+void fn_800DBB4C(Task* t) {
+    EvObj* w = t->work;
+    IVec_800D9BA0 k;
+    Vec_800D9BA0 v;
+    f32 near;
+    f32 far;
+    k.x = w->b16a;
+    k.y = 0;
+    k.z = w->b16b;
+    fn_80090B68(&k, &v);
+    if (lbl_80347450 != 0) {
+        fn_80090BE4(&lbl_80347450->pos.x, &k);
+    } else {
+        return;
+    }
+    if (w->mapMode->mode != 0) {
+        t->state = 0xFF;
+    } else if (lbl_80347450 == 0) {
+        return;
+    }
+    ClipZPush();
+    near = lbl_80347560;
+    far = -1200.0f;
+    lbl_80346788 = near;
+    lbl_8034678C = far;
+    njClipZ(near, far);
+    switch (t->state) {
+    case 0: {
+        f32* buf;
+        s32 i;
+        w->x1ec = 1;
+        if (w->texlist != 0) {
+            fn_80227810(w->texlist);
+        }
+        w->clipNear = -1100.0f;
+        w->clipFar = -1200.0f;
+        w->x08 = 1;
+        w->x2c = 1;
+        w->pos.x = w->pos.x - v.x;
+        w->pos.z = w->pos.z - v.z;
+        w->home.x = w->pos.x;
+        w->home.y = w->pos.y;
+        w->home.z = w->pos.z;
+        fn_800DBF5C(fn_801C8930(w->model), &w->x20c);
+        w->x25c = fn_801E1C34(w->x20c * 12);
+        w->x264 = fn_801E1C34(w->x20c * 12);
+        w->x268 = fn_801E1C34(w->x20c * 12);
+        buf = w->x25c;
+        fn_800DC220(fn_801C8930(w->model), &buf);
+        for (i = 0; i < w->x20c * 3; i++) {
+            w->x264[i] = 3.0517578125e-05f * fn_8025ECC4() - 0.5;
+        }
+        memcpy(w->x268, w->x25c, w->x20c * 12);
+        t->state = 1;
+        break;
+    }
+    case 1: {
+        s32 i;
+        f32* a = w->x25c;
+        f32* b = w->x264;
+        f32* buf = w->x268;
+        LimInfo* lim = w->ext->info;
+        fn_80090A7C(&lbl_80347450->pos.x, &v);
+        w->pos.x = (w->home.x + v.x) - 2400.0f * k.x;
+        w->pos.y = w->home.y;
+        w->pos.z = (w->home.z + v.z) - 2400.0f * k.z;
+        for (i = 0; i < w->x20c * 3; i++) {
+            if ((b[i] < 0.0f ? -b[i] : b[i]) < 0.1 || AbsF_800DBB4C((buf[i] + b[i]) - a[i]) > lim->limit) {
+                b[i] = lim->scale * (3.0517578125e-05f * fn_8025ECC4() - 0.5f);
+            } else {
+                buf[i] += b[i];
+            }
+        }
+        fn_800DC524(fn_801C8930(w->model), &buf);
+        fn_801E5DF0(w);
+        break;
+    }
+    case 0xFF:
+        if (w->x1ec) {
+            fn_801E1784(w->x25c);
+            fn_801E1784(w->x264);
+            fn_801E1784(w->x268);
+            if (w->texlist != 0) {
+                fn_802275A4(w->texlist, 0);
+            }
+        }
+        fn_80100B74(t);
+        break;
+    }
+    ClipZPop();
+}
+
 void fn_800DCF18(Task* t) {
     EvInfoBox* info;
     EvObj* e = t->work;

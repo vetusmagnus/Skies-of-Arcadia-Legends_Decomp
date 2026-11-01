@@ -89,7 +89,7 @@ typedef struct {
 
 /* Trail. */
 typedef struct {
-    s32 count;     /* 0x00 */
+    u32 count;     /* 0x00 */
     u8 pad4[0x14 - 4];
     u32 flags;     /* 0x14 */
     u32 x18;       /* 0x18 texture id / flags */
@@ -98,7 +98,8 @@ typedef struct {
     s32 actDist;   /* 0x28 */
     s32 x2c;       /* 0x2C */
     s32 speed;     /* 0x30 */
-    u8 pad34[0x4C - 0x34];
+    u8 pad34[0x48 - 0x34];
+    u32 x48;       /* 0x48 */
     u32 x4c;       /* 0x4C */
     u32 x50;       /* 0x50 */
     u32 x54;       /* 0x54 trail mode */
@@ -243,7 +244,11 @@ typedef struct {
     u8 padC[0x18 - 0xC];
     s16 h18;      /* 0x18 */
     u8 pad1a[0x1A0 - 0x1A];
-    u32 x1a0;     /* 0x1A0 */
+    s32 x1a0;     /* 0x1A0 */
+    u8 pad1a4[0x260 - 0x1A4];
+    void* x260;   /* 0x260 callback */
+    u8 pad264[0x31C - 0x264];
+    void* x31c;   /* 0x31C callback */
 } EvSub;
 
 typedef struct {
@@ -308,7 +313,8 @@ typedef struct EvObj {
     NJS_TEXLIST* texlist;    /* 0x100 */
     NJS_POINT3 home;         /* 0x104 */
     Angle tgt[3];            /* 0x110 */
-    u8 pad11C[0x158 - 0x11C];
+    NJS_POINT3 x11c;         /* 0x11C saved scale */
+    u8 pad128[0x158 - 0x128];
     NJS_POINT3 x158;         /* 0x158 */
     f32 x164;                /* 0x164 */
     s16 state;               /* 0x168 */
@@ -320,7 +326,7 @@ typedef struct EvObj {
     u16 x172;                /* 0x172 */
     u8 pad174[2];
     u16 id;                  /* 0x176 */
-    u8 pad178[2];
+    u16 x178;                /* 0x178 */
     u16 x17a;                /* 0x17A */
     u8 pad17C[4];
     s32 x180;                /* 0x180 */
@@ -385,7 +391,7 @@ typedef struct EvObj {
     f32 x258;                /* 0x258 fade */
     void* x25c;             /* 0x25C per-kind record (EvScript for map objects) */
     EvMode* mapMode;         /* 0x260 */
-    u8 pad264[4];
+    f32* x264;               /* 0x264 */
     void* x268;              /* 0x268 per-kind record */
     u8 x26c;                 /* 0x26C */
 } EvObj;
