@@ -3004,23 +3004,6 @@ typedef struct {
     u8 pad240[0x260 - 0x240];
     Script_800D5F94_800D62DC* x260;     /* 0x260 */
 } Ent_800D62DC;
-typedef struct { s32 a; u32 ang; } Sub44;
-typedef struct {
-    u8 pad0[0x44];
-    Sub44 s44;
-    u8 pad4C[0xb4 - 0x4c];
-    NJS_POINT3 p_b4;
-    u8 padc0[0xe8 - 0xc0];
-    void* e8;
-    u8 pad_ec[0x18c - 0xec];
-    f32 f18c;
-    u8 pad190[0x210 - 0x190];
-    s32 i210;
-    u8 pad214[0x250 - 0x214];
-    f32 f250;
-    f32 f254;
-    f32 f258;
-} Obj_800D3668;
 extern void* lbl_803470E8;
 extern void* lbl_803470F0;
 extern void* lbl_803470F4;
@@ -4816,13 +4799,84 @@ void fn_800D2CB8(u8 v) {
     lbl_80305BA8.b0 = v;
 }
 
-extern void fn_800D4690(Msg*, s16);
-void fn_800D4944(Msg* a, s16 i) {
-    fn_800D4690(a, i);
+void fn_800D3668(EvObj* o);
+extern void fn_801E735C(s32 a, void* o, f32 f);
+
+void fn_800D4690(Task *self)
+{
+    EvObj *e = self->work;
+    EvInfoMap *c;
+    s32 n;
+    s32 m;
+    s32 ok;
+    f32 t;
+    MapInfo2 *tb;
+
+    switch (self->state) {
+    case 0:
+    case 0xfe:
+        ok = 0;
+        tb = &lbl_80311AC0;
+        if (tb->map == 0x6b) {
+            if (tb->room == 0x64) ok = 1;
+        } else if (tb->map == 0xd1) {
+            if (tb->room == 0x61) ok = 1;
+        }
+        if (ok != 0) {
+            self->state = 2;
+        } else {
+            self->state = 1;
+        }
+        break;
+    case 3:
+        if (lbl_80347450 != 0 && lbl_80347450->hit != 0) {
+            c = EvMapInfo(e);
+            n = (c->count > 8) ? c->nearDist : 0;
+            t = n / 100.0f;
+            e->x24c.x = t;
+            fn_801E735C(0, e, 0.0f);
+            m = (c->count > 0xc) ? c->x34 : 0;
+            if (0.0f > t) m = -m;
+            e->x24c.y = m / 100.0f;
+            if (e->motion != 0) {
+                n = e->motion->nbFrame - 1;
+                e->x258 = n;
+                e->x210 = n << 3;
+            }
+            fn_800D3668(e);
+            self->state = 4;
+        }
+        break;
+    case 4:
+        fn_800D3668(e);
+        if (lbl_80310B3C[0x3a] & 1) {
+            e->x24c.z = e->x24c.z + e->x24c.x;
+            if (0.0f <= e->x24c.x) {
+                if (e->x24c.z > e->x210) {
+                    e->x24c.z = e->x24c.z - e->x210;
+                }
+            } else {
+                if (e->x24c.z < 0.0f) {
+                    e->x24c.z = e->x24c.z + e->x210;
+                }
+            }
+        }
+        break;
+    case 1:
+    case 2:
+        break;
+    default:
+        fn_80100B74(self);
+        break;
+    }
 }
 
-void fn_800D4964(Msg* a, s16 i) {
-    fn_800D4690(a, i);
+void fn_800D4944(Task* t) {
+    fn_800D4690(t);
+}
+
+void fn_800D4964(Task* t) {
+    fn_800D4690(t);
 }
 
 void *fn_800D5184(s16 *tbl, s16 idx) {
@@ -10362,29 +10416,29 @@ s32 fn_800D62DC(void* unused, Ent_800D62DC* e, Script_800D5F94_800D62DC* s, s16 
     return ok;
 }
 
-void fn_800D3668(Obj_800D3668* o) {
+void fn_800D3668(EvObj* o) {
     NJS_POINT3 v1, v2;
     f32 c;
     s32 q;
     f32 p;
     void *e;
     f32 x;
-    x = o->f254;
-    p = o->f258;
+    x = o->x24c.z;
+    p = o->x258;
     q = (s32)(x / p);
     if (q != 0) x = x - p * (f32)q;
-    o->f18c = x;
+    o->x18c = x;
     njPushMatrixEx();
     fn_80286EE8();
     fn_8028B498();
-    fn_801E7B2C(o->e8, &v1, 0, o->f18c);
+    fn_801E7B2C(o->motion, &v1, 0, o->x18c);
     njUnitMatrix(0);
     njRotateY(0, -(q << 13));
-    njCalcPoint(0, &v1, &o->p_b4);
-    c = o->f254 + o->f250;
-    if (0.0f > o->f250 && 0.0f > c) c += (f32)o->i210;
-    p = o->f258;
-    e = o->e8;
+    njCalcPoint(0, &v1, &o->pivotPos);
+    c = o->x24c.z + o->x24c.y;
+    if (0.0f > o->x24c.y && 0.0f > c) c += (f32)o->x210;
+    p = o->x258;
+    e = o->motion;
     q = (s32)(c / p);
     if (q != 0) c = c - p * (f32)q;
     fn_801E7B2C(e, &v1, 0, c);
@@ -10392,11 +10446,11 @@ void fn_800D3668(Obj_800D3668* o) {
     njRotateY(0, -(q << 13));
     njCalcPoint(0, &v1, &v2);
     njPopMatrixEx();
-    v2.x = v2.x - o->p_b4.x;
+    v2.x = v2.x - o->pivotPos.x;
     v2.y = 0.0f;
-    v2.z = v2.z - o->p_b4.z;
-    fn_801DD5E8(&o->s44, &v2);
-    o->s44.ang = (u16)(-o->s44.ang);
+    v2.z = v2.z - o->pivotPos.z;
+    fn_801DD5E8(o->ang, &v2);
+    o->ang[1] = (u16)(-o->ang[1]);
 }
 
 void fn_800D208C(u32 col, f32 start) {
