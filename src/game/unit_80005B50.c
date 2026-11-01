@@ -129,8 +129,8 @@ typedef struct Pair {
 extern Task* lbl_80309E24[];
 extern void fn_8028AB48(void);
 extern void fn_802A9B94(s32 a, s32 b, s32 c, void (*f)(void));
-extern u32 lbl_803478A0;
-extern u32 lbl_803478A4;
+extern s32 lbl_803478A0;
+extern s32* lbl_803478A4;
 extern u8 *lbl_803478DC;
 extern void fn_8000832C(s32 a, s32 b, s32 c);
 /* A linked condition record (fn_800085EC walks the list). */
@@ -804,7 +804,7 @@ typedef struct CalendarStamp {
     u8 weekday;
     u8 pad;
 } CalendarStamp;
-extern s32 fn_80007BFC(void* a, void* b);
+extern s32 fn_80007BFC(void* a, s32 b);
 typedef struct Slot {
     s16 id;
     u8 pad[0xa];
@@ -1077,7 +1077,7 @@ typedef struct ArcHdr {
 } ArcHdr;
 extern void fn_80298E48(void);
 extern s32 fn_80297558(ArcSet* set, s32 idx, u32* a, s32* b);
-extern s32 fn_80298798(ArcHdr* hdr, s32* c, ArcInfo* info);
+extern u32 fn_80298798(ArcHdr* hdr, s32* c, void* info);
 extern s32 fn_80298A04(ArcSet* set, s32 idx, s32 c, s32 b, ArcHdr* hdr, s32* out);
 extern s32 fn_80298BF8(s32 out, s32 x);
 extern void fn_80298BCC(s32 out);
@@ -1551,6 +1551,74 @@ void fn_80007370(s32 a, s32 b, s32 c)
 void fn_80007398(s32 a, s32 b, s32 c)
 {
     fn_802A9338(a, b, c, fn_802890A4);
+}
+
+void fn_80008170(void);
+extern NjTexRef* lbl_80347ED4;
+extern char lbl_80348060[5];
+extern char lbl_80348068[5];
+extern char lbl_802DADC0[];
+extern void fn_80298034(char* out, ArcInfo* info, char* ext);
+extern s32 fn_80008194(char* name);
+s32 fn_80008258(s32* out);
+void fn_80007514(s32** buf, s32* size);
+s32 fn_8000810C(void* a, s32 b);
+s32 fn_800079AC(ArcSet* set, s32 idx) {
+    char name[256];
+    char path[256];
+    ArcHdr hdr;
+    s32 n;
+    s32 c;
+    u32 a;
+    s32 b;
+    s32 out;
+    s32* ptr;
+    s32 m;
+    s32 r;
+    fn_80298E48();
+    r = fn_80297558(set, idx, &a, &b);
+    if (r != 0) return r;
+    fn_80298034(path, set->slots[idx].info, lbl_80348060);
+    strcpy(name, lbl_802DADC0);
+    strcat(name, path);
+    if (fn_80008194(name) < 0) {
+        fn_80298034(path, set->slots[idx].info, lbl_80348068);
+        strcpy(name, lbl_802DADC0);
+        strcat(name, path);
+        if (fn_80008194(name) < 0) {
+            lbl_803457F8.err = 2;
+            return -1;
+        }
+    }
+    fn_80008258(&n);
+    fn_80007514(&ptr, &m);
+    if (m < n) {
+        fn_80008170();
+        return -1;
+    }
+    if (fn_8000810C(ptr, 0x20) < 0) {
+        fn_80008170();
+        lbl_803457F8.err = 5;
+        return -1;
+    }
+    if (fn_80298798(&hdr, &c, ptr) == 0) return -1;
+    if (*ptr == 0x47434958) { /* "GCIX" */
+        if (a != -1) c = a;
+        r = fn_80298A04(set, idx, c, b, &hdr, &out);
+        if (r != 0) return r;
+        if (fn_8000810C(lbl_80347ED4[out].mem->body.data, lbl_80347ED4[out].mem->body.size) < 0) {
+            fn_80008170();
+            fn_80298BCC(out);
+            set->slots[idx].x4 &= ~0x200000;
+            set->slots[idx].x8 = 0;
+            lbl_803457F8.err = 8;
+            return -1;
+        }
+        fn_80008170();
+    } else {
+        return -1;
+    }
+    return 1;
 }
 
 void fn_80008170(void) {
@@ -3617,13 +3685,13 @@ void fn_80007280(s32 a, s32 b, s32 c)
     fn_802A9B94(a, b, c, fn_8028AB48);
 }
 
-void fn_80007514(u32 *a, u32 *b)
+void fn_80007514(s32 **a, s32 *b)
 {
     *b = lbl_803478A0;
     *a = lbl_803478A4;
 }
 
-s32 fn_80008258(u32 *out)
+s32 fn_80008258(s32 *out)
 {
     u32 n = *(u32 *)(lbl_803478DC + 0x34);
     *out = (n + 0x1f) & ~0x1fu;
@@ -4940,7 +5008,7 @@ s32 fn_800073C0(CalendarStamp* out) {
     return 1;
 }
 
-s32 fn_8000810C(void* a, void* b) {
+s32 fn_8000810C(void* a, s32 b) {
     s32 r = 0;
     while (r == 0) {
         r = fn_80007BFC(a, b);
