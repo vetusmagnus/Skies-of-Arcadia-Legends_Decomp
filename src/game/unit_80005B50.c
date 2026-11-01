@@ -3445,6 +3445,46 @@ static inline int PartyCanAct(void)
     }
     return 1;
 }
+static inline s8 FindBySlot(s8 slot)
+{
+    Task **pp = lbl_80309E24;
+    s8 j;
+    for (j = 0; j < 12; pp++, j++) {
+        if (*pp != 0) {
+            ChrWork *w = (*pp)->work;
+            if (slot == fn_80020E10(w->x10->xc)) {
+                return w->st->id;
+            }
+        }
+    }
+    return -1;
+}
+s8 fn_80017324(u16 mode_) {
+    s32 mode = mode_;
+    s8 slot;
+    s8 result;
+    s8 found;
+    result = -1;
+    slot = 0;
+    while (result < 0) {
+        found = FindBySlot(slot);
+        if (found >= 0) {
+            if (rand() % 4 == 0) {
+                if (mode != 1) {
+                    result = found;
+                } else if ((ChrW(fn_80021658(found))->st->xec & 0x100) == 0) {
+                    result = found;
+                }
+            }
+        }
+        slot++;
+        if (slot == 6) {
+            slot = 0;
+        }
+    }
+    return result;
+}
+
 void fn_80017430(s8 sel)
 {
     ChrInfo* u;
