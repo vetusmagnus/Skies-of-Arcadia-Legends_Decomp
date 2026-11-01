@@ -9,6 +9,8 @@
 #include "game/text.h"
 #include "game/menu.h"
 #include "game/gamedata.h"
+#include "game/sprite.h"
+#include <stdio.h>
 
 /* Digit glyph codes for the ones, tens, hundreds and thousands places. These are the start of
  * the original file's .data (lbl_802F8A20, 0x58 bytes): separate arrays, addressed from one
@@ -258,7 +260,6 @@ extern void fn_801A372C(void);
 extern u8 lbl_802D973C[];
 extern u8 lbl_802D9750[];
 extern TexRoot *fn_801DB244(void *p);
-extern void fn_80227810(void *list);
 extern void fn_801DBA58(u32 a, u32 b, u32 c);
 extern void fn_801CBC30(void);
 extern void fn_801CBBBC(void);
@@ -979,6 +980,63 @@ s32 fn_8021A2B0(Save1568* a, void* crew, s32 stat)
         r += CrewSum(crew, stat);
     }
     return r;
+}
+
+typedef struct IconInfo {
+    u32 colour;
+    u8 pad4[0x1a - 4];
+    s16 icon;
+} IconInfo;
+
+extern s32 fn_8021EE1C(NJS_TEXLIST* tex, char* name);
+
+static inline s32 FindIcon(NJS_TEXLIST* tex, char* name)
+{
+    s16 idx = fn_8021EE1C(tex, name);
+    u16 uidx = idx;
+    if (tex->nbTexture <= uidx) {
+        idx = tex->nbTexture - 1;
+    }
+    return idx;
+}
+
+void fn_8021E75C(s16 x0, s16 y0, s16 x1, s16 y1, NJS_TEXLIST* tex, IconInfo* info, s32 blend, f32 z)
+{
+    DrawState state;
+    char name[16];
+    Vertex2D v[4];
+    s32 i;
+    DrawStateDefault2D(&state);
+    if (blend != 0) {
+        state.blend_src = 8;
+        state.blend_dst = 10;
+    }
+    sprintf(name, "icon3%02d", info->icon);
+    fn_80299040(tex);
+    fn_80298FE4(FindIcon(tex, name));
+    z = fn_801DBD9C(z);
+    for (i = 0; i < 4; i++) {
+        if (i < 2) {
+            v[i].x = x0;
+            v[i].u = 0.0f;
+        } else {
+            v[i].x = x1;
+            v[i].u = 0.75f;
+        }
+        if (i % 2 != 0) {
+            v[i].y = y1;
+            v[i].v = 0.75f;
+        } else {
+            v[i].y = y0;
+            v[i].v = 0.0f;
+        }
+        v[i].z = z;
+        v[i].colour = info->colour;
+    }
+    if (DrawStatePush(&state)) {
+        fn_80291064(v, 4, 1);
+        DrawStatePop(0);
+    }
 }
 
 void fn_8021EDE0(NJS_TEXLIST *p, s16 n)
@@ -4804,12 +4862,7 @@ void fn_8021BF80(Owner_8021BF80 *o, NJS_TEXLIST *arg, s32 val, s16 count, s16 ex
     }
 }
 
-typedef struct {
-    f32 x, y, z, u, v;
-    u32 colour;
-} VertexTex;
 
-extern void fn_80291064(VertexTex* v, s32 count, s32 mode);
 
 /* fn_8021EDE0 inlined: select texture n of the list, clamped to the last one. */
 static inline void SetTexture(NJS_TEXLIST* t, s16 n)
@@ -4824,7 +4877,7 @@ static inline void SetTexture(NJS_TEXLIST* t, s16 n)
 void fn_8021D648(f32 z, s16 x, s16 y, s16 mode, NJS_TEXLIST* tex, s32 blend, u32 alpha)
 {
     DrawState st;
-    VertexTex v[4];
+    Vertex2D v[4];
     f32 zz;
     f32 u0, v0;
     f32 u1, v1;
