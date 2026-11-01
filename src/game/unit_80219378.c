@@ -1138,6 +1138,50 @@ void fn_8022697C(s32 v) {
     lbl_803477F4 = v;
 }
 
+typedef struct TexReq {
+    u32 a;
+    s16 b;
+    s16 c;
+} TexReq;
+extern s32 fn_80298210(Ctx802281DC **, Sub802281DC **);
+extern s32 fn_8029873C(Ctx802281DC *, TexReq *);
+extern void fn_80297E3C(Ctx802281DC *);
+
+Ctx802281DC *fn_80227268(u32 id, u16 x, s16 y, s16 z) {
+    Ctx802281DC *p;
+    Sub802281DC *q;
+    TexReq req;
+    s32 i;
+
+    if (id > 0xFFFFFFEF) return 0;
+    p = lbl_803475EC;
+    for (i = 0; i < 0x400; i++) {
+        q = p->sub;
+        if (q != 0 && q->a == id) {
+            p->a10++;
+            p->sub->z44++;
+            return p;
+        }
+        p++;
+    }
+    if (fn_80298210(&p, &q) == -1) return 0;
+    p->sub = q;
+    req.a = x;
+    req.b = y;
+    req.c = z;
+    if (fn_8029873C(p, &req) == -1) {
+        fn_802281DC(p);
+        return 0;
+    }
+    if (id != 0xFFFFFFFF) p->sub->a = id;
+    fn_80297E3C(p);
+    p->a8 = -1;
+    p->sub->z44 = 1;
+    p->a10 = 1;
+    lbl_80347EC4++;
+    return p;
+}
+
 void fn_802281BC(s32 n) {
     fn_802979B8();
 }
