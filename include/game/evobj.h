@@ -391,7 +391,7 @@ typedef struct EvObj {
     f32 x258;                /* 0x258 fade */
     void* x25c;             /* 0x25C per-kind record (EvScript for map objects) */
     EvMode* mapMode;         /* 0x260 */
-    void* x264;              /* 0x264 */
+    f32* x264;               /* 0x264 */
     void* x268;              /* 0x268 per-kind record */
     u8 x26c;                 /* 0x26C */
 } EvObj;
