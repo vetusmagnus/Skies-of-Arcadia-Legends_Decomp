@@ -360,6 +360,18 @@ s32 fn_802890A4(NjModel* m) {
 void fn_8028A054(void) {
 }
 
+#pragma optimization_level 2
+void fn_8028A058(u32 argb, s32 p, f32 w) {
+    fn_8029B248(5, p);
+    lbl_80347E28.a = argb >> 24;
+    lbl_80347E28.r = argb >> 16;
+    lbl_80347E28.g = argb >> 8;
+    lbl_80347E28.b = argb;
+    GXSetChanMatColor(GX_COLOR0A0, lbl_80347E28);
+    GXSetLineWidth((w + 0.16f) * 12.0f, GX_TO_ZERO);
+}
+#pragma optimization_level reset
+
 void fn_8028A268(void) {
 }
 
@@ -518,6 +530,35 @@ s32 fn_8028BBCC(NJS_POINT3* amin, NJS_POINT3* amax, NJS_POINT3* bmin, NJS_POINT3
     return 1;
 }
 
+s32 fn_8028F884(f32* a, f32* s) {
+    f32 dx, dy, dz, ex, ey, ez, t, d, r;
+    f32 x, y, z;
+    dx = a[0] - s[0];
+    dy = a[1] - s[1];
+    dz = a[2] - s[2];
+    ex = s[3] - s[0];
+    ey = s[4] - s[1];
+    ez = s[5] - s[2];
+    t = (dx * ex + dy * ey + dz * ez) / (ex * ex + ey * ey + ez * ez);
+    if (t < 0.0f) {
+        d = dx * dx + dy * dy + dz * dz;
+    } else if (t > 1.0f) {
+        f32 u, v, w;
+        u = ex - dx;
+        v = ey - dy;
+        w = ez - dz;
+        d = u * u + v * v + w * w;
+    } else {
+        x = t * ex - dx;
+        y = t * ey - dy;
+        z = t * ez - dz;
+        d = x * x + y * y + z * z;
+    }
+    r = a[3] + s[6];
+    if (d <= r * r) return 1;
+    return 0;
+}
+
 s32 fn_8028F95C(f32* a, f32* b) {
     f32 dx, dy, dz, r;
     dx = b[0] - a[0];
@@ -575,9 +616,48 @@ s32 fn_8029076C(f32* a, f32* b) {
     return (f32)fabs(d * d / (la * lb)) > 0.975f;
 }
 
+static inline f32 vlen(f32* v) {
+    f32 z, x, y;
+    x = v[0];
+    y = v[1];
+    z = v[2];
+    x = x * x;
+    y = y * y;
+    z = z * z;
+    return sqrtf(x + y + z);
+}
+static inline f32 vlen2(f32* v) {
+    f32 x, y, z;
+    x = v[0] * v[0];
+    y = v[1] * v[1];
+    z = v[2] * v[2];
+    return sqrtf(x + y + z);
+}
+s32 fn_802907D0(f32* a, f32* b) {
+    f32 la, lb;
+    la = vlen(&a[3]);
+    lb = vlen2(&b[3]);
+    if ((f32)fabs((a[3] * b[3] + a[4] * b[4] + a[5] * b[5]) / (la * lb)) < 0.025f) return 1;
+    return 0;
+}
+
 void fn_80290E98(u32 x) {
     lbl_80347E48 = (x << 8) | (x >> 24);
 }
+
+#pragma optimization_level 1
+void fn_80290EA8(u16 x) {
+    lbl_80347E44 = x;
+}
+#pragma optimization_level reset
+
+#pragma optimization_level 1
+void fn_802913D4(u32 x) {
+    x = __rlwinm(x, 8, 0, 31);
+    lbl_80347E50 = 1;
+    lbl_80347E58 = x;
+}
+#pragma optimization_level reset
 
 void fn_802913E8(s32 n, u32 x) {
     fn_80298FE4(n);
@@ -593,9 +673,11 @@ void fn_80291428(s32 p) {
     lbl_80347E5C = p;
 }
 
+#pragma optimization_level 1
 f32 njCos(Angle a) {
     return cos(a * ANG_RAD);
 }
+#pragma optimization_level reset
 
 f32 fn_802917A0(f32 x) {
     f64 ip;
@@ -634,9 +716,11 @@ f32 fn_802918DC(f32 x) {
     return r;
 }
 
+#pragma optimization_level 1
 f32 njSin(Angle a) {
     return sin(a * ANG_RAD);
 }
+#pragma optimization_level reset
 
 f32 fn_80291978(f64 x) {
     f32 r = (x < 0.0) ? -sqrtf(-x) : sqrtf(x);
@@ -653,9 +737,11 @@ f32 fn_80291A5C(f64 x) {
     return r;
 }
 
+#pragma optimization_level 1
 f32 njTan(Angle a) {
     return tan(a * ANG_RAD);
 }
+#pragma optimization_level reset
 
 void njCalcPoint(NJS_MATRIX m, NJS_POINT3* p, NJS_POINT3* out) {
     PSMTXMultVec(m ? m : lbl_80347EB4, p, out);
@@ -684,21 +770,23 @@ void njGetTranslation(NJS_MATRIX m, NJS_POINT3* out) {
     out->z = p[11];
 }
 
+#pragma optimization_level 1
 void njInitMatrix(NJS_MATRIX* base, s32 limit) {
     f32* aligned = (f32*)(((u32)base + 31) & ~31);
     lbl_80347EB4 = aligned;
     lbl_80347EB0 = aligned;
     lbl_80347EAC = limit;
     lbl_80347EA8 = 1;
-    PSMTXCopy(&lbl_803007C8[0][0], lbl_80347EB4);
+    PSMTXCopy(&lbl_803007C8[0][0], aligned);
 }
+#pragma optimization_level reset
 
 f32 njInnerProduct(NJS_POINT3* a, NJS_POINT3* b) {
     return PSVECDotProduct(a, b);
 }
 
-void fn_80291CF8(void) {
-    fn_802394C4();
+void fn_80291CF8(f32* a, f32* b, f32* out, f32 t) {
+    C_QUATSlerp(a, b, out, t);
 }
 
 s32 njInvertMatrix(NJS_MATRIX m) {
@@ -947,17 +1035,21 @@ void fn_802929C0(f32* q) {
     lbl_80347F70 = 5;
 }
 
+#pragma optimization_level 1
 void fn_80292A00(NJS_POINT3* axis, f32 w) {
     f32 q[4];
     f32 t[12];
+    f32* m;
     q[0] = axis->x;
     q[1] = axis->y;
     q[2] = axis->z;
     q[3] = w;
     PSMTXQuat(t, q);
-    PSMTXConcat(lbl_80347EB4, t, lbl_80347EB4);
+    m = lbl_80347EB4;
+    PSMTXConcat(m, t, m);
     lbl_80347F70 = 5;
 }
+#pragma optimization_level reset
 
 void njRotateEx(Angle* ang, s32 lv) {
     f32 t[12];
@@ -1328,6 +1420,12 @@ void fn_802938C0(void (*cb)(NjObj*)) {
     lbl_80347E60 = cb;
 }
 
+#pragma optimization_level 1
+void fn_80293B34(s32 i) {
+    lbl_80347E64 = &lbl_803456D0[i];
+}
+#pragma optimization_level reset
+
 s32 fn_80293C68(u16* out) {
     void* k = lbl_80347E64->keys[lbl_80347E64->count];
     if (k != 0) {
@@ -1490,6 +1588,60 @@ static inline void walk_a1(NjObj* obj) {
     MOTION_WALK(fn_802947D4, walk_a2)
 }
 
+#pragma opt_propagation off
+void fn_802947D4(NjObj* obj) {
+    NJS_POINT3 po;
+    NJS_POINT3 so;
+    f32 qo[4];
+    f32 q1[4];
+    Angle rot1[3];
+    f32 scl1[3];
+    f32 pos1[3];
+    f32 q0[4];
+    Angle rot0[3];
+    f32 scl0[3];
+    f32 pos0[3];
+    f32 s, t;
+    s32 r0, r1;
+    u16 flags;
+    t = lbl_80347E70;
+    s = 1.0f - t;
+    fn_80293B34(1);
+    r1 = fn_802951D4(obj, pos1, rot1, scl1, q1);
+    flags = lbl_80347E78 ? lbl_80347E7C : flags;
+    fn_80293B34(0);
+    r0 = fn_802951D4(obj, pos0, rot0, scl0, q0);
+    if (lbl_80347E78 != 0 && t < 1.0f) {
+        lbl_80347E7C = flags;
+    }
+    if (r0 != 2) {
+        if (r0 == 0) {
+            fn_802926A4(rot0, q0);
+        } else {
+            fn_802927CC(rot0, q0);
+        }
+    }
+    if (r1 != 2) {
+        if (r1 == 0) {
+            fn_802926A4(rot1, q1);
+        } else {
+            fn_802927CC(rot1, q1);
+        }
+    }
+    po.x = pos0[0] * s + pos1[0] * t;
+    po.y = pos0[1] * s + pos1[1] * t;
+    po.z = pos0[2] * s + pos1[2] * t;
+    so.x = scl0[0] * s + scl1[0] * t;
+    so.y = scl0[1] * s + scl1[1] * t;
+    so.z = scl0[2] * s + scl1[2] * t;
+    fn_80291CF8(q0, q1, qo, t);
+    njTranslateEx(&po);
+    fn_802929C0(qo);
+    njScaleEx(&so);
+}
+
+#pragma opt_propagation reset
+
 void fn_802949A4(NJS_MOTION_LINK* link, f32 rate) {
     fn_80293B34(1);
     fn_8029557C(link->motion[1], link->frame[1]);
@@ -1599,6 +1751,29 @@ s32 fn_802951D4(NjObj* obj, f32* pos, Angle* rot, f32* scale, f32* quat) {
     return ret;
 }
 
+#pragma optimization_level 1
+void fn_802954EC(NjObj* obj) {
+    NJS_POINT3 pos;
+    NJS_POINT3 scale;
+    Angle rot[3];
+    f32 quat[4];
+    s32 r = fn_802951D4(obj, &pos.x, rot, &scale.x, quat);
+    njTranslateEx(&pos);
+    switch (r) {
+    case 0:
+        njRotateEx(rot, 0);
+        break;
+    case 1:
+        njRotateEx(rot, 1);
+        break;
+    default:
+        fn_802929C0(quat);
+        break;
+    }
+    njScaleEx(&scale);
+}
+#pragma optimization_level reset
+
 void fn_8029557C(NJS_MOTION* mot, f32 frame) {
     u32 fl;
     fn_80293B4C(mot, frame);
@@ -1700,6 +1875,23 @@ void fn_80295EB8(NjModel* m) {
         lbl_80347E88->rec++;
     }
 }
+
+#pragma optimization_level 1
+void fn_80296090(s32 i) { lbl_80347E88 = &lbl_80345770[i]; }
+#pragma optimization_level reset
+
+#pragma opt_propagation off
+void fn_802960A8(NJS_MOTION* m, f32 t) {
+    NjCacheCtx* c = lbl_80347E88;
+    void* p = m->mdata;
+    c->cur = p;
+    lbl_80347E88->w8 = m->nbFrame;
+    lbl_80347E88->t = t;
+    lbl_80347E88->key++;
+    lbl_80347E88->count = lbl_80347E88->cur->count;
+    lbl_80347E88->rec = lbl_80347E88->cur->rec;
+}
+#pragma opt_propagation reset
 
 void fn_802960FC(void) {
     lbl_80347E88->cur++;
@@ -1909,6 +2101,53 @@ void fn_80297504(int a, f32* s, f32* c) {
     *c = njCos(a);
 }
 
+#pragma optimization_level 1
+/* K&R definition: fn_8029CF7C also calls it with only the texture body. */
+s32 fn_802976F8(b, w, h, fmt)
+NjTexBody* b;
+u32 w;
+u32 h;
+u32 fmt;
+{
+    u32 f;
+    s32 extra;
+    u8 mip;
+    u32 g;
+    u32 size;
+    b->w00 = fmt & 0xff;
+    b->w0c = w;
+    b->w10 = h;
+    b->w08 = b->flags = 0;
+    f = 0;
+    if (fmt & 0x100) f |= 0x80000000;
+    if (fmt & 0x200) f |= 0x8000;
+    if (fmt & 0x400) f |= 0x1000000;
+    if (fmt & 0x800) {
+        f |= 0x40000000;
+        if (fmt & 0x1000) b->w08 = 1;
+        if (fmt & 0x2000) b->w08 = 2;
+    }
+    b->flags = f;
+    extra = 0;
+    g = b->flags;
+    mip = g >> 31;
+    if (g & 0x40000000) {
+        switch (b->w00) {
+        case 8:
+            extra = 0x20;
+            break;
+        case 9:
+            extra = 0x200;
+            break;
+        }
+    }
+    size = GXGetTexBufferSize(b->w0c, b->w10, b->w00, mip, 100);
+    b->size = size + extra;
+    return 0;
+}
+
+#pragma optimization_level reset
+
 void fn_802979B8(void) {
     s32 i;
     NjTexMem* a = lbl_80347ECC;
@@ -1972,7 +2211,7 @@ s32 fn_80297B5C(s32 key) {
     return r;
 }
 
-static inline s32 load_tex(NjTexMem* m, void* a, void* b) {
+static inline s32 load_tex(NjTexMem* m, void* a, u32 b) {
     if ((m->body.flags & 0x80000000) && b) {
         if (fn_802995CC(&m->body, a, b)) {
             lbl_803457F8.texerr = 8;
@@ -1987,7 +2226,7 @@ static inline s32 load_tex(NjTexMem* m, void* a, void* b) {
     return 1;
 }
 
-s32 fn_80297BD8(s32 idx, void* a, void* b) {
+s32 fn_80297BD8(s32 idx, void* a, u32 b) {
     s32 r;
     fn_80298E48();
     r = load_tex(lbl_803457A8.texlist->textures[idx].texaddr->mem, a, b);
@@ -1997,7 +2236,7 @@ s32 fn_80297BD8(s32 idx, void* a, void* b) {
     return r;
 }
 
-static inline s32 reload_tex(NjTexMem* m, void* a, void* b, void* c) {
+static inline s32 reload_tex(NjTexMem* m, void* a, u32 b, u32 c) {
     s32 e = fn_802986C8(&m->body, a, b, c);
     if (e) {
         switch (e) {
@@ -2013,7 +2252,7 @@ static inline s32 reload_tex(NjTexMem* m, void* a, void* b, void* c) {
     return 1;
 }
 
-s32 fn_80297CC0(s32 idx, void* a, void* b, void* c) {
+s32 fn_80297CC0(s32 idx, void* a, u32 b, u32 c) {
     s32 r;
     fn_80298E48();
     r = reload_tex(lbl_803457A8.texlist->textures[idx].texaddr->mem, a, b, c);
@@ -2034,6 +2273,21 @@ void fn_80297DB4(Rec6* p, s32 a, s32 b, s32 c, s32 d) {
     p->f10 = c;
     p->f14 = d;
     p->f4 = b;
+}
+
+s32 fn_80297DC8(s32 key) {
+    NjTexRef* r;
+    s32 i = fn_802982F0(key);
+    if (i < 0) {
+        return -1;
+    }
+    r = &lbl_80347ED4[i];
+    if (lbl_803457A8.w48 != r->mem->id) {
+        lbl_803457A8.w48 = r->mem->id;
+        lbl_803457A8.w4c = r->key;
+        fn_8029976C(&r->mem->body, 0);
+    }
+    return 1;
 }
 
 s32 fn_8029800C(u32 fmt) {
@@ -2146,10 +2400,27 @@ s32 fn_80298210(NjTexRef** outB, NjTexMem** outA) {
     return idx;
 }
 
+s32 fn_802982F0(s32 key) {
+    s32 i;
+    for (i = 0; i < lbl_80347ED0; i++) {
+        if (lbl_80347ED4[i].mem != 0 && key == lbl_80347ED4[i].mem->id) return i;
+    }
+    return -1;
+}
+
 s32 fn_80298694(NjTexBody* b, const void* src) {
     fn_802994B8(b->data, src, b->size, 0);
     return 0;
 }
+
+#pragma optimization_level 1
+s32 fn_80298700(NjTexRef* r) {
+    if (fn_8029959C(&r->mem->body) != 0) {
+        return -1;
+    }
+    return 1;
+}
+#pragma optimization_level reset
 
 s32 fn_8029873C(NjTexRef* r, NjTexSize* sz) {
     if (fn_80297804(&r->mem->body, sz->w, sz->h, sz->fmt) != 0) {
@@ -2159,10 +2430,77 @@ s32 fn_8029873C(NjTexRef* r, NjTexSize* sz) {
     return 1;
 }
 
+#pragma optimization_level 1
+#pragma optimization_level 1
+void fn_80298BCC(s32 n) { fn_80297AC0(&lbl_80347ED4[n]); }
+
+#pragma optimization_level reset
+
+s32 fn_80298BF8(s32 idx, void* src) {
+    NjTexMem* m = lbl_80347ED4[idx].mem;
+    if (m == NULL) {
+        lbl_803457F8.texerr = 1;
+        return -1;
+    }
+    if (fn_802986C8(&m->body, src, 0, m->body.size) != 0) {
+        lbl_803457F8.texerr = 8;
+        return -1;
+    }
+    return 1;
+}
+#pragma optimization_level reset
+
 void fn_80298C78(NJS_TEXLIST* tl, s32 i, s32 j) {
     tl->textures[i].texaddr = &lbl_80347ED4[j];
     tl->textures[i].attr |= 0x200000;
 }
+
+#pragma optimization_level 1
+#pragma opt_common_subs on
+static inline s32 find_tex(u32 id) {
+    return fn_802982F0(id);
+}
+s32 fn_80298CAC(u32 id, u32 key, u32 fmt, s32* out) {
+    s32 idx = find_tex(id);
+    s32 r;
+    s32 n;
+    NjTexRef* nr;
+    if (fn_8029800C(fmt)) {
+        if (idx < 0) {
+            *out = -1;
+            return 0;
+        }
+        r = fn_802981B8(id, key);
+        if (r < 0) {
+            n = fn_80298210(&nr, NULL);
+            if (n < 0) {
+                return -1;
+            }
+            nr->key = key;
+            nr->mem = lbl_80347ED4[idx].mem;
+            nr->mem->refs++;
+            nr->refs = 1;
+            nr->w14 = lbl_80347ED4[idx].w14;
+            fn_80297E3C(nr);
+            *out = n;
+            return 1;
+        }
+        *out = r;
+        lbl_80347ED4[r].refs++;
+        lbl_80347ED4[r].mem->refs++;
+        return 1;
+    }
+    *out = idx;
+    if (idx < 0) {
+        return 0;
+    }
+    lbl_80347ED4[idx].refs++;
+    lbl_80347ED4[idx].mem->refs++;
+    return 1;
+}
+
+#pragma opt_common_subs reset
+#pragma optimization_level reset
 
 void fn_80298E48(void) {
     lbl_803457F8.n = -1;
@@ -2205,6 +2543,13 @@ s32 fn_80298ED0(u32 idx) {
     return 0;
 }
 
+#pragma optimization_level 1
+s32 fn_80299040(NJS_TEXLIST* t) {
+    lbl_803457A8.texlist = t;
+    return 1;
+}
+#pragma optimization_level reset
+
 void fn_80299058(void) {
     fn_802979B8();
 }
@@ -2236,6 +2581,17 @@ s32 fn_802994B8(void* dst, const void* src, u32 n, s32 unused) {
     return 0;
 }
 
+#pragma optimization_level 1
+s32 fn_80299500(void* a, u32 size, void** out) {
+    s32 r;
+    *out = OSAllocFromHeapClear(lbl_80347F44, size);
+    r = 3;
+    if (*out) r = 0;
+    return r;
+}
+
+#pragma optimization_level reset
+
 s32 fn_8029954C(void* dst, NjTexBody* b) {
     fn_802AC710(dst, b->data, b->size);
     DCFlushRange(dst, b->size);
@@ -2246,6 +2602,39 @@ s32 fn_8029959C(NjTexBody* b) {
     OSFreeToHeap(lbl_80347F44, b->data);
     return 0;
 }
+
+#pragma optimization_level 1
+s32 fn_802995CC(NjTexBody* b, void* src, u32 dv) {
+    s32 div = dv;
+    u32 sz;
+    void* d;
+    s32 w = b->w0c;
+    s32 h = b->w10;
+    u32 fmt = b->w00;
+    s32 lod;
+    u32 off;
+    lod = w / div;
+    switch (lod) {
+    case 1: lod = 0; break;
+    case 2: lod = 1; break;
+    case 4: lod = 2; break;
+    case 8: lod = 3; break;
+    case 0x10: lod = 4; break;
+    case 0x20: lod = 5; break;
+    case 0x40: lod = 6; break;
+    case 0x80: lod = 7; break;
+    case 0x100: lod = 8; break;
+    case 0x200: lod = 9; break;
+    case 0x400: lod = 10; break;
+    }
+    off = GXGetTexBufferSize(w, h, fmt, 1, lod);
+    sz = GXGetTexBufferSize(w, h, fmt, 1, lod + 1) - off;
+    d = b->data + off;
+    fn_802AC710(d, src, sz);
+    DCFlushRange(b->data + off, sz);
+    return 0;
+}
+#pragma optimization_level reset
 
 s32 fn_80299744(s32* a, s32* b) {
     *a = 0;
@@ -3140,6 +3529,10 @@ s32 fn_802A8ADC(void) { return lbl_80346A50; }
 void fn_802A8F40(s32 v) { lbl_80347FB4 = v; }
 
 void fn_802A8FA0(s32 v) { lbl_80347FB8 = v; }
+
+#pragma optimization_level 1
+void fn_802A8FA8(s32 i) { lbl_80347FBC = &lbl_80346690[i]; }
+#pragma optimization_level reset
 
 inline void fn_802A907C(NjObj* obj) {
     NjDrawCtx* ctx;

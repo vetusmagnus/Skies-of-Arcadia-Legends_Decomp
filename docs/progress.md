@@ -2184,3 +2184,7 @@ config.yml blocks the false relocation from `lbl_802DC1F8` (a key/bit-mask table
 .init pointer). SDK code is 960/960. Ninja: +34 (including the nine asm routines in `ninja_asm.c`), header types folded into
 `ninja_lib.h` (NjEnvState, light colour/ambient, NgCtx cursor, NJS_POINT2, NjCapsule); details and the remaining
 blockers in docs/ninja.md "Library pass".
+
+Ninja near-miss pass (2026-11-01, 4 Opus agents): 26 more functions (7 plain C, 19 with a per-function
+`#pragma optimization_level`/`opt_*`, allowed by the owner when nothing else matches); 5,652 of 7,117. Details in
+docs/ninja.md "Per-function optimization levels".

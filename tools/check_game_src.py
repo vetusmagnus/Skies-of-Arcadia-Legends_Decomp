@@ -11,6 +11,8 @@ without that:
   - assembly or binary includes (`#include "*.s"`, `.incbin`, `INCLUDE_ASM`)
   - fakematch markers (`FAKEMATCH`, `NONMATCHING`, `fakematch`)
 Library code under extern/ is not checked: its asm functions are asm in the original libraries.
+The Ninja library (src/ninja/) may use per-function optimizer pragmas (`optimization_level`, `opt_*`,
+`scheduling`) where the original build used a different optimization level and no plain-C form matches.
 Comments and string literals are ignored. With --stamp, FILE is touched on success (for ninja).
 """
 import os, re, sys
@@ -24,6 +26,7 @@ RULES = [
     (re.compile(r"\b(?:FAKEMATCH|NONMATCHING|fakematch)\b"), "fakematch marker"),
 ]
 EXTS = (".c", ".cpp", ".h", ".hpp", ".inc")
+NINJA_PRAGMA = re.compile(r"^\s*#\s*pragma\s+(?:optimization_level|opt_\w+|scheduling)\b")
 
 
 def strip(text):
@@ -74,6 +77,8 @@ def main():
         with open(path, encoding="utf-8", errors="replace") as f:
             lines = strip(f.read()).splitlines()
         for no, line in enumerate(lines, 1):
+            if "src/ninja/" in path.replace("\\", "/") and NINJA_PRAGMA.search(line):
+                continue
             for rx, what in RULES:
                 if rx.search(line):
                     print(f"{path}:{no}: {what} is not allowed in game code")

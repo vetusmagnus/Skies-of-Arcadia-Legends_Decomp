@@ -106,7 +106,7 @@ Where things are
 Matching status
 ---------------
 
-245 of 451 functions match byte for byte (`src/ninja/ninja.c`, objdiff and `tools/match/fdiff.py`
+271 of 451 functions match byte for byte (`src/ninja/ninja.c`, objdiff and `tools/match/fdiff.py`
 plus `floatcheck.py` agree; main.dol still hashes OK). The unit covers the whole region
 (`0x80286EE8`-`0x802AC75C`) because no real file boundary has turned up: the `.sdata2` pool is
 contiguous in text order, so the data gives no edge, and no edge has been checked against
@@ -153,6 +153,20 @@ a coincidence of one conversion pattern, not the library's setting.
 - `NjGxState` (`lbl_803457A8`, 0x50 bytes): state words, the blend mode at +0x22, a mode at
   +0x2A and the current texlist at +0x44.
 
+
+
+### Per-function optimization levels (2026-11-01)
+
+With the owner's OK to use a pragma where it is the only way to match, 20 functions matched inside
+`#pragma optimization_level 1` (one at level 2, two with `opt_propagation off`, one adding `opt_common_subs on`),
+each wrapped around that single function with a `reset`. That one setting clears two of the "recurring blockers"
+below: the call result copied through r0 (fn_80298700, fn_80299500, fn_802954EC, fn_802976F8, fn_80298CAC) and the
+r3/r4 swap around a table-index `mulli` (fn_80293B34, fn_80296090, fn_80298BCC), plus njSin/njCos/njTan and
+njInitMatrix. The original library evidently mixed optimization levels (most of the texture code at 0x80298xxx-
+0x802995xx is level 1). `tools/check_game_src.py` allows only these optimizer pragmas, only under src/ninja/.
+Also new: fn_802976F8 has a K&R definition because fn_8029CF7C calls it with only the texture body;
+NjTexBody.data is `u8*`; fn_80291CF8 passes its four arguments to C_QUATSlerp (declared with flat f32 pointers).
+The copy pattern (FIFO) does not respond to these pragmas.
 
 ### Library pass (2026-10-31)
 

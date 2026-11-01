@@ -159,7 +159,8 @@ void njRotateEx(Angle*, s32);
 void njScaleEx(NJS_POINT3*);
 void njSetMatrix(NJS_MATRIX md, NJS_MATRIX ms);
 void fn_80297504(int a, f32* s, f32* c);
-void fn_802394C4(void);
+void C_QUATSlerp(f32* p, f32* q, f32* r, f32 t);
+void fn_80291CF8(f32* a, f32* b, f32* out, f32 t);
 
 void PSMTXConcat(const f32* a, const f32* b, f32* ab);
 void PSMTXMultVec(const f32* m, const NJS_POINT3* src, NJS_POINT3* dst);
@@ -350,9 +351,9 @@ extern s32 lbl_80347F44;
 void fn_80298E48(void);
 s32 fn_802982F0(s32 key);
 s32 fn_80297AC0(NjTexRef* e);
-s32 fn_802995CC(NjTexBody* b, void* a, void* c);
+s32 fn_802995CC(NjTexBody* b, void* a, u32 div);
 s32 fn_80298694(NjTexBody* b, const void* src);
-s32 fn_802986C8(NjTexBody* b, void* a, void* c, void* d);
+s32 fn_802986C8(NjTexBody* b, void* a, u32 off, u32 n);
 s32 fn_80297804(NjTexBody* b, u32 w, u32 h, u32 fmt);
 s32 fn_8029959C(NjTexBody* b);
 s32 fn_8029954C(void* dst, NjTexBody* b);
@@ -553,5 +554,15 @@ s32 fn_802AB2C4(NjModel* m);
 s32 fn_802AC31C(NjModel* m);
 void fn_802AB340(s16* list);
 extern s32 lbl_80346A5C;
+
+extern NgCtx lbl_80346690[2];
+extern f32 lbl_80347E44;
+void fn_802960A8(NJS_MOTION* m, f32 t);
+s32 fn_80298BF8(s32 idx, void* src);
+void* OSAllocFromHeapClear(int heap, u32 size);
+void fn_80297E3C(NjTexRef* r);
+s32 fn_8029800C(u32 fmt);
+s32 fn_802981B8(u32 id, u32 key);
+s32 fn_80298210(NjTexRef** outB, NjTexMem** outA);
 
 #endif

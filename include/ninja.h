@@ -47,7 +47,7 @@ typedef struct {
     u32 w10;
     u32 size;  /* 0x14 */
     u32 flags; /* 0x18 */
-    void* data; /* 0x1c */
+    u8* data; /* 0x1c */
 } NjTexBody;
 
 /* Texture memory slot (lbl_80347ECC, 0x48 bytes). */
