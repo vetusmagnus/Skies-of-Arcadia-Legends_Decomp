@@ -341,7 +341,8 @@ typedef struct Obj {
     s32 x8;
     s32 xc;
     s32 x10;
-    u8 pad14[8];
+    s32 x14;
+    s32 x18;
     s32 x1c;
 } Obj;
 extern void njPushMatrixEx(void);
@@ -1594,6 +1595,32 @@ void fn_8022B07C(P_UNIT0000 *p)
 }
 
 void fn_8022B0B4(void) {
+}
+
+extern void fn_801CBBD8(void);
+extern u8 lbl_802D9F9C[];
+
+void fn_8022B808(Obj *o) {
+    fn_801A2C40();
+    o->xc = fn_801A28F4(&o->x10);
+    if (o->xc == 0) {
+        o->x8 = 0;
+        o->x0 = 7;
+    } else {
+        o->x8 = 2;
+        lbl_80347854 = fn_801DB244(lbl_802D9F9C);
+        fn_80227810(lbl_80347854->inner->list);
+        fn_801CBC30();
+        fn_801CBBD8();
+        o->x18 = 1;
+        o->x1c = 1;
+        if (o->xc == 2) {
+            o->x0 = 3;
+            o->x14 = 1;
+        } else {
+            o->x0 = 2;
+        }
+    }
 }
 
 void fn_8022B960(void *p)
