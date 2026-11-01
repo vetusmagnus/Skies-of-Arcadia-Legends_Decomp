@@ -39,7 +39,8 @@ typedef struct AkFio {
     s32 prio;       /* 0x88 */
     s32 prio0;      /* 0x8c */
 } AkFio;
-typedef struct { char* str; u32 w4; } FioName; /* w4: the buffer address */
+typedef struct { char* str; u32 w4; } FioName;
+/* w4: the buffer address */
 typedef struct FioOut {
     s32 addr;
     u32 own;        /* addr was allocated for the request */
@@ -1288,4 +1289,46 @@ s32 fn_801CB460(s32 type) {
         return 0x80000001;
     }
     return 0;
+}
+
+s16 *fn_801CB51C(s16 *p, s16 want)
+{
+    s32 c0;
+    s32 c;
+    s32 n;
+    s32 stride;
+    u16 len;
+    if (p == NULL) {
+        return NULL;
+    }
+    c0 = p[0] & 0xFF;
+    p++;
+    stride = fn_801CB460(c0);
+    if (stride >= 0) {
+        n = p[0];
+        p++;
+    } else {
+        len = stride;
+        n = len;
+    }
+    p += n;
+    if (c0 != 0xFF) {
+        do {
+            c = p[0] & 0xFF;
+            if (want == c) {
+                return p;
+            }
+            p++;
+            stride = fn_801CB460(c);
+            if (stride >= 0) {
+                n = p[0];
+                p++;
+            } else {
+                len = stride;
+                n = len;
+            }
+            p += n;
+        } while (c != 0xFF);
+    }
+    return NULL;
 }
