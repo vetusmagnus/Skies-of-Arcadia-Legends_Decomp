@@ -76,9 +76,6 @@ extern void SePlay(s32 id, s32 a, s32 b);
 extern void fn_80097294(s32 a);
 extern s32 lbl_80346F80;
 extern s32 lbl_80347290;
-typedef struct Node_80149070 Node_80149070;
-/* lbl_80346F88: 500 node slots (fn_801490F4 allocates them). */
-extern Node_80149070** lbl_80346F88;
 extern void* memset(void* dst, s32 c, u32 n);
 typedef struct Slot {
     u32 flags;
@@ -263,6 +260,11 @@ typedef struct Node {
     struct Node* x10;
     struct Node* x14;
 } Node;
+/* lbl_80346F88: 500 node slots (fn_801490F4 allocates them). */
+extern Node** lbl_80346F88;
+void fn_80148E4C(Node *p);
+extern void fn_801E17E0(void*);
+void fn_80148EDC(Node* n);
 extern void fn_80131500(s8 a);
 extern void fn_80131658(Cell *c);
 extern void fn_80140264(void);
@@ -606,7 +608,6 @@ typedef struct Ent_80143200 {
     u8 pad0[0x20];
     Stat *stat;
 } Ent_80143200;
-void fn_80148EDC(Node_80149070 *n);
 typedef struct {
     u8 b0;
     u8 b1;
@@ -3979,3 +3980,16 @@ void fn_80142C78(void)
     }
 }
 
+/* Frees a node chain. Declared inline, so MWCC expands the self-call eight levels deep in
+ * this (out-of-line, since its callers come first) copy. */
+inline void fn_80148EDC(Node* n)
+{
+    if (n != NULL) {
+        if (n->x4 != NULL) {
+            fn_80148EDC(n->x4);
+            n->x4 = NULL;
+        }
+        fn_80148E4C(n);
+        fn_801E17E0(n);
+    }
+}
