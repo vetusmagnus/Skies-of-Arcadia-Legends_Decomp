@@ -1329,6 +1329,90 @@ void fn_80053964(Pawn *o) {
     fn_80011400(un->id, 0);
 }
 
+void fn_80053C48(Pawn *o) {
+    ActTask *c;
+    BtlUnit *un;
+    Pawn *src;
+    if (o->mv->flags & 0x40000000) {
+        c = fn_8001E05C(o->child);
+    } else {
+        c = o->child;
+    }
+    un = c->work->unit;
+    if ((o->mv->flags & 0x01000000) && o->step != 0 && (un->x50 & 0x40000000)) {
+        o->f68 |= 0x20000000;
+    }
+    switch (o->step) {
+    case 0:
+        if (o->frame < o->mv->start) {
+            break;
+        }
+        if (lbl_80309EC8.o.kind2 != o->kind2) {
+            src = 0;
+        } else {
+            switch (o->kind2) {
+            case 0xf:
+            case 0x10:
+                if (o->idA != lbl_80309EC8.o.idA) {
+                    src = 0;
+                } else {
+                    src = &lbl_80309EC8.o;
+                }
+                break;
+            default:
+                src = 0;
+                break;
+            }
+        }
+        if (src != 0) {
+            o->fd8 = src->fd8;
+        } else {
+            o->fd8 = 0.0f;
+        }
+        fn_80014AB8(1, o);
+        o->idA = un->id;
+        fn_8001D288(&o->pos, c->work->unit->id, o->fd8, 0.0f);
+        fn_8001D200(c, &o->at);
+        fn_80071F84(o->rot, &o->at, &o->pos);
+        fn_80011370(un->id, -1);
+        if (!(o->mv->flags & 0x10000000)) {
+            fn_80032B4C();
+        }
+        o->step = 1;
+    case 1:
+        fn_80011370(un->id, -1);
+        if (o->mv->flags & 0x20000000) {
+            fn_8001D288(&o->pos, c->work->unit->id, o->fd8, 0.0f);
+            fn_8001D200(c, &o->at);
+            if (o->mv->flags & 0x02000000) {
+                o->fd8 += o->mv->f14;
+            } else {
+                o->fd8 += 1.0f;
+            }
+        }
+        fn_80071F84(o->rot, &o->at, &o->pos);
+        if (!(o->mv->flags & 0x10000000)) {
+            switch (o->mv->kind) {
+            case 0x10:
+                fn_80032BBC(un->id, 0);
+                break;
+            default:
+                if (!(o->f68 & 0x20000000)) {
+                    fn_80032BBC(un->id, 1);
+                } else {
+                    fn_80032BBC(un->id, 0);
+                }
+                break;
+            }
+        }
+        lbl_80309EC8.o = *o;
+        break;
+    }
+    if (o->step != 0) {
+        fn_80011400(un->id, 0);
+    }
+}
+
 void fn_80053F38(u8 id, s8 b) {
     Task *c;
     Pawn *w;
