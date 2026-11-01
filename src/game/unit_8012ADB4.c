@@ -45,7 +45,7 @@ typedef struct {
     s8 x1;
     u8 x2;
     u8 x3;
-    u8 x4;
+    s8 x4;
     u8 pad5;
     s8 x6;
     u8 pad7[0x50 - 7];
@@ -534,6 +534,53 @@ s32 fn_8012C7E8(Fn8012C744Obj *unused) {
         fn_8012CA4C();
     }
     return 1;
+}
+
+void fn_8012D508(u8 n) {
+    SysB* b = lbl_80346F20->x24;
+    s8 v = b->x5c - n;
+    b->x5d = v;
+    switch (v) {
+    case 0:
+        lbl_80346F20->x28[13] = fn_801D68C4(lbl_80346F04, 0x19);
+        lbl_80346F20->x28[15] = fn_801D68C4(lbl_80346F04, 0x32);
+        break;
+    case 1:
+        lbl_80346F20->x28[13] = fn_801D68C4(lbl_80346F04, 0x17);
+        lbl_80346F20->x28[15] = fn_801D68C4(lbl_80346F04, 0x30);
+        break;
+    case 2:
+        lbl_80346F20->x28[13] = fn_801D68C4(lbl_80346F04, 0x15);
+        lbl_80346F20->x28[15] = fn_801D68C4(lbl_80346F04, 0x2E);
+        break;
+    case 3:
+        lbl_80346F20->x28[13] = fn_801D68C4(lbl_80346F04, 0x14);
+        lbl_80346F20->x28[15] = fn_801D68C4(lbl_80346F04, 0x2D);
+        break;
+    case 4:
+        lbl_80346F20->x28[13] = fn_801D68C4(lbl_80346F04, 0x18);
+        lbl_80346F20->x28[15] = fn_801D68C4(lbl_80346F04, 0x31);
+        break;
+    case 5:
+        lbl_80346F20->x28[13] = fn_801D68C4(lbl_80346F04, 0x16);
+        lbl_80346F20->x28[15] = fn_801D68C4(lbl_80346F04, 0x2F);
+        break;
+    case 6:
+        if (lbl_80346F20->x24->x4 == 0) {
+            lbl_80346F20->x28[13] = fn_801D68C4(lbl_80346F04, 0x8E);
+            lbl_80346F20->x28[15] = fn_801D68C4(lbl_80346F04, 0x90);
+        } else {
+            lbl_80346F20->x28[13] = fn_801D68C4(lbl_80346F04, 0x8F);
+            lbl_80346F20->x28[15] = fn_801D68C4(lbl_80346F04, 0x90);
+        }
+        break;
+    case 7:
+        lbl_80346F20->x28[13] = fn_801D68C4(lbl_80346F04, 0x1A);
+        lbl_80346F20->x28[15] = fn_801D68C4(lbl_80346F04, 0x33);
+        break;
+    }
+    lbl_80346F20->x24->f54 = 1.0f;
+    lbl_80346F20->x24->f58 = 0.0f;
 }
 
 void fn_8012E404(u8 v) { lbl_80346F28->x24->x31 = v; }
