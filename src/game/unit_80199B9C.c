@@ -149,7 +149,7 @@ typedef struct Self_8019E294 {
     u8 pad1[0xb];
     Ctx_8019E294 *ctx;
 } Self_8019E294;
-extern s32 fn_801A2670(u8 idx, s32 *out);
+extern s32 fn_801A2670(s32 idx, s32 *out);
 extern void fn_801A64B4(void *o, s32 k);
 typedef struct Ctx_8019E650 {
     u8 pad0[4];
@@ -532,7 +532,7 @@ typedef struct ShopWork {
     s8 who[4];       /* 0x10 */
     s16 stat[4][4];  /* 0x14 */
     u8 b34;          /* 0x34 */
-    u8 pad35;
+    u8 count;        /* 0x35 party size */
     u8 b36;          /* 0x36 */
     u8 b37;          /* 0x37 */
     ShopMember m[4];     /* 0x38: the party, in order */
@@ -2110,6 +2110,90 @@ void fn_8019B42C(void* p, u32 a) {
     ((u32*)p)[0] = a;
     ((u8**)p)[1] = lbl_8030741C + 8;
     ((u32*)p)[2] = 0;
+}
+
+void fn_801A28A8(void);
+extern s32 CARDMountAsync(s32 chan, void *work, void (*detach)(void), void (*attach)(void));
+extern s32 CARDFormatAsync(s32 chan, void (*cb)(void));
+
+s32 fn_801A2670(s32 idx, s32 *out)
+{
+    s32 done = 0;
+    s32 r;
+    s32 t;
+    switch (lbl_80347180) {
+    case 0:
+        if (lbl_8034718C[idx] == 0) {
+            lbl_8034718C[idx] = fn_801E1C7C(0xA000);
+        }
+        CARDMountAsync(idx, lbl_8034718C[idx], idx == 0 ? fn_801A2CC4 : fn_801A2C58, 0);
+        do {
+            fn_801DC214();
+            r = CARDGetResultCode(idx);
+        } while (r == -1);
+        switch (r) {
+        case 0:
+        case -6:
+        case -13:
+            lbl_80347180 = 1;
+            break;
+        default:
+            *out = r;
+            done = 1;
+            break;
+        }
+        break;
+    case 1:
+        r = CARDFormatAsync(idx, fn_801A28A8);
+        if (r == 0 || r == -1) {
+            lbl_80347180 = 2;
+        } else {
+            if (lbl_8034718C[idx] != 0) {
+                fn_801DC214();
+                t = CARDUnmount(idx);
+                if (t == 0 || t == -3) {
+                    fn_801E17E0(lbl_8034718C[idx]);
+                    lbl_8034718C[idx] = 0;
+                }
+            }
+            *out = r;
+            done = 1;
+        }
+        break;
+    case 2:
+        r = CARDGetResultCode(idx);
+        if (r != -1) {
+            if (r == 0) {
+                if (lbl_8034718C[idx] != 0) {
+                    fn_801DC214();
+                    t = CARDUnmount(idx);
+                    if (t == 0 || t == -3) {
+                        fn_801E17E0(lbl_8034718C[idx]);
+                        lbl_8034718C[idx] = 0;
+                    }
+                }
+                *out = 0;
+                done = 1;
+            } else {
+                if (lbl_8034718C[idx] != 0) {
+                    fn_801DC214();
+                    t = CARDUnmount(idx);
+                    if (t == 0 || t == -3) {
+                        fn_801E17E0(lbl_8034718C[idx]);
+                        lbl_8034718C[idx] = 0;
+                    }
+                }
+                *out = r;
+                done = 1;
+            }
+        }
+        break;
+    default:
+        *out = -0x80;
+        done = 1;
+        break;
+    }
+    return done;
 }
 
 void fn_801A289C(void) {
