@@ -106,7 +106,7 @@ Where things are
 Matching status
 ---------------
 
-285 of 451 functions match byte for byte (`src/ninja/ninja.c`, objdiff and `tools/match/fdiff.py`
+The matched functions (count in the README status block) match byte for byte (`src/ninja/ninja.c`, objdiff and `tools/match/fdiff.py`
 plus `floatcheck.py` agree; main.dol still hashes OK). The unit covers the whole region
 (`0x80286EE8`-`0x802AC75C`) because no real file boundary has turned up: the `.sdata2` pool is
 contiguous in text order, so the data gives no edge, and no edge has been checked against
@@ -174,6 +174,7 @@ Owner-approved exception (2026-11-01): pointer casts are allowed where the origi
 (an unsigned field of the s16 chunk stream, a row of a byte-strided motion key table, a byte offset in an NGDL
 header), each with a comment naming the field. That merged fn_802A1374, fn_802A7894, fn_802AB340, fn_80293AF4,
 fn_80293C2C, fn_80294100, fn_80294770 and fn_802A8AE4; NjMotState got its mdata/size/stride/nbFrame fields.
+Later the same day: fn_802A9040, the NGDL twin of fn_80293C2C (duplicate group 125), written the same way.
 Game code stays cast-free.
 
 ### Library pass (2026-10-31)
@@ -190,8 +191,74 @@ Game code stays cast-free.
   optimizer pragmas, inline and wrapper forms) all merge the copies, so this looks like a compiler build we don't
   have rather than a source form. `-O1` matches only njSin/njCos/njTan (checked over the whole unit: no file
   boundary there). A ready test case for other compilers is two FIFO drawers, fn_8029681C and fn_8028A0F4.
-- Still needing a pointer cast (not merged): fn_802A9040 / fn_802A8F48 (the NgCtx cursor advances by bytes but
-  feeds pointer arrays), fn_802A7894, fn_802AC31C, fn_80287610, fn_80287F00, fn_80289390 (an `lhz` strip size read
+- **Copy pattern solved (2026-11-01): a patched GC/1.3.2.** The difference is in copy propagation
+  (AddPropagation.c), and only in the run right after VALUE NUMBERING 2 (driver call at 0x4FFA18). That run
+  removes the `mr` copies value numbering makes of loop invariants re-created in a loop's preheader; the
+  Ninja code keeps them, and the register allocator then gives every use after the second its own register
+  (the copy's source and destination don't interfere, so the first copy coalesces, the rest can't). Ninja
+  only needs block-local propagation from that run, so `tools/patch_mwcc_ninja.py` builds
+  `build/compilers/GC/1.3.2nj` with that one run limited to propagation within a block; every other run is
+  stock. Found by knocking out each PCode pass in turn, then by dumping the PCode under gdb at each
+  copy-propagation run (value numbering 2 is what creates the copies).
+  - Results with fdiff: 277 of the 277 functions in ninja.c that match with 1.3.2 still match;
+    `fn_8029681C` (FIFO point drawer) and `fn_80298544` (`docs/near/fn_80298544.c`) match as plain C.
+  - Ruled out on the way: no copy propagation after value numbering 2 at all (255/277), a pessimistic
+    available-copies start in every run or a loop-weight rule in every run (275/277: both block the
+    source-level copy `type = n` in fn_802A1374/fn_802A7894, which the early runs propagate into the loop),
+    no register coalescing (146/277). A pessimistic start in the late run only also gives 277/277; nothing
+    in Ninja tells it apart from block-local yet.
+  - `fn_802A1160` still differs (preheader copies of values loaded before the loop, coalesced by 1.3.2).
+  Three FIFO writers now match as plain C too (fn_8028A0F4, fn_80291064, fn_8029681C), and building the
+  whole game with the patch changes 145 non-Ninja functions, so it is for Ninja only. Full write-up, evidence
+  files and `tools/verify_mwcc_ninja.py`: [mwcc_ninja/README.md](mwcc_ninja/README.md). configure.py builds
+  ninja.c with 1.3.2nj, and the four functions are in ninja.c (objdiff: 287 Ninja matches with stock, 291
+  with 1.3.2nj, none lost). fdiff on Ninja code needs `CCV=1.3.2nj`.
+- **Remaining compiler-blocked Ninja functions (2026-11-01).** With GC/1.3.2nj, 29 functions now match that no
+  stock compiler matches (`tools/verify_mwcc_ninja.py` lists them). What is left of the copy-pattern list:
+  - The strip drawers that kept one load out of place (11) now match: see "Strip drawer file" below.
+    fn_802A3B34 has the same load plus register differences and is not merged.
+  - Register assignment only (instructions exact, so not the compiler): fn_8029F86C, fn_802A0FD4, fn_802A09AC
+    (the original keeps `nuv * 2` apart from `nuv`; every declaration order tried, 48 lines at best),
+    fn_80295FEC (counter vs size in r31), fn_802AC5E8 (5 lines; `n * 3` computed twice).
+  - Not tried yet: the GXClearVtxDesc drawers (fn_8029DEDC, fn_8029E5CC, fn_8029F0F8, fn_8029F680, fn_8029FE0C,
+    fn_802A02E8, fn_802A07C0, fn_802A0DE8), the float + index mixes (fn_802A2770, fn_802A2A8C, fn_802A33EC,
+    fn_802A3790, fn_802A404C, fn_802A42DC, fn_802A44F0, fn_802A49F4, fn_802A4C20, fn_802A4FC8, fn_802A52C4,
+    fn_802A5530), fn_8029DCD0/fn_8029E1B4/fn_8029E850/fn_8029EC1C, fn_80296918, fn_8029833C, fn_802A8BA4.
+    fn_8029E40C/fn_8029EA5C have one FIFO register and no copies, so they aren't compiler-blocked.
+- **Strip drawer file (2026-11-01): a probable file boundary.** Eleven strip drawers (fn_802A2394, fn_802A24CC,
+  fn_802A292C, fn_802A2F84, fn_802A30FC, fn_802A3274, fn_802A35F0, fn_802A3994, fn_802A4E4C, fn_802A5738,
+  fn_802A58DC) send each vertex value once and keep the vertex loads in source order. With the patched 1.3.2,
+  IRO expression propagation (seen with encounter's 1.3.2 IRO-logging patch, "Found expression propagation at
+  273 from 171", then "Removing dead assignment 171") forwards the offset-0 load into the first FIFO store, past
+  the other loads, so it comes out last. The drawers that use each value twice (position as normal) can't be
+  forwarded and matched already. With `#pragma opt_dead_assignments off` (or `opt_propagation off`, equally)
+  over the stretch fn_802A20DC..fn_802A58DC, all 11 match and the other 306 ninja.c functions still do; the
+  same setting over the whole unit fixes the 11 but breaks 16-18 functions, all outside that stretch
+  (fn_80289EC8..fn_80291064, fn_8029681C, fn_802A1374, fn_802A7D74, njProjectScreen). So the stretch was most
+  likely its own source file built with a different optimizer setting. It is a pragma block in ninja.c for now;
+  edges: after fn_802A1374 (ends 0x802A1B54), before fn_802A7D74 (0x802A5EF8..0x802A7D74 untested), not yet
+  checked against .sdata2/padding. A real split is the next step for whoever handles splits.
+- Copy pattern, a minimal case (2026-11-01): `docs/near/fn_80298544.c`. With GC/1.3.2 the whole function is
+  identical (prologue, 8x unroll, trip count, the unrolled body sharing one `li r5,0`) except the leftover loop
+  MWCC builds for n % 8: the original hoists `li r9,0` plus `mr` copies for the third and later zero stores,
+  every available compiler hoists one shared `li`. Since the unroller's own output agrees everywhere else, this
+  is the strongest sign yet that Ninja was built with a compiler build that isn't in the decomp.dev bundle
+  (probably an early CodeWarrior for Dolphin/GameCube from Sega's 2001 port, older than GC/1.0 build 144),
+  not a source form. That file lists what was ruled out, including every recognised optimizer pragma and a
+  permuter run.
+  Also ruled out on decomp.me: GC/1.2.5e (2.3.3 build 163, not in the decomp.dev bundle) at `-O4,p`. One
+  `lis r31` and no copy on fifo_8029681C, one shared `li` in fn_80298544's leftover loop, and its prologue saves
+  LR before `stwu` (the original is `stwu`-first). The two known builds outside every public set are 2.4.7
+  build 1 (release notes dated June 2001, no release name) and anything older than GC/1.0 (2.3.3 build 144). The
+  decomp Discord's compiler-hunt channel lists them; a test there needs only the two standalone files.
+- Copy pattern, more ruled out (2026-11-01, cloud session; test case in `docs/near/fifo_8029681C.c`, which
+  needs no headers): every Wii compiler in the decomp.dev bundle (`Wii/0x4201_127` to `Wii/1.7`) at `-O4,p`,
+  `-O4,s`, `-O3` and `-O2`; pairs of `-opt` switches (no cse, deadcode, deadstore, lifetimes, loop, prop,
+  strength, peephole, space) on top of `-O4,p`, `-opt level=3` and `-opt level=2` with GC/1.2.5n, 1.3.2 and 2.6;
+  SN ProDG 3.5 to 3.9.3 (GCC 2.95), whose code looks nothing like the original (`stmw`, `lis`+`ori` for the
+  address, different prologue). All give one base register for the three stores.
+- Still needing a pointer cast (not merged): fn_802A8F48 (the NgCtx cursor advances by bytes but
+  feeds pointer arrays; fn_802A9040 is merged under the stream-cast rule), fn_802A7894, fn_802AC31C, fn_80287610, fn_80287F00, fn_80289390 (an `lhz` strip size read
   from an `s16` stream), fn_802A93CC / fn_802A9C20 / fn_80293AF4 (generic key tables), fn_8029CB1C (flat matrix
   passed as `Mtx`).
 - Agent notes per function: `build/agents/j01`-`j11/NOTES.md` on the machine that ran the pass.
@@ -228,7 +295,15 @@ Logged, not integrated as matches. Functions marked * are in the unit as NonMatc
     an inline function, `register` pointers, pointer parameters per write and per call, nested
     `POS2`+`POS1` helpers, inlines defined after use, indexed and pointer loops. Test files are in
     `build/agents/fifo/` (local).
-- Register allocation or scheduling only: `fn_80286EE8`, `fn_8028B498`, `fn_80288C68`,
+- `fn_802A1160` (duplicate group 12, the second renderer's chunk-model callback): 38 lines, the per-use copy
+  shape for `&lbl_80300760` like `fn_802873BC`; best source and what was tried in `docs/near/fn_802A1160.c`.
+- Ambient colour setters `fn_802871D8` / `fn_8028B784` (duplicate group 74, one per light table):
+  instructions exact, but the original scales each argument in its own register (`fmuls f1,f1,f4`) where
+  MWCC picks a fresh one (24 lines, registers only). Plain, `*=`-in-condition, temp, inline-helper and
+  macro forms all give the same diff; no GC compiler from 1.0 to 3.0a5.2 matches it.
+- `fn_80286EE8` / `fn_8028B498` (light update, duplicate group 40): 23 lines: the walker/base copy of the table
+  address goes the other way and `base + 0x30c` isn't hoisted; best form in `docs/near/fn_80286EE8.c`.
+- Register allocation or scheduling only: `fn_80288C68`,
   `fn_8028F884`, `fn_8028FD98`, `fn_8028FEA4`, `fn_802904E8`, `fn_802907D0`, `fn_80290918`,
   `fn_80291700` (Bezier), `fn_802917C8` (Catmull-Rom), `fn_80291888`, `fn_802918DC`, `fn_80291978`,
   `fn_80291A5C`, `fn_802915C8`, `fn_802938C8`, `fn_802939C4`, `fn_80293B34`, `fn_80293B4C`,
