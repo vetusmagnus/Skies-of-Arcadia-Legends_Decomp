@@ -2299,25 +2299,8 @@ typedef struct Tab_80166138 {
     u32 count;
     Ent_80166138 *ents;
 } Tab_80166138;
-typedef struct Mod {
-    u8 pad[0x170];
-    u16 f170;
-    u16 f172;
-    u8 pad174[0x198 - 0x174];
-    s32 f198;
-} Mod;
-typedef struct Hd {
-    u8 pad0[8];
-    Mod *mod;
-    u8 pad_c[0x1a - 0xc];
-    s16 idx;
-} Hd;
-typedef struct Obj_80166138 {
-    u8 pad[0x1d8];
-    Hd *x1d8;
-} Obj_80166138;
-extern s32 fn_801664A4(Obj_80166138 *o);
-extern void fn_801E735C(u32 index, f32 speed, Mod *obj);
+extern s32 fn_801664A4(EvObj *o);
+extern void fn_801E735C(u32 index, f32 speed, EvObj *obj);
 typedef struct Obj_80191E94 { u8 pad[0x18]; u8 flags; u8 kind; } Obj_80191E94;
 typedef struct NameEnt { char *name; u32 b; u32 c; } NameEnt;
 typedef struct NameTab { NameEnt *ents; u32 count; } NameTab;
@@ -3282,6 +3265,98 @@ s32 fn_80165DE8(Spl *sp, s32 t, void *out) {
     }
     fn_80213178(t, sp->x8[k], sp->xc[k], sp->x10[k].a, sp->x10[k].b, sp->xc[k + 1], out);
     return k;
+}
+
+static inline s32 Step_80166220(EvObj *in, u32 i)
+{
+    s16 diff;
+    if (in != 0 && i < 3) {
+        in->ang[i] += in->rotv[i];
+        diff = in->tgt[i] - in->ang[i];
+        if ((in->rotv[i] > 0 && diff <= 0) || (in->rotv[i] <= 0 && diff >= 0)) {
+            in->ang[i] = in->tgt[i];
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static inline s32 Pred_80166220(EvObj *o, Tab_80166138 *a)
+{
+    EvSub *s = o->sub;
+    if (s && a && a->ents && a->count && a->count > s->idx) {
+        return 1;
+    }
+    return 0;
+}
+
+static inline s32 StepAll_80166220(EvObj *in)
+{
+    s32 ok = 1;
+    s32 i;
+    if (in != 0) {
+        for (i = 0; i < 3; i++) {
+            ok = Step_80166220(in, i) != 0 && ok != 0;
+        }
+    }
+    return ok;
+}
+
+static inline void SyncHit_80166220(EvObj *in)
+{
+    f32 *vp;
+    if (in != 0 && in->coll != 0) {
+        vp = in->coll->pos;
+        {
+            f32 x = in->pos.x, y = in->pos.y, z = in->pos.z;
+            vp[2] = z;
+            vp[1] = y;
+            vp[0] = x;
+        }
+        in->coll->ang[0] = in->ang[0];
+        in->coll->ang[1] = in->ang[1];
+        in->coll->ang[2] = in->ang[2];
+        fn_80222838(in->coll);
+    }
+}
+
+static inline s32 Move_80166220(EvObj *in, f32 f)
+{
+    s32 ok = 1;
+    s32 sx;
+    s32 sz;
+    if (in != 0) {
+        sx = in->ang[0];
+        sz = in->ang[2];
+        ok = StepAll_80166220(in);
+        if (lbl_80311AC0.f4 != 0x1c || lbl_80311AC0.f8 != 0x62) {
+            in->ang[0] = sx;
+            in->ang[2] = sz;
+        }
+        SyncHit_80166220(in);
+        if (ok != 0) {
+            in->speed = f;
+        }
+    }
+    return ok != 0;
+}
+
+s32 fn_80166220(EvObj *obj, Tab_80166138 *arg)
+{
+    s32 ok = 1;
+    EvSub *st = obj->sub;
+    EvObj *in = st->target;
+
+    if (in != 0) {
+        ok = Move_80166220(in, st->x20);
+        if (Pred_80166220(obj, arg) != 0) {
+            Ent_80166138 *e = &arg->ents[st->idx];
+            if (e->f2c != 1 && in->x198 != 0) {
+                fn_801E735C(in->x172, 1.0f, in);
+            }
+        }
+    }
+    return ok;
 }
 
 s32 fn_8016645C(Obj_8016645C *o, Arg *a) {
@@ -11823,19 +11898,19 @@ void fn_801729D0(void) {
     fn_801954D0((void *)fn_80194C38(LA(0x85 + (s8)c->cur[0].sel)->f10));
 }
 
-static inline s32 inRange(Hd *h, Tab_80166138 *t) {
+static inline s32 inRange(EvSub *h, Tab_80166138 *t) {
     if (h != 0 && t != 0 && t->ents != 0 && t->count != 0 && t->count > h->idx) return 1;
     return 0;
 }
 
-s32 fn_80166138(Obj_80166138 *o, Tab_80166138 *t) {
-    Hd *h = o->x1d8;
-    Mod *m = h->mod;
+s32 fn_80166138(EvObj *o, Tab_80166138 *t) {
+    EvSub *h = o->sub;
+    EvObj *m = h->target;
     s32 r = fn_801664A4(o);
-    if (inRange(o->x1d8, t)) {
+    if (inRange(o->sub, t)) {
         Ent_80166138 *e = &t->ents[h->idx];
-        u16 i = m->f172;
-        if (m->f170 != i && e->f2c != 1 && m->f198 != 0) {
+        u16 i = m->x172;
+        if (m->motionId != i && e->f2c != 1 && m->x198 != 0) {
             fn_801E735C(i, 1.0f, m);
         }
     }

@@ -242,7 +242,10 @@ typedef struct {
     struct EvObj* target; /* 0x08 the object this one rides on */
     u8 padC[0x18 - 0xC];
     s16 h18;      /* 0x18 */
-    u8 pad1a[0x1A0 - 0x1A];
+    s16 idx;      /* 0x1A */
+    u8 pad1c[0x20 - 0x1C];
+    f32 x20;      /* 0x20 */
+    u8 pad24[0x1A0 - 0x24];
     u32 x1a0;     /* 0x1A0 */
 } EvSub;
 
