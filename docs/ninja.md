@@ -225,19 +225,51 @@ Game code stays cast-free.
     fn_802A3790, fn_802A404C, fn_802A42DC, fn_802A44F0, fn_802A49F4, fn_802A4C20, fn_802A4FC8, fn_802A52C4,
     fn_802A5530), fn_8029DCD0/fn_8029E1B4/fn_8029E850/fn_8029EC1C, fn_80296918, fn_8029833C, fn_802A8BA4.
     fn_8029E40C/fn_8029EA5C have one FIFO register and no copies, so they aren't compiler-blocked.
-- **Strip drawer file (2026-11-01): a probable file boundary.** Eleven strip drawers (fn_802A2394, fn_802A24CC,
-  fn_802A292C, fn_802A2F84, fn_802A30FC, fn_802A3274, fn_802A35F0, fn_802A3994, fn_802A4E4C, fn_802A5738,
-  fn_802A58DC) send each vertex value once and keep the vertex loads in source order. With the patched 1.3.2,
-  IRO expression propagation (seen with encounter's 1.3.2 IRO-logging patch, "Found expression propagation at
-  273 from 171", then "Removing dead assignment 171") forwards the offset-0 load into the first FIFO store, past
-  the other loads, so it comes out last. The drawers that use each value twice (position as normal) can't be
-  forwarded and matched already. With `#pragma opt_dead_assignments off` (or `opt_propagation off`, equally)
-  over the stretch fn_802A20DC..fn_802A58DC, all 11 match and the other 306 ninja.c functions still do; the
-  same setting over the whole unit fixes the 11 but breaks 16-18 functions, all outside that stretch
-  (fn_80289EC8..fn_80291064, fn_8029681C, fn_802A1374, fn_802A7D74, njProjectScreen). So the stretch was most
-  likely its own source file built with a different optimizer setting. It is a pragma block in ninja.c for now;
-  edges: after fn_802A1374 (ends 0x802A1B54), before fn_802A7D74 (0x802A5EF8..0x802A7D74 untested), not yet
-  checked against .sdata2/padding. A real split is the next step for whoever handles splits.
+- **Strip drawer files (2026-11-01): file boundaries from .sdata2, and a per-file setting.** Eleven strip drawers
+  (fn_802A2394, fn_802A24CC, fn_802A292C, fn_802A2F84, fn_802A30FC, fn_802A3274, fn_802A35F0, fn_802A3994,
+  fn_802A4E4C, fn_802A5738, fn_802A58DC) send each vertex value once and keep the vertex loads in source order.
+  With the patched 1.3.2, IRO expression propagation (seen with encounter's 1.3.2 IRO-logging patch: "Found
+  expression propagation at 273 from 171", then "Removing dead assignment 171") forwards the offset-0 load into
+  the first FIFO store, past the other loads. Drawers that use each value twice can't be forwarded and matched
+  already. `#pragma opt_dead_assignments off` (or `opt_propagation off`, equally) over fn_802A2394..fn_802A58DC
+  makes all 11 match and keeps every other ninja.c function matching. The same setting over the whole unit fixes
+  the 11 but breaks 16-18 functions outside that stretch (fn_80289EC8..fn_80291064, fn_8029681C, fn_802A1374,
+  fn_802A7D74, njProjectScreen). It is a pragma block in ninja.c until the split.
+
+  Evidence for the files (step 1 of a split; nothing in splits.txt changed yet). In .sdata2 several constants are
+  a lone float followed by 4 zero bytes, i.e. a file's whole pool padded to the next 8-byte start:
+
+  | .sdata2 | contents | used by |
+  |---|---|---|
+  | 0x8034D300-0x8034D327 | nine words | fn_8029D0F4 |
+  | 0x8034D328 | 65.0f + pad | fn_8029DCD0 |
+  | 0x8034D330 | 65.0f + pad | fn_8029DEDC, fn_8029E1B4 |
+  | 0x8034D338 | 65.0f + pad | fn_8029E40C |
+  | 0x8034D340 | 65.0f + pad | fn_8029E5CC, fn_8029E850 |
+  | 0x8034D348 | 65.0f + pad | fn_8029EA5C |
+  | 0x8034D350 | 65.0f + pad | fn_8029EC1C |
+  | 0x8034D358-0x8034D37F | -1, 0.0f, u32->float double, 255, 1, 50, -49, double | fn_802A1160, fn_802A1374, fn_802A1B54 |
+  | 0x8034D380 | 1048576.0f + pad | fn_802A210C |
+  | 0x8034D388 | 65.0f + pad | fn_802A3B34 |
+  | 0x8034D390 | 65.0f + pad | fn_802A3D08 |
+  | 0x8034D398 | 65.0f + pad | fn_802A404C, fn_802A42DC |
+  | 0x8034D3A0 | 65.0f + pad | fn_802A49F4 |
+  | 0x8034D3A8 | 65.0f + pad | fn_802A4C20 |
+  | 0x8034D3B0 | 65.0f + pad | fn_802A4FC8, fn_802A52C4 |
+  | 0x8034D3B8 | double | fn_802A5F2C |
+  | 0x8034D3C0-... | the same layout again | fn_802A6184, fn_802A6398, fn_802A70B0, fn_802A75C8 (0x8034D3E8, lone), fn_802A7680, fn_802A7894 |
+
+  Reading: the strip and indexed drawers (0x8029DCD0-0x802A0FD4 and 0x802A2394-0x802A58DC) are many small files,
+  each ending with the textured variant that owns a 65.0f (the Dreamcast Ninja had a source file per strip
+  format). Around them sit renderer 1's chunk-model file (fn_802A1160, fn_802A1374, fn_802A1B54: one shared pool),
+  the fn_802A20DC/fn_802A20F4/fn_802A210C file (pool 0x8034D380), the fn_802A5A58..fn_802A5F2C file (pool
+  0x8034D3B8), and then renderer 2's copies of the same files (0x802A6184 on; the twins are duplicate groups 11,
+  12 and 168/169/67 in duplicates.txt). Functions with no constants (fn_802A2394..fn_802A3994, fn_802A21C4,
+  fn_8029EE28..fn_802A0FD4, fn_802A5A58..fn_802A5EF8) can't be placed by data alone: the file edges between them
+  are unknown, so a split only has the pool edges for now. Each one-pool edge is certain: a file ends right
+  after the function that uses the lone constant, or after the constant-free functions that follow it.
+  The indexed drawers before the block don't depend on the setting either way (none changes with it on), so
+  whether those files shared it can't be told from the code matched so far.
 - Copy pattern, a minimal case (2026-11-01): `docs/near/fn_80298544.c`. With GC/1.3.2 the whole function is
   identical (prologue, 8x unroll, trip count, the unrolled body sharing one `li r5,0`) except the leftover loop
   MWCC builds for n % 8: the original hoists `li r9,0` plus `mr` copies for the third and later zero stores,
