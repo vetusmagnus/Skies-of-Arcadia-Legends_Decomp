@@ -446,7 +446,7 @@ typedef struct P5D47C {
 typedef struct O5D47C {
     u8 pad0[0x20];
     V3 v20;
-    V3 v2c;
+    s32 ang[3];
     V3 v38;
     u8 pad44[0x2c];
     s16 s70;
@@ -461,7 +461,7 @@ typedef struct O5D47C {
 extern void fn_80014AB8(s32, O5D47C *);
 extern void fn_8001E4A0(V3 *, V3 *, void *);
 extern void fn_80061518(V3 *, V3 *, void *);
-extern void fn_80071F84(V3 *, V3 *, V3 *);
+extern void fn_80071F84(s32 *, NJS_POINT3 *, NJS_POINT3 *);
 extern void njPushMatrixEx(void);
 extern void njPopMatrixEx(void);
 extern void njRotateX(NJS_MATRIX m, Angle a);
@@ -4037,7 +4037,7 @@ void fn_8005D47C(O5D47C *o) {
                 fn_8001E4A0(b, &o->v38, o->p78);
             }
         }
-        fn_80071F84(&o->v2c, &o->v38, &o->v20);
+        fn_80071F84(o->ang, &o->v38, &o->v20);
         break;
     }
 }
@@ -5279,6 +5279,23 @@ extern s32 fn_800154BC(Task *t);
 typedef struct Snd { u8 pad_00[7]; s8 x7; u8 pad_08[0x20]; s32 x28; s32 x2c; } Snd;
 extern void fn_80218D84(void *dst, u32 src, u32 size);
 extern s32 SePlay(s32 bank, s8 arg1, s8 id);
+
+void fn_80071F84(s32 *out, NJS_POINT3 *a, NJS_POINT3 *b) {
+    Vec3f d;
+    f32 *p;
+    s8 i;
+    d.x = b->x - a->x;
+    d.y = b->y - a->y;
+    d.z = b->z - a->z;
+    p = &d.x;
+    for (i = 0; i < 3; i++) {
+        if (*p < 0.00001f && *p > -0.00001f) {
+            *p = 0.0f;
+        }
+        p++;
+    }
+    fn_8007201C(out, &d);
+}
 
 void fn_80072F10(Snd *s) {
     if (lbl_8030A10C.x7c != 0) {
