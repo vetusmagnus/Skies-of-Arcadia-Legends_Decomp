@@ -209,6 +209,51 @@ s32 fn_801F4D14(void)
     return !((f32)sa / (f32)sb < 0.63);
 }
 
+s32 fn_801F4F54(s16* pa, s16* pb) {
+    u8 ka;
+    s16 a = *pa;
+    s16 b = *pb;
+    u8 kb;
+    if (a == -1 && b == -1) return 0;
+    if (a == -1) return 1;
+    if (b == -1) return -1;
+    switch (fn_801F4C24(a)) {
+    case 0:
+        ka = lbl_802C5790[a].sort2;
+        kb = lbl_802C5790[b].sort2;
+        break;
+    case 1:
+        ka = lbl_802C6190[a - 0x50].sort2;
+        kb = lbl_802C6190[b - 0x50].sort2;
+        break;
+    case 2:
+        ka = lbl_802C6E10[a - 0xa0].sort2;
+        kb = lbl_802C6E10[b - 0xa0].sort2;
+        break;
+    case 3:
+        ka = lbl_802C7C34[a - 0xf0].sort2;
+        kb = lbl_802C7C34[b - 0xf0].sort2;
+        break;
+    case 4:
+        ka = lbl_802C8774[a - 0x140].sort2;
+        kb = lbl_802C8774[b - 0x140].sort2;
+        break;
+    case 5:
+        ka = lbl_802D7E4C[a - 0x190].sort2;
+        kb = lbl_802D7E4C[b - 0x190].sort2;
+        break;
+    case 6:
+        ka = lbl_802D83EC[a - 0x1b8].sort2;
+        kb = lbl_802D83EC[b - 0x1b8].sort2;
+        break;
+    case 7:
+        ka = lbl_802D8A2C[a - 0x1e0].sort2;
+        kb = lbl_802D8A2C[b - 0x1e0].sort2;
+        break;
+    }
+    return ka - kb;
+}
+
 s32 fn_801F52AC(void)
 {
     s8 i;
