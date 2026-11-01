@@ -202,7 +202,7 @@ extern char lbl_802B0678[];
 extern char lbl_802B068C[];
 extern void fn_8001C6CC(void *, s16, s16, char *);
 extern void fn_80061048(char *);
-extern s32 sprintf(char *, char *, ...);
+extern s32 sprintf(char *, const char *, ...);
 extern void *fn_801CC1B4(char *);
 extern s32 fn_801CC1A4(void *);
 extern void *fn_801CC0A0(void *);
@@ -469,8 +469,18 @@ extern void njRotateY(NJS_MATRIX m, Angle a);
 extern void njRotateZ(NJS_MATRIX m, Angle a);
 extern void fn_80286EE8(void);
 extern void fn_8028B498(void);
+typedef struct MotEnt { s32 x0; s32 x4; s32 x8; } MotEnt;
+typedef struct MotTbl { MotEnt *base; } MotTbl;
+typedef struct MotDst { MotEnt *ent; } MotDst;
+typedef struct MotWork {
+    u8 pad0[8];
+    MotDst *x8;
+    u8 pad_c[0x48 - 0xc];
+    MotTbl *x48;
+} MotWork;
+typedef struct MotRoot { u8 pad0[0x24]; MotWork *w24; } MotRoot;
 typedef struct G800624FC {
-    u8 pad_0[0x4];
+    MotRoot *in;
     s32 w4;
     f32 v8[3];
     f32 base[3];
@@ -514,6 +524,7 @@ typedef struct O800624FC {
     S800624FC *s;
 } O800624FC;
 extern G800624FC *lbl_80346BD8;
+s16 fn_80015C30(MotTbl *t, const char *str);
 extern void fn_80075FF0(void *, s32, s32);
 typedef struct U80064CA4 {
     u8 pad0[6];
@@ -1233,10 +1244,21 @@ extern void fn_8007E13C(void *a);
 extern void fn_8007E118(void *a);
 extern void fn_8007DFC0(void *a);
 extern void fn_8007DEE0(void *a);
-/* The unit's .rodata string pool (lbl_802B0610 + 0x18 etc. from its start, MWCC's pooled base). */
-extern char lbl_802B04C8[];
+/* The unit's pooled .rodata from lbl_802B04C8 (MWCC addresses it from its start). */
+typedef struct RoPool_80055E94 {
+    char mld[16][12];          /* 0x000 "MA010.MLD".."MA025.MLD" */
+    const char *mldTbl[16];    /* 0x0C0 */
+    char twName[6][12];        /* 0x100 "tw010003", "tw010000", ... */
+    char deadChara[12];        /* 0x148 "DEAD CHARA" */
+    char stdFmt[12];           /* 0x154 "%s%s.STD" */
+    char badNum[0x14];         /* 0x160 */
+    char errTitle[0x14];       /* 0x174 */
+    char errMsg[0x1C];         /* 0x188 */
+    char mldFmt[0xC];          /* 0x1A4 "MA%03d.MLD" */
+} RoPool_80055E94;
+extern const RoPool_80055E94 lbl_802B04C8;
 extern const u8 lbl_803489B0[8];
-extern void fn_8008F75C(void *, void *, void *, const void *);
+extern void fn_8008F75C(const void *, void *, const void *, const void *);
 extern s16 lbl_8034736A;
 extern s32 lbl_80346A90;
 extern u32 lbl_80347364;
@@ -2569,6 +2591,36 @@ void fn_80065498(T5C188 *o, T5C188 *other) {
             }
         }
         s->rot[1] = t->rot[1];
+    }
+}
+
+void fn_800656A8(s16 sel) {
+    const RoPool_80055E94 *tab = &lbl_802B04C8;
+    MotWork *w = lbl_80346BD8->in->w24;
+    s16 v;
+    switch (sel) {
+    case 0:
+        v = fn_80015C30(w->x48, tab->twName[0]);
+        break;
+    case 1:
+        v = fn_80015C30(w->x48, tab->twName[1]);
+        break;
+    case 2:
+        v = fn_80015C30(w->x48, tab->twName[2]);
+        break;
+    case 3:
+        v = fn_80015C30(w->x48, tab->twName[3]);
+        break;
+    case 4:
+        v = fn_80015C30(w->x48, tab->twName[4]);
+        break;
+    case 5:
+    default:
+        v = fn_80015C30(w->x48, tab->twName[5]);
+        break;
+    }
+    if (w->x48 != NULL) {
+        w->x8->ent->x8 = w->x48->base[v].x8;
     }
 }
 
@@ -6888,14 +6940,14 @@ void fn_80067DFC(Arg80067CA4 *p)
 s32 fn_80068348(s16 idx)
 {
     char buf[0x100];
-    char *base = lbl_802B04C8;
+    const RoPool_80055E94 *base = &lbl_802B04C8;
     s32 r;
 
     r = lbl_80309DE4[idx]->xb6 - 0x16;
     if ((s16)r < 10 || (s16)r > 25) {
         r = 10;
-        sprintf(buf, base + 0x160, lbl_80309DE4[idx]->xb6);
-        fn_8008F75C(base + 0x174, buf, base + 0x188, lbl_803489B0);
+        sprintf(buf, base->badNum, lbl_80309DE4[idx]->xb6);
+        fn_8008F75C(base->errTitle, buf, base->errMsg, lbl_803489B0);
     }
     return r;
 }
