@@ -1420,6 +1420,46 @@ Xf_80224F28 *fn_80225958(Cmp *k) {
     return rec;
 }
 
+static inline s16 SlotFindKey(Xf_80224F28 *p, s32 n, u16 id)
+{
+    s32 i;
+
+    for (i = 0; i < n; p++, i++) {
+        if (p->key == id) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+Xf_80224F28 *fn_80225B74(u16 key, u16 id)
+{
+    Slot *s = lbl_8034752C;
+    s32 j;
+    s32 i;
+
+    if (key != 0xffff) {
+        j = fn_80225E58(s, lbl_8034752A, key);
+        if (j >= 0) {
+            s += j;
+            j = SlotFindKey(s->p0, s->count, id);
+            if (j >= 0) {
+                return &s->p0[j];
+            }
+        }
+    } else {
+        for (i = 0; i < lbl_8034752A; s++, i++) {
+            if (s->p0 != NULL) {
+                j = SlotFindKey(s->p0, s->count, id);
+                if (j >= 0) {
+                    return &s->p0[j];
+                }
+            }
+        }
+    }
+    return NULL;
+}
+
 Xf_80224F28 *fn_80225CAC(u16 gid, u16 key, s16 n) {
     Slot *g = lbl_8034752C;
     Xf_80224F28 *rec = 0;
