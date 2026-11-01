@@ -122,6 +122,15 @@ extern s32 lbl_803477DC;
 void fn_80217830(s32 arg);
 extern u32 lbl_803477E0;
 float fn_801F6120(float **p);
+/* An int argument of the script stream; FLT_MAX stands for 'unset' (0x7FFFFFFF). */
+static inline s32 ReadInt(f32** p)
+{
+    if (3.4028235e38f == **p) {
+        (*p)++;
+        return 0x7FFFFFFF;
+    }
+    return (s32)fn_801F6120(p);
+}
 void fn_801EFF0C(s16 v);
 typedef struct Work801F8 {
     Ev ev;
@@ -2850,6 +2859,227 @@ s32 fn_80215368(u32 flags, Scpt *c) {
     return 1;
 }
 
+/* ---- own copy of game/evobj.h (EvSub gains obj at 0x08; EvObj tagged) ---- */
+
+
+/* The game's field-map model object (see model.c and evobj.c): the player (lbl_80347450), the work of
+ * the story-event, map-object and sparkle tasks and of the field camera tasks. Only the fields the
+ * decompiled code uses are named. */
+struct NJS_MOTION;
+
+typedef struct {
+    void* model;          /* 0x00 */
+    u32 pad4;
+    NJS_TEXLIST texlist;  /* 0x08 */
+} ModelFile;
+
+typedef struct {
+    u8 pad0[8];
+    ModelFile* body;    /* 0x08 */
+    ModelFile* extra;   /* 0x0C */
+    ModelFile* spark;   /* 0x10 */
+} ModelFiles;
+
+typedef struct {
+    s32 count;
+    void* items[1]; /* count entries */
+} ItemList;
+
+typedef struct {
+    u8 pad0[0x14];
+    u32 flags;     /* 0x14 */
+    u8 pad18[0x24 - 0x18];
+    u32 nearDist;  /* 0x24 */
+    u32 actDist;   /* 0x28 */
+    u32 x2c;       /* 0x2C */
+    u32 speed;     /* 0x30 */
+    u8 pad34[4];
+    s32 mode;      /* 0x38 */
+    u32 flag;      /* 0x3C story flag */
+} EvInfo;
+
+typedef struct {
+    u8 pad0[0x10];
+    EvInfo* info;          /* 0x10 */
+    ModelFiles* files;     /* 0x14 */
+    u8 pad18[4];
+    ItemList* items;       /* 0x1C */
+    NJS_TEXLIST* texlist;  /* 0x20 */
+    u8 pad24[0x44 - 0x24];
+    NJS_POINT3 target;     /* 0x44 */
+    NJS_POINT3 rot;        /* 0x50 */
+} EvExt;
+
+struct EvObj;
+typedef struct {
+    u8 pad0[8];
+    struct EvObj* obj;   /* 0x08 (added) */
+    u8 pad0c[0x18 - 0xc];
+    s16 h18;      /* 0x18 */
+} EvSub;
+
+typedef struct {
+    s32 mode;     /* 0x00 */
+} EvMode;
+
+typedef struct {
+    u8 pad0[0x28];
+    u16 x28;      /* 0x28 */
+    u16 id;       /* 0x2A */
+    s16 x2c;      /* 0x2C */
+    s16 x2e;      /* 0x2E */
+} EvHit;
+
+typedef struct EvObj {
+    u8 pad0[4];
+    s32 kind;                /* 0x04 */
+    s32 x08;                 /* 0x08 */
+    f32 clipNear;            /* 0x0C */
+    f32 clipFar;             /* 0x10 */
+    u8 pad14[0x1C - 0x14];
+    NJS_ARGB colour;         /* 0x1C */
+    s32 x2c;                 /* 0x2C */
+    u8 pad30[0x38 - 0x30];
+    NJS_POINT3 pos;          /* 0x38 */
+    Angle ang[3];            /* 0x44 */
+    NJS_POINT3 scl;          /* 0x50 */
+    NJS_POINT3 vel;          /* 0x5C */
+    Angle rotv[3];           /* 0x68 */
+    s16 x74;                 /* 0x74 */
+    u8 pad76[0xB4 - 0x76];
+    NJS_POINT3 pivotPos;     /* 0xB4 */
+    u8 padC0[0xE4 - 0xC0];
+    void* model;             /* 0xE4 */
+    struct NJS_MOTION* motion; /* 0xE8 */
+    void* shape;             /* 0xEC */
+    u8 padF0[0x100 - 0xF0];
+    NJS_TEXLIST* texlist;    /* 0x100 */
+    NJS_POINT3 home;         /* 0x104 */
+    Angle tgt[3];            /* 0x110 */
+    u8 pad11C[0x164 - 0x11C];
+    f32 x164;                /* 0x164 */
+    s16 state;               /* 0x168 */
+    u8 b16a;                 /* 0x16A */
+    u8 b16b;                 /* 0x16B */
+    s16 pivot;               /* 0x16C */
+    u8 pad16E[2];
+    u16 motionId;            /* 0x170 */
+    u16 x172;                /* 0x172 */
+    u8 pad174[2];
+    u16 id;                  /* 0x176 */
+    u8 pad178[2];
+    u16 x17a;                /* 0x17A */
+    u8 pad17C[4];
+    s32 x180;                /* 0x180 */
+    s32 hidden;              /* 0x184 */
+    u8 pad188[4];
+    f32 x18c;                /* 0x18C */
+    f32 speed;               /* 0x190 */
+    u8 pad194[4];
+    s32 x198;                /* 0x198 */
+    u8 pad19C[0x1B8 - 0x19C];
+    EvHit* hit;              /* 0x1B8 */
+    void* x1bc;              /* 0x1BC */
+    u8 pad1C0[0x1C8 - 0x1C0];
+    EvExt* ext;              /* 0x1C8 */
+    u8 pad1CC[0x1D8 - 0x1CC];
+    EvSub* sub;              /* 0x1D8 */
+    u8 pad1DC[0x1EC - 0x1DC];
+    s8 x1ec;                 /* 0x1EC */
+    s8 x1ed;                 /* 0x1ED */
+    s8 x1ee;                 /* 0x1EE */
+    u8 pad1EF[0x1FC - 0x1EF];
+    s16 x1fc;                /* 0x1FC */
+    s16 x1fe;                /* 0x1FE */
+    s16 x200;                /* 0x200 */
+    s16 x202;                /* 0x202 */
+    s16 x204;                /* 0x204 */
+    s16 x206;                /* 0x206 */
+    s16 x208;                /* 0x208 */
+    s16 x20a;                /* 0x20A */
+    Angle x20c;              /* 0x20C */
+    u32 x210;                /* 0x210 */
+    u8 pad214[0x21C - 0x214];
+    u8 x21c;                 /* 0x21C */
+    u8 x21d;                 /* 0x21D */
+    u8 x21e;                 /* 0x21E */
+    u8 x21f;                 /* 0x21F */
+    u8 pad220[0x22C - 0x220];
+    u16 x22c;                /* 0x22C frame counter */
+    u16 x22e;                /* 0x22E colour key index */
+    u16 x230;                /* 0x230 */
+    u16 point;               /* 0x232 */
+    u8 pad234[0x23C - 0x234];
+    void* x23c;              /* 0x23C */
+    void* x240;              /* 0x240 */
+    u8 pad244[0x24C - 0x244];
+    NJS_POINT3 x24c;         /* 0x24C */
+    u8 pad258[0x260 - 0x258];
+    EvMode* mapMode;         /* 0x260 */
+} EvObj;
+float fn_801F6120(float **p);
+/* The argument block fn_80148954 takes. */
+typedef struct {
+    s32 x00;
+    s32 x04;
+    s32 x08;
+    s32 x0c;
+    s32 x10;
+    s32 x14;
+    s32 x18;
+    s32 x1c;
+    s32 x20;
+    s16 h24;
+    s16 h26;
+    s16 h28;
+    s16 h2a;
+    f32 f2c;
+    f32 f30;
+    f32 f34;
+    f32 f38;
+    s16 h3c;
+    s16 h3e;
+} Args40;
+extern void fn_80148954(Args40* a);
+
+static inline u16 ReadU16(f32** p)
+{
+    return ReadInt(p);
+}
+
+s32 fn_80215590(u32 flags, Scpt* c)
+{
+    f32* p;
+    Args40 a;
+    if (flags & 1) {
+        p = c->cur.f;
+        p++;
+        a.x00 = ReadU16(&p);
+        a.x04 = ReadInt(&p);
+        a.x08 = ReadInt(&p);
+        a.x0c = ReadInt(&p);
+        a.x10 = ReadInt(&p);
+        a.x14 = ReadInt(&p);
+        a.x18 = ReadInt(&p);
+        a.x1c = ReadInt(&p);
+        a.x20 = ReadU16(&p);
+        a.h24 = ReadInt(&p);
+        a.h26 = ReadInt(&p);
+        a.h28 = ReadInt(&p);
+        a.h2a = ReadInt(&p);
+        a.f2c = fn_801F6120(&p);
+        a.f30 = fn_801F6120(&p);
+        a.f34 = fn_801F6120(&p);
+        a.f38 = fn_801F6120(&p);
+        a.h3c = ReadInt(&p);
+        a.h3e = ReadInt(&p);
+        c->cur.f = p;
+        fn_80148954(&a);
+        return 0;
+    }
+    return 1;
+}
+
 s32 fn_80215F8C(void) {
     return 1;
 }
@@ -3172,14 +3402,6 @@ void fn_80216CB4(char *p) {
 }
 
 extern void fn_80168398(f32 a, f32 b, f32 c, f32 d, s32 i0, s32 i1, s32 i2, s32 i3, u16 i4, u8 i5);
-static inline s32 ReadInt(f32** p)
-{
-    if (3.4028235e38f == **p) {
-        (*p)++;
-        return 0x7FFFFFFF;
-    }
-    return (s32)fn_801F6120(p);
-}
 s32 fn_801F9988(u16 flags, Scpt* obj)
 {
     f32* p;
