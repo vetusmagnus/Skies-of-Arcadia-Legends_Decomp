@@ -760,7 +760,7 @@ typedef struct E12_80083ACC {
 } E12_80083ACC;
 typedef struct ChrState_8007B958 { s32 x0; s8 x4; u8 pad5; s16 x6; u8 pad8[0x20 - 8]; } ChrState_8007B958;
 extern void fn_8007B328(s32 idx, s8 val, s32 kind);
-extern void fn_8007D318(u8* p);
+void fn_8007D318(Task_8007BEB4* p);
 extern void fn_80078EFC(void);
 extern void fn_8007C194(List* w);
 typedef struct {
@@ -1179,11 +1179,11 @@ void fn_8007C7F8(Out_8007C7F8* out)
     fn_80022F1C(out);
 }
 
-void fn_8007D318(u8* p) {
+void fn_8007D318(Task_8007BEB4* p) {
     if (p == 0) {
         return;
     }
-    p[0x19] = 7;
+    p->state = 7;
 }
 
 void fn_8007E118(u8* p) {
