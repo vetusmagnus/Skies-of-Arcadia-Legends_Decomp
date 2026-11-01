@@ -18,7 +18,6 @@ extern u8* lbl_8034725C;
 extern u8* lbl_80347264;
 /* the draw buffer (lbl_80347218 bytes from heap lbl_803476A4) */
 extern void* lbl_803476A4;
-extern void* lbl_80347260;
 /* a 0x4000-byte block from the same heap */
 extern void* OSAllocFromHeapClear(void* heap, s32 size);
 extern void fn_80005AD8(void* heap, void* p);
@@ -31,8 +30,10 @@ extern u8 lbl_80346820;
 /* lbl_8034720C = (lbl_80347208 != 0), and the value is returned (r3 holds the result;
  * as a void function the compiler keeps it in r0). The one caller, fn_801DC62C, ignores it. */
 extern long lbl_80347208;
-typedef struct Node { u8 pad0[4]; struct Node* next; void* tex; } Node;
+/* A draw-list node: lbl_80347260 holds them, three list heads per layer then the entries. */
+typedef struct Node { struct Node* prev; struct Node* next; void* tex; f32 w; } Node;
 extern Node* lbl_80308CB8[10];
+extern Node* lbl_80347260;
 extern s32 lbl_803475D8;
 extern s32 lbl_803475CC;
 extern void FogOn(void);
@@ -324,6 +325,38 @@ extern s16 lbl_80347256;
 extern s16 lbl_80347254;
 extern s32 lbl_80347250;
 
+extern void fn_801D1A40(void);
+extern void fn_80290A60(s32 a, const char* fmt, ...);
+
+void fn_801D129C(void)
+{
+    u32 i;
+    lbl_8034725C = lbl_80347264;
+    lbl_80347258 = 0;
+    memset(lbl_80347260, 0, 0x4000);
+    lbl_80347256 = 0;
+    for (i = 0; i < lbl_80347250; i++) {
+        lbl_80308CB8[i] = lbl_80347260 + lbl_80347256;
+        lbl_80308CB8[i][0].tex = 0;
+        lbl_80308CB8[i][0].prev = 0;
+        lbl_80308CB8[i][0].next = lbl_80308CB8[i] + 1;
+        lbl_80308CB8[i][0].w = 1410065400.0f;
+        lbl_80308CB8[i][1].tex = 0;
+        lbl_80308CB8[i][1].prev = lbl_80308CB8[i];
+        lbl_80308CB8[i][1].next = lbl_80308CB8[i] + 2;
+        lbl_80308CB8[i][1].w = 900000000.0f;
+        lbl_80308CB8[i][2].tex = 0;
+        lbl_80308CB8[i][2].prev = lbl_80308CB8[i] + 1;
+        lbl_80308CB8[i][2].next = 0;
+        lbl_80308CB8[i][2].w = 0.0f;
+        lbl_80347256 = lbl_80347256 + 3;
+    }
+    lbl_80347214 = 0;
+    lbl_8034721C = 0;
+    fn_801D1A40();
+    fn_80290A60(0x2d, " ");
+}
+
 void fn_801D1434(void)
 {
     s32 i;
@@ -480,7 +513,7 @@ extern void fn_8024DE74(void);
 extern void fn_8029CEA4(s32 a, s32 b);
 extern void fn_8029CE6C(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f);
 extern void fn_80296EEC(s32 a, s32 b, s32 c);
-extern void fn_802A8BA4(void);
+extern u32 fn_802A8BA4(void);
 extern void njPushMatrixEx(void);
 extern void njPopMatrixEx(void);
 extern void njScale(NJS_MATRIX m, f32 x, f32 y, f32 z);
@@ -550,6 +583,76 @@ static inline void DrawBufFlushRoom(void)
             DrawBufFlushPending(4);
         }
         DrawStateApplyFog();
+    }
+}
+
+static inline Node *DrawListFind(Node *n, f32 t) {
+    Node *cur;
+    if (n->w < t) {
+        cur = n;
+        for (;;) {
+            n = cur->prev;
+            if (n->prev != 0) {
+                if (n->w > t && t > cur->w) return cur;
+            } else {
+                return cur;
+            }
+            cur = n;
+            if (n == 0) return 0;
+        }
+    } else {
+        for (;;) {
+            cur = n->next;
+            if (cur != 0) {
+                if (n->w > t && t > cur->w) return cur;
+            } else {
+                return n;
+            }
+            n = cur;
+            if (cur == 0) return 0;
+        }
+    }
+}
+
+void fn_801D0BC0(s32 idx, f32 t) {
+    s32 aligned = 0;
+    u32 size = fn_802A8BA4();
+    lbl_80346A50 = 1;
+    if (size != 0) {
+        Node *base;
+        Node *cur;
+        Node *n;
+        u32 r = size & 0x1f;
+        if (size <= 0x20 || r != 0) {
+            aligned = 1;
+            size += r;
+        }
+        base = lbl_80347260;
+        n = &base[idx * 3 + 1];
+        cur = DrawListFind(n, t);
+        if (cur != 0) {
+            Node *nx = cur->prev;
+            Node *nw = &base[lbl_80347256];
+            cur->prev = nw;
+            nx->next = nw;
+            nw->prev = nx;
+            nw->next = cur;
+            nw->w = t;
+            if (aligned) {
+                nw->tex = 0;
+            } else {
+                nw->tex = lbl_8034725C;
+            }
+        }
+        lbl_80347258 += size;
+        lbl_8034725C = lbl_80347264 + lbl_80347258;
+        lbl_80347256++;
+        if (lbl_80347210 < lbl_80347258) {
+            lbl_80347210 = lbl_80347258;
+        }
+        if (lbl_80347254 < lbl_80347256) {
+            lbl_80347254 = lbl_80347256;
+        }
     }
 }
 
