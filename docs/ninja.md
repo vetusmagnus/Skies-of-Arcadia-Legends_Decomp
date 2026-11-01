@@ -208,7 +208,10 @@ Game code stays cast-free.
     no register coalescing (146/277). A pessimistic start in the late run only also gives 277/277; nothing
     in Ninja tells it apart from block-local yet.
   - `fn_802A1160` still differs (preheader copies of values loaded before the loop, coalesced by 1.3.2).
-  Not wired into configure.py yet.
+  Three FIFO writers now match as plain C too (fn_8028A0F4, fn_80291064, fn_8029681C), and building the
+  whole game with the patch changes 145 non-Ninja functions, so it is for Ninja only. Full write-up, evidence
+  files and `tools/verify_mwcc_ninja.py`: [mwcc_ninja/README.md](mwcc_ninja/README.md). Not wired into
+  configure.py yet.
 - Copy pattern, a minimal case (2026-11-01): `docs/near/fn_80298544.c`. With GC/1.3.2 the whole function is
   identical (prologue, 8x unroll, trip count, the unrolled body sharing one `li r5,0`) except the leftover loop
   MWCC builds for n % 8: the original hoists `li r9,0` plus `mr` copies for the third and later zero stores,

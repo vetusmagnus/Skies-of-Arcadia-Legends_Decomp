@@ -66,14 +66,30 @@ def patch(data):
         sys.exit("code cave is not empty")
     d[co:co + len(stub)] = stub
     d[o:o + 7] = b"\xe9" + rel32(SITE + 5, CAVE) + b"\x66\x90"
-    # .text section header: VirtualSize := SizeOfRawData so the stub is mapped
     pe = struct.unpack_from("<I", d, 0x3C)[0]
     nsec = struct.unpack_from("<H", d, pe + 6)[0]
     opt = struct.unpack_from("<H", d, pe + 20)[0]
+    image_base = struct.unpack_from("<I", d, pe + 24 + 28)[0]
     for i in range(nsec):
         h = pe + 24 + opt + i * 40
         if d[h:h + 5] == b".text":
+            # VirtualSize := SizeOfRawData so the stub is mapped
             struct.pack_into("<I", d, h + 8, struct.unpack_from("<I", d, h + 16)[0])
+        if d[h:h + 6] == b".reloc":
+            # The stub's absolute operand needs a base relocation: the build runs the compiler
+            # inside sjiswrap.exe, which loads it away from its preferred base. Append one block
+            # (page, size 12, HIGHLOW entry, padding) in the section's unused raw tail.
+            vsize, raw, rawptr = (struct.unpack_from("<I", d, h + o)[0] for o in (8, 16, 20))
+            target = CAVE + 2 - image_base  # RVA of the cmp's address operand
+            block = struct.pack("<IIHH", target & ~0xFFF, 12, 0x3000 | (target & 0xFFF), 0)
+            if vsize + len(block) > raw or any(d[rawptr + vsize:rawptr + vsize + len(block)]):
+                sys.exit("no room for the relocation block")
+            d[rawptr + vsize:rawptr + vsize + len(block)] = block
+            struct.pack_into("<I", d, h + 8, vsize + len(block))
+            ddir = pe + 24 + 96 + 5 * 8  # IMAGE_DIRECTORY_ENTRY_BASERELOC
+            if struct.unpack_from("<I", d, ddir + 4)[0] != vsize:
+                sys.exit("unexpected relocation directory size")
+            struct.pack_into("<I", d, ddir + 4, vsize + len(block))
     return bytes(d)
 
 
