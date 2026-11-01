@@ -173,19 +173,6 @@ typedef struct {
     s16 a;
     u16 b;
 } Probe;
-typedef struct {
-    u8 pad00[2];
-    s16 flags;       /* 0x02 */
-    u8 pad04[0x0C];
-    f32 y;           /* 0x10 */
-    u8 pad14[0x74 - 0x14];
-    s32 w74;         /* 0x74 */
-    u8 pad78[0xF0 - 0x78];
-    f32 ox, oy, oz;  /* 0xF0 */
-    u8 padFC[4];
-    s32 ang;         /* 0x100 */
-    s32 ang_out;     /* 0x104 */
-} Obj80094B20;
 extern void fn_801DCE18(f32* in, f32* out, s32 ang);
 extern s32 fn_80224588(s32 a, Probe* p, s32 b);
 typedef struct {
@@ -498,10 +485,10 @@ int fn_8003DCF4(void* objp, void* cp);
 Task* fn_8003DB34(void* fn);
 void fn_8008EC84(Task* t);
 typedef struct Cam_80091040 {
-    f32 pos[3];
+    NJS_POINT3 pos;
     f32 min;
     f32 max;
-    f32 last[3];
+    NJS_POINT3 last;
 } Cam_80091040;
 typedef struct {
     f32 x, y, z, u, v;
@@ -542,19 +529,22 @@ typedef struct CamCtl {
     s16 flags;          /* 0x02: 0x01 odd mode, 0x04 hold, 0x08 aim, 0x10 start aim, 0x20 free */
     s16 mode;           /* 0x04 */
     s16 mode2;          /* 0x06 */
-    u8 pad8[0x30 - 8];
+    s16 state;          /* 0x08 */
+    u8 pada[2];
+    NJS_POINT3 p0c;     /* 0x0C */
+    NJS_POINT3 p18;     /* 0x18 */
+    NJS_POINT3 p24;     /* 0x24 */
     NJS_POINT3 lift;    /* 0x30: only y (0x34) is used as the eye height */
-    u8 pad3c[4];
+    Angle a3c;          /* 0x3C */
     Angle w40[3];       /* 0x40 */
     NJS_POINT3 v4c;     /* 0x4C */
     NJS_POINT3 v58;     /* 0x58 */
     NJS_POINT3 v64;     /* 0x64 */
     Angle ang70[3];     /* 0x70 */
-    u8 pad7c[0xac - 0x7c];
-    NJS_POINT3 pos;     /* 0xAC */
-    f32 xb8;            /* 0xB8 */
-    f32 xbc;            /* 0xBC */
-    u8 padc0[0xcc - 0xc0];
+    f32 f7c[3];         /* 0x7C */
+    s32 x88[3];         /* 0x88 */
+    u8 pad94[0xac - 0x94];
+    Cam_80091040 trk;   /* 0xAC: eye position following p0c */
     f32 xcc;            /* 0xCC */
     f32 xd0;            /* 0xD0 */
     f32 xd4;            /* 0xD4 */
@@ -1745,24 +1735,24 @@ s32 fn_80090BE4(f32* pos, s32* dir) {
     return 'N';
 }
 
-void fn_80094B20(Obj80094B20* o) {
+void fn_80094B20(CamCtl* o) {
     Probe p;
 
     if (!(o->flags & 2)) {
-        o->ang_out = o->ang;
+        o->x104 = o->x100;
         return;
     }
     p.x = 0.0f;
     p.y = 0.0f;
     p.z = -16.0f;
-    fn_801DCE18(&p.x, &p.x, o->w74);
-    p.x += o->ox;
-    p.y += o->oy;
-    p.z += o->oz;
+    fn_801DCE18(&p.x, &p.x, o->ang70[1]);
+    p.x += o->prev.x;
+    p.y += o->prev.y;
+    p.z += o->prev.z;
     if (fn_80224588(0, &p, 1) != 0 && p.a != 0 && (p.b & 0x1800) != 0x1800) {
-        f32 a = (f32)atan2(p.h - o->y, 6.0);
-        s32 base = o->ang;
-        o->ang_out = base + (s32)(10430.381f * a) / 3;
+        f32 a = (f32)atan2(p.h - o->p0c.y, 6.0);
+        s32 base = o->x100;
+        o->x104 = base + (s32)(10430.381f * a) / 3;
     }
 }
 
@@ -2708,43 +2698,43 @@ s32 fn_80090378(s32 x, s32 n) {
 
 /* Camera follow: moves c->pos toward tgt, by a tenth per call, or (min > 0) to within min of it,
    faster the further past min it is (full speed at max). */
-void fn_80091040(f32* tgt, Cam_80091040* c) {
+void fn_80091040(NJS_POINT3* tgt, Cam_80091040* c) {
     f32 min = c->min;
     f32 max = c->max;
     if (0.0f >= min) {
-        c->pos[0] = c->pos[0] + (tgt[0] - c->pos[0]) / 10.0f;
-        c->pos[1] = c->pos[1] + (tgt[1] - c->pos[1]) / 10.0f;
-        c->pos[2] = c->pos[2] + (tgt[2] - c->pos[2]) / 10.0f;
+        c->pos.x = c->pos.x + (tgt->x - c->pos.x) / 10.0f;
+        c->pos.y = c->pos.y + (tgt->y - c->pos.y) / 10.0f;
+        c->pos.z = c->pos.z + (tgt->z - c->pos.z) / 10.0f;
     } else {
-        f32 dx = tgt[0] - c->pos[0];
-        f32 dy = tgt[1] - c->pos[1];
-        f32 dz = tgt[2] - c->pos[2];
+        f32 dx = tgt->x - c->pos.x;
+        f32 dy = tgt->y - c->pos.y;
+        f32 dz = tgt->z - c->pos.z;
         f32 d2 = dx * dx + dy * dy + dz * dz;
         if (min * min < d2) {
             f32 dist = fn_80291A5C(d2);
             f32 px, py, pz, a, b;
             if (0.001f < dist) {
-                px = dx * ((dist - min) / dist) + c->pos[0];
-                py = dy * ((dist - min) / dist) + c->pos[1];
-                pz = dz * ((dist - min) / dist) + c->pos[2];
+                px = dx * ((dist - min) / dist) + c->pos.x;
+                py = dy * ((dist - min) / dist) + c->pos.y;
+                pz = dz * ((dist - min) / dist) + c->pos.z;
             } else {
-                px = tgt[0];
-                py = tgt[1];
-                pz = tgt[2];
+                px = tgt->x;
+                py = tgt->y;
+                pz = tgt->z;
             }
             if ((a = max - min) < (b = dist - min) || 0.001f >= b) {
                 a = 1.0f;
             } else {
                 a = a / b;
             }
-            c->pos[0] = c->pos[0] + (px - c->pos[0]) / a;
-            c->pos[1] = c->pos[1] + (py - c->pos[1]) / a;
-            c->pos[2] = c->pos[2] + (pz - c->pos[2]) / a;
+            c->pos.x = c->pos.x + (px - c->pos.x) / a;
+            c->pos.y = c->pos.y + (py - c->pos.y) / a;
+            c->pos.z = c->pos.z + (pz - c->pos.z) / a;
         }
     }
-    c->last[0] = tgt[0];
-    c->last[1] = tgt[1];
-    c->last[2] = tgt[2];
+    c->last.x = tgt->x;
+    c->last.y = tgt->y;
+    c->last.z = tgt->z;
 }
 
 void fn_8009076C(s32 flag, Quad3D* q)
@@ -2795,6 +2785,141 @@ static inline f32 Dist(f32 ax, f32 ay, f32 az, NJS_POINT3* b) {
     return fn_80291A5C(dz * dz + (dx * dx + dy * dy));
 }
 
+extern void fn_80094E50(CamCtl* cam);
+s32 fn_80090DBC(s32 a);
+extern void fn_80094800(CamCtl* cam);
+extern void fn_801DCEB0(NJS_POINT3* out, Angle* ang, f32 dist);
+extern f32 njSin(Angle a);
+static inline f32 Dist2(NJS_POINT3* a, NJS_POINT3* b) {
+    f32 dx = a->x - b->x;
+    f32 dy = a->y - b->y;
+    f32 dz = a->z - b->z;
+    return dx * dx + dy * dy + dz * dz;
+}
+
+static inline f32 DistXZ(NJS_POINT3* a, NJS_POINT3* b) {
+    f32 dx = a->x - b->x;
+    f32 dz = a->z - b->z;
+    return dx * dx + dz * dz;
+}
+
+static inline void Lift(NJS_POINT3* p, CamCtl* cam) {
+    f32 dx = p->x - cam->p0c.x;
+    f32 dy = p->y - cam->prev.y;
+    f32 dz = p->z - cam->p0c.z;
+    f32 xz = dx * dx + dz * dz;
+    f32 h;
+    if (xz + dy * dy < 144.0f) {
+        h = 0.5f * fn_80291A5C(144.0f - xz);
+        h = cam->prev.y + h;
+        if (p->y < h) {
+            p->y = h;
+        }
+    }
+}
+
+void fn_80095910(CamCtl* cam) {
+    Probe pr;
+    Angle ang[3];
+    NJS_POINT3 v;
+    s32 snap;
+    f32 save;
+    f32 t;
+
+    if (lbl_80347450->hit != 0) {
+        if ((lbl_80347450->hit->h24 & 0x1800) == 0x1800) {
+            cam->flags |= 0x20;
+            return;
+        }
+        if (cam->flags & 0x20) {
+            cam->f7c[0] = lbl_80311970.f[0];
+            cam->f7c[1] = lbl_80311970.f[1];
+            cam->f7c[2] = lbl_80311970.f[2];
+            cam->x88[0] = lbl_80311970.w[0] & 0xffff;
+            cam->x88[1] = lbl_80311970.w[1] & 0xffff;
+            cam->x88[2] = lbl_80311970.w[2] & 0xffff;
+            cam->mode = 4;
+            cam->mode2 = 6;
+            cam->xdc = 0.5f;
+            cam->xe0 = 0x100;
+            cam->xe4 = 0x78;
+            cam->flags &= ~0x20;
+        }
+    }
+    if (!(cam->flags & 0x10) && fn_8015F1F0(lbl_80347450) == 0) {
+        cam->x10c = fn_80090DBC(1);
+    }
+    snap = 0;
+    switch (cam->state) {
+    case 0:
+        if (lbl_80347450 != 0) {
+            fn_80095220(lbl_80347450, &cam->p0c, ang);
+        }
+        cam->a3c = ang[1] + 0x8000;
+        if (!(0.010000001f > Dist2(&cam->p18, &cam->p0c))) {
+            snap = 1;
+            fn_80094E50(cam);
+            break;
+        }
+    case 1:
+        cam->state = 2;
+    case 2:
+        if (lbl_80347450 != 0) {
+            fn_80095220(lbl_80347450, &cam->p0c, ang);
+        }
+        cam->a3c = ang[1] + 0x8000;
+        if (0.010000001f > Dist2(&cam->p18, &cam->p0c)) {
+            save = cam->trk.min;
+            cam->trk.min = 0.0f;
+            fn_80091040(&cam->p0c, &cam->trk);
+            cam->trk.min = save;
+            cam->prev.x = cam->trk.pos.x;
+            cam->prev.y = cam->trk.pos.y + cam->lift.y;
+            cam->prev.z = cam->trk.pos.z;
+            fn_80094800(cam);
+            cam->sub->flags &= ~0x4000;
+            break;
+        }
+    case 3:
+        cam->state = 0;
+        snap = 1;
+        fn_80094E50(cam);
+        break;
+    }
+    fn_801DCEB0(&v, cam->ang70, -cam->xd4);
+    cam->v64.x = cam->prev.x + v.x;
+    cam->v64.y = cam->prev.y + v.y;
+    cam->v64.z = cam->prev.z + v.z;
+    Lift(&cam->v64, cam);
+    cam->v4c.x = cam->v4c.x + (cam->v64.x - cam->v4c.x) / 5.0f;
+    cam->v4c.y = cam->v4c.y + (cam->v64.y - cam->v4c.y) / 5.0f;
+    cam->v4c.z = cam->v4c.z + (cam->v64.z - cam->v4c.z) / 5.0f;
+    Lift(&cam->v4c, cam);
+    pr.x = cam->v4c.x;
+    pr.y = cam->v4c.y;
+    pr.z = cam->v4c.z;
+    fn_80224588(0, &pr, 1);
+    if (pr.a != 0 && (pr.b & 0x400)) {
+        cam->v4c.y = pr.h;
+    }
+    fn_80222838(cam->sub);
+    fn_80094B20(cam);
+    if (DistXZ(&cam->v4c, &cam->prev) < 144.0f) {
+        t = 0.5f * -njSin(cam->ang70[0]);
+    } else {
+        t = 0.0f;
+    }
+    cam->xfc += (12.0f * t - cam->xfc) / 10.0f;
+    cam->p24.x = cam->prev.x;
+    cam->p24.y = cam->prev.y + cam->xfc;
+    cam->p24.z = cam->prev.z;
+    if (snap) {
+        cam->p18.x = cam->p0c.x;
+        cam->p18.y = cam->p0c.y;
+        cam->p18.z = cam->p0c.z;
+    }
+}
+
 void fn_80095DFC(CamCtl* c, CamReq* r) {
     f32 y, z, x;
     NJS_POINT3 t;
@@ -2803,16 +2928,16 @@ void fn_80095DFC(CamCtl* c, CamReq* r) {
         c->sub->flags &= ~0x8000;
     }
     if (lbl_80347450 != 0) {
-        fn_80095220(lbl_80347450, &c->pos, 0);
+        fn_80095220(lbl_80347450, &c->trk.pos, 0);
     }
-    c->xb8 = 4.0f;
-    c->xbc = 10.0f;
+    c->trk.min = 4.0f;
+    c->trk.max = 10.0f;
     c->x10c = 0;
     c->flags &= ~0x20;
     if (c->flags & 4) {
-        x = c->pos.x;
-        y = c->pos.y + c->lift.y;
-        z = c->pos.z;
+        x = c->trk.pos.x;
+        y = c->trk.pos.y + c->lift.y;
+        z = c->trk.pos.z;
     } else {
         if (!(r->flags & 4)) {
             c->lift.z = 0.0f;
@@ -2830,13 +2955,13 @@ void fn_80095DFC(CamCtl* c, CamReq* r) {
         c->w40[0] = (u16)lbl_80311970.w[0];
         c->w40[1] = (u16)lbl_80311970.w[1];
         c->w40[2] = (u16)lbl_80311970.w[2];
-        x = c->pos.x;
-        y = c->pos.y + c->lift.y;
-        z = c->pos.z;
+        x = c->trk.pos.x;
+        y = c->trk.pos.y + c->lift.y;
+        z = c->trk.pos.z;
         if (r->flags & 0x10) {
             c->v64.x = x + c->v58.x;
-            c->v64.y = c->pos.y + c->v58.y;
-            c->v64.z = c->pos.z + c->v58.z;
+            c->v64.y = c->trk.pos.y + c->v58.y;
+            c->v64.z = c->trk.pos.z + c->v58.z;
             r->flags &= ~0x10;
             r->flags |= 8;
         }
