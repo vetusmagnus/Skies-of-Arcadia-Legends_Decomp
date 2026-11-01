@@ -395,6 +395,9 @@ config.libs = [
             Object(NonMatching, "game/unit_8008B4A0.c"),
             Object(NonMatching, "game/unit_8009623C.c"),
             Object(NonMatching, "game/unit_800972AC.c"),
+            # Split at a new .sdata2 block (0x80348E70: a second 1.0f and 0.0f); its .bss blocks
+            # 0x80303618/34/50 are addressed from one pooled base, so they are defined here.
+            Object(NonMatching, "game/unit_800AE300.c"),
             Object(NonMatching, "game/unit_800B2DA0.c"),
             Object(NonMatching, "game/unit_800D81E8.c"),
             Object(NonMatching, "game/unit_8010E164.c"),

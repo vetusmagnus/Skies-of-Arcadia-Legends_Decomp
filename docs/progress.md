@@ -2261,3 +2261,13 @@ local fixed it twice), callee-saved colouring swaps no declaration order changes
 that need their unit's .rodata/.bss defined in C in first-use order (fn_80217554, fn_8009D190, fn_80097720, fn_801A3A10, fn_800D3464,
 fn_80073164, fn_800A7860, fn_800A6F30, fn_801B6E5C, fn_800EAAAC), and about 170 functions of 1 KB and up with no attempt yet.
 `#pragma optimization_level 1` (which fixed the r0-result pattern in Ninja) did not turn up as the only fix for any game function.
+
+## Unit splits for the held-back matches (2026-11-01, branch s1-split)
+
+Splits made where the data layout shows an original file boundary, so that held matches can go into their own unit:
+- **unit_800AE300** (0x800AE300-0x800B2DA0, from unit_800972AC): its `.sdata2` starts at 0x80348E70 (8-aligned) with a
+  1.0f that repeats 0x80348E64's, and its 0.0f at 0x80348E88 is a second 0.0f after 0x80348E60; every function from
+  0x800AE300 on uses only constants from 0x80348E70 up, everything before only below it. The file's `.bss` blocks
+  0x80303618/0x80303634/0x80303650 are addressed from one pooled base in the original (base register + 0x1c/+0x38), which
+  MWCC only does for data defined in the same file, so they are defined in the unit (first use is 0x80303618, which makes it
+  the base). Released fn_800B0900, fn_800B0F54 and fn_800B0278 (the 0x80303634 block is the wave-strip state).
