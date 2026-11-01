@@ -2878,6 +2878,39 @@ void fn_8016058C(s32 n, Key *ents, EvObj *obj)
     }
 }
 
+extern void fn_8021331C(u32 n, f32 **pts, Pair *ctl);
+
+Spl *fn_801607A0(s32 n, Key *keys, Vec *v) {
+    Spl *s;
+    s32 i;
+    if (n <= 0) {
+        return 0;
+    }
+    s = fn_801E1A2C(1, 0x1c);
+    if (s == 0) {
+        return 0;
+    }
+    s->count = n + 1;
+    s->xc = fn_801E1A2C(1, s->count * 4);
+    s->x10 = fn_801E1A2C(1, s->count * 8);
+    s->x8 = fn_801E1A2C(1, s->count * 4);
+    s->xc[0] = fn_801E1A2C(1, 0xc);
+    s->xc[0][0] = v->x;
+    s->xc[0][1] = v->y;
+    s->xc[0][2] = v->z;
+    for (i = 0; i < s->count - 1; i++) {
+        s->xc[i + 1] = fn_801E1A2C(1, 0xc);
+        s->x10[i].a = fn_801E1A2C(1, 0xc);
+        s->x10[i].b = fn_801E1A2C(1, 0xc);
+        s->x8[i] = keys[i].x18;
+        s->xc[i + 1][0] = keys[i].p0.x;
+        s->xc[i + 1][2] = keys[i].p0.z;
+        s->xc[i + 1][1] = keys[i].p0.y;
+    }
+    fn_8021331C(s->count, s->xc, s->x10);
+    return s;
+}
+
 s32 fn_80160A4C(Ent_8015EBF4 *self, Arg_8016679C *a)
 {
     Hold_8015EB8C *h = self->x1d8;
