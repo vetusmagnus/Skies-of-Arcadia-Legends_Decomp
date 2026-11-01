@@ -311,6 +311,13 @@ typedef struct M5D8F8 {
     void *model;
 } M5D8F8;
 /* Work of a battle character task. */
+typedef struct P_80065F1C {
+    u8 pad0[0xc];
+    s32 x0c;
+    u8 pad10[0x2c - 0x10];
+    void *x2c;
+    s32 x30;
+} P_80065F1C;
 typedef struct W5C188 {
     M5D8F8 *mdl;        /* 0x00 */
     u8 pad4[4];
@@ -943,6 +950,7 @@ extern void fn_8006D8DC(s32);
 extern void fn_80215F94(u32);
 extern s32 fn_80216F48(u32);
 extern void fn_80217830(s32);
+extern s32 SePlay(s32 bank, s8 arg1, s8 id);
 typedef struct Un_8005D614 {
     u8 pad0[2];
     s16 s2;
@@ -1263,7 +1271,6 @@ extern s16 lbl_8034736A;
 extern s32 lbl_80346A90;
 extern u32 lbl_80347364;
 void fn_80217380(s32 a);
-typedef struct P_80065F1C { u8 pad0[0x30]; s32 x30; } P_80065F1C;
 extern void fn_80008308(void *o, s32 v);
 void fn_80065AB0(T5C188 *o, s16 v);
 typedef struct Src_80064C00 {
@@ -2587,6 +2594,37 @@ void fn_8005BBC4(EvMotTask* t)
     }
     s->t++;
     fn_80037FD8(s->d, &t->state);
+}
+
+extern s8 fn_80020E10(void *p);
+extern s32 fn_8002F598(s8 row);
+extern void fn_8002F630(void);
+extern void fn_80073D18(void *a, void *b, s32 n);
+
+void fn_8005CAF4(s8 idx) {
+    T5C188 *o;
+    W5C188 *p;
+    U5C188 *r;
+    s8 k;
+    o = fn_80021658(idx);
+    p = o->work;
+    r = p->u;
+    k = fn_80020E10(&p->x10->x0c);
+    if (k < 0 || k != 0) {
+        return;
+    }
+    {
+        if (r->f50 & 0x8000) {
+            return;
+        }
+        if (fn_8002F598(0) == 0) {
+            return;
+        }
+        fn_80073D18(o->work->x10->x2c, r->p154, 0x50);
+        r->f50 = r->f50 | 0x8000;
+        SePlay(0, 3, 6);
+        fn_8002F630();
+    }
 }
 
 void fn_80060950(u8 *p) {
@@ -5323,7 +5361,6 @@ extern s32 fn_800154BC(Task *t);
 
 typedef struct Snd { u8 pad_00[7]; s8 x7; u8 pad_08[0x20]; s32 x28; s32 x2c; } Snd;
 extern void fn_80218D84(void *dst, u32 src, u32 size);
-extern s32 SePlay(s32 bank, s8 arg1, s8 id);
 
 void fn_80071F84(s32 *out, NJS_POINT3 *a, NJS_POINT3 *b) {
     Vec3f d;
