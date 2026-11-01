@@ -229,7 +229,7 @@ typedef struct Obj_80017B18 {
 typedef struct ChrWork {
     void* x0;           /* 0x00 model */
     u8 pad4[4];
-    void* x8;           /* 0x08 */
+    NJS_TEXLIST* x8;    /* 0x08 */
     u8 padc[4];
     Obj_80017B18 *x10; /* 0x10 */
     s16 x14;            /* 0x14 */
@@ -317,18 +317,16 @@ extern u8 *lbl_80346AA4;
 typedef void (*TaskFn)(void*);
 extern TaskFn lbl_802DAFA8[];
 extern u8 lbl_8030B7F4[];
-/* lbl_80309EC8: the 0x244-byte battle/system block (memset in battle.c). */
-typedef struct {
-    u8 pad_0[0x40];
-    u32 x40;
-    u32 x44;
-    u32 x48;
-    u8 x4c[12];
-    u8 x58[12];
-    u8 x64[12];
-    f32 va[3];
-    f32 vb[3];
-    u8 pad88[0xC0 - 0x88];
+/* The 0x70-byte objects lbl_80309EC8 keeps at 0x40/0x44 (fn_80014AB8); 0x20000000 in flags
+ * releases one. */
+typedef struct SysObj {
+    u8 pad0[0x68];
+    u32 flags;          /* 0x68 */
+    u8 x6c[4];          /* 0x6c */
+} SysObj;
+/* lbl_80309EC8 0x88..0x204, cleared as one block by fn_80014AB8. */
+typedef struct SysMove {
+    u8 pad0[0xC0 - 0x88];
     f32 xc0[3];
     u8 padcc[0x110 - 0xCC];
     f32 x110;
@@ -337,6 +335,19 @@ typedef struct {
     u8 pad164[0x19A - 0x164];
     s16 x19a;
     u8 pad19c[0x204 - 0x19C];
+} SysMove;
+/* lbl_80309EC8: the 0x244-byte battle/system block (memset in battle.c). */
+typedef struct Sys_80309EC8 {
+    u8 pad_0[0x40];
+    SysObj* x40;
+    SysObj* x44;
+    u32 x48;
+    u8 x4c[12];
+    u8 x58[12];
+    u8 x64[12];
+    f32 va[3];
+    f32 vb[3];
+    SysMove mv;         /* 0x88 */
     s8 a[10];
     u8 pad20e[2];
     u32 w[10];
@@ -692,7 +703,7 @@ extern f32 fn_800114AC(void*, f32*, f32*, int);
 extern void fn_800608C8(void*);
 extern void fn_80061C80(void*, f32, f32, f32, int);
 extern void fn_80071F84(void*, void*, void*);
-extern void fn_80014AB8(s32, void*);
+void fn_80014AB8(u8 kind, SysObj* o);
 typedef struct {
     f32 x, y, z;
 } Vec;
@@ -877,7 +888,7 @@ extern void fn_8028B498(void);
 extern void fn_80035140(void* model, u8 flag);
 typedef struct Obj_80014784 {
     u8 pad[0x24];
-    void* data;
+    SysObj* data;
 } Obj_80014784;
 extern void fn_800136DC(void*);
 typedef s32 Angle;
@@ -1576,11 +1587,82 @@ f32 fn_8000ACF0(Vec3* v) {
     return fn_80291A5C(v->z * v->z + (v->x * v->x + v->y * v->y));
 }
 
+/* A loaded resource file handle (fn_801CC69C). */
+typedef struct ResHandle {
+    u8 pad0[0x54];
+    u32 size;
+} ResHandle;
+extern char lbl_802ACCC4[];
+extern char lbl_802ACCD0[];
+extern int sprintf(char* s, const char* fmt, ...);
+extern ResHandle* fn_801CC69C(char* name);
+extern void fn_801CC608(ResHandle* h, void* buf, u32 size);
+extern void fn_801CC65C(ResHandle* h);
+extern void fn_801E1DF8(s32 a, void* b);
+
+void fn_8000C9F8(void** out1, void** out2) {
+    char name[0x20];
+
+    if (lbl_803098C8.buf[0] == 0) {
+        ResHandle* h;
+        u32 size;
+        sprintf(name, lbl_802ACCC4, lbl_80309E5C.x0);
+        h = fn_801CC69C(name);
+        size = h->size;
+        *out1 = fn_801E1C7C(size);
+        fn_801CC608(h, *out1, size);
+        fn_801CC65C(h);
+    } else {
+        fn_801E1DF8(0, lbl_803098C8.buf[0]);
+        *out1 = lbl_803098C8.buf[0];
+        lbl_803098C8.buf[0] = 0;
+    }
+    if (lbl_803098C8.buf[1] == 0) {
+        ResHandle* h2;
+        u32 size2;
+        sprintf(name, lbl_802ACCD0, lbl_80309E5C.x0);
+        h2 = fn_801CC69C(name);
+        size2 = h2->size;
+        *out2 = fn_801E1C7C(size2);
+        fn_801CC608(h2, *out2, size2);
+        fn_801CC65C(h2);
+    } else {
+        fn_801E1DF8(0, lbl_803098C8.buf[1]);
+        *out2 = lbl_803098C8.buf[1];
+        lbl_803098C8.buf[1] = 0;
+    }
+}
+
 void fn_8000CC84(s32 flag) {
     if (flag == 1) {
         lbl_80309E5C.x8 |= 0x01000000;
     } else {
         lbl_80309E5C.x8 &= ~0x01000000;
+    }
+}
+
+s32 fn_80015828(const char* s);
+static inline int FindNamedChr(Task** out) {
+    Task* e;
+    u8 i;
+    for (i = 0; i < 0xe; i++) {
+        e = lbl_80309E24[i];
+        if (e != 0) {
+            ChrWork* w = e->work;
+            if (fn_80015828(w->x10->xc) != 0) {
+                *out = e;
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+void fn_8000F168(NJS_TEXLIST* d) {
+    Task* hit;
+    if (FindNamedChr(&hit)) {
+        ChrWork* w = hit->work;
+        d->textures->texaddr = w->x8->textures->texaddr;
     }
 }
 
@@ -1713,12 +1795,12 @@ void fn_80016580(Tk_80016580* t);
 
 inline int HitCached(W_800121D8* w, U_800121D8* u, f32 xc)
 {
-    switch (lbl_80309EC8.x19a) {
+    switch (lbl_80309EC8.mv.x19a) {
     case 10:
     case 11:
-        if (lbl_80309EC8.x110 == xc && lbl_80309EC8.xc0[0] == w->x38[0] && lbl_80309EC8.xc0[1] == w->x38[1]
-            && lbl_80309EC8.xc0[2] == w->x38[2]) {
-            u->x8 = lbl_80309EC8.x160;
+        if (lbl_80309EC8.mv.x110 == xc && lbl_80309EC8.mv.xc0[0] == w->x38[0] && lbl_80309EC8.mv.xc0[1] == w->x38[1]
+            && lbl_80309EC8.mv.xc0[2] == w->x38[2]) {
+            u->x8 = lbl_80309EC8.mv.x160;
             return 1;
         }
     }
@@ -1835,6 +1917,54 @@ s32 fn_800117EC(NJS_POINT3* a, NJS_POINT3* b, f32* out, NJS_POINT3* c) {
     return 1;
 }
 
+s32 fn_80011E50(f32* v, f32* out, u8 mode) {
+    f32 pos[3];
+    f32 c58[3];
+    f32 tmp[3];
+    f32 ang[3];
+    f32 d;
+    fn_80071CF0(lbl_80309EC8.x4c, pos);
+    fn_800614FC(lbl_80309EC8.x64, ang);
+    fn_80071CF0(lbl_80309EC8.x58, c58);
+    fn_80071CF0(v, tmp);
+    switch (mode) {
+    case 0:
+        tmp[2] = pos[2];
+        if (v[0] < 0.0f && pos[0] <= v[0]) {
+            *out = -1.0f;
+            return 1;
+        }
+        if (v[0] > 0.0f && pos[0] >= v[0]) {
+            *out = -1.0f;
+            return 1;
+        }
+        break;
+    case 1:
+        tmp[0] = pos[0];
+        if (v[2] < 0.0f && pos[2] <= v[2]) {
+            *out = -1.0f;
+            return 1;
+        }
+        if (v[2] > 0.0f && pos[2] >= v[2]) {
+            *out = -1.0f;
+            return 1;
+        }
+        break;
+    }
+    tmp[1] = pos[1];
+    d = fn_80071E9C(pos, tmp) - 7.5f;
+    if (d < 0.0f) {
+        d = 0.0001f;
+    }
+    d = d / 7.5f;
+    d = -(1.0f - d);
+    if (d < 0.0001f) {
+        *out = 3.0f * d;
+        return 1;
+    }
+    return 0;
+}
+
 void fn_800121D8(Task* t)
 {
     W_800121D8* w = t->work;
@@ -1918,10 +2048,10 @@ void fn_800121D8(Task* t)
     }
     d = u->xc;
     c = u->x8;
-    lbl_80309EC8.x19a = 11;
-    lbl_80309EC8.x110 = d;
-    fn_80071CF0(w->x38, lbl_80309EC8.xc0);
-    lbl_80309EC8.x160 = c;
+    lbl_80309EC8.mv.x19a = 11;
+    lbl_80309EC8.mv.x110 = d;
+    fn_80071CF0(w->x38, lbl_80309EC8.mv.xc0);
+    lbl_80309EC8.mv.x160 = c;
     c = u->xc;
     fn_80061C80(w->x20, 0.0f, u->x8, c, 0);
     w->x20[0] = w->x20[0] + w->x38[0];
@@ -1929,6 +2059,34 @@ void fn_800121D8(Task* t)
     w->x20[1] = c;
     fn_80071F84(w->x2c, w->x38, w->x20);
     u->x8 += 1.0f;
+}
+
+extern void fn_8028BB90(void* p);
+
+void fn_80014AB8(u8 kind, SysObj* o) {
+    if (o != NULL) {
+        fn_8028BB90(o);
+    }
+    switch (kind) {
+    case 0:
+        if (lbl_80309EC8.x44 != NULL) {
+            lbl_80309EC8.x44->flags |= 0x20000000;
+        }
+        lbl_80309EC8.x44 = o;
+        break;
+    case 1:
+        if (lbl_80309EC8.x40 != NULL) {
+            lbl_80309EC8.x40->flags |= 0x20000000;
+        }
+        lbl_80309EC8.x40 = o;
+        memset(&lbl_80309EC8.mv, 0, sizeof(SysMove));
+        break;
+    case 2:
+        if (lbl_80309EC8.x40 != NULL) {
+            lbl_80309EC8.x40->flags |= 0x20000000;
+        }
+        break;
+    }
 }
 
 s32 fn_80014CC0(void* obj) {
@@ -2223,6 +2381,33 @@ void fn_8001DD00(ChrInfo* o, s8 v) {
             o->x28[j] = o->x28[j + 1];
         }
         o->x28[j] = val;
+    }
+}
+
+static inline Task *FindChrId(s8 id) {
+    s8 i;
+    for (i = 0; i < 14; i++) {
+        Task *t = lbl_80309E24[i];
+        if (t != 0) {
+            ChrWork *w = t->work;
+            if (w->st->id == id) {
+                return lbl_80309E24[i];
+            }
+        }
+    }
+    return 0;
+}
+
+void fn_8001E6DC(V3 *out, s8 id) {
+    Task *t = FindChrId(id);
+    t = t ? t : FindChrId(0);
+    if (t == 0) {
+        out->x = 0.0f;
+        out->y = 0.0f;
+        out->z = 0.0f;
+    } else {
+        ChrWork *w = t->work;
+        fn_80071CF0(&w->st->x13c, out);
     }
 }
 
@@ -3230,10 +3415,10 @@ void fn_80014474(Tk_80014474* t)
         Reset();
         d = u->xc;
         c = u->x8;
-        lbl_80309EC8.x19a = 11;
-        lbl_80309EC8.x110 = d;
-        fn_80071CF0(w->x38, lbl_80309EC8.xc0);
-        lbl_80309EC8.x160 = c;
+        lbl_80309EC8.mv.x19a = 11;
+        lbl_80309EC8.mv.x110 = d;
+        fn_80071CF0(w->x38, lbl_80309EC8.mv.xc0);
+        lbl_80309EC8.mv.x160 = c;
         break;
     case 2:
         Reset();
@@ -3825,7 +4010,7 @@ void fn_80014784(void) {
         if (o != 0) {
             o->data = fn_801E1C7C(0x70);
             memset(o->data, 0, 0x70);
-            fn_80061F58((u8*)o->data + 0x6c, 0x38, 0);
+            fn_80061F58(o->data->x6c, 0x38, 0);
             fn_80014AB8(0, o->data);
         }
     }
@@ -5103,7 +5288,7 @@ s32 fn_80007640(ArcSet *o, s32 idx) {
 }
 
 /* Clears pending word 1 (sel 1, 0x40) or 0 (sel 0, 0x44) if it equals val; 1 if cleared. */
-s32 fn_80014A54(u8 sel, u32 val) {
+s32 fn_80014A54(u8 sel, SysObj* val) {
     s32 r = 0;
     switch (sel) {
     case 0:
