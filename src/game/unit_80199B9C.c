@@ -11,6 +11,7 @@
 extern void TextPrint(s32 x, s32 y, const char *str);
 #include "game/menu.h"
 #include "game/drawstate.h"
+#include "game/evobj.h"
 #include "game/gamedata.h"
 #include <math.h>
 #include <stdlib.h>
@@ -2008,65 +2009,6 @@ typedef struct Ent_801BE608 {
     s32 f24;
 } Ent_801BE608;
 extern TaskFunc lbl_802EBD30[33];
-typedef struct EvHit {
-    u8 pad0[0x24];
-    u16 h24;      /* 0x24 ADD: collision attribute (bits 8-14 the area id) */
-} EvHit;
-/* The emitter parameters (EvExt.info of a sparkle map object); game/evobj.h types this pointer
- * as EvInfo, whose 0x24..0x40 fields are retyped here. */
-typedef struct EvInfo {
-    u8 pad0[4];
-    f32 rate;      /* 0x04 ADD: spawn threshold (0..1) */
-    f32 drag;      /* 0x08 ADD */
-    f32 spin;      /* 0x0C ADD */
-    f32 rise;      /* 0x10 ADD */
-    f32 riseVar;   /* 0x14 ADD */
-    f32 spread;    /* 0x18 ADD */
-    f32 gravity;   /* 0x1C ADD */
-    f32 side;      /* 0x20 ADD */
-    s32 angVel;    /* 0x24 (EvInfo.nearDist) */
-    s32 life;      /* 0x28 (EvInfo.actDist) */
-    f32 minDist;   /* 0x2C (EvInfo.x2c) */
-    f32 scale;     /* 0x30 (EvInfo.speed) */
-    u8 pad34[4];
-    f32 yOfs;      /* 0x38 (EvInfo.mode) */
-    f32 height;    /* 0x3C (EvInfo.flag) */
-    s32 area;      /* 0x40 ADD */
-} EvInfo;
-typedef struct EvExt {
-    u8 pad0[0x10];
-    EvInfo* info;          /* 0x10 */
-    u8 pad14[0x20 - 0x14];
-    NJS_TEXLIST* texlist;  /* 0x20 */
-} EvExt;
-/* Copy of game/evobj.h's EvObj with the fields this function needs. */
-typedef struct EvObj {
-    u8 pad0[0x38];
-    NJS_POINT3 pos;          /* 0x38 */
-    Angle ang[3];            /* 0x44 */
-    u8 pad50[0xE4 - 0x50];
-    void* model;             /* 0xE4 */
-    u8 padE8[0x100 - 0xE8];
-    NJS_TEXLIST* texlist;    /* 0x100 */
-    NJS_POINT3 home;         /* 0x104 */
-    u8 pad110[0x158 - 0x110];
-    NJS_POINT3 x158;         /* 0x158 */
-    u8 pad164[0x17A - 0x164];
-    u16 x17a;                /* 0x17A */
-    u8 pad17c[0x1B8 - 0x17C];
-    EvHit* hit;              /* 0x1B8 */
-    u8 pad1BC[0x1C8 - 0x1BC];
-    EvExt* ext;              /* 0x1C8 */
-    u8 pad1CC[0x20C - 0x1CC];
-    s32 x20c;                /* 0x20C ADD: the loop sound is playing */
-    s32 x210;                /* 0x210 */
-    u8 pad214[0x23C - 0x214];
-    s32 x23c;                /* 0x23C ADD: the loop sound's handle */
-    u8 pad240[0x24C - 0x240];
-    NJS_POINT3 x24c;         /* 0x24C */
-    f32 x258;                /* 0x258 */
-    void* x25c;              /* 0x25C per-kind record (the trail of fn_8019D678) */
-} EvObj;
 extern EvObj *lbl_80347450;
 typedef struct Obj_8019CB80_8019C424 {
     u8 pad00[8];
@@ -2126,6 +2068,74 @@ void fn_8019B42C(void* p, u32 a) {
 void fn_801A28A8(void);
 extern s32 CARDMountAsync(s32 chan, void *work, void (*detach)(void), void (*attach)(void));
 extern s32 CARDFormatAsync(s32 chan, void (*cb)(void));
+
+void fn_8019BED8(struct Task* t, EvObj* o);
+static inline s32 Flag_8019C190(u32 n) {
+    return (lbl_80310B3C[n >> 5] & (1 << (n & 31))) != 0;
+}
+
+extern s32 lbl_803473A8;
+
+extern void fn_800CF8C4(f32* v, f32 f);
+
+extern void fn_801DBE1C(const char* fmt, ...);
+
+static inline s32 InArea_8019C190(EvObj* o) {
+    NJS_POINT3 v;
+    EvObj* p;
+    if (o->x20c >= 0 && Flag_8019C190(o->x20c) != 0) return 0;
+    p = lbl_80347450;
+    if (o->x24c.z < p->pos.y || o->x258 > p->pos.y) return 0;
+    v.x = p->pos.x;
+    v.y = p->pos.y;
+    v.z = p->pos.z;
+    return fn_802254A0(&v, o->hit);
+}
+
+void fn_8019C190(struct Task* t) {
+    EvObj* o;
+    f32 d;
+    f32 k;
+    o = t->work;
+    switch (t->state) {
+    case 0:
+    case 1:
+    case 0xfe:
+        if (lbl_80347450 == NULL || lbl_803473A8 == 0) {
+            t->state = 1;
+            break;
+        }
+    case 2:
+        fn_8019BED8(t, o);
+        break;
+    case 3:
+        if (InArea_8019C190(o)) fn_800CF8C4(&o->x158.x, o->x24c.y);
+        break;
+    case 4:
+        if (InArea_8019C190(o)) {
+            f32 dz = lbl_80347450->pos.z - o->pos.z;
+            f32 dx = lbl_80347450->pos.x - o->pos.x;
+            d = dx * dx + dz * dz;
+            if (0.000000009999999f < d) {
+                k = o->x24c.x / fn_80291A5C(d);
+                o->x158.x = dx * k;
+                o->x158.z = dz * k;
+                fn_800CF8C4(&o->x158.x, o->x24c.y);
+            }
+        }
+        break;
+    case 5:
+        fn_801DBE1C("BadOption %d", o->x17a);
+        break;
+    default:
+        if (o->hit != NULL) {
+            fn_801E17E0(o->hit);
+            o->hit = NULL;
+        }
+        fn_80100B74(t);
+        break;
+    }
+}
 
 s32 fn_801A2670(s32 idx, s32 *out)
 {
@@ -7504,45 +7514,45 @@ void fn_801A1958(Self_801A1958 *o, s32 st) {
     fn_801A64B4(o, v);
 }
 
-void fn_8019BED8(struct Task* t, Obj_8019BED8* o) {
-    Ent_8019BED8* e;
+void fn_8019BED8(struct Task* t, EvObj* o) {
+    EvExt* e;
     Rec* r;
     s32 ty;
     s32 k;
     t->state = 5;
-    e = o->ent;
+    e = o->ext;
     if (e == NULL) return;
-    o->h = fn_802258BC(0xffff, (u16)e->id, 2);
-    if (o->h == NULL) return;
-    r = e->rec;
+    o->hit = fn_802258BC(0xffff, (u16)e->x04, 2);
+    if (o->hit == NULL) return;
+    r = e->info;
     if (r == NULL) return;
     ty = r->type;
     if (ty <= 10) return;
-    o->f20c = r->f24;
+    o->x20c = r->f24;
     k = r->f28;
-    o->f210 = k;
+    o->x210 = k;
     if (k == 0) {
         if ((u32)ty == 0xf && r->f34 > r->f38) {
-            o->f24c = 0.0001f * r->f2c;
-            o->f250 = 0.0001f * r->f30;
-            o->f254 = 0.01f * r->f34;
-            o->f258 = 0.01f * r->f38;
-            o->f48 = 182.04445f * (0.01f * r->f3c);
-            o->v[1] = 0.0f;
-            o->v[0] = 0.0f;
-            o->v[2] = -o->f24c;
-            fn_801DCE18(o->v, o->v, o->f48);
+            o->x24c.x = 0.0001f * r->f2c;
+            o->x24c.y = 0.0001f * r->f30;
+            o->x24c.z = 0.01f * r->f34;
+            o->x258 = 0.01f * r->f38;
+            o->ang[1] = 182.04445f * (0.01f * r->f3c);
+            o->x158.y = 0.0f;
+            o->x158.x = 0.0f;
+            o->x158.z = -o->x24c.x;
+            fn_801DCE18(&o->x158.x, &o->x158.x, o->ang[1]);
             t->state = 3;
         }
     } else if (k == 1) {
         if ((u32)ty == 0x10 && r->f34 > r->f38) {
-            o->f24c = 0.0001f * r->f2c;
-            o->f250 = 0.0001f * r->f30;
-            o->f254 = 0.01f * r->f34;
-            o->f258 = 0.01f * r->f38;
-            o->f38 = 0.01f * r->f3c;
-            o->f40 = 0.01f * r->f40;
-            o->v[1] = 0.0f;
+            o->x24c.x = 0.0001f * r->f2c;
+            o->x24c.y = 0.0001f * r->f30;
+            o->x24c.z = 0.01f * r->f34;
+            o->x258 = 0.01f * r->f38;
+            o->pos.x = 0.01f * r->f3c;
+            o->pos.z = 0.01f * r->f40;
+            o->x158.y = 0.0f;
             t->state = 4;
         }
     }
@@ -8405,7 +8415,7 @@ void SaveLoadTask(Task *task) {
 
 void fn_8019C424(Task *t)
 {
-    EvInfo *info;
+    EvInfoSpark *info;
     EvObj *o;
     Obj_8019CB80_8019C424 *sp;
     f32 dx;

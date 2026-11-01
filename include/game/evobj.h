@@ -164,6 +164,27 @@ typedef struct {
     u32 x30c, x310, x314; /* 0x30C */
 } EvInfoEmit;
 
+/* The info record of a sparkle map object (fn_8019C424 in unit_80199B9C.c). */
+typedef struct {
+    s32 count;     /* 0x00 */
+    f32 rate;      /* 0x04: spawn threshold (0..1) */
+    f32 drag;      /* 0x08 */
+    f32 spin;      /* 0x0C */
+    f32 rise;      /* 0x10 */
+    f32 riseVar;   /* 0x14 */
+    f32 spread;    /* 0x18 */
+    f32 gravity;   /* 0x1C */
+    f32 side;      /* 0x20 */
+    s32 angVel;    /* 0x24 */
+    s32 life;      /* 0x28 */
+    f32 minDist;   /* 0x2C */
+    f32 scale;     /* 0x30 */
+    u8 pad34[4];
+    f32 yOfs;      /* 0x38 */
+    f32 height;    /* 0x3C */
+    s32 area;      /* 0x40 */
+} EvInfoSpark;
+
 /* Fading model. */
 typedef struct {
     s32 count;     /* 0x00 */
