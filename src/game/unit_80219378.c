@@ -279,7 +279,7 @@ typedef struct Anim {
 extern s32 fn_801E7B2C(void* o, f32 frame, void* a, void* b);
 extern u32 strlen(const char *s);
 extern s32 fn_801E4BBC(s8 n);
-extern void fn_8021AF94(s32 *a, void *b, s8 *list);
+extern void fn_8021AF94(ShipStat *a, void *b, s8 *list);
 extern void fn_8021B3B4(void);
 extern void fn_801EFF0C(s16 id);
 typedef struct Ent { u8 pad_0[0x1c];
@@ -2515,7 +2515,7 @@ static inline void collect(s8 *out) {
     }
 }
 
-void fn_8021B1CC(s32 *a, void *b) {
+void fn_8021B1CC(ShipStat *a, void *b) {
     s8 list[0x16];
     collect(list);
     fn_8021AF94(a, b, list);
@@ -3228,7 +3228,7 @@ static inline void fill(s8 *out) {
 void fn_8021B2B4(void) {
     s8 buf[22];
     fill(buf);
-    fn_8021AF94(&lbl_8030B4D4.limit, &lbl_8030B7F4.x1568.b1568, buf);
+    fn_8021AF94(&lbl_8030B4D4.ship, &lbl_8030B7F4.x1568.b1568, buf);
 }
 
 typedef struct { f32 x, y, z; u32 colour; } VertexCol;
@@ -4385,12 +4385,12 @@ void fn_8021B4B4(s32 ship) {
         }
         fn_8021B3B4();
         fill(buf);
-        fn_8021AF94(&lbl_8030B4D4.limit, s, buf);
+        fn_8021AF94(&lbl_8030B4D4.ship, s, buf);
     }
 }
 
 extern s32 fn_801E4BBC(s8 n);
-extern void fn_8021AF94(s32 *a, void *b, s8 *list);
+extern void fn_8021AF94(ShipStat *a, void *b, s8 *list);
 extern void fn_8021B3B4(void);
 extern void fn_801EFF0C(s16 id);
 extern void fn_801EFC88(s16 id);
@@ -4501,7 +4501,7 @@ void fn_8021B644(s32 ship) {
         SetGears(s, e);
         fn_8021B3B4();
         fillOwned(buf);
-        fn_8021AF94(&lbl_8030B4D4.limit, s, buf);
+        fn_8021AF94(&lbl_8030B4D4.ship, s, buf);
     }
 }
 
@@ -4524,7 +4524,7 @@ void fn_8021B91C(s32 ship) {
         }
         fn_8021B3B4();
         fill(buf);
-        fn_8021AF94(&lbl_8030B4D4.limit, s, buf);
+        fn_8021AF94(&lbl_8030B4D4.ship, s, buf);
     }
 }
 
@@ -4636,7 +4636,7 @@ void fn_8021BAEC(s32 idx)
         CopyEquipB(d, src);
         fn_8021B3B4();
         BuildList(list);
-        fn_8021AF94(&lbl_8030B4D4.limit, d, list);
+        fn_8021AF94(&lbl_8030B4D4.ship, d, list);
     }
 }
 
@@ -4662,7 +4662,7 @@ void fn_8021BD7C(s32 id)
     if (id < 0) {
         fn_8021BED0();
         fill(buf);
-        fn_8021AF94(&lbl_8030B4D4.limit, &lbl_8030B7F4.x1568.b1568, buf);
+        fn_8021AF94(&lbl_8030B4D4.ship, &lbl_8030B7F4.x1568.b1568, buf);
     } else {
         switch (id) {
         case 1:

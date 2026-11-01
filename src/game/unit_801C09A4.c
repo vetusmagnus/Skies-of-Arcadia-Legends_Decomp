@@ -260,6 +260,31 @@ s32 fn_801C16D0(s16 id) {
     return lbl_802D7E4C[id - 400].type;
 }
 
+void fn_801C1E48(void) {
+    Save1568* o = &lbl_8030B7F4.x1568;
+    ShipStat* l = &lbl_8030B4D4.ship;
+    s32 i;
+    lbl_803471B8->w->xcc = o->b1568;
+    lbl_803471B8->w->xc8 = o->name;
+    lbl_803471B8->w->xd4 = o->x157c;
+    for (i = 0; i < 5; i++) {
+        lbl_803471B8->w->d8[i].v = o->s1580[i];
+        lbl_803471B8->w->d8[i].z = 0;
+        lbl_803471B8->w->d8[i].a = l->e[i].a;
+        lbl_803471B8->w->d8[i].b = l->e[i].b;
+        lbl_803471B8->w->d8[i].c = l->e[i].c;
+        lbl_803471B8->w->d8[i].d = l->e[i].d;
+    }
+    lbl_803471B8->w->h10a[0] = o->s158a[0];
+    lbl_803471B8->w->h10a[1] = o->s158a[1];
+    lbl_803471B8->w->h10a[2] = o->s158a[2];
+    lbl_803471B8->w->xce = l->x4;
+    lbl_803471B8->w->xd0 = l->x6;
+    lbl_803471B8->w->x112 = l->x1a;
+    lbl_803471B8->w->x114 = l->x8;
+    lbl_803471B8->w->x116 = l->x1c;
+}
+
 void fn_801C2C4C(u8 i, u8 v) {
     u16 c = lbl_803471B8->w->m[i].id;
     SaveChar* m = &lbl_8030B7F4.chr[c];
