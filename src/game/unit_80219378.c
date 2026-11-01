@@ -1059,6 +1059,43 @@ u32 fn_80223228(u16 n)
 void fn_80223628(NJS_POINT3* out, NJS_POINT3* in, Xf_80224F28* o);
 extern void fn_801D24D0(NJS_POINT3* out, NJS_POINT3* in, ModelNode* model, Cmp* e);
 
+void fn_8022394C(Xf_80224F28 *o);
+
+void fn_802234D4(Xf_80224F28* o)
+{
+    if (o->flags != 0) {
+        Shape_80224F28* p = o->shape;
+        if (p != 0 && (o->flags & 4) && p->kind == 2) {
+            njPushMatrixEx();
+            fn_80286EE8();
+            fn_8028B498();
+            njUnitMatrix(0);
+            njTranslate(0, o->pos->x, o->pos->y, o->pos->z);
+            njRotateZXY(0, o->rot->x, o->rot->y, o->rot->z);
+            njScale(0, o->scale->x, o->scale->y, o->scale->z);
+            njTranslate(0, o->pos2->x, o->pos2->y, o->pos2->z);
+            njRotateZXY(0, o->rot2->x, o->rot2->y, o->rot2->z);
+            fn_801D25DC(p->p0);
+            njPopMatrixEx();
+        }
+        if (o->flags & 1) {
+            fn_8022394C(o);
+        }
+        if (o->flags & 2) {
+            NJS_POINT3* sp = o->pos2;
+            Ang3* sa;
+            o->oPos2.x = sp->x;
+            o->oPos2.y = sp->y;
+            o->oPos2.z = sp->z;
+            sa = o->rot2;
+            o->oAng2.x = sa->x;
+            o->oAng2.y = sa->y;
+            o->oAng2.z = sa->z;
+        }
+        o->flags = 0;
+    }
+}
+
 s32 fn_8022377C(NJS_POINT3* out, NJS_POINT3* in, Xf_80224F28* o, Cmp* c)
 {
     s32 ret = 0;
@@ -2136,35 +2173,21 @@ void fn_8022BBF4(void *m, s32 x, s32 y, s32 z) {
     njRotateXYZ(m, lbl_80311970.f1c + x, y, z);
 }
 
-typedef struct Obj_8022394C {
-    u8 pad0[0x1c];
-    Vec3 *p1c;
-    Vec3 *p20;
-    u32 *p24;
-    Vec3 *p28;
-    u32 *p2c;
-    Vec3 v30;
-    Vec3 v3c;
-    u32 w48[3];
-    Vec3 v54;
-    u32 w60[3];
-} Obj_8022394C;
-
-void fn_8022394C(Obj_8022394C *o)
+void fn_8022394C(Xf_80224F28 *o)
 {
-    Vec3 *s = o->p1c;
-    u32 *w;
-    o->v30.x = s->x;
-    o->v30.y = s->y;
-    o->v30.z = s->z;
-    s = o->p20;
-    o->v3c.x = s->x;
-    o->v3c.y = s->y;
-    o->v3c.z = s->z;
-    w = o->p24;
-    o->w48[0] = w[0];
-    o->w48[1] = w[1];
-    o->w48[2] = w[2];
+    NJS_POINT3 *s = o->pos;
+    Ang3 *w;
+    o->oPos.x = s->x;
+    o->oPos.y = s->y;
+    o->oPos.z = s->z;
+    s = o->scale;
+    o->oScale.x = s->x;
+    o->oScale.y = s->y;
+    o->oScale.z = s->z;
+    w = o->rot;
+    o->oAng.x = w->x;
+    o->oAng.y = w->y;
+    o->oAng.z = w->z;
 }
 
 typedef struct Sub_802239A4 { ModelNode *f0; s16 f4; } Sub_802239A4;
