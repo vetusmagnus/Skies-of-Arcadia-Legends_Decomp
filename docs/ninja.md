@@ -349,6 +349,10 @@ Logged, not integrated as matches. Functions marked * are in the unit as NonMatc
   `fn_8029E1B4` and `fn_8029E850` match with the usual declaration order. No order of the
   declarations changes the allocation (5,040 orders plus all placements of `idx`, `c` and `col`),
   and neither do explicit table or stride locals, `idx`/`len`/`c` types, or the strip-file pragmas.
+  The TEX0/TEX1 colour drawers in `ninja_8029EE28.c` behave the same way: `fn_8029F0F8`,
+  `fn_8029F680`, `fn_802A07C0` and `fn_802A0DE8` don't respond to declaration order (76-86 lines);
+  `fn_8029FE0C` and `fn_802A02E8` (`nuv + 2`) are 20 lines off, with only `data`/`col` and `cull`
+  swapping registers. Their position-only siblings `fn_8029EFD0` and `fn_8029F400` match.
 - **GX immediate-mode FIFO writers (about 30 functions, the biggest blocker).** The original
   hoists several separate copies of the FIFO address (`lis rN,0xcc01` then `mr` copies, one per
   store after the second) and reloads the shared 0.0f/1.0f constants before every store. Every form

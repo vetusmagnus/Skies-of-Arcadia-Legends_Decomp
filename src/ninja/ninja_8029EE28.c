@@ -75,6 +75,47 @@ void fn_8029EE78(s16* p, u32* data, s32 hdr, s32 side) {
     lbl_80347EF0 += total;
 }
 
+void fn_8029EFD0(s16* p, u32* data, s32 hdr, s32 side) {
+    s32 total;
+    u32 cull = -1;
+    s32 nuv;
+    s32 len;
+    u32 mode;
+    s16 idx;
+
+    fn_8029AF68(GX_INDEX16);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+    nuv = (hdr >> 14) & 3;
+    hdr &= 0x3fff;
+    total = 0;
+    GXSetArray(GX_VA_POS, data, 0x10);
+    do {
+        len = *p++;
+        if (len < 0) {
+            len = -len;
+            mode = lbl_80300898[side][lbl_80347E20];
+            if (cull != mode) {
+                cull = mode;
+                GXSetCullMode(mode);
+            }
+        } else {
+            mode = lbl_803008C0[side][lbl_80347E20];
+            if (cull != mode) {
+                cull = mode;
+                GXSetCullMode(mode);
+            }
+        }
+        total += len;
+        GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, len);
+        do {
+            idx = *p++;
+            p += nuv;
+            GXPosition1x16(idx);
+        } while (--len);
+    } while (--hdr);
+    lbl_80347EF0 += total;
+}
+
 void fn_8029F2A8(s16* p, u32* data, s32 hdr, s32 side) {
     s32 total;
     u32 cull = -1;
@@ -114,6 +155,47 @@ void fn_8029F2A8(s16* p, u32* data, s32 hdr, s32 side) {
             p += nuv;
             GXPosition1x16(idx);
             GXColor1x16(idx);
+        } while (--len);
+    } while (--hdr);
+    lbl_80347EF0 += total;
+}
+
+void fn_8029F400(s16* p, u32* data, s32 hdr, s32 side) {
+    s32 total;
+    u32 cull = -1;
+    s32 nuv;
+    s32 len;
+    u32 mode;
+    s16 idx;
+
+    fn_8029AF68(GX_INDEX16);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+    nuv = (hdr >> 14) & 3;
+    hdr &= 0x3fff;
+    total = 0;
+    GXSetArray(GX_VA_POS, data, 0xc);
+    do {
+        len = *p++;
+        if (len < 0) {
+            len = -len;
+            mode = lbl_80300898[side][lbl_80347E20];
+            if (cull != mode) {
+                cull = mode;
+                GXSetCullMode(mode);
+            }
+        } else {
+            mode = lbl_803008C0[side][lbl_80347E20];
+            if (cull != mode) {
+                cull = mode;
+                GXSetCullMode(mode);
+            }
+        }
+        total += len;
+        GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, len);
+        do {
+            idx = *p++;
+            p += nuv;
+            GXPosition1x16(idx);
         } while (--len);
     } while (--hdr);
     lbl_80347EF0 += total;
