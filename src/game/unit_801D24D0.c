@@ -374,7 +374,8 @@ typedef struct {
     s32 g;
 } PadMotor6C3C;
 extern s32 lbl_80347668;
-extern u8 lbl_80311E00[];
+extern Light lbl_80311E00[][12]; /* the light stack, 8 saved copies of lbl_8030E830 */
+extern const char lbl_802C4490[];
 extern const char lbl_802C44A8[];
 void MemCopy(void *dst, void *src, u32 n);
 void fn_8028B784(f32 r, f32 g, f32 b);
@@ -1398,6 +1399,22 @@ void fn_801D995C(s32 a, f32 f1, f32 f2, f32 f3) {
     memcpy(&lbl_8030E830[7], c, sizeof(Light));
 }
 
+void fn_801D9D2C(Light* base, int kind, int flag);
+
+void fn_801D9B34(void) {
+    int i;
+    if (lbl_80347668 == 0) {
+        fn_801DBE1C(lbl_802C4490);
+    }
+    lbl_80347668--;
+    for (i = 0; i < 12; i++) {
+        if (lbl_8030E830[i].on == 1) {
+            fn_801D9D2C(lbl_80311E00[lbl_80347668], i, 1);
+        }
+    }
+    MemCopy(lbl_8030E830, lbl_80311E00[lbl_80347668], 0x1e0);
+}
+
 void fn_801D9CF0(f32 f1, f32 f2, f32 f3) {
     lbl_8030E830[2].on = 1;
     lbl_8030E830[2].c.x = f1;
@@ -1700,7 +1717,7 @@ void fn_801DC214(void) {
     }
 }
 
-void fn_801DC3AC(void) {
+void fn_801DC3AC(u32 retraceCount) {
     int reset = OSGetResetButtonState();
     u32 flags = lbl_803476D4;
     if (flags & 1) {
@@ -2679,7 +2696,7 @@ s32 fn_801D6C3C(s32 chan) {
 
 void fn_801D9BFC(void) {
     if (lbl_80347668 == 8) fn_801DBE1C(lbl_802C44A8);
-    MemCopy(lbl_80311E00 + lbl_80347668 * 0x1e0, lbl_8030E830, 0x1e0);
+    MemCopy(lbl_80311E00[lbl_80347668], lbl_8030E830, 0x1e0);
     lbl_80347668 = lbl_80347668 + 1;
 }
 
