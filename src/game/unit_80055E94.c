@@ -2596,6 +2596,322 @@ s32 fn_800593AC(T5C188 *t) {
     return 0;
 }
 
+extern s8 fn_80020E10(void *p);
+void fn_80071CBC(V3 *a, V3 *b);
+typedef struct { u8 pad0[8]; void *x8; u8 pad_c[0x3c - 0xc]; u32 f3c; } ObjRef;
+/* Effect command (the 0x68 block of the emitter state). */
+typedef struct EfCmd {
+    u8 pad0[0x10];
+    u32 flags;          /* 0x10 */
+    s16 start;          /* 0x14 */
+    s16 end;            /* 0x16 */
+    s16 fadeAt;         /* 0x18 */
+    s16 fadeLen;        /* 0x1A */
+    u8 pad1c[2];
+    s16 id;             /* 0x1E */
+    V3 v20;             /* 0x20 */
+    f32 rotX;           /* 0x2C */
+    f32 rotY;           /* 0x30 */
+    f32 rotZ;           /* 0x34 */
+    s16 anim[0x80];     /* 0x38: (id, weight) pairs for fn_800403AC */
+    s16 animA;          /* 0x138 */
+    s16 animB;          /* 0x13A */
+    V3 move;            /* 0x13C */
+    f32 rotSpdX;        /* 0x148 */
+    f32 rotSpdY;        /* 0x14C */
+    f32 rotSpdZ;        /* 0x150 */
+    V3 scaleStep;       /* 0x154 */
+    s16 scaleFrom;      /* 0x160 */
+    s16 scaleCount;     /* 0x162 */
+    V3 scale;           /* 0x164 */
+    V3 scaleStep2;      /* 0x170 */
+    s16 scale2From;     /* 0x17C */
+    s16 scale2Count;    /* 0x17E */
+    s16 sndA;           /* 0x180 */
+    s16 sndB;           /* 0x182 */
+    f32 frameStep;      /* 0x184 */
+    s16 rotFrom;        /* 0x188 */
+    s16 rotTo;          /* 0x18A */
+    s16 mode;           /* 0x18C */
+    s16 moveFrom;       /* 0x18E */
+    s16 moveTo;         /* 0x190 */
+} EfCmd;
+typedef struct EfSub {
+    s16 timer;          /* 0x00 */
+    s16 hold;           /* 0x02 */
+    ChrTask *p4;        /* 0x04 */
+    void *f8;           /* 0x08 */
+    f32 alpha;          /* 0x0C */
+    s16 frame;          /* 0x10 */
+    u8 pad12[2];
+    f32 xf;             /* 0x14 */
+    s16 sc1;            /* 0x18 */
+    s16 sc2;            /* 0x1A */
+    V3 v1c;             /* 0x1C */
+    void *x28;          /* 0x28 */
+    Motion *x2c;       /* 0x2C */
+    u8 pad30[8];
+    s32 x38;            /* 0x38 */
+    u8 pad3c[4];
+    f32 x40;            /* 0x40 */
+    f32 x44;            /* 0x44 */
+    V3 v48;             /* 0x48 */
+    V3 v54;             /* 0x54 */
+    s32 x60;
+    s32 x64;            /* 0x64 */
+    EfCmd *cmd;         /* 0x68 */
+} EfSub;
+typedef struct EfWork {
+    void *f0;           /* 0x00 */
+    u8 pad4[4];
+    void *model;        /* 0x08 */
+    Motion *tex;       /* 0x0C */
+    ObjRef *x10;        /* 0x10 */
+    u8 pad14[2];
+    s16 x16;            /* 0x16 */
+    u8 pad18[4];
+    V3 v1c;             /* 0x1C */
+    s32 ang[3];         /* 0x28 */
+    V3 sc;              /* 0x34 (ADD: V3 view of the unit's f32 sc[3]) */
+    u8 pad40[4];
+    u8 col;             /* 0x44 */
+    u8 pad45[0x4C - 0x45];
+    EfSub *sub;         /* 0x4C */
+} EfWork;
+typedef struct EfNode {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 state;
+    u8 pad1A[0x24 - 0x1A];
+    EfWork *work;
+} EfNode;
+extern void sndAuxCallbackShutdownReverbSTD(void *, void *);
+extern void fn_8022E8F8(void *, s32);
+extern u8 fn_80011984(Motion **);
+extern void fn_8001E238(V3 *, V3 *, ChrTask *);
+
+static inline s32 DegAng(f32 d)
+{
+    return 182.04445f * d;
+}
+
+void fn_80059D6C(EfNode *node)
+{
+    EfWork *w = node->work;
+    EfSub *s = w->sub;
+    ChrInfo *ci;
+    s32 run = 1;
+    f32 alpha;
+    f32 a;
+    s32 big;
+    s32 blend;
+    s32 col;
+
+    ci = s->p4->work->u;
+    if ((ci->fec & 0x100) && fn_80020E10(s->p4->work->model->name) < 0 && node->state != 5) {
+        node->state = 4;
+    }
+    switch (node->state) {
+    case 2:
+        break;
+    case 0:
+        node->state = 1;
+    case 1:
+        if (s->timer < s->cmd->start) {
+            break;
+        }
+        fn_80040150(s->cmd->flags, s->p4, s->cmd->id, &s->f8);
+        w->ang[0] = 182.04445f * s->cmd->rotX;
+        w->ang[1] = 182.04445f * s->cmd->rotY;
+        w->ang[2] = 182.04445f * s->cmd->rotZ;
+        if (s->timer >= s->cmd->fadeAt) {
+            if (s->cmd->fadeLen != 0) {
+                s->alpha = -1.0f + 1.0f / s->cmd->fadeLen;
+            } else {
+                s->alpha = -1.0f;
+            }
+        } else {
+            s->alpha = -1.0f;
+        }
+        fn_80071CF0(&s->cmd->scale, &w->sc);
+        s->sc1 = s->cmd->scaleCount;
+        s->sc2 = s->cmd->scale2Count;
+        fn_8006CEEC(w->x10->x8, &w->tex, 0, w->x16);
+        s->x2c = w->tex;
+        s->x40 = s->cmd->frameStep;
+        if (s->cmd->sndA != 0 || s->cmd->sndB != 0) {
+            sndAuxCallbackShutdownReverbSTD(w->f0, &s->x28);
+            fn_8022E8F8(w->f0, 0);
+        }
+        fn_80071CF0(&s->cmd->v20, &s->v1c);
+        if (s->cmd->moveFrom >= s->cmd->moveTo) {
+            s->cmd->moveTo = s->cmd->end;
+        }
+        node->state = 3;
+        break;
+    case 3:
+    case 4:
+        a = s->alpha;
+        if (a > ci->f164) {
+            alpha = ci->f164;
+        } else {
+            alpha = a;
+        }
+        if (node->state == 4 && alpha <= -0.8f) {
+            node->state = 5;
+            return;
+        }
+        switch (ci->x6) {
+        case 30:
+            switch (ci->x8) {
+            case 2:
+                if (ci->ff0 & 0x10000000) {
+                    if (s->hold > 0) {
+                        run = 0;
+                    } else {
+                        s->hold++;
+                    }
+                }
+                break;
+            case 3:
+            case 4:
+                run = 0;
+                s->hold = 0;
+                break;
+            }
+            break;
+        }
+        fn_80071CF0(&s->v1c, &s->v54);
+        if (((s->cmd->flags & 0x4000000) || w->f0 == 0) && w->tex != 0) {
+            if (fn_80011984(&s->x2c) == 1 && !(s->cmd->flags & 0x8000000)) {
+                s->x44 = 0.0f;
+                s->x38 = 0;
+            }
+            fn_80071CF0(&s->v48, &s->v1c);
+            fn_80071CBC(&s->v54, &s->v1c);
+        }
+        if (s->timer >= s->cmd->fadeAt && s->alpha < 0.0f && s->timer < s->cmd->end) {
+            s->alpha += 1.0f / s->cmd->fadeLen;
+            if (s->alpha > 0.0f) {
+                s->alpha = 0.0f;
+            }
+        }
+        switch (s->cmd->flags & 0xF) {
+        case 3:
+            fn_8001E238(&s->cmd->v20, &w->v1c, s->p4);
+            break;
+        case 0:
+            fn_8001E4A0(&s->cmd->v20, &w->v1c, s->p4);
+            s->f8 = 0;
+            break;
+        case 2:
+        default:
+            fn_80071CF0(&s->v1c, &w->v1c);
+            break;
+        }
+        fn_80071CF0(&s->v54, &s->v1c);
+        if ((s->cmd->flags & 0xF) != 3 && s->timer >= s->cmd->moveFrom && s->timer < s->cmd->moveTo) {
+            s->v1c.x += s->cmd->move.x;
+            s->v1c.y += s->cmd->move.y;
+            s->v1c.z += s->cmd->move.z;
+        }
+        if (s->cmd->rotFrom == s->cmd->rotTo || (s->cmd->rotTo > s->timer && s->cmd->rotFrom <= s->timer)) {
+            w->ang[0] += DegAng(s->cmd->rotSpdX);
+            w->ang[1] += DegAng(s->cmd->rotSpdY);
+            w->ang[2] += DegAng(s->cmd->rotSpdZ);
+        }
+        if (s->sc1 > 0 && s->timer >= s->cmd->scaleFrom) {
+            w->sc.x += s->cmd->scaleStep.x;
+            w->sc.y += s->cmd->scaleStep.y;
+            w->sc.z += s->cmd->scaleStep.z;
+            s->sc1--;
+        }
+        if (s->sc2 > 0 && s->timer >= s->cmd->scale2From) {
+            w->sc.x += s->cmd->scaleStep2.x;
+            w->sc.y += s->cmd->scaleStep2.y;
+            w->sc.z += s->cmd->scaleStep2.z;
+            s->sc2--;
+        }
+        if (w->sc.x < 0.0f) {
+            w->sc.x = 0.0f;
+        }
+        if (w->sc.y < 0.0f) {
+            w->sc.y = 0.0f;
+        }
+        if (w->sc.z < 0.0f) {
+            w->sc.z = 0.0f;
+        }
+        s->frame = fn_800403AC(s->timer, s->cmd->anim, s->cmd->animA, s->cmd->animB);
+        if (w->tex != 0 && !(w->x10->f3c & 0x40000000)) {
+            s->xf += s->cmd->frameStep;
+            if (s->xf >= w->tex->nbFrame - 1.0f) {
+                if (s->cmd->flags & 0x8000000) {
+                    s->xf = w->tex->nbFrame - 1.0f;
+                } else {
+                    s->xf = 0.0f;
+                }
+            }
+        }
+        if (s->cmd->sndA != 0 || s->cmd->sndB != 0) {
+            s16 snd[2];
+            if (s->x64 != 0 || !(w->x10->f3c & 0x80000000)) {
+                if (s->x64 == 0 && (s->cmd->flags & 0x20)) {
+                    s->x64 = 1;
+                    w->x10->f3c |= 0x80000000;
+                }
+                snd[0] = s->cmd->sndA;
+                snd[1] = s->cmd->sndB;
+                fn_8023080C(s->x28, snd, 0);
+            }
+        }
+        if ((s->cmd->flags & 0x4000000) || w->f0 == 0) {
+            col = 0;
+            if (s->cmd->flags & 0x20000000) {
+                col = 1;
+            }
+            if (s->frame < 0) {
+                s->frame = 0;
+            }
+            if (run) {
+                blend = fn_80040010(s->cmd->flags);
+                fn_80032E78(col, w, s->frame, alpha, s->f8, s->cmd->mode, blend);
+            }
+        } else {
+            DrawState st;
+            Motion *tmp;
+            u8 saved;
+            DrawStateDefault2D(&st);
+            saved = w->col;
+            fn_80040044(&st, alpha, s->cmd->flags, &w->col);
+            if (DrawStatePush(&st)) {
+                fn_80032E44(w->model);
+                tmp = 0;
+                fn_8006CEEC(w->x10->x8, &tmp, 1, w->x16);
+                big = 0;
+                if (s->cmd->flags & 0x2000) {
+                    big = 1;
+                }
+                if (run) {
+                    fn_80034AF0(w, s->frame, s->f8, w->tex, tmp, big, s->xf);
+                }
+                DrawStatePop(0);
+            }
+            w->col = saved;
+        }
+        break;
+    case 5:
+        if (s->x64 != 0) {
+            w->x10->f3c &= 0x7FFFFFFF;
+        }
+        fn_800400D8(s->cmd->flags, s->p4, s->cmd->id, &s->f8);
+        fn_801E17E0(s);
+        node->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    s->timer++;
+}
+
 void fn_8005A7B8(PartTask* node)
 {
     PartWork* w = node->work;
