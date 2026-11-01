@@ -2973,7 +2973,79 @@ typedef struct {
     CnkObject* owner; /* 0x08 */
 } ChunkSetList;
 extern void* fn_801E1C7C(s32 size);
-extern void fn_8009D400(CnkObject* o, ChunkSet** strips, s16** out);
+void fn_8009D400(CnkObject* node, ChunkSet** ent, s16** outp);
+void fn_8009D400(CnkObject* node, ChunkSet** ent, s16** outp) {
+    s16 *stream;
+    s32 op;
+    s16 *start;
+    s32 total;
+    s16 *p;
+    s16 *out;
+    if (node->model != NULL && !(node->flags & 8) && node->model->plist != NULL) {
+        stream = node->model->plist;
+        total = 0;
+        p = stream;
+        out = *outp;
+        do {
+            s32 n;
+            s32 len;
+            start = p;
+            op = *p++ & 0xff;
+            n = fn_801CB460(op);
+            if (n >= 0) {
+                len = *p++;
+            } else {
+                len = n & 0xffff;
+            }
+            if (n > 0) {
+                switch (op) {
+                case 0x41:
+                case 0x42:
+                case 0x44:
+                case 0x45:
+                case 0x47:
+                case 0x48: {
+                    s16 *q;
+                    s32 m;
+                    total++;
+                    *out++ = ((u32)start - (u32)stream) >> 1; /* byte offset into the stream */
+                    q = p;
+                    m = *q++ & 0xffff3fff;
+                    do {
+                        s16 v0 = *q++;
+                        s32 v = v0;
+                        if (0 > v) v = -v;
+                        total += v * 2;
+                        do {
+                            out[0] = q[1];
+                            out[1] = q[2];
+                            out += 2;
+                            q += n;
+                        } while (--v > 0);
+                    } while (--m > 0);
+                    break;
+                }
+                }
+            }
+            p += len;
+        } while (op != 0xff);
+        if (total != 0) {
+            *out = -1;
+            (*ent)->len = total + 1;
+            (*ent)->plist = stream;
+            (*ent)->offsets = *outp;
+            *outp = out + 1;
+            (*ent)++;
+        }
+    }
+    if (node->child != NULL && !(node->flags & 0x10)) {
+        fn_8009D400(node->child, ent, outp);
+    }
+    if (node->sibling != NULL) {
+        fn_8009D400(node->sibling, ent, outp);
+    }
+}
+
 void* fn_8009D5BC(CnkObject* o) {
     s32 nodes;
     s32 shorts;
