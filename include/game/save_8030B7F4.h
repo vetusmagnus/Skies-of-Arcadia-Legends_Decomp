@@ -15,7 +15,7 @@ typedef struct SaveChar {
     s16 slot0;              /* 0x10 */
     s16 slot1;
     s16 slot2;
-    u8 pad16[2];
+    s16 lvMax;              /* 0x16 */
     s16 hp;                 /* 0x18 */
     s16 hpMax;
     s16 x1c;                /* 0x1c */
