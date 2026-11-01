@@ -2345,3 +2345,53 @@ Second pass (same branch):
   The other unit_80005B50/unit_800B2DA0/unit_8010E164/unit_8013D400/unit_800D81E8/unit_80020B50/unit_80055E94/
   unit_8012F6C4 holds fail on type folding (agent views of Task/EvObj/BtlWork, `EvInfo` redefinitions, typed callees),
   not on a file boundary.
+
+## File splits and the untried functions of 1 KB and up (2026-11-01, worktree build/wt-split, from 77f7e56)
+
+5,965 to 6,000 of 7,117 (+35), `main.dol` SHA OK; every game unit fdiff and floatcheck clean except the failures that were already
+there at 77f7e56 (units built with `-str reuse,readonly`, now also unit_80009800 and unit_8009D274, are checked with
+`XF="-str reuse,readonly"`; fn_800C9144's "not initialized" warning still shows as 6 lines in sc_chk). No new pointer casts or pragmas.
+
+Duplicates: against 77f7e56 only one unmatched function was an exact copy of a matched one (Ninja fn_802A9040 = fn_80293C2C, now
+matched); 18 groups have no matched member (6 game groups, 13 functions; they went to the front of the untried lists).
+
+File splits (one agent, then a fresh one; evidence per split in "Unit splits for the held-back matches" above): unit_800AE300,
+unit_8004DE48, unit_802159E0, unit_8020EEE8, unit_800CE2B4 + unit_800D2048, unit_80009800 + unit_8000A38C, unit_8009D274 +
+unit_800A3ED4 (10 new NonMatching units). They released fn_800B0900, fn_800B0F54, fn_800B0278, fn_8021730C, fn_802088D8,
+fn_80009874, fn_8000ABCC and fn_8001D944; fn_80207830, fn_80209028, fn_80209330 and fn_8020F3D4 folded without a split. Most of the
+other held matches turned out to need type folding (per-kind EvObj records, Task/BtlWork views), not a file boundary.
+Correction to the notes above: fn_8004E474 and fn_8020E984 were taken back out (see "Held" below).
+
+Untried functions (152 game functions of 1,004-5,220 bytes never attempted, plus the 13 duplicate-group members; four Opus agents
+by size quarter, each continued by fresh agents as it ran out of context, stopped by the owner before the end): about 135
+attempted, about 31 matched in isolation, 22 of them merged plus fn_800594CC, a neighbour not on the list (BattleIconColumnDraw, BattleLabelPlace, fn_8001CAA8, fn_80059788 +
+fn_800594CC, fn_8006F4B0, fn_80085CE0, fn_80087844, fn_80095910, fn_8009BED8, fn_800A2830, fn_8011A2D4, fn_80175EE8, fn_8018A2D8,
+fn_8019D678, fn_801377C0, fn_801BECA8, fn_801BFC84, fn_801D56C8, fn_801D5A50, fn_8022D384, fn_800743BC, ...). The owner judged
+this part poor value for its usage (about 1 match in 4-5 from scratch at this size); future passes should prefer type fixes,
+data-backed splits and folds.
+
+Verified in isolation, not merged yet (need unit type work; files in build/wt-U*/build/agents/U*/): fn_8000CFFC (unit_8000A38C:
+CE8State/CE8Prm sub-struct, task view with work->st), fn_80129DD0 (unit_8010E164: its three helpers must be both inlined and
+emitted out of line), fn_800CDA38 (unit_800B2DA0), fn_80181318 (unit_8015DC6C: fn_80195EA4 prototype), fn_800FFB24
+(unit_800D81E8: lbl_802B2374 split into its four strings, fn_8010A270 returns s16).
+
+Misses of the untried pass (77 with a best `.near.c`, scored per instruction as 1 - orig lines in removed hunks / orig count, so a
+register-only difference counts as a miss): mean 83.1%, median 88.9%; >=99%: 5, 95-99%: 19, 90-95%: 11, 80-90%: 17, <80%: 25.
+37 of the 77 are identical once register numbers are masked (code-exact, colouring/scheduling only); 54 have the original's
+instruction count. Candidates for a later register-colouring pass (>=95%; * = not register-only): fn_801C1FC0 99.8%,
+fn_8011A994 99.4%, fn_800125A8 99.3%, fn_80055F0C 99.3%, fn_8002468C 99.1%*, fn_800BDF14 98.8%, fn_80157948 98.7%, fn_8015E600
+98.6%, fn_80133BE0 98.5%, fn_8005E42C 98.3%* (frame 0x10 too small), fn_8017AB38 98.2%, fn_80183D90 98.2%*, fn_8014A1FC 97.9%,
+fn_80078EFC 97.6%*, fn_8019F930 97.6%, fn_8007D42C 97.5%, fn_80087F6C 97.0%*, fn_801477A8 96.9%, fn_8006782C 96.9%, fn_801CC6BC
+96.6%, fn_800544C4 96.5%*, fn_800949BC 95.5% (and its duplicate fn_80094CEC), fn_802193BC 95.5%*, fn_80221328 95.0%.
+
+Held for the owner (match in isolation, not merged):
+- fn_801E04E8 / fn_801E0AC0 (duplicate pair): need `(u8)p[1]` on the chunk header's low byte, the form the unit's matched
+  fn_801CB12C already uses; no cast-free form matches.
+- fn_800ADA60: three casts that go away if `EvObj.x260` becomes `void *` (a per-kind record pointer) in evobj.h.
+- Conflicting prototypes (a callee declared differently from its definition elsewhere): fn_8020E984 (fn_801BEA70 u8 mode),
+  CampScreenStatus (fn_80171B64's first parameter), fn_80186F58 (fn_801D4F0C floats first), fn_800091E0, fn_80069B58.
+- fn_8004E474: reads its .sdata2 floats through extern labels instead of literals (the literals load in the other order).
+- fn_800D0970: matches once unit_800CE2B4's .data is defined in C, but its neighbour fn_800CE4B4 then needs a `(u32)` cast.
+- fn_800308FC / fn_80030280 (readonly_strings pair, battle.c) and the `void *` hops kept out earlier, as before.
+- Note: fn_8005BF30 sits ahead of fn_800594CC in unit_80055E94 (out of address order) so its .rodata initialisers come first;
+  revisit if that unit is ever linked.
