@@ -4144,6 +4144,33 @@ void fn_80228014(void)
     lbl_803477FC = 0x10000;
 }
 
+void fn_802280D4(void) {
+    s32 i;
+    Ctx802281DC *s;
+    s32 last;
+    Blk *n;
+    last = -1;
+    s = lbl_803475EC;
+    for (i = 0; i < 0x400; i++, s++) {
+        if (s->sub != 0) {
+            u32 v = s->sub->a;
+            if (v < 0xfffffff0u && v != 0x1869e) {
+                if (fn_80298700(s) == 1) fn_802281DC(s);
+            } else {
+                last = i;
+            }
+        }
+    }
+    lbl_80347EC4 = last + 1;
+    n = lbl_80347804;
+    if (n != 0) {
+        FreeAll(n);
+        lbl_80347804 = 0;
+    }
+    lbl_803477FC = 0x10000;
+    lbl_80347800 = 0;
+}
+
 void fn_8022A68C(void) {
     fn_801E1D94();
     fn_80226170();
