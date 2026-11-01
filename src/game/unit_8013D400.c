@@ -994,6 +994,8 @@ extern s16 fn_800DE598(s32 id);
 extern s32 fn_800E0C38(s32 id);
 extern void *fn_801C8930(void *h);
 extern void *fn_80167244(void *a, u32 mask);
+extern s32 fn_8025ECC4(void);
+typedef struct Arg { u8 pad[4]; s16 mode; } Arg;
 
 void fn_8013D400(s32 a, s32 b) {
     fn_80136A28(a, b, 3, -1, -1, -1);
@@ -3899,4 +3901,37 @@ void fn_8014836C(u16 ship, s32 path)
             fn_801DBE1C(msg->camMotion, path);
         }
     }
+}
+
+s16 fn_80147CC8(Arg* a) {
+    s32 res;
+    s16 x;
+    s16 y;
+    s16 n;
+    s32 t;
+    switch (a->mode) {
+    case 1:
+        res = 1;
+        break;
+    case 2:
+        res = 2;
+        break;
+    case 0:
+    default:
+        if (lbl_8034727C->b29 & 8) {
+            res = 1;
+        } else {
+            x = lbl_8034727C->x20->x24;
+            y = lbl_8034727C->x24->x24;
+            n = (x + y) / 4 + 1;
+            t = y + fn_8025ECC4() % n;
+            if (x + fn_8025ECC4() % n >= t) {
+                res = 1;
+            } else {
+                res = 2;
+            }
+        }
+        break;
+    }
+    return res;
 }

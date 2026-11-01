@@ -925,7 +925,7 @@ typedef struct S_8005C480 {
     Nd_8005C480 *p;
     Ad *a;
 } S_8005C480;
-extern void fn_8006D954(s32);
+s32 fn_8006D954(s32 key);
 extern void fn_8006D8DC(s32);
 extern void fn_80215F94(void *);
 extern s32 fn_80216F48(void *);
@@ -8711,4 +8711,32 @@ void fn_8006AE20(s16 a, s16 slot, int mode, s8 val) {
     lbl_80309730[slot].x8 = 1;
     lbl_80309700[slot]->work->x3c = v;
     lbl_80309700[slot]->work->x44 = val;
+}
+
+s32 fn_8006D954(s32 key)
+{
+    Node_8006D888 *n;
+    Node_8006D888 *p;
+
+    p = lbl_8034739C;
+    if (key == 0) {
+        return 0;
+    }
+    for (;;) {
+        if (p->x0 == key) {
+            p->x4 = p->x4 + 1;
+            return p->x4;
+        }
+        if (p->x10 == 0) {
+            break;
+        }
+        p = p->x10;
+    }
+    p->x10 = fn_801E1C7C(0x14);
+    n = p->x10;
+    memset(n, 0, 0x14);
+    n->xc = p;
+    n->x0 = key;
+    n->x4 = 1;
+    return 1;
 }

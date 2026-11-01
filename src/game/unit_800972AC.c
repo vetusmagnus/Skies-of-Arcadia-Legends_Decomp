@@ -256,6 +256,9 @@ typedef struct Rec {
 typedef struct {
     u32 count;
 } EvInfoCount;
+typedef struct Vec3_800A12D8 { f32 x, y, z; } Vec3_800A12D8;
+extern f32 fn_80291A5C(f32 x);
+
 static inline EvInfoCount* CountInfo(EvObj* e) {
     return e->ext->info;
 }
@@ -4413,4 +4416,28 @@ void fn_800B2C1C(Task *o) {
         o->state = 0xff;
     }
     Step(o, w);
+}
+
+/* Matches only with the self-assignment after the length call: without a
+   store to d there, MWCC keeps d.z in f30 across the calls where the original
+   reloads it. Rotates p about the Y axis through c by angle a (XZ plane). */
+void fn_800A12D8(Vec3_800A12D8 *p, Vec3_800A12D8 *c, Angle a)
+{
+    Vec3_800A12D8 d;
+    f32 s;
+    f32 co;
+
+    d = *p;
+    d.x -= c->x;
+    d.z -= c->z;
+    if (d.x || d.z) {
+        fn_80291A5C(d.x * d.x + d.z * d.z);
+        d.x = d.x;
+        s = njSin(a);
+        co = njCos(a);
+        p->x = d.x * co - d.z * s;
+        p->z = d.x * s + d.z * co;
+        p->x += c->x;
+        p->z += c->z;
+    }
 }

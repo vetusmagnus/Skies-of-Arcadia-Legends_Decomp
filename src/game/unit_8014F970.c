@@ -71,7 +71,7 @@ typedef struct { u8 pad[0x1c]; u32 f1c; } Src_8015DBE4;
 typedef struct { u8 pad[0x1e]; s16 h1e; u8 pad2[0x78 - 0x20]; Blk b78; } State;
 typedef struct { u8 pad[0x1c8]; M *p1c8; u8 pad2[0x1d8 - 0x1cc]; State *p1d8; } Self;
 void fn_80153270(void *p);
-void fn_80155CD8(void);
+s32 fn_80155CD8(void);
 void fn_80155D74(void);
 void *memcpy(void *dst, const void *src, u32 n);
 void *memset(void *p, s32 c, u32 n);
@@ -4567,4 +4567,12 @@ s32 fn_8015D124(Obj_8015D124* o, St_8015D124* st)
         st->cnt--;
     }
     return 1;
+}
+
+s32 fn_80155CD8(void) {
+    Ent_80155AB4 *s = &lbl_80346FF8[lbl_80346FF4];
+    if (s->p != NULL) {
+        fn_80217830(s->p);
+        s->p = NULL;
+    }
 }

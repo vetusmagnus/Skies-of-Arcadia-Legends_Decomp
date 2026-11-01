@@ -5,7 +5,6 @@
 extern u16 lbl_8030A2F4[18];
 extern char lbl_802EE634[];
 void *fn_801F4AE4(s16 idx);
-
 /* A party member's record in the shop work (0x24 bytes; as in unit_80199B9C.c). */
 typedef struct ShopMember {
     const char* name; /* 0x00 */
@@ -44,7 +43,6 @@ typedef struct ShopTask {
     ShopWork* w;     /* 0x24 */
 } ShopTask;
 extern ShopTask* lbl_803471B8;
-
 extern s32 fn_801F4C24(s16 id);
 extern s8 fn_801F452C(s16 id);
 extern void fn_801F4E6C(s32 i, s16 v);
@@ -65,6 +63,7 @@ typedef struct Info {
     s16 x12;
 } Info;
 extern s16 fn_801EE344(s16 id, s32 stat);
+extern s8 fn_801F4A60(void);
 
 void fn_801C09A4(void)
 {
@@ -306,4 +305,46 @@ s32 fn_801C2E48(Info* o, s16 id) {
         break;
     }
     return 1;
+}
+
+void fn_801C1148(s16 id, s8 amount) {
+    InvEnt* tbl;
+    InvEnt* p;
+    s32 i;
+    s32 n = fn_801F4A60();
+
+    switch (fn_801F4C24(id)) {
+    case 0: tbl = lbl_8030B7F4.s354; break;
+    case 1: tbl = lbl_8030B7F4.s494; break;
+    case 2: tbl = lbl_8030B7F4.s5d4; break;
+    case 3: tbl = lbl_8030B7F4.s714; break;
+    case 4: tbl = lbl_8030B7F4.s854; break;
+    case 5: tbl = lbl_8030B7F4.sa0c; break;
+    case 6: tbl = lbl_8030B7F4.saac; break;
+    case 7: tbl = lbl_8030B7F4.s994; break;
+    }
+    p = tbl;
+    i = 0;
+    do {
+        if (id == p->id) {
+            tbl[i].cnt += amount;
+            if (tbl[i].cnt >= 99) {
+                tbl[i].cnt = 99;
+            }
+            return;
+        }
+        i++;
+        p++;
+    } while (i < n);
+    i = 0;
+    p = tbl;
+    do {
+        if (p->id == -1) {
+            tbl[i].id = id;
+            tbl[i].cnt = amount;
+            return;
+        }
+        i++;
+        p++;
+    } while (i < n);
 }

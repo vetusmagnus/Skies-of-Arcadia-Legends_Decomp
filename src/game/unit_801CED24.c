@@ -13,10 +13,13 @@ extern void fn_801CF248(void);
 extern s32 lbl_80347208;
 extern s32 lbl_80347210;
 extern s32 lbl_80347258;
-extern u8* lbl_8034725C;     /* the flush pointer into the draw buffer */
-extern u8* lbl_80347264;     /* the draw buffer (lbl_80347218 bytes from heap lbl_803476A4) */
+extern u8* lbl_8034725C;
+/* the flush pointer into the draw buffer */
+extern u8* lbl_80347264;
+/* the draw buffer (lbl_80347218 bytes from heap lbl_803476A4) */
 extern void* lbl_803476A4;
-extern void* lbl_80347260;   /* a 0x4000-byte block from the same heap */
+extern void* lbl_80347260;
+/* a 0x4000-byte block from the same heap */
 extern void* OSAllocFromHeapClear(void* heap, s32 size);
 extern void fn_80005AD8(void* heap, void* p);
 extern s32 lbl_80347218;
@@ -54,6 +57,8 @@ extern s32 lbl_80347274;
 extern void fn_8029CFF8(s32 a);
 extern s32 lbl_8034721C;
 extern void GXResetWriteGatherPipe(void);
+extern s32 DVDGetDriveStatus(void);
+extern u32 lbl_80347268;
 
 void fn_801CED24(u32 a, u32 b, u32 c, f32 d, u32 e)
 {
@@ -863,5 +868,25 @@ void fn_801D1A40(void) {
     p = lbl_80308CE0;
     for (i = 4; i > 0; i--) {
         *p++ = 0.0f;
+    }
+}
+
+s32 fn_801D168C(void) {
+    switch (DVDGetDriveStatus() + 1) {
+    case 0:
+        return 0;
+    case 5:
+        lbl_80347268 = 1;
+        return 1;
+    case 6:
+        lbl_80347268 = 1;
+        return 2;
+    case 7:
+        lbl_80347268 = 1;
+        return 3;
+    case 12:
+        return 4;
+    default:
+        return -1;
     }
 }

@@ -277,6 +277,26 @@ typedef struct TkRec {
     WorkRec *work;
 } TkRec;
 extern TkRec *lbl_80309700[12];
+/* The character record a character task's work points at (0x4c). */
+typedef struct Unit_8001D288 {
+    s8 id;              /* 0x000 */
+    u8 pad1[0xEC - 0x1];
+    u32 xec;            /* 0x0EC: 0x200000 = large */
+    u8 padf0[0x15C - 0xF0];
+    f32 x15c;           /* 0x15C: ground height */
+} Unit_8001D288;
+/* A character task's work: position at 0x1c, rotation at 0x28. */
+typedef struct Wk_8001D288 {
+    u8 pad0[0x1C];
+    f32 x;              /* 0x1C */
+    f32 y;              /* 0x20 */
+    f32 z;              /* 0x24 */
+    f32 rot[3];         /* 0x28 */
+    u8 pad34[0x4C - 0x34];
+    Unit_8001D288* w;   /* 0x4C */
+} Wk_8001D288;
+extern void fn_80061C80(void*, f32, f32, f32, int);
+extern void fn_800615B4(void* p, void* v, void* b);
 
 inline ChrWork* ChrW(Task* t)
 {
@@ -5714,4 +5734,37 @@ s8 fn_8001D628(Task* t, s16* out, s8 w, s8 h, V3* center, s8 flag)
     }
     out[cnt] = -1;
     return cnt;
+}
+
+static inline Task* Find3(s8 key) {
+    Task* r = Find(key);
+    if (r != 0) return r;
+    return Find(0);
+}
+
+/* Point at angle ang and distance radius (30, doubled for large characters, when 0) around
+ * character id, on its ground height. */
+void fn_8001D288(f32* out, s8 id, f32 ang, f32 radius) {
+    Task* t;
+    Unit_8001D288* w;
+    f32 r;
+    f32 buf[3];
+    Wk_8001D288* wk;
+    t = Find3(id);
+    wk = t->work;
+    w = wk->w;
+    if (radius) {
+        r = radius;
+    } else {
+        r = 30.0f;
+        if (w->xec & 0x200000) r *= 2.0f;
+    }
+    fn_80061C80(buf, 0.0f, ang, r, 0);
+    wk = t->work;
+    fn_800615B4(buf, out, wk->rot);
+    wk = t->work;
+    out[0] = out[0] + wk->x;
+    out[1] = w->x15c;
+    wk = t->work;
+    out[2] = out[2] + wk->z;
 }

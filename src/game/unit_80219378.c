@@ -813,6 +813,13 @@ extern s32 fn_8021A2B0(Save1568* a, void* b, s32 code);
 extern Ent* lbl_80309DE4[];
 extern void fn_8021E94C(u32* out, s32 a, s32 b);
 extern void fn_801DD5E8(Angle* out, NJS_POINT3* p);
+typedef struct Mode {
+    s32 w0;
+    s32 sel;
+    u8 pad8[0x38];
+} Mode;
+extern Mode lbl_80311AC0;
+extern void fn_801D0F80(int);
 
 void fn_80219378(s32 a)
 {
@@ -5240,4 +5247,37 @@ s32 fn_8022BAA0(Angle* ang, NJS_POINT3* a, NJS_POINT3* b, NJS_POINT3* v) {
     }
     r = fn_801DD078(v, &d);
     return 0 <= r ? AngNeg(r) : 0;
+}
+
+void fn_80226984(void) {
+    Node_UNIT0000 *o;
+    int i;
+    int c = 1;
+    int a = lbl_80311AC0.sel == 99;
+    int b = 0;
+    f32 y;
+
+    if (lbl_80311AC0.sel == 99) fn_801D0F80(0);
+    for (i = 0; i < lbl_803477F0; i++) {
+        o = lbl_80315530[i];
+        y = o->f20;
+        if (y == -255.0f && lbl_80311AC0.sel == 99) b = 1;
+        if (a && y > -32.0f) {
+            fn_801D0F80(0);
+            a = 0;
+            b = 0;
+            c = 0;
+        } else if (b && y > -255.0f) {
+            fn_801D0F80(0);
+            b = 0;
+            c = 0;
+        } else if (c && y > -256.0f) {
+            fn_801D0F80(0);
+            c = 0;
+        }
+        o->b18 |= 8;
+        o->w0(o);
+    }
+    if (c || a || b) fn_801D0F80(0);
+    lbl_803477F0 = -1;
 }
