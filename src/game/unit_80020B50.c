@@ -198,8 +198,10 @@ typedef struct Ent80025518 {
     s32 *out_ptr;
 } Ent80025518;
 extern s32 lbl_8034732C;
+/* A character's record (its task work's 0x4C). */
 typedef struct Dat {
-    u8 pad_00[4];
+    s8 kind;
+    u8 pad_01[3];
     u8 x4;
     u8 pad_05;
     s16 x6;
@@ -280,10 +282,7 @@ extern void fn_80035380(void* a, Res* r, f32 t, s32 b);
 extern void fn_80035140(void* a, s32 b);
 extern void fn_8007E264(f32* p, f32 a, f32 b);
 extern void fn_801E17E0(void* p);
-typedef struct D21 { s8 kind; } D21;
-typedef struct W21 { u8 pad00[0x4c]; D21 *d; } W21;
-typedef struct T21 { u8 pad00[0x24]; W21 *work; } T21;
-extern T21 *lbl_80309E24[14];
+extern Tsk *lbl_80309E24[14];
 extern void* lbl_80347628;
 extern s32 lbl_80346B4C;
 extern s32 lbl_80346B98;
@@ -337,7 +336,7 @@ extern Item36 lbl_802C7C34[];
 extern Item48 lbl_802C4BF0[];
 extern Rec28B90 *fn_800786C0(void);
 /* Takes the task, a command and its argument (fn_80020250 extends the command as s16). */
-extern s32 fn_80020250(T21 *t, s16 cmd, s32 arg);
+extern s32 fn_80020250(Tsk *t, s16 cmd, s32 arg);
 extern void fn_801D5340(Sprite* m, s32 c, s32 d, f32 z, f32 ang, f32 a, f32 b);
 extern void fn_800277F4(Sprite** m, s32 n, f32* ang);
 
@@ -1143,20 +1142,20 @@ void BattleLabelPlace(Ent* e, s8 mode, u32 c) {
     }
 }
 
-static inline T21 *Find21(s8 id)
+static inline Tsk *Find21(s8 id)
 {
     s8 i;
     for (i = 0; i < 14; i++) {
-        T21 *t = lbl_80309E24[i];
-        if (t != NULL && t->work->d->kind == id) {
+        Tsk *t = lbl_80309E24[i];
+        if (t != NULL && t->work->x4c->kind == id) {
             return lbl_80309E24[i];
         }
     }
     return NULL;
 }
-T21 *fn_80021658(s8 id)
+Tsk *fn_80021658(s8 id)
 {
-    T21 *r = Find21(id);
+    Tsk *r = Find21(id);
     if (r != NULL) {
         return r;
     }
@@ -2239,9 +2238,9 @@ s32 fn_80028B90(void)
     }
 }
 
-static inline T21 *F2(s8 id)
+static inline Tsk *F2(s8 id)
 {
-    T21 *r = Find21(id);
+    Tsk *r = Find21(id);
     if (r != NULL) return r;
     return Find21(0);
 }
@@ -2294,10 +2293,10 @@ void fn_80027484(Sprite** objs, s32 count, s32 mode)
     }
 }
 
-extern void fn_8000FBA8(T21* t);
+extern void fn_8000FBA8(Tsk* t);
 
 /* Removes t from the character task table, shifting the later entries down. */
-void fn_80020D50(T21* t) {
+void fn_80020D50(Tsk* t) {
     s8 i;
     s8 j;
 
