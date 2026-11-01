@@ -1727,6 +1727,42 @@ extern void fn_802872C4(s32 a);
 extern void fn_8028B870(s32 a);
 extern void fn_801DA0AC(void);
 
+extern s32 lbl_80347534;
+extern s32 lbl_80347538;
+extern s32 lbl_80347540;
+extern void fn_801CAE84(void (*f)(void), s32 a);
+extern void fn_801E74C4(void);
+void fn_801D9D2C(Light* base, int kind, int flag);
+
+void fn_801DA0AC(void) {
+    s32 i;
+    s32 old;
+    s32 cur;
+    f32 f;
+    for (i = 0; i < 12; i++) {
+        fn_801D9D2C(lbl_8030E830, i, 1);
+        lbl_8030E830[i].on = 0;
+    }
+    old = lbl_80347534;
+    cur = lbl_80347538;
+    if (old != cur) {
+        lbl_80347540 = cur;
+    }
+    if (cur != -1) {
+        f = 256.0f - 128.0f * ((lbl_8030E830[3].c.x + lbl_8030E830[3].c.y + lbl_8030E830[3].c.z) / 3.0f);
+        if (f < 0.0f) {
+            f = 0.0f;
+        } else if (f > 255.0f) {
+            f = 255.0f;
+        }
+        lbl_80347538 = f;
+    }
+    if (old != lbl_80347538) {
+        lbl_80347534 = lbl_80347538;
+        fn_801CAE84(fn_801E74C4, 0);
+    }
+}
+
 void fn_801DA1C0(void) {
     lbl_80347668 = 0;
     lbl_8030E830[0].dir.x = 1.0f;
