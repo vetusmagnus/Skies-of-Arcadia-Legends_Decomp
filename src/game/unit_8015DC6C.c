@@ -6,6 +6,7 @@
 #include "game/evobj.h"
 #include "game/menu.h"
 #include "ninja.h"
+#include "ninja_lib.h"
 #include "game/camera_803119E0.h"
 #include "game/uiobj.h"
 #include "game/gamedata.h"
@@ -426,22 +427,32 @@ struct Dst_80189958;
 extern void fn_80189958(struct Dst_80189958* dst, void* unused, s8 a, s32 b, s8 unused2, s32 c);
 typedef struct {
     u8 pad0[0x2c];
-    u32 owner;        /* 0x2C */
+    NjObj* owner;     /* 0x2C */
 } Node8015F2E8;
+/* lbl_80347070: the object whose model parts fn_8015F3B0 draws with their own matrices. */
 typedef struct {
-    u8 pad0[0x84];
+    u32 flags;        /* 0x00 */
+    u8 pad4[0x84 - 0x4];
     Node8015F2E8* n84;
     Node8015F2E8* n88;
     Node8015F2E8* n8c;
     u8 pad1[0x94 - 0x90];
     s32 f94;          /* 0x94 */
-    u8 pad2[0xe0 - 0x98];
+    NJS_MATRIX m98;   /* 0x98 */
+    NJS_TEXLIST* tex98; /* 0xD8 */
+    void* mdl98;      /* 0xDC */
     s32 fe0;          /* 0xE0 */
-    u8 pad3[0x12c - 0xe4];
+    NJS_MATRIX me4;   /* 0xE4 */
+    NJS_TEXLIST* texe4; /* 0x124 */
+    void* mdle4;      /* 0x128 */
     s32 f12c;         /* 0x12C */
+    NJS_MATRIX m130;  /* 0x130 */
+    NJS_TEXLIST* tex130; /* 0x170 */
+    void* mdl130;     /* 0x174 */
+    u8 pad178[0x260 - 0x178];
+    void (*draw)(EvObj*, s32); /* 0x260 */
 } Obj8015F2E8;
 extern Obj8015F2E8* lbl_80347070;
-extern void fn_80291C44(void* p);
 typedef struct {
     u8 pad0[0x16c];
     s16 flag16c;      /* 0x16C */
@@ -2632,6 +2643,91 @@ static inline s32 ObjIsMoving(Obj_8015F768 *o) {
     r = 0;
     if (s->x178 == 1 || s->x178 == 3) r = 1;
     return r != 0;
+}
+
+void fn_8015F2E8(NjObj* owner);
+extern void fn_80118AA4(EvObj *o);
+extern void fn_80118948(EvObj *o);
+extern void fn_801C8450(void *id);
+extern void fn_801C83B4(void *id);
+extern void fn_801E4FD4(EvObj *o);
+extern void fn_80286EE8(void);
+extern void fn_8028B498(void);
+extern void fn_801E4CB0(s32 id, void *model);
+extern s32 lbl_80347444;
+
+void fn_8015F3B0(EvObj *a, Obj8015F2E8 *b)
+{
+    s32 saved;
+
+    if (b->draw != 0) {
+        b->draw(a, 0);
+        return;
+    }
+    if (a == 0) {
+        return;
+    }
+    if (b->flags & 0x80) {
+        if (a->colour.a >= -1.0f) {
+            fn_80118AA4(a);
+        }
+    }
+    if (b->f94 != 0 || b->f12c != 0 || b->fe0 != 0) {
+        if (a->colour.a > -1.0f) {
+            saved = lbl_80347444;
+            lbl_80347070 = b;
+            lbl_80347444 = 0;
+            if (b->f94 != 0 && b->n84 != 0) {
+                b->n84->owner->evalflags |= 8;
+            }
+            if (b->f12c != 0 && b->n8c != 0) {
+                b->n8c->owner->evalflags |= 8;
+            }
+            if (b->fe0 != 0 && b->n88 != 0) {
+                b->n88->owner->evalflags |= 8;
+            }
+            fn_801C8450(fn_8015F2E8);
+            fn_80118948(a);
+            fn_801C83B4(fn_8015F2E8);
+            if (b->f94 != 0 && b->n84 != 0) {
+                b->n84->owner->evalflags ^= 8;
+            }
+            if (b->f12c != 0 && b->n8c != 0) {
+                b->n8c->owner->evalflags ^= 8;
+            }
+            if (b->fe0 != 0 && b->n88 != 0) {
+                b->n88->owner->evalflags ^= 8;
+            }
+            fn_801E4FD4(a);
+            njPushMatrixEx();
+            fn_80286EE8();
+            fn_8028B498();
+            if (b->f94 != 0) {
+                fn_80299040(b->tex98);
+                njSetMatrix(0, b->m98);
+                fn_801E4CB0(a->id, b->mdl98);
+            }
+            if (b->f12c != 0) {
+                fn_80299040(b->tex130);
+                njSetMatrix(0, b->m130);
+                fn_801E4CB0(a->id, b->mdl130);
+            }
+            if (b->fe0 != 0) {
+                fn_80299040(b->texe4);
+                njSetMatrix(0, b->me4);
+                fn_801E4CB0(a->id, b->mdle4);
+            }
+            njPopMatrixEx();
+            DrawStatePop(0);
+            lbl_80347444 = saved;
+            lbl_80347070 = 0;
+        }
+    } else {
+        saved = lbl_80347444;
+        lbl_80347444 = 0;
+        fn_80118948(a);
+        lbl_80347444 = saved;
+    }
 }
 
 s32 fn_8015F768(Obj_8015F768 *o) {
@@ -5600,7 +5696,7 @@ void fn_80189900(Dst_80189958* p, s8 a4, s8 a5, s32 a6, s8 a7)
     }
 }
 
-void fn_8015F2E8(u32 owner) {
+void fn_8015F2E8(NjObj* owner) {
     Obj8015F2E8* o = lbl_80347070;
     Node8015F2E8* n;
     if (o == 0) {
@@ -5608,15 +5704,15 @@ void fn_8015F2E8(u32 owner) {
     }
     n = o->n8c;
     if (n != 0 && n->owner == owner && o->f12c != 0) {
-        fn_80291C44((u8*)o + 0x130);
+        fn_80291C44(o->m130);
     }
     n = lbl_80347070->n88;
     if (n != 0 && n->owner == owner && o->fe0 != 0) {
-        fn_80291C44((u8*)o + 0xe4);
+        fn_80291C44(o->me4);
     }
     n = lbl_80347070->n84;
     if (n != 0 && n->owner == owner && o->f94 != 0) {
-        fn_80291C44((u8*)o + 0x98);
+        fn_80291C44(o->m98);
     }
 }
 
