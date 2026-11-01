@@ -745,23 +745,23 @@ void fn_8012DFE0(void) {
 
 void fn_8012E404(u8 v) { lbl_80346F28->x24->x31 = v; }
 
-void fn_8012E414(u8 v) { lbl_80346F28->x24->x32 = v; }
+void fn_8012E414(s8 v) { lbl_80346F28->x24->x32 = v; }
 
 void fn_8012E424(u8 v) { lbl_80346F28->x24->x30 = v; }
 
-void fn_8012E560(u8 v) { lbl_80346F28->x24->x9 = v; }
+void fn_8012E560(s8 v) { lbl_80346F28->x24->x9 = v; }
 
-void fn_8012E570(u8 v) { lbl_80346F28->x24->x8 = v; }
+void fn_8012E570(s8 v) { lbl_80346F28->x24->x8 = v; }
 
-void fn_8012E580(u8 v) { lbl_80346F28->x24->x7 = v; }
+void fn_8012E580(s8 v) { lbl_80346F28->x24->x7 = v; }
 
-void fn_8012E590(u8 v) { lbl_80346F28->x24->x6 = v; }
+void fn_8012E590(s8 v) { lbl_80346F28->x24->x6 = v; }
 
 void fn_8012E5A0(u16 v) { lbl_80346F28->x24->x4 = v; }
 
-void fn_8012E5B0(u8 v) { (*(u8**)((u8*)lbl_80346F28 + 0x24))[2] = v; }
+void fn_8012E5B0(s8 v) { (*(u8**)((u8*)lbl_80346F28 + 0x24))[2] = v; }
 
-void fn_8012E5C0(u8 v) {
+void fn_8012E5C0(s8 v) {
     if (lbl_80346F28 == 0) return;
     (*(u8**)((u8*)lbl_80346F28 + 0x24))[0] = v;
 }
