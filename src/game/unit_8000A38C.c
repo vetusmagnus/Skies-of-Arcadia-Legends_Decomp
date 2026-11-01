@@ -135,10 +135,11 @@ typedef struct CondLink {
     struct CondLink* next;  /* 0x8 */
     struct CondLink* prev;  /* 0xc */
 } CondLink;
+typedef struct Ent_80008800 Ent_80008800;
 typedef struct {
     u8 pad0[0xc];
     void* xc;           /* 0x0c */
-    void* x10;
+    Ent_80008800* x10;  /* 0x10 condition id table */
     s8 x14[9][9];       /* 0x14 party grid */
     u8 pad65[0x68 - 0x65];
     void* x68;
@@ -148,7 +149,7 @@ typedef struct {
     s16 xf0;
     u8 padf2[0x180 - 0xf2];
     void* x180;         /* 0x180 */
-    void* x184;         /* 0x184 */
+    CondLink* x184;     /* 0x184 */
     u8 pad188[0x1c4 - 0x188];
     s32 x1c4;
 } GS;
@@ -193,7 +194,8 @@ typedef struct ChrInfo {
     u8 pad5;
     s16 x6;             /* 0x06 */
     s16 x8;             /* 0x08 */
-    u8 padA[8];
+    u8 padA[6];
+    s16 x10;            /* 0x10 */
     s16 state;          /* 0x12 */
     s16 x14;            /* 0x14 */
     s16 x16;            /* 0x16 */
@@ -294,12 +296,12 @@ typedef struct Key {
     s16 x10;
 } Key;
 /* 0x10-byte id record; lists end at a negative x0. */
-typedef struct Ent_80008800 {
+struct Ent_80008800 {
     s16 x0;
     s16 x2;
     u8 pad4[8];
     Key* xc;
-} Ent_80008800;
+};
 s16 fn_800086BC(Task* t, s16 a, s16 b, Ent_80008800* tbl, CondLink* e, u8 f);
 typedef struct Obj_80017B18 {
     u8 pad0[0xc];
@@ -591,39 +593,18 @@ extern void fn_80035228(void*, void*, f32, u8);
 extern void fn_800353F4(void*, void*, void*, f32, u8);
 extern void fn_80035380(void*, void*, f32, u8);
 extern void fn_8003529C(void*, void*, f32, u8);
-typedef struct {
-    s8 id;
-    u8 pad1[5];
-    s16 x6;
-    s16 x8;
-    u8 padA[0x10 - 0xA];
-    s16 x10;
-    u8 pad12[2];
-    s16 x14;
-    s16 x16;
-    u8 pad18[0xec - 0x18];
-    u32 xec;
-    u8 padf0[0x20c - 0xf0];
-    s16 x20c;
-    s16 x20e;
-} Unit_8001CED0;
-typedef struct {
-    u8 pad[0x3c];
-    u32 x3c;
-    u8 pad40[0x4c - 0x40];
-    Unit_8001CED0* w;
-} Wk_8001CED0;
-typedef struct Tk_8001CED0 {
-    u8 pad[0x24];
-    Wk_8001CED0* work;
-} Tk_8001CED0;
 extern u32 fn_800153E0(s32, s16);
 extern s16 fn_800760EC(void*, s16, s16);
-extern s8 fn_8002EEFC(Tk_8001CED0*, u32*);
-extern s8 fn_80030AE8(u32, Unit_8001CED0*);
+extern s8 fn_8002EEFC(Task*, u32*);
+extern s8 fn_80030AE8(u32, ChrInfo*);
 extern s16 fn_80009030(Ent_80008800* list, s16 p1, s16 p2, s16 c, s16 d);
-extern void fn_800312F0(Tk_8001CED0*, s16, s16, s8);
-extern void fn_80031254(Tk_8001CED0*);
+extern void fn_800312F0(Task*, s16, s16, s8);
+extern void fn_80031254(Task*);
+extern void fn_80037918(Task* t);
+extern u8 fn_80078478(int a);
+extern s32 fn_8003136C(Task* t);
+extern void fn_8002F154(Task* t, u32* out);
+int fn_8001CED0(Task* t);
 /* The camera object fn_8006B6F4 returns; its position is at 0x3c. */
 typedef struct CamObj {
     u8 pad0[0x3C];
@@ -4442,7 +4423,7 @@ void fn_80018868(Task* t, s8 mode, f32 frame)
     }
 }
 
-inline int Match(Tk_8001CED0* t, Unit_8001CED0* u)
+inline int Match(Task* t, ChrInfo* u)
 {
     s16 a;
     s16 b;
@@ -4473,7 +4454,7 @@ inline int Match(Tk_8001CED0* t, Unit_8001CED0* u)
     return 0;
 }
 
-inline int Kind(Unit_8001CED0* u)
+inline int Kind(ChrInfo* u)
 {
     switch (u->x10) {
     case 0x10:
@@ -4485,33 +4466,130 @@ inline int Kind(Unit_8001CED0* u)
 }
 
 
-inline int Both(Tk_8001CED0* t)
+inline int Both(Task* t)
 {
-    Unit_8001CED0* u2 = t->work->w;
+    ChrInfo* u2 = ChrW(t)->st;
     if (!Kind(u2)) {
         return 0;
     }
     return Match(t, u2);
 }
 
-int fn_8001CED0(Tk_8001CED0* t)
+inline int Party(Task* t)
+{
+    SysObj* s;
+
+    if (lbl_80347394 != NULL) {
+        s = lbl_80347394->work;
+        if (s->x3c & 0x40000) {
+            return 1;
+        }
+    } else {
+        switch (fn_80078478(ChrW(t)->st->id)) {
+        case 2:
+        case 4:
+        case 6:
+            return 1;
+        }
+    }
+    return 0;
+}
+
+inline int Linked(Task* t)
+{
+    if (!Match(t, ChrW(t)->st)) {
+        return 0;
+    }
+    return Party(t);
+}
+
+void fn_8001CAA8(Task* t)
 {
     u32 flags = 0;
-    Unit_8001CED0* u = t->work->w;
+    ChrInfo* w = ChrW(t)->st;
+    s16 a;
+    s16 b;
+    ChrInfo* u;
+
+    if (w->x6 == 2 && (w->x50 & 0x08000000)) {
+        w->x50 &= ~0x08000000;
+        return;
+    }
+    switch (w->x6) {
+    case 2:
+    case 7:
+        return;
+    case 0x1e:
+        switch (w->x8) {
+        case 0x23:
+        case 0x24:
+        case 0x25:
+            return;
+        }
+        break;
+    }
+    if (fn_8001C1F0(t)) {
+        fn_800085EC(t, 0x1e, 0x2a, lbl_8030A10C.x10, lbl_8030A10C.x184);
+    } else {
+        fn_800085EC(t, w->x6, w->x8, ChrW(t)->x10->x30, w->x298);
+        fn_80037918(t);
+    }
+    if (w->xec & 0x100000) {
+        return;
+    }
+    switch (w->x6) {
+    case 6:
+    case 12:
+    case 13:
+        return;
+    }
+    fn_800085EC(t, w->x6, w->x8, lbl_8030A10C.x10, lbl_8030A10C.x184);
+    if (Linked(t)) {
+        fn_8003136C(t);
+        fn_8001CED0(t);
+        w->x50 |= 0x20000;
+        return;
+    }
+    w->x50 &= ~0x20000;
+    u = ChrW(t)->st;
+    if (u->xec & 0x8000) {
+        a = u->x14;
+        b = u->x16;
+    } else {
+        a = u->x6;
+        b = u->x8;
+    }
+    flags = 0;
+    if (fn_8003136C(t)) {
+        fn_8002F154(t, &flags);
+    }
+    if (fn_80030AE8(flags, w) && Both(t)) {
+        return;
+    }
+    if (fn_80009030(lbl_8030A10C.x10, a, b, -1, -1)) {
+        fn_80031254(t);
+        w->xec |= 0x80000;
+    }
+}
+
+int fn_8001CED0(Task* t)
+{
+    u32 flags = 0;
+    ChrInfo* u = ChrW(t)->st;
     s8 r;
     s16 a;
     s16 b;
-    Unit_8001CED0* u2;
+    ChrInfo* u2;
 
     r = fn_8002EEFC(t, &flags);
-    if (!Kind(t->work->w)) {
+    if (!Kind(ChrW(t)->st)) {
         flags &= ~0x20000000;
     }
     if (r == 2) {
         r = 1;
     }
     if (fn_80030AE8(flags, u) && Both(t)) {
-        u2 = t->work->w;
+        u2 = ChrW(t)->st;
         if (u2->xec & 0x8000) {
             a = u2->x14;
             b = u2->x16;
@@ -4524,7 +4602,7 @@ int fn_8001CED0(Tk_8001CED0* t)
             u->xec &= ~0x8000;
         }
     } else {
-        u2 = t->work->w;
+        u2 = ChrW(t)->st;
         if (u2->xec & 0x8000) {
             a = u2->x14;
             b = u2->x16;
