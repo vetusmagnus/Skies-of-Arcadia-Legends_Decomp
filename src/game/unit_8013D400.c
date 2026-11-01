@@ -304,7 +304,24 @@ extern Party *fn_8013558C(void);
 /* lbl_80308F98: 32 lists of 0x58 records. */
 typedef struct BtlItem {
     s32 f0;
-    u8 pad4[0x48 - 0x4];
+    s32 w4;
+    s32 w8;
+    s32 wc;
+    s32 w10;
+    s32 w14;
+    s32 w18;
+    s32 w1c;
+    s32 w20;
+    s32 w24;
+    s32 w28;
+    s32 w2c;
+    s32 w30;
+    f32 f34;
+    f32 f38;
+    f32 f3c;
+    f32 f40;
+    u16 s44;
+    u16 s46;
     s32 f48;
     s32 f4c;
     s32 f50;
@@ -1521,6 +1538,80 @@ void fn_80148464(Obj_80148464* o) {
         lbl_803472CC[o->idx + i].a = o->hi[i];
         lbl_803472CC[o->idx + i].b = o->lo[i];
     }
+}
+
+/* The record a scene script command hands fn_80148954. */
+typedef struct {
+    s32 w0;
+    s32 w4;
+    s32 w8;
+    s32 wc;
+    s32 w10;
+    s32 w14;
+    s32 w18;
+    s32 w1c;
+    s32 w20;
+    u16 h24;
+    u16 h26;
+    u16 h28;
+    u16 h2a;
+    f32 f2c;
+    f32 f30;
+    f32 f34;
+    f32 f38;
+    u16 h3c;
+    u16 h3e;
+} Src_80148954;
+extern void fn_801557A8(s32 cur, s32 id);
+
+void fn_80148954(Src_80148954 *s)
+{
+    const StrPool_8013D400* msg = &lbl_802B3578;
+    u16 id = s->w0;
+    s32 a = s->w4;
+    s32 b = s->w8;
+    s32 c = s->wc;
+    s32 d = s->w10;
+    s32 e = s->w14;
+    s32 f = s->w18;
+    s32 g = s->w1c;
+    u16 h = s->w20;
+    u16 i = s->h24;
+    u16 j = s->h26;
+    u16 k = s->h28;
+    u16 l = s->h2a;
+
+    if (lbl_803472C4 == -1) {
+        fn_801DBE1C(msg->sceneStart);
+    }
+    if (id >= 4) {
+        fn_801DBE1C(msg->scenePhase);
+    }
+    if (lbl_80308F98[lbl_803472C4].items[id].f0 != -1) {
+        fn_801DBE1C(msg->sceneDup, lbl_803472C4, id);
+    }
+    lbl_80308F98[lbl_803472C4].items[id].f0 = id;
+    lbl_80308F98[lbl_803472C4].items[id].w4 = a;
+    lbl_80308F98[lbl_803472C4].items[id].w8 = b;
+    lbl_80308F98[lbl_803472C4].items[id].wc = c;
+    lbl_80308F98[lbl_803472C4].items[id].w10 = d;
+    lbl_80308F98[lbl_803472C4].items[id].w14 = e;
+    lbl_80308F98[lbl_803472C4].items[id].w18 = f;
+    lbl_80308F98[lbl_803472C4].items[id].w1c = g;
+    lbl_80308F98[lbl_803472C4].items[id].w20 = h;
+    lbl_80308F98[lbl_803472C4].items[id].w24 = i;
+    lbl_80308F98[lbl_803472C4].items[id].w28 = j;
+    lbl_80308F98[lbl_803472C4].items[id].w2c = k;
+    lbl_80308F98[lbl_803472C4].items[id].w30 = l;
+    lbl_80308F98[lbl_803472C4].items[id].f34 = s->f2c;
+    lbl_80308F98[lbl_803472C4].items[id].f38 = s->f30;
+    lbl_80308F98[lbl_803472C4].items[id].f3c = s->f34;
+    lbl_80308F98[lbl_803472C4].items[id].f40 = s->f38;
+    lbl_80308F98[lbl_803472C4].items[id].s44 = s->h3c;
+    lbl_80308F98[lbl_803472C4].items[id].s46 = s->h3e;
+    lbl_80308F98[lbl_803472C4].n += 1;
+    lbl_80308F98[lbl_803472C4].count += a;
+    fn_801557A8(lbl_803472C4, id);
 }
 
 void fn_80148DDC(void) {
