@@ -7,7 +7,6 @@ __flush_cache = .init:0x80003374; // type:function size:0x34 scope:global
 TRK_memset = .init:0x800033A8; // type:function size:0x30 scope:global
 TRK_memcpy = .init:0x800033D8; // type:function size:0x24 scope:global
 gTRKInterruptVectorTable = .init:0x800033FC; // type:label scope:global
-lbl_80004000 = .init:0x80004000; // type:label
 __TRK_reset = .init:0x80005330; // type:function size:0x104 scope:global
 gTRKInterruptVectorTableEnd = .init:0x80005330; // type:label scope:global
 memset = .init:0x80005434; // type:function size:0x30 scope:global

@@ -9,3 +9,6 @@ splits: config/GEAE8P/splits.txt
 mw_comment_version: 10
 # No RELs on the disc: the whole game is main.dol.
 ldscript_template: config/GEAE8P/ldscript.lcf
+# lbl_802DC1F8 is a table of (u32 key, u32 bit mask) pairs; masks like 0x80004000 are not pointers into .init.
+block_relocations:
+- target: .init:0x80004000

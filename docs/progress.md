@@ -2178,6 +2178,9 @@ Follow-up: msgbuf.c links with GC/1.3 (its auto-inline limit is about half of 1.
 once it has `pos`/`src` locals) and DebuggerDriver.c (db + `-inline deferred`) links once its mailbox helpers check
 `if (!DBGEXISelect(4)) return FALSE;` (5,624 of 7,117). GXReadXfRasMetric then matched with `#pragma scheduling off` (Nick's call:
 1.2.5n always schedules the high counter load first, ~190 plain-C variants failed, and the Animal Crossing and Pikmin 2
-decomps use the same pragma on this function), so every SDK/MSL/TRK function now matches (5,625). Ninja: +34 (including the nine asm routines in `ninja_asm.c`), header types folded into
+decomps use the same pragma on this function), so every SDK/MSL/TRK function now matches (5,625). The 7.8 KB MetroTRK
+exception vector table (`gTRKInterruptVectorTable`, .init 0x800033FC-0x80005330) is linked from the vendored `__exception.s`;
+config.yml blocks the false relocation from `lbl_802DC1F8` (a key/bit-mask table whose 0x80004000 mask looked like an
+.init pointer). SDK code is 960/960. Ninja: +34 (including the nine asm routines in `ninja_asm.c`), header types folded into
 `ninja_lib.h` (NjEnvState, light colour/ambient, NgCtx cursor, NJS_POINT2, NjCapsule); details and the remaining
 blockers in docs/ninja.md "Library pass".

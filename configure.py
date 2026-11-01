@@ -665,6 +665,7 @@ config.libs += [
             Object(Matching, "MetroTRK/main_TRK.c"),
             Object(Matching, "MetroTRK/dolphin_trk.c"),
             Object(Matching, "MetroTRK/targsupp.s"),
+            Object(Matching, "MetroTRK/__exception.s"),
             Object(Matching, "MetroTRK/targimpl.c"),
             Object(Matching, "MetroTRK/notify.c"),
             Object(Matching, "MetroTRK/msghndlr.c"),
