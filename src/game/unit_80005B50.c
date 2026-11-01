@@ -942,7 +942,7 @@ s32 fn_8001C1F0(Task* o);
 typedef struct Cmd { u8 pad0[0x10]; s16 x10; s16 x12; } Cmd;
 typedef struct Item { s16 lo; s16 hi; u8 pad4[8]; Cmd* obj; } Item;
 extern s32 fn_8006EDA0(void);
-extern void fn_80011400(s16 a, s32 b);
+s32 fn_80011400(s16 id, s8 val);
 extern void fn_8005535C(void *a, void *v, void *t, f32 x);
 extern void fn_80011208(s8 a, s8 b, s32 c);
 typedef struct B { u32 x0; u8 pad[0x24]; s32 x28; s32 x2c; s32 x30; } B;
@@ -2623,6 +2623,33 @@ inline void ResetChrs(int idle)
 
 extern s32 fn_8025ECC4(void);
 s32 fn_800117EC(NJS_POINT3* a, NJS_POINT3* b, f32* out, NJS_POINT3* c);
+
+s32 fn_80011400(s16 id, s8 val)
+{
+    Task* t;
+    ChrWork* w;
+    ChrInfo* c;
+    t = fn_800215EC(id);
+    if (t == NULL) {
+        return 0;
+    }
+    w = t->work;
+    c = w->st;
+    if (c->x50 & 0x40000) {
+        return 0;
+    }
+    if (c->xf0 & 0x80000000) {
+        if (val != 0) {
+            c->draw.a = 0.0f;
+            c->x1ec |= 0x20000000;
+            return 0;
+        }
+        return 0;
+    }
+    c->draw.a = 0.0f;
+    c->x1ec |= 0x20000000;
+    return 1;
+}
 
 f32 fn_800114AC(f32* out, f32* w, f32* h, s8 flag) {
     f32 v[3];
