@@ -1,5 +1,6 @@
 #include "types.h"
 #include "ninja.h"
+#include "game/task.h"
 /* One sprite: texture, position, size and UV rectangle (fn_801C8BC0 draws it). */
 typedef struct Rect8 {
     s32 tex;
@@ -460,6 +461,24 @@ float fn_801C60C8(float a, float b)
 }
 
 extern u32 lbl_803471D0;
+
+extern void* fn_80226704(void* list, void* cb, s32 size);
+
+/* A task allocated together with its work area, which follows the 0x40-byte task block. */
+typedef struct TaskBlk_801C6180 {
+    Task task;
+    u8 pad28[0x40 - sizeof(Task)];
+    Sub_801C610C work; /* 0x40 */
+} TaskBlk_801C6180;
+
+Task* fn_801C6180(Task* parent, TaskFunc func) {
+    TaskBlk_801C6180* b = fn_80226704(parent, func, 0x270);
+    b->task.flags |= 1;
+    b->task.work = &b->work;
+    SubInit(b->task.work);
+    return &b->task;
+}
+
 s32 fn_801C621C(void) {
     return lbl_803471CC;
 }
@@ -795,7 +814,7 @@ void fn_801C5DEC(Obj_801C5DEC* o) {
     }
 }
 
-void fn_801C610C(Sub_801C610C* s) {
+static inline void SubInit(Sub_801C610C* s) {
     s->f58 = 1.0f;
     s->f54 = 1.0f;
     s->f50 = 1.0f;
@@ -811,6 +830,10 @@ void fn_801C610C(Sub_801C610C* s) {
     s->w08 = 0;
     s->f190 = 1.0f;
     s->f1a8 = 0.2f;
+}
+
+void fn_801C610C(Sub_801C610C* s) {
+    SubInit(s);
 }
 
 void fn_801C6248(void) {
