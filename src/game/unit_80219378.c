@@ -9,6 +9,15 @@
 #include "game/text.h"
 #include "game/menu.h"
 #include "game/gamedata.h"
+
+/* Digit glyph codes for the ones, tens, hundreds and thousands places. These are the start of
+ * the original file's .data (lbl_802F8A20, 0x58 bytes): separate arrays, addressed from one
+ * pooled base register, so they have to be defined here (in this order, first in .data). */
+u16 lbl_802F8A20[10] = { 0x0000, 0x6800, 0x7800, 0x1800, 0x1400, 0x0100, 0x1200, 0x1300, 0x0000, 0x0000 };
+u16 lbl_802F8A34[12] = { 0x0000, 0x0001, 0x0002, 0x0003, 0x0004, 0x0005, 0x0006, 0x0007, 0x0008, 0x0009, 0x0000, 0x0000 };
+u16 lbl_802F8A4C[8] = { 0x0000, 0x0010, 0x0020, 0x0030, 0x0040, 0x0050, 0x0060, 0x0000 };
+u16 lbl_802F8A5C[14] = { 0x0000, 0x8000, 0x8200, 0x8400, 0x8600, 0x8800, 0x8A00, 0x8C00, 0x8E00, 0x9000, 0x0000, 0x0000, 0x0000, 0x0000 };
+
 extern void fn_802193BC(s32 a, s32 b);
 extern s32 fn_801D168C(void);
 extern void fn_801D150C(s32 v);
@@ -344,7 +353,7 @@ extern void fn_8028B498(void);
 extern void njTranslate(void *m, f32 x, f32 y, f32 z);
 extern void njScale(void *m, f32 x, f32 y, f32 z);
 extern s32 fn_801D2A64(void *a, void *c, s32 d, void *b);
-extern s16 fn_80223228(u16 v);
+u32 fn_80223228(u16 n);
 extern void fn_80297DB4(void *a, void *b, s32 c, s32 d, s32 e);
 extern void fn_80297DA4(void *a, void *b, void *c, s32 d);
 extern void fn_80297B5C(void *p);
@@ -1034,6 +1043,28 @@ void fn_80221048(Vec3 *v)
     if (v[2].z > v[3].z) { t5 = v[3]; v[3] = v[2]; v[2] = t5; }
     if (v[4].z < v[5].z) { t6 = v[5]; v[5] = v[4]; v[4] = t6; }
     if (v[6].z > v[7].z) { t7 = v[7]; v[7] = v[6]; v[6] = t7; }
+}
+
+static inline u16 Digit(u16* t, int v)
+{
+    return t[v % 10];
+}
+
+u32 fn_80223228(u16 n)
+{
+    u32 r;
+    s32 q;
+
+    r = Digit(lbl_802F8A20, n);
+    q = n / 10;
+    if (q == 0) return r;
+    r |= Digit(lbl_802F8A34, q);
+    q = n / 100;
+    if (q == 0) return r;
+    r |= Digit(lbl_802F8A4C, q);
+    q = n / 1000;
+    if (q == 0) return r;
+    return r + Digit(lbl_802F8A5C, q);
 }
 
 void fn_802260E8(void *p)
