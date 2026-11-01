@@ -40,7 +40,10 @@ typedef struct {
     s8 xd;
     u8 pade[2];
     void* fn;
-    u8 pad14[0x4c - 0x14];
+    u8 pad14[0x17 - 0x14];
+    s8 x17;
+    s8 x18;
+    u8 pad19[0x4c - 0x19];
     s32 x4c;
     s8 x50;
     s8 x51;
@@ -140,7 +143,7 @@ extern s16 lbl_80309DCC[12];
 extern s32 lbl_8034733C;
 extern void fn_80081168(s32 i, s32 k);
 extern s32 fn_8006D1C4(void);
-extern void fn_80080438(void* o);
+extern s32 fn_80080438(Slot* o);
 void fn_8008C6BC(Slot* o);
 typedef struct {
     u8 pad0[0xae];
@@ -782,6 +785,54 @@ void fn_8008D610(Slot *o);
 void fn_8008C98C(Slot* self);
 
 #define GO(f) do { lbl_80309700[i]->fn = (f); lbl_80309700[i]->state = 0; } while (0)
+
+extern void fn_8008178C(Sub80309700* d, s8 a, s8 b, s32 id);
+extern void fn_80081648(Sub80309700* d, s32 id);
+
+extern void fn_80080710(Sub80309700* d, s32 a);
+extern void fn_80081134(s16 i, u32 v);
+extern void fn_8008BFDC(Slot* o);
+
+static inline void Begin(Slot* o, s32 id) {
+    Sub80309700* d = o->sub;
+    if (id < 4) {
+        fn_80080710(d, 2);
+    } else {
+        fn_80080710(d, 1);
+    }
+    if (d->x17 != 0) {
+        fn_8008178C(d, d->x17, d->x18, id);
+        fn_80081134(id, 0xf);
+        o->state = 1;
+    } else {
+        fn_800811E4(id, 0);
+        lbl_80309700[id]->fn = fn_8008BFDC;
+        lbl_80309700[id]->state = 0;
+    }
+}
+
+void fn_8008C7B0(Slot* o) {
+    Sub80309700* d = o->sub;
+    s32 id = d->idx;
+    switch (o->state) {
+    case 0:
+        if (fn_8007FFE8(id, 0x16)) {
+            Begin(o, id);
+        }
+        break;
+    case 1:
+        if (fn_8007FFE8(id, 0xf)) {
+            fn_80081648(d, id);
+            o->state = 0;
+            if (fn_80080438(o)) {
+                fn_800811E4(id, 0);
+            } else {
+                Begin(o, id);
+            }
+        }
+        break;
+    }
+}
 
 s32 fn_8008DC1C(s16 idx) {
     s32 kind;
@@ -1733,7 +1784,7 @@ void fn_8008D4A4(Slot* o)
     extern void fn_8008178C(Sub80309700* d, s8 a, s8 b, s32 id);
     extern void fn_800810FC(s32 id);
     extern void fn_80081648(Sub80309700* d, s32 id);
-    extern void fn_80080438(Slot* o);
+    extern s32 fn_80080438(Slot* o);
     s32 id;
     Sub80309700* d = o->sub;
     s32 a, b;
