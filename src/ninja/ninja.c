@@ -3519,6 +3519,205 @@ void fn_8029DA24(s16 kind, s32 type, s32 mode) {
     }
 }
 
+void fn_802A1374(s16* p, s32 n, u32* data) {
+    u8 dif[4] = {0xff, 0xff, 0xff, 0xff};
+    u16 size;
+    s16 cnt;
+    s16 fl;
+    s16 len;
+    u8 type = n;
+    s16 kind;
+    s32 alpha;
+    s32 mode;
+    s16 c;
+    u8 spc[4] = {0, 0, 0, 0};
+    s32 tex;
+
+    while ((c = *p++) != 0xff) {
+        kind = c & 0xff;
+        if (kind < 8) {
+            switch (kind) {
+            case 1:
+                fn_8029D010(c);
+                break;
+            case 4:
+                lbl_803458A8[(s16)((c >> 8) & 0xff)] = p;
+                lbl_80347F24++;
+                return;
+            case 5:
+                fn_802A1374(lbl_803458A8[(s16)((c >> 8) & 0xff)], n, data);
+                lbl_80347F24--;
+                break;
+            }
+        } else if (kind < 0x10) {
+            fn_8029D0F4(c, *p++);
+            if (*p & 0x18) {
+                p += 8;
+            }
+        } else if (kind < 0x40) {
+            len = *p++;
+            fn_8029D698(c, p, dif, 0, spc);
+            p += len;
+        } else {
+            cnt = p[1];
+            size = *(u16*)p;  /* the chunk stream is s16; this field is unsigned */
+            p += 2;
+            if (_nj_control_3d_flag_ & 0x800) {
+                c &= _nj_constant_attr_and_;
+                c |= _nj_constant_attr_or_;
+            }
+            fl = (c >> 8) & 0x2a;
+            lbl_80347EA0 = fl & 0x20;
+            if (fl & 2) {
+                mode = 2;
+                tex = 0;
+            } else {
+                mode = 1;
+                tex = 1;
+            }
+            if (fl & 8) {
+                alpha = 1;
+                if (lbl_80347E20 == 1) {
+                    p += size - 1;
+                    continue;
+                }
+            } else {
+                alpha = 0;
+                switch (lbl_80347E20) {
+                case 2:
+                case 3:
+                case 4:
+                    p += size - 1;
+                    continue;
+                }
+            }
+            fn_802A8F40(1);
+            switch (kind) {
+            case 0x41:
+            case 0x42:
+                GXSetTexCoordGen2(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, 0x3c, 0, 0x7d);
+                GXSetNumTexGens(1);
+                switch (type) {
+                case 0x29:
+                    fn_8029DA24(kind, n, mode);
+                    if (tex) {
+                        fn_8029A4EC(alpha);
+                    } else {
+                        fn_8029AE38(alpha);
+                    }
+                    fn_802A1B54(0x1002, 0, 0, spc, dif);
+                    fn_8029DCD0(p, data, cnt, 1, kind);
+                    break;
+                case 0x2b:
+                    fn_8029DA24(kind, n, mode);
+                    if (tex) {
+                        fn_8029A4EC(alpha);
+                    } else {
+                        fn_8029AE38(alpha);
+                    }
+                    fn_802A1B54(0x1002, 0, 0, spc, dif);
+                    fn_8029EC1C(p, data, cnt, 1, kind);
+                    break;
+                case 0x2a:
+                    if (fn_8029CFF0()) {
+                        fn_8029DA24(kind, 0x29, 0);
+                        fn_8029CF04();
+                        fn_8029AB44(alpha, 0);
+                        fn_8029DEDC(p, data, cnt, 1, kind);
+                    } else {
+                        fn_8029DA24(kind, n, mode);
+                        fn_8029AE38(alpha);
+                        fn_8029E1B4(p, data, cnt, 1, kind);
+                    }
+                    break;
+                case 0x22:
+                    fn_8029DA24(kind, n, 0);
+                    fn_802A1B54(0x3412, 0, 0, spc, dif);
+                    fn_8029AE38(alpha);
+                    fn_8029E40C(p, data, cnt, 1, kind);
+                    break;
+                case 0x24:
+                    fn_8029DA24(kind, n, mode);
+                    fn_8029AE38(alpha);
+                    fn_802A1B54(0x3412, 0, 0, spc, dif);
+                    fn_8029EA5C(p, data, cnt, 1, kind);
+                    break;
+                case 0x23:
+                    if (fn_8029CFF0()) {
+                        fn_8029DA24(kind, 0x29, 0);
+                        fn_8029CF04();
+                        fn_8029AB44(alpha, 0);
+                        fn_8029E5CC(p, data, cnt, 1, kind);
+                    } else {
+                        fn_8029DA24(kind, n, mode);
+                        fn_8029AE38(alpha);
+                        fn_8029E850(p, data, cnt, 1, kind);
+                    }
+                    break;
+                }
+                break;
+            case 0x40:
+                GXSetNumTexGens(0);
+                if (mode) {
+                    mode = 2;
+                }
+                switch (type) {
+                case 0x29:
+                    fn_8029DA24(kind, n, mode);
+                    fn_8029A41C(alpha);
+                    fn_802A1B54(0x3001, 0, 0, 0, dif);
+                    fn_8029EE78(p, data, cnt, 1);
+                    break;
+                case 0x2a:
+                    if (fn_8029CFF0()) {
+                        fn_8029DA24(kind, 0x29, 0);
+                        fn_8029CF04();
+                        fn_8029A298(alpha);
+                        fn_8029F680(p, data, cnt, 1);
+                    } else {
+                        fn_8029DA24(kind, n, mode);
+                        fn_8029A41C(alpha);
+                        fn_8029F86C(p, data, cnt, 1);
+                    }
+                    break;
+                case 0x2b:
+                    fn_8029DA24(kind, n, mode);
+                    fn_8029A41C(alpha);
+                    fn_802A1B54(0x3001, 0, 0, 0, dif);
+                    fn_8029F528(p, data, cnt, 1);
+                    break;
+                case 0x22:
+                    fn_8029DA24(kind, n, mode);
+                    fn_8029A41C(alpha);
+                    fn_802A1B54(0x3003, 0, 0, 0, dif);
+                    fn_8029F400(p, data, cnt, 1);
+                    break;
+                case 0x24:
+                    fn_8029DA24(kind, n, mode);
+                    fn_8029A41C(alpha);
+                    fn_802A1B54(0x3003, 0, 0, 0, dif);
+                    fn_8029EFD0(p, data, cnt, 1);
+                    break;
+                case 0x23:
+                    if (fn_8029CFF0()) {
+                        fn_8029DA24(kind, 0x29, 0);
+                        fn_8029CF04();
+                        fn_8029A298(alpha);
+                        fn_8029F0F8(p, data, cnt, 1);
+                    } else {
+                        fn_8029DA24(kind, n, mode);
+                        fn_8029A41C(alpha);
+                        fn_8029F2A8(p, data, cnt, 1);
+                    }
+                    break;
+                }
+                break;
+            }
+            p += size - 1;
+        }
+    }
+}
+
 void fn_802A20DC(f32 a, f32 b, f32 c) {
     lbl_80300760.f18[0] = a;
     lbl_80300760.f18[1] = b;
@@ -3561,6 +3760,149 @@ void fn_802A75C8(f32 x, f32 y, f32 z) {
     lbl_80300794.dir[2] = z;
     GXInitLightPos(&lbl_803465E0, 1048576.0f * -(f32)a, 1048576.0f * -(f32)b, 1048576.0f * -(f32)c);
     GXInitSpecularDir(&lbl_803465A0, x, y, z);
+}
+
+void fn_802A7894(s16* p, s32 n, u32* data) {
+    u8 type = n;
+    u8 dif[4] = {0xff, 0xff, 0xff, 0xff};
+    u8 spc[4] = {0, 0, 0, 0};
+    u8 amb[4] = {0, 0, 0, 0};
+    s32 tex;
+    u16 size;
+    s16 cnt;
+    s16 kind;
+    s16 c;
+    s16 len;
+    s16 fl;
+    s32 alpha;
+    s32 enable;
+    u32 ambf;
+
+    while ((c = *p++) != 0xff) {
+        kind = c & 0xff;
+        if (kind < 8) {
+            switch (kind) {
+            case 1:
+                fn_8029D010(c);
+                break;
+            case 4:
+                lbl_803458A8[(s16)((c >> 8) & 0xff)] = p;
+                lbl_80347F24++;
+                return;
+            case 5:
+                fn_802A7894(lbl_803458A8[(s16)((c >> 8) & 0xff)], n, data);
+                lbl_80347F24--;
+                break;
+            }
+        } else if (kind < 0x10) {
+            fn_8029D0F4(c, *p++);
+            if (*p & 0x18) {
+                p += 8;
+            }
+        } else if (kind < 0x40) {
+            len = *p++;
+            fn_8029D698(c, p, dif, amb, spc);
+            p += len;
+        } else {
+            cnt = p[1];
+            size = *(u16*)p;  /* the chunk stream is s16; this field is unsigned */
+            p += 2;
+            if (_nj_control_3d_flag_ & 0x800) {
+                c &= _nj_constant_attr_and_;
+                c |= _nj_constant_attr_or_;
+            }
+            fl = (c >> 8) & 0x2a;
+            lbl_80347EA0 = fl & 0x20;
+            tex = fl & 2;
+            if (tex) {
+                enable = 1;
+            } else {
+                enable = 1;
+            }
+            if (fl & 8) {
+                alpha = 1;
+                if (lbl_80347E20 == 1) {
+                    p += size - 1;
+                    continue;
+                }
+            } else {
+                alpha = 0;
+                switch (lbl_80347E20) {
+                case 2:
+                case 3:
+                case 4:
+                    p += size - 1;
+                    continue;
+                }
+            }
+            ambf = 0;
+            if (fl & 4) {
+                ambf = 0x300;
+            }
+            fn_802A8F40(1);
+            fn_8029D8B0(&lbl_80344DE0, kind, n, enable);
+            switch (kind) {
+            case 0x41:
+            case 0x42:
+                GXSetTexCoordGen2(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, 0x3c, 0, 0x7d);
+                GXSetNumTexGens(1);
+                switch (type) {
+                case 0x29:
+                    if (tex) {
+                        fn_8029AA14(alpha);
+                    } else {
+                        fn_80299BD8(alpha);
+                    }
+                    fn_802A7D74(ambf | 2, 0, amb, 0, dif);
+                    fn_8029DCD0(p, data, cnt, 1, kind);
+                    break;
+                case 0x2a:
+                    if (fn_8029CFF0()) {
+                        fn_802A7D74(ambf | 2, 0, amb, 0, dif);
+                        fn_8029D8B0(&lbl_80344DE0, kind, 0x29, enable);
+                        fn_8029CF04();
+                        fn_8029A698(alpha, 0);
+                        fn_8029DEDC(p, data, cnt, 1, kind);
+                    } else {
+                        fn_802A7D74(ambf | 4, 0, amb, 0, 0);
+                        if (tex) {
+                            fn_8029AA14(alpha);
+                        } else {
+                            fn_80299BD8(alpha);
+                        }
+                        fn_8029E1B4(p, data, cnt, 1, kind);
+                    }
+                    break;
+                }
+                break;
+            case 0x40:
+                switch (type) {
+                case 0x29:
+                    GXSetNumTexGens(0);
+                    fn_8029A1C8(alpha);
+                    fn_802A7D74(ambf | 1, 0, amb, 0, dif);
+                    fn_8029EE78(p, data, cnt, 1);
+                    break;
+                case 0x2a:
+                    if (fn_8029CFF0()) {
+                        fn_802A7D74(ambf | 2, 0, amb, 0, dif);
+                        fn_8029D8B0(&lbl_80344DE0, kind, 0x29, enable);
+                        fn_8029CF04();
+                        fn_80299FC8(alpha);
+                        fn_8029F680(p, data, cnt, 1);
+                    } else {
+                        GXSetNumTexGens(0);
+                        fn_8029A1C8(alpha);
+                        fn_802A7D74(ambf | 4, 0, amb, 0, dif);
+                        fn_8029F86C(p, data, cnt, 1);
+                    }
+                    break;
+                }
+                break;
+            }
+            p += size - 1;
+        }
+    }
 }
 
 void fn_802A7D74(u32 flags, s32 unused1, u8* amb, s32 unused2, u8* mat) {
@@ -3883,6 +4225,48 @@ s32 fn_802AB2C4(NjModel* m) {
         fn_802AB340(m->plist);
     }
     return 0;
+}
+
+void fn_802AB340(s16* list) {
+    s16* p = list;
+    s16 h;
+    s16 t;
+    while ((h = *p++) != 0xFF) {
+        t = h & 0xFF;
+        if (t < 8) {
+            switch (t) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+                break;
+            case 4:
+                lbl_803458A8[(s16)((h >> 8) & 0xFF)] = p;
+                lbl_80347F24++;
+                return;
+            case 5:
+                fn_802AB340(lbl_803458A8[(s16)((h >> 8) & 0xFF)]);
+                lbl_80347F24--;
+                break;
+            }
+        } else if (t < 16) {
+            if (*++p & 0x18) {
+                p += 8;
+            }
+        } else if (t < 64) {
+            h = *p++;
+            p += h;
+        } else {
+            s32 n;
+            s16 fl = (h >> 8) & 8;
+            n = *(u16*)p;  /* the chunk stream is s16; this field is unsigned */
+            p += 2;
+            if (fl & 8) {
+                lbl_80347FCC = 1;
+            }
+            p += n - 1;
+        }
+    }
 }
 
 void fn_802AC2EC(s32 v) { lbl_80346A5C = v; }
