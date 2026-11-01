@@ -347,3 +347,31 @@ void GXClearGPMetric(void) {
   reg = 4;
   GX_SET_CP_REG(2, reg);
 }
+
+static inline u32 __GXReadCPCounterU32(u32 regAddrL, u32 regAddrH) {
+  volatile u16* regH;
+  volatile u16* regL;
+  u32 ctrH0;
+  u32 ctrH1;
+  u32 ctrL;
+
+  regH = &GX_GET_CP_REG(regAddrH);
+  ctrH0 = *regH;
+  regL = &GX_GET_CP_REG(regAddrL);
+  do {
+    ctrH1 = ctrH0;
+    ctrL = *regL;
+    ctrH0 = *regH;
+  } while (ctrH0 != ctrH1);
+
+  return (ctrH0 << 16) | ctrL;
+}
+
+#pragma scheduling off
+void GXReadXfRasMetric(u32* xf_wait_in, u32* xf_wait_out, u32* ras_busy, u32* clocks) {
+  *ras_busy = __GXReadCPCounterU32(32, 33);
+  *clocks = __GXReadCPCounterU32(34, 35);
+  *xf_wait_in = __GXReadCPCounterU32(36, 37);
+  *xf_wait_out = __GXReadCPCounterU32(38, 39);
+}
+#pragma scheduling reset

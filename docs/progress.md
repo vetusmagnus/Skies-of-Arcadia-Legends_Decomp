@@ -2176,7 +2176,8 @@ TRK headers: `TRKFramingState.receiveState` is `u8`, `TRKResetBuffer` takes `u8`
 
 Follow-up: msgbuf.c links with GC/1.3 (its auto-inline limit is about half of 1.3.2's, so TRKAppendBuffer stays a call
 once it has `pos`/`src` locals) and DebuggerDriver.c (db + `-inline deferred`) links once its mailbox helpers check
-`if (!DBGEXISelect(4)) return FALSE;` (5,624 of 7,117). Left in the SDK range: only GXReadXfRasMetric (diff 8: 1.2.5n
-schedules the high counter load first; ~80 variants over two passes). Ninja: +34 (including the nine asm routines in `ninja_asm.c`), header types folded into
+`if (!DBGEXISelect(4)) return FALSE;` (5,624 of 7,117). GXReadXfRasMetric then matched with `#pragma scheduling off` (Nick's call:
+1.2.5n always schedules the high counter load first, ~190 plain-C variants failed, and the Animal Crossing and Pikmin 2
+decomps use the same pragma on this function), so every SDK/MSL/TRK function now matches (5,625). Ninja: +34 (including the nine asm routines in `ninja_asm.c`), header types folded into
 `ninja_lib.h` (NjEnvState, light colour/ambient, NgCtx cursor, NJS_POINT2, NjCapsule); details and the remaining
 blockers in docs/ninja.md "Library pass".

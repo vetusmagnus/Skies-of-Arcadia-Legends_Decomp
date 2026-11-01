@@ -30,7 +30,6 @@ extern void GXSetDrawSync(u16 token);
 extern u16 GXReadDrawSync(void);
 extern void GXDrawDone(void);
 extern f32 GXGetYScaleFactor(u16 efbHeight, u16 xfbHeight);
-extern void fn_80252D88(u32* a, u32* b, u32* c, u32* d);
 extern void GXSetGPMetric(s32 perf0, s32 perf1);
 extern void GXClearGPMetric(void);
 
@@ -143,8 +142,8 @@ void fn_801D20D8(void) {
     u32 b1, b0, b3, b2;
     GXBool readIdle, cmdIdle, dummy;
     u32 sameB, sameA, diffHi, diffLo;
-    fn_80252D88(&a0, &a1, &a2, &a3);
-    fn_80252D88(&b0, &b1, &b2, &b3);
+    GXReadXfRasMetric(&a0, &a1, &a2, &a3);
+    GXReadXfRasMetric(&b0, &b1, &b2, &b3);
     sameB = (b1 - a1) == 0;
     sameA = (b0 - a0) == 0;
     diffHi = (b3 - a3) > 0;
