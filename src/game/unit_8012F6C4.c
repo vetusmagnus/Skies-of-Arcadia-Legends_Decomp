@@ -211,25 +211,34 @@ typedef struct {
     s16 s18;
     s16 s1a;
 } Item;
+/* A party slot (0x22): the name, then the id and stats copied from the character or cannon data. */
 typedef struct {
-    u8 pad0[0x12];
-    s16 id;
+    char name[0x11];
+    u8 pad11;
+    s16 id;     /* 0x12 */
     s8 b14;
-    u8 pad15[0x1e - 0x15];
+    s8 b15;
+    s16 s16;
+    s16 s18;
+    s16 s1a;
+    s16 s1c;
     s8 b1e;
     s8 b1f;
     s8 b20;
     u8 pad21;
 } Member;
 typedef struct {
-    s32 x0;
-    u8 pad4[0x11 - 0x4];
+    char name[0x11];
     s8 b11;
-    u8 pad12[0x18 - 0x12];
+    u8 pad12[2];
+    s32 x14;
     s32 x18;
-    u8 pad1c[0x58 - 0x1c];
+    s16 h1c, h1e, h20, h22, h24, h26;
+    s16 h28[6];
+    s16 h34[6];
+    s16 h40, h42, h44, h46, h48, h4a, h4c, h4e, h50, h52, h54, h56;
     u32 flags; /* 0x58 */
-    u8 pad5c[0x60 - 0x5c];
+    s32 x5c;
     Member mem[5];
 } Party;
 /* lbl_803063F0: the battle menu's system record (fn_80135598). */
@@ -247,20 +256,6 @@ void fn_80134E7C(Party *party);
 void fn_80135290(Item *v, s32 slot, s32 add);
 s32 fn_8021A1C4(s8 *out);
 s32 fn_8021A83C(Save1568 *ship, void *crew);
-typedef struct {
-    char name[0x11];
-    u8 pad11;
-    s16 s12;
-    s8 b14;
-    s8 b15;
-    s16 s16;
-    s16 s18;
-    s16 s1a;
-    s16 s1c;
-    s8 b1e;
-    s8 b1f;
-    s8 b20;
-} Dst;
 typedef struct {
     s16 v0;
     s16 v2;
@@ -818,6 +813,84 @@ void fn_8013312C(u8 v) {
 
 void fn_80133144(void) {
     ((u8*)lbl_80346F58)[0x19] = 2;
+}
+
+extern s32 fn_8021ADA0(Save1568* p, void* q);
+extern s16 fn_8021ACE0(Save1568* p, void* q);
+extern s16 fn_8021AC20(Save1568* p, void* q);
+extern s16 fn_8021AB60(Save1568* p, void* q);
+extern s32 fn_8021AA48(Save1568* p, void* q, s32 k);
+extern s16 fn_8021A880(Save1568* p, void* q);
+extern s32 fn_8021A0BC(s32 v);
+void fn_80134D1C(Member* out, Save1568* t, void* b, s32 idx);
+
+static inline void PartyMembers(Member* ent, Save1568* p, s8* buf) {
+    s32 i;
+    if (ent != 0 && p != 0 && buf != 0) {
+        for (i = 0; i < 5; i++) {
+            fn_80134D1C(&ent[i], p, buf, i);
+        }
+    }
+}
+
+static inline void PartyMask(u32* m, s8* buf) {
+    s32 j;
+    if (m != 0 && buf != 0) {
+        *m = 0;
+        for (j = 0; j < 0x16; j++) {
+            s32 v = buf[j];
+            if (fn_8021A0BC(v) != 0) {
+                *m |= 1 << v;
+            }
+        }
+    }
+}
+
+void fn_80134E7C(Party* dst) {
+    s8 buf[0x16];
+    s32 i;
+    Save1568* p;
+
+    if (dst == 0) {
+        return;
+    }
+    p = &lbl_8030B7F4.x1568;
+    if (p->b1568 < 0) {
+        p = 0;
+    }
+    if (p == 0) {
+        return;
+    }
+    fn_8021A1C4(buf);
+    MemCopy(dst, p->name, 0x11);
+    dst->b11 = p->b1568;
+    dst->x14 = fn_8021ADA0(p, buf);
+    dst->x18 = p->x157c;
+    dst->h1c = fn_8021ACE0(p, buf);
+    dst->h1e = 0;
+    dst->h20 = fn_8021AC20(p, buf);
+    dst->h22 = 0;
+    dst->h24 = fn_8021AB60(p, buf);
+    dst->h26 = 0;
+    for (i = 0; i < 6; i++) {
+        dst->h28[i] = fn_8021AA48(p, buf, i);
+        dst->h34[i] = 0;
+    }
+    dst->h40 = fn_8021A880(p, buf);
+    dst->h42 = 0;
+    dst->h44 = fn_8021A83C(p, buf);
+    dst->h46 = 0;
+    dst->h48 = 0;
+    dst->h4a = 0;
+    dst->h4c = 0;
+    dst->h4e = 0;
+    dst->h50 = 0;
+    dst->h52 = 0;
+    dst->h54 = 0;
+    dst->h56 = 0;
+    PartyMembers(dst->mem, p, buf);
+    PartyMask(&dst->flags, buf);
+    dst->x5c = 0;
 }
 
 void* fn_8013558C(void) {
@@ -1482,13 +1555,13 @@ void fn_80134900(void)
     }
 }
 
-void fn_80134C24(Dst *p, Src *src, const char *name)
+void fn_80134C24(Member *p, Src *src, const char *name)
 {
     if (p != NULL) {
         if (src == NULL) {
             if (p != NULL) {
                 memset(p, 0, 0x11);
-                p->s12 = -1;
+                p->id = -1;
                 p->b14 = -1;
                 p->b15 = -1;
                 p->s16 = 0;
@@ -1506,7 +1579,7 @@ void fn_80134C24(Dst *p, Src *src, const char *name)
                 strncpy(p->name, name, 0x10);
                 p->name[0x10] = 0;
             }
-            p->s12 = -1;
+            p->id = -1;
             p->b14 = src->v0;
             p->b15 = src->v8;
             p->s16 = src->v2;
@@ -2623,70 +2696,53 @@ void fn_80133750(void)
 
 #ifdef NONMATCHING
 #include "game/util.h"
-typedef struct Out {
-    u8 pad0[0x12];
-    s16 id;   /* 0x12 */
-    s8 x14;
-    s8 x15;
-    s16 x16;
-    s16 x18;
-    s16 x1a;
-    s16 x1c;
-    u8 x1e;
-    u8 x1f;
-    u8 x20;
-} Out;
-typedef struct Tbl {
-    u8 pad0[0x18];
-    s16 ids[1];
-} Tbl;
 extern const CannonData lbl_802D7E4C[40];
 extern s32 fn_8021A0FC(s32 i);
 extern s32 fn_8021A0DC(s32 id);
-extern s16 fn_8021A6E8(Tbl* t, void* b, const CannonData* c);
-extern s16 fn_8021A620(Tbl* t, void* b, const CannonData* c);
-extern u8 fn_8021A608(Tbl* t, void* b, const CannonData* c);
-extern u8 fn_8021A5F0(Tbl* t, void* b, const CannonData* c);
+extern s16 fn_8021A6E8(Save1568* t, void* b, const CannonData* c);
+extern s16 fn_8021A620(Save1568* t, void* b, const CannonData* c);
+extern u8 fn_8021A608(Save1568* t, void* b, const CannonData* c);
+extern u8 fn_8021A5F0(Save1568* t, void* b, const CannonData* c);
 
-inline void ClearOut(Out* o)
+inline void ClearOut(Member* o)
 {
     if (o != 0) {
         memset(o, 0, 0x11);
         o->id = -1;
-        o->x14 = -1;
-        o->x15 = -1;
-        o->x16 = 0;
-        o->x18 = 0;
-        o->x1a = 0;
-        o->x1c = 0;
-        o->x1e = 0;
-        o->x1f = 0;
-        o->x20 = 0;
+        o->b14 = -1;
+        o->b15 = -1;
+        o->s16 = 0;
+        o->s18 = 0;
+        o->s1a = 0;
+        o->s1c = 0;
+        o->b1e = 0;
+        o->b1f = 0;
+        o->b20 = 0;
     }
 }
 #endif
 
 #ifdef NONMATCHING
-void fn_80134D1C(Out* out, Tbl* t, void* b, s32 idx)
+void fn_80134D1C(Member* out, Save1568* t, void* b, s32 idx)
 {
     if (out != 0) {
-        if (t == 0 || b == 0 || fn_8021A0FC(idx) == 0 || fn_8021A0DC(t->ids[idx]) == 0) {
+        if (t == 0 || b == 0 || fn_8021A0FC(idx) == 0 || fn_8021A0DC(t->s1580[idx]) == 0) {
             ClearOut(out);
         } else {
             const CannonData* info;
-            s32 id = t->ids[idx];
+            s32 id = t->s1580[idx];
             info = &lbl_802D7E4C[id - 0x190];
             MemCopy(out, info, 0x11);
             out->id = id;
-            out->x14 = info->type;
-            out->x15 = info->element;
-            out->x16 = fn_8021A6E8(t, b, info);
-            out->x18 = 0;
-            out->x1a = fn_8021A620(t, b, info);
-            out->x1c = 0;
-            out->x1e = fn_8021A608(t, b, info);
-            out->x1f = fn_8021A5F0(t, b, info);
-            out->x20 = 0;
+            out->b14 = info->type;
+            out->b15 = info->element;
+            out->s16 = fn_8021A6E8(t, b, info);
+            out->s18 = 0;
+            out->s1a = fn_8021A620(t, b, info);
+            out->s1c = 0;
+            out->b1e = fn_8021A608(t, b, info);
+            out->b1f = fn_8021A5F0(t, b, info);
+            out->b20 = 0;
         }
     }
 }
