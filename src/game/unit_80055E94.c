@@ -2080,25 +2080,39 @@ typedef struct WobCmd {
     s32 x8;
     u8 padc[4];
     u32 x10;
-    u8 pad14[0x1a - 0x14];
+    s16 s14;             /* 0x14 */
+    s16 s16_;            /* 0x16 */
+    s16 s18;             /* 0x18 */
     s16 s1a;
     s16 s1c;
-    u8 pad1e[0x24 - 0x1e];
+    s16 s1e;             /* 0x1e */
+    s16 s20;             /* 0x20 */
+    u8 pad22[0x24 - 0x22];
     f32 f24;
     f32 f28;
     f32 f2c;
     f32 f30;
-    u8 pad34[0x42 - 0x34];
+    f32 f34;             /* 0x34 */
+    f32 f38;             /* 0x38 */
+    f32 f3c;             /* 0x3c */
+    s16 s40;             /* 0x40 */
     s16 t42[128];
     s16 s142;
     s16 s144;
-    u8 pad146[0x160 - 0x146];
+    s16 s146;            /* 0x146 */
+    f32 f148;            /* 0x148 */
+    f32 f14c;
+    f32 f150;
+    f32 f154;
+    f32 f158;
+    f32 f15c;
     s16 s160;
     u8 pad162[2];
     V3 v164;
     f32 f170;
     f32 f174;
     V3 v178;
+    s16 s184;            /* 0x184 */
 } WobCmd;
 typedef struct WobSt {
     s16 cnt;
@@ -2387,13 +2401,17 @@ typedef struct BitSt {
     u8 pad52[2];
     WobCmd* cfg;         /* 0x54 */
 } BitSt;
-typedef struct BitWork {
+/* The 0x4c-byte head every effect work starts with (copied whole into spawned particles). */
+typedef struct FxHdr {
     u8 pad0[8];
     NJS_TEXLIST* model;  /* 0x08 */
     u8 padc[0x1c - 0xc];
     V3 pos;              /* 0x1c */
     u8 pad28[0x4c - 0x28];
-    BitSt* st;
+} FxHdr;
+typedef struct BitWork {
+    FxHdr hdr;
+    BitSt* st;           /* 0x4c */
     s32 x50;
     s32 x54;
 } BitWork;
@@ -2483,7 +2501,7 @@ void fn_800586F4(BitTask* t)
         b.z = b.z + s->f8;
         a.y = a.y + s->fc;
         b.y = b.y + s->fc;
-        fn_80061ABC(&w->pos, s->f20, s->f3c, &a, &b);
+        fn_80061ABC(&w->hdr.pos, s->f20, s->f3c, &a, &b);
         s->f3c = 360.0f * (3.0517578e-5f * rand());
         s->f40 = s->cfg->f2c;
         t->state = 3;
@@ -2519,16 +2537,16 @@ void fn_800586F4(BitTask* t)
             if (3.0517578e-5f * rand() >= 0.5f) {
                 sign *= -1.0f;
             }
-            w->pos.x = sign * (s->cfg->f28 * (3.0517578e-5f * rand())) + w->pos.x;
-            w->pos.y = w->pos.y + s->f40;
+            w->hdr.pos.x = sign * (s->cfg->f28 * (3.0517578e-5f * rand())) + w->hdr.pos.x;
+            w->hdr.pos.y = w->hdr.pos.y + s->f40;
             if (3.0517578e-5f * rand() >= 0.5f) {
                 sign *= -1.0f;
             }
-            w->pos.z = sign * (s->cfg->f30 * (3.0517578e-5f * rand())) + w->pos.z;
+            w->hdr.pos.z = sign * (s->cfg->f30 * (3.0517578e-5f * rand())) + w->hdr.pos.z;
             s->f40 += s->cfg->f24;
             if (s->cfg->f170) {
-                save = w->pos.y;
-                w->pos.y = s->cfg->f170 * njSin(182.04445f * s->f3c) + w->pos.y;
+                save = w->hdr.pos.y;
+                w->hdr.pos.y = s->cfg->f170 * njSin(182.04445f * s->f3c) + w->hdr.pos.y;
                 s->f3c += s->cfg->f174;
                 if (s->f3c > 360.0f) {
                     s->f3c = 0.0f;
@@ -2545,12 +2563,12 @@ void fn_800586F4(BitTask* t)
                 d.x38 = 0;
                 d.sx = s->f14;
                 d.sy = s->f14;
-                d.model = w->model;
+                d.model = w->hdr.model;
                 d.frame = s->s50;
-                if (d.frame >= w->model->nbTexture) {
+                if (d.frame >= w->hdr.model->nbTexture) {
                     d.frame = 0;
                 }
-                fn_80071CF0(&w->pos, &pos);
+                fn_80071CF0(&w->hdr.pos, &pos);
                 fn_80061654(&pos, &s->v44, &s->cfg->v178, &d.v4, s->chr);
                 fn_80012130(&d.v10);
                 for (i = 0; i < 4; i++) {
@@ -2565,7 +2583,7 @@ void fn_800586F4(BitTask* t)
                 DrawStatePop(0);
             }
             if (s->cfg->f170) {
-                w->pos.y = save;
+                w->hdr.pos.y = save;
             }
         }
         s->frame++;
@@ -2573,6 +2591,148 @@ void fn_800586F4(BitTask* t)
     case 0xf9:
     case 0xfa:
         fn_8006D8DC(s->cfg->x8);
+        fn_801E17E0(s);
+        t->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    s->cnt = s->cnt + 1;
+    fn_80037FD8(s->cfg, &t->state);
+}
+
+/* The spray spawner (fn_80058E20): emits BitTask particles at random times. */
+typedef struct SpawnSt {
+    s16 cnt;
+    s16 left;            /* 0x02 */
+    s16* p4;             /* 0x04 */
+    void* chr;           /* 0x08 */
+    void* m;             /* 0x0c */
+    WobCmd* cfg;         /* 0x10 */
+} SpawnSt;
+typedef struct SpawnWork {
+    FxHdr hdr;
+    SpawnSt* st;         /* 0x4c */
+    s32 x50;
+    s32 x54;
+} SpawnWork;
+typedef struct SpawnTask {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 state;
+    u8 pad1a[0x24 - 0x1a];
+    SpawnWork* work;
+} SpawnTask;
+extern BitTask* fn_8003DB34(void (*fn)(BitTask*));
+
+void fn_80058E20(SpawnTask* t)
+{
+    BitTask* node;
+    SpawnWork* w = t->work;
+    SpawnSt* s = w->st;
+    BitWork* pw;
+    s16 i;
+    s16 j;
+    BitSt* p;
+    s16 off;
+    V3 a;
+    V3 b;
+    f32 zero;
+    f32 f29, f28, f27, f26, f30;
+    u8 kind;
+
+    switch (t->state) {
+    case 0: {
+        fn_8006D954(s->cfg->x8);
+        fn_80040150(s->cfg->x10, s->chr, s->cfg->s184, &s->m);
+        fn_80061F58(&s->p4, s->cfg->s146 * 2, 0);
+        for (i = 0, off = 0; i < s->cfg->s146; i++, off += 2) {
+            if (s->cfg->s16_ == 0) {
+                s->p4[i] = s->cfg->s14;
+            } else {
+                s->p4[i] = s->cfg->s14 + rand() % s->cfg->s16_;
+            }
+            if (s->p4[i] == 0) {
+                s->p4[i] = 1;
+            }
+        }
+        s->left = s->cfg->s146;
+        t->state = 1;
+        t->work->x50 = s->cfg->x8;
+        t->work->x54 = -1;
+        break;
+    }
+    case 1: {
+        for (i = 0, off = 0; i < s->cfg->s146; i++) {
+            if (s->cnt == s->p4[i]) {
+                s->p4[i] = -1;
+                s->left--;
+                zero = 0.0f;
+                a.x = zero;
+                a.y = zero;
+                a.z = zero;
+                if (s->m != 0) {
+                    fn_80061518(&a, &b, s->m);
+                } else {
+                    fn_80071CF0(&a, &b);
+                }
+                f29 = s->cfg->f150 * (3.0517578e-5f * rand());
+                f28 = s->cfg->f154 * (3.0517578e-5f * rand());
+                f27 = 3.0517578e-5f * rand();
+                f26 = 3.0517578e-5f * rand();
+                f30 = 3.0517578e-5f * rand();
+                if (f26 < 0.8f) {
+                    f26 = 0.8f;
+                }
+                if (s->cfg->s40 == 8) {
+                    kind = rand() % 4;
+                } else {
+                    kind = s->cfg->s40;
+                }
+                f30 = 360.0f * f30;
+                for (j = 0; j < s->cfg->s1e; j++) {
+                    node = fn_8003DB34(fn_800586F4);
+                    fn_80061F58(&node->work, 0x58, 0);
+                    pw = node->work;
+                    pw->hdr = w->hdr;
+                    fn_80061F58(&pw->st, 0x58, 0);
+                    p = pw->st;
+                    p->cfg = s->cfg;
+                    p->chr = s->chr;
+                    fn_80071CF0(&b, &p->v24);
+                    p->start = s->cfg->s20 * j;
+                    p->end = s->cfg->s18 + s->cfg->s20 * j - s->cnt;
+                    p->f8 = s->cfg->f148 + f29;
+                    p->fc = s->cfg->f14c + f28;
+                    p->f20 = s->cfg->f158 - s->cfg->f15c;
+                    if (p->f20 < zero) {
+                        p->f20 *= -1.0f;
+                    }
+                    p->f20 = p->f20 * f27;
+                    if (s->cfg->f158 < s->cfg->f15c) {
+                        p->f20 = p->f20 + s->cfg->f158;
+                    } else {
+                        p->f20 = p->f20 + s->cfg->f15c;
+                    }
+                    p->f3c = f30;
+                    p->s10 = kind;
+                    p->f14 = s->cfg->f34 * f26;
+                    p->f18 = s->cfg->f38 * f26;
+                    p->f1c = s->cfg->f3c * f26;
+                }
+            }
+        }
+        if (s->left <= 0) {
+            t->state = 0xfa;
+        }
+        break;
+    }
+    case 0xf9:
+    case 0xfa:
+        fn_8006D8DC(s->cfg->x8);
+        fn_800400D8(s->cfg->x10, s->chr, s->cfg->s184, &s->m);
+        if (s->p4 != 0) {
+            fn_801E17E0(s->p4);
+        }
         fn_801E17E0(s);
         t->flags |= 0x40;
         lbl_8030A10C.count--;
