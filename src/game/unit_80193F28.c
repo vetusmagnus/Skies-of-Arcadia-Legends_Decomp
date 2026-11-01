@@ -146,6 +146,11 @@ typedef struct CampWork {
 extern CampWork camp_work;
 extern void fn_8016E220(void);
 extern Node* fn_802268E8(void*, void*);
+extern void fn_80186E4C(void);
+extern void fn_80187D78(void *p, f32 f);
+extern void fn_80187E68(void *p);
+extern void fn_80186E20(void *p, s8 c, s8 b, s8 a, f32 v);
+void fn_80195B38(s8 idx, s32 id, s8 flag);
 extern void* fn_801E1C7C(s32);
 extern void fn_8016E818(void*, s32);
 extern void fn_8018A16C(void);
@@ -500,6 +505,56 @@ void fn_80195B34(void) {
 
 void fn_80195F90(void) {
     lbl_803473EC = 1;
+}
+
+void fn_80197654(s8 a) {
+    s32 i;
+    for (i = 0; i < 3; i++) {
+        Node* n;
+        Body* b;
+        void* t;
+        s32 v;
+        f32 y;
+        SaveChar *e;
+        n = fn_802268E8(lbl_8034710C, fn_80186E4C);
+        n->body = fn_801E1C7C(0xc0);
+        b = n->body;
+        b->x0 = 0;
+        t = fn_801E1C7C(0xc);
+        b->xbc = t;
+        fn_80187D78(b->x74, 1.0f);
+        e = &lbl_8030B7F4.chr[a];
+        switch (i) {
+        case 0: v = e->slot0; break;
+        case 1: v = e->slot1; break;
+        case 2: v = e->slot2; break;
+        }
+        fn_80195B38(3, v, i + 1);
+        fn_80186E20(t, i, 3, i + 1, 0.8f);
+        b->x14 = 0.0f;
+        y = 128.0f + i * 0x58;
+        b->x18 = y;
+        b->xc = 0.0f;
+        b->x10 = y;
+        b->x2c = 0.0f;
+        b->x30 = 0.0f;
+        b->x34 = 0.0f;
+        b->x38 = 0.0f;
+        b->x1c = 0.0f;
+        b->x20 = 0.0f;
+        b->x24 = 0.0f;
+        b->x28 = 0.0f;
+        b->x4a = 0;
+        b->x4e = 0;
+        b->x4c = 0;
+        b->x48 = 1;
+        b->x3c = 1.0f;
+        b->x40 = 1.0f;
+        b->x44 = 0;
+        b->x49 = 0;
+        camp_work.objs[0x5a + i] = n;
+        n->body->x4 = 0x5a + i;
+    }
 }
 
 void fn_80199B60(void) {
@@ -1045,7 +1100,7 @@ void fn_801998B8(void) {
     n->body->x4 = 4;
 }
 
-void fn_80195B38(s8 idx, s32 id, u8 flag)
+void fn_80195B38(s8 idx, s32 id, s8 flag)
 {
     extern Ent2c lbl_803072E8[];
     extern u8 fn_801F4C24(s16 id);
@@ -1879,10 +1934,6 @@ void fn_80197270(s8 a) {
     }
 }
 
-extern void fn_80186E4C(void);
-extern void fn_80187D78(void *p, f32 f);
-extern void fn_80187E68(void *p);
-extern void fn_80186E20(void *p, u8 c, s8 b, u8 a, f32 v);
 
 void fn_801974B4(s32 arg)
 {

@@ -877,9 +877,10 @@ extern void njTranslateEx(NJS_POINT3* p);
 extern void njRotateEx(Angle* a, s32 flag);
 extern void fn_801E7194(s32 id, void* model, void* motion, void* shape, f32 frame);
 extern void fn_801E4CB0(s32 id, void* model);
+typedef struct { u32 f0; void* f4; } NodeModel;
 typedef struct Node_8009E9D8 {
     u32 flags;          /* 0x00 */
-    u8 pad4[4];
+    NodeModel* model;   /* 0x04 */
     NJS_POINT3 pos;     /* 0x08 */
     Angle ang[3];       /* 0x14 */
     NJS_POINT3 scl;     /* 0x20 */
@@ -1146,6 +1147,9 @@ extern void njRotateZ(NJS_MATRIX m, Angle a);
  * extern/sdk OSFastCast.h lacks. The SDK's definition is reproduced here only until it is
  * added to <dolphin/os/OSFastCast.h>; the game code itself is the one-line function. */
 #include <dolphin/os/OSFastCast.h>
+/* lbl_80311AC0: the current map. */
+typedef struct MapInfo { s32 x0; s32 map; char room; } MapInfo;
+extern MapInfo lbl_80311AC0;
 typedef unsigned char u8;
 typedef struct Ent_8009884C {
     s16 h0;
@@ -1514,6 +1518,144 @@ void fn_8009E804(ItemList_8009E804 *list, s32 idx) {
     }
     list->items[idx] = NULL;
     list->count--;
+}
+
+typedef struct { s16 type; s16 pad; u32 w4, w8, wc; } ModelRec;
+
+extern NJS_POINT3 lbl_802B0ED0;
+extern ModelRec* fn_801CB5F4(void* p, s32 lo, s32 hi);
+
+#define BSW(x) ((((x) >> 24) & 0xff) | (((x) >> 8) & 0xff00) | (((x) << 8) & 0xff0000) | ((x) << 24))
+
+Node_8009E9D8* fn_8009ED04(Node_8009E9D8* node, s32 anim, u32 target, Out* out) {
+    NJS_POINT3 pos;
+    Angle rot[3];
+    NJS_POINT3 scl;
+    ModelRec* r;
+    Node_8009E9D8* c;
+    u32 v;
+
+    if (node != NULL) {
+        njSetMatrix(0, lbl_803034D8);
+        njPushMatrixEx();
+        fn_80286EE8();
+        fn_8028B498();
+        njSetMatrix(0, lbl_80303498);
+        njPushMatrixEx();
+        fn_80286EE8();
+        fn_8028B498();
+        if (lbl_80346CFC == 0) {
+            if (lbl_80346CF4 & 1) {
+                if (fn_80007080(&pos, anim) == 0) {
+                    pos.x = node->pos.x;
+                    pos.y = node->pos.y;
+                    pos.z = node->pos.z;
+                }
+                njTranslate(lbl_803034D8, pos.x, pos.y, pos.z);
+            }
+            if (lbl_80346CF4 & 2) {
+                if (fn_80006F1C(rot, anim) == 0) {
+                    rot[0] = node->ang[0];
+                    rot[1] = node->ang[1];
+                    rot[2] = node->ang[2];
+                }
+                njRotateXYZ(lbl_803034D8, rot[0], rot[1], rot[2]);
+                njRotateXYZ(lbl_80303498, rot[0], rot[1], rot[2]);
+            }
+            if (lbl_80346CF4 & 4) {
+                if (fn_80006DA0(&scl, anim) == 0) {
+                    scl.x = node->scl.x;
+                    scl.y = node->scl.y;
+                    scl.z = node->scl.z;
+                }
+                njScale(lbl_803034D8, scl.x, scl.y, scl.z);
+            }
+            fn_80006CE0();
+        } else {
+            if (!(node->flags & 1)) {
+                njTranslate(lbl_803034D8, node->pos.x, node->pos.y, node->pos.z);
+            }
+            if (!(node->flags & 2)) {
+                njRotateXYZ(lbl_803034D8, node->ang[0], node->ang[1], node->ang[2]);
+            }
+            if (!(node->flags & 4)) {
+                njScale(lbl_803034D8, node->scl.x, node->scl.y, node->scl.z);
+            }
+            if (!(node->flags & 2)) {
+                njRotateXYZ(lbl_80303498, node->ang[0], node->ang[1], node->ang[2]);
+            }
+        }
+        if (node->model != NULL) {
+            r = fn_801CB5F4(node->model->f4, 0x14, 0x17);
+            if (r != NULL) {
+                v = 0;
+                switch (r->type & 0xff) {
+                case 0x14: v = BSW(r->w4) & 0xffffff; break;
+                case 0x15: case 0x16: v = BSW(r->w8) & 0xffffff; break;
+                case 0x17: v = BSW(r->wc) & 0xffffff; break;
+                }
+                if (v == target) {
+                    lbl_80346D00 = node;
+                    c = node->child;
+                    if (c != NULL) {
+                        if (lbl_80346CFC == 0) {
+                            if (lbl_80346CF4 & 1) {
+                                if (fn_80007080(&pos, anim) == 0) {
+                                    pos.x = c->pos.x;
+                                    pos.y = c->pos.y;
+                                    pos.z = c->pos.z;
+                                }
+                                njTranslate(lbl_803034D8, pos.x, pos.y, pos.z);
+                            }
+                            if (lbl_80346CF4 & 2) {
+                                if (fn_80006F1C(rot, anim) == 0) {
+                                    rot[0] = c->ang[0];
+                                    rot[1] = c->ang[1];
+                                    rot[2] = c->ang[2];
+                                }
+                                njRotateXYZ(lbl_803034D8, rot[0], rot[1], rot[2]);
+                                njRotateXYZ(lbl_80303498, rot[0], rot[1], rot[2]);
+                            }
+                            if (lbl_80346CF4 & 4) {
+                                if (fn_80006DA0(&scl, anim) == 0) {
+                                    scl.x = c->scl.x;
+                                    scl.y = c->scl.y;
+                                    scl.z = c->scl.z;
+                                }
+                                njScale(lbl_803034D8, scl.x, scl.y, scl.z);
+                            }
+                        } else {
+                            if (!(c->flags & 1)) {
+                                njTranslate(lbl_803034D8, c->pos.x, c->pos.y, c->pos.z);
+                            }
+                            if (!(node->child->flags & 2)) {
+                                njRotateXYZ(lbl_803034D8, c->ang[0], c->ang[1], c->ang[2]);
+                            }
+                            if (!(node->child->flags & 4)) {
+                                njScale(lbl_803034D8, c->scl.x, c->scl.y, c->scl.z);
+                            }
+                            if (!(node->child->flags & 2)) {
+                                njRotateXYZ(lbl_80303498, c->ang[0], c->ang[1], c->ang[2]);
+                            }
+                        }
+                    }
+                    njCalcPoint(lbl_803034D8, &lbl_802B0ED0, out->point);
+                    fn_800A1690(lbl_80303498, out->rot);
+                }
+            }
+        }
+        if (lbl_80346D00 == NULL && node->child != NULL) {
+            lbl_80346D00 = fn_8009ED04(node->child, anim, target, out);
+        }
+        njPopMatrixEx();
+        fn_80291C44(lbl_80303498);
+        njPopMatrixEx();
+        fn_80291C44(lbl_803034D8);
+        if (lbl_80346D00 == NULL && node->sibling != NULL) {
+            lbl_80346D00 = fn_8009ED04(node->sibling, anim, target, out);
+        }
+    }
+    return lbl_80346D00;
 }
 
 u32 *fn_800A10A8(u32 *base, u32 i, s32 n)
@@ -2711,7 +2853,6 @@ Obj_800A3ED4* fn_800A3ED4(void* list, void* cb, s16 v, Src_800A3ED4* src) {
 
 void fn_800B2588(Obj_800B2588 *o)
 {
-    extern s32 lbl_80311AC0[5];
     extern void fn_8015ED90(void *o);
     extern void fn_8015EB8C(void *c, s32 id, void *cb);
     extern void fn_8015E600(void *c);
@@ -2747,7 +2888,7 @@ void fn_800B2588(Obj_800B2588 *o)
         o->state = 1;
     case 1: {
         s32 ready = 0;
-        if (lbl_80311AC0[1] >= 500 && lbl_80311AC0[1] < 600) {
+        if (lbl_80311AC0.map >= 500 && lbl_80311AC0.map < 600) {
             ready = 1;
         }
         ready = (ready != 0);
@@ -4209,8 +4350,6 @@ void fn_800A3680(EvObj *obj)
     }
 }
 
-typedef struct MapInfo { s32 x0; s32 map; char room; } MapInfo;
-extern MapInfo lbl_80311AC0;
 extern Rec* fn_800CCA6C(s32, u32);
 extern void fn_80210B44(void*);
 extern void fn_800A3744(EvObj*);

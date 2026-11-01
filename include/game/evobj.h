@@ -243,7 +243,10 @@ typedef struct {
     struct EvObj* target; /* 0x08 the object this one rides on */
     u8 padC[0x18 - 0xC];
     s16 h18;      /* 0x18 */
-    u8 pad1a[0x1A0 - 0x1A];
+    s16 idx;      /* 0x1A */
+    u8 pad1c[0x20 - 0x1C];
+    f32 x20;      /* 0x20 */
+    u8 pad24[0x1A0 - 0x24];
     s32 x1a0;     /* 0x1A0 */
     u8 pad1a4[0x260 - 0x1A4];
     void* x260;   /* 0x260 callback */
@@ -309,7 +312,8 @@ typedef struct EvObj {
     NJS_MOTION* motion;      /* 0xE8 */
     void* shape;             /* 0xEC */
     NJS_MOTION* motion2;     /* 0xF0 */
-    u8 padF4[0x100 - 0xF4];
+    void* shape2;            /* 0xF4 */
+    u8 padF8[0x100 - 0xF8];
     NJS_TEXLIST* texlist;    /* 0x100 */
     NJS_POINT3 home;         /* 0x104 */
     Angle tgt[3];            /* 0x110 */

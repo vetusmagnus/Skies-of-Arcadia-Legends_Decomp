@@ -174,8 +174,17 @@ extern void* memset(void*, int, u32);
 extern f32 fn_800177C0(s32, void*);
 extern s32 fn_80015B94(s32, void*);
 extern s32 fn_80020FF0(s32 idx);
-extern s32 lbl_80302A38[6];
-extern void fn_80028E28(s32 *p);
+/* lbl_80302A38: the scrolling state fn_80028E28 runs. */
+typedef struct Scroll {
+    s32 state;
+    f32 f4;
+    f32 f8;
+    f32 fc;
+    f32 f10;
+    u8 pad14[4];
+} Scroll;
+extern Scroll lbl_80302A38;
+f32 fn_80028E28(Scroll *p);
 typedef struct Ent80025518 {
     u8 pad0[0x4];
     s32 *out_ptr;
@@ -392,6 +401,84 @@ void fn_800255CC(void *p) {
   *(void **)((Holder *)lbl_80346BAC)->ptr = p;
 }
 
+typedef struct Lim {
+    u8 pad[6];
+    s16 x6;
+    s16 x8;
+    s16 xa;
+} Lim;
+
+extern Lim* lbl_80347390;
+extern f32 lbl_80346B7C;
+extern f32 lbl_80346B80;
+extern f32 lbl_80346B84;
+extern f32 lbl_80346B88;
+extern s32 lbl_80346B8C;
+extern s32 lbl_80346B90;
+extern s32 lbl_80346B94;
+
+f32 fn_80028E28(Scroll* p) {
+    p->f4 = lbl_80347390->x6;
+    p->f8 = lbl_80347390->x8;
+    p->fc = lbl_80347390->xa;
+    switch (p->state) {
+    case 0:
+        lbl_80346B94 = 0;
+        lbl_80346B90 = 0;
+        lbl_80346B8C = 0;
+        lbl_80346B7C = p->f8;
+        lbl_80346B84 = p->f8;
+        p->state = 1;
+        break;
+    case 1: {
+        s32 whole = lbl_80346B84;
+        if (p->f8 != whole) {
+            f32 d = lbl_80346B84 - p->f8;
+            lbl_80346B94 = 1;
+            lbl_80346B88 = d;
+            lbl_80346B80 = d / 39.0f;
+        }
+        if (lbl_80346B94 == 1) {
+            lbl_80346B90++;
+        }
+        if (lbl_80346B90 > 1) {
+            lbl_80346B8C = 1;
+        }
+        if (lbl_80346B8C == 1) {
+            lbl_80346B7C = lbl_80346B7C - lbl_80346B80;
+            if (lbl_80346B80 > 0.0f) {
+                if (lbl_80346B7C <= p->f8) {
+                    lbl_80346B80 = 0.0f;
+                    lbl_80346B84 = p->f8;
+                    lbl_80346B7C = p->f8;
+                    lbl_80346B8C = 0;
+                    lbl_80346B90 = 0;
+                }
+            } else if (lbl_80346B7C >= p->f8) {
+                lbl_80346B80 = 0.0f;
+                lbl_80346B84 = p->f8;
+                lbl_80346B7C = p->f8;
+                lbl_80346B8C = 0;
+                lbl_80346B90 = 0;
+            }
+        } else {
+            lbl_80346B94 = 0;
+        }
+        break;
+    }
+    case 2:
+        lbl_80346B80 = 0.0f;
+        lbl_80346B84 = p->f8;
+        lbl_80346B7C = p->f8;
+        lbl_80346B8C = 0;
+        lbl_80346B90 = 0;
+        p->state = 1;
+        break;
+    }
+    p->f10 = lbl_80346B7C;
+    return lbl_80346B7C;
+}
+
 void fn_80029070(void) {
   lbl_8034731C = fn_802268E8(lbl_803475A8, fn_80027C04);
   fn_8000A3A4(lbl_80346AA0);
@@ -570,13 +657,13 @@ s32 fn_80020F68(void)
 
 void fn_80028DE4(void)
 {
-    fn_80028E28(lbl_80302A38);
+    fn_80028E28(&lbl_80302A38);
 }
 
 void fn_80028E0C(void)
 {
-    if (lbl_80302A38[0] == 1) {
-        lbl_80302A38[0] = 2;
+    if (lbl_80302A38.state == 1) {
+        lbl_80302A38.state = 2;
     }
 }
 

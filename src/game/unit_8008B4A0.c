@@ -636,6 +636,25 @@ typedef struct Pad_80090DBC {
 } Pad_80090DBC;
 extern Pad_80090DBC *lbl_80311A60[];
 extern s32 lbl_80346C40;
+typedef struct Seg {
+    f32 start[3];      /* 0x00 */
+    u8 pad0c[0x20 - 0x0C];
+    s32 x20;           /* 0x20 */
+    f32 end[3];        /* 0x24 */
+} Seg;
+/* fn_802254A0's ground hit record (the line probe's state). */
+typedef struct ColInfo {
+    u8 pad00[0x24];
+    u16 flags;   /* 0x24 */
+    u8 pad26[0x2];
+    s32 x28;     /* 0x28 */
+    s16 x2c;     /* 0x2C */
+    s16 x2e;     /* 0x2E */
+    s16 x30;     /* 0x30 */
+} ColInfo;
+extern s32 fn_802254A0(f32* v, ColInfo* p);
+extern s32 fn_801D3EB4(f32* cur, f32* end, Seg* seg, ColInfo* p);
+extern void fn_801D3E58(void* a, s32 j, ColInfo* p);
 
 u32 fn_8008B55C(void* a0, Ent_UNIT0000* e) {
     return (e->x1c >> 9) & 1;
@@ -2981,4 +3000,78 @@ s32 fn_80090DBC(s32 a)
         }
     }
     return r;
+}
+
+static inline f32 Dot2(f32 ax, f32 az, f32 bx, f32 bz) { return ax * bx + az * bz; }
+
+s32 fn_800916A8(f32* out, void* a, Seg* seg) {
+    f32 dx;
+    f32 dy;
+    f32 dz;
+    f32 v[3];
+    f32 cur[3];
+    ColInfo pr;
+    s32 n;
+    s32 j;
+    s32 ok;
+    f32 len;
+
+    dx = (seg->end[0] - seg->start[0]) / 6.0f;
+    dy = (seg->end[1] - seg->start[1]) / 6.0f;
+    dz = (seg->end[2] - seg->start[2]) / 6.0f;
+    n = 6;
+    len = dx * dx + dz * dz;
+    if (1.0f < len) {
+        len = fn_80291A5C(len);
+        dx /= len;
+        dy /= len;
+        dz /= len;
+    }
+    pr.x28 = seg->x20;
+    pr.x2c = pr.x2e = -1;
+    pr.x30 = 1;
+    cur[0] = v[0] = seg->start[0];
+    cur[1] = v[1] = seg->start[1];
+    cur[2] = v[2] = seg->start[2];
+    v[1] += 1.0f;
+    ok = fn_802254A0(v, &pr);
+    if (ok != 0 && (pr.flags & 0x1800) == 0x1800) {
+        ok = 0;
+    }
+    if (ok != 0) {
+    do {
+        j = fn_801D3EB4(cur, seg->end, seg, &pr);
+        if (j < 0) {
+            v[0] = (cur[0] += dx);
+            v[1] = (cur[1] += dy);
+            v[2] = (cur[2] += dz);
+        } else {
+            fn_801D3E58(a, j, &pr);
+            v[0] = cur[0] + dx;
+            v[1] = cur[1] + dy;
+            v[2] = cur[2] + dz;
+        }
+        if (0.0f <= Dot2(v[0] - seg->end[0], v[2] - seg->end[2], dx, dz)) {
+            break;
+        }
+        pr.x28 = seg->x20;
+        pr.x2c = pr.x2e = -1;
+        v[1] += 1.0f;
+        ok = fn_802254A0(v, &pr);
+        if (ok != 0 && (pr.flags & 0x1800) == 0x1800) {
+            ok = 0;
+        }
+        if (ok == 0) {
+            break;
+        }
+    } while (--n > 0);
+    if (n != 0 && j >= 0) {
+        out[0] = cur[0];
+        out[1] = cur[1];
+        out[2] = cur[2];
+        return 1;
+    }
+    return 0;
+    }
+    return 0;
 }
