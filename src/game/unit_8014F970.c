@@ -108,12 +108,12 @@ extern E12 lbl_80308F98[];
 extern Obj_8015854C* lbl_80306DB8[];
 extern s32 lbl_8034729C;
 extern u32 lbl_802E7090[];
-extern s32 lbl_80346FA0;
-extern s32 lbl_80346FA4;
-extern s32 lbl_80346FA8;
-extern s32 lbl_80346F9C;
-extern s32 lbl_80346FB0;
-extern s32 lbl_80346FB4;
+extern void *lbl_80346FA0;
+extern void *lbl_80346FA4;
+extern void *lbl_80346FA8;
+extern void *lbl_80346F9C;
+extern void *lbl_80346FB0;
+extern void *lbl_80346FB4;
 extern u32 lbl_80346FBC;
 extern u8* lbl_80346FC8[2];
 extern St_UNIT0000* lbl_80347000;
@@ -123,7 +123,7 @@ extern Gx lbl_80311AC0;
 extern Slot_UNIT0000_UNIT0000 lbl_80308EF8[];
 extern f32 lbl_803472DC;
 extern f32 lbl_803472E0;
-void fn_801E17E0(s32 x);
+void fn_801E17E0(void *x);
 void fn_80150CB0(void *a, void *b);
 void fn_8015C4D8(void);
 void fn_80144680(void);
@@ -1146,6 +1146,53 @@ struct Pose {
 
 /* Defined ahead of the file's other .rodata users: its three initializers are read through the
  * section base, and in the original they start that base (lbl_802B3F00 + 0). */
+extern void *lbl_80346FD8[2];
+void fn_801539C0(void);
+void fn_80155D28(void);
+void fn_80155F5C(void);
+void fn_80153498(void);
+void fn_801558EC(void);
+void fn_8014FD9C(void);
+void fn_80154B04(void);
+void fn_801539D0(void);
+void fn_80149070(void);
+void fn_8010A094(void);
+
+/* Frees the 32 resource slots of lbl_80306B14. As an inline its counter's zero is copied for the
+ * NULL store (li r30 / mr r31), as the original has. */
+static inline void ClearAll(void) {
+    s32 i;
+    for (i = 0; i < 0x20; i++) {
+        if (lbl_80306B14[i].p != 0) {
+            fn_801E17E0(lbl_80306B14[i].p);
+        }
+        lbl_80306B14[i].p = 0;
+    }
+}
+
+/* Shutdown: frees the slot resources and buffers and calls the subsystems' exit functions. */
+void fn_80156024(void) {
+    s32 i;
+    ClearAll();
+    fn_801539C0();
+    fn_80155D28();
+    fn_80155F5C();
+    lbl_80347024 = 0xC350;
+    fn_801E17E0(lbl_80346FD8[0]);
+    fn_801E17E0(lbl_80346FD8[1]);
+    for (i = 0; i < 2; i++) {
+        fn_801E17E0(lbl_80346FC8[i]);
+    }
+    fn_80153498();
+    fn_801558EC();
+    fn_8014FD9C();
+    fn_80154B04();
+    fn_801539D0();
+    fn_801E17E0(lbl_80346FD0);
+    fn_80149070();
+    fn_8010A094();
+}
+
 void fn_80156CC4(Obj_80157EA8 *o, struct Pose *p)
 {
     f32 off[3] = { 0.0f, 0.0f, 0.0f };
@@ -1402,7 +1449,7 @@ void fn_801539CC(void) {
 
 void fn_801539D0(void) {
     if (lbl_80346FB8 != 0) {
-        fn_801E17E0((s32)lbl_80346FB8);
+        fn_801E17E0(lbl_80346FB8);
 
         lbl_80346FB8 = 0;
     }
@@ -1426,7 +1473,7 @@ void fn_80153DB8(s32 i, u8 v) {
 
 void fn_80154B04(void) {
     if (lbl_80346FE0 != 0) {
-        fn_801E17E0((s32)lbl_80346FE0);
+        fn_801E17E0(lbl_80346FE0);
 
         lbl_80346FE0 = 0;
     }
@@ -1442,7 +1489,7 @@ void fn_801558B0(Src_UNIT0000* s) {
 }
 
 void fn_801558EC(void) {
-    fn_801E17E0((s32)lbl_80346FE8);
+    fn_801E17E0(lbl_80346FE8);
 }
 
 void fn_80155944(void *p) {
@@ -1468,7 +1515,7 @@ void fn_80155D74(void) {
 }
 
 void fn_80155F5C(void) {
-    fn_801E17E0((s32)lbl_80347000);
+    fn_801E17E0(lbl_80347000);
 }
 
 void fn_80155F80(void) {
@@ -1610,7 +1657,7 @@ void fn_8015C5F4(void) {
 
 extern void fn_80144E60(Msg*, s16);
 void fn_8015C618(void) {
-    fn_801E17E0((s32)lbl_80347048);
+    fn_801E17E0(lbl_80347048);
     lbl_80347048 = NULL;
 }
 
@@ -1705,11 +1752,11 @@ s32 fn_8015DC54(u8 *p) {
 
 void fn_8014FD9C(void)
 {
-    s32 r31;
+    void *r31;
     fn_801E17E0(lbl_80346FA0);
     fn_801E17E0(lbl_80346FA4);
     fn_801E17E0(lbl_80346FA8);
-    r31 = (s32)lbl_80346FAC;
+    r31 = lbl_80346FAC;
     fn_801E17E0(lbl_80346F9C);
     fn_801E17E0(r31);
     fn_801E17E0(lbl_80346FB0);
@@ -2616,7 +2663,7 @@ void fn_80158A80(void)
     if (lbl_80347028 != 0) {
         fn_802275A4(lbl_80347030, 1);
         lbl_80347030 = 0;
-        fn_801E17E0((s32)lbl_80347028);
+        fn_801E17E0(lbl_80347028);
         lbl_80347028 = 0;
     }
 }
@@ -3972,7 +4019,7 @@ void fn_801512DC(Obj_801512DC* o, In_801512DC* in) {
 }
 
 void fn_80158374(void *p) {
-    fn_801E17E0((s32)p);
+    fn_801E17E0(p);
 }
 
 void fn_801575C4(void *a) {
