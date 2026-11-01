@@ -237,8 +237,9 @@ typedef struct Obj10A { void (*fn)(struct Obj10A *); u8 pad4[0x15]; u8 x19; u8 p
 extern Obj10A *fn_8010A164(u32 id);
 extern void *lbl_8034759C;
 extern s32 lbl_803473C0;
-extern u8 fn_8020E984(void);
-void fn_801BEA70(void *a, u32 idx, s32 mode);
+extern s32 fn_8020E984(void);
+/* Defined in unit_80199B9C.c with an s32 mode it reads as a byte; this file passes a u8. */
+void fn_801BEA70(void *a, u32 idx, u8 mode);
 extern s32 lbl_803477A8;
 extern s32 lbl_803477AC;
 void fn_800EB58C(s32 n);
@@ -6492,6 +6493,17 @@ static inline s32 FlagCount(u32 base, s32 cnt)
         if (FlagTest(base + i) == 1) n++;
     }
     return n;
+}
+
+s32 fn_8020E984(void)
+{
+    s32 i;
+    for (i = 19; i >= 0; i--) {
+        if (FlagTest(lbl_802D5940[i].flag) == 1 && i >= 0) {
+            return lbl_802D5940[i].val;
+        }
+    }
+    return 0;
 }
 
 void fn_8020ED58(void)
