@@ -3192,6 +3192,91 @@ extern s32 fn_8025CB24(char* buf, const char* fmt, ...);
 extern s32 fn_801CC62C(char* path);
 extern void* fn_801CC3C4(char* path);
 
+typedef struct Ent_800C1A50 {
+    u8 pad0[0x1c];
+    u32 off;
+} Ent_800C1A50;
+
+typedef struct Rec_800C1A50 {
+    char c0;
+    char c1;
+    u16 n;
+} Rec_800C1A50;
+
+extern char lbl_802B130C[0x94];
+
+extern s32 lbl_80346CD8;
+
+s32 fn_800C1A50(void)
+{
+    Rec_800C1A50 *p;
+    Rec_800C1A50 *q;
+    s32 ret;
+
+    if (lbl_80311AC0.map != 99) {
+        p = lbl_80346D24;
+        q = lbl_80346D20;
+    } else {
+        s32 k;
+        s32 v;
+        s32 idx = lbl_80346CD8;
+        Ent_800C1A50 *e1;
+        Ent_800C1A50 *e2;
+        if (idx < 1 || idx > 15) {
+            lbl_803474BC = 0;
+            lbl_803474B8 = 0;
+            return 0;
+        }
+        v = lbl_80310A1C[6];
+        if (v == 0) {
+            k = 0;
+        } else if (v == 1) {
+            k = 1;
+        } else if (v == 2) {
+            k = 2;
+        } else if (v == 3) {
+            k = 3;
+        } else if (v == 4) {
+            k = 4;
+        } else if (v == 5 || v == 7) {
+            k = 5;
+        } else if (v == 6) {
+            k = 6;
+        } else if (v == 12) {
+            k = 8;
+        } else if ((v >= 8 && v <= 11) || (v >= 14 && v <= 16)) {
+            k = 7;
+        } else {
+            fn_801DBE1C(lbl_802B130C);
+        }
+        k = k * 15 + lbl_80346CD8 - 1;
+        e1 = lbl_80346D24;
+        e2 = lbl_80346D20;
+        {
+            /* the entries hold byte offsets from the start of their table */
+            u8 *b1 = lbl_80346D24;
+            u8 *b2 = lbl_80346D20;
+            void *v1 = b1 + e1[k].off;
+            void *v2 = b2 + e2[lbl_80346CD8 - 1].off;
+            p = v1;
+            q = v2;
+        }
+    }
+    if (p != lbl_803474BC || q != lbl_803474B8) {
+        ret = 1;
+    } else {
+        ret = 0;
+    }
+    if ((p->c0 == 0x44 && p->c1 == 0x4d) || p->n == 0) {
+        lbl_803474BC = 0;
+        lbl_803474B8 = 0;
+        return 0;
+    }
+    lbl_803474BC = p;
+    lbl_803474B8 = q;
+    return ret;
+}
+
 void fn_800C24CC(void) {
     char ect[0x40];
     char enp[0x40];
