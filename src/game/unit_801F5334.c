@@ -1785,6 +1785,32 @@ void fn_80212084(void) {
     lbl_8030CEA0.pat.c = 0;
 }
 
+/* The offset fn_80213718 rotates (0x10 bytes of .data; z is set per call). */
+extern NJS_POINT3 lbl_802F85B8;
+
+void fn_80213718(f32 *src, Angle *rot, f32 *dst, f32 z)
+{
+    NJS_MATRIX m;
+    NJS_POINT3 p;
+    Angle rx;
+    Angle ry;
+    Angle rz;
+    if (rot != 0) {
+        lbl_802F85B8.z = z;
+        rz = rot[2];
+        ry = rot[1];
+        rx = rot[0];
+        if (&lbl_802F85B8 != 0 && &p != 0) {
+            njUnitMatrix(m);
+            njRotateXYZ(m, rx, ry, rz);
+            njCalcPoint(m, &lbl_802F85B8, &p);
+        }
+        dst[0] = src[0] - p.x;
+        dst[1] = src[1] - p.y;
+        dst[2] = src[2] - p.z;
+    }
+}
+
 s32 fn_802138A0(u32 a, Scpt *st) {
     if (a & 1) {
         u8 *c = st->cur.b;
