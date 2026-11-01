@@ -80,7 +80,8 @@ typedef struct {
 extern Sys_80309E5C lbl_80309E5C;
 extern Task* lbl_80347394;
 typedef struct ChrRec {
-    u8 pad_0[8];
+    s16 x0;             /* 0x00 */
+    u8 pad_2[6];
     s16 x8;             /* 0x08 */
     u8 pada[0x14 - 0xa];
     s32 x14;
@@ -3304,6 +3305,83 @@ NJS_TEXLIST* fn_80015B94(s8 id, s16* out)
         return TaskTex(t);
     }
     return 0;
+}
+
+extern void fn_80032BBC(s8, s32);
+extern void fn_80032B6C(s8, s32);
+extern void fn_80029168(s32, s32);
+extern void fn_80032AF8(s8, u16);
+extern s32 SePlay(s32 bank, s8 arg1, s8 id);
+/* fn_80016E1C's work: a countdown and the flag word it clears at the end. */
+typedef struct W16E1C {
+    s16 timer;
+    u8 pad2[2];
+    struct { u8 pad[4]; u32 bits; }* p;
+    u8 mode;
+} W16E1C;
+static inline s32 Flagged(s8 id) {
+    if (id < 12) return lbl_80309DE4[id]->bits & 0x40000;
+    return 0;
+}
+void fn_80016E1C(Task* t) {
+    s8 lo;
+    s8 i;
+    Task* c;
+    ChrInfo* u;
+    W16E1C* w;
+    s8 hi;
+    s16 v;
+    s8 n;
+    s16 k;
+    w = t->work;
+    if (w->mode != 0) {
+        lo = 4;
+        hi = 12;
+    } else {
+        lo = 0;
+        hi = 4;
+    }
+    switch (t->state) {
+    case 0:
+        t->state = 1;
+        break;
+    case 1:
+        for (i = lo; i < hi; i++) {
+            c = fn_800215EC(i);
+            if (c != 0) {
+                u = ChrW(c)->st;
+                if (Flagged(u->id)) {
+                    fn_80032BBC(u->id, 1);
+                    fn_80032B6C(u->id, 8);
+                    n = u->id;
+                    v = 0;
+                    if (fn_80078610(n)) v = lbl_80309DE4[n]->x0;
+                    k = v;
+                    if (k < 0) k = 0;
+                    fn_80029168(u->id, k);
+                    fn_80032AF8(u->id, 0x100);
+                    fn_800085EC(c, 0x1f, -1, lbl_8030A10C.x10, lbl_8030A10C.x184);
+                }
+            }
+        }
+        SePlay(3, 1, 20);
+        w->timer = 90;
+        t->state = 2;
+        break;
+    case 2:
+        if (w->timer != 0) {
+            w->timer--;
+        } else {
+            t->state = 3;
+        }
+        break;
+    case 3:
+        w->p->bits &= 0x7FFFFFFF;
+        fn_80032B4C();
+        t->flags |= 0x40;
+        lbl_8030A10C.x1c4--;
+        break;
+    }
 }
 
 void fn_80017320(void) {
