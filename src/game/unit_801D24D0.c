@@ -949,6 +949,28 @@ void fn_801D5340(s32 a, s32 b, s32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
 static inline void OSu8tof32(register const unsigned char* in, register volatile float* out) { *out = __OSu8tof32(in); }
 
 /* Scales an ARGB colour: alpha by b, the colour bytes by a (fast casts through GQR2). */
+extern f32 lbl_8034BDE0;
+
+void fn_801D6528(u32 c, NJS_ARGB* out, f32 f1, f32 f2) {
+    u8 b[4];
+    f32 d;
+    f32 x3;
+    b[0] = c >> 24;
+    b[1] = (c >> 16) & 0xFF;
+    b[2] = (c >> 8) & 0xFF;
+    b[3] = c & 0xFF;
+    out->a = __OSu8tof32(&b[0]);
+    out->r = __OSu8tof32(&b[1]);
+    out->g = __OSu8tof32(&b[2]);
+    x3 = __OSu8tof32(&b[3]);
+    d = lbl_8034BDE0;
+    out->b = x3;
+    out->a = f2 * (out->a / d);
+    out->r = f1 * (out->r / d);
+    out->g = f1 * (out->g / d);
+    out->b = f1 * (out->b / d);
+}
+
 void fn_801D65B4(u32 colour, u8* out, f32 a, f32 b)
 {
     u8 c[4];
