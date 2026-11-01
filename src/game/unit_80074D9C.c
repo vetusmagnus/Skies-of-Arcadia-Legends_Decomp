@@ -19,7 +19,7 @@ typedef struct ChrState {
     s8 x8;
     u8 pad_9[0x3];
     u8 xc;
-    u8 bd;
+    s8 bd;
     u8 pad_e[0x2];
     s32 x10;
     u8 x14;
@@ -1334,6 +1334,104 @@ s32 fn_800855AC(s32 i);
 #define SETFN(f)                       \
     lbl_80309700[id]->update = f;        \
     lbl_80309700[id]->state = 0
+
+void fn_80081168(s16 idx, s32 val);
+int fn_8007FAB0(int a, int b);
+
+void fn_80085064(Slot* t) {
+    s32 i;
+    s32 c;
+    Wk* wk;
+    wk = t->work;
+    i = wk->idx;
+    c = lbl_80309174[i].b4;
+    switch (t->state) {
+    case 0:
+        if (fn_8007FFE8(i, 0x16) != 0) {
+            fn_800811E4(i, 0);
+            t->state = 1;
+            if (lbl_80309174[i].x6 == 0x77) {
+                fn_80085414(i);
+                lbl_80309174[i].bd = 0;
+            }
+        }
+        break;
+    case 1:
+        if (fn_8007FFE8(i, 0) != 0 && fn_8007FAB0(i, c) != 0) {
+            const SkillData* e = &lbl_802C4BF0[lbl_80309174[i].x6 & 0xFF];
+            s16 save = wk->x3c;
+            wk->x3c = lbl_80309174[i].bd;
+            lbl_80309174[i].bd = 0;
+            fn_8002DD8C(i, 0, 100);
+            wk->x3c = save;
+            if (e->speed == 0) {
+                switch (e->effect) {
+                case 0:
+                case 4:
+                case 0x11:
+                    if (lbl_80309DE4[i]->x10 & 0x10) {
+                        lbl_80309DE4[i]->x10 |= 0x20;
+                    } else {
+                        lbl_80309DE4[i]->x10 |= 0x10;
+                    }
+                    break;
+                case 0x1f:
+                case 0x20:
+                    if (lbl_80309DE4[i]->x10 & 4) {
+                        lbl_80309DE4[i]->x10 |= 8;
+                    } else {
+                        lbl_80309DE4[i]->x10 |= 4;
+                    }
+                    break;
+                case 0x12:
+                case 0x13:
+                case 0x14:
+                case 0x15:
+                case 0x16:
+                    if (lbl_80309DE4[i]->x10 & 0x40) {
+                        lbl_80309DE4[i]->x10 |= 0x80;
+                    } else {
+                        lbl_80309DE4[i]->x10 |= 0x40;
+                    }
+                    break;
+                }
+                lbl_80309DE4[i]->xfe--;
+            }
+            fn_80081168(i, 12);
+            lbl_80309730[i].b4 = c;
+            lbl_80309730[i].h6 = lbl_80309174[i].x6;
+            t->state = 0xb;
+        }
+        break;
+    case 0xb:
+        if (fn_8007FFE8(i, 12) != 0) {
+            fn_800811E4(i, 0);
+            t->state = 0xc;
+        }
+        break;
+    case 0xc:
+        if (fn_8007FFE8(i, 0) != 0) {
+            const SkillData* e = &lbl_802C4BF0[lbl_80309174[i].x6 & 0xFF];
+            if (i == c || e->target == 2) {
+                if (fn_8006D1C4() != 1) {
+                    break;
+                }
+            }
+            fn_80010474(i);
+            fn_800811E4(i, 0);
+            t->state = 0xd;
+        }
+        break;
+    case 0xd:
+        if (fn_8006D1C4() == 1 && fn_8007FFE8(i, 0) != 0) {
+            wk->flags |= 1;
+            lbl_80309700[i]->update = fn_80086C48;
+            lbl_80309700[i]->state = 0;
+            lbl_80309DE4[i]->w1c &= ~0x400000;
+        }
+        break;
+    }
+}
 
 void fn_80086C68(Slot* o)
 {
