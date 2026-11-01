@@ -398,6 +398,11 @@ config.libs = [
             Object(NonMatching, "game/unit_8008B4A0.c"),
             Object(NonMatching, "game/unit_8009623C.c"),
             Object(NonMatching, "game/unit_800972AC.c"),
+            # Starts at the 0x80348D70 .sdata2 block (0.0f first; its own int-to-float double) and .rodata
+            # 0x802B0E30; its short strings sit in .sdata2, so it was built with read-only strings.
+            Object(NonMatching, "game/unit_8009D274.c", extra_cflags=["-str reuse,readonly"]),
+            # Starts at the 0x80348DD0 .sdata2 block (a second 182.04445) and .rodata 0x802B0F88.
+            Object(NonMatching, "game/unit_800A3ED4.c"),
             # Split at a new .sdata2 block (0x80348E70: a second 1.0f and 0.0f); its .bss blocks
             # 0x80303618/34/50 are addressed from one pooled base, so they are defined here.
             Object(NonMatching, "game/unit_800AE300.c"),
