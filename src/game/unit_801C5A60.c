@@ -464,6 +464,24 @@ extern u32 lbl_803471D0;
 
 extern void* fn_80226704(void* list, void* cb, s32 size);
 
+static inline void SubInit(Sub_801C610C* s) {
+    s->f58 = 1.0f;
+    s->f54 = 1.0f;
+    s->f50 = 1.0f;
+    s->f190 = 1.0f;
+    s->w14 = -1;
+    s->w18 = 0;
+    s->w30 = 8;
+    s->w34 = 6;
+    s->w2c = 1;
+    s->w04 = 1;
+    s->f0c = 9000.0f;
+    s->f10 = 10000.0f;
+    s->w08 = 0;
+    s->f190 = 1.0f;
+    s->f1a8 = 0.2f;
+}
+
 /* A task allocated together with its work area, which follows the 0x40-byte task block. */
 typedef struct TaskBlk_801C6180 {
     Task task;
@@ -814,23 +832,6 @@ void fn_801C5DEC(Obj_801C5DEC* o) {
     }
 }
 
-static inline void SubInit(Sub_801C610C* s) {
-    s->f58 = 1.0f;
-    s->f54 = 1.0f;
-    s->f50 = 1.0f;
-    s->f190 = 1.0f;
-    s->w14 = -1;
-    s->w18 = 0;
-    s->w30 = 8;
-    s->w34 = 6;
-    s->w2c = 1;
-    s->w04 = 1;
-    s->f0c = 9000.0f;
-    s->f10 = 10000.0f;
-    s->w08 = 0;
-    s->f190 = 1.0f;
-    s->f1a8 = 0.2f;
-}
 
 void fn_801C610C(Sub_801C610C* s) {
     SubInit(s);
