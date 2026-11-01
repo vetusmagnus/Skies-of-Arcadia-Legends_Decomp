@@ -83,7 +83,7 @@ typedef struct {
     s16 xc84;
     s16 xc86;
     s16 xc88;
-    s16 xc8a[4];                /* camera path n: node count */
+    u16 xc8a[4];                /* camera path n: node count */
     u8 padc92[0xca0 - 0xc92];
     s32 xca0[4];
     u8 padcb0[0xcbc - 0xcb0];

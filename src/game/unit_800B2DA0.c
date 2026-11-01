@@ -3897,6 +3897,40 @@ void fn_800BB574(EvObj* w, EffCfg* b) {
     }
 }
 
+void fn_800C0368(s32 track, f32 *out, f32 *out2) {
+    s32 i;
+    s32 n;
+    s32 t;
+    s32 next;
+    f32 f;
+    f32 ft;
+    f32 fw;
+
+    t = lbl_8030CEA0.xca0[track];
+    for (i = 0; i < lbl_8030CEA0.xc8a[track]; i++) {
+        u32 d = lbl_8030CEA0.path[track][i].w;
+        if (t <= d) {
+            break;
+        }
+        t -= d;
+    }
+    n = lbl_8030CEA0.xc8a[track];
+    if (i == n) {
+        i = 1;
+    }
+    next = (i == n - 1) ? 1 : (i + 1) % n;
+    ft = t;
+    fw = lbl_8030CEA0.path[track][i].w;
+    f = ft / fw;
+    out[0] = f * (lbl_8030CEA0.path[track][next].a[0] - lbl_8030CEA0.path[track][i].a[0]) + lbl_8030CEA0.path[track][i].a[0];
+    out[1] = f * (lbl_8030CEA0.path[track][next].a[1] - lbl_8030CEA0.path[track][i].a[1]) + lbl_8030CEA0.path[track][i].a[1];
+    out[2] = f * (lbl_8030CEA0.path[track][next].a[2] - lbl_8030CEA0.path[track][i].a[2]) + lbl_8030CEA0.path[track][i].a[2];
+    if (out2 != NULL) {
+        out2[0] = f * (lbl_8030CEA0.path[track][next].c[0] - lbl_8030CEA0.path[track][i].c[0]) + lbl_8030CEA0.path[track][i].c[0];
+        out2[1] = f * (lbl_8030CEA0.path[track][next].c[1] - lbl_8030CEA0.path[track][i].c[1]) + lbl_8030CEA0.path[track][i].c[1];
+    }
+}
+
 void fn_800C1A34(s32 a, s32 b, s32 c, s32 d) {
     lbl_803473D0 = a;
     lbl_803473D4 = 1;
