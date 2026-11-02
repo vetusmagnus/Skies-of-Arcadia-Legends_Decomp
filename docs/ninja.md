@@ -495,3 +495,24 @@ before the ambient colour and the second light table.
 as a `static inline` helper: unlike `fn_802A1160` / `fn_802A6184` / `fn_802A7FA0`, the original keeps no copy
 of the vertex base there (it lives in a saved register across the transform calls), so the inline-argument
 copy difference doesn't arise.
+
+### Large functions, 2026-11-02 (drafts kept out of the source; all with 1.3.2nj)
+
+- `fn_8028AD9C` (renderer 1's strip walker for view-space vertices, 1.8 KB; `fn_802A81B4` is the same code for
+  renderer 2): written in the shape of `fn_80287610` with the environment-map drawers (flag 0x40) and
+  `fn_802A88C0` materials, it has the right instruction count (447) but the allocator gives the parameters
+  r23-r25 where the original has r29-r31 (388 diff lines). No declaration order, `tex`/`enable` locals,
+  position of `type`, or removing whole cases changes that; a 25-minute permuter run only found junk.
+- `fn_8028BC64` (quad overlap by XY/XZ/YZ projection through `fn_8028CF20`): the original loads all 16
+  coordinates before storing them into the two `NJS_POINT2[4]` arrays (16 live floats, so two go to f30/f31).
+  With 16 float locals the instructions match (139) but the float registers are assigned in the opposite
+  order (194 lines); C89 rules out the aggregate initialisers that would naturally produce this.
+- `fn_802A8BA4` (NGDL recorder end: size, header offset per pass, pad to 64, flush, total size): 24 lines of
+  volatile-register scheduling around the return value, with the zero-fill loop's per-store zero copies
+  (the copy pattern) now right.
+- `fn_80297E3C` (texture format words from width/height codes and flags): 22 lines with the size code as a
+  `static inline` helper; only the insertion direction of the top two bits of the second word differs.
+- `fn_80298A04` (texture load and bind): 28 lines, parameter registers only.
+- `fn_80298798` (PVR/GVR chunk walk with byte swaps through `__stwbrx`/`__sthbrx`): the byte-swap expression
+  order is found, but the in-place swap loop unrolls differently (`lwzu` per word against the original's
+  offsets from a base plus a counter), 15 instructions short.
