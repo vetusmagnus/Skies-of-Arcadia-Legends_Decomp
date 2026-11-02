@@ -22,6 +22,18 @@ typedef struct {
     f32 x, y;
 } NJS_POINT2;
 
+/* Texture coordinates and a polygon vertex list (Ninja's DC layout). */
+typedef struct {
+    s16 u, v;
+} NJS_TEX;
+
+typedef struct {
+    NJS_POINT3* p;
+    u32* col;
+    NJS_TEX* tex;
+    u32 num;
+} NJS_POINT3COL;
+
 /* A 2D polygon with per-vertex colours. */
 typedef struct {
     NJS_POINT2* p;

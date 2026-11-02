@@ -562,3 +562,10 @@ Also merged in round 2: `fn_80296424` (shape-key blend; colour bytes read from t
 GXPriv.h): the volatile is what reloads the 0.0f/1.0f texcoords before every store, which the non-volatile
 `GXWGFifo` of extern/sdk's GXVert.h hoists into registers. B2's notes on the rest (fn_80290A60 8 lines,
 fn_8029976C 10, fn_8029D0F4 14, fn_802970A0 20; plain-C byte swaps in fn_80298798) are in the round notes.
+Round 2 also merged `fn_802A1B54` (renderer 1 light/material colours; stock too: the switch is on a `u8 kind`
+copy of the flags), `fn_802AAE5C` (njDrawPolygon3D-style: four `static inline` cases; `NJS_TEX` and
+`NJS_POINT3COL` added to ninja.h) and `fn_802AB608` (flat screen quad: P3 as a macro over `__GXWGFifo`,
+a `static inline FlatColor(GXColor)` gives the stack slots). Held back: `fn_802ABB9C` and `fn_802AB8FC`
+match only with an identity in the colour invert's else branch (`c.r = 0x00 + c.r`, or `(u8)c.r`); a plain
+self-assignment is dropped where the original keeps the loads and stores. Near misses: `fn_802A70B0`
+(2 lines, `fmr` copy of 255.0f), `fn_802A93CC` (3), `fn_802AC31C` (18), `fn_802A9C20` (45, volatile registers).

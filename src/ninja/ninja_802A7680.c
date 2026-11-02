@@ -762,6 +762,149 @@ void fn_802AA110(u32** in, u32** out) {
     }
 }
 
+#define PVTX(p, c) \
+    GXPosition3f32((p)->x, (p)->y, (p)->z); \
+    GXColor1u32(__rlwinm(*(c), 8, 0, 31))
+#define PVTXT(p, c, t) \
+    PVTX(p, c); \
+    GXTexCoord2f32(0.00390625f * (t)->u, 0.00390625f * (t)->v)
+
+static inline void PolyStripT(NJS_POINT3COL* pc, s32 n, u32 attr) {
+    s32 i;
+    s32 lo;
+    s32 hi;
+    s32 idx;
+    s32 k;
+    NJS_POINT3* p;
+    u32* c;
+    NJS_TEX* t;
+
+    lo = 0;
+    p = pc->p;
+    c = pc->col;
+    i = n;
+    t = pc->tex;
+    hi = n;
+    idx = lo;
+    k = lo;
+    fn_8029CB1C();
+    fn_8029B248(0, attr & 0x40);
+    GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, n);
+    do {
+        NJS_POINT3* pp = &p[idx];
+        u32* cp = &c[idx];
+        NJS_TEX* tp = &t[idx];
+
+        k++;
+        PVTXT(pp, cp, tp);
+        if (k & 1) {
+            hi--;
+            idx = hi;
+        } else {
+            lo++;
+            idx = lo;
+        }
+    } while (--i > 0);
+}
+
+static inline void PolyLineT(NJS_POINT3COL* pc, s32 n, u32 attr) {
+    NJS_POINT3* p;
+    u32* c;
+    NJS_POINT3* p0;
+    u32* c0;
+    NJS_TEX* t;
+    NJS_TEX* t0;
+
+    p = pc->p;
+    c = pc->col;
+    t = pc->tex;
+    p0 = p;
+    c0 = c;
+    t0 = t;
+    fn_8029CB1C();
+    fn_8029B248(0, attr & 0x40);
+    GXSetLineWidth(7, GX_TO_ZERO);
+    GXBegin(GX_LINESTRIP, GX_VTXFMT0, n + 1);
+    do {
+        PVTXT(p, c, t);
+        p++;
+        c++;
+        t++;
+    } while (--n > 0);
+    PVTXT(p0, c0, t0);
+}
+
+static inline void PolyStrip(NJS_POINT3COL* pc, s32 n, u32 attr) {
+    s32 i;
+    s32 lo;
+    s32 idx;
+    s32 k;
+    NJS_POINT3* p;
+    u32* c;
+
+    lo = 0;
+    p = pc->p;
+    c = pc->col;
+    i = n;
+    idx = lo;
+    k = lo;
+    fn_8029CB1C();
+    fn_8029B248(4, attr & 0x40);
+    GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, n);
+    do {
+        NJS_POINT3* pp = &p[idx];
+        u32* cp = &c[idx];
+
+        k++;
+        PVTX(pp, cp);
+        if (k & 1) {
+            i--;
+            idx = i;
+        } else {
+            lo++;
+            idx = lo;
+        }
+    } while (--n > 0);
+}
+
+static inline void PolyLine(NJS_POINT3COL* pc, s32 n, u32 attr) {
+    NJS_POINT3* p;
+    u32* c;
+    NJS_POINT3* p0;
+    u32* c0;
+
+    p = pc->p;
+    c = pc->col;
+    p0 = p;
+    c0 = c;
+    fn_8029CB1C();
+    fn_8029B248(4, attr & 0x40);
+    GXSetLineWidth(7, GX_TO_ZERO);
+    GXBegin(GX_LINESTRIP, GX_VTXFMT0, n + 1);
+    do {
+        PVTX(p, c);
+        p++;
+        c++;
+    } while (--n > 0);
+    PVTX(p0, c0);
+}
+
+void fn_802AAE5C(NJS_POINT3COL* pc, s32 n, u32 attr) {
+    if (attr & 0x80000000) {
+        if (attr & 0x20) {
+            PolyStripT(pc, n, attr);
+        } else {
+            PolyLineT(pc, n, attr);
+        }
+    } else {
+        if (attr & 0x20) {
+            PolyStrip(pc, n, attr);
+        } else {
+            PolyLine(pc, n, attr);
+        }
+    }
+}
+
 void fn_802AB23C(NjObj* obj) {
     if (!(obj->evalflags & 0x10000)) {
         lbl_80347FC8 = 0;
@@ -838,6 +981,57 @@ void fn_802AB340(s16* list) {
             p += n - 1;
         }
     }
+}
+
+#define P3(x, y, z) (__GXWGFifo.f32 = (x), __GXWGFifo.f32 = (y), __GXWGFifo.f32 = (z))
+extern GXColor lbl_80346A60;
+extern s32 lbl_80347FE0;
+extern void* lbl_80347FE8;
+
+static inline void FlatColor(GXColor c) {
+    fn_8029CB74();
+    GXClearVtxDesc();
+    GXSetVtxDesc(GX_VA_POS, GX_DIRECT);
+    GXSetChanCtrl(GX_COLOR0A0, GX_FALSE, GX_SRC_REG, GX_SRC_REG, 0, GX_DF_CLAMP, GX_AF_NONE);
+    GXSetChanCtrl(GX_COLOR1A1, GX_FALSE, GX_SRC_REG, GX_SRC_REG, 0, GX_DF_CLAMP, GX_AF_NONE);
+    GXSetChanAmbColor(GX_COLOR0A0, c);
+    GXSetChanMatColor(GX_COLOR0A0, c);
+    GXSetNumChans(1);
+    GXSetNumTexGens(0);
+    GXSetNumTevStages(1);
+    GXSetTevOrder(GX_TEVSTAGE0, GX_TEXCOORD_NULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+    GXSetTevColorIn(GX_TEVSTAGE0, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO, GX_CC_RASC);
+    GXSetTevColorOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+    GXSetTevAlphaIn(GX_TEVSTAGE0, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, GX_CA_RASA);
+    GXSetTevAlphaOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+}
+
+void fn_802AB608(void) {
+    f32 w;
+
+    GXSetZCompLoc(GX_TRUE);
+    GXSetAlphaCompare(GX_ALWAYS, 0, GX_AOP_AND, GX_ALWAYS, 0);
+    GXSetZMode(GX_FALSE, GX_NEVER, GX_FALSE);
+    GXSetCopyClear(lbl_80346A60, 0xffffff);
+    GXSetTexCopySrc(0, 0, lbl_80345878[10], lbl_80345878[11]);
+    if (lbl_80347FE0 == 1) {
+        GXSetTexCopyDst(lbl_80345878[10], lbl_80345878[11], GX_CTF_R8, GX_FALSE);
+        GXSetTevAlphaIn(GX_TEVSTAGE0, GX_CA_KONST, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO);
+        GXCopyTex(lbl_80347FE8, GX_FALSE);
+        GXSetZMode(GX_TRUE, GX_ALWAYS, GX_FALSE);
+        GXSetBlendMode(GX_BM_LOGIC, GX_BL_ONE, GX_BL_ONE, GX_LO_OR);
+        FlatColor(lbl_80346A60);
+        GXSetCullMode(GX_CULL_NONE);
+        GXBegin(GX_QUADS, GX_VTXFMT0, 4);
+        P3(0.0f, 0.0f, 0.0f);
+        P3(w = lbl_80345878[10], 0.0f, 0.0f);
+        P3(w, lbl_80345878[11], 0.0f);
+        P3(0.0f, w, 0.0f);
+    } else {
+        GXSetTexCopyDst(lbl_80345878[10], lbl_80345878[11], lbl_80347FE0, GX_FALSE);
+        GXCopyTex(lbl_80347FE8, GX_TRUE);
+    }
+    GXSetZMode(GX_TRUE, GX_LEQUAL, GX_FALSE);
 }
 
 void fn_802AC2EC(s32 v) { lbl_80346A5C = v; }

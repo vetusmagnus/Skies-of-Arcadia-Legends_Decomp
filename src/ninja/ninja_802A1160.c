@@ -201,3 +201,121 @@ void fn_802A1374(s16* p, s32 n, u32* data) {
         }
     }
 }
+
+void fn_802A1B54(u32 flags, s32 a, s32 b, u8* spc, u8* dif) {
+    GXColor c;
+    GXColor m;
+    f32 s;
+    f32 al;
+    f32 r, g, bl;
+    f32 ab, ag, ar;
+    f32 k;
+    u8 kind;
+
+    kind = flags;
+    switch (kind & 0xf) {
+    case 1:
+        m.a = dif[3];
+        m.r = dif[0];
+        m.g = dif[1];
+        m.b = dif[2];
+        break;
+    case 2:
+        m.a = dif[3];
+        m.r = 0xff;
+        m.g = 0xff;
+        m.b = 0xff;
+        break;
+    case 3:
+        return;
+    case 4:
+        return;
+    }
+    GXSetChanMatColor(GX_COLOR0A0, m);
+    switch (flags & 0xf0) {
+    case 0:
+        s = -lbl_80300760.f0c;
+        break;
+    case 0x10:
+        s = 0.0f;
+        break;
+    }
+    r = 255.0f * lbl_80300760.f18[0] * s;
+    if (r > 255.0f) r = 255.0f;
+    g = 255.0f * lbl_80300760.f18[1] * s;
+    if (g > 255.0f) g = 255.0f;
+    bl = 255.0f * lbl_80300760.f18[2] * s;
+    if (bl > 255.0f) bl = 255.0f;
+    c.r = r;
+    c.g = g;
+    c.b = bl;
+    c.a = 0xff;
+    GXInitLightColor(&lbl_80346560, c);
+    switch (flags & 0xf000) {
+    case 0x1000:
+        r *= spc[0] * s;
+        if (r > 255.0f) r = 255.0f;
+        g *= spc[1] * s;
+        if (g > 255.0f) g = 255.0f;
+        bl *= spc[2] * s;
+        if (bl > 255.0f) bl = 255.0f;
+        al *= spc[3] * s;
+        if (al > 255.0f) al = 255.0f;
+        c.r = r;
+        c.g = g;
+        c.b = bl;
+        c.a = al;
+        GXInitLightColor(&lbl_80346520, c);
+        GXInitLightAttn(&lbl_80346520, 0.0f, 0.0f, 1.0f, 50.0f, 0.0f, -49.0f);
+        GXLoadLightObjImm(&lbl_80346520, GX_LIGHT1);
+        break;
+    case 0x2000:
+        GXInitLightColor(&lbl_80346520, c);
+        GXInitLightAttn(&lbl_80346520, 0.0f, 0.0f, 1.0f, 50.0f, 0.0f, -49.0f);
+        GXLoadLightObjImm(&lbl_80346520, GX_LIGHT1);
+        break;
+    case 0x3000:
+        c.r = 0;
+        c.g = 0;
+        c.b = 0;
+        c.a = 0xff;
+        GXInitLightColor(&lbl_80346520, c);
+        GXInitLightAttn(&lbl_80346520, 0.0f, 0.0f, 1.0f, 50.0f, 0.0f, -49.0f);
+        GXLoadLightObjImm(&lbl_80346520, GX_LIGHT1);
+        break;
+    }
+    switch (flags & 0xf00) {
+    case 0:
+        k = lbl_80300760.f10;
+        ar = 255.0f * lbl_80300760.f18[0] * k;
+        if (ar > 255.0f) ar = 255.0f;
+        ag = 255.0f * lbl_80300760.f18[1] * k;
+        if (ag > 255.0f) ag = 255.0f;
+        ab = 255.0f * lbl_80300760.f18[2] * k;
+        if (ab > 255.0f) ab = 255.0f;
+        c.r = ar;
+        c.g = ag;
+        c.b = ab;
+        c.a = 0xff;
+        GXSetChanAmbColor(GX_COLOR0A0, c);
+        c.r = 0;
+        c.g = 0;
+        c.b = 0;
+        c.a = 0xff;
+        GXSetChanAmbColor(GX_COLOR1A1, c);
+        break;
+    case 0x400:
+        c.r = 0xff;
+        c.g = 0xff;
+        c.b = 0xff;
+        c.a = 0xff;
+        GXSetChanAmbColor(GX_COLOR0A0, c);
+        c.r = 0xff;
+        c.g = 0xff;
+        c.b = 0xff;
+        c.a = 0xff;
+        GXSetChanAmbColor(GX_COLOR1A1, c);
+        break;
+    }
+    GXLoadLightObjImm(&lbl_80346560, GX_LIGHT0);
+}
