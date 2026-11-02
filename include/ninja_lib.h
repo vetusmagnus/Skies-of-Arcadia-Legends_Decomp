@@ -246,6 +246,7 @@ s32 fn_8028BC64(const NJS_POINT3* qa, const NJS_POINT3* qb);
 s32 fn_8028BE90(NJS_POINT3* qa, NJS_POINT3* qb);
 s32 fn_8028CF20(NJS_POINT2* a, NJS_POINT2* b);
 void fn_80290428(NJS_POINT3* pts, NJS_POINT3* min, NJS_POINT3* max);
+s32 fn_80290918(const f32* a, f32* b);
 void fn_802904E8(NjCapsule* c, NJS_POINT3* min, NJS_POINT3* max);
 extern NJS_POINT3 lbl_802DAB18;
 extern f32 lbl_80347E70;

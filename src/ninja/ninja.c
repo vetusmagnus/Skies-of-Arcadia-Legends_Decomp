@@ -1841,6 +1841,45 @@ f32 fn_802900C0(f32* p, f32* pl, f32* out) {
 #pragma opt_common_subs reset
 #pragma optimization_level reset
 
+f32 fn_80290180(const f32* a, f32* b, f32* out) {
+    f32 p[3];
+    f32 ka, kb, kd, det, n0, n1, n2;
+    if (fn_80290918(a, b)) {
+        p[0] = a[0];
+        p[1] = a[1];
+        p[2] = a[2];
+        if (out) {
+            out[0] = 0.0f;
+            out[1] = 0.0f;
+            out[2] = 0.0f;
+            out[3] = 0.0f;
+            out[4] = 0.0f;
+            out[5] = 0.0f;
+        }
+        return fn_802900C0(p, b, NULL);
+    }
+    if (out) {
+        out[3] = a[4] * b[5] - b[4] * a[5];
+        out[4] = a[5] * b[3] - b[5] * a[3];
+        out[5] = a[3] * b[4] - b[3] * a[4];
+        ka = a[3] * a[0] + a[4] * a[1] + a[5] * a[2];
+        kb = b[3] * b[0] + b[4] * b[1] + b[5] * b[2];
+        kd = out[3] * b[0] + out[4] * b[1] + out[5] * b[2];
+        det = 1.0f / (a[3] * b[4] * out[5] + a[4] * b[5] * out[3] + a[5] * out[4] * b[3]
+                    - a[5] * b[4] * out[3] - a[4] * b[3] * out[5] - a[3] * out[4] * b[5]);
+        n0 = (ka * b[4] * out[5] + a[4] * b[5] * kd + a[5] * out[4] * kb
+                  - a[5] * b[4] * kd - a[4] * kb * out[5] - ka * out[4] * b[5]);
+        n1 = (a[3] * kb * out[5] + ka * b[5] * out[3] + a[5] * kd * b[3]
+                  - a[5] * kb * out[3] - ka * b[3] * out[5] - a[3] * kd * b[5]);
+        n2 = (a[3] * b[4] * kd + a[4] * kb * out[3] + ka * out[4] * b[3]
+                  - ka * b[4] * out[3] - a[4] * b[3] * kd - a[3] * out[4] * kb);
+        out[0] = n0 * det;
+        out[1] = n1 * det;
+        out[2] = n2 * det;
+    }
+    return 0.0f;
+}
+
 void fn_80290428(NJS_POINT3* p, NJS_POINT3* lo, NJS_POINT3* hi) {
     s32 i;
     lo->x = p[0].x;
@@ -1924,7 +1963,7 @@ s32 fn_8029076C(f32* a, f32* b) {
     return (f32)fabs(d * d / (la * lb)) > 0.975f;
 }
 
-static inline f32 vlen(f32* v) {
+static inline f32 vlen(const f32* v) {
     f32 z, x, y;
     x = v[0];
     y = v[1];
@@ -1934,7 +1973,7 @@ static inline f32 vlen(f32* v) {
     z = z * z;
     return sqrtf(x + y + z);
 }
-static inline f32 vlen2(f32* v) {
+static inline f32 vlen2(const f32* v) {
     f32 x, y, z;
     x = v[0] * v[0];
     y = v[1] * v[1];
@@ -1951,7 +1990,7 @@ s32 fn_802907D0(f32* a, f32* b) {
 
 /* Counterpart of fn_802907D0: 1 when the two direction vectors are nearly parallel. Its constants are a
  * separate pool (0x8034D0A8-0x8034D0C7), so it came from another source file. */
-s32 fn_80290918(f32* a, f32* b) {
+s32 fn_80290918(const f32* a, f32* b) {
     f32 la, lb;
     la = vlen(&a[3]);
     lb = vlen2(&b[3]);

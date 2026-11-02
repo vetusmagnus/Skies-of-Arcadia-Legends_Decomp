@@ -580,3 +580,7 @@ under `opt_propagation off`) and `fn_802A8BA4` (NGDL recorder end; 1.3.2nj). Nea
 and `fn_802A8D64` ~56 (kept copies of `gd` / the buffer pointer: the inline-argument copy difference).
 `fn_8029CA58` also addresses three projection matrices from one `lbl_803463C0` base, which MWCC only does for
 objects defined in the same unit.
+`fn_80290180` (plane-plane intersection) matches with stock too once `a` is `const f32*` (so are
+`fn_80290918`'s first parameter and the `vlen` helpers): the parallel-planes copy of `a[0..2]` then loads all
+three before storing, as in the original. B3's drafts: `fn_8028ED64` (box vs sphere, instructions exact,
+registers rotated), `fn_80297E3C` 14 lines, `fn_80293690` order exact.
