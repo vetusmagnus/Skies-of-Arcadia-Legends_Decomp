@@ -556,3 +556,9 @@ when IR becomes PCode). The last registers came from declaration order (see each
 `fn_802AB8FC` (screen quad with an inverted colour) matches with SDK-style volatile FIFO macros, but only
 when the else branch writes `c.g = (u8)c.g` etc. (the original reloads and stores g and b there), so it is
 not merged.
+Also merged in round 2: `fn_80296424` (shape-key blend; colour bytes read from the vertex stream), `fn_8029833C`
+(texture slot init; the remainder loop's zero copies need 1.3.2nj) and `fn_80296918` (point/quad sprites;
+1.3.2nj). `fn_80296918` writes through the SDK's volatile `__GXWGFifo` (declared in `ninja_lib.h` as in
+GXPriv.h): the volatile is what reloads the 0.0f/1.0f texcoords before every store, which the non-volatile
+`GXWGFifo` of extern/sdk's GXVert.h hoists into registers. B2's notes on the rest (fn_80290A60 8 lines,
+fn_8029976C 10, fn_8029D0F4 14, fn_802970A0 20; plain-C byte swaps in fn_80298798) are in the round notes.

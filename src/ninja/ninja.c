@@ -3417,6 +3417,51 @@ void fn_8029638C(NjObj* obj, NJS_MOTION* mot, NJS_MOTION* shape, NjModelCb cb, f
     }
 }
 
+void fn_80296424(f32* dst, f32* a, f32* b, s32 n, f32 t) {
+    f32* start = dst;
+    s32 fl = n >> 16;
+    u32 cnt = n & 0xFFFF;
+    f32 u = 1.0f - t;
+    do {
+        if (fl & 1) {
+            if (fl & 0x10) {
+                dst[0] = a[0] * u + b[0] * t;
+                dst[1] = a[1] * u + b[1] * t;
+                dst[2] = a[2] * u + b[2] * t;
+                a += 3;
+                b += 3;
+            }
+            dst += 3;
+        }
+        if (fl & 2) {
+            if (fl & 0x20) {
+                dst[0] = a[0] * u + b[0] * t;
+                dst[1] = a[1] * u + b[1] * t;
+                dst[2] = a[2] * u + b[2] * t;
+                a += 3;
+                b += 3;
+            }
+            dst += 3;
+        }
+        if (fl & 4) {
+            if (fl & 0x40) {
+                /* vertex stream: the colour is four bytes (r, g, b, a) */
+                ((u8*)dst)[0] = ((u8*)a)[0] * u + ((u8*)b)[0] * t;
+                ((u8*)dst)[1] = ((u8*)a)[1] * u + ((u8*)b)[1] * t;
+                ((u8*)dst)[2] = ((u8*)a)[2] * u + ((u8*)b)[2] * t;
+                ((u8*)dst)[3] = ((u8*)a)[3] * u + ((u8*)b)[3] * t;
+                a++;
+                b++;
+            }
+            dst++;
+        }
+        if (fl & 8) {
+            dst++;
+        }
+    } while (--cnt);
+    DCFlushRange(start, (u8*)dst - (u8*)start);
+}
+
 void fn_8029681C(NJS_POINT3* p, s32 n, f32 size) {
     GXSetPointSize(size * 12.0f, 0);
     do {
@@ -3439,6 +3484,45 @@ void fn_802968BC(u32 argb) {
     fn_8029CB1C();
     fn_8029B248(5, 1);
     GXSetChanMatColor(GX_COLOR0A0, c);
+}
+
+/* Vertex writes through the volatile FIFO (each texcoord constant is reloaded per store). */
+static inline void P3(f32 x, f32 y, f32 z) { __GXWGFifo.f32 = x; __GXWGFifo.f32 = y; __GXWGFifo.f32 = z; }
+static inline void T2(f32 x, f32 y) { __GXWGFifo.f32 = x; __GXWGFifo.f32 = y; }
+void fn_80296918(NJS_POINT3* p, s32 n, f32 a, f32 s) {
+    NJS_POINT3 v;
+    f32 x0, x1, y1, y0, z;
+
+    if (a == s) {
+        fn_8029CB1C();
+        GXSetPointSize(12.0f * s, 5);
+        do {
+            GXBegin(GX_POINTS, GX_VTXFMT0, 1);
+            P3(p->x, p->y, p->z);
+            T2(0.0f, 0.0f);
+            p++;
+        } while (--n);
+    } else {
+        fn_8029C93C();
+        do {
+            njCalcPoint(NULL, p, &v);
+            x0 = v.x - s;
+            x1 = v.x + s;
+            y1 = v.y + s;
+            z = v.z;
+            y0 = v.y - s;
+            p++;
+            GXBegin(GX_QUADS, GX_VTXFMT0, 4);
+            P3(x0, y1, z);
+            T2(0.0f, 0.0f);
+            P3(x0, y0, z);
+            T2(0.0f, 1.0f);
+            P3(x1, y0, z);
+            T2(1.0f, 1.0f);
+            P3(x1, y1, z);
+            T2(1.0f, 0.0f);
+        } while (--n);
+    }
 }
 
 void fn_80296B34(void) {
@@ -3880,6 +3964,25 @@ s32 fn_802982F0(s32 key) {
         if (lbl_80347ED4[i].mem != 0 && key == lbl_80347ED4[i].mem->id) return i;
     }
     return -1;
+}
+
+void fn_8029833C(NjTexMem* m, s32 n) {
+    s32 i;
+    lbl_80347ECC = m;
+    lbl_80347EC8 = n;
+    for (i = 0; i < n; i++) {
+        m->id = -1;
+        m->body.w00 = 0;
+        m->body.w04 = 0;
+        m->body.w08 = 0;
+        m->body.w0c = 0;
+        m->body.w10 = 0;
+        m->body.size = 0;
+        m->body.flags = 0;
+        m->body.data = NULL;
+        m->refs = 0;
+        m++;
+    }
 }
 
 void fn_80298544(NjTexRef* refs, s32 n) {

@@ -11,6 +11,10 @@
 #include <math.h>
 #include <dolphin/gx.h>
 #include <dolphin/os.h>
+
+/* The write-gather FIFO as the Dolphin SDK declares it, volatile (extern/sdk's GXVert.h leaves the
+ * volatile out of GXWGFifo; GXPriv.h has this same declaration). */
+volatile PPCWGPipe __GXWGFifo AT_ADDRESS(GXFIFO_ADDR);
 extern f64 modf(f64 x, f64* ip);
 
 #define CURM(m) ((m) ? (m) : (lbl_80347F70 = 5, lbl_80347EB4))
@@ -502,6 +506,7 @@ extern s32 lbl_80347EC0;
 s32 fn_80299744(s32* a, s32* b);
 void fn_802979B8(void);
 void fn_80298544(NjTexRef* refs, s32 n);
+void fn_8029C93C(void);
 void fn_8029833C(NjTexMem* m, s32 n);
 void* fn_802AC710(void* dst, const void* src, u32 n);
 extern u8 lbl_80345BC0[0x800];
