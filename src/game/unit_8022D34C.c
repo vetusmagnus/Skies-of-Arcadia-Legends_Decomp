@@ -78,9 +78,6 @@ typedef struct Ctx {
     f32 f74;
 } Ctx;
 extern Ctx lbl_8030E830;
-typedef struct Nrm {
-    f32 x, y, z;
-} Nrm;
 typedef struct Vtx Vtx;
 typedef struct Hdr {
     u16 len;
@@ -92,20 +89,20 @@ typedef union Cur {
     Hdr *h;
 } Cur;
 extern GXColor lbl_8034D480;
-extern Nrm lbl_802F93E8;
+extern NJS_POINT3 lbl_802F93E8;
 extern void njPushMatrixEx(void);
 extern void njPopMatrixEx(void);
 extern void njInvertMatrix(NJS_MATRIX m);
 extern void fn_80286EE8(void);
 extern void fn_8028B498(void);
-extern void fn_802928F4(Nrm *src, Nrm *dst);
+extern void fn_802928F4(NJS_POINT3 *src, NJS_POINT3 *dst);
 extern void fn_8029D010(void);
 extern void fn_8029D0F4(s16 op, s16 v);
 extern void fn_8029D698(s16 op, s16 *p, GXColor *a, GXColor *b, s32 z);
 extern void fn_802A8F40(s32 a);
 extern void fn_8023152C(GXColor *mat, GXColor *amb);
 extern void fn_80231688(s32 mode);
-extern void fn_80231360(s16 *strip, Vtx *verts, u32 flags, Nrm *nrm);
+extern void fn_80231360(s16 *strip, Vtx *verts, u32 flags, NJS_POINT3 *nrm);
 /* GX light helpers, not yet named in symbols.txt (signatures are the SDK's). */
 extern void fn_8024F82C(GXLightObj *l, GXColor c);
 /* GXInitLightColor */
@@ -924,7 +921,7 @@ void fn_8023114C(s16 *p, u8 kind, Vtx *verts, s32 mode) {
     s32 k;
     GXColor col_mat = {255, 255, 255, 255};
     GXColor col_amb = lbl_8034D480;
-    Nrm nrm;
+    NJS_POINT3 nrm;
     s16 op;
     s16 code;
     s16 cnt;

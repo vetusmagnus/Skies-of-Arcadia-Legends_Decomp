@@ -152,9 +152,8 @@ typedef struct Tbl_8007E690 {
     f32 x1c;
 } Tbl_8007E690;
 typedef struct Pos_8007E690 { u8 pad0[8]; f32 x8; f32 xc; f32 x10; } Pos_8007E690;
-typedef struct Vec_8007E690 { f32 x; f32 y; f32 z; } Vec_8007E690;
 extern void sndAuxCallbackShutdownReverbSTD(void* a, Pos_8007E690** out);
-extern int fn_80011E50(Vec_8007E690* v, f32* out, int flag);
+extern int fn_80011E50(NJS_POINT3* v, f32* out, int flag);
 extern s16 lbl_80309DCC[12];
 extern s32 fn_8007FFE8(s32 i, s32 k);
 void fn_800811E4(s16 id, int mode);
@@ -1650,7 +1649,7 @@ void fn_8007E690(Tk_8007E690* t)
     Wk_8007E690* w = t->work;
     Eff* e = w->eff;
     Pos_8007E690* pos;
-    Vec_8007E690 v;
+    NJS_POINT3 v;
     f32 hit;
 
     switch (t->state) {

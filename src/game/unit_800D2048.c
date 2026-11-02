@@ -243,9 +243,6 @@ extern s32 lbl_8034757C;
 extern Stick lbl_80311A14[];
 extern u32 lbl_80311A00[];
 s32 SePlay(s32 bank, s8 arg1, s8 id);
-typedef struct V3_800C4584 {
-    f32 x, y, z;
-} V3_800C4584;
 typedef struct R_800C4584 {
     u8 pad0[4];
     s32 w4;                 /* 0x04 */
@@ -257,7 +254,7 @@ typedef struct R_800C4584 {
     u8 pad20[0x34 - 0x20];
     s32 w34;                /* 0x34 */
     u8 pad38[0x44 - 0x38];
-    V3_800C4584 v44;
+    NJS_POINT3 v44;
     u8 pad50[0x54 - 0x50];
     f32 f54;
 } R_800C4584;
@@ -474,7 +471,7 @@ typedef struct Obj_800D3F00 {
     u8 pos38[0xc];
     u8 v44[0xc];
     u8 pad_50[0xb4 - 0x50];
-    V3_800C4584 vb4;
+    NJS_POINT3 vb4;
     u8 vc0[0xc];
     u8 pad_cc[0xe8 - 0xcc];
     u32 ie8;

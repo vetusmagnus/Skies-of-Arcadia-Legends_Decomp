@@ -823,9 +823,6 @@ typedef struct {
     St_8016022C *st;
 } Obj_8016022C;
 typedef struct {
-    f32 x, y, z;
-} Vec_8016022C;
-typedef struct {
     u32 f0;
     s32 f4;
     s8 f8;
@@ -1023,7 +1020,7 @@ typedef struct {
     f32 x, y, z;
 } Cam_80167EF0;
 extern s32 fn_800C8D90(void);
-extern void fn_8009FDA0(void *a, s32 b, Vec_8016022C *out, s32 c, Vec_8016022C *d, s32 e, s32 f);
+extern void fn_8009FDA0(void *a, s32 b, NJS_POINT3 *out, s32 c, NJS_POINT3 *d, s32 e, s32 f);
 extern f32 fn_80291A5C(f32 x);
 typedef struct {
     u8 pad0[0x14];
@@ -2282,7 +2279,7 @@ void fn_801679A4(Fx_801677D0 *t)
 
 s32 fn_80168A04(Obj_80168A04* a, s32 b);
 s8 fn_80167EF0(Sub_80168A04 *a);
-extern f32 njScalor(Vec_8016022C *v);
+extern f32 njScalor(NJS_POINT3 *v);
 /* Ninja NJM_RAD_ANG: radians to a 0x10000-per-turn angle. */
 static inline s32 RadToAng(f32 r) { return 10430.381f * r; }
 extern void fn_8021A094(u8 *p);
@@ -2292,9 +2289,9 @@ s32 fn_80167C34(St_801677D0 *w)
 {
     void *h;
     s32 base;
-    Vec_8016022C o;
-    Vec_8016022C p;
-    Vec_8016022C d;
+    NJS_POINT3 o;
+    NJS_POINT3 p;
+    NJS_POINT3 d;
     f32 dist;
     f32 a, b;
     s32 n;
@@ -4400,7 +4397,7 @@ void fn_8016022C(Obj_8016022C *obj, Arg_8016022C *arg)
     extern u32 fn_8008F8FC(Inner_8016022C *o, s32 i);
     extern s32 fn_8016645C(Inner_8016022C *o, Arg_8016022C *a);
     extern void fn_80167034(Inner_8016022C *o, s32 *p, s32 n, void *q);
-    extern void fn_8016694C(f32 *a, Vec_8016022C *v, s32 *out);
+    extern void fn_8016694C(f32 *a, NJS_POINT3 *v, s32 *out);
     extern f32 fn_80291A5C(f32 x);
     extern s32 fn_80166D40(s32 *a, s32 *b);
     St_8016022C *st = obj->st;
@@ -4409,7 +4406,7 @@ void fn_8016022C(Obj_8016022C *obj, Arg_8016022C *arg)
     f32 s;
     f32 len;
     u32 m;
-    Vec_8016022C v;
+    NJS_POINT3 v;
 
     if (obj != 0) {
         if (3.4028235e38f == e->x24) {
@@ -4906,8 +4903,8 @@ s8 fn_80167EF0(Sub_80168A04 *a)
     f32 d;
     f32 x;
     f32 tz;
-    Vec_8016022C o;
-    Vec_8016022C v;
+    NJS_POINT3 o;
+    NJS_POINT3 v;
 
     if ((*(Cam_80167EF0 **)&lbl_80347450) != 0) {
         p = fn_8015F1A0(a->f18 >> 16);
@@ -5501,8 +5498,8 @@ s32 fn_801673D8(Obj_801673D8 *o, s32 id)
 s8 fn_80168BD4(Sub_80168A04 *w)
 {
     void *h;
-    Vec_8016022C o;
-    Vec_8016022C p;
+    NJS_POINT3 o;
+    NJS_POINT3 p;
     f32 dy2, dx2, dz2, d2;
     f32 a, b;
     s32 n;

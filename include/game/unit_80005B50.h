@@ -7,11 +7,6 @@
 
 /* Struct layouts shared by unit_80005B50.c and the units split from it, unit_80009800.c,
  * unit_8000A38C.c, unit_80011160.c and unit_80014784.c (docs/progress.md). */
-typedef struct Vec3 {
-    f32 x;
-    f32 y;
-    f32 z;
-} Vec3;
 typedef struct Sub2_BB28 {
     u8 pad[0x4C];
     void* x4c;

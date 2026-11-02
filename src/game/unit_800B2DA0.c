@@ -105,13 +105,10 @@ typedef struct {
     ItemList_UNIT0000* list; /* 0x14 */
 } Ctx_800C355C_UNIT0000;
 typedef struct {
-    f32 x, y, z;
-} Vec3;
-typedef struct {
     u8 pad0[0xc];
-    Vec3 a;         /* 0x0c */
+    NJS_POINT3 a;         /* 0x0c */
     u8 pad1[0x24 - 0x18];
-    Vec3 sum;       /* 0x24 */
+    NJS_POINT3 sum;       /* 0x24 */
 } Obj_800C4B18;
 typedef struct {
     s32 x, y, z;
@@ -168,7 +165,7 @@ typedef struct {
 } Obj_800C682C;
 extern void fn_801002D0(const char* name);
 extern u8 lbl_802B1448[];
-extern Vec3 lbl_8030A2E8;
+extern NJS_POINT3 lbl_8030A2E8;
 extern u32 lbl_8030A2DC[3];
 extern s32 lbl_803473B8;
 extern void* fn_801E1A2C(u32 size, u32 align);
@@ -911,11 +908,11 @@ typedef struct {
     u8 pad0[0x2c];
     u32 x2c;
     u8 pad30[0x50 - 0x30];
-    Vec3 v50;
+    NJS_POINT3 v50;
     u8 pad5c[0xe4 - 0x5c];
     void *xe4;
     u8 padE8[0x11c - 0xe8];
-    Vec3 v11c;
+    NJS_POINT3 v11c;
     u8 pad128[0x176 - 0x128];
     s16 x176;
     u8 pad178[0x18c - 0x178];
@@ -928,11 +925,11 @@ typedef struct {
     s16 x1fc;
     u8 pad1fe[0x208 - 0x1fe];
     s16 x208, x20a;
-    Vec3 v20c;
+    NJS_POINT3 v20c;
     u8 pad218[0x21d - 0x218];
     u8 x21d;
     u8 pad21e[0x24c - 0x21e];
-    Vec3 v24c;
+    NJS_POINT3 v24c;
     u8 pad258[0x25c - 0x258];
     void *x25c;
 } W_800BB3DC;
@@ -944,8 +941,8 @@ typedef struct {
     s32 x10;
     s32 x14;
     u8 pad18[0x28 - 0x18];
-    Vec3 a;
-    Vec3 b;
+    NJS_POINT3 a;
+    NJS_POINT3 b;
     u8 pad40[0x64 - 0x40];
     s32 x64, x68, x6c;
     u8 pad70[0xb4 - 0x70];
@@ -1072,11 +1069,6 @@ extern void* lbl_803056E8[6][7];
 extern s32 fn_801CC1A4(void* p);
 extern void* fn_80109D74(void* p);
 extern void* fn_801CC0A0(void* p);
-typedef struct Vec3_800CB1D0 {
-    f32 x;
-    f32 y;
-    f32 z;
-} Vec3_800CB1D0;
 typedef struct Obj_800CB1D0 {
     u8 pad0[0x38];
     f32 f38;
@@ -1167,9 +1159,9 @@ typedef struct S_800BA04C {
     s16 hfa;
 } S_800BA04C;
 typedef struct Node_800BA220 {
-    Vec3 a;          /* 0x00 */
-    Vec3 b;          /* 0x0c */
-    Vec3 c;          /* 0x18 */
+    NJS_POINT3 a;          /* 0x00 */
+    NJS_POINT3 b;          /* 0x0c */
+    NJS_POINT3 c;          /* 0x18 */
     f32 f24;
     f32 f28;
     s16 h2c;
@@ -1187,9 +1179,9 @@ typedef struct W_800BA220 {
     u8 pad20[0x2c - 0x20];
     s32 w2c;
     u8 pad30[0x38 - 0x30];
-    Vec3 a;          /* 0x38 */
-    Vec3 b;          /* 0x44 */
-    Vec3 c;          /* 0x50 */
+    NJS_POINT3 a;          /* 0x38 */
+    NJS_POINT3 b;          /* 0x44 */
+    NJS_POINT3 c;          /* 0x50 */
     u8 pad5c[0x100 - 0x5c];
     Hdr_800BA220 *hdr;      /* 0x100 */
     u8 pad104[0x18c - 0x104];
@@ -1212,16 +1204,16 @@ typedef struct Hook_800BBA70 {
 typedef struct Buf_800BBA70 {
     u32 flags;
     u8 pad4[0x40 - 4];
-    Vec3 a40;
-    Vec3 a4c;
+    NJS_POINT3 a40;
+    NJS_POINT3 a4c;
 } Buf_800BBA70;
 typedef struct W_800BBA70 {
     u8 pad0[0x38];
-    Vec3 a;          /* 0x38 */
-    Vec3 b;          /* 0x44 */
-    Vec3 c;          /* 0x50 */
+    NJS_POINT3 a;          /* 0x38 */
+    NJS_POINT3 b;          /* 0x44 */
+    NJS_POINT3 c;          /* 0x50 */
     u8 pad5c[0x11c - 0x5c];
-    Vec3 d;          /* 0x11c */
+    NJS_POINT3 d;          /* 0x11c */
     u8 pad128[0x1d8 - 0x128];
     Hook_800BBA70 *hook;    /* 0x1d8 */
     u8 pad1dc[0x1fa - 0x1dc];
@@ -1251,19 +1243,19 @@ typedef struct Obj_800C381C {
     u8 pad0[2];
     s16 flags;
     u8 pad4[0xc - 4];
-    Vec3 pos;        /* 0x0c */
+    NJS_POINT3 pos;        /* 0x0c */
     u8 pad18[0x30 - 0x18];
     f32 f30, f34, f38;
     u8 pad3c[0x40 - 0x3c];
     s32 w40, w44, w48;
-    Vec3 v4c;        /* 0x4c */
-    Vec3 v58;        /* 0x58 */
-    Vec3 v64;        /* 0x64 */
+    NJS_POINT3 v4c;        /* 0x4c */
+    NJS_POINT3 v58;        /* 0x58 */
+    NJS_POINT3 v64;        /* 0x64 */
     s32 w70, w74, w78;
     u8 pad7c[0xcc - 0x7c];
     f32 fcc, fd0, fd4;
     u8 padd8[0xf0 - 0xd8];
-    Vec3 vf0;        /* 0xf0 */
+    NJS_POINT3 vf0;        /* 0xf0 */
     u8 padfc[0x108 - 0xfc];
     Part *sub;      /* 0x108 */
     s32 w10c;
@@ -1278,17 +1270,17 @@ typedef struct Obj_800C41D0 {
     u8 pad0[2];
     s16 flags;
     u8 pad4[0xc - 4];
-    Vec3 pos;        /* 0x0c */
+    NJS_POINT3 pos;        /* 0x0c */
     u8 pad18[0x24 - 0x18];
-    Vec3 v24;        /* 0x24 */
-    Vec3 v30;        /* 0x30 */
+    NJS_POINT3 v24;        /* 0x24 */
+    NJS_POINT3 v30;        /* 0x30 */
     u8 pad3c[0x40 - 0x3c];
     s32 w40, w44, w48;
-    Vec3 v4c;        /* 0x4c */
+    NJS_POINT3 v4c;        /* 0x4c */
     u8 pad58[0x70 - 0x58];
     s32 w70, w74, w78;
     u8 pad7c[0xac - 0x7c];
-    Vec3 vac;        /* 0xac */
+    NJS_POINT3 vac;        /* 0xac */
     f32 fb8, fbc;
     u8 padc0[0xcc - 0xc0];
     f32 fcc;
@@ -1303,17 +1295,17 @@ typedef struct Mot_800C43A0 {
 } Mot_800C43A0;
 typedef struct Obj_800C43A0 {
     u8 pad0[0xc];
-    Vec3 pos;        /* 0x0c */
+    NJS_POINT3 pos;        /* 0x0c */
     u8 pad18[0x24 - 0x18];
-    Vec3 v24;        /* 0x24 */
-    Vec3 v30;        /* 0x30 */
+    NJS_POINT3 v24;        /* 0x24 */
+    NJS_POINT3 v30;        /* 0x30 */
     u8 pad3c[0x58 - 0x3c];
-    Vec3 v58;        /* 0x58 */
-    Vec3 v64;        /* 0x64 */
+    NJS_POINT3 v58;        /* 0x58 */
+    NJS_POINT3 v64;        /* 0x64 */
     s32 w70;
     s32 w74;
     s32 w78;
-    Vec3 v7c;        /* 0x7c */
+    NJS_POINT3 v7c;        /* 0x7c */
     s32 w88, w8c;
     u8 pad90[0xd8 - 0x90];
     s32 wd8;
@@ -1336,7 +1328,7 @@ typedef struct R_800C4584 {
     u8 pad20[0x34 - 0x20];
     s32 w34;                /* 0x34 */
     u8 pad38[0x44 - 0x38];
-    Vec3 v44;
+    NJS_POINT3 v44;
     u8 pad50[0x54 - 0x50];
     f32 f54;
 } R_800C4584;
@@ -1357,14 +1349,14 @@ typedef struct Obj_800C4584 {
     u8 pad0[4];
     s16 h4;
     u8 pad6[0xc - 6];
-    Vec3 pos;        /* 0x0c */
+    NJS_POINT3 pos;        /* 0x0c */
     u8 pad18[0x30 - 0x18];
-    Vec3 v30;        /* 0x30 */
+    NJS_POINT3 v30;        /* 0x30 */
     u8 pad3c[0x40 - 0x3c];
     s32 w40, w44, w48;
-    Vec3 v4c;        /* 0x4c */
-    Vec3 v58;        /* 0x58 */
-    Vec3 v64;        /* 0x64 */
+    NJS_POINT3 v4c;        /* 0x4c */
+    NJS_POINT3 v58;        /* 0x58 */
+    NJS_POINT3 v64;        /* 0x64 */
     s32 w70, w74, w78;
     u8 pad7c[0xd8 - 0x7c];
     s32 wd8;
@@ -1390,18 +1382,18 @@ typedef struct Obj_800C48C4 {
     u8 pad0[2];
     s16 flags;
     u8 pad4[0xc - 4];
-    Vec3 pos;        /* 0x0c */
+    NJS_POINT3 pos;        /* 0x0c */
     u8 pad18[0x24 - 0x18];
-    Vec3 v24;        /* 0x24 */
-    Vec3 v30;        /* 0x30 */
+    NJS_POINT3 v24;        /* 0x24 */
+    NJS_POINT3 v30;        /* 0x30 */
     u8 pad3c[0x40 - 0x3c];
     s32 w40, w44, w48;
-    Vec3 v4c;        /* 0x4c */
+    NJS_POINT3 v4c;        /* 0x4c */
     u8 pad58[0x64 - 0x58];
-    Vec3 v64;        /* 0x64 */
+    NJS_POINT3 v64;        /* 0x64 */
     s32 w70, w74, w78;
     u8 pad7c[0xac - 0x7c];
-    Vec3 vac;        /* 0xac */
+    NJS_POINT3 vac;        /* 0xac */
     f32 fb8, fbc;
     u8 padc0[0xcc - 0xc0];
     f32 fcc;
@@ -1867,8 +1859,8 @@ typedef struct PoolNode {
 } PoolNode;
 typedef struct {
     u8 pad0[4];
-    Vec3 a;
-    Vec3 b;
+    NJS_POINT3 a;
+    NJS_POINT3 b;
     u8 pad1c[0x30 - 0x1c];
     f32 x30;
     f32 x34;
@@ -1903,12 +1895,12 @@ typedef struct {
     u8 x1fb;
     s16 x1fc;
     u8 pad1fe[0x20c - 0x1fe];
-    Vec3 v20c;
+    NJS_POINT3 v20c;
     u8 pad218[0x22e - 0x218];
     u16 x22e;
     u16 x230;
     u8 pad232[0x24c - 0x232];
-    Vec3 v24c;
+    NJS_POINT3 v24c;
     u8 pad258[0x268 - 0x258];
     Pool *x268;
 } Work_800B4EEC;
@@ -4889,7 +4881,7 @@ s32 fn_800C7DFC(void) {
 }
 
 void fn_800CB1D0(Obj_800CB1D0* o) {
-    extern s32 fn_802254A0(Vec3_800CB1D0* v, void* p);
+    extern s32 fn_802254A0(NJS_POINT3* v, void* p);
     extern void fn_801E17E0(void* p);
     extern s32 fn_800D2924(Obj_800CB1D0* o);
     extern void njPushMatrixEx(void);
@@ -4900,7 +4892,7 @@ void fn_800CB1D0(Obj_800CB1D0* o) {
     extern void fn_8029681C(void* p, s32 a, f32 f);
     extern void fn_802968B8(void);
     extern void fn_801E66E0(Obj_800CB1D0* o);
-    Vec3_800CB1D0 v;
+    NJS_POINT3 v;
     o->f38 += o->f5c;
     o->f3c += o->f60;
     o->f40 += o->f64;
@@ -5100,9 +5092,9 @@ void fn_800BA04C(W_800BA04C *w, S_800BA04C *s)
 
 void fn_800BA220(W_800BA220 *w, X_800BA220 *x)
 {
-    Vec3 sa;
-    Vec3 sc;
-    Vec3 sb;
+    NJS_POINT3 sa;
+    NJS_POINT3 sc;
+    NJS_POINT3 sb;
     f32 save = w->f1c;
     f32 zero = 0.0f;
     Node_800BA220 *n = w->list;
@@ -5178,9 +5170,9 @@ void fn_800BBA70(Obj_800C682C *o, W_800BBA70 *w)
     fn_800BAC88(w, b);
     t = w->hook != 0 ? w->hook->w1a0 : 1;
     if (t == 0) {
-        Vec3 sb;
-        Vec3 sc;
-        Vec3 sa;
+        NJS_POINT3 sb;
+        NJS_POINT3 sc;
+        NJS_POINT3 sa;
         sa = w->a;
         sb = w->b;
         sc = w->c;
@@ -5239,9 +5231,9 @@ f32 fn_800C2650(Arg_800C2650 *a)
 void fn_800C381C(Obj_800C381C *o, Src_800C381C *s)
 {
     extern void fn_8009539C(void *a, void *b);
-    extern void fn_80090F9C(Ang *out, Vec3 *a, Vec3 *b);
-    extern f32 fn_80090FF0(Vec3 *a, Vec3 *b);
-    Vec3 t;
+    extern void fn_80090F9C(Ang *out, NJS_POINT3 *a, NJS_POINT3 *b);
+    extern f32 fn_80090FF0(NJS_POINT3 *a, NJS_POINT3 *b);
+    NJS_POINT3 t;
     Ang ang;
     s32 a;
 
@@ -5369,9 +5361,9 @@ void fn_800C43A0(Obj_800C43A0 *o)
     extern s32 lbl_8030EA10[3];
     extern s32 fn_801E7B2C(Mot_800C43A0 *m, void *a, void *b, f32 frame);
     extern void fn_801DCE18(void *in, void *out, s32 ang);
-    extern void fn_80090F9C(void *out, Vec3 *a, Vec3 *b);
+    extern void fn_80090F9C(void *out, NJS_POINT3 *a, NJS_POINT3 *b);
     s32 ang[3];
-    Vec3 tmp;
+    NJS_POINT3 tmp;
     f32 lim;
 
     if (o->mA != 0) {
@@ -5489,10 +5481,10 @@ void fn_800C4584(Obj_800C4584 *o, Src_800C4584 *s)
 void fn_800C48C4(Obj_800C48C4 *o, Src_800C48C4 *s)
 {
     extern void fn_80095360(void *p, s32 mode);
-    extern void fn_80090F9C(Ang *out, Vec3 *a, Vec3 *b);
+    extern void fn_80090F9C(Ang *out, NJS_POINT3 *a, NJS_POINT3 *b);
     extern f32 fn_80291A5C(f32 x);
     Ang ang;
-    Vec3 tmp;
+    NJS_POINT3 tmp;
     s32 a;
 
     if (o->sub != 0) {
@@ -5549,11 +5541,11 @@ void fn_800C48C4(Obj_800C48C4 *o, Src_800C48C4 *s)
 void fn_800CAF6C(Obj_800CAF6C *o)
 {
     extern s32 fn_8009761C(s32 a, s32 b);
-    extern s32 fn_802254A0(Vec3 *v, void *p);
+    extern s32 fn_802254A0(NJS_POINT3 *v, void *p);
     extern void fn_801E17E0(void *p);
     extern s32 fn_800D2924(Obj_800CAF6C *o);
     extern void fn_801E66E0(Obj_800CAF6C *o);
-    Vec3 v;
+    NJS_POINT3 v;
     s32 d;
     s32 e;
     s32 b;

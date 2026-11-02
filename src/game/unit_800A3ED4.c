@@ -145,9 +145,6 @@ typedef struct {
     f32 f74, f78;
 } P;
 extern s32 rand(void);
-typedef struct V3_800A3ED4 {
-    f32 x, y, z;
-} V3_800A3ED4;
 typedef struct Tbl_800A3ED4 {
     s32 n;
     u32 w[8];
@@ -166,9 +163,9 @@ typedef struct Src_800A3ED4 {
     u8 pad20[0x38 - 0x20];
     void* p38;
     u8 pad3c[0x44 - 0x3c];
-    V3_800A3ED4 v44;
+    NJS_POINT3 v44;
     f32 f50, f54, f58;
-    V3_800A3ED4 v5c;
+    NJS_POINT3 v5c;
 } Src_800A3ED4;
 typedef struct Sub_800A3ED4 {
     s16 h0;
@@ -176,9 +173,9 @@ typedef struct Sub_800A3ED4 {
     s32 w2c;
     s32 w30;
     s32 w34;
-    V3_800A3ED4 v38;
+    NJS_POINT3 v38;
     s32 w44, w48, w4c;
-    V3_800A3ED4 v50;
+    NJS_POINT3 v50;
     u8 pad5c[0xe4 - 0x5c];
     s32 we4;
     s32 we8;

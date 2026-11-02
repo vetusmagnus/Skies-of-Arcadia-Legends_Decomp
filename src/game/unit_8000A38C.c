@@ -441,7 +441,7 @@ s32 fn_8000ACE8(void) {
     return 1;
 }
 
-f32 fn_8000ACF0(Vec3* v) {
+f32 fn_8000ACF0(NJS_POINT3* v) {
     return fn_80291A5C(v->z * v->z + (v->x * v->x + v->y * v->y));
 }
 
@@ -1812,9 +1812,9 @@ void fn_8000F0BC(void)
 }
 
 s32 fn_8000AE08(void* obj, f32* out, u8 dir) {
-    Vec3 a;
-    Vec3 c;
-    Vec3 p;
+    NJS_POINT3 a;
+    NJS_POINT3 c;
+    NJS_POINT3 p;
     s32 b[3];
     f32 f;
     f32 s;

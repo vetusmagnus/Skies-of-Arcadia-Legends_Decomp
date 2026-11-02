@@ -262,7 +262,6 @@ extern TexRoot *fn_801DB244(void *p);
 extern void fn_801DBA58(u32 a, u32 b, u32 c);
 extern void fn_801CBC30(void);
 extern void fn_801CBBBC(void);
-typedef struct Pos { f32 x, y, z; } Pos;
 typedef struct Ang { s32 x, y, z; } Ang;
 typedef struct Anim {
     u8 pad0[6];
@@ -271,10 +270,10 @@ typedef struct Anim {
     void* motion;
     f32 frame;
     u8 pad14[0x28 - 0x14];
-    Pos* pos;
+    NJS_POINT3* pos;
     Ang* ang;
     u8 pad30[0x54 - 0x30];
-    Pos lastPos;
+    NJS_POINT3 lastPos;
     Ang lastAng;
 } Anim;
 extern s32 fn_801E7B2C(void* o, f32 frame, void* a, void* b);
@@ -639,10 +638,10 @@ typedef struct Obj_80222838 {
     u8 pad0[0xc];
     s16 count;               /* 0x0c */
     u8 pade[0x18 - 0xe];
-    Pos *pos;      /* 0x18 */
+    NJS_POINT3 *pos;      /* 0x18 */
     void *parts;             /* 0x1c */
     Ang3 *rot;      /* 0x20 */
-    Pos *pos2;     /* 0x24 */
+    NJS_POINT3 *pos2;     /* 0x24 */
     Ang3 *rot2;     /* 0x28 */
     u8 pad2c[0x34 - 0x2c];
     u8 data[1];              /* 0x34 */
@@ -1114,11 +1113,10 @@ void* fn_802205C8(s16 i)
     return lbl_802F89A8[i];
 }
 
-typedef struct { float x, y, z; } Vec3;
-void fn_80221048(Vec3 *v)
+void fn_80221048(NJS_POINT3 *v)
 {
     int i, j;
-    Vec3 t1, t7, t6, t5, t4, t3, t2;
+    NJS_POINT3 t1, t7, t6, t5, t4, t3, t2;
 
     for (i = 0; i < 7; i++) {
         for (j = i + 1; j < 8; j++) {
@@ -2405,21 +2403,21 @@ typedef struct Obj_802239A4 {
     u8 pad0[8];
     Sub_802239A4 *sub;
     u8 pad_c[0x1c - 0xc];
-    Vec3 *p1c;
-    Vec3 *p20;
+    NJS_POINT3 *p1c;
+    NJS_POINT3 *p20;
     u32 *p24;
-    Vec3 *p28;
+    NJS_POINT3 *p28;
     u32 *p2c;
-    Vec3 v30;
-    Vec3 v3c;
+    NJS_POINT3 v30;
+    NJS_POINT3 v3c;
     u32 w48[3];
-    Vec3 v54;
+    NJS_POINT3 v54;
     u32 w60[3];
 } Obj_802239A4;
 
 void fn_802239A4(Obj_802239A4 *o)
 {
-    Vec3 *s = o->p1c;
+    NJS_POINT3 *s = o->p1c;
     u32 *w;
     o->v30.x = s->x;
     o->v30.y = s->y;
@@ -3098,9 +3096,9 @@ typedef struct Rec_80222010 {
     s16 fc;
     u16 fe;
     u8 pad10[8];
-    Pos *p18;
-    Pos *p1c;
-    Pos *p20;
+    NJS_POINT3 *p18;
+    NJS_POINT3 *p1c;
+    NJS_POINT3 *p20;
     s32 f24;
     s32 f28;
     s32 f2c;
@@ -3116,9 +3114,9 @@ typedef struct In_80222010 { V3_80222010 v; V3_80222010 w; f32 g; } In_80222010;
 void fn_80222010(In_80222010 *in) {
     Rec_80222010 *r = fn_801E1A74(1, 0x94);
     if (r) {
-        r->p18 = (Pos *)((u8 *)r + 0x70);
-        r->p1c = (Pos *)((u8 *)r->p18 + 0xc);
-        r->p20 = (Pos *)((u8 *)r->p1c + 0xc);
+        r->p18 = (NJS_POINT3 *)((u8 *)r + 0x70);
+        r->p1c = (NJS_POINT3 *)((u8 *)r->p18 + 0xc);
+        r->p20 = (NJS_POINT3 *)((u8 *)r->p1c + 0xc);
         r->f24 = 0;
         r->f28 = 0;
         r->p18->z = 0.0f;

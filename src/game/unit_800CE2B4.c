@@ -49,11 +49,8 @@ f32 fn_80291A5C(f32 x);
 extern void fn_801E1784(void* p);
 extern s32 fn_802275A4(NJS_TEXLIST* texlist, s32 a);
 extern int rand(void);
-typedef struct {
-    f32 x, y, z;
-} V3;
-extern V3 lbl_802E1118;
-extern void fn_800CF7BC(V3* a, V3* b, f32 c);
+extern NJS_POINT3 lbl_802E1118;
+extern void fn_800CF7BC(NJS_POINT3* a, NJS_POINT3* b, f32 c);
 typedef struct {
     u8 pad0[8];
     f32 x8;           /* 0x08 */
@@ -248,7 +245,7 @@ typedef struct Obj_800D07F8 {
 extern u32 lbl_8030A3C8[3];
 extern u16 lbl_8034740E;
 extern f32 lbl_80347410;
-extern s32 fn_802256A0(V3* v, Sub_800D07F8* s, u32 a, u32 b);
+extern s32 fn_802256A0(NJS_POINT3* v, Sub_800D07F8* s, u32 a, u32 b);
 #define FREE_CHAIN(w) do { \
     Node_800B63A4* p = (w)->x25c; \
     if (p != NULL) { \
@@ -799,7 +796,7 @@ void fn_800D1268(Self_800D1268_UNIT0000 *self) {
     self->f1b0 = 0;
 }
 
-void fn_800CF7BC(V3* v, V3* d, f32 max) {
+void fn_800CF7BC(NJS_POINT3* v, NJS_POINT3* d, f32 max) {
     f32 nx, ny, nz;
     f32 cur2, new2, max2;
 
@@ -829,7 +826,7 @@ void fn_800CF7BC(V3* v, V3* d, f32 max) {
     }
 }
 
-f32 fn_800CFAB8(V3* out, Ent_800CFAB8* a, Src_800CFAB8* b, f32 p) {
+f32 fn_800CFAB8(NJS_POINT3* out, Ent_800CFAB8* a, Src_800CFAB8* b, f32 p) {
     f32 v;
     f32 t;
 
@@ -1292,7 +1289,7 @@ u32 fn_800CE4B4(void) {
     return (v | -v) >> 31;
 }
 
-f32 fn_800CF988(V3 *out, Ent_800CF988 *a, Src_800CFAB8 *b, f32 p)
+f32 fn_800CF988(NJS_POINT3 *out, Ent_800CF988 *a, Src_800CFAB8 *b, f32 p)
 {
     f32 v;
     f32 lim;
@@ -1336,7 +1333,7 @@ f32 fn_800CF988(V3 *out, Ent_800CF988 *a, Src_800CFAB8 *b, f32 p)
 }
 
 s32 fn_800D07F8(Obj_800D07F8* o) {
-    V3 v;
+    NJS_POINT3 v;
     s32 res = 0;
     if (o->p1b8 != NULL) {
         o->p1b8->h30 = 1;

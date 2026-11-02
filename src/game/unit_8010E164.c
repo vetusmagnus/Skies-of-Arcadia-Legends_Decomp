@@ -670,9 +670,6 @@ typedef struct Chr_80122ED8 {
     Path *path;
 } Chr_80122ED8;
 extern void fn_8009FDA0(s32 a, s32 b, NJS_POINT3 *out, s32 c, s32 *d, s32 e, s32 f);
-typedef struct Vec3 {
-    f32 x, y, z;
-} Vec3;
 typedef struct Eff_80110AA0 {
     u8 pad0[8];
     void *w8;
@@ -1479,7 +1476,7 @@ typedef struct Own_80124634 {
 } Own_80124634;
 typedef struct Obj2_80124634 {
     u8 _00[0x38];
-    Vec3 pos;
+    NJS_POINT3 pos;
     u8 _44[0xa4];
     s32 fe8;
     u8 _ec[4];
@@ -1507,7 +1504,7 @@ typedef struct In_80124634 {
     u8 _1c[0x18];
     s16 h34;
     u8 _36[0x1e];
-    Vec3 v54;
+    NJS_POINT3 v54;
 } In_80124634;
 typedef struct Cur_80126118 {
     u8 _00[4];
@@ -1763,7 +1760,7 @@ extern void fn_80005AD8(void *a, void *b);
 extern s32 fn_8011E72C(Ctx_8011DD9C *c);
 extern void fn_8020F154(s32 a, s32 b);
 extern s32 fn_8011D958(Ctx_8011DD9C *c, Sub *s, s32 a);
-extern f32 fn_8011A8B0(Vec3 *a, Vec3 *b);
+extern f32 fn_8011A8B0(NJS_POINT3 *a, NJS_POINT3 *b);
 extern s32 fn_80156A8C(s32 x);
 extern void fn_801575C8(void *a, s32 b, f32 c);
 extern void fn_80120C64(void *o, void *p);
@@ -1783,7 +1780,7 @@ typedef struct {
     u8 padc[8];
     s16 x14;
     s16 x16;
-    Vec3 pos;
+    NJS_POINT3 pos;
     u8 pad24[0x38];
     u8 *x5c;
     u8 *x60;
@@ -1793,7 +1790,7 @@ typedef struct {
 } O;
 typedef struct {
     u8 pad0[0x38];
-    Vec3 pos;
+    NJS_POINT3 pos;
     u8 pad44[0x1e4 - 0x44];
     B *x1e4;
     u8 pad1e8[5];
@@ -1843,8 +1840,8 @@ typedef struct {
     Ang3_8010F3A8 ang;
     u8 pad50[0xc0 - 0x50];
     Ang3_8010F3A8 start;
-    Vec3 xcc;
-    Vec3 xd8;
+    NJS_POINT3 xcc;
+    NJS_POINT3 xd8;
     u8 pad_e4[0x170 - 0xe4];
     u16 h170;
     u16 h172;
@@ -1861,7 +1858,7 @@ typedef struct {
 } Row_80114950;
 typedef struct {
     u8 pad0[0x38];
-    Vec3 pos;
+    NJS_POINT3 pos;
     u8 pad44[0x1bc - 0x44];
     void* x1bc;
 } Chr_80114950;
@@ -1885,7 +1882,7 @@ typedef struct {
 } Mdl_8012239C;
 typedef struct {
     u8 pad0[0x38];
-    Vec3 pos;
+    NJS_POINT3 pos;
     u8 pad44[0x17a - 0x44];
     u16 x17a;
     u8 pad17c[0x1c8 - 0x17c];
@@ -1907,7 +1904,7 @@ typedef struct {
 } B_8012239C;
 typedef struct {
     u8 pad0[0x38];
-    Vec3 pos;
+    NJS_POINT3 pos;
     u8 pad44[0x1e4 - 0x44];
     B_8012239C* x1e4;
     u8 pad1e8[0x22c - 0x1e8];
@@ -1919,7 +1916,7 @@ typedef struct {
     u8 pad4[0x8 - 0x4];
     s32 x8;
     u8 padc[0x14 - 0xc];
-    Vec3 pos;
+    NJS_POINT3 pos;
     u8 pad20[0x2c - 0x20];
     u8* x2c;
     u8 pad30[0x38 - 0x30];
@@ -2011,11 +2008,11 @@ typedef struct {
 } Model_8010F924;
 typedef struct {
     u8 pad0[0x38];
-    Vec3 pos;
+    NJS_POINT3 pos;
     Ang3_8010F3A8 ang;
     u8 pad50[0x100 - 0x50];
     void* texlist;
-    Vec3 prev;
+    NJS_POINT3 prev;
     u8 pad110[0x1b8 - 0x110];
     void* x1b8;
     Model_8010F924* model;
@@ -5186,23 +5183,23 @@ s32 fn_80128C1C(FormTbl* t)
 
 Node_80110AA0 *fn_80110AA0(Self_80110AA0 *self, Tgt_80110AA0 *tgt, s32 ang, s32 flag)
 {
-    extern Vec3 lbl_802B30F0;
+    extern NJS_POINT3 lbl_802B30F0;
     extern u8 lbl_802E4CB0[0x84];
     extern Node_80110AA0 *lbl_80347414;
     extern Eff_80110AA0 *fn_80222224(void *p);
     extern void njUnitMatrix(f32 *m);
     extern void njTranslate(f32 *m, f32 x, f32 y, f32 z);
     extern void njRotateXYZ(f32 *m, s32 x, s32 y, s32 z);
-    extern void njCalcPoint(f32 *m, Vec3 *p, Vec3 *out);
-    extern void njUnitVector(Vec3 *v);
-    extern f32 njInnerProduct(Vec3 *a, Vec3 *b);
+    extern void njCalcPoint(f32 *m, NJS_POINT3 *p, NJS_POINT3 *out);
+    extern void njUnitVector(NJS_POINT3 *v);
+    extern f32 njInnerProduct(NJS_POINT3 *a, NJS_POINT3 *b);
     extern double acos(double x);
     extern Node_80110AA0 *fn_8022300C(void *list);
     extern Node_80110AA0 *fn_80222F14(void *list, void *n);
     extern void fn_80222964(void *p);
     extern void fn_801E1784(void *p);
-    Vec3 out;
-    Vec3 v = lbl_802B30F0;
+    NJS_POINT3 out;
+    NJS_POINT3 v = lbl_802B30F0;
     f32 m[16];
     Eff_80110AA0 *e;
     Node_80110AA0 *found;
@@ -7251,7 +7248,7 @@ void fn_8011FE2C(Rec_8011FE2C *r) {
     } while (--n != 0);
 }
 
-static inline void VecCopy_80124634(Vec3* d, Vec3* s) {
+static inline void VecCopy_80124634(NJS_POINT3* d, NJS_POINT3* s) {
     f32 x = s->x;
     f32 y = s->y;
     f32 z = s->z;
@@ -7268,8 +7265,8 @@ void fn_80124634(Obj2_80124634* o, In_80124634* in) {
     Own_80124634* own;
     switch (in->kind) {
     case 0x18: {
-        Vec3 saved;
-        Vec3* ps = &saved;
+        NJS_POINT3 saved;
+        NJS_POINT3* ps = &saved;
         Rec_80124634 res;
         s32 flag;
         VecCopy_80124634(ps, &o->pos);
@@ -7646,7 +7643,7 @@ void fn_801264A4(void *p, s32 n, f32 f) {
 }
 
 /* out = a - b */
-void fn_8011A960(Vec3 *out, Vec3 *a, Vec3 *b) {
+void fn_8011A960(NJS_POINT3 *out, NJS_POINT3 *a, NJS_POINT3 *b) {
     f32 ax = a->x, ay = a->y, az = a->z;
     f32 bx = b->x, by = b->y, bz = b->z;
     out->z = az - bz;
@@ -7760,7 +7757,7 @@ void fn_801213F0(O *o, A *a) {
     u16 id;
     u8 *r31;
     B *b = a->x1e4;
-    Vec3 *ap;
+    NJS_POINT3 *ap;
     void *w;
     u8 *p6c;
     u8 *p68;
@@ -7791,7 +7788,7 @@ void fn_801213F0(O *o, A *a) {
     r31 = *(u8 **)((u8 *)b->x10 + 0x24);
     o->x5c = r31;
     o->x64 = *(u8 **)(*(u8 **)(r31 + 0x1c8) + 0x10) + 0x3c;
-    s = (s32)(0.1f * fn_8011A8B0((Vec3 *)(r31 + 0x38), ap) + 1.0f);
+    s = (s32)(0.1f * fn_8011A8B0((NJS_POINT3 *)(r31 + 0x38), ap) + 1.0f);
     if (s > 50) s = 50;
     w = (u8 *)o + 0x24;
     t = b->ent[idx].x10;
@@ -7806,7 +7803,7 @@ void fn_801213F0(O *o, A *a) {
         o->flags |= 0x100;
     }
     {
-        Vec3 v;
+        NJS_POINT3 v;
         fn_801575C8(w, fn_80156A8C(*(u16 *)(r31 + 0x17a)), (f32)s);
         fn_8011A960((void *)(&v), (void *)(w), (void *)(ap));
         fn_801DD5E8((void *)(o->x68 + 0x44), (void *)(&v));
@@ -8018,11 +8015,11 @@ void fn_8012239C(O_8012239C* o, A_8012239C* a) {
     u16 id;
     Chr_8012239C* r;
     s32 s;
-    Vec3* ap;
+    NJS_POINT3* ap;
     void* w;
     B_8012239C* b;
     Sub_8012239C* sub;
-    Vec3 v;
+    NJS_POINT3 v;
 
     b = a->x1e4;
     if (b == NULL) return;
@@ -8843,7 +8840,7 @@ s32 fn_80114AB8(s32 a, f32 t, s32 unused, Src *e) {
     return r;
 }
 
-f32 fn_8011A8B0(Vec3 *a, Vec3 *b) {
+f32 fn_8011A8B0(NJS_POINT3 *a, NJS_POINT3 *b) {
     f32 dx = a->x - b->x;
     f32 dy = a->y - b->y;
     f32 dz = a->z - b->z;

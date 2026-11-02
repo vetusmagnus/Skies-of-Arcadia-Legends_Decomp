@@ -1,7 +1,6 @@
 #include "types.h"
 #include "ninja.h"
 s32 fn_80227068(s32 n);
-typedef struct { f32 x, y, z; } V3;
 typedef struct U553FC {
     s8 b0;
     u8 pad1[0xf0 - 1];
@@ -11,7 +10,7 @@ typedef struct U553FC {
 } U553FC;
 typedef struct W553FC {
     u8 pad0[0x1c];
-    V3 pos;
+    NJS_POINT3 pos;
     u8 pad28[0x4c - 0x28];
     U553FC *u;
 } W553FC;
@@ -23,13 +22,13 @@ typedef struct A553FC {
     u8 pad0[0x14];
     s16 s14;
     s16 s16;
-    V3 v18;
+    NJS_POINT3 v18;
 } A553FC;
 typedef struct S553FC {
     u16 cnt;
     u8 pad2[2];
     T553FC *target;
-    V3 v8;
+    NJS_POINT3 v8;
     A553FC *a;
 } S553FC;
 typedef struct O553FC {
@@ -47,8 +46,8 @@ typedef struct G553FC {
     s32 count;
 } G553FC;
 extern G553FC lbl_8030A10C;
-extern void fn_80071CF0(V3 *, V3 *);
-extern void fn_8001E4A0(V3 *, V3 *, T553FC *);
+extern void fn_80071CF0(NJS_POINT3 *, NJS_POINT3 *);
+extern void fn_8001E4A0(NJS_POINT3 *, NJS_POINT3 *, T553FC *);
 extern void fn_80037FD8(void *cmd, u8 *state);
 typedef struct Unit {
     u8 pad0[0xEC];
@@ -115,7 +114,7 @@ s32 fn_800553B4(void) {
 
 void fn_800553FC(O553FC *o) {
     S553FC *s = o->s;
-    V3 v;
+    NJS_POINT3 v;
     switch (o->state) {
     case 0:
         if (s->cnt != s->a->s14) {

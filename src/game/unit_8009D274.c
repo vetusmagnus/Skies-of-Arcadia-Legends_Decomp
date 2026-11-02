@@ -139,7 +139,6 @@ typedef struct Rec {
     u32 id;         /* 0x08 */
     RecSub* pc;     /* 0x0C */
 } Rec;
-typedef struct Vec3_800A12D8 { f32 x, y, z; } Vec3_800A12D8;
 extern f32 fn_80291A5C(f32 x);
 /* Four separate .bss arrays of the unit, reached through its section base. */
 extern s32 lbl_803033B0[6];
@@ -2111,9 +2110,9 @@ void fn_800A39E0(Task* o) {
 /* Matches only with the self-assignment after the length call: without a
    store to d there, MWCC keeps d.z in f30 across the calls where the original
    reloads it. Rotates p about the Y axis through c by angle a (XZ plane). */
-void fn_800A12D8(Vec3_800A12D8 *p, Vec3_800A12D8 *c, Angle a)
+void fn_800A12D8(NJS_POINT3 *p, NJS_POINT3 *c, Angle a)
 {
-    Vec3_800A12D8 d;
+    NJS_POINT3 d;
     f32 s;
     f32 co;
 

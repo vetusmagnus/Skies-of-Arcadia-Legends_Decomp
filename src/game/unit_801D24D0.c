@@ -760,9 +760,8 @@ struct Layout {
 };
 void fn_801D81C0(Layout* sprite, Rec23* req, f32 z, f32 a, f32 b, u32 attr, u32 blend, NJS_TEXLIST* texlist);
 void fn_801D4A2C(Layout* lay, u32 flags, u32 mode, NJS_TEXLIST* tex, s32 vmode, f32 f1, f32 f2, f32 base, f32 f4, f32 a, f32 b);
-typedef struct Vec3 { f32 x, y, z; } Vec3;
-typedef struct Line3 { Vec3 pos; Vec3 dir; } Line3;
-extern f32 fn_8028F9B0(Line3* a, Line3* b, Vec3* hit, Vec3* aux);
+typedef struct Line3 { NJS_POINT3 pos; NJS_POINT3 dir; } Line3;
+extern f32 fn_8028F9B0(Line3* a, Line3* b, NJS_POINT3* hit, NJS_POINT3* aux);
 extern s32 lbl_80347578;
 
 void fn_801D49E4(Layout* a, u32 b, u32 c, s32 d, f32 p1, f32 p2, f32 p3, f32 p4) {
@@ -5244,9 +5243,9 @@ extern void fn_80290ED4(VertexCol* v, s32 count, s32 flag);
 #endif
 
 #ifdef NONMATCHING
-s32 fn_801D44B0(Vec3* out, Vec3* a, Vec3* b, Vec3* tri) {
-    Vec3 hit;
-    Vec3 aux;
+s32 fn_801D44B0(NJS_POINT3* out, NJS_POINT3* a, NJS_POINT3* b, NJS_POINT3* tri) {
+    NJS_POINT3 hit;
+    NJS_POINT3 aux;
     Line3 l1;
     Line3 l2;
     s32 ret = -1;
@@ -5291,7 +5290,7 @@ s32 fn_801D732C(s32 port, s32 dead)
 
 /* Is p inside triangle abc, projected onto the y/z plane (edge cross products >= -0.001)? */
 #ifdef NONMATCHING
-s32 fn_801D289C(Vec3* a, Vec3* b, Vec3* c, Vec3* p) {
+s32 fn_801D289C(NJS_POINT3* a, NJS_POINT3* b, NJS_POINT3* c, NJS_POINT3* p) {
     f32 cy;
     f32 cz;
     f32 by;
@@ -5328,7 +5327,7 @@ s32 fn_801D289C(Vec3* a, Vec3* b, Vec3* c, Vec3* p) {
 /* Is p inside triangle abc (x/y plane)? */
 /* NEAR (8 lines): p.x - a.x lands in f9 instead of reusing f1 in the second test; rest matches. */
 #ifdef NONMATCHING
-s32 fn_801D2934(Vec3 *a, Vec3 *b, Vec3 *c, Vec3 *p)
+s32 fn_801D2934(NJS_POINT3 *a, NJS_POINT3 *b, NJS_POINT3 *c, NJS_POINT3 *p)
 {
     f32 cx, cy, bx, by, ax, ay, py, m1, px, m0;
     ax = a->x;
@@ -5353,7 +5352,7 @@ s32 fn_801D2934(Vec3 *a, Vec3 *b, Vec3 *c, Vec3 *p)
 
 /* Is p inside triangle abc, projected onto the x/z plane (edge cross products >= -0.001)? */
 #ifdef NONMATCHING
-s32 fn_801D29CC(Vec3* a, Vec3* b, Vec3* c, Vec3* p) {
+s32 fn_801D29CC(NJS_POINT3* a, NJS_POINT3* b, NJS_POINT3* c, NJS_POINT3* p) {
     f32 cx;
     f32 cz;
     f32 bx;

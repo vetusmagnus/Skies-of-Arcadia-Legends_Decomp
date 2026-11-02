@@ -266,7 +266,6 @@ typedef struct AkRd {
     u32 w80;
 } AkRd;
 extern void fn_801C74D0(AkRd* f);
-typedef struct { f32 x, y, z; } Vtx;
 typedef struct { s16 i[4]; } Quad;
 /* akFIO.c LZSS ("AKLZ") expander: input stream in work, output to data, 0x1000-byte window in ring. */
 typedef struct AkLz {
@@ -677,7 +676,6 @@ void fn_801C6224(void) {
     lbl_803471CC = DVDGetDriveStatus();
 }
 
-typedef struct { float x, y, z; } Vec3;
 /* A controller read (lbl_80311A60 holds one per port). */
 typedef struct PadState { u32 x0; u8 pad4[4]; u32 x8; u8 padc[8]; s16 x14; s16 x16; } PadState;
 typedef struct PadInfo { PadState* pads[6]; } PadInfo;
@@ -721,10 +719,10 @@ void fn_801C7904(void)
     }
 }
 
-void fn_801C7A2C(Vec3 *v)
+void fn_801C7A2C(NJS_POINT3 *v)
 {
     int i, j;
-    Vec3 t1, t7, t6, t5, t4, t3, t2;
+    NJS_POINT3 t1, t7, t6, t5, t4, t3, t2;
 
     for (i = 0; i < 7; i++) {
         for (j = i + 1; j < 8; j++) {
@@ -759,9 +757,9 @@ void fn_801C7A2C(Vec3 *v)
     if (v[6].z > v[7].z) { t7 = v[7]; v[7] = v[6]; v[6] = t7; }
 }
 
-extern void fn_801D9634(Vec3 *v, void *out);
-void fn_801C588C(Vec3 *a, Vec3 *b, void *out) {
-    Vec3 d;
+extern void fn_801D9634(NJS_POINT3 *v, void *out);
+void fn_801C588C(NJS_POINT3 *a, NJS_POINT3 *b, void *out) {
+    NJS_POINT3 d;
     if (a != 0 && b != 0 && out != 0) {
         d.x = b->x - a->x;
         d.y = b->y - a->y;
@@ -1308,7 +1306,7 @@ s32 fn_801C6C7C(AkRd* f) {
 }
 
 /* Is (px, pz) inside the quad? (2D cross product of each edge, using the vertices' y and z.) */
-s32 fn_801C81DC(Quad* q, Vtx* v, f32 px, f32 pz)
+s32 fn_801C81DC(Quad* q, NJS_POINT3* v, f32 px, f32 pz)
 {
     f32 zero = 0.0f;
     f32 ax, az;
@@ -1337,7 +1335,7 @@ s32 fn_801C81DC(Quad* q, Vtx* v, f32 px, f32 pz)
 }
 
 /* Is (px, pz) inside the quad? (2D cross product of each edge, using the vertices' x and y.) */
-s32 fn_801C82C8(Quad* q, Vtx* v, f32 px, f32 pz)
+s32 fn_801C82C8(Quad* q, NJS_POINT3* v, f32 px, f32 pz)
 {
     f32 zero = 0.0f;
     f32 ax, az;

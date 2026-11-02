@@ -523,11 +523,8 @@ void fn_801CD73C(DrawVtx *v, s32 n, s32 a, u32 flags) {
     }
 }
 
-typedef struct DrawPt {
-    f32 x, y, z;
-} DrawPt;
 typedef struct LineArgs {
-    DrawPt* pts;
+    NJS_POINT3* pts;
 } LineArgs;
 void fn_802AA2F0(LineArgs *v, s32 n, s32 a);
 

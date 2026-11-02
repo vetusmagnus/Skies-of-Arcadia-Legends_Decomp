@@ -1227,7 +1227,6 @@ typedef struct O5B094 {
     u8 pad1A[10];
     S5B094 *s;
 } O5B094;
-typedef struct V60B98 { f32 x, y, z; } V60B98;
 typedef struct P60B98 { f32 x, z; } P60B98;
 typedef struct Seg60B98 {
     P60B98 a, b;
@@ -8638,7 +8637,7 @@ void fn_8005B094(O5B094 *o) {
     s->cnt = s->cnt + 1;
 }
 
-static inline void mkseg_60B98(Seg60B98 *s, V60B98 *p, V60B98 *q) {
+static inline void mkseg_60B98(Seg60B98 *s, NJS_POINT3 *p, NJS_POINT3 *q) {
     s->a.x = p->x;
     s->a.z = p->z;
     s->b.x = q->x;
@@ -8656,7 +8655,7 @@ static inline f32 segy_60B98(Seg60B98 *s, s32 i, f32 x) {
     return x * s[i].m + s[i].c;
 }
 
-s32 fn_80060B98(V60B98 *p0, V60B98 *p1, V60B98 *p2, V60B98 *pt) {
+s32 fn_80060B98(NJS_POINT3 *p0, NJS_POINT3 *p1, NJS_POINT3 *p2, NJS_POINT3 *pt) {
     Seg60B98 seg[3];
     s8 a = -1;
     s8 b = -1;

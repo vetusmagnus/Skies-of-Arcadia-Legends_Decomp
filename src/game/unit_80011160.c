@@ -120,7 +120,6 @@ extern s32 rand(void);
 /* lbl_80309E24: the character task table (void* in unit_80005B50.c). */
 extern Task* lbl_80309E24[];
 extern f32 fn_80071E9C(void*, void*);
-typedef struct V5BF30 { f32 x, y, z; } V5BF30;
 extern void* memset(void* dst, int c, u32 n);
 typedef struct {
     u8 pad0[0x48];
@@ -598,7 +597,7 @@ void fn_800121D8(Task* t)
     u->x8 += 1.0f;
 }
 
-void fn_80013504(Vec3* obj, Vec3* src, void* p5, f32 a, f32 b) {
+void fn_80013504(NJS_POINT3* obj, NJS_POINT3* src, void* p5, f32 a, f32 b) {
     fn_80061C80(obj, 0.0f, b, a, 0);
     obj->x = obj->x + src->x;
     obj->z = obj->z + src->z;
@@ -814,7 +813,7 @@ void fn_80012130(void* p) {
     fn_80071CF0(&lbl_80309EC8.x4c, p);
 }
 
-f32 fn_8001359C(Vec3* obj, f32* out) {
+f32 fn_8001359C(NJS_POINT3* obj, f32* out) {
     f32 b;
     f32 a;
     f32 v[3];
@@ -832,7 +831,7 @@ f32 fn_8001359C(Vec3* obj, f32* out) {
     return r;
 }
 
-f32 fn_8001363C(Vec3* obj, f32* out) {
+f32 fn_8001363C(NJS_POINT3* obj, f32* out) {
     f32 b;
     f32 a;
     f32 v[3];
@@ -894,7 +893,7 @@ void fn_80011394(s8 sel) {
 
 /* Copies each non-zero component of v into lbl_80309EC8.va (the float test is `if (x)`,
  * which compares x against 0.0f in the order the original has; `x != 0.0f` swaps fcmpu). */
-void fn_80012078(V5BF30* v) {
+void fn_80012078(NJS_POINT3* v) {
     if (v->x) {
         lbl_80309EC8.va[0] = v->x;
     }

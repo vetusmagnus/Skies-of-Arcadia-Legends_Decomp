@@ -1557,11 +1557,10 @@ typedef struct {
     struct { u8 pad0[8]; void *f8; } *f0;
     s32 f4;
 } Res;
-typedef struct { f32 x, y, z; } Vec3;
 typedef struct Obj_8010AE90 {
     u8 pad0[0x38];
-    Vec3 f38;
-    Vec3 f44;
+    NJS_POINT3 f38;
+    NJS_POINT3 f44;
     u8 pad50[0xb4 - 0x50];
     f32 fb4[3];
     f32 fc0[3];
@@ -1576,9 +1575,9 @@ typedef struct Obj_8010AE90 {
     u8 pad194[0x1bc - 0x194];
     Attach *attach; /* 0x1BC */
     u8 pad1c0[0x20c - 0x1c0];
-    Vec3 f20c;
+    NJS_POINT3 f20c;
     u8 pad218[0x24c - 0x218];
-    Vec3 f24c;
+    NJS_POINT3 f24c;
 } Obj_8010AE90;
 typedef struct {
     u8 pad0[0x1c];
@@ -1652,9 +1651,9 @@ extern void fn_800C3428(void* o);
 typedef struct {
     s32 x, y, z;
 } IVec_800D9BA0;
-extern void fn_80090B68(IVec_800D9BA0* k, Vec3* v);
+extern void fn_80090B68(IVec_800D9BA0* k, NJS_POINT3* v);
 extern void fn_80090BE4(f32* p, IVec_800D9BA0* k);
-extern void fn_80090A7C(f32* p, Vec3* v);
+extern void fn_80090A7C(f32* p, NJS_POINT3* v);
 extern s32 fn_800E126C(EvObj* w);
 typedef struct {
     u8 pad0[0x20];
@@ -1771,11 +1770,6 @@ typedef struct {
         f32 oz;
     }* ext;
 } Obj_800F2270;
-typedef struct {
-    f32 x;
-    f32 y;
-    f32 z;
-} Vec_800F2270;
 typedef struct {
     u8 pad0[0x24];
     s32 f24;
@@ -2719,7 +2713,7 @@ void fn_800D8924(Task* t) {
     EvInfoFade* info;
     EvObj* e = t->work;
     IVec_800D9BA0 k;
-    Vec3 v;
+    NJS_POINT3 v;
     info = e->ext->info;
     k.x = e->b16a;
     k.y = 0;
@@ -2834,7 +2828,7 @@ void fn_800D8E1C(Task* t) {
     EvInfoFade* info;
     EvObj* e = t->work;
     IVec_800D9BA0 k;
-    Vec3 v;
+    NJS_POINT3 v;
     NJS_POINT3 p;
     info = e->ext->info;
     k.x = e->b16a;
@@ -2963,7 +2957,7 @@ void fn_800D934C(Task* t) {
     EvInfoFade* info;
     EvObj* e = t->work;
     IVec_800D9BA0 k;
-    Vec3 v;
+    NJS_POINT3 v;
     NJS_POINT3 p;
     info = e->ext->info;
     k.x = e->b16a;
@@ -3159,7 +3153,7 @@ static inline f32 AbsF_800DBB4C(f32 x) {
 void fn_800DBB4C(Task* t) {
     EvObj* w = t->work;
     IVec_800D9BA0 k;
-    Vec3 v;
+    NJS_POINT3 v;
     f32 near;
     f32 far;
     k.x = w->b16a;
@@ -3257,7 +3251,7 @@ void fn_800DC828(Task *self)
 {
     EvObj *e = self->work;
     IVec_800D9BA0 k;
-    Vec3 v;
+    NJS_POINT3 v;
     u32 type;
     u16 hw;
     EvObj *ev;
@@ -3440,7 +3434,7 @@ void fn_800DD5B4(Task* t) {
     EvInfoBox* info;
     EvObj* e = t->work;
     IVec_800D9BA0 k;
-    Vec3 v;
+    NJS_POINT3 v;
     info = e->ext->info;
     k.x = e->b16a;
     k.y = 0;
@@ -7962,7 +7956,7 @@ void fn_800D99B4(Obj_800D99B4* o) {
 void fn_800D9BA0(Task* o) {
     EvObj* w = o->work;
     IVec_800D9BA0 k;
-    Vec3 v;
+    NJS_POINT3 v;
     k.x = w->b16a;
     k.y = 0;
     k.z = w->b16b;
@@ -8106,15 +8100,15 @@ void fn_800ED360(void) {
     }
 }
 
-void fn_800F2270(Obj_800F2270* o, u8 dir, Vec_800F2270* out) {
-    extern Vec_800F2270 lbl_802B21B0[8];
-    extern Vec_800F2270 lbl_802B2210;
+void fn_800F2270(Obj_800F2270* o, u8 dir, NJS_POINT3* out) {
+    extern NJS_POINT3 lbl_802B21B0[8];
+    extern NJS_POINT3 lbl_802B2210;
     extern s32 fn_801C6068(Obj_800F2270* o, s32 n);
     extern void fn_801C5AB4(Obj_800F2270* o, Angle* out);
     extern void njScale(NJS_MATRIX m, f32 x, f32 y, f32 z);
-    extern void njCalcVector(NJS_MATRIX m, Vec_800F2270* in, Vec_800F2270* out);
+    extern void njCalcVector(NJS_MATRIX m, NJS_POINT3* in, NJS_POINT3* out);
     NJS_MATRIX m;
-    Vec_800F2270 v;
+    NJS_POINT3 v;
     Angle rot[3];
     f32 scale;
     if (o != 0) {
@@ -8687,7 +8681,7 @@ s32 fn_8010D12C(Menu *m) {
 void fn_800D9E00(Task* o) {
     EvObj* w = o->work;
     IVec_800D9BA0 k;
-    Vec3 v;
+    NJS_POINT3 v;
     k.x = w->b16a;
     k.y = 0;
     k.z = w->b16b;
@@ -10432,13 +10426,13 @@ extern void fn_801D9CF0(f32 a, f32 b, f32 c);
 extern void fn_801D9B34(void);
 extern u32 fn_801D0B40(void);
 extern void fn_801D0B48(u32 v);
-extern void fn_80090B68(IVec_800D9BA0* k, Vec3* v);
+extern void fn_80090B68(IVec_800D9BA0* k, NJS_POINT3* v);
 
 void fn_800DCB78(Task* t)
 {
     EvObj* w = t->work;
     IVec_800D9BA0 k;
-    Vec3 v;
+    NJS_POINT3 v;
     u32 s;
 
     k.x = w->b16a;

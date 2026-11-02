@@ -688,7 +688,6 @@ typedef struct {
     s16 a;
     u16 b;
 } Probe;
-typedef struct { f32 x, y, z; } Vec;
 typedef struct {
     u8 pad0[0x38];
     f32 x38, x3c, x40;
@@ -718,7 +717,7 @@ extern s32 fn_802254A0(f32 *p, void *q);
 extern s32 fn_80224588(s32 a, Probe *p, s32 b);
 extern void fn_801673D8(Obj_8015D768 *o, s32 a);
 extern void fn_801671C0(Obj_8015D768 *o);
-extern void fn_802135B4(Vec *v, f32 *out);
+extern void fn_802135B4(NJS_POINT3 *v, f32 *out);
 typedef struct {
     u8 pad0[0x38];
     f32 x38, x3c, x40;
@@ -1173,16 +1172,16 @@ void fn_801517EC(Fx *p);
 void fn_801515EC(Fx *p);
 void fn_801514C4(Fx *o, s32 flag);
 typedef struct K_80150014 {
-    Vec pos;
+    NJS_POINT3 pos;
     Blk w;
     f32 f18;
-    Vec v1c;
-    Vec v28;
-    Vec v34;
+    NJS_POINT3 v1c;
+    NJS_POINT3 v28;
+    NJS_POINT3 v34;
     Blk w40;
 } K_80150014;
 typedef struct In_80150014 {
-    Vec pos;
+    NJS_POINT3 pos;
     Blk w;
 } In_80150014;
 extern K_80150014 lbl_80306AC8;
@@ -1209,7 +1208,7 @@ static inline void Select(s32 t) {
     }
 }
 
-void fn_80150014(In_80150014* a, f32* b, Vec* c) {
+void fn_80150014(In_80150014* a, f32* b, NJS_POINT3* c) {
     BtlCam* m;
 
     lbl_80306AC8.v28.x = lbl_80306AC8.v1c.x;
@@ -1612,14 +1611,9 @@ extern void fn_80156584(void);
 extern void fn_8015983C(s32 on, s32 who, SeqRec *rec, s32 flag);
 extern void fn_80159F28(s32 who);
 extern void fn_8015A36C(s32 who);
-typedef struct Vec_8015D124 {
-    f32 x;
-    f32 y;
-    f32 z;
-} Vec_8015D124;
 typedef struct A_8015D124 {
     u8 pad[0x50];
-    Vec_8015D124 pos;
+    NJS_POINT3 pos;
     u8 pad2[0x168 - 0x5c];
     s16 mode;
 } A_8015D124;
@@ -1633,7 +1627,7 @@ typedef struct Obj_8015D124 {
 } Obj_8015D124;
 typedef struct St_8015D124 {
     u8 pad[0x1c];
-    Vec_8015D124 v;
+    NJS_POINT3 v;
     u32 cnt;
 } St_8015D124;
 
@@ -1916,7 +1910,7 @@ void fn_80157360(s32 idx) {
     }
 }
 
-void fn_80157510(In_80150014* a, f32* b, Vec* c) {
+void fn_80157510(In_80150014* a, f32* b, NJS_POINT3* c) {
     fn_80150014(a, b, c);
 }
 
@@ -3713,7 +3707,7 @@ void fn_801580A4(s32 *out, f32 *v) {
 s32 fn_8015D768(Ent_8015D768 *self, Arg *a) {
     Obj_8015D768 *o = self->x1d8->x8;
     f32 y;
-    Vec v;
+    NJS_POINT3 v;
     Probe p;
     if (3.4028235e38f != a->x1c) {
         o->x38 = a->x1c;

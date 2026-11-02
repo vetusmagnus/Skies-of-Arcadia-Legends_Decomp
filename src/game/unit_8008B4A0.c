@@ -125,17 +125,11 @@ typedef struct {
     s32 y; /* 0x04 */
     s32 z; /* 0x08 */
 } Src;
-typedef struct {
-    f32 x; /* 0x00 */
-    f32 y; /* 0x04 */
-    f32 z; /* 0x08 */
-} Vec3F;
 f32 fn_802918DC(f32 x);
 extern EvObj* lbl_80347450;
 s32 fn_8015F1F0(void* p);
 void fn_801DD3B8(void* a, void* b, void* c);
-typedef struct { f32 x, y, z; } Vec3;
-typedef struct { u8 pad0[0x14]; s16 count; u8 pad16[6]; Vec3 v; u8 pad28[0x4c - 0x28]; Sub80309700* x4c; } Sub_8008B600;
+typedef struct { u8 pad0[0x14]; s16 count; u8 pad16[6]; NJS_POINT3 v; u8 pad28[0x4c - 0x28]; Sub80309700* x4c; } Sub_8008B600;
 typedef struct { u8 pad[0x24]; Sub_8008B600 *x24; } Ent_8008B600;
 extern Ent_8008B600 *fn_80021658(s8 idx);
 extern s32 fn_80078610(s8 idx);
@@ -467,15 +461,15 @@ typedef struct Cam_80091040 {
 typedef struct {
     NJS_TEXLIST* texlist; /* 0x00 */
     u8 pad4[0x50];
-    Vec3* pos;            /* 0x54 */
+    NJS_POINT3* pos;            /* 0x54 */
     u32* col;             /* 0x58 */
     s16* uv;              /* 0x5C */
     u8 pad60[4];
-    Vec3 trans;           /* 0x64 */
+    NJS_POINT3 trans;           /* 0x64 */
     u8 pad70[4];
     Angle rotx;           /* 0x74 */
     Angle rotz;           /* 0x78 */
-    Vec3 scale;           /* 0x7C */
+    NJS_POINT3 scale;           /* 0x7C */
 } Quad3D;
 extern void fn_80298FE4(s32 i);
 extern void fn_8022BC24(s32 a, s32 b, s32 c, s32 d);
@@ -634,8 +628,8 @@ s32 fn_8008B5C8(void) {
 
 s32 fn_8008B6C4(s32 a) {
     s32 i;
-    Vec3 A;
-    Vec3 B;
+    NJS_POINT3 A;
+    NJS_POINT3 B;
     Sub_8008B600 *s;
     s = fn_80021658(a)->x24;
     A.x = s->v.x;
@@ -657,8 +651,8 @@ s32 fn_8008B6C4(s32 a) {
 
 s32 fn_8008B84C(s32 a) {
     s32 i;
-    Vec3 A;
-    Vec3 B;
+    NJS_POINT3 A;
+    NJS_POINT3 B;
     Sub_8008B600 *s;
     s = fn_80021658(a)->x24;
     A.x = s->v.x;
@@ -1497,7 +1491,7 @@ void fn_80090B68(Src* s, f32* d) {
     d[2] = (2400.0f * -(f32)s->z + 7200.0f) - 1200.0f;
 }
 
-void fn_80090D20(Vec3F* s, s32* out) {
+void fn_80090D20(NJS_POINT3* s, s32* out) {
     out[0] = (s32)((8400.0f - s->x) / 2400.0f);
     out[1] = 0;
     out[2] = (s32)((7200.0f - s->z) / 2400.0f);
@@ -1554,8 +1548,8 @@ void fn_8009519C(void* a, void* b) {
 
 s32 fn_8008B600(s32 a) {
     s32 i;
-    Vec3 A;
-    Vec3 B;
+    NJS_POINT3 A;
+    NJS_POINT3 B;
     Sub_8008B600 *s;
     s = fn_80021658(a)->x24;
     A.x = s->v.x;
@@ -1577,8 +1571,8 @@ s32 fn_8008B600(s32 a) {
 
 s32 fn_8008B788(s32 a) {
     s32 i;
-    Vec3 A;
-    Vec3 B;
+    NJS_POINT3 A;
+    NJS_POINT3 B;
     Sub_8008B600 *s;
     s = fn_80021658(a)->x24;
     A.x = s->v.x;
@@ -1615,7 +1609,7 @@ void fn_8008D610(Slot *o) {
 }
 
 
-void fn_8009009C(Vec3F *v, f32 s) {
+void fn_8009009C(NJS_POINT3 *v, f32 s) {
     f32 k;
     if (lbl_80348B38 == v->x && lbl_80348B38 == v->y && lbl_80348B38 == v->z) {
         v->x = s;

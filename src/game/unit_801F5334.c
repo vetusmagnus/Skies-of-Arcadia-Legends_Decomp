@@ -145,8 +145,7 @@ extern void* fn_801F4AE4(s16 id);
 extern int sprintf(char* buf, const char* fmt, ...);
 extern s32 fn_8021026C(const char* name);
 typedef struct Vec3i { s32 x, y, z; } Vec3i;
-typedef struct Vec3f { f32 x, y, z; } Vec3f;
-typedef struct Link { u8 pad_00[0x18]; Vec3f *pos; u8 pad_1c[4]; Vec3i *col; } Link;
+typedef struct Link { u8 pad_00[0x18]; NJS_POINT3 *pos; u8 pad_1c[4]; Vec3i *col; } Link;
 typedef struct Obj {
     u8 pad_00[0x38];
     f32 x38, x3c, x40;
