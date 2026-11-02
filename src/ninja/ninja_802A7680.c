@@ -300,6 +300,22 @@ void fn_802A8AE4(NgDlHdr* h) {
 
 void fn_802A8F40(s32 v) { lbl_80347FB4 = v; }
 
+static inline void NgStep(void) {
+    u8* p;
+    /* step to the next motion record; the record holds `stride`-byte key-pointer tables (as fn_80293C2C) */
+    p = lbl_80347FBC->base;
+    p += lbl_80347FBC->step;
+    lbl_80347FBC->base = p;
+    lbl_80347FBC->arrA = (void**)p;
+    lbl_80347FBC->arrB = (void**)(p + lbl_80347FBC->stride);
+    lbl_80347FBC->idx = 0;
+}
+
+void fn_802A8F48(u32** in, u32** out) {
+    fn_802A9714(in, out);
+    NgStep();
+}
+
 void fn_802A8FA0(s32 v) { lbl_80347FB8 = v; }
 
 #pragma optimization_level 1

@@ -99,6 +99,100 @@ void fn_802872D4(NjObj* obj) {
     }
 }
 
+void fn_80287610(s16* p, s32 n, void* data);
+extern u32 aramSize; /* 0x80347E10: flags of the last vertex chunk fn_802873BC walked (the symbol name is musyx's, from its .sbss split) */
+
+/* The same vertex-chunk walk for fn_802873BC, with its own env state and flags word. */
+static inline void VtxChunksR1a(u32* v, u8* base) {
+    u32 w;
+    u32 h;
+    u32 cnt;
+    u32 size;
+    u32 flags;
+    u32 idx;
+
+    while (((w = *v) & 0xff) != 0xff) {
+        h = v[1];
+        v += 2;
+        cnt = h >> 16;
+        lbl_80346620.n = cnt;
+        lbl_80346620.data = v;
+        lbl_80347EF4 += cnt;
+        lbl_80347EF8 += cnt;
+        size = w >> 16;
+        idx = h & 0xffff;
+        flags = w & 0x7fff;
+        /* the u32 chunk stream carries the source vertices for the transforms (NJS_VECTOR) */
+        switch (w & 0xff) {
+        case 0x29:
+            lbl_80346620.dst = base + idx * 0x18;
+            fn_802A21C4(cnt, lbl_80346620.dst, (NJS_VECTOR*)v);
+            break;
+        case 0x2a:
+            lbl_80346620.dst = base + idx * 0x1c;
+            fn_802A5D20(cnt, lbl_80346620.dst, (NJS_VECTOR*)v);
+            break;
+        case 0x2c:
+            lbl_80346620.dst = base + idx * 0x18;
+            fn_802A5F2C(cnt, lbl_80346620.dst, v, flags);
+            flags = 0x29;
+            break;
+        }
+        v += size - 1;
+    }
+    aramSize = flags;
+}
+
+s32 fn_802873BC(NjModel* m) {
+    u32* v;
+    s16* p;
+    void* base;
+
+    if ((_nj_control_3d_flag_ & 0x100) && m->r > 0.0f) {
+        if (fn_80288C68(m)) {
+            return -1;
+        }
+    }
+    v = m->vlist;
+    base = lbl_80347EFC;
+    if (v) {
+        VtxChunksR1a(v, base);
+    }
+    p = m->plist;
+    if (p) {
+        fn_8029C8A0();
+        switch (lbl_80346A50) {
+        case 1:
+            lbl_80347E20 = 0;
+            fn_80287610(p, aramSize, base);
+            break;
+        case 2:
+            lbl_80347E20 = 1;
+            fn_80287610(p, aramSize, base);
+            break;
+        case 3:
+            lbl_80347E20 = 2;
+            fn_80287610(p, aramSize, base);
+            break;
+        case 4:
+            lbl_80347E20 = 3;
+            fn_80287610(p, aramSize, base);
+            lbl_80347E20 = 4;
+            fn_80287610(p, aramSize, base);
+            break;
+        case 5:
+            lbl_80347E20 = 3;
+            fn_80287610(p, aramSize, base);
+            break;
+        case 6:
+            lbl_80347E20 = 4;
+            fn_80287610(p, aramSize, base);
+            break;
+        }
+    }
+    return 0;
+}
+
 void fn_80287610(s16* p, s32 n, void* data) {
     u8 type = n;
     u8 dif[4] = {0xff, 0xff, 0xff, 0xff};
@@ -704,6 +798,20 @@ void fn_80289390(s16* p, s32 n, void* data) {
     }
 }
 
+void fn_80289B70(NJS_POINT2* p, s32 n, f32 z) {
+    s32 i;
+    s32 lines = n >> 1;
+    fn_8029CB74();
+    GXBegin(GX_LINES, GX_VTXFMT0, n);
+    z = z * lbl_80347F30 + lbl_80347F34;
+    for (i = 0; i < lines; i++) {
+        GXPosition3f32(p->x, p->y, z);
+        p++;
+        GXPosition3f32(p->x, p->y, z);
+        p++;
+    }
+}
+
 void fn_80289EC8(NJS_POINT3* p, s32 n) {
     s32 i;
     s32 lines = n >> 1;
@@ -1039,6 +1147,42 @@ s32 fn_8028BBCC(NJS_POINT3* amin, NJS_POINT3* amax, NJS_POINT3* bmin, NJS_POINT3
     if (amax->z < bmin->z) return 0;
     if (amin->z > bmax->z) return 0;
     return 1;
+}
+
+s32 fn_8028BC64(const NJS_POINT3* qa, const NJS_POINT3* qb) {
+    NJS_POINT2 a[4];
+    NJS_POINT2 b[4];
+    s32 k;
+    s32 flags = 0;
+
+    for (k = 0; k < 4; k++) {
+        a[k].x = qa[k].x;
+        a[k].y = qa[k].y;
+        b[k].x = qb[k].x;
+        b[k].y = qb[k].y;
+    }
+    if (fn_8028CF20(a, b)) {
+        flags |= 4;
+    }
+    for (k = 0; k < 4; k++) {
+        a[k].x = qa[k].x;
+        a[k].y = qa[k].z;
+        b[k].x = qb[k].x;
+        b[k].y = qb[k].z;
+    }
+    if (fn_8028CF20(a, b)) {
+        flags |= 2;
+    }
+    for (k = 0; k < 4; k++) {
+        a[k].x = qa[k].y;
+        a[k].y = qa[k].z;
+        b[k].x = qb[k].y;
+        b[k].y = qb[k].z;
+    }
+    if (fn_8028CF20(a, b)) {
+        flags |= 1;
+    }
+    return flags;
 }
 
 s32 fn_8028F884(f32* a, f32* s) {
@@ -2089,6 +2233,40 @@ void fn_80293B34(s32 i) {
 }
 #pragma optimization_level reset
 
+extern NJS_MOTION lbl_802DAD38;
+extern NjInterp lbl_803469F8[2];
+extern NjInterp lbl_80346A00[2];
+extern NjInterp lbl_80346A08[2];
+extern NjInterp lbl_80346A10[2];
+
+static inline void MotKeysInit(void) {
+    void** p = lbl_80347E64->mdata;
+    lbl_80347E64->keys = p;
+    /* the key counts follow the `size` bytes of key-table pointers */
+    lbl_80347E64->nkeys = (s32*)((u8*)p + lbl_80347E64->size);
+    lbl_80347E64->count = 0;
+}
+
+void fn_80293B4C(NJS_MOTION* m, f32 f) {
+    s32 n;
+    s32 i;
+    if (!m) m = &lbl_802DAD38;
+    i = (m->inp_fn & 0xC0) > 0;
+    lbl_80347E64->mdata = m->mdata;
+    lbl_80347E64->nbFrame = m->nbFrame;
+    lbl_80347E64->flags = m->type;
+    lbl_80347E64->frame = f;
+    lbl_80347E64->count = 0;
+    n = (m->inp_fn & ~0xC0) * 4;
+    lbl_80347E64->size = n;
+    lbl_80347E64->stride = n + n;
+    MotKeysInit();
+    lbl_80347E64->interpPos = lbl_803469F8[i];
+    lbl_80347E64->interpRot = lbl_80346A00[i];
+    lbl_80347E64->interpScl = lbl_80346A08[0];
+    lbl_80347E64->interpRot16 = lbl_80346A10[i];
+}
+
 void fn_80293C2C(void) {
     void** p;
     /* step to the next NJS_MDATA record; records are raw motion data `stride` bytes long */
@@ -2225,6 +2403,17 @@ void fn_802945C4(void* table, s32 count, s32* out, f32 t) {
     } else {
         *out = (s32)(frac * (s16)(hi[1] - lo[1]) + lo[1]);
     }
+}
+
+void fn_802946D0(void* table, s32 count, f32* out, f32 t) {
+    f32 frac;
+    s32* lo;
+    s32* hi;
+    fn_802939C4(table, 16, count, t, &lo, &hi, &frac);
+    /* the key rows are a u32 frame followed by three f32 values */
+    out[0] = ((f32*)lo)[1] + frac * (((f32*)hi)[1] - ((f32*)lo)[1]);
+    out[1] = ((f32*)lo)[2] + frac * (((f32*)hi)[2] - ((f32*)lo)[2]);
+    out[2] = ((f32*)lo)[3] + frac * (((f32*)hi)[3] - ((f32*)lo)[3]);
 }
 
 void fn_80294770(void* table, s32 count, f32* out, f32 t) {
@@ -2851,6 +3040,22 @@ u32 fmt;
     return 0;
 }
 
+#pragma optimization_level reset
+
+static inline s32 save_tex(NjTexRef* t, void* dst, s32 idx) {
+    s32 r = fn_8029954C(dst, &t->mem->body) ? -1 : 1;
+    if (r < 0) {
+        lbl_803457F8.n = idx;
+    }
+    return r;
+}
+
+#pragma optimization_level 1
+s32 fn_80297864(s32 idx, void* dst) {
+    NjTexRef* t = lbl_803457A8.texlist->textures[idx].texaddr;
+    fn_80298E48();
+    return save_tex(t, dst, idx);
+}
 #pragma optimization_level reset
 
 void fn_802979B8(void) {
