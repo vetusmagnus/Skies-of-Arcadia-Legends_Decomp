@@ -15,6 +15,7 @@
 #include "game/text.h"
 #include "game/gamedata.h"
 #include "game/camera_803119E0.h"
+#include "game/draw2d.h"
 /* The .rodata of the warp/party code (fn_800FFA18 .. fn_801004C4) from its start: fn_801004C4
    reaches its messages through this section base, so the block is defined here, first, with every
    object at its original offset. */
@@ -579,10 +580,6 @@ extern void *fn_801E1A74(s32 a, u32 b);
 extern u16 TextReadChar(const u8 **pp);
 extern s8 lbl_802E4C70[];
 extern void fn_8010C0E4(struct Obj_8010C0E4 *obj, struct Src_8010C0E4 *n);
-typedef struct {
-    f32 x, y, z;
-    u32 colour;
-} VertexCol;
 typedef VertexCol Quad;
 extern f32 fn_801DBD9C(f32 v);
 extern void fn_80290ED4(Quad *q, s32 n, s32 m);

@@ -6,6 +6,7 @@
 #include "game/evobj.h"
 #include "game/task.h"
 #include <dolphin/os/OSFastCast.h>
+#include "game/draw2d.h"
 typedef struct Ent_UNIT0000 {
     u8 pad[0x1C];
     u32 x1c;
@@ -462,10 +463,6 @@ typedef struct Cam_80091040 {
     f32 max;
     NJS_POINT3 last;
 } Cam_80091040;
-typedef struct {
-    f32 x, y, z, u, v;
-    u32 colour;
-} VertexTex;
 typedef struct {
     NJS_TEXLIST* texlist; /* 0x00 */
     u8 pad4[0x50];

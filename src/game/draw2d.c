@@ -7,20 +7,13 @@
 #include "types.h"
 #include "ninja.h"
 #include "game/drawstate.h"
+#include "game/draw2d.h"
 
 typedef struct {
     f32 x, y;
 } NJS_POINT2;
 
-typedef struct {
-    f32 x, y, z, u, v;
-    u32 colour;
-} VertexTex;
 
-typedef struct {
-    f32 x, y, z;
-    u32 colour;
-} VertexCol;
 
 typedef struct {
     u8 c[4];

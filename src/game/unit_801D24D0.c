@@ -10,6 +10,7 @@
 #include "game/task.h"
 #include "game/text.h"
 #include <dolphin/os/OSFastCast.h>
+#include "game/draw2d.h"
 void VISetNextFrameBuffer(void *fb);
 void VIFlush(void);
 void VIWaitForRetrace(void);
@@ -773,10 +774,6 @@ void fn_801D4C54(Layout* a, u32 b, u32 c, s32 d, f32 p1, f32 p2, f32 p3, f32 p4)
 }
 
 void fn_801D4F54(Layout* lay, u32 flags, u32 mode, NJS_TEXLIST* tex, s32 vmode, f32 f1, f32 f2, f32 base, f32 f4, f32 a, f32 b);
-typedef struct {
-    f32 x, y, z, u, v;
-    u32 colour;
-} VertexTex;
 extern s32 fn_801E7554(void);
 extern s32 fn_80297DC8(s32 id);
 extern VertexTex lbl_80308E30[4];
@@ -5246,7 +5243,6 @@ static inline f32 Dist2(f32 x, f32 z) { return x * x + z * z; }
     }
 
 #ifdef NONMATCHING
-typedef struct VertexCol { f32 x, y, z; u32 colour; } VertexCol;
 extern VertexCol lbl_80308DF0[4];
 extern f32 lbl_80345878[];
 extern void GXSetColorUpdate(u8 enable);

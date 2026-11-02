@@ -7,6 +7,7 @@
 #include "ninja.h"
 #include "game/drawstate.h"
 #include <dolphin/os/OSFastCast.h>
+#include "game/draw2d.h"
 
 typedef struct {
     u8 pad0[0x1a];
@@ -295,10 +296,6 @@ void fn_8002B124(void) {
     }
 }
 
-typedef struct {
-    f32 x, y, z;
-    u32 colour;
-} VertexCol;
 
 extern s16 lbl_80346740;
 extern s32 lbl_80346744;

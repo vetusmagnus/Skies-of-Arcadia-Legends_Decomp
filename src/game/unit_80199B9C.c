@@ -16,6 +16,7 @@ extern void TextPrint(s32 x, s32 y, const char *str);
 #include <math.h>
 #include <stdlib.h>
 #include "game/camp.h"
+#include "game/draw2d.h"
 /* A menu panel (0x6C bytes, the object at a menu part task's 0x28/0x2C): its UiObj, the text it
  * prints and four parameters (layout, item or member ids). */
 typedef struct MenuPanel {
@@ -74,10 +75,6 @@ extern void fn_801A65D4(Task *t);
 extern PadState *lbl_80311A60[];
 extern s32 fn_801A6554(void *o);
 extern void fn_801A64E0(void *o);
-typedef struct VertexCol {
-    f32 x, y, z;
-    u32 colour;
-} VertexCol;
 typedef struct Ctx_801A66AC {
     u8 pad0[0x44];
     u32 w44;

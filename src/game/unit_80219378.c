@@ -11,6 +11,7 @@
 #include "game/gamedata.h"
 #include "game/sprite.h"
 #include <stdio.h>
+#include "game/draw2d.h"
 /* Digit glyph codes for the ones, tens, hundreds and thousands places. These are the start of
  * the original file's .data (lbl_802F8A20, 0x58 bytes): separate arrays, addressed from one
  * pooled base register, so they have to be defined here (in this order, first in .data). */
@@ -3227,7 +3228,6 @@ void fn_8021B2B4(void) {
     fn_8021AF94(&lbl_8030B4D4.ship, &lbl_8030B7F4.x1568.b1568, buf);
 }
 
-typedef struct { f32 x, y, z; u32 colour; } VertexCol;
 extern u32_8022A36C lbl_80347828;
 extern VertexCol lbl_802F911C[4];
 extern DrawState lbl_803165A0;

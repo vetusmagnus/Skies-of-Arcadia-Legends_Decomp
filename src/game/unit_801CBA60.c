@@ -2,6 +2,7 @@
 #include "game/task.h"
 #include "ninja.h"
 #include "game/drawstate.h"
+#include "game/draw2d.h"
 typedef struct Ent {
     float a;
     s32 b;
@@ -63,10 +64,6 @@ void fn_801C6384(AkFio* f);
 AkFio* fn_801C64DC(const char* name);
 void fn_801C6C7C(AkFio* f);
 extern s32 fn_801CB460(s32 type);
-typedef struct VertexTex {
-    f32 x, y, z, u, v;
-    u32 colour;
-} VertexTex;
 extern s32 lbl_8034720C;
 extern s16 lbl_80347256;
 extern u32 lbl_80347218;

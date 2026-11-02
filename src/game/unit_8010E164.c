@@ -9,6 +9,7 @@
 #include "game/evobj.h"
 #include "game/btlside.h"
 #include <string.h>
+#include "game/draw2d.h"
 extern void fn_80117748();
 extern void fn_80114C84(void *a, void *b, void *c, void *d, void *e, void *f);
 /* a wall segment: two end points */
@@ -923,10 +924,6 @@ typedef struct Out_8011CA68 {
     f32 f8c;
 } Out_8011CA68;
 extern s16 lbl_802B31E8[12];
-typedef struct VertexTex {
-    f32 x, y, z, u, v;
-    u32 colour;
-} VertexTex;
 typedef struct T1d8 {
     u8 pad0[0x19];
     u8 state;
@@ -9162,10 +9159,6 @@ typedef struct EvInfoArea {
     s32 x20;
     s32 x24;       /* 0x24 alpha step */
 } EvInfoArea;
-typedef struct {
-    f32 x, y, z;
-    u32 colour;
-} VertexCol;
 extern EvObj *lbl_80347450;
 extern VertexCol lbl_80305E78[4];
 extern const char lbl_802B31B8[];
