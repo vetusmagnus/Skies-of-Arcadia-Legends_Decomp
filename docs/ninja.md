@@ -516,3 +516,31 @@ copy difference doesn't arise.
 - `fn_80298798` (PVR/GVR chunk walk with byte swaps through `__stwbrx`/`__sthbrx`): the byte-swap expression
   order is found, but the in-place swap loop unrolls differently (`lwzu` per word against the original's
   offsets from a base plus a counter), 15 instructions short.
+
+### Pass of 2026-11-02 (second)
+
+Merged: `fn_802873BC` (twin of `fn_8028AB48`; its flags word is 0x80347E10, which `symbols.txt` names
+`aramSize` from musyx's `.sbss` split, though only Ninja reads it), `fn_80289B70` (2D twin of `fn_80289EC8`;
+`p++` after each vertex inside the body gives the 8x unroll and all 24 FIFO copies), `fn_8028BC64`
+(`const NJS_POINT3*` parameters let the 16 loads move above the stores), `fn_80293B4C` (table index
+`(inp_fn & 0xC0) > 0` gives `neg; andc`; the keys set-up is a `static inline`), `fn_802946D0` (stream-cast
+rule, as `fn_80294770`), `fn_80297864` (level 1; the save tail is an inline whose result is returned
+directly) and `fn_802A8F48` (`fn_802A9040`'s body as a `static inline`; `fn_802A9040` keeps its own body,
+inlining there swaps r4/r5). `fn_8028BC64`, `fn_80293B4C`, `fn_802946D0`, `fn_80297864` and `fn_802A8F48`
+also match with stock 1.3.2.
+
+Closer than before, not merged:
+- 2 lines: `fn_802938C8` (binary search as an inline `search16(table, stride, count, u16 key)`; only a
+  `li`/`mr` swap), `fn_8028BAEC` (level 1, float locals per branch declared z, y, x), `fn_802986C8`
+  (`add` operand order; only a cast fixes it), `fn_80297804`, `fn_802915C8`, `fn_80296E4C`.
+- 4-6 lines: `fn_802A8FC0` (tail as an inline; first three instructions), `fn_802AB8FC`, `fn_802911CC`
+  (the `fmr` parameter copy), `fn_80296DC8`, `fn_80298FE4`, `fn_802AC5E8`.
+- Instructions exact, registers only: `fn_802A6398` / `fn_80287F00` (renderer chunk-model strip walkers;
+  the original gives the parameters the top saved registers, which MWCC does at level 1 or when two more
+  long-lived invariants exist, so the same cause as `fn_8028AD9C` / `fn_802A81B4`), `fn_802AA2F0` (3D lines,
+  64 lines), `fn_80287D98` / `fn_80289228` (24), `fn_802939C4`, `fn_80298A04`, njSetAspect, njSetScreen.
+- `fn_8028DAE4` and `fn_8028F9B0` need `const` parameters (and so do `fn_8029076C` / `fn_8028FEA4`); then
+  `fn_8028DAE4` differs only in eleven hoisted address computations.
+- `fn_8028B6D4` is the renderer 2 twin of `fn_80287124` (its blue clamp compares with 128.0f, a bug in the
+  original), with the same float-register problem. `fn_802A7680`, `fn_802A6184`, `fn_802A7FA0` have the
+  inline-argument copy problem of `fn_802A1160`.
