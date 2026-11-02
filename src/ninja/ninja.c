@@ -99,6 +99,152 @@ void fn_802872D4(NjObj* obj) {
     }
 }
 
+void fn_80287610(s16* p, s32 n, void* data) {
+    u8 type = n;
+    u8 dif[4] = {0xff, 0xff, 0xff, 0xff};
+    u8 spc[4] = {0, 0, 0, 0};
+    u8 amb[4] = {0, 0, 0, 0};
+    u16 size;
+    s16 cnt;
+    s32 alpha;
+    s32 enable;
+    s16 c;
+    s16 len;
+    s16 fl;
+    s32 tex;
+    s16 kind;
+    u32 ambf;
+
+    while ((c = *p++) != 0xff) {
+        kind = c & 0xff;
+        if (kind < 8) {
+            switch (kind) {
+            case 1:
+                fn_8029D010(c);
+                break;
+            case 4:
+                lbl_803458A8[(s16)((c >> 8) & 0xff)] = p;
+                lbl_80347F24++;
+                return;
+            case 5:
+                fn_80287610(lbl_803458A8[(s16)((c >> 8) & 0xff)], n, data);
+                lbl_80347F24--;
+                break;
+            }
+        } else if (kind < 0x10) {
+            fn_8029D0F4(c, *p++);
+            if (*p & 0x18) {
+                p += 8;
+            }
+        } else if (kind < 0x40) {
+            len = *p++;
+            fn_8029D698(c, p, dif, amb, spc);
+            p += len;
+        } else {
+            cnt = p[1];
+            size = *(u16*)p;  /* the chunk stream is s16; this field is unsigned */
+            p += 2;
+            if (_nj_control_3d_flag_ & 0x800) {
+                c &= _nj_constant_attr_and_;
+                c |= _nj_constant_attr_or_;
+            }
+            fl = (c >> 8) & 0x2a;
+            lbl_80347EA0 = fl & 0x20;
+            tex = fl & 2;
+            if (tex) {
+                enable = 1;
+            } else {
+                enable = 1;
+            }
+            if (fl & 8) {
+                alpha = 1;
+                if (lbl_80347E20 == 1) {
+                    p += size - 1;
+                    continue;
+                }
+            } else {
+                alpha = 0;
+                switch (lbl_80347E20) {
+                case 2:
+                case 3:
+                case 4:
+                    p += size - 1;
+                    continue;
+                }
+            }
+            ambf = 0;
+            if (fl & 4) {
+                ambf = 0x300;
+            }
+            fn_802A8F40(1);
+            switch (kind) {
+            case 0x41:
+            case 0x42:
+                GXSetTexCoordGen2(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, 0x3c, 0, 0x7d);
+                GXSetNumTexGens(1);
+                switch (type) {
+                case 0x29:
+                    fn_8029D8B0(&lbl_80344DE0, kind, n, enable);
+                    if (tex) {
+                        fn_8029AA14(alpha);
+                    } else {
+                        fn_80299BD8(alpha);
+                    }
+                    fn_802A7D74(ambf | 2, 0, amb, 0, dif);
+                    fn_802A49F4(p, data, cnt, 1, kind);
+                    break;
+                case 0x2a:
+                    if (fn_8029CFF0()) {
+                        fn_802A7D74(ambf | 2, 0, amb, 0, dif);
+                        fn_8029D8B0(&lbl_80344DE0, kind, 0x29, enable);
+                        fn_8029CF04();
+                        fn_8029A698(alpha, 0);
+                        fn_802A4FC8(p, data, cnt, 1, kind);
+                    } else {
+                        fn_8029D8B0(&lbl_80344DE0, kind, n, enable);
+                        if (tex) {
+                            fn_8029AA14(alpha);
+                        } else {
+                            fn_80299BD8(alpha);
+                        }
+                        fn_802A7D74(ambf | 4, 0, amb, 0, 0);
+                        fn_802A52C4(p, data, cnt, 1, kind);
+                    }
+                    break;
+                }
+                break;
+            case 0x40:
+                switch (type) {
+                case 0x29:
+                    GXSetNumTexGens(0);
+                    fn_8029D8B0(&lbl_80344DE0, kind, n, enable);
+                    fn_8029A1C8(alpha);
+                    fn_802A7D74(ambf | 1, 0, amb, 0, dif);
+                    fn_802A2F84(p, data, cnt, 1);
+                    break;
+                case 0x2a:
+                    if (fn_8029CFF0()) {
+                        fn_802A7D74(ambf | 2, 0, amb, 0, dif);
+                        fn_8029D8B0(&lbl_80344DE0, kind, 0x29, enable);
+                        fn_8029CF04();
+                        fn_80299FC8(alpha);
+                        fn_802A33EC(p, data, cnt, 1);
+                    } else {
+                        GXSetNumTexGens(0);
+                        fn_8029D8B0(&lbl_80344DE0, kind, n, enable);
+                        fn_8029A1C8(alpha);
+                        fn_802A7D74(ambf | 4, 0, amb, 0, dif);
+                        fn_802A35F0(p, data, cnt, 1);
+                    }
+                    break;
+                }
+                break;
+            }
+            p += size - 1;
+        }
+    }
+}
+
 void fn_80287B38(NjObj* obj) {
     if (lbl_80347FD0 && !(obj->evalflags & 0x10000)) {
         fn_802AB23C(obj);
@@ -357,6 +503,205 @@ s32 fn_802890A4(NjModel* m) {
         }
     }
     return 0;
+}
+
+void fn_80289390(s16* p, s32 n, void* data) {
+    u8 dif[4] = {0xff, 0xff, 0xff, 0xff};
+    u16 size;
+    s16 cnt;
+    s16 fl;
+    s16 len;
+    u8 type = n;
+    s16 kind;
+    s32 alpha;
+    s32 mode;
+    s16 c;
+    u8 spc[4] = {0, 0, 0, 0};
+    s32 tex;
+
+    while ((c = *p++) != 0xff) {
+        kind = c & 0xff;
+        if (kind < 8) {
+            switch (kind) {
+            case 1:
+                fn_8029D010(c);
+                break;
+            case 4:
+                lbl_803458A8[(s16)((c >> 8) & 0xff)] = p;
+                lbl_80347F24++;
+                return;
+            case 5:
+                fn_80289390(lbl_803458A8[(s16)((c >> 8) & 0xff)], n, data);
+                lbl_80347F24--;
+                break;
+            }
+        } else if (kind < 0x10) {
+            fn_8029D0F4(c, *p++);
+            if (*p & 0x18) {
+                p += 8;
+            }
+        } else if (kind < 0x40) {
+            len = *p++;
+            fn_8029D698(c, p, dif, 0, spc);
+            p += len;
+        } else {
+            cnt = p[1];
+            size = *(u16*)p;  /* the chunk stream is s16; this field is unsigned */
+            p += 2;
+            if (_nj_control_3d_flag_ & 0x800) {
+                c &= _nj_constant_attr_and_;
+                c |= _nj_constant_attr_or_;
+            }
+            fl = (c >> 8) & 0x2a;
+            lbl_80347EA0 = fl & 0x20;
+            if (fl & 2) {
+                mode = 2;
+                tex = 0;
+            } else {
+                mode = 1;
+                tex = 1;
+            }
+            if (fl & 8) {
+                alpha = 1;
+                if (lbl_80347E20 == 1) {
+                    p += size - 1;
+                    continue;
+                }
+            } else {
+                alpha = 0;
+                switch (lbl_80347E20) {
+                case 2:
+                case 3:
+                case 4:
+                    p += size - 1;
+                    continue;
+                }
+            }
+            fn_802A8F40(1);
+            switch (kind) {
+            case 0x41:
+            case 0x42:
+                GXSetTexCoordGen2(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, 0x3c, 0, 0x7d);
+                GXSetNumTexGens(1);
+                switch (type) {
+                case 0x29:
+                    fn_8029DA24(kind, n, mode);
+                    if (tex) {
+                        fn_8029A4EC(alpha);
+                    } else {
+                        fn_8029AE38(alpha);
+                    }
+                    fn_802A1B54(0x1002, 0, 0, spc, dif);
+                    fn_802A49F4(p, data, cnt, 1, kind);
+                    break;
+                case 0x2b:
+                    fn_8029DA24(kind, n, mode);
+                    if (tex) {
+                        fn_8029A4EC(alpha);
+                    } else {
+                        fn_8029AE38(alpha);
+                    }
+                    fn_802A1B54(0x1002, 0, 0, spc, dif);
+                    fn_802A4C20(p, data, cnt, 1, kind);
+                    break;
+                case 0x2a:
+                    if (fn_8029CFF0()) {
+                        fn_8029DA24(kind, 0x29, 0);
+                        fn_8029CF04();
+                        fn_8029AB44(alpha, 0);
+                        fn_802A4FC8(p, data, cnt, 1, kind);
+                    } else {
+                        fn_8029DA24(kind, n, mode);
+                        fn_8029AE38(alpha);
+                        fn_802A52C4(p, data, cnt, 1, kind);
+                    }
+                    break;
+                case 0x22:
+                    fn_8029DA24(kind, n, 0);
+                    fn_8029AE38(alpha);
+                    fn_802A1B54(0x3412, 0, 0, spc, dif);
+                    fn_802A3B34(p, data, cnt, 1, kind);
+                    break;
+                case 0x24:
+                    fn_8029DA24(kind, n, mode);
+                    fn_8029AE38(alpha);
+                    fn_802A1B54(0x3412, 0, 0, spc, dif);
+                    fn_802A3D08(p, data, cnt, 1, kind);
+                    break;
+                case 0x23:
+                    if (fn_8029CFF0()) {
+                        fn_8029DA24(kind, 0x29, 0);
+                        fn_8029CF04();
+                        fn_8029AB44(alpha, 0);
+                        fn_802A404C(p, data, cnt, 1, kind);
+                    } else {
+                        fn_8029DA24(kind, n, mode);
+                        fn_8029AE38(alpha);
+                        fn_802A42DC(p, data, cnt, 1, kind);
+                    }
+                    break;
+                }
+                break;
+            case 0x40:
+                GXSetNumTexGens(0);
+                if (mode) {
+                    mode = 2;
+                }
+                switch (type) {
+                case 0x29:
+                    fn_8029DA24(kind, n, mode);
+                    fn_802A1B54(0x3001, 0, 0, 0, dif);
+                    fn_8029A41C(alpha);
+                    fn_802A2F84(p, data, cnt, 1);
+                    break;
+                case 0x2a:
+                    if (fn_8029CFF0()) {
+                        fn_8029DA24(kind, 0x29, 0);
+                        fn_8029CF04();
+                        fn_8029A298(alpha);
+                        fn_802A33EC(p, data, cnt, 1);
+                    } else {
+                        fn_8029DA24(kind, n, mode);
+                        fn_8029A41C(alpha);
+                        fn_802A35F0(p, data, cnt, 1);
+                    }
+                    break;
+                case 0x2b:
+                    fn_8029DA24(kind, n, mode);
+                    fn_802A1B54(0x3001, 0, 0, 0, dif);
+                    fn_8029A41C(alpha);
+                    fn_802A30FC(p, data, cnt, 1);
+                    break;
+                case 0x22:
+                    fn_8029DA24(kind, n, mode);
+                    fn_802A1B54(0x3413, 0, 0, 0, dif);
+                    fn_8029A41C(alpha);
+                    fn_802A2394(p, data, cnt, 1);
+                    break;
+                case 0x24:
+                    fn_8029DA24(kind, n, mode);
+                    fn_802A1B54(0x3413, 0, 0, 0, dif);
+                    fn_8029A41C(alpha);
+                    fn_802A24CC(p, data, cnt, 1);
+                    break;
+                case 0x23:
+                    if (fn_8029CFF0()) {
+                        fn_8029DA24(kind, 0x29, 0);
+                        fn_8029CF04();
+                        fn_8029A298(alpha);
+                        fn_802A2770(p, data, cnt, 1);
+                    } else {
+                        fn_8029DA24(kind, n, mode);
+                        fn_8029A41C(alpha);
+                        fn_802A292C(p, data, cnt, 1);
+                    }
+                    break;
+                }
+                break;
+            }
+            p += size - 1;
+        }
+    }
 }
 
 void fn_80289EC8(NJS_POINT3* p, s32 n) {
@@ -801,6 +1146,16 @@ s32 fn_802907D0(f32* a, f32* b) {
     la = vlen(&a[3]);
     lb = vlen2(&b[3]);
     if ((f32)fabs((a[3] * b[3] + a[4] * b[4] + a[5] * b[5]) / (la * lb)) < 0.025f) return 1;
+    return 0;
+}
+
+/* Counterpart of fn_802907D0: 1 when the two direction vectors are nearly parallel. Its constants are a
+ * separate pool (0x8034D0A8-0x8034D0C7), so it came from another source file. */
+s32 fn_80290918(f32* a, f32* b) {
+    f32 la, lb;
+    la = vlen(&a[3]);
+    lb = vlen2(&b[3]);
+    if ((f32)fabs((a[3] * b[3] + a[4] * b[4] + a[5] * b[5]) / (la * lb)) > 0.975f) return 1;
     return 0;
 }
 

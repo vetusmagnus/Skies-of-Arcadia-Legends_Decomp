@@ -328,7 +328,7 @@ Game code stays cast-free.
   SN ProDG 3.5 to 3.9.3 (GCC 2.95), whose code looks nothing like the original (`stmw`, `lis`+`ori` for the
   address, different prologue). All give one base register for the three stores.
 - Still needing a pointer cast (not merged): fn_802A8F48 (the NgCtx cursor advances by bytes but
-  feeds pointer arrays; fn_802A9040 is merged under the stream-cast rule), fn_802A7894, fn_802AC31C, fn_80287610, fn_80287F00, fn_80289390 (an `lhz` strip size read
+  feeds pointer arrays; fn_802A9040 is merged under the stream-cast rule), fn_802A7894, fn_802AC31C, fn_80287F00 (an `lhz` strip size read
   from an `s16` stream), fn_802A93CC / fn_802A9C20 / fn_80293AF4 (generic key tables), fn_8029CB1C (flat matrix
   passed as `Mtx`).
 - Agent notes per function: `build/agents/j01`-`j11/NOTES.md` on the machine that ran the pass.
@@ -435,15 +435,15 @@ Logged, not integrated as matches. Functions marked * are in the unit as NonMatc
 - `fn_80286EE8` / `fn_8028B498` (light update, duplicate group 40): 23 lines: the walker/base copy of the table
   address goes the other way and `base + 0x30c` isn't hoisted; best form in `docs/near/fn_80286EE8.c`.
 - Register allocation or scheduling only: `fn_80288C68`,
-  `fn_8028F884`, `fn_8028FD98`, `fn_8028FEA4`, `fn_802904E8`, `fn_802907D0`, `fn_80290918`,
+  `fn_8028F884`, `fn_8028FD98`, `fn_8028FEA4`, `fn_802904E8`, `fn_802907D0`,
   `fn_80291700` (Bezier), `fn_802917C8` (Catmull-Rom), `fn_80291888`, `fn_802918DC`, `fn_80291978`,
   `fn_80291A5C`, `fn_802915C8`, `fn_802938C8`, `fn_802939C4`, `fn_80293B34`, `fn_80293B4C`,
   `fn_80293C2C`, `fn_80293F20`, `fn_802947D4`, `fn_80296090`, `fn_802960A8`, `fn_80296EEC`,
   `fn_80297804`, `fn_80297DC8`, `fn_8029800C`, `fn_802982F0`, `fn_802986C8`, `fn_80298700`,
   `fn_80298BCC`, `fn_80298BF8`, `fn_80299040`, `fn_80299500`, `fn_8029D0F4`, `fn_802A0668`,
   `fn_802A0B38`, `fn_802A0C90`, `njColorBlendingMode`, `fn_802AB340`, `fn_802AB460`, `fn_802AC160`.
-- Large walkers close in structure but not allocation: `fn_80287610`, `fn_80287D98`, `fn_80289228`,
-  `fn_80289390`, `fn_802873BC`, `fn_802A93CC`, `fn_80296424`, `fn_802AC31C`.
+- Large walkers close in structure but not allocation: `fn_80287D98`, `fn_80289228`,
+  `fn_802873BC`, `fn_802A93CC`, `fn_80296424`, `fn_802AC31C`.
 - Not attempted: paired-single code (`fn_802A5B48`, `fn_802A5D20`, `fn_802A21C4`), the 2.9 KB
   `fn_802AA2F0`, `fn_8029B248` (5.7 KB), `fn_8028BE90`, `fn_8028DD5C`, `fn_80287F00`, `fn_802A6398`,
   `fn_8028CF20` and the other functions over 3,000 bytes.
@@ -476,3 +476,18 @@ Every agent match that verified on its own is merged except three:
 - `fn_8029EFD0`, `fn_8029F400` (position-only strip drawers) step the strip pointer by
   `nuv * 2` bytes. `strips += nuv` allocates registers differently; only a byte cast or
   `nuv * 2 ... / 2` matches.
+
+### Twins of matched functions (2026-11-02)
+
+Comparing every unmatched Ninja function with every matched one (instructions with registers and
+symbols masked) found three that are the same code as a matched function:
+- `fn_80289390` (renderer 1's chunk-model strip walker, 2 KB) is `fn_802A1374` calling the 0x802A2394-
+  0x802A52C4 strip drawers, with the material call before the alpha call in four places and mode 0x3413
+  where renderer 2 uses 0x3003. Its vertex data is `void*` (the drawers take typed vertex arrays), and it
+  keeps the commented `*(u16*)p` size read of the stream-cast rule.
+- `fn_80287610` is `fn_802A7894` the same way, with `fn_8029D8B0` called at the start of each path instead
+  of once before the switch; the declaration order that matches was found by search.
+- `fn_80290918` is `fn_802907D0` with `> 0.975f`. It has its own copy of the constant pool
+  (0x8034D0A8-0x8034D0C7), so it came from a different source file than `fn_802907D0`.
+`fn_802A88C0` (renderer 2 material, lights and ambient) is `fn_802A7D74` with the light upload moved
+before the ambient colour and the second light table.

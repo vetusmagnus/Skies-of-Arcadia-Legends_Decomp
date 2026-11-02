@@ -380,6 +380,24 @@ void fn_8029B160(GXAttrType p, GXAttrType n, GXAttrType c, GXAttrType t);
 void fn_8029B110(GXAttrType p, GXAttrType t);
 void fn_8029B1E0(GXAttrType p, GXAttrType n, GXAttrType t);
 
+/* The strip drawers renderer 1's chunk walker (fn_80289390) calls; renderer 2 uses the 0x8029D-0x8029F set. */
+void fn_802A2394(s16* p, NJS_POINT3* v, u32 hdr, s32 side);
+void fn_802A24CC(s16* p, NjColVtx* v, u32 hdr, s32 side);
+void fn_802A2770(s16* p, NjColVtx* v, u32 hdr, s32 side);
+void fn_802A292C(s16* p, NjColVtx* v, u32 hdr, s32 side);
+void fn_802A2F84(s16* p, NjPosNrm* v, u32 hdr, s32 side);
+void fn_802A30FC(s16* p, NjPosNrmCol* v, u32 hdr, s32 side);
+void fn_802A33EC(s16* p, NjPosNrmCol* v, u32 hdr, s32 side);
+void fn_802A35F0(s16* p, NjPosNrmCol* v, u32 hdr, s32 side);
+void fn_802A3B34(s16* p, NJS_POINT3* v, s32 hdr, s32 side, f32 scale);
+void fn_802A3D08(s16* p, NjColVtx* v, s32 hdr, s32 side, f32 scale);
+void fn_802A404C(s16* p, NjColVtx* v, s32 hdr, s32 side, f32 scale);
+void fn_802A42DC(s16* p, NjColVtx* v, s32 hdr, s32 side, f32 scale);
+void fn_802A49F4(s16* p, NjPosNrm* v, s32 hdr, s32 side, f32 scale);
+void fn_802A4C20(s16* p, NjPosNrmCol* v, s32 hdr, s32 side, f32 scale);
+void fn_802A4FC8(s16* p, NjPosNrmCol* v, s32 hdr, s32 side, f32 scale);
+void fn_802A52C4(s16* p, NjPosNrmCol* v, s32 hdr, s32 side, f32 scale);
+
 /* ---- GX render state ---- */
 
 /* Render state (lbl_803457A8, 0x50 bytes; the texture error status follows it). */
