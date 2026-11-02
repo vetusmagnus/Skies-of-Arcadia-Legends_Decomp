@@ -8,6 +8,7 @@
 #include <stdarg.h>
 void fn_80217B98();
 #include "game/save_8030B7F4.h"
+#include "game/unit_801F5334.h"
 s32 fn_80219B7C(void);
 s32 fn_801D168C(void);
 void fn_801D150C(s32 v);
