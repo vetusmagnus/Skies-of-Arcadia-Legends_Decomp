@@ -6,113 +6,14 @@
 #include "game/save_8030B7F4.h"
 #include "game/stat_8030B4D4.h"
 #include "game/gamedata.h"
+#include "game/unit_80074D9C.h"
 extern s32 lbl_80347330;
-typedef struct ChrState {
-    s32 x0;
-    s8 b4;
-    u8 pad_5[0x1];
-    s16 x6;
-    s8 x8;
-    s8 x9;
-    s8 xa;
-    u8 pad_b[0x1];
-    u8 xc;
-    s8 bd;
-    u8 pad_e[0x2];
-    s32 x10;
-    u8 x14;
-    u8 pad_15[0x1];
-    s16 x16;
-    u8 x18;
-    u8 pad_19[0x1];
-    s16 x1a;
-    u8 x1c;
-    u8 pad_1d[0x3];
-} ChrState;
 extern ChrState lbl_80309174[12];
 extern struct Slot;
-typedef struct Wk {
-    s16 idx;
-    s16 x2;
-    u32 flags;
-    struct Chr_UNIT0000* chr;
-    s8 xc;
-    s8 xd;
-    s8 xe;
-    s8 xf;
-    void (*x10)(struct Slot *);   /* next update handler */
-    s8 len;             /* 0x14: path length */
-    u8 pad15;
-    s8 state;           /* 0x16 */
-    s8 path[16][2];     /* 0x17: grid steps, -1 ends */
-    s8 x37;
-    u8 pad38[4];
-    s32 x3c;
-    s32 x40;
-    s16 x44;
-    s16 x46;
-    s16 x48;
-    s16 x4a;
-    u8 pad4c[4];
-    s8 x50;
-    u8 pad51[2];
-    u8 grid[11 * 11];   /* 0x53 */
-    u8 padcc[0xd4 - 0xcc];
-} Wk;
-typedef struct Slot {
-    void (*update)(struct Slot *);
-    u8 pad1[0x14];
-    u8 flags18;
-    u8 state;
-    u8 pad2[0x0a];
-    Wk *work;
-} Slot;
 extern Slot *lbl_80309700[12];
 extern s32 fn_80081FEC(s16 i);
-typedef struct Stat {
-    u8 pad0[0x56];
-    s16 s56;
-    s8 x58;     /* enemy weapon effect */
-} Stat;
-typedef struct Chr_UNIT0000 {
-    u8 pad[0xe];
-    s16 xe;     /* status bits */
-    u32 x10;
-    s32 score;  /* 0x14 */
-    s32 x18;
-    u32 w1c;
-    u8 pad_20[0x4];
-    s16 x24;
-    u8 pad_26[0x6e];
-    s16 x94;
-    u8 pad_96[0x16];
-    s8 xac;
-    s8 xad;
-    s16 xae;
-    u8 padb0[4];
-    s16 xb4;
-    s16 xb6;    /* equipped weapon */
-    u8 padb8[2];
-    s16 xba;
-    u8 padbc[0xfe - 0xbc];
-    s8 xfe;
-    s8 xff;
-    u8 x100;
-    u8 pad101;
-    s16 x102;   /* first equipped item slot */
-    s16 x104;   /* second equipped item slot */
-    u8 pad106[0x110 - 0x106];
-    Stat* p110;
-} Chr_UNIT0000;
 extern Chr_UNIT0000* lbl_80309DE4[12];
 extern s32 fn_80078610(s8 idx);
-typedef struct Obj_8007DE54_8007D42C {
-    u8 pad[0x18];
-    u8 flags18;
-    u8 state;
-    u8 pad1a[0x24 - 0x1a];
-    s32* buf;
-} Obj_8007DE54_8007D42C;
 void fn_8007D42C(Obj_8007DE54_8007D42C* p);
 extern void *lbl_803475A8;
 extern void *lbl_8034736C;
@@ -149,20 +50,6 @@ typedef struct List {
     s8 x7;
     Ent e[8];   /* 0x8 */
 } List;
-/* One inventory slot: item id (-1 free) and its count. */
-typedef struct ItemSlot {
-    s16 id;
-    s8 count;
-    u8 pad3;
-} ItemSlot;
-typedef struct Lim {
-    u8 pad_0[0x6];
-    s16 x6;
-    s16 x8;
-    s16 xa;
-    u8 padc[0x38 - 0xc];
-    ItemSlot e[80];     /* 0x38 */
-} Lim;
 extern s8 lbl_80346C0C;
 extern Lim* lbl_80347390;
 extern u32 lbl_802F6918[];
