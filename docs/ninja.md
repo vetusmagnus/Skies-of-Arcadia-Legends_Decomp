@@ -569,3 +569,8 @@ a `static inline FlatColor(GXColor)` gives the stack slots). Held back: `fn_802A
 match only with an identity in the colour invert's else branch (`c.r = 0x00 + c.r`, or `(u8)c.r`); a plain
 self-assignment is dropped where the original keeps the loads and stores. Near misses: `fn_802A70B0`
 (2 lines, `fmr` copy of 255.0f), `fn_802A93CC` (3), `fn_802AC31C` (18), `fn_802A9C20` (45, volatile registers).
+The parameter-copy form brings the TEX colour drawers `fn_8029FE0C`, `fn_802A02E8` and `fn_8029F0F8` to 6 lines
+(registers all right; the copied parameters' `mr`s come after the uncopied ones in the prologue and the `col`
+`addi` lands later), and `fn_802939C4` to 34. It does not help `fn_80298A04`, `fn_802911CC`, `fn_80287D98`,
+`fn_802871D8`, `fn_80296C00`, `fn_802AC5E8`, `fn_802A1160`, `fn_80286EE8` or the `p += nuv` drawers
+(`fn_8029F680`, `fn_802A07C0`, `fn_802A0DE8`).
