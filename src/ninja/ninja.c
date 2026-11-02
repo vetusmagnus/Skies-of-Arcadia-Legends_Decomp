@@ -855,7 +855,7 @@ void fn_8028AA60(NjObj* obj) {
 
 /* Renderer 1's vertex-chunk walk, inlined into its chunk-model callback: each chunk transforms its
  * vertices into the vertex buffer with the paired-single routine for its format. */
-static inline void VtxChunksR1(u32* v, void* base) {
+static inline void VtxChunksR1(u32* v, u8* base) {
     u32 w;
     u32 h;
     u32 cnt;
@@ -874,17 +874,18 @@ static inline void VtxChunksR1(u32* v, void* base) {
         size = w >> 16;
         idx = h & 0xffff;
         flags = w & 0x7fff;
+        /* the u32 chunk stream carries the source vertices for the transforms (NJS_VECTOR) */
         switch (w & 0xff) {
         case 0x29:
-            lbl_80346658.dst = (u8*)base + idx * 0x18;
+            lbl_80346658.dst = base + idx * 0x18;
             fn_802A21C4(cnt, lbl_80346658.dst, (NJS_VECTOR*)v);
             break;
         case 0x2a:
-            lbl_80346658.dst = (u8*)base + idx * 0x1c;
+            lbl_80346658.dst = base + idx * 0x1c;
             fn_802A5D20(cnt, lbl_80346658.dst, (NJS_VECTOR*)v);
             break;
         case 0x2c:
-            lbl_80346658.dst = (u8*)base + idx * 0x18;
+            lbl_80346658.dst = base + idx * 0x18;
             fn_802A5F2C(cnt, lbl_80346658.dst, v, flags);
             flags = 0x29;
             break;
