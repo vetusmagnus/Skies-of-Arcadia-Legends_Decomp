@@ -594,3 +594,14 @@ mode load move above the four `dst` stores. Closer, not merged: `fn_8028CF20` (2
 hoisted `&qb[k].y` computations, likely the inline-argument copy difference); `fn_8028F9B0`, `fn_8028FEA4`,
 `fn_8028ED64` unchanged. `fn_8028DD5C` is fn_8028ED64's box test against a capsule; `fn_8028BE90` keeps its first
 projection's endpoints on the stack and the other two in registers.
+
+### Round 5 (2026-11-02)
+
+No new matches. Best drafts are in `docs/near/`: `fn_8028CF20` 4 lines (instructions exact; one float register
+in the last triangle; the edge-length sum in its own local fixed the rest), `fn_8028BE90` 458 lines with
+instructions exact (its stack slots are allocator spills: each projection is a block with its own
+declarations, so the maybe-unset slope/intercept/point copies of all three are live through the first;
+needs `const` parameters), `fn_8028DD5C` 1062 lines with instructions exact (fn_8028ED64's skeleton with the
+capsule axis), `fn_80296680` 18 (`cnt /= sz;` as its own statement), `fn_80293F20` 46 (cyclic Catmull-Rom;
+`f32 span[2] = {1.0f, 1.0f}` indexed by `(s32)d > 0`), plus `fn_8028ED64`, `fn_802938C8` and the TEX colour
+drawers `fn_8029FE0C`, `fn_8029F0F8`, `fn_802A02E8` (6 lines each).
