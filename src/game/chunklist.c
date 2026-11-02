@@ -3,7 +3,6 @@
  * headers (ChunkHdr) that task resources are made of, and fn_8003617C, which gives each chunk type
  * its data size. The end is a guess: the .data jump table at 0x802DD0C8 belongs to this file and
  * the next file's .data starts at the task table (0x802DD238). */
-#include "types.h"
 #include "game/chunklist.h"
 
 extern void fn_801E17E0(void*);

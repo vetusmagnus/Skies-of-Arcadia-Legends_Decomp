@@ -8,7 +8,6 @@
  * fn_80030280 / fn_800308FC: "MA%03d.MLD" style names) and the title sequence task fn_800304DC
  * with its init/exit helpers. Types shared by several functions are declared once here; types
  * used by one function carry its address as a suffix. */
-#include "types.h"
 
 /* Battle unit record (pointed to by the work area at +0x4C). */
 typedef struct Unit {

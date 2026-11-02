@@ -254,7 +254,6 @@ extern s32 fn_80097CEC(s32 p);
  * The original calls the Dolphin SDK inline __OSf32tou8 from <dolphin/os/OSFastCast.h>.
  * The game code itself is plain C. Siblings: fn_8009E4B8 = __OSu8tof32(b) * K,
  * fn_8009E4D4 = __OSf32tou8((K0 + x) * 255). */
-#include <dolphin/os/OSFastCast.h>
 typedef unsigned char u8;
 typedef float f32;
 typedef struct {
@@ -428,7 +427,6 @@ extern void njUnitMatrix(NJS_MATRIX m);
  * Needs the Dolphin SDK fast-cast inline __OSu8tof32 (psq_l through GQR2), which our
  * extern/sdk OSFastCast.h lacks. The SDK's definition is reproduced here only until it is
  * added to <dolphin/os/OSFastCast.h>; the game code itself is the one-line function. */
-#include <dolphin/os/OSFastCast.h>
 typedef unsigned char u8;
 typedef struct Ent_8009884C {
     s16 h0;

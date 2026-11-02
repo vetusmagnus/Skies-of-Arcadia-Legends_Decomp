@@ -882,7 +882,6 @@ extern s32 fn_80194C38(s8 a);
 typedef struct Obj_80191E94 { u8 pad[0x18]; u8 flags; u8 kind; } Obj_80191E94;
 #define OBJ_801763B8(i) (&((Elem*)camp_work.pnl[i])->mid->obj)
 /* fn_80167578: walk the object chain, return the i-th table entry's data. */
-#include "types.h"
 typedef struct Vec4f { f32 a, b, c, d; } Vec4f;
 typedef struct IconObj_80189214 {
     f32 x;       /* 0x00 */

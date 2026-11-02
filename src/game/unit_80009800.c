@@ -9,6 +9,7 @@
 #include "game/stat_8030B4D4.h"
 #include "game/gamedata.h"
 #include <string.h>
+#include <dolphin/os/OSFastCast.h>
 #define PTR(p, off) (*(void**)((u8*)(p) + (off)))
 extern void* lbl_803475A8;
 extern void* fn_802268E8(void* a, void* cb);
@@ -516,7 +517,6 @@ void fn_80009FD8(void) {
 }
 
 #ifdef NONMATCHING
-#include <dolphin/os/OSFastCast.h>
 typedef struct VertexCol {
     f32 x, y, z;
     u32 colour;

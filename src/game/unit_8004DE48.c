@@ -1,7 +1,6 @@
 #include "types.h"
 /* Effect task handlers from 0x8004DE48 (a new .sdata2 block at 0x80348700: second 182.04445f, 1.0f
  * and 0.0f): the model effect fn_8004DE48, the area-of-effect pulse fn_8004E474 and the strip helpers. */
-#include "types.h"
 #include "ninja.h"
 #include "game/drawstate.h"
 

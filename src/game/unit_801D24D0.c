@@ -8,6 +8,8 @@
 #include <dolphin/gx.h>
 #include <dolphin/types.h>
 #include "game/task.h"
+#include "game/text.h"
+#include <dolphin/os/OSFastCast.h>
 void VISetNextFrameBuffer(void *fb);
 void VIFlush(void);
 void VIWaitForRetrace(void);
@@ -1936,7 +1938,6 @@ void fn_801DBE1C(const char *fmt, ...) {
 }
 
 void fn_801DBF90(void);
-#include "game/text.h"
 extern u32 lbl_80310B3C[]; /* story-flag bitset */
 extern s32 lbl_803475D8, lbl_80347470, lbl_803476D0, lbl_803476CC, lbl_80347674;
 extern s32 lbl_80347578, lbl_80347280, lbl_803473A4, lbl_803475B4;
@@ -5245,7 +5246,6 @@ static inline f32 Dist2(f32 x, f32 z) { return x * x + z * z; }
     }
 
 #ifdef NONMATCHING
-#include <dolphin/os/OSFastCast.h>
 typedef struct VertexCol { f32 x, y, z; u32 colour; } VertexCol;
 extern VertexCol lbl_80308DF0[4];
 extern f32 lbl_80345878[];

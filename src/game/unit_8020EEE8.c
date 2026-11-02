@@ -6,6 +6,7 @@
 #include "game/gamedata.h"
 #include <math.h>
 #include <stdarg.h>
+#include "game/save_8030B7F4.h"
 /* The head of a message a script command posts through fn_800CD0B8; the receiver sets kind (2 = done). */
 typedef struct EvHead {
     u32 kind;       /* 0x00 */
@@ -74,7 +75,6 @@ typedef struct Scpt {
 s32 fn_800CD0B8(s32 a, s32 b, s32 c, s32 d);
 void fn_80211058(Scpt *s, s32 a, s32 b, s32 c, s16 d, Ev *w);
 void fn_802110E8(Scpt *s, s32 a, s32 b, s32 c, s16 d, EvHead *w);
-#include "game/save_8030B7F4.h"
 void fn_80210CE4(void);
 void fn_80142C78(void *p);
 void fn_80147DCC(void *p);

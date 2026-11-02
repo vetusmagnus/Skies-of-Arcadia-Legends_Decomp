@@ -1468,7 +1468,6 @@ typedef struct Hit {
 extern s32 fn_8022436C(u32 id, Hit* arr, s32 count);
 #define OBJ_801763B8(i) (&((Elem*)camp_work.pnl[i])->mid->obj)
 /* fn_80167578: walk the object chain, return the i-th table entry's data. */
-#include "types.h"
 
 typedef struct Ent_80167578 {
     u32 x0;

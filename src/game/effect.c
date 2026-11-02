@@ -7,7 +7,6 @@
  * fn_80043C24 - fn_800445D4, the model effects fn_80044B24 - fn_80045CD8 and the 2D effects
  * fn_80046704 - fn_800470F0. Each handler switches on node->state (0 init, 1 wait, 0xF9/0xFA
  * free) and uses a work area whose layout is named <Type>_<handler address> when it is private. */
-#include "types.h"
 #include "ninja.h"
 #include "game/drawstate.h"
 

@@ -9,7 +9,6 @@
 #include "game/evobj.h"
 #include "game/btlside.h"
 #include <string.h>
-#include "string.h"
 extern void fn_80117748();
 extern void fn_80114C84(void *a, void *b, void *c, void *d, void *e, void *f);
 /* a wall segment: two end points */

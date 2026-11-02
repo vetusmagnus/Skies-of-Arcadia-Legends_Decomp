@@ -5,6 +5,7 @@
 #include "game/text.h"
 #include "game/save_8030B7F4.h"
 #include <string.h>
+#include "game/util.h"
 typedef struct {
     u8 pad0[1];
     u8 x1;
@@ -2730,7 +2731,6 @@ void fn_80133750(void)
 }
 
 #ifdef NONMATCHING
-#include "game/util.h"
 extern const CannonData lbl_802D7E4C[40];
 extern s32 fn_8021A0FC(s32 i);
 extern s32 fn_8021A0DC(s32 id);
