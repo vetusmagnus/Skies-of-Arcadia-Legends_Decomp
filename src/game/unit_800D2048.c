@@ -96,8 +96,8 @@ typedef struct {
     s32 unk0;
     s32 map;
     char room;
-} MapInfo2;
-extern MapInfo2 lbl_80311AC0;
+} MapInfo;
+extern MapInfo lbl_80311AC0;
 s32 fn_800D2924(EvObj *self);
 typedef struct {
     u8 pad0[0x34];
@@ -197,6 +197,7 @@ typedef struct {
     u8 pad250[0x25C - 0x250];
     Script_800D5E78* x25c;     /* 0x25C */
 } Ent_800D5E78;
+/* Same layouts as unit_800B2DA0.c (fn_800D5F94). */
 typedef struct {
     s16 frames;       /* 0x00 */
     s16 value;        /* 0x02 */
@@ -280,7 +281,6 @@ typedef struct {
     u8 pad3[0x264 - 0x25c];
     KeyList_800D5CF4* list;
 } Obj_800D5CF4;
-typedef struct { u8 pad[8]; u32 flags; } Pad;
 typedef struct { u8 b0, b1; s8 b2, b3; u8 pad[8]; } Stick;
 typedef struct {
     s16 cur;
@@ -477,7 +477,7 @@ typedef struct Hnd {
     u8 v48[0xc]; u8 v54[0xc]; u8 v60[0xc];
 } Hnd;
 typedef struct Scr { u8 pad[4]; s32 i4; } Scr;
-typedef struct Ent_800D3C00 { f32 a; s32 b; f32 c; } Ent_800D3C00;
+typedef struct Rec { f32 a; s32 b; f32 c; } Rec;
 typedef struct Obj_800D3C00 {
     u8 pad0[0x38]; u8 pos38[0xc]; u8 v44[0xc];
     u8 pad50[0xb4 - 0x50]; u8 vb4[0xc]; u8 vc0[0xc];
@@ -493,7 +493,7 @@ typedef struct Hd { u8 pad[0x19]; u8 state; } Hd;
 extern Hnd *fn_80225B74(s32 mask, u16 id);
 extern void fn_802233EC(Hnd *h);
 extern void fn_802234D4(Hnd *h);
-extern Ent_800D3C00 *fn_80100684(u32 id, s32 n);
+extern Rec *fn_80100684(u32 id, s32 n);
 extern s32 MemEqual(const void *a, const void *b, s32 size);
 /* An animation/sequence record: header (4 bytes) then b3 words; its size in words is passed in. */
 typedef struct Seq_800D6240 {
@@ -518,33 +518,11 @@ typedef struct Obj_800D6240 {
     u8 pad250[0x25c - 0x250];
     Seq_800D6240* seq;
 } Obj_800D6240;
-/* Same layouts as unit_800B2DA0.c (fn_800D5F94). */
-typedef struct {
-    s16 frames;       /* 0x00 */
-    s16 value;        /* 0x02 */
-    u8 pad4[4];
-} Key_800D5F94_800D62DC;
-typedef struct {
-    u16 mode;         /* 0x00 */
-    s16 count;        /* 0x02 */
-    Key_800D5F94_800D62DC keys[1];      /* 0x04 */
-} Script_800D5F94_800D62DC;
-typedef struct {
-    u8 pad0[0xC];
-    u32* data;        /* 0x0C */
-} Node_800D62DC;
-typedef struct {
-    u8 pad0[8];
-    Node_800D62DC* node;       /* 0x08 */
-} Rec_800D5F94_800D62DC;
-typedef struct {
-    Rec_800D5F94_800D62DC* recs;        /* 0x00 */
-} Table_800D5F94_800D62DC;
 typedef struct {
     u8 pad0[0x34];
     s32 x34;          /* 0x34 */
     u8 pad38[0x100 - 0x38];
-    Table_800D5F94_800D62DC* x100;      /* 0x100 */
+    Table_800D5F94* x100;      /* 0x100 */
     u8 pad104[0x188 - 0x104];
     u32 x188;         /* 0x188 */
     u8 pad18c[0x200 - 0x18c];
@@ -553,9 +531,8 @@ typedef struct {
     u8 pad204[0x23C - 0x204];
     s32 x23c;         /* 0x23C */
     u8 pad240[0x260 - 0x240];
-    Script_800D5F94_800D62DC* x260;     /* 0x260 */
+    Script_800D5F94* x260;     /* 0x260 */
 } Ent_800D62DC;
-typedef struct V3_800D3F00 { f32 x, y, z; } V3_800D3F00;
 typedef struct Hnd_800D3F00 {
     u8 pad_00[6];
     u16 flags;
@@ -569,13 +546,12 @@ typedef struct Hnd_800D3F00 {
     u8 v60[0xc];
 } Hnd_800D3F00;
 typedef struct Scr_800D3F00 { u8 pad_00[4]; s32 i4; } Scr_800D3F00;
-typedef struct Rec { f32 a; s32 b; f32 c; } Rec;
 typedef struct Obj_800D3F00 {
     u8 pad_00[0x38];
     u8 pos38[0xc];
     u8 v44[0xc];
     u8 pad_50[0xb4 - 0x50];
-    V3_800D3F00 vb4;
+    V3_800C4584 vb4;
     u8 vc0[0xc];
     u8 pad_cc[0xe8 - 0xcc];
     u32 ie8;
@@ -601,11 +577,6 @@ typedef struct Task_800D3F00 {
     Obj_800D3F00 *obj;
 } Task_800D3F00;
 typedef struct Hd_800D3F00 { u8 pad_00[0x19]; u8 state; } Hd_800D3F00;
-typedef struct MapInfo {
-    s32 unk0;
-    s32 map;
-    char room;
-} MapInfo;
 typedef struct Node_800B63A4 {
     u8 pad0[0x58];
     struct Node_800B63A4* next;
@@ -854,7 +825,7 @@ void fn_800D4690(Task *self)
     s32 m;
     s32 ok;
     f32 t;
-    MapInfo2 *tb;
+    MapInfo *tb;
 
     switch (self->state) {
     case 0:
@@ -1750,7 +1721,7 @@ s32 fn_800D7E7C(Menu* m) {
     if (m->count > 1) {
         u32 flags;
         s16 old = m->cur;
-        flags = (*(Pad*(*)[])&lbl_80311A60)[lbl_8034757C]->flags;
+        flags = (*(Ctrl*(*)[])&lbl_80311A60)[lbl_8034757C]->flags;
         if ((flags & 8) || lbl_80311A14[lbl_8034757C].b3 > 30) {
             m->cur--;
         } else if ((flags & 4) || lbl_80311A14[lbl_8034757C].b2 > 30) {
@@ -1767,7 +1738,7 @@ s32 fn_800D7E7C(Menu* m) {
     }
     {
         u32 flags;
-        if ((lbl_80311A00[1] & (flags = (*(Pad*(*)[])&lbl_80311A60)[lbl_8034757C]->flags)) || (flags & 0x1000)) {
+        if ((lbl_80311A00[1] & (flags = (*(Ctrl*(*)[])&lbl_80311A60)[lbl_8034757C]->flags)) || (flags & 0x1000)) {
             ret = -1;
         } else if (lbl_80311A00[0] & flags) {
             s16* p = &m->cur;
@@ -2209,7 +2180,7 @@ void fn_800D3C00(Task_800D3C00 *self)
 {
     Obj_800D3C00 *e = *(Obj_800D3C00 **)((char *)self + 0x24);
     Hnd *h;
-    Ent_800D3C00 *p;
+    Rec *p;
     s32 ok;
     s32 *tb;
 
@@ -2315,12 +2286,12 @@ s32 fn_800D6240(void* unused, Obj_800D6240* o, Seq_800D6240* seq, s16 words) {
 }
 
 /* Installs script s on e when its size in words matches, starts it at key 0. */
-s32 fn_800D62DC(void* unused, Ent_800D62DC* e, Script_800D5F94_800D62DC* s, s16 words)
+s32 fn_800D62DC(void* unused, Ent_800D62DC* e, Script_800D5F94* s, s16 words)
 {
     s32 ok = 0;
     s32 size = ((s->count - 1) * 8 + 0xc) / 4;
     s32 mode;
-    Key_800D5F94_800D62DC* k;
+    Key_800D5F94* k;
     s16 v;
 
     if (size == words) {
@@ -2336,7 +2307,7 @@ s32 fn_800D62DC(void* unused, Ent_800D62DC* e, Script_800D5F94_800D62DC* s, s16 
         k += e->x200;
         v = k->value;
         if (v >= 0) {
-            e->x23c = *(*(Node_800D62DC**)((u8*)e->x100->recs + v * 12 + 8))->data;
+            e->x23c = *(*(Node**)((u8*)e->x100->recs + v * 12 + 8))->data;
         } else {
             e->x23c = -1;
         }

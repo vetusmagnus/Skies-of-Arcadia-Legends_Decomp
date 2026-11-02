@@ -365,16 +365,7 @@ typedef struct Loc74E2C {
 } Loc74E2C;
 extern void fn_8006CF28(Sub74E2C *, Loc74E2C **, s32);
 extern s32 fn_80227810(void *);
-typedef struct Eff_8007E690 {
-    u8 pad0[0xC];
-    f32 xc;
-    f32 x10;
-    u8 pad14[0x40 - 0x14];
-    s32 x40;
-    s32 x44;
-    f32 x48;
-} Eff_8007E690;
-typedef struct Wk_8007E690 { void* x0; u32 x4; void* x8; u8 padc[0x4C - 0xC]; Eff_8007E690* eff; } Wk_8007E690;
+typedef struct Wk_8007E690 { void* x0; u32 x4; void* x8; u8 padc[0x4C - 0xC]; Eff* eff; } Wk_8007E690;
 typedef struct Tk_8007E690 { u8 pad[0x19]; u8 state; u8 pad1a[0x24 - 0x1A]; Wk_8007E690* work; } Tk_8007E690;
 typedef struct Tbl_8007E690 {
     u8 pad0[8];
@@ -1882,7 +1873,7 @@ s32 fn_80083728(s32 a, s32 b)
 void fn_8007E690(Tk_8007E690* t)
 {
     Wk_8007E690* w = t->work;
-    Eff_8007E690* e = w->eff;
+    Eff* e = w->eff;
     Pos_8007E690* pos;
     Vec_8007E690 v;
     f32 hit;

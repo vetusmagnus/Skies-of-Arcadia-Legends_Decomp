@@ -134,12 +134,6 @@ typedef struct Ent_800E04E0 {
     u32 u198;
 } Ent_800E04E0;
 extern f32 lbl_80349698;
-typedef struct Ent_800E0540 {
-    u8 pad0[0x190];
-    f32 f190;
-    u32 u194;
-    u32 u198;
-} Ent_800E0540;
 typedef struct Mid {
     u8 pad0[8];
     u32 u8;
@@ -602,10 +596,6 @@ typedef struct {
 } Obj_800DE440;
 extern s32 fn_801C60A4(void *p);
 extern void* fn_800CCA6C(s32 a, s32 b);
-typedef struct {
-    u8 pad0[0x1c8];
-    Code1c8* info; /* 0x1c8 */
-} Obj_800E0B08;
 extern void njPushMatrixEx(void);
 extern void njPopMatrixEx(void);
 extern void fn_80286EE8(void);
@@ -1256,7 +1246,7 @@ typedef struct {
 } Unit_801051A0;
 extern void* fn_800DE440(Obj_800DE440* o);
 extern void fn_800DE2E4(K06Obj_800DE2E4 *p, s8 *a, s8 *b, s8 *c);
-extern s32 fn_800E0B08(Obj_800E0B08* o, s32 limit);
+extern s32 fn_800E0B08(Obj_800DE440* o, s32 limit);
 extern s32 fn_800DE228(void *p, f32 f);
 typedef struct Unit_80107B18 {
     u8 pad0[0x74];
@@ -1275,10 +1265,6 @@ typedef struct {
     u8 pad0[0x17a];
     u16 id;
 } Target;
-typedef struct {
-    u8 pad0[0x17a];
-    u16 id;
-} Self24;
 typedef struct Node_80108CC4 {
     u8 pad0[8];
     u32 id;
@@ -1685,12 +1671,9 @@ extern void fn_800C3428(void* o);
 typedef struct {
     s32 x, y, z;
 } IVec_800D9BA0;
-typedef struct {
-    f32 x, y, z;
-} Vec_800D9BA0;
-extern void fn_80090B68(IVec_800D9BA0* k, Vec_800D9BA0* v);
+extern void fn_80090B68(IVec_800D9BA0* k, Vec3* v);
 extern void fn_80090BE4(f32* p, IVec_800D9BA0* k);
-extern void fn_80090A7C(f32* p, Vec_800D9BA0* v);
+extern void fn_80090A7C(f32* p, Vec3* v);
 extern s32 fn_800E126C(EvObj* w);
 typedef struct {
     u8 pad0[0x20];
@@ -2005,12 +1988,6 @@ typedef struct {
     u8 pad1c[0x38 - 0x1c];
     s16 f38;
 } Menu;
-typedef struct {
-    s32 x, y, z;
-} IVec_800D9E00;
-typedef struct {
-    f32 x, y, z;
-} Vec_800D9E00;
 extern s32 lbl_80346DA0[2];
 extern u16 lbl_8034740C;
 extern void fn_800DA010(void* o);
@@ -2205,30 +2182,10 @@ extern s32 fn_801F3844(s32 n);
 extern void fn_801F3E6C(s32 n);
 extern void fn_801F3CB0(s32 n);
 typedef struct {
-    u8 pad0[0xe8];
-    struct { s32 p0; u32 len; } *anim; /* 0xE8 */
-    u8 pad_ec[0x180 - 0xec];
-    s32 timer;      /* 0x180 */
-    u8 pad184[0x18c - 0x184];
-    f32 f18c;
-    f32 f190;
-    u8 pad194[4];
-    s32 state;      /* 0x198 */
-    u8 pad19c[0x20c - 0x19c];
-    s32 idx;        /* 0x20C */
-    s32 cnt;        /* 0x210 */
-    u8 pad214[0x23c - 0x214];
-    s32 state3;     /* 0x23C */
-    u8 pad240[0x24c - 0x240];
-    f32 f24c;
-    u8 pad250[0x25c - 0x250];
-    SeqTbl *tbl;    /* 0x25C */
-} Obj_80107D90;
-typedef struct {
     u8 pad0[0x19];
     u8 f19;
     u8 pad1a[0x24 - 0x1a];
-    Obj_80107D90 *obj;   /* 0x24 */
+    Obj_80107C24 *obj;   /* 0x24 */
 } Parent_80107D90;
 typedef struct {
     u8 pad0[0x38];
@@ -2441,15 +2398,6 @@ extern void fn_800EA4A8(ResSpr* spr);
 extern s32 fn_801F4C24(s16 id);
 /* item category: 0 weapon ... 5 accessory (evobj.c declares it (void)) */
 extern char* fn_801F4AE4(s16 id);
-typedef struct ResStat_800E9B04 {           /* 0x6E */
-    s16 h0;      /* 0x00 */
-    s16 h2;      /* 0x02 */
-    u8 pad4[4];
-    u8 b8;       /* 0x08 */
-    u8 b9[99];   /* 0x09 */
-    u8 b6c;      /* 0x6C */
-    u8 b6d;      /* 0x6D */
-} ResStat_800E9B04;
 typedef struct Ctx3594_800E9B04 {
     u32 w0;              /* 0x00 */
     s32 state;           /* 0x04 */
@@ -2477,7 +2425,7 @@ typedef struct Ctx3594_800E9B04 {
     u8 pad328[0x48];
     ResSpr spr[22];      /* 0x370 */
     ResPanel obj[22];    /* 0x580 */
-    ResStat_800E9B04 stat[4];     /* 0xEC8 */
+    ResStat_800E88FC stat[4];     /* 0xEC8 */
     u8 pad1080[0x470];
     s16 evIdx;           /* 0x14F0 */
     s16 h14f2;           /* 0x14F2 */
@@ -2796,7 +2744,7 @@ void fn_800D8924(Task* t) {
     EvInfoFade* info;
     EvObj* e = t->work;
     IVec_800D9BA0 k;
-    Vec_800D9BA0 v;
+    Vec3 v;
     info = e->ext->info;
     k.x = e->b16a;
     k.y = 0;
@@ -2911,7 +2859,7 @@ void fn_800D8E1C(Task* t) {
     EvInfoFade* info;
     EvObj* e = t->work;
     IVec_800D9BA0 k;
-    Vec_800D9BA0 v;
+    Vec3 v;
     NJS_POINT3 p;
     info = e->ext->info;
     k.x = e->b16a;
@@ -3040,7 +2988,7 @@ void fn_800D934C(Task* t) {
     EvInfoFade* info;
     EvObj* e = t->work;
     IVec_800D9BA0 k;
-    Vec_800D9BA0 v;
+    Vec3 v;
     NJS_POINT3 p;
     info = e->ext->info;
     k.x = e->b16a;
@@ -3236,7 +3184,7 @@ static inline f32 AbsF_800DBB4C(f32 x) {
 void fn_800DBB4C(Task* t) {
     EvObj* w = t->work;
     IVec_800D9BA0 k;
-    Vec_800D9BA0 v;
+    Vec3 v;
     f32 near;
     f32 far;
     k.x = w->b16a;
@@ -3334,7 +3282,7 @@ void fn_800DC828(Task *self)
 {
     EvObj *e = self->work;
     IVec_800D9BA0 k;
-    Vec_800D9BA0 v;
+    Vec3 v;
     u32 type;
     u16 hw;
     EvObj *ev;
@@ -3508,10 +3456,7 @@ void fn_800DCF18(Task* t) {
 }
 
 s32 fn_800DDE60(u8 *self);
-typedef struct Box_800DD5B4 {
-    NJS_POINT3 v[8];
-} Box_800DD5B4;
-extern Box_800DD5B4 lbl_802B1640;
+extern Box_800DCF18 lbl_802B1640;
 extern void fn_801D142C(u8 v);
 extern void fn_801D1420(void);
 
@@ -3520,7 +3465,7 @@ void fn_800DD5B4(Task* t) {
     EvInfoBox* info;
     EvObj* e = t->work;
     IVec_800D9BA0 k;
-    Vec_800D9BA0 v;
+    Vec3 v;
     info = e->ext->info;
     k.x = e->b16a;
     k.y = 0;
@@ -3544,7 +3489,7 @@ void fn_800DD5B4(Task* t) {
     njClipZ(lbl_80346788, lbl_8034678C);
     switch (t->state) {
     case 0: {
-        Box_800DD5B4 box;
+        Box_800DCF18 box;
         s32 i;
         e->x1ec = 1;
         box = lbl_802B1640;
@@ -5271,7 +5216,7 @@ void fn_800E04E0(Ent_800E04E0* p) {
     }
 }
 
-void fn_800E0540(Ent_800E0540* p) {
+void fn_800E0540(Ent_800E0470* p) {
     f32 f31;
 
     if (p != 0) {
@@ -6288,7 +6233,7 @@ void* fn_800DE440(Obj_800DE440* o)
     return res;
 }
 
-s32 fn_800E0B08(Obj_800E0B08* o, s32 limit)
+s32 fn_800E0B08(Obj_800DE440* o, s32 limit)
 {
     s32 a = -1;
     s32 b;
@@ -7099,7 +7044,7 @@ void fn_801051A0(Unit_801051A0 *u) {
     switch (u->state) {
     case 0:
         if (u->b1ef != 0) {
-            if (fn_800E0B08((Obj_800E0B08 *)u, u->b1f0) != 0) {
+            if (fn_800E0B08((Obj_800DE440 *)u, u->b1f0) != 0) {
                 u->state = 1;
             }
         }
@@ -7110,7 +7055,7 @@ void fn_801051A0(Unit_801051A0 *u) {
         }
         break;
     case 2:
-        if (u->b1ef == 0 || fn_800E0B08((Obj_800E0B08 *)u, u->b1f0) == 0) {
+        if (u->b1ef == 0 || fn_800E0B08((Obj_800DE440 *)u, u->b1f0) == 0) {
             u->state = 3;
         }
         break;
@@ -8051,7 +7996,7 @@ void fn_800D99B4(Obj_800D99B4* o) {
 void fn_800D9BA0(Task* o) {
     EvObj* w = o->work;
     IVec_800D9BA0 k;
-    Vec_800D9BA0 v;
+    Vec3 v;
     k.x = w->b16a;
     k.y = 0;
     k.z = w->b16b;
@@ -8775,8 +8720,8 @@ s32 fn_8010D12C(Menu *m) {
 
 void fn_800D9E00(Task* o) {
     EvObj* w = o->work;
-    IVec_800D9E00 k;
-    Vec_800D9E00 v;
+    IVec_800D9BA0 k;
+    Vec3 v;
     k.x = w->b16a;
     k.y = 0;
     k.z = w->b16b;
@@ -9803,7 +9748,7 @@ void fn_800FF6B4(s32 n) {
     }
 }
 
-static inline void SeqStart(Obj_80107D90 *o) {
+static inline void SeqStart(Obj_80107C24 *o) {
     SeqTbl *t = o->tbl;
     o->idx = 0;
     o->timer = t->ent[0].a;
@@ -9814,7 +9759,7 @@ static inline void SeqStart(Obj_80107D90 *o) {
 }
 
 s32 fn_80107D90(Parent_80107D90 *p) {
-    Obj_80107D90 *o;
+    Obj_80107C24 *o;
 
     switch (fn_8015F218((void *)(p->obj))) {
     case 1:
@@ -10521,13 +10466,13 @@ extern void fn_801D9CF0(f32 a, f32 b, f32 c);
 extern void fn_801D9B34(void);
 extern u32 fn_801D0B40(void);
 extern void fn_801D0B48(u32 v);
-extern void fn_80090B68(IVec_800D9BA0* k, Vec_800D9BA0* v);
+extern void fn_80090B68(IVec_800D9BA0* k, Vec3* v);
 
 void fn_800DCB78(Task* t)
 {
     EvObj* w = t->work;
     IVec_800D9BA0 k;
-    Vec_800D9BA0 v;
+    Vec3 v;
     u32 s;
 
     k.x = w->b16a;

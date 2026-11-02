@@ -218,8 +218,8 @@ typedef struct Out {
     s32 i18;
     s32 i1c;
 } Out;
-typedef struct { u8 pad[4]; u32 f4; } I1c8;
-typedef struct { u8 pad[0x1c8]; I1c8 *p1c8; } Obj_8015F218;
+typedef struct { u8 pad[4]; u32 f4; } Mo;
+typedef struct { u8 pad[0x1c8]; Mo *p1c8; } Obj_8015F218;
 typedef struct { s32 f0; void *p4; } Sub0;
 typedef struct { u8 pad[8]; u32 f8; Sub0 *pc; } Res;
 Res *fn_800CCA6C(s32 kind, u32 v);
@@ -291,7 +291,6 @@ typedef struct TaskWork_80169294 {
     Task* link;
 } TaskWork_80169294;
 extern u32 lbl_80347088;
-typedef struct Sub_80168BD4 { u8 pad[0x24]; void *x24; } Sub_80168BD4;
 typedef struct Sub_80168A04 {
     u32 w0;
     s32 id;
@@ -306,7 +305,7 @@ typedef struct Sub_80168A04 {
     f32 x20;
     f32 x24;
     f32 x28;            /* 0x28 range */
-    Sub_80168BD4* x2c;
+    Rec_UNIT0000* x2c;
     struct Obj_80168A04* x30;   /* previous sound task */
     struct Obj_80168A04* x34;   /* next */
 } Sub_80168A04;
@@ -437,18 +436,6 @@ extern u8 lbl_802E7970[0x1C], lbl_802E79C0[0x1C], lbl_802E7A10[0x1C], lbl_802E7A
 extern u8 lbl_802E863C[0x1C], lbl_802E868C[0x1C], lbl_802E86DC[0x1C], lbl_802E872C[0x1C], lbl_802E877C[0x1C];
 extern u8 lbl_802E8ACC[0x1C], lbl_802E8B1C[0x1C], lbl_802E8B6C[0x1C], lbl_802E8BBC[0x1C], lbl_802E8C0C[0x1C];
 extern void* fn_801E1C7C(s32 size);
-typedef struct {
-    void* p0;
-    void* p4;
-    void* p8;
-    void* pc;
-    void* p10;
-} Tbl_8016CED8;
-typedef struct {
-    u8 pad0[0x24];
-    s8* kind;
-    Tbl_8016CED8* tbl;
-} Obj_8016CED8;
 extern s32 fn_8016C888(void);
 extern u8 lbl_802E7D5C[], lbl_802E8390[], lbl_802E83E0[], lbl_802E8464[], lbl_802E84E8[];
 void fn_8016CED8(Task* task);
@@ -524,7 +511,6 @@ extern void* lbl_803470F4;
 extern void* lbl_803470F0;
 extern void* lbl_803470E8;
 void fn_80199F38(void* r);
-typedef struct { u8 pad[4]; u32 f4; } Mo;
 typedef struct {
     u8 pad[0xe8];
     Mo *fe8;
@@ -1184,56 +1170,11 @@ typedef struct {
     Win_80172C60* win;
 } Pnl_80172C60;
 #define PNL_80172C60(off) (*(Pnl_80172C60**)(CWB + (off)))
-typedef struct {
-    u8 pad0[8];
-    UiObj ui;
-} Win_80173104;
-typedef struct {
-    u8 pad0[0x24];
-    Win_80173104* win;
-} Pnl_80173104;
-#define PNL_80173104(off) (*(Pnl_80173104**)(CWB + (off)))
-typedef struct {
-    u8 pad0[8];
-    UiObj ui;
-} Win_80174F40;
-typedef struct {
-    u8 pad0[0x24];
-    Win_80174F40* win;
-} Pnl_80174F40;
-#define PNL_80174F40(off) (*(Pnl_80174F40**)(CWB + (off)))
-typedef struct {
-    u8 pad0[8];
-    UiObj ui;
-} Win_801764E4;
-typedef struct {
-    u8 pad0[0x24];
-    Win_801764E4* win;
-} Pnl_801764E4;
-#define PNL_801764E4(off) (*(Pnl_801764E4**)(CWB + (off)))
-typedef struct {
-    u8 pad0[8];
-    UiObj ui;
-} Win_80176868;
-typedef struct {
-    u8 pad0[0x24];
-    Win_80176868* win;
-} Pnl_80176868;
-#define PNL_80176868(off) (*(Pnl_80176868**)(CWB + (off)))
-typedef struct {
-    u8 pad0[8];
-    UiObj ui;
-} Win_80178D2C;
-typedef struct {
-    u8 pad0[0x24];
-    Win_80178D2C* win;
-} Pnl_80178D2C;
-#define PNL_80178D2C(off) (*(Pnl_80178D2C**)(CWB + (off)))
-typedef struct Spr_8016E3E0 {
-    u8 pad[0x14];
-    f32 x;
-    f32 y;
-} Spr_8016E3E0;
+#define PNL_80173104(off) (*(Pnl_80172C60**)(CWB + (off)))
+#define PNL_80174F40(off) (*(Pnl_80172C60**)(CWB + (off)))
+#define PNL_801764E4(off) (*(Pnl_80172C60**)(CWB + (off)))
+#define PNL_80176868(off) (*(Pnl_80172C60**)(CWB + (off)))
+#define PNL_80178D2C(off) (*(Pnl_80172C60**)(CWB + (off)))
 typedef struct Obj_8016E3E0 {
     u8 pad0[0x2c];
     f32 x;
@@ -1284,11 +1225,8 @@ typedef struct {
     u8 pad0[0x38];
     f32 x, y, z;
 } Cam_80167EF0;
-typedef struct {
-    f32 x, y, z;
-} Vec_80167EF0;
 extern s32 fn_800C8D90(void);
-extern void fn_8009FDA0(void *a, s32 b, Vec_80167EF0 *out, s32 c, Vec_80167EF0 *d, s32 e, s32 f);
+extern void fn_8009FDA0(void *a, s32 b, Vec_8016022C *out, s32 c, Vec_8016022C *d, s32 e, s32 f);
 extern f32 fn_80291A5C(f32 x);
 typedef struct {
     u8 pad0[0x14];
@@ -1422,7 +1360,6 @@ typedef struct { u8 pad[0x74]; f32 y; } Nd;
 typedef struct { u8 pad[0x24]; Nd* n; } Elem2;
 #define ND(i) (((Elem2*)camp_work.pnl[i])->n)
 #define CW(off, T) (*(T*)((u8*)&camp_work + (off)))
-typedef struct Vec3_80168BD4 { f32 x, y, z; } Vec3_80168BD4;
 extern void *fn_8015F1A0(u32 id);
 extern f32 njSin(s32 a);
 typedef struct {
@@ -1529,10 +1466,7 @@ typedef struct Hit {
     u16 id1;        /* 0x22 */
 } Hit;
 extern s32 fn_8022436C(u32 id, Hit* arr, s32 count);
-typedef struct { u8 pad0[8]; s32 a8; u8 padc[4]; s32 a10; u8 pad14[0x5c - 0x14]; u32 f5c; } Leaf_801763B8;
-typedef struct { u8 pad[8]; UiObj obj; u8 pad2[0xBC - 8 - sizeof(UiObj)]; Leaf_801763B8* leaf; } Mid_801763B8;
-typedef struct { u8 pad[0x24]; Mid_801763B8* mid; } Elem_801763B8;
-#define OBJ_801763B8(i) (&((Elem_801763B8*)camp_work.pnl[i])->mid->obj)
+#define OBJ_801763B8(i) (&((Elem*)camp_work.pnl[i])->mid->obj)
 /* fn_80167578: walk the object chain, return the i-th table entry's data. */
 #include "types.h"
 
@@ -1594,14 +1528,9 @@ typedef struct Elem801732C8 {
 } Elem801732C8;
 #define IN(i) (((Elem801732C8 *)camp_work.pnl[i])->in)
 #define CW_801732C8(off, T) (*(T *)((u8 *)&camp_work + (off)))
-typedef struct Inner_80176D70 {
-    s32 kind;
-    u32 pad04;
-    UiObj obj;
-} Inner_80176D70;
 typedef struct Elem_80176D70 {
     u8 pad0[0x24];
-    Inner_80176D70 *in;
+    Inner_8016EE2C *in;
 } Elem_80176D70;
 #define CW_80176D70(off, T) (*(T *)((u8 *)w + (off)))
 #define CG(off, T) (*(T *)((u8 *)&camp_work + (off)))
@@ -2603,7 +2532,7 @@ void fn_801679A4(Fx_801677D0 *t)
 
 s32 fn_80168A04(Obj_80168A04* a, s32 b);
 s8 fn_80167EF0(Sub_80168A04 *a);
-extern f32 njScalor(Vec_80167EF0 *v);
+extern f32 njScalor(Vec_8016022C *v);
 /* Ninja NJM_RAD_ANG: radians to a 0x10000-per-turn angle. */
 static inline s32 RadToAng(f32 r) { return 10430.381f * r; }
 extern void fn_8021A094(u8 *p);
@@ -2613,9 +2542,9 @@ s32 fn_80167C34(St_801677D0 *w)
 {
     void *h;
     s32 base;
-    Vec_80167EF0 o;
-    Vec_80167EF0 p;
-    Vec_80167EF0 d;
+    Vec_8016022C o;
+    Vec_8016022C p;
+    Vec_8016022C d;
     f32 dist;
     f32 a, b;
     s32 n;
@@ -5166,7 +5095,7 @@ void fn_8016C4C8(s8 mode) {
 void fn_8016E3E0(Obj_8016E3E0* o) {
     s16 x = o->x;
     s16 y = o->y;
-    Spr_8016E3E0* s;
+    Spr_8016E52C* s;
     f32 oz;
     f32 f;
     f = o->f3c;
@@ -5174,7 +5103,7 @@ void fn_8016E3E0(Obj_8016E3E0* o) {
     TextSetZ(10.0f + o->z);
     TextPushColor();
     TextSetColor(0xff201008);
-    s = ((Spr_8016E3E0*)fn_801D68C4((void *)(lbl_803470F0), 0x1d));
+    s = ((Spr_8016E52C*)fn_801D68C4((void *)(lbl_803470F0), 0x1d));
     s->x = x + 16;
     s->y = y - 2;
     fn_801D4F0C((void *)(s), 0, 0, 1, 20.0f + o->z, 0.0f, f, 1.0f);
@@ -5227,8 +5156,8 @@ s8 fn_80167EF0(Sub_80168A04 *a)
     f32 d;
     f32 x;
     f32 tz;
-    Vec_80167EF0 o;
-    Vec_80167EF0 v;
+    Vec_8016022C o;
+    Vec_8016022C v;
 
     if ((*(Cam_80167EF0 **)&lbl_80347450) != 0) {
         p = fn_8015F1A0(a->f18 >> 16);
@@ -5822,8 +5751,8 @@ s32 fn_801673D8(Obj_801673D8 *o, s32 id)
 s8 fn_80168BD4(Sub_80168A04 *w)
 {
     void *h;
-    Vec3_80168BD4 o;
-    Vec3_80168BD4 p;
+    Vec_8016022C o;
+    Vec_8016022C p;
     f32 dy2, dx2, dz2, d2;
     f32 a, b;
     s32 n;
@@ -5994,16 +5923,16 @@ void fn_8016CED8(Task* task) {
     switch (task->state) {
     case 0:
     case 0xfe:
-        (*(Obj_8016CED8**)&lbl_803470B8)->tbl = fn_801E1C7C(0x14);
-        switch (*(*(Obj_8016CED8**)&lbl_803470B8)->kind) {
+        (*(Obj_8016C2C0**)&lbl_803470B8)->tbl = fn_801E1C7C(0x14);
+        switch (*(*(Obj_8016C2C0**)&lbl_803470B8)->kind) {
         case 0:
             break;
         case 1:
-            (*(Obj_8016CED8**)&lbl_803470B8)->tbl->p0 = lbl_802E7D5C;
-            (*(Obj_8016CED8**)&lbl_803470B8)->tbl->p4 = lbl_802E8390;
-            (*(Obj_8016CED8**)&lbl_803470B8)->tbl->p8 = lbl_802E83E0;
-            (*(Obj_8016CED8**)&lbl_803470B8)->tbl->pc = lbl_802E8464;
-            (*(Obj_8016CED8**)&lbl_803470B8)->tbl->p10 = lbl_802E84E8;
+            (*(Obj_8016C2C0**)&lbl_803470B8)->tbl->p0 = lbl_802E7D5C;
+            (*(Obj_8016C2C0**)&lbl_803470B8)->tbl->p4 = lbl_802E8390;
+            (*(Obj_8016C2C0**)&lbl_803470B8)->tbl->p8 = lbl_802E83E0;
+            (*(Obj_8016C2C0**)&lbl_803470B8)->tbl->pc = lbl_802E8464;
+            (*(Obj_8016C2C0**)&lbl_803470B8)->tbl->p10 = lbl_802E84E8;
             break;
         case 2:
             break;
@@ -6022,8 +5951,8 @@ void fn_8016CED8(Task* task) {
         break;
     case 0xff:
         task->flags |= 0x40;
-        if ((*(Obj_8016CED8**)&lbl_803470B8) != 0) {
-            (*(Obj_8016CED8**)&lbl_803470B8) = 0;
+        if ((*(Obj_8016C2C0**)&lbl_803470B8) != 0) {
+            (*(Obj_8016C2C0**)&lbl_803470B8) = 0;
         }
         break;
     }

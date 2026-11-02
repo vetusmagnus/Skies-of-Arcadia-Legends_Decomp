@@ -456,10 +456,7 @@ typedef struct { u8 pad[0x1d8]; S_8015D234 *s; } Obj_8015D234;
 typedef struct { u8 pad[0x1c]; u32 cnt; } St_8015D234;
 void fn_80222964(void *p);
 void fn_80167374(void *obj);
-typedef struct { u8 pad[0x1c]; f32 f1c; u8 pad2[0x168 - 0x20]; s16 mode; u8 pad3[0x1bc - 0x16a]; void *h1bc; } A_8015D340;
-typedef struct { u32 flags; u8 pad[4]; A_8015D340 *a; } S_8015D340;
-typedef struct { u8 pad[0x1bc]; void *h1bc; u8 pad2[0x1d8 - 0x1c0]; S_8015D340 *s; } Obj_8015D340;
-typedef struct { u8 pad[0x1c]; u32 cnt; } St_8015D340;
+typedef struct { u8 pad[0x1bc]; void *h1bc; u8 pad2[0x1d8 - 0x1c0]; S_8015D234 *s; } Obj_8015D340;
 void fn_802229F8(void *p);
 typedef struct { u8 pad[8]; } A_8015D54C;
 typedef struct {
@@ -906,10 +903,8 @@ typedef struct {
     s16 b;
 } Rec_80150DAC;
 extern s16 lbl_802E5EF0[];
-typedef struct { u8 pad[0x17a]; u16 h17a; } Rec_8015A888;
-typedef struct { u8 pad[0x24]; Rec_8015A888 *p24; } Holder_8015A888;
 typedef struct {
-    Holder_8015A888 *p0;
+    Holder_UNIT0000 *p0;
     u8 pad4[0xc];
     s32 f10;
 } Ent_8015A888;
@@ -1181,24 +1176,18 @@ s32 fn_80150800(Obj_80150800 *o);
 void fn_801517EC(Fx *p);
 void fn_801515EC(Fx *p);
 void fn_801514C4(Fx *o, s32 flag);
-typedef struct V3_80150014 {
-    f32 x, y, z;
-} V3_80150014;
-typedef struct W3_80150014 {
-    u32 a, b, c;
-} W3_80150014;
 typedef struct K_80150014 {
-    V3_80150014 pos;
-    W3_80150014 w;
+    Vec pos;
+    Blk w;
     f32 f18;
-    V3_80150014 v1c;
-    V3_80150014 v28;
-    V3_80150014 v34;
-    W3_80150014 w40;
+    Vec v1c;
+    Vec v28;
+    Vec v34;
+    Blk w40;
 } K_80150014;
 typedef struct In_80150014 {
-    V3_80150014 pos;
-    W3_80150014 w;
+    Vec pos;
+    Blk w;
 } In_80150014;
 extern K_80150014 lbl_80306AC8;
 extern void* lbl_80346F98;
@@ -1224,7 +1213,7 @@ static inline void Select(s32 t) {
     }
 }
 
-void fn_80150014(In_80150014* a, f32* b, V3_80150014* c) {
+void fn_80150014(In_80150014* a, f32* b, Vec* c) {
     BtlCam* m;
 
     lbl_80306AC8.v28.x = lbl_80306AC8.v1c.x;
@@ -1939,7 +1928,7 @@ void fn_80157360(s32 idx) {
     }
 }
 
-void fn_80157510(In_80150014* a, f32* b, V3_80150014* c) {
+void fn_80157510(In_80150014* a, f32* b, Vec* c) {
     fn_80150014(a, b, c);
 }
 
@@ -3293,10 +3282,10 @@ s32 fn_8015D234(Obj_8015D234 *o, St_8015D234 *st)
     return 1;
 }
 
-s32 fn_8015D340(Obj_8015D340 *o, St_8015D340 *st)
+s32 fn_8015D340(Obj_8015D340 *o, St_8015D234 *st)
 {
-    S_8015D340 *s = o->s;
-    A_8015D340 *a = s->a;
+    S_8015D234 *s = o->s;
+    A_8015D234 *a = s->a;
     if (st->cnt == 0) {
         a->f1c = 0.0f;
         s->flags &= ~8;

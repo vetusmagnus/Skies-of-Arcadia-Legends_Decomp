@@ -132,15 +132,14 @@ f32 fn_802918DC(f32 x);
 extern EvObj* lbl_80347450;
 s32 fn_8015F1F0(void* p);
 void fn_801DD3B8(void* a, void* b, void* c);
-typedef struct { f32 x, y, z; } Vec3_8008B600;
-typedef struct { u8 pad0[0x14]; s16 count; u8 pad16[6]; Vec3_8008B600 v; u8 pad28[0x4c - 0x28]; Sub80309700* x4c; } Sub_8008B600;
+typedef struct { f32 x, y, z; } Vec3;
+typedef struct { u8 pad0[0x14]; s16 count; u8 pad16[6]; Vec3 v; u8 pad28[0x4c - 0x28]; Sub80309700* x4c; } Sub_8008B600;
 typedef struct { u8 pad[0x24]; Sub_8008B600 *x24; } Ent_8008B600;
 extern Ent_8008B600 *fn_80021658(s8 idx);
 extern s32 fn_80078610(s8 idx);
 extern f32 fn_80071E9C(void*a, void*b);
 extern s16 *lbl_80302D48[12];
 extern void fn_801E17E0(void *p);
-typedef struct Vec3_8009009C { f32 x; f32 y; f32 z; } Vec3_8009009C;
 extern f32 lbl_80348B38;
 extern s16 lbl_80309DCC[12];
 extern s32 lbl_8034733C;
@@ -177,10 +176,10 @@ typedef struct {
 } Probe;
 extern void fn_801DCE18(f32* in, f32* out, s32 ang);
 extern s32 fn_80224588(s32 a, Probe* p, s32 b);
-typedef struct {
+typedef struct CamSub {
     u8 pad0[0x14];
-    s16 flags;
-} Sub8009564C;
+    s16 flags; /* 0x14 */
+} CamSub;
 typedef struct {
     u8 pad00[2];
     s16 flags;         /* 0x02 */
@@ -203,7 +202,7 @@ typedef struct {
     s32 e0;            /* 0xE0 */
     s16 e4;            /* 0xE4 */
     u8 padE6[0x108 - 0xE6];
-    Sub8009564C* sub;  /* 0x108 */
+    CamSub* sub;  /* 0x108 */
 } Obj8009564C;
 typedef struct Sub {
     u8 pad0[4];
@@ -277,12 +276,6 @@ extern s32 fn_8015F1F0(void* p);
 extern void fn_801DBE1C(const char* fmt, ...);
 extern char lbl_802B0D78[];
 extern f32 lbl_802B0D6C[3];
-typedef struct Probe_800912FC {
-    f32 x, y, z;
-    f32 h;
-    s16 a;
-    u16 b;
-} Probe_800912FC;
 typedef struct Obj_800912FC {
     u8 pad0[0x18];
     f32* p18;
@@ -451,24 +444,6 @@ extern void fn_80222838(void *);
 extern s32 fn_80223194(s32 mask, void *);
 extern s32 fn_801DD4C4(f32 x, f32 z);
 extern void fn_80221EDC(f32* out, u32 a, u32 b);
-typedef struct {
-    u8 pad0[0x18];
-    f32* pos; /* 0x18 */
-} Res_80094144;
-typedef struct {
-    f32 p[3];    /* 0x00 */
-    u8 pad0c[0x24 - 0x0C];
-    f32 m[3];    /* 0x24 */
-    u8 pad30[0x48 - 0x30];
-} Probe_80094144;
-typedef struct {
-    u8 padf0[0xF0];
-    f32 pos[3];  /* 0xF0 */
-    u8 padfc[0x128 - 0xFC];
-    Res_80094144* res;    /* 0x128 */
-    u8 pad12c[0x1C8 - 0x12C];
-    Probe_80094144 probe[2]; /* 0x1C8 */
-} Chr_80094144;
 FindEntry *fn_8008F2CC(FindEntry *head, s16 id);
 typedef struct { u8 pad[0xC]; u8 xc[1]; } TaskSub;
 typedef struct { u8 pad_0[0x8];
@@ -497,9 +472,6 @@ typedef struct {
     u32 colour;
 } VertexTex;
 typedef struct {
-    f32 x, y, z;
-} Vec3;
-typedef struct {
     NJS_TEXLIST* texlist; /* 0x00 */
     u8 pad4[0x50];
     Vec3* pos;            /* 0x54 */
@@ -515,10 +487,6 @@ typedef struct {
 extern void fn_80298FE4(s32 i);
 extern void fn_8022BC24(s32 a, s32 b, s32 c, s32 d);
 extern void fn_8028A8C0(VertexTex* v, s32 count, s32 flag);
-typedef struct CamSub {
-    u8 pad0[0x14];
-    s16 flags; /* 0x14 */
-} CamSub;
 typedef struct CamReq {
     u8 pad0[2];
     s16 flags;      /* 0x02 */
@@ -580,10 +548,9 @@ typedef struct Body_8008F138 {
     s32 x198;
     f32 x19c;
 } Body_8008F138;
-typedef struct TaskArg_8008F138 { u8 pad[0x24]; TaskRes* res; } TaskArg_8008F138;
 typedef struct ObjRef_8008F138 { u8 pad0[0x10]; s16 x10; } ObjRef_8008F138;
 typedef struct Work_8008F138_8008F138 {
-    TaskArg_8008F138* arg;        /* 0x00 */
+    TaskArg* arg;        /* 0x00 */
     void* owner;         /* 0x04 */
     MdlNode* root;       /* 0x08 */
     u8 pad0c[4];
@@ -674,8 +641,8 @@ s32 fn_8008B5C8(void) {
 
 s32 fn_8008B6C4(s32 a) {
     s32 i;
-    Vec3_8008B600 A;
-    Vec3_8008B600 B;
+    Vec3 A;
+    Vec3 B;
     Sub_8008B600 *s;
     s = fn_80021658(a)->x24;
     A.x = s->v.x;
@@ -697,8 +664,8 @@ s32 fn_8008B6C4(s32 a) {
 
 s32 fn_8008B84C(s32 a) {
     s32 i;
-    Vec3_8008B600 A;
-    Vec3_8008B600 B;
+    Vec3 A;
+    Vec3 B;
     Sub_8008B600 *s;
     s = fn_80021658(a)->x24;
     A.x = s->v.x;
@@ -1602,8 +1569,8 @@ void fn_8009519C(void* a, void* b) {
 
 s32 fn_8008B600(s32 a) {
     s32 i;
-    Vec3_8008B600 A;
-    Vec3_8008B600 B;
+    Vec3 A;
+    Vec3 B;
     Sub_8008B600 *s;
     s = fn_80021658(a)->x24;
     A.x = s->v.x;
@@ -1625,8 +1592,8 @@ s32 fn_8008B600(s32 a) {
 
 s32 fn_8008B788(s32 a) {
     s32 i;
-    Vec3_8008B600 A;
-    Vec3_8008B600 B;
+    Vec3 A;
+    Vec3 B;
     Sub_8008B600 *s;
     s = fn_80021658(a)->x24;
     A.x = s->v.x;
@@ -1663,7 +1630,7 @@ void fn_8008D610(Slot *o) {
 }
 
 
-void fn_8009009C(Vec3_8009009C *v, f32 s) {
+void fn_8009009C(Vec3F *v, f32 s) {
     f32 k;
     if (lbl_80348B38 == v->x && lbl_80348B38 == v->y && lbl_80348B38 == v->z) {
         v->x = s;
@@ -2228,10 +2195,10 @@ void fn_80094F90(NJS_POINT3* out, Actor* o)
 s32 fn_800912FC(f32* pos, Obj_800912FC* o) {
     extern f32 njSin(s32 a);
     extern f32 njCos(s32 a);
-    extern s32 fn_80224588(s32 a, Probe_800912FC* p, s32 b);
+    extern s32 fn_80224588(s32 a, Probe* p, s32 b);
     extern void fn_80222838(void* p);
     extern s32 fn_80223194(s32 a, void* p);
-    Probe_800912FC p;
+    Probe p;
     f32 r = 4.0f;
     f32 dx;
     f32 dz;
@@ -2716,7 +2683,7 @@ s32 fn_80093668(s32 unused, s32 ang, f32* pos, Chr_80093668* chr) {
     return ang;
 }
 
-s32 fn_80094144(s32 base, s32 ang, f32* pos, Chr_80094144* chr) {
+s32 fn_80094144(s32 base, s32 ang, f32* pos, Chr_80093668* chr) {
     f32 d[3];
     f32 w[3];
     f32 x, y, z;
@@ -2725,8 +2692,8 @@ s32 fn_80094144(s32 base, s32 ang, f32* pos, Chr_80094144* chr) {
     s32 bit;
     s32 j;
     s32 cur;
-    Probe_80094144* pr;
-    Res_80094144* res;
+    Probe_80093668* pr;
+    Res_80093668* res;
     f32 ex, ez;
     s32 a;
 
@@ -3299,7 +3266,7 @@ void fn_80095DFC(CamCtl* c, CamReq* r) {
     c->xe4 = 0x78;
 }
 
-int fn_8008F138(Handler* h, TaskArg_8008F138* arg)
+int fn_8008F138(Handler* h, TaskArg* arg)
 {
     TaskRes* res;
     Body_8008F138* b;

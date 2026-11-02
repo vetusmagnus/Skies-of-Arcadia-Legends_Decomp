@@ -45,9 +45,7 @@ typedef struct { u8 pad[0x10]; Sub_80036584* sub; s16 x14; u8 pad2[0x4C - 0x16];
 typedef struct { void* arg; s16 id; } Work_80036880;
 typedef struct { void* arg; void* obj; } Work_80036914;
 typedef struct { void* arg; s16 a; s16 b; s16 c; s16 d; } Work_800369A4;
-typedef struct { void* arg; s16 a; s16 b; s16 c; s16 d; } Work_80036A38;
 typedef struct { void* arg; u8 pad[8]; s16 c; s16 d; s16 e; } Work_80036AE4;
-typedef struct { void* arg; s16 a; s16 b; s16 c; s16 d; } Work_80036B88;
 typedef struct { void* arg; s16 a; s16 pad; s16 b; } Work_80036C1C;
 typedef struct { s16 s; u8 p[0xE]; s16 a; s16 b; s16 c; } O1_80036CB0;
 typedef struct { void* owner; u8 p[0xC-4]; s16 a; s16 b; s16 c; s16 d; } W1_80036CB0;
@@ -55,16 +53,6 @@ typedef struct { u8 p0[0x10]; f32 f10; s16 s14; s16 s16x; s16 s18; u8 p1[2]; f32
 typedef struct { void* owner; u8 p0[0x70]; f32 f74; f32 f78; u8 p1[4]; s16 s80; s16 s82; s16 s84; u8 p2[0x18]; s16 s9e; } W_80036D5C;
 typedef struct { s16 id; u8 p[2]; f32 f[16]; } O_80036E18;
 typedef struct { void* owner; f32 f[0x1F]; s16 id; } W_80036E18;
-typedef struct { s16 id; u8 p[2]; f32 f[16]; } O_80036EC4;
-typedef struct { void* owner; f32 f[0x1F]; s16 id; } W_80036EC4;
-typedef struct { s16 id; u8 p[2]; f32 f[16]; } O_80036F70;
-typedef struct { void* owner; f32 f[0x1F]; s16 id; } W_80036F70;
-typedef struct { s16 id; u8 p[2]; f32 f[16]; } O_8003701C;
-typedef struct { void* owner; f32 f[0x1F]; s16 id; } W_8003701C;
-typedef struct { s16 id; u8 p[2]; f32 f[16]; } O_800370C8;
-typedef struct { void* owner; f32 f[0x1F]; s16 id; } W_800370C8;
-typedef struct { s16 id; u8 p[2]; f32 f[16]; } O_8003716C;
-typedef struct { void* owner; f32 f[0x1F]; s16 id; } W_8003716C;
 typedef struct { u8 pad0[0x74]; void* x74; u8 pad1[0x178 - 0x78]; void* x178; } W_80037250;
 typedef struct {
     u8 x0;
@@ -92,7 +80,6 @@ typedef struct { u8 pad[0xF0]; u32 flags; u8 p1[0x164 - 0xF4]; f32 x164; u8 p2[0
 typedef struct { u8 pad0[6]; s16 flags; } Ent_80037FD8;
 typedef struct { u8 pad0[8]; u32 flags; u8 pad1[4]; f32 x10; f32 x14; } Cam_8003801C;
 typedef struct { void* arg; u8 pad[4]; void* owner; } Work_80038078;
-typedef struct { void* arg; u8 pad[4]; void* owner; } Work_80038140;
 typedef struct { u8 pad0[120]; void* arg; u8 pad1[56]; void* owner; } Work_80038208;
 typedef struct { u8 pad0[4]; void* arg; u8 pad1[24]; void* owner; } Work_800382D0;
 typedef struct { u8 pad[0x4]; void* arg; u8 pad2[0x34]; void* owner; } Work_80038398;
@@ -101,67 +88,40 @@ typedef struct { u8 pad[0x8]; s32 src; } Obj_80038534;
 typedef struct { u8 d[0x4C]; } Buf_80038534;
 typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x60]; void* owner; } Sub_80038534;
 typedef struct { Buf_80038534 buf; Sub_80038534* sub; } Work_80038534;
-typedef struct { u8 pad[0x8]; s32 src; } Obj_80038654;
-typedef struct { u8 d[0x4C]; } Buf_80038654;
 typedef struct { u8 pad0[0x10]; void* arg; void* owner; } Sub_80038654;
-typedef struct { Buf_80038654 buf; Sub_80038654* sub; } Work_80038654;
+typedef struct { Buf_80038534 buf; Sub_80038654* sub; } Work_80038654;
 typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0xe8]; void* owner; } Work_80038774;
 typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x9c]; void* owner; } Work_80038848;
 typedef struct { u8 pad0[0x30]; void* arg; void* owner; } Work_8003891C;
 typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x8]; void* owner; } Work_800389F0;
 typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x44]; void* owner; } Work_80038AC4;
-typedef struct { u8 pad[0x8]; s32 src; } Obj_80038B98;
-typedef struct { u8 d[0x4C]; } Buf_80038B98;
 typedef struct { u8 pad0[0x8]; void* arg; u8 pad1[0x4]; void* owner; } Sub_80038B98;
-typedef struct { Buf_80038B98 buf; Sub_80038B98* sub; } Work_80038B98;
+typedef struct { Buf_80038534 buf; Sub_80038B98* sub; } Work_80038B98;
 typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x18]; void* owner; } Work_80038CB8;
-typedef struct { u8 pad[0x8]; s32 src; } Obj_80038D8C;
-typedef struct { u8 d[0x4C]; } Buf_80038D8C;
-typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x60]; void* owner; } Sub_80038D8C;
-typedef struct { Buf_80038D8C buf; Sub_80038D8C* sub; } Work_80038D8C;
 typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x4]; void* owner; } Work_80038EAC;
-typedef struct { u8 pad[0x8]; s32 src; } Obj_80038F80;
-typedef struct { u8 d[0x4C]; } Buf_80038F80;
 typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x2c]; void* owner; } Sub_80038F80;
-typedef struct { Buf_80038F80 buf; Sub_80038F80* sub; } Work_80038F80;
+typedef struct { Buf_80038534 buf; Sub_80038F80* sub; } Work_80038F80;
 typedef struct { u8 pad0[0x50]; void* arg; void* owner; } Work_800390A0;
 typedef struct { u32 a, b; s32 src; u32 c, d, e; } Obj_80039174;
 typedef struct { u32 first; u8 rest[0x48]; } Buf_80039174;
 typedef struct { u8 pad0[4]; void* arg; u8 pad1[0xC]; Buf_80039174 buf; void* owner; } Work_80039174;
-typedef struct { u32 a, b; s32 src; u32 c, d, e; } Obj_80039280;
-typedef struct { u32 first; u8 rest[0x48]; } Buf_80039280;
-typedef struct { Buf_80039280 buf; u8 pad0[0x54-0x4C]; void* arg; u8 pad1[0xB4-0x58]; void* owner; } Work_80039280;
-typedef struct { u32 a, b; s32 src; u32 c, d, e; } Obj_800393AC;
-typedef struct { u32 first; u8 rest[0x48]; } Buf_800393AC;
-typedef struct { u8 pad0[4]; void* arg; Buf_800393AC buf; Obj_800393AC copy; } Work_800393AC;
-typedef struct { u8 pad[0x8]; s32 src; } Obj_800394E4;
-typedef struct { u8 d[0x4C]; } Buf_800394E4;
-typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x2c]; void* owner; } Sub_800394E4;
-typedef struct { Buf_800394E4 buf; Sub_800394E4* sub; } Work_800394E4;
+typedef struct { Buf_80039174 buf; u8 pad0[0x54-0x4C]; void* arg; u8 pad1[0xB4-0x58]; void* owner; } Work_80039280;
+typedef struct { u8 pad0[4]; void* arg; Buf_80039174 buf; Obj_80039174 copy; } Work_800393AC;
 typedef struct { u8 pad0[4]; void* arg; u8 pad1[28]; void* owner; } Work_80039604;
 typedef struct { u8 pad0[4]; void* arg; u8 pad1[48]; void* owner; } Work_800396D8;
 typedef struct { u8 pad0[4]; void* arg; u8 pad1[4]; void* owner; } Work_800397AC;
 typedef struct { u8 pad0[4]; void* arg; void* owner; } Work_80039880;
-typedef struct { u8 pad0[4]; void* arg; void* owner; } Work_80039954;
 typedef struct { u8 pad0[4]; void* arg; u8 pad1[136]; void* owner; } Work_80039A28;
-typedef struct { u8 pad[0x8]; s32 src; } Obj_80039AFC;
-typedef struct { u8 d[0x4C]; } Buf_80039AFC;
 typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0xC]; void* owner; } Sub_80039AFC;
-typedef struct { Buf_80039AFC buf; Sub_80039AFC* sub; } Work_80039AFC;
+typedef struct { Buf_80038534 buf; Sub_80039AFC* sub; } Work_80039AFC;
 typedef struct { u8 pad0[4]; void* arg; u8 pad1[12]; void* owner; } Work_80039C38;
-typedef struct { u8 pad0[4]; void* arg; u8 pad1[24]; void* owner; } Work_80039D0C;
 typedef struct { u8 pad0[8]; void* arg; void* owner; } Work_80039DE0;
-typedef struct { u8 pad0[4]; void* arg; void* owner; } Work_80039EB4;
 typedef struct { u8 pad0[0x8]; void* arg; void* owner; } Sub_80039F88;
 typedef struct { u8 pad[0x4C]; Sub_80039F88* sub; } Work_80039F88;
-typedef struct { u8 pad[0x8]; s32 src; } Obj_8003A070;
-typedef struct { u8 d[0x4C]; } Buf_8003A070;
 typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x24]; void* owner; } Sub_8003A070;
-typedef struct { Buf_8003A070 buf; Sub_8003A070* sub; } Work_8003A070;
+typedef struct { Buf_80038534 buf; Sub_8003A070* sub; } Work_8003A070;
 typedef struct { u8 pad0[4]; void* arg; u8 pad1[60]; void* owner; } Work_8003A190;
-typedef struct { u8 pad[0x8]; s32 src; } Obj_8003A264;
-typedef struct { u8 d[0x4C]; } Buf_8003A264;
-typedef struct { Buf_8003A264 buf; u8 pad0[0x8]; void* arg; u8 pad1[0x34]; void* owner; } Work_8003A264;
+typedef struct { Buf_80038534 buf; u8 pad0[0x8]; void* arg; u8 pad1[0x34]; void* owner; } Work_8003A264;
 typedef struct {
     u8 pad0[0x8]; s32 src;            /* 0x08 */
     u8 pad1[0x14 - 0xC]; s16 x14;     /* 0x14 */
@@ -174,7 +134,6 @@ typedef struct {
     u8 pad4[0x146 - 0x42]; s16 x146;  /* 0x146 */
     f32 x148, x14c, x150, x154, x158, x15c; /* 0x148 */
 } Obj_8003A370;
-typedef struct { u8 d[0x4C]; } Buf_8003A370;
 typedef struct {
     u8 pad0[0x2]; s16 x2; s16 x4; u8 pad1[2];
     f32 x8, xc;
@@ -184,93 +143,58 @@ typedef struct {
     u8 pad4[0x30 - 0x28]; f32 x30, x34; /* 0x30 */
     u8 pad5[0x40 - 0x38]; void* owner; /* 0x40 */
 } Sub_8003A370;
-typedef struct { Buf_8003A370 buf; Sub_8003A370* sub; } Work_8003A370;
-typedef struct { u8 pad0[4]; void* arg; void* owner; } Work_8003A75C;
-typedef struct { u8 pad0[4]; void* arg; u8 pad1[28]; void* owner; } Work_8003A830;
+typedef struct { Buf_80038534 buf; Sub_8003A370* sub; } Work_8003A370;
 typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x40]; void* owner; } Work_8003A904;
-typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x8]; void* owner; } Work_8003A9D8;
-typedef struct { u8 pad[0x8]; s32 src; } Obj_8003AAAC;
-typedef struct { u8 d[0x4C]; } Buf_8003AAAC;
 typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x34]; void* owner; } Sub_8003AAAC;
-typedef struct { Buf_8003AAAC buf; Sub_8003AAAC* sub; } Work_8003AAAC;
+typedef struct { Buf_80038534 buf; Sub_8003AAAC* sub; } Work_8003AAAC;
 typedef struct { u8 d[0x7C]; } Obj_8003ABCC;
-typedef struct { u8 d[0x4C]; } Buf_8003ABCC;
 typedef struct { u8 pad0[0x8]; void* arg; u32 x; Obj_8003ABCC copy; } Sub_8003ABCC;
-typedef struct { Buf_8003ABCC buf; Sub_8003ABCC* sub; } Work_8003ABCC;
+typedef struct { Buf_80038534 buf; Sub_8003ABCC* sub; } Work_8003ABCC;
 typedef struct { u8 pad[0x8]; s32 src; u8 rest[0x84]; } Obj_8003AD14;
-typedef struct { u8 d[0x4C]; } Buf_8003AD14;
 typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x14]; Obj_8003AD14 copy; } Sub_8003AD14;
-typedef struct { Buf_8003AD14 buf; Sub_8003AD14* sub; } Work_8003AD14;
-typedef struct { u8 pad[0x8]; s32 src; } Obj_8003AE54;
-typedef struct { u8 d[0x4C]; } Buf_8003AE54;
+typedef struct { Buf_80038534 buf; Sub_8003AD14* sub; } Work_8003AD14;
 typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x10]; void* owner; } Sub_8003AE54;
-typedef struct { Buf_8003AE54 buf; Sub_8003AE54* sub; } Work_8003AE54;
-typedef struct { u8 pad[0x8]; s32 src; } Obj_8003AF7C;
-typedef struct { u8 d[0x4C]; } Buf_8003AF7C;
-typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x60]; void* owner; } Sub_8003AF7C;
-typedef struct { Buf_8003AF7C buf; Sub_8003AF7C* sub; } Work_8003AF7C;
-typedef struct { u8 pad[0x8]; s32 src; } Obj_8003B09C;
-typedef struct { u8 d[0x4C]; } Buf_8003B09C;
-typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0xC]; void* owner; } Sub_8003B09C;
-typedef struct { Buf_8003B09C buf; Sub_8003B09C* sub; } Work_8003B09C;
+typedef struct { Buf_80038534 buf; Sub_8003AE54* sub; } Work_8003AE54;
 typedef struct { u8 d[0x1C]; } Obj_8003B1D8;
 typedef struct { u8 pad0[0x8]; void* arg; u32 pad1; Obj_8003B1D8 copy; } Work_8003B1D8;
 typedef struct { u8 pad[0x8]; s32 src; u8 p1[0x8]; s16 x; s16 y; u8 p2[0x10]; s16 count; s16 step; u8 p3[0x20]; } Obj_8003B2E0;
-typedef struct { u8 d[0x4C]; } Buf_8003B2E0;
 typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x18]; Obj_8003B2E0 copy; } Sub_8003B2E0;
-typedef struct { Buf_8003B2E0 buf; Sub_8003B2E0* sub; } Work_8003B2E0;
-typedef struct { u8 pad[0x8]; s32 src; } Obj_8003B464;
-typedef struct { u8 d[0x4C]; } Buf_8003B464;
+typedef struct { Buf_80038534 buf; Sub_8003B2E0* sub; } Work_8003B2E0;
 typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x84]; void* owner; } Sub_8003B464;
-typedef struct { Buf_8003B464 buf; Sub_8003B464* sub; } Work_8003B464;
+typedef struct { Buf_80038534 buf; Sub_8003B464* sub; } Work_8003B464;
 typedef struct { u8 pad[0x8]; s32 src; u8 p1[0x8]; s16 x; s16 y; u8 p2[0x10]; s16 count; s16 step; u8 p3[0x18]; } Obj_8003B584;
-typedef struct { u8 d[0x4C]; } Buf_8003B584;
 typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x8]; Obj_8003B584 copy; } Sub_8003B584;
-typedef struct { Buf_8003B584 buf; Sub_8003B584* sub; } Work_8003B584;
+typedef struct { Buf_80038534 buf; Sub_8003B584* sub; } Work_8003B584;
 typedef struct { u8 pad[0x8]; s32 src; u8 p1[0x8]; s16 x; s16 y; u8 p2[0x12]; s16 count; s16 step; u8 p3[0x2a]; } Obj_8003B708;
-typedef struct { u8 d[0x4C]; } Buf_8003B708;
 typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x1c]; Obj_8003B708 copy; } Sub_8003B708;
-typedef struct { Buf_8003B708 buf; Sub_8003B708* sub; } Work_8003B708;
+typedef struct { Buf_80038534 buf; Sub_8003B708* sub; } Work_8003B708;
 typedef struct { u8 pad[0x8]; s32 src; u8 p1[0x8]; s16 x; s16 y; u8 p2[0x12]; s16 count; s16 step; u8 p3[0x12e]; } Obj_8003B884;
-typedef struct { u8 d[0x4C]; } Buf_8003B884;
 typedef struct { s16 x; s16 y; u8 pad0[0x4]; void* arg; u8 pad1[0x1c]; Obj_8003B884 copy; } Sub_8003B884;
-typedef struct { Buf_8003B884 buf; Sub_8003B884* sub; } Work_8003B884;
+typedef struct { Buf_80038534 buf; Sub_8003B884* sub; } Work_8003B884;
 typedef struct { u8 pad[0x8]; s32 src; u8 p1[0x8]; s16 x; s16 y; u8 p2[0x12]; s16 count; s16 step; u8 p3[0x136]; } Obj_8003BA08;
-typedef struct { u8 d[0x4C]; } Buf_8003BA08;
 typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x20]; Obj_8003BA08 copy; } Sub_8003BA08;
-typedef struct { Buf_8003BA08 buf; Sub_8003BA08* sub; } Work_8003BA08;
+typedef struct { Buf_80038534 buf; Sub_8003BA08* sub; } Work_8003BA08;
 typedef struct { u8 pad[0x14]; s16 start; s16 end; u8 p2[0x36]; s16 mod; } Obj_8003BB50;
 typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x8]; s16 idx; s16 next; u8 pad2[0x4C]; void* owner; } Work_8003BB50;
-typedef struct { u8 pad[0x8]; s32 src; } Obj_8003BC58;
-typedef struct { u8 d[0x4C]; } Buf_8003BC58;
 typedef struct { void* arg; void* owner; } Sub_8003BC58;
-typedef struct { Buf_8003BC58 buf; Sub_8003BC58* sub; } Work_8003BC58;
-typedef struct { u8 pad[0x8]; s32 src; } Obj_8003BD78;
-typedef struct { u8 d[0x4C]; } Buf_8003BD78;
+typedef struct { Buf_80038534 buf; Sub_8003BC58* sub; } Work_8003BC58;
 typedef struct { u8 pad0[0x8]; void* arg; u8 pad1[0x44]; void* owner; } Sub_8003BD78;
-typedef struct { Buf_8003BD78 buf; Sub_8003BD78* sub; } Work_8003BD78;
-typedef struct { u8 pad0[0x8]; void* arg; void* owner; } Work_8003BE98;
-typedef struct { u8 pad[0x8]; s32 src; } Obj_8003BF74;
-typedef struct { u8 d[0x4C]; } Buf_8003BF74;
+typedef struct { Buf_80038534 buf; Sub_8003BD78* sub; } Work_8003BD78;
 typedef struct { u8 pad0[0x8]; void* arg; u8 pad1[0x28]; void* owner; } Sub_8003BF74;
-typedef struct { Buf_8003BF74 buf; Sub_8003BF74* sub; } Work_8003BF74;
+typedef struct { Buf_80038534 buf; Sub_8003BF74* sub; } Work_8003BF74;
 typedef struct { u8 pad[0x8]; s32 src; u8 rest[0x110]; } Obj_8003C094;
-typedef struct { u32 first; u8 rest[0x48]; } Buf_8003C094;
 typedef struct { u8 pad0[0x4]; void* arg; Obj_8003C094 copy; } Sub_8003C094;
-typedef struct { Buf_8003C094 buf; Sub_8003C094* sub; } Work_8003C094;
+typedef struct { Buf_80039174 buf; Sub_8003C094* sub; } Work_8003C094;
 typedef struct { u8 pad0[4]; void* arg; u8 pad1[0xC]; void* owner; } Sub_8003C1F0;
 typedef struct { u8 d[0x4C]; Sub_8003C1F0* sub; } Work_8003C1F0;
-typedef struct { u8 d[0x4C]; } Buf_8003C2D8;
 typedef struct { u8 pad0[4]; void* arg; u8 pad1[0x14]; void* owner; } Sub_8003C2D8;
-typedef struct { Buf_8003C2D8 buf; Sub_8003C2D8* sub; } Work_8003C2D8;
+typedef struct { Buf_80038534 buf; Sub_8003C2D8* sub; } Work_8003C2D8;
 typedef struct { u8 d[0x174]; } Obj_8003C400;
-typedef struct { u8 d[0x4C]; } Buf_8003C400;
 typedef struct { u8 pad0[8]; void* arg; u8 pad1[0x20]; Obj_8003C400 copy; } Sub_8003C400;
-typedef struct { Buf_8003C400 buf; Sub_8003C400* sub; } Work_8003C400;
+typedef struct { Buf_80038534 buf; Sub_8003C400* sub; } Work_8003C400;
 typedef struct { u32 a, b; s32 src; u8 rest[0x1A0 - 12]; } Obj_8003C550;
-typedef struct { u8 d[0x4C]; } Buf_8003C550;
 typedef struct { u8 pad0[4]; void* arg; u8 pad1[0x14]; Obj_8003C550 copy; } Sub_8003C550;
-typedef struct { Buf_8003C550 buf; Sub_8003C550* sub; } Work_8003C550;
+typedef struct { Buf_80038534 buf; Sub_8003C550* sub; } Work_8003C550;
 typedef struct { u8 pad116[0x74]; void* arg; u8 pad376[0x100]; void* owner; } Work_8003C690;
 typedef struct { u8 pad24[0x18]; void* arg; u8 pad32[0x4]; void* owner; } Work_8003C764;
 typedef struct { u8 pad4[0x4]; void* arg; void* owner; } Work_8003C838;
@@ -279,7 +203,6 @@ typedef struct { u8 d[0x38]; } Obj_8003C9E0;
 typedef struct { u8 pad0[4]; void* arg; u8 pad1[0x1C]; Obj_8003C9E0 copy; } Work_8003C9E0;
 typedef struct { u8 d[0x28]; } Obj_8003CB20;
 typedef struct { u8 pad0[4]; Obj_8003CB20 copy; } Work_8003CB20;
-typedef struct { u8 pad4[0x4]; void* arg; u8 pad44[0x24]; void* owner; } Work_8003CC30;
 typedef struct { u8 pad4[0x4]; void* arg; u8 pad32[0x18]; void* owner; } Work_8003CD04;
 typedef struct { u8 pad4[0x4]; void* arg; u8 pad12[0x4]; void* owner; } Work_8003CDD8;
 typedef struct { u32 d[10]; } Obj_8003CEAC;
@@ -292,24 +215,18 @@ typedef struct {
     u8 pad2[0x45 - 0x14]; u8 x45;     /* 0x45 */
     u8 pad3[0x50 - 0x46];
 } Obj_8003D14C;
-typedef struct { u8 d[0x4C]; } Buf_8003D14C;
 typedef struct { u8 pad0[0x4]; void* arg; u8 pad1[0x20 - 0x8]; Obj_8003D14C copy; } Sub_8003D14C;
-typedef struct { Buf_8003D14C buf; Sub_8003D14C* sub; } Work_8003D14C;
+typedef struct { Buf_80038534 buf; Sub_8003D14C* sub; } Work_8003D14C;
 typedef struct { u32 a, b; s32 src; u32 rest[9]; } Obj_8003D2E4;
-typedef struct { u8 d[0x4C]; } Buf_8003D2E4;
 typedef struct { u8 pad0[0x8]; void* arg; u8 pad1[0x18 - 0xC]; Obj_8003D2E4 copy; u8 pad2[0x50 - 0x48]; } Sub_8003D2E4;
-typedef struct { Buf_8003D2E4 buf; Sub_8003D2E4* sub; } Work_8003D2E4;
-typedef struct { u8 pad[0x8]; s32 src; } Obj_8003D520;
-typedef struct { u8 d[0x4C]; } Buf_8003D520;
+typedef struct { Buf_80038534 buf; Sub_8003D2E4* sub; } Work_8003D2E4;
 typedef struct { u8 pad0[0x70]; void* arg; u8 pad1[0x4C]; void* owner; } Sub_8003D520;
-typedef struct { Buf_8003D520 buf; Sub_8003D520* sub; } Work_8003D520;
+typedef struct { Buf_80038534 buf; Sub_8003D520* sub; } Work_8003D520;
 typedef struct { u32 a, b; s32 src; u8 rest[0x1A8 - 12]; } Obj_8003D640;
-typedef struct { u8 d[0x4C]; } Buf_8003D640;
 typedef struct { u8 pad0[4]; void* arg; u8 pad1[0x14]; Obj_8003D640 copy; } Sub_8003D640;
-typedef struct { Buf_8003D640 buf; Sub_8003D640* sub; } Work_8003D640;
+typedef struct { Buf_80038534 buf; Sub_8003D640* sub; } Work_8003D640;
 typedef struct { u8 pad4[0x4]; void* arg; u8 pad236[0xe4]; void* owner; } Work_8003D780;
 typedef struct { u8 pad4[0x4]; void* arg; u8 pad16[0x8]; void* owner; } Work_8003D854;
-typedef struct { u8 pad4[0x4]; void* arg; u8 pad16[0x8]; void* owner; } Work_8003D928;
 typedef struct { u8 pad4[0x4]; void* arg; u8 pad168[0xa0]; void* owner; } Work_8003D9FC;
 typedef struct { s16 type; s16 x2; s16 id; } TaskTarget;
 typedef struct {
@@ -1093,7 +1010,7 @@ int fn_8003D928(Handler* h, TaskArg* arg)
 {
     void* obj = h->obj;
     Node* node;
-    Work_8003D928* w;
+    Work_8003D854* w;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         node = TaskNew(fn_80054DD8);
         fn_80061F58((u8*)node + 0x24, 0x14, 0);
@@ -1143,7 +1060,7 @@ int fn_8003D640(Handler* h, TaskArg* arg)
     Node* node;
     Work_8003D640* w;
     Sub_8003D640* s;
-    Buf_8003D640 buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         node = TaskNew(fn_800454A0);
@@ -1161,11 +1078,11 @@ int fn_8003D640(Handler* h, TaskArg* arg)
 }
 int fn_8003D520(Handler* h, TaskArg* arg)
 {
-    Obj_8003D520* obj = h->obj;
+    Obj_80038534* obj = h->obj;
     Node* node;
     Work_8003D520* w;
     Sub_8003D520* s;
-    Buf_8003D520 buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         node = TaskNew(fn_8004E7F0);
@@ -1191,7 +1108,7 @@ int fn_8003D2E4(Handler* h, TaskArg* arg)
     s8 a, b;
     s32 id;
     char name[0x20];
-    Buf_8003D2E4 buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, res)) {
         a = fn_80020E10(arg->res->x10->xc);
         b = fn_8000FA30(*res);
@@ -1227,7 +1144,7 @@ int fn_8003D14C(Handler* h, TaskArg* arg)
     Node* node;
     Work_8003D14C* w;
     Sub_8003D14C* s;
-    Buf_8003D14C buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, res)) {
         if ((obj->flags & 0x8000) && obj->x45 != 0xFF && obj->x45 != fn_8000FA30(*res)) return 0;
         if (obj->src) fn_80036520(obj->src, &buf); else memset(&buf, 0, sizeof(buf));
@@ -1317,7 +1234,7 @@ int fn_8003CC30(Handler* h, TaskArg* arg)
 {
     void* obj = h->obj;
     Node* node;
-    Work_8003CC30* w;
+    Work_8003C90C* w;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         node = TaskNew(fn_800506B0);
         fn_80061F58((u8*)node + 0x24, 0x34, 0);
@@ -1430,7 +1347,7 @@ int fn_8003C550(Handler* h, TaskArg* arg)
     Node* node;
     Work_8003C550* w;
     Sub_8003C550* s;
-    Buf_8003C550 buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         node = TaskNew(fn_80044B24);
@@ -1452,7 +1369,7 @@ int fn_8003C400(Handler* h, TaskArg* arg)
     Node* node;
     Work_8003C400* w;
     Sub_8003C400* s;
-    Buf_8003C400* buf;
+    Buf_80038534* buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_800102C8(arg, 1, &buf);
         node = TaskNew(fn_8004A40C);
@@ -1474,7 +1391,7 @@ int fn_8003C2D8(Handler* h, TaskArg* arg)
     Node* node;
     Work_8003C2D8* w;
     Sub_8003C2D8* s;
-    Buf_8003C2D8* buf;
+    Buf_80038534* buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_800102C8(arg, 1, &buf);
         node = TaskNew(fn_8004DE48);
@@ -1515,7 +1432,7 @@ int fn_8003C094(Handler* h, TaskArg* arg)
     Node* node;
     Work_8003C094* w;
     Sub_8003C094* s;
-    Buf_8003C094 buf;
+    Buf_80039174 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         if (obj->src) fn_80036520(obj->src, &buf);
         node = TaskNew(fn_8004A260);
@@ -1533,11 +1450,11 @@ int fn_8003C094(Handler* h, TaskArg* arg)
 }
 int fn_8003BF74(Handler* h, TaskArg* arg)
 {
-    Obj_8003BF74* obj = h->obj;
+    Obj_80038534* obj = h->obj;
     Node* node;
     Work_8003BF74* w;
     Sub_8003BF74* s;
-    Buf_8003BF74 buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         node = TaskNew(fn_80040AA0);
@@ -1561,7 +1478,7 @@ int fn_8003BE98(Handler* h, TaskArg* arg)
 {
     void* obj = h->obj;
     Node* node;
-    Work_8003BE98* w;
+    Sub_80039F88* w;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         node = TaskNew(fn_8004D828);
         fn_80061F58((u8*)node + 0x24, 0x10, 0);
@@ -1575,11 +1492,11 @@ int fn_8003BE98(Handler* h, TaskArg* arg)
 }
 int fn_8003BD78(Handler* h, TaskArg* arg)
 {
-    Obj_8003BD78* obj = h->obj;
+    Obj_80038534* obj = h->obj;
     Node* node;
     Work_8003BD78* w;
     Sub_8003BD78* s;
-    Buf_8003BD78 buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         node = TaskNew(fn_8004D378);
@@ -1597,11 +1514,11 @@ int fn_8003BD78(Handler* h, TaskArg* arg)
 }
 int fn_8003BC58(Handler* h, TaskArg* arg)
 {
-    Obj_8003BC58* obj = h->obj;
+    Obj_80038534* obj = h->obj;
     Node* node;
     Work_8003BC58* w;
     Sub_8003BC58* s;
-    Buf_8003BC58 buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         node = TaskNew(fn_8004DB90);
@@ -1646,7 +1563,7 @@ int fn_8003BA08(Handler* h, TaskArg* arg)
     Node* node;
     Work_8003BA08* w;
     Sub_8003BA08* s;
-    Buf_8003BA08 buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         node = TaskNew(fn_80042B10);
@@ -1669,7 +1586,7 @@ int fn_8003B884(Handler* h, TaskArg* arg)
     Node* node;
     Work_8003B884* w;
     Sub_8003B884* s;
-    Buf_8003B884 buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         for (i = 0; i < obj->count; i++) {
@@ -1696,7 +1613,7 @@ int fn_8003B708(Handler* h, TaskArg* arg)
     Node* node;
     Work_8003B708* w;
     Sub_8003B708* s;
-    Buf_8003B708 buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         for (i = 0; i < obj->count; i++) {
@@ -1723,7 +1640,7 @@ int fn_8003B584(Handler* h, TaskArg* arg)
     Node* node;
     Work_8003B584* w;
     Sub_8003B584* s;
-    Buf_8003B584 buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         for (i = 0; i < obj->count; i++) {
@@ -1745,11 +1662,11 @@ int fn_8003B584(Handler* h, TaskArg* arg)
 }
 int fn_8003B464(Handler* h, TaskArg* arg)
 {
-    Obj_8003B464* obj = h->obj;
+    Obj_80038534* obj = h->obj;
     Node* node;
     Work_8003B464* w;
     Sub_8003B464* s;
-    Buf_8003B464 buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         node = TaskNew(fn_80041E64);
@@ -1772,7 +1689,7 @@ int fn_8003B2E0(Handler* h, TaskArg* arg)
     Node* node;
     Work_8003B2E0* w;
     Sub_8003B2E0* s;
-    Buf_8003B2E0 buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         for (i = 0; i < obj->count; i++) {
@@ -1810,11 +1727,11 @@ int fn_8003B1D8(Handler* h, TaskArg* arg)
 }
 int fn_8003B09C(Handler* h, TaskArg* arg)
 {
-    Obj_8003B09C* obj = h->obj;
+    Obj_80038534* obj = h->obj;
     Node* node;
-    Work_8003B09C* w;
-    Sub_8003B09C* s;
-    Buf_8003B09C buf;
+    Work_80039AFC* w;
+    Sub_80039AFC* s;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         if (obj->src) fn_80036520(obj->src, &buf);
         else memset(&buf, 0, 0x4c);
@@ -1833,11 +1750,11 @@ int fn_8003B09C(Handler* h, TaskArg* arg)
 }
 int fn_8003AF7C(Handler* h, TaskArg* arg)
 {
-    Obj_8003AF7C* obj = h->obj;
+    Obj_80038534* obj = h->obj;
     Node* node;
-    Work_8003AF7C* w;
-    Sub_8003AF7C* s;
-    Buf_8003AF7C buf;
+    Work_80038534* w;
+    Sub_80038534* s;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         node = TaskNew(fn_80045CD8);
@@ -1855,11 +1772,11 @@ int fn_8003AF7C(Handler* h, TaskArg* arg)
 }
 int fn_8003AE54(Handler* h, TaskArg* arg)
 {
-    Obj_8003AE54* obj = h->obj;
+    Obj_80038534* obj = h->obj;
     Node* node;
     Work_8003AE54* w;
     Sub_8003AE54* s;
-    Buf_8003AE54 buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         node = TaskNew(fn_800544C4);
@@ -1882,7 +1799,7 @@ int fn_8003AD14(Handler* h, TaskArg* arg)
     Node* node;
     Work_8003AD14* w;
     Sub_8003AD14* s;
-    Buf_8003AD14 buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         node = TaskNew(fn_80041664);
@@ -1904,7 +1821,7 @@ int fn_8003ABCC(Handler* h, TaskArg* arg)
     Node* node;
     Work_8003ABCC* w;
     Sub_8003ABCC* s;
-    Buf_8003ABCC buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(*(s32*)((u8*)obj + 8), &buf);
         node = TaskNew(fn_80041238);
@@ -1922,11 +1839,11 @@ int fn_8003ABCC(Handler* h, TaskArg* arg)
 }
 int fn_8003AAAC(Handler* h, TaskArg* arg)
 {
-    Obj_8003AAAC* obj = h->obj;
+    Obj_80038534* obj = h->obj;
     Node* node;
     Work_8003AAAC* w;
     Sub_8003AAAC* s;
-    Buf_8003AAAC buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         node = TaskNew(fn_80049464);
@@ -1946,7 +1863,7 @@ int fn_8003A9D8(Handler* h, TaskArg* arg)
 {
     void* obj = h->obj;
     Node* node;
-    Work_8003A9D8* w;
+    Work_800389F0* w;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         node = TaskNew(fn_800581B8);
         fn_80061F58((u8*)node + 0x24, 0x38, 0);
@@ -1978,7 +1895,7 @@ int fn_8003A830(Handler* h, TaskArg* arg)
 {
     void* obj = h->obj;
     Node* node;
-    Work_8003A830* w;
+    Work_80039604* w;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         node = TaskNew(fn_80057BD0);
         fn_80061F58((u8*)node + 0x24, 0x2c, 0);
@@ -1994,7 +1911,7 @@ int fn_8003A75C(Handler* h, TaskArg* arg)
 {
     void* obj = h->obj;
     Node* node;
-    Work_8003A75C* w;
+    Work_80039880* w;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         node = TaskNew(fn_800576B0);
         fn_80061F58((u8*)node + 0x24, 0xc, 0);
@@ -2016,7 +1933,7 @@ int fn_8003A370(Handler* h, TaskArg* arg)
     s16 off;
     u8 kind;
     f32 dx, dy, spread, scale, angle;
-    Buf_8003A370 buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         for (i = 0; i < obj->x146; i++) {
@@ -2060,10 +1977,10 @@ int fn_8003A370(Handler* h, TaskArg* arg)
 }
 int fn_8003A264(Handler* h, TaskArg* arg)
 {
-    Obj_8003A264* obj = h->obj;
+    Obj_80038534* obj = h->obj;
     Node* node;
     Work_8003A264* w;
-    Buf_8003A264 buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         node = TaskNew(fn_80056B6C);
@@ -2095,11 +2012,11 @@ int fn_8003A190(Handler* h, TaskArg* arg)
 }
 int fn_8003A070(Handler* h, TaskArg* arg)
 {
-    Obj_8003A070* obj = h->obj;
+    Obj_80038534* obj = h->obj;
     Node* node;
     Work_8003A070* w;
     Sub_8003A070* s;
-    Buf_8003A070 buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         node = TaskNew(fn_80055F0C);
@@ -2138,7 +2055,7 @@ int fn_80039EB4(Handler* h, TaskArg* arg)
 {
     void* obj = h->obj;
     Node* node;
-    Work_80039EB4* w;
+    Work_80039880* w;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         node = TaskNew(fn_80055E94);
         fn_80061F58((u8*)node + 0x24, 0xc, 0);
@@ -2170,7 +2087,7 @@ int fn_80039D0C(Handler* h, TaskArg* arg)
 {
     void* obj = h->obj;
     Node* node;
-    Work_80039D0C* w;
+    Work_800382D0* w;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         node = TaskNew(fn_80055558);
         fn_80061F58((u8*)node + 0x24, 0x24, 0);
@@ -2200,11 +2117,11 @@ int fn_80039C38(Handler* h, TaskArg* arg)
 }
 int fn_80039AFC(Handler* h, TaskArg* arg)
 {
-    Obj_80039AFC* obj = h->obj;
+    Obj_80038534* obj = h->obj;
     Node* node;
     Work_80039AFC* w;
     Sub_80039AFC* s;
-    Buf_80039AFC buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         if (obj->src) fn_80036520(obj->src, &buf); else memset(&buf, 0, 0x4c);
         node = TaskNew(fn_80046704);
@@ -2240,7 +2157,7 @@ int fn_80039954(Handler* h, TaskArg* arg)
 {
     void* obj = h->obj;
     Node* node;
-    Work_80039954* w;
+    Work_80039880* w;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         node = TaskNew(fn_8005C480);
         fn_80061F58((u8*)node + 0x24, 0xc, 0);
@@ -2318,11 +2235,11 @@ int fn_80039604(Handler* h, TaskArg* arg)
 }
 int fn_800394E4(Handler* h, TaskArg* arg)
 {
-    Obj_800394E4* obj = h->obj;
+    Obj_80038534* obj = h->obj;
     Node* node;
-    Work_800394E4* w;
-    Sub_800394E4* s;
-    Buf_800394E4 buf;
+    Work_80038F80* w;
+    Sub_80038F80* s;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         node = TaskNew(fn_8005BBC4);
@@ -2340,10 +2257,10 @@ int fn_800394E4(Handler* h, TaskArg* arg)
 }
 int fn_800393AC(Handler* h, TaskArg* arg)
 {
-    Obj_800393AC* obj = h->obj;
+    Obj_80039174* obj = h->obj;
     Node* node;
     Work_800393AC* w;
-    Buf_800393AC buf;
+    Buf_80039174 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         node = TaskNew(fn_8005BAA0);
@@ -2359,10 +2276,10 @@ int fn_800393AC(Handler* h, TaskArg* arg)
 }
 int fn_80039280(Handler* h, TaskArg* arg)
 {
-    Obj_80039280* obj = h->obj;
+    Obj_80039174* obj = h->obj;
     Node* node;
     Work_80039280* w;
-    Buf_80039280 buf;
+    Buf_80039174 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         if (obj->src) fn_80036520(obj->src, &buf);
         node = TaskNew(fn_8005B648);
@@ -2413,11 +2330,11 @@ int fn_800390A0(Handler* h, TaskArg* arg)
 }
 int fn_80038F80(Handler* h, TaskArg* arg)
 {
-    Obj_80038F80* obj = h->obj;
+    Obj_80038534* obj = h->obj;
     Node* node;
     Work_80038F80* w;
     Sub_80038F80* s;
-    Buf_80038F80 buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         node = TaskNew(fn_8005ACD4);
@@ -2451,11 +2368,11 @@ int fn_80038EAC(Handler* h, TaskArg* arg)
 }
 int fn_80038D8C(Handler* h, TaskArg* arg)
 {
-    Obj_80038D8C* obj = h->obj;
+    Obj_80038534* obj = h->obj;
     Node* node;
-    Work_80038D8C* w;
-    Sub_80038D8C* s;
-    Buf_80038D8C buf;
+    Work_80038534* w;
+    Sub_80038534* s;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         node = TaskNew(fn_80059D6C);
@@ -2489,11 +2406,11 @@ int fn_80038CB8(Handler* h, TaskArg* arg)
 }
 int fn_80038B98(Handler* h, TaskArg* arg)
 {
-    Obj_80038B98* obj = h->obj;
+    Obj_80038534* obj = h->obj;
     Node* node;
     Work_80038B98* w;
     Sub_80038B98* s;
-    Buf_80038B98 buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         node = TaskNew(fn_80058E20);
@@ -2591,11 +2508,11 @@ int fn_80038774(Handler* h, TaskArg* arg)
 }
 int fn_80038654(Handler* h, TaskArg* arg)
 {
-    Obj_80038654* obj = h->obj;
+    Obj_80038534* obj = h->obj;
     Node* node;
     Work_80038654* w;
     Sub_80038654* s;
-    Buf_80038654 buf;
+    Buf_80038534 buf;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         fn_80036520(obj->src, &buf);
         node = TaskNew(fn_8005F640);
@@ -2695,7 +2612,7 @@ int fn_80038140(Handler* h, TaskArg* arg)
 {
     void* obj = h->obj;
     Node* node;
-    Work_80038140* w;
+    Work_80038078* w;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         node = TaskNew(fn_8005CCB0);
         fn_80061F58((u8*)node + 0x24, 0xc, 0);
@@ -3006,10 +2923,10 @@ int fn_80037250(Handler* h, TaskArg* arg)
 }
 int fn_8003716C(Handler* h, TaskArg* arg)
 {
-    O_8003716C* o = h->obj;
+    O_80036E18* o = h->obj;
     if (fn_8003DCF4(o, arg->res->x4c)) {
         Node* node = fn_8003DAD0(fn_800651D0);
-        W_8003716C* w;
+        W_80036E18* w;
         fn_80061F58((u8*)node + 0x24, 0x98, 0);
         w = node->work;
         w->owner = arg;
@@ -3031,10 +2948,10 @@ int fn_8003716C(Handler* h, TaskArg* arg)
 }
 int fn_800370C8(Handler* h, TaskArg* arg)
 {
-    O_800370C8* o = h->obj;
+    O_80036E18* o = h->obj;
     if (fn_8003DCF4(o, arg->res->x4c)) {
         Node* node = fn_8003DAD0(fn_80064FE0);
-        W_800370C8* w;
+        W_80036E18* w;
         fn_80061F58((u8*)node + 0x24, 0x98, 0);
         w = node->work;
         w->owner = arg;
@@ -3048,10 +2965,10 @@ int fn_800370C8(Handler* h, TaskArg* arg)
 }
 int fn_8003701C(Handler* h, TaskArg* arg)
 {
-    O_8003701C* o = h->obj;
+    O_80036E18* o = h->obj;
     if (fn_8003DCF4(o, arg->res->x4c)) {
         Node* node = fn_8003DAD0(fn_80064E38);
-        W_8003701C* w;
+        W_80036E18* w;
         fn_80061F58((u8*)node + 0x24, 0x98, 0);
         w = node->work;
         w->owner = arg;
@@ -3066,10 +2983,10 @@ int fn_8003701C(Handler* h, TaskArg* arg)
 }
 int fn_80036F70(Handler* h, TaskArg* arg)
 {
-    O_80036F70* o = h->obj;
+    O_80036E18* o = h->obj;
     if (fn_8003DCF4(o, arg->res->x4c)) {
         Node* node = fn_8003DAD0(fn_80064CA4);
-        W_80036F70* w;
+        W_80036E18* w;
         fn_80061F58((u8*)node + 0x24, 0x98, 0);
         w = node->work;
         w->owner = arg;
@@ -3084,10 +3001,10 @@ int fn_80036F70(Handler* h, TaskArg* arg)
 }
 int fn_80036EC4(Handler* h, TaskArg* arg)
 {
-    O_80036EC4* o = h->obj;
+    O_80036E18* o = h->obj;
     if (fn_8003DCF4(o, arg->res->x4c)) {
         Node* node = fn_8003DAD0(fn_80064C00);
-        W_80036EC4* w;
+        W_80036E18* w;
         fn_80061F58((u8*)node + 0x24, 0x98, 0);
         w = node->work;
         w->owner = arg;
@@ -3176,7 +3093,7 @@ int fn_80036B88(Handler* h, TaskArg* arg)
 {
     s16* obj = h->obj;
     Node* node;
-    Work_80036B88* w;
+    Work_800369A4* w;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         node = fn_8003DAD0(fn_80062674);
         fn_80061F58((u8*)node + 0x24, 8, 0);
@@ -3210,7 +3127,7 @@ int fn_80036A38(Handler* h, TaskArg* arg)
 {
     s16* obj = h->obj;
     Node* node;
-    Work_80036A38* w;
+    Work_800369A4* w;
     if (fn_8003DCF4(obj, arg->res->x4c)) {
         node = fn_8003DAD0(fn_80062318);
         fn_80061F58((u8*)node + 0x24, 0x14, 0);

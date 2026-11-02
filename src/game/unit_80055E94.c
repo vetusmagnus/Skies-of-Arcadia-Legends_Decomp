@@ -272,15 +272,9 @@ extern s32 fn_8006E640(void *, u8 *, s16 *, s32);
 extern void fn_801E17E0(void *);
 extern s32 fn_801CC62C(char *);
 void fn_8006E244(Ent* e, s32 n);
-typedef struct E6DDBC {
-    s32 f0;
-    void *f4;
-    char f8[0x10];
-    s32 f18;
-} E6DDBC;
 typedef struct S6DDBC {
     u8 pad0[4];
-    E6DDBC *p4;
+    Ent6EB88 *p4;
     void *p8;
     char name[0x8c - 0xc];
     s16 s8c;
@@ -773,26 +767,6 @@ typedef struct U715F0 {
 } U715F0;
 extern void fn_8007D3D0(void);
 extern void fn_8007181C(void);
-typedef struct E6E00C {
-    s32 f0;
-    void *f4;
-    char f8[0x10];
-    s32 f18;
-} E6E00C;
-typedef struct S6E00C {
-    u8 pad0[4];
-    E6E00C *p4;
-    void *p8;
-    char name[0x8c - 0xc];
-    s16 s8c;
-} S6E00C;
-typedef struct O6E00C {
-    u8 pad0[0x18];
-    u8 flags;
-    u8 state;
-    u8 pad1A[10];
-    S6E00C *s;
-} O6E00C;
 extern u32 fn_8022ABEC(char *);
 extern void *fn_8022ACA8(u32);
 typedef struct ChrInfo {
@@ -1068,13 +1042,6 @@ extern void fn_802A7598(f32, f32, f32);
 extern void fn_802A210C(f32, f32, f32);
 extern void fn_802A20F4(f32, f32);
 extern void fn_802A20DC(f32, f32, f32);
-typedef struct TblEnt_8006B71C {
-    void *f0;
-    void *f4;
-    u32 f8;
-    u8 fc;
-    u8 pad[3];
-} TblEnt_8006B71C;
 extern void fn_802872C4(s32);
 extern void fn_80287274(s32, s32);
 extern void fn_8028B870(s32);
@@ -1165,7 +1132,7 @@ typedef struct {
     s32 count;
 } Sys_8030A10C_8005CBA4;
 typedef NJS_POINT3 Vec3f;
-typedef struct { u8 pad[0x1c4]; s32 count; } Sys_8030A10C_8005A694;
+typedef struct { u8 pad[0x1c4]; s32 count; } Game;
 typedef struct { u8 pad0[0x4c]; u8 pad4c[0x154 - 0x4c]; } Dummy_8005A694;
 typedef struct W_8005A694 { u8 f0; u8 pad1[0x153]; u8 *f154; } W_8005A694;
 typedef struct { u8 pad0[0x4c]; W_8005A694 *w; } Q_8005A694;
@@ -1181,7 +1148,6 @@ typedef struct S_8005A694 {
 extern void fn_8022EF58(void *p, s32 v);
 extern s32 fn_800179E4(s32 id);
 extern void fn_8023080C(void *p, s16 *v, s32 n);
-typedef struct { u8 pad[0x1c4]; s32 count; } Sys_8030A10C_8005BAA0;
 typedef struct { u8 pad0[0x3c]; u32 f3c; } T_8005BAA0;
 typedef struct S_8005BAA0 {
     s16 f0;
@@ -1194,9 +1160,7 @@ typedef struct S_8005BAA0 {
     s16 f68;
     s16 f6a;
 } S_8005BAA0;
-typedef struct Sys_8030A10C_8005CCB0 { u8 pad[0x1c4]; s32 count; } Sys_8030A10C_8005CCB0;
-typedef struct Lim_8005CCB0 { u8 pad[0x14]; s16 x14; s16 x16; } Lim_8005CCB0;
-typedef struct St { u8 pad0[4]; s16 t; u8 pad6[2]; Lim_8005CCB0* lim; } St;
+typedef struct St { u8 pad0[4]; s16 t; u8 pad6[2]; D_8005CBA4* lim; } St;
 extern s32 lbl_80347508;
 extern f32 lbl_80347510;
 extern void fn_801CBC30(void);
@@ -1291,10 +1255,6 @@ typedef struct O5B094 {
     u8 pad1A[10];
     S5B094 *s;
 } O5B094;
-typedef struct H5B094 {
-    u8 pad[0x1c4];
-    s32 count;
-} H5B094;
 typedef struct V60B98 { f32 x, y, z; } V60B98;
 typedef struct P60B98 { f32 x, z; } P60B98;
 typedef struct Seg60B98 {
@@ -1373,7 +1333,6 @@ typedef struct Work_80057DFC {
     u8 pad46[2];
     Data_80057DFC* d;
 } Work_80057DFC;
-typedef struct { u8 pad[0x1c4]; s32 count; } Game;
 typedef NJS_POINT3 Vec3_8005D108;
 typedef struct Info_8005D108 { s8 id; } Info_8005D108;
 typedef struct Par_8005D108 { u8 pad[0x4c]; Info_8005D108* x4c; } Par_8005D108;
@@ -1423,12 +1382,6 @@ typedef struct W_8005D108 {
 extern Vec3_8005D108 lbl_802AD434;
 extern void fn_8001D1D8(Task*, Vec3_8005D108*);
 extern void fn_8001D288(f32*, s32, f32, f32);
-typedef struct Sys_8030A10C_8005DB1C {
-    u8 pad0[0x6c];
-    u32 f6c;
-    u8 pad70[0x1c4 - 0x70];
-    s32 count;
-} Sys_8030A10C_8005DB1C;
 typedef struct Tb_8005DB1C {
     u8 pad0[0x10];
     u32 f10;
@@ -6799,12 +6752,12 @@ void fn_8006DDBC(O6DDBC *o) {
     }
 }
 
-void fn_8006E00C(O6E00C *o) {
+void fn_8006E00C(O6DDBC *o) {
     char buf2[0x4c];
     char buf[0x20];
     s32 v;
     u32 x;
-    S6E00C *s = o->s;
+    S6DDBC *s = o->s;
     switch (o->state) {
     case 0:
         o->state = 1;

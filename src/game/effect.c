@@ -4145,10 +4145,6 @@ typedef struct I800492C0 {
 typedef struct Node_800492C0 { u8 pad[0x24]; struct { u8 pad[0x4c]; I800492C0* e; }* work; } Node_800492C0;
 typedef NJS_POINT3 Vec_8004A40C;
 typedef struct {
-    s16 id;
-    s16 weight;
-} AnimEnt_X;
-typedef struct {
     u8 pad0[0x8];
     s32 src;            /* 0x008 */
     u8 pad0c[4];
@@ -4158,7 +4154,7 @@ typedef struct {
     s16 end;            /* 0x018 */
     s16 fadeInLen;      /* 0x01A */
     s16 fadeOutLen;     /* 0x01C */
-    AnimEnt_X anim[0x40]; /* 0x01E */
+    AnimEnt anim[0x40]; /* 0x01E */
     s16 animA;          /* 0x11E */
     s16 animB;          /* 0x120 */
     s16 id;             /* 0x122 */
@@ -4253,7 +4249,7 @@ typedef struct {
     s16 len;            /* 0x18 */
     s16 fadeIn;         /* 0x1A */
     s16 fadeOut;        /* 0x1C */
-    AnimEnt_X anim[0x40]; /* 0x1E */
+    AnimEnt anim[0x40]; /* 0x1E */
     s16 animA;          /* 0x11E */
     s16 animB;          /* 0x120 */
     u8 b;               /* 0x122 */
@@ -4580,13 +4576,6 @@ typedef struct { u8 pad[0x24]; ChildNode_8004AFD8* work; } CNode_8004AFD8;
 extern int fn_8000FB4C(void*, void*, s16);
 extern void fn_80076344(void*);
 typedef struct {
-    u8 pad[0x18];
-    u8 flags;
-    u8 state;
-    u8 pad1a[0x24 - 0x1A];
-    void* work;
-} Node_8004B458;
-typedef struct {
     u8 pad0[6];
     s16 flags;
     s32 src;
@@ -4628,13 +4617,6 @@ typedef struct {
     s32 x50;
     s32 x54;
 } Work_8004B458;
-typedef struct {
-    u8 pad[0x18];
-    u8 flags;
-    u8 state;
-    u8 pad1a[0x24 - 0x1A];
-    void* work;
-} Node_8004B7C4;
 typedef struct {
     s8 id;              /* 0x00 */
     u8 pad1[3];
@@ -4876,8 +4858,8 @@ void fn_8004A260(Node_8004A260* node);
 void fn_8004A40C(Node_8004A40C* node);
 void fn_8004AD38(Node_8004AD38* n);
 void fn_8004AFD8(Node_8004AFD8* node);
-void fn_8004B458(Node_8004B458* node);
-void fn_8004B7C4(Node_8004B7C4* node);
+void fn_8004B458(Node* node);
+void fn_8004B7C4(Node* node);
 void fn_8004BFD8(Tk_8004BFD8* t);
 void fn_8004C070(Node_8004C070* node);
 void fn_8004CF14(Node_8004CF14* node);
@@ -6432,7 +6414,7 @@ void fn_8004AFD8(Node_8004AFD8* node)
     fn_80037FD8(w->sub, &node->state);
 }
 
-void fn_8004B458(Node_8004B458* node) {
+void fn_8004B458(Node* node) {
     Work_8004B458* w = node->work;
     Sub_8004B458* s = w->sub;
     DrawState st;
@@ -6523,7 +6505,7 @@ void fn_8004B458(Node_8004B458* node) {
     fn_80037FD8(&s->c, &node->state);
 }
 
-void fn_8004B7C4(Node_8004B7C4* node) {
+void fn_8004B7C4(Node* node) {
     Work_8004B7C4* w = node->work;
     Chr* c;
     Vec_8004A40C v20;

@@ -214,12 +214,6 @@ extern void fn_8000F0BC(void);
 extern void fn_8000B6F0(W*);
 extern void fn_8000B5F4(W*, f32);
 extern void fn_800D2048(void);
-typedef struct {
-    u8 pad0[0x19];
-    u8 state;
-    u8 pad1a[0x24 - 0x1a];
-    W* work;
-} Tk_8000EDE4;
 extern void njTranslate(void*, f32, f32, f32);
 extern void njScale(void*, f32, f32, f32);
 extern void fn_800353F4(void*, void*, void*, f32, u8);
@@ -300,20 +294,16 @@ typedef struct Ref {
     u8 pad[0x4c];
     Ref3* m;
 } Ref;
-typedef struct Ent8C00_8000FBA8 {
-    u8 pad[0x24];
-    Ref* r;
-} Ent8C00_8000FBA8;
-typedef struct Owner_8000FBA8 {
-    u8 pad[0x1e0];
-    Ent8C00_8000FBA8* a;
-    Ent8C00_8000FBA8* b;
-    Ent8C00_8000FBA8* c;
-} Owner_8000FBA8;
 typedef struct Actor {
     u8 pad[0x24];
     Ref* r;
 } Actor;
+typedef struct Owner_8000FBA8 {
+    u8 pad[0x1e0];
+    Actor* a;
+    Actor* b;
+    Actor* c;
+} Owner_8000FBA8;
 extern void njPushMatrixEx(void);
 extern void njPopMatrixEx(void);
 extern void fn_80286EE8(void);
@@ -1278,7 +1268,7 @@ void fn_8000E664(Tk_8000E664* t)
     fn_800D2048();
 }
 
-void fn_8000EDE4(Tk_8000EDE4* t)
+void fn_8000EDE4(Tk_8000E664* t)
 {
     W* w = t->work;
     U* u = w->u;

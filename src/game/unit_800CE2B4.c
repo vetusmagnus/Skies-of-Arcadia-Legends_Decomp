@@ -233,15 +233,6 @@ typedef struct CbObj {
 extern s32 fn_80222B30(EvColl *a, EvColl *b);
 extern s32 fn_802254A0(NJS_POINT3* p, void* q);
 #define RND (3.0517578125e-05f * rand())
-typedef struct V3_800CF988 {
-    f32 x, y, z;
-} V3_800CF988;
-typedef struct {
-    u8 pad0[8];
-    f32 x8;
-    f32 xc;
-    f32 x10;
-} Src_800CF988;
 typedef struct {
     u8 pad0[0x44];
     s32 x44;
@@ -1375,7 +1366,7 @@ u32 fn_800CE4B4(void) {
     return (v | -v) >> 31;
 }
 
-f32 fn_800CF988(V3_800CF988 *out, Ent_800CF988 *a, Src_800CF988 *b, f32 p)
+f32 fn_800CF988(V3 *out, Ent_800CF988 *a, Src_800CFAB8 *b, f32 p)
 {
     f32 v;
     f32 lim;

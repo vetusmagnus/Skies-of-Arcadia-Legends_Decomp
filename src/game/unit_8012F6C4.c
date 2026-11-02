@@ -114,15 +114,10 @@ typedef struct {
     Data_80132458 *x24;
     s32 *x28;
 } Obj_80132458;
-typedef struct {
-    u8 pad0[0x18];
-    u8 flags;
-    u8 state;
-} Task_80132458;
 extern void *lbl_80346F00;
 extern Sys_80132458 *lbl_80346EF8;
 extern void FieldPartyStatusDraw(void);
-void fn_80132458(Task_80132458 *t);
+void fn_80132458(Task_801303D0 *t);
 void fn_801331AC(void);
 typedef struct Fn80130040Inner {
     u8 pad0[0xa8];
@@ -1916,7 +1911,7 @@ void fn_801303D0(Task_801303D0 *t) {
     }
 }
 
-void fn_80132458(Task_80132458 *t) {
+void fn_80132458(Task_801303D0 *t) {
     switch (t->state) {
     case 0:
     case 0xFE:

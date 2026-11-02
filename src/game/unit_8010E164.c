@@ -33,11 +33,11 @@ s32 fn_80114A44(s32 id, NJS_POINT3* p, f32 y, Flags* info);
 extern f32 lbl_80349E00;
 extern f32 lbl_80349E04;
 /* Only the flags halfword at 0x24 is used here. */
-typedef struct Ent114 {
+typedef struct Src {
     u8 pad0[0x24];
     u16 flags; /* 0x24: bit 0x8000 gates the test, bits 8..14 select the case */
-} Ent114;
-s32 fn_80114AB8(s32 a, f32 t, s32 unused, Ent114 *e);
+} Src;
+s32 fn_80114AB8(s32 a, f32 t, s32 unused, Src *e);
 extern s32 lbl_80346E80;
 extern s32 fn_801161B4(void);
 /* One playable character's movement config (0xA4 bytes, lbl_802E54B0[fn_801161B4()]). */
@@ -539,10 +539,6 @@ typedef struct {
     u32 flags;      /* 4 */
     u8 pad8[0x20 - 8];
 } Row;
-typedef struct {
-    u8 pad0[0x24];
-    u16 flags;      /* 0x24 */
-} Src;
 extern Row lbl_802E1154[];
 extern u32 lbl_8030A3C8[];
 extern int fn_802256A0(f32 *pos, EvHit *obj, u32 mask, u32 id);
@@ -678,9 +674,9 @@ typedef struct Chr_80122ED8 {
     Path *path;
 } Chr_80122ED8;
 extern void fn_8009FDA0(s32 a, s32 b, NJS_POINT3 *out, s32 c, s32 *d, s32 e, s32 f);
-typedef struct Vec_80110AA0 {
+typedef struct Vec3 {
     f32 x, y, z;
-} Vec_80110AA0;
+} Vec3;
 typedef struct Eff_80110AA0 {
     u8 pad0[8];
     void *w8;
@@ -950,10 +946,10 @@ typedef struct VertexTex {
     f32 x, y, z, u, v;
     u32 colour;
 } VertexTex;
-typedef struct Par_8011CE6C {
+typedef struct T1d8 {
     u8 pad0[0x19];
     u8 state;
-} Par_8011CE6C;
+} T1d8;
 typedef struct Task_8011CE6C {
     u8 pad0[0x18];
     u8 flags;
@@ -961,7 +957,7 @@ typedef struct Task_8011CE6C {
     u8 pad1a[0x24 - 0x1a];
     u8 *work;
     u8 pad28[4];
-    Par_8011CE6C *x2c;
+    T1d8 *x2c;
 } Task_8011CE6C;
 typedef struct Rec_8011CE6C {
     u8 pad0[8];
@@ -1414,26 +1410,13 @@ static inline s32 PlayerBusy(void)
 extern s32 lbl_803474F4;
 extern s32 lbl_80347578;
 extern f32 fn_801D72A0(s32 a, s32 b);
-typedef struct Task_8011B448 {
-    u8 pad0[0x18];
-    u8 flags;
-    u8 state;
-    u8 pad1a;
-    u8 x1b;
-    u8 pad1c[0x24 - 0x1c];
-    void *work;
-} Task_8011B448;
 typedef struct Rec_8011B448 {
     u8 pad0[0x24];
     void *x24;
 } Rec_8011B448;
-typedef struct Sub_8011B448 {
-    u8 pad0[0x1a0];
-    s32 x1a0;
-} Sub_8011B448;
 typedef struct Work_8011B448 {
     u8 pad0[0x1d8];
-    Sub_8011B448 *x1d8;
+    Sub2_8011C858 *x1d8;
     u8 pad1dc[0x1fa - 0x1dc];
     u8 x1fa;
     u8 x1fb;
@@ -1447,41 +1430,21 @@ extern void fn_8015EB8C(void *p, s32 id, void *cb);
 extern int fn_8011B290();
 extern int fn_8011B288();
 extern s32 fn_8011B298(void *work, void *rec);
-typedef struct Task_8011CC74 {
-    u8 pad0[0x18];
-    u8 flags;
-    u8 state;
-    u8 pad1a;
-    u8 x1b;
-    u8 pad1c[0x24 - 0x1c];
-    void *work;
-} Task_8011CC74;
 typedef struct Rec_8011CC74 {
     s32 x0;
     s32 x4;
 } Rec_8011CC74;
-typedef struct Res_8011CC74 {
-    u32 x0;
-} Res_8011CC74;
-typedef struct Sub_8011CC74 {
-    u8 pad0[0x10];
-    Res_8011CC74 *x10;
-} Sub_8011CC74;
-typedef struct Sub2_8011CC74 {
-    u8 pad0[0x1a0];
-    s32 x1a0;
-} Sub2_8011CC74;
 typedef struct Spawn_8011CC74 {
     u8 pad0[0x24];
     Rec_8011CC74 *x24;
     void *x28;
-    Task_8011CC74 *x2c;
+    Task_8011C858 *x2c;
 } Spawn_8011CC74;
 typedef struct Work_8011CC74 {
     u8 pad0[0x1c8];
-    Sub_8011CC74 *x1c8;
+    Sub_8011C858 *x1c8;
     u8 pad1cc[0x1d8 - 0x1cc];
-    Sub2_8011CC74 *x1d8;
+    Sub2_8011C858 *x1d8;
     u8 pad1dc[0x1fa - 0x1dc];
     u8 x1fa;
     u8 pad1fb[0x25c - 0x1fb];
@@ -1532,9 +1495,6 @@ extern f32 fn_80291A5C(f32 v);
 extern u8 lbl_80305E18[];
 extern void fn_80222964(void *p);
 extern EvColl *fn_80222224(void *p);
-typedef struct V_80124634 {
-    f32 x, y, z;
-} V_80124634;
 typedef struct Rec_80124634 {
     f32 pos[3];
     s32 v[3];
@@ -1549,7 +1509,7 @@ typedef struct Own_80124634 {
 } Own_80124634;
 typedef struct Obj2_80124634 {
     u8 _00[0x38];
-    V_80124634 pos;
+    Vec3 pos;
     u8 _44[0xa4];
     s32 fe8;
     u8 _ec[4];
@@ -1577,16 +1537,8 @@ typedef struct In_80124634 {
     u8 _1c[0x18];
     s16 h34;
     u8 _36[0x1e];
-    V_80124634 v54;
+    Vec3 v54;
 } In_80124634;
-typedef struct Tbl_80126118 {
-    s32 n;
-    s32 e[1];
-} Tbl_80126118;
-typedef struct Own_80126118 {
-    u8 _00[0x1c];
-    Tbl_80126118* tbl;
-} Own_80126118;
 typedef struct Cur_80126118 {
     u8 _00[4];
     s32 f4;
@@ -1605,7 +1557,7 @@ typedef struct Obj_80126118 {
     f32 f1a0;
     f32 f1a4;
     u8 _1a8[0x20];
-    Own_80126118* own;
+    Own_80124634* own;
 } Obj_80126118;
 typedef struct In_80126118 {
     u8 _00[5];
@@ -1624,13 +1576,9 @@ typedef struct In_80126118 {
     f32 f12c;
     f32 f130;
 } In_80126118;
-typedef struct Cur_801276E8 {
-    u8 _00[4];
-    s32 f4;
-} Cur_801276E8;
 typedef struct Obj_801276E8 {
     u8 _00[0xe8];
-    Cur_801276E8* fe8;
+    Cur_80126118* fe8;
     u8 _ec[0xa0];
     f32 f18c;
     f32 f190;
@@ -1726,11 +1674,6 @@ extern W_80127994* fn_80125D40(void* m);
 extern void* fn_801094C8(u32 key);
 extern void fn_80156B04(void*, void*, s32, s32, void*);
 extern void fn_80124CE4(void* m, void* w);
-typedef struct Rec_80127BC0 {
-    f32 pos[3];
-    s32 v[3];
-    f32 extra[3];
-} Rec_80127BC0;
 typedef struct Ship_80127BC0 {
     u8 _00[4];
     s8 kind;
@@ -1761,7 +1704,6 @@ typedef struct M_80127BC0 {
 typedef struct PadInfo_80118204 { Pad_80311A60 *pad; u8 pad4[0x14]; } PadInfo_80118204;
 extern s32 lbl_80347508;
 extern s8 fn_8009763C(void);
-typedef struct { f32 x, y, z; } Vec3;
 typedef struct Obj_80117B9C {
     u8 pad0[0xb4];
     f32 xb4;
@@ -1815,7 +1757,6 @@ typedef struct Sub {
     Small x8c;       /* 0x8C */
     u8 padcc[0xd8 - 0xcc];
 } Sub;
-typedef struct T1d8 { u8 pad0[0x19]; u8 state; } T1d8;
 typedef struct C1d8 { u8 pad0[4]; T1d8 *x4; u8 pad8[0x1a0 - 8]; s32 w1a0; } C1d8;
 typedef struct Ctx_8011DD9C {
     u8 pad0[0x38];
@@ -1926,9 +1867,6 @@ extern void fn_801237EC(Q_80123A44 *q);
 extern s32 fn_8015F218(Q_80123A44 *q);
 extern void fn_801231F8(Q_80123A44 *q);
 typedef struct {
-    f32 x, y, z;
-} Vec3_8010F3A8;
-typedef struct {
     s32 x, y, z;
 } Ang3_8010F3A8;
 typedef struct {
@@ -1936,8 +1874,8 @@ typedef struct {
     Ang3_8010F3A8 ang;
     u8 pad50[0xc0 - 0x50];
     Ang3_8010F3A8 start;
-    Vec3_8010F3A8 xcc;
-    Vec3_8010F3A8 xd8;
+    Vec3 xcc;
+    Vec3 xd8;
     u8 pad_e4[0x170 - 0xe4];
     u16 h170;
     u16 h172;
@@ -1948,16 +1886,13 @@ extern void fn_801DD3B8(void* a, void* b, void* c);
 extern void fn_801DD22C(void* a, void* b, void* c);
 extern void fn_8010E5BC(Obj_8010F3A8* o);
 typedef struct {
-    f32 x, y, z;
-} Vec3_80114950;
-typedef struct {
     f32 height;
     u32 flags;
     u8 pad8[0x20 - 8];
 } Row_80114950;
 typedef struct {
     u8 pad0[0x38];
-    Vec3_80114950 pos;
+    Vec3 pos;
     u8 pad44[0x1bc - 0x44];
     void* x1bc;
 } Chr_80114950;
@@ -2102,27 +2037,21 @@ typedef struct {
 } Parent_801295EC;
 extern void fn_801E735C(u32 index, f32 speed, Obj_801295EC* obj);
 typedef struct {
-    f32 x, y, z;
-} Vec3_8010F924;
-typedef struct {
-    s32 x, y, z;
-} Ang3_8010F924;
-typedef struct {
     u8 pad0[0x20];
-    Ang3_8010F924* ang;
+    Ang3_8010F3A8* ang;
 } Model_8010F924;
 typedef struct {
     u8 pad0[0x38];
-    Vec3_8010F924 pos;
-    Ang3_8010F924 ang;
+    Vec3 pos;
+    Ang3_8010F3A8 ang;
     u8 pad50[0x100 - 0x50];
     void* texlist;
-    Vec3_8010F924 prev;
+    Vec3 prev;
     u8 pad110[0x1b8 - 0x110];
     void* x1b8;
     Model_8010F924* model;
     u8 pad1c0[0x20c - 0x1c0];
-    Ang3_8010F924 ang2;
+    Ang3_8010F3A8 ang2;
 } Work_8010F924;
 typedef struct {
     u8 pad0[0x19];
@@ -5288,23 +5217,23 @@ s32 fn_80128C1C(FormTbl* t)
 
 Node_80110AA0 *fn_80110AA0(Self_80110AA0 *self, Tgt_80110AA0 *tgt, s32 ang, s32 flag)
 {
-    extern Vec_80110AA0 lbl_802B30F0;
+    extern Vec3 lbl_802B30F0;
     extern u8 lbl_802E4CB0[0x84];
     extern Node_80110AA0 *lbl_80347414;
     extern Eff_80110AA0 *fn_80222224(void *p);
     extern void njUnitMatrix(f32 *m);
     extern void njTranslate(f32 *m, f32 x, f32 y, f32 z);
     extern void njRotateXYZ(f32 *m, s32 x, s32 y, s32 z);
-    extern void njCalcPoint(f32 *m, Vec_80110AA0 *p, Vec_80110AA0 *out);
-    extern void njUnitVector(Vec_80110AA0 *v);
-    extern f32 njInnerProduct(Vec_80110AA0 *a, Vec_80110AA0 *b);
+    extern void njCalcPoint(f32 *m, Vec3 *p, Vec3 *out);
+    extern void njUnitVector(Vec3 *v);
+    extern f32 njInnerProduct(Vec3 *a, Vec3 *b);
     extern double acos(double x);
     extern Node_80110AA0 *fn_8022300C(void *list);
     extern Node_80110AA0 *fn_80222F14(void *list, void *n);
     extern void fn_80222964(void *p);
     extern void fn_801E1784(void *p);
-    Vec_80110AA0 out;
-    Vec_80110AA0 v = lbl_802B30F0;
+    Vec3 out;
+    Vec3 v = lbl_802B30F0;
     f32 m[16];
     Eff_80110AA0 *e;
     Node_80110AA0 *found;
@@ -6723,7 +6652,7 @@ void fn_801115EC(EvObj *o)
     }
 }
 
-void fn_8011B448(Task_8011B448 *t) {
+void fn_8011B448(Task_8011C858 *t) {
     Work_8011B448 *work = t->work;
     void *rec = work->x25c;
     Rec_8011B448 *p;
@@ -6783,7 +6712,7 @@ void fn_8011B448(Task_8011B448 *t) {
     }
 }
 
-static inline Spawn_8011CC74 *Mk_8011CC74(Rec_8011CC74 *rec, Task_8011CC74 *t) {
+static inline Spawn_8011CC74 *Mk_8011CC74(Rec_8011CC74 *rec, Task_8011C858 *t) {
     Spawn_8011CC74 *p = ((Spawn_8011CC74 *)fn_80226704((void *)((*(void **)&lbl_80347588)), (void *)(fn_8011CE6C), 0x30));
     if (p == 0) {
         return 0;
@@ -6794,7 +6723,7 @@ static inline Spawn_8011CC74 *Mk_8011CC74(Rec_8011CC74 *rec, Task_8011CC74 *t) {
     return p;
 }
 
-void fn_8011CC74(Task_8011CC74 *t) {
+void fn_8011CC74(Task_8011C858 *t) {
     Work_8011CC74 *work = t->work;
     Rec_8011CC74 *rec = work->x25c;
     Spawn_8011CC74 *p;
@@ -7353,7 +7282,7 @@ void fn_8011FE2C(Rec_8011FE2C *r) {
     } while (--n != 0);
 }
 
-static inline void VecCopy_80124634(V_80124634* d, V_80124634* s) {
+static inline void VecCopy_80124634(Vec3* d, Vec3* s) {
     f32 x = s->x;
     f32 y = s->y;
     f32 z = s->z;
@@ -7370,8 +7299,8 @@ void fn_80124634(Obj2_80124634* o, In_80124634* in) {
     Own_80124634* own;
     switch (in->kind) {
     case 0x18: {
-        V_80124634 saved;
-        V_80124634* ps = &saved;
+        Vec3 saved;
+        Vec3* ps = &saved;
         Rec_80124634 res;
         s32 flag;
         VecCopy_80124634(ps, &o->pos);
@@ -7468,7 +7397,7 @@ void fn_80126118(Obj_80126118* o, In_80126118* in) {
                 in->f6 = in->f5;
                 {
                     s8 idx = in->f5;
-                    Own_80126118* own = o->own;
+                    Own_80124634* own = o->own;
                     if (in->f7 != 0) {
                         void* m = fn_8008F8FC(o, idx);
                         o->f198 = 0;
@@ -7479,7 +7408,7 @@ void fn_80126118(Obj_80126118* o, In_80126118* in) {
                         o->f18c = 0.0f;
                         o->f1a4 = 0.0f;
                     } else {
-                        Tbl_80126118* t;
+                        Tbl_80124634* t;
                         o->f18c = 0.0f;
                         t = own->tbl;
                         o->fe8 = (Cur_80126118*)(t->n > idx ? t->e[idx] : 0);
@@ -7646,7 +7575,7 @@ void fn_80127BC0(M_80127BC0* m) {
         *w->f8 = 0;
     }
     if (ship->f50 == 0) {
-        Rec_80127BC0 rec;
+        Rec_80125820 rec;
         fn_801264A4(&rec, 1, 0.0f);
         if (0.0f != rec.pos[0] || 0.0f != rec.pos[1] || 0.0f != rec.pos[2] || rec.v[0] != 0 || rec.v[1] != 0 || rec.v[2] != 0) {
             ship->pos[0] = rec.pos[0];
@@ -8921,7 +8850,7 @@ void fn_8011B024(f32* p, int n, int k, f32* out, f32 t)
     *out = x;
 }
 
-s32 fn_80114AB8(s32 a, f32 t, s32 unused, Ent114 *e) {
+s32 fn_80114AB8(s32 a, f32 t, s32 unused, Src *e) {
     s32 r = 0;
     if (a != 0) {
         if (lbl_80349E00 >= t) {

@@ -361,26 +361,24 @@ typedef struct {
     u8 pade0[0xec - 0xe0];
     u32 xec;
 } Unit_8001BAC0;
-typedef struct Vec3_8001E3D8 { f32 x, y, z; } Vec3_8001E3D8;
 typedef struct Model { u8 pad[0x154]; Joint* joints; } Model;
 typedef struct Work_8001E3D8 {
     u8 pad0[0x14];
     s16 idx;
     u8 pad16[6];
-    Vec3_8001E3D8 off;
-    Vec3_8001E3D8 pos;
+    Vec off;
+    Vec pos;
     u8 pad34[0x4c - 0x34];
     Model* model;
 } Work_8001E3D8;
 typedef struct Task_8001E3D8 { u8 pad[0x24]; Work_8001E3D8* work; } Task_8001E3D8;
-typedef struct P3 { f32 x, y, z; } P3;
 typedef struct Dat1E { u8 pad00[0x154]; u8 *tbl; } Dat1E;
 typedef struct Wk1E {
     u8 pad00[0x14];
     s16 idx;
     u8 pad16[6];
     f32 x1c, x20, x24;
-    P3 x28;
+    Vec x28;
     u8 pad34[0x18];
     Dat1E *d;
 } Wk1E;
@@ -399,9 +397,8 @@ extern void fn_8002923C(s16 id, u16 mask, s32 c);
 extern s32 fn_8001604C(void* t, s8* arr, s32 a, s32 b);
 extern s32 fn_80016234(void* t, s8 flag, s32 a, s32 b, s32 c);
 extern s32 fn_80015EC8(void* t, s8* arr, s8 flag);
-typedef struct { f32 x, y, z; } V3;
-extern void fn_8001E6DC(V3* out, s8 v);
-extern s8 fn_80018398(V3* v, s32 a);
+extern void fn_8001E6DC(Vec* out, s8 v);
+extern s8 fn_80018398(Vec* v, s32 a);
 int fn_8001D944(s8 id, Task* t);
 extern void fn_80075F2C(void *t);
 extern s32 fn_8006DB94(void);
@@ -415,8 +412,7 @@ typedef struct { u8 pad[0x1c]; NJS_POINT3 pos; u8 pad28[0x4c - 0x28]; Flags* x4c
 typedef struct { u8 pad[0x24]; Work_800171F0* work; } Obj_800171F0;
 extern f32 fn_80071E9C(void*, void*);
 void fn_8001E19C(NJS_POINT3 *self, NJS_POINT3 *out, void *ctx, NJS_POINT3 *v);
-typedef struct Vec3_80015A58 { f32 x, y, z; } Vec3_80015A58;
-extern void fn_802917C8(Vec3_80015A58 *pts, Vec3_80015A58 *out, Vec3_80015A58 *tmp, f32 t);
+extern void fn_802917C8(Vec *pts, Vec *out, Vec *tmp, f32 t);
 typedef struct {
     s32 key;
     s32 val;
@@ -830,14 +826,14 @@ s32 fn_80015828(const char* s) {
     return 0;
 }
 
-extern Vec3_80015A58 lbl_802DB110[];
+extern Vec lbl_802DB110[];
 void fn_8001E4A0(void *a, NJS_POINT3 *v, Task *c);
-void fn_80015A58(Vec3_80015A58 *base, s16 n, Vec3_80015A58 *out, f32 ang);
+void fn_80015A58(Vec *base, s16 n, Vec *out, f32 ang);
 
 s32 fn_80015880(s8 a, f32 f, NJS_POINT3* b, NJS_POINT3* c) {
-    Vec3_80015A58* tbl = lbl_802DB110;
-    Vec3_80015A58 v0;
-    Vec3_80015A58 v1;
+    Vec* tbl = lbl_802DB110;
+    Vec v0;
+    Vec v1;
     Task* t = fn_80021658(a);
     ChrWork* w = t->work;
     s8 kind = fn_80020E10(w->x10->xc);
@@ -2239,7 +2235,7 @@ void fn_8001E5C8(Angle *v, s8 id) {
     fn_800614FC(&w->rx, v);
 }
 
-void fn_8001E6DC(V3 *out, s8 id) {
+void fn_8001E6DC(Vec *out, s8 id) {
     Task *t = FindChrId(id);
     t = t ? t : FindChrId(0);
     if (t == 0) {
@@ -3456,8 +3452,8 @@ s32 fn_8001BAC0(Unit_8001BAC0* u, s16 idx, s16 want, s16 other)
     return bad;
 }
 
-void fn_8001E3D8(void* a, Vec3_8001E3D8* out, Task_8001E3D8* t) {
-    Vec3_8001E3D8 v;
+void fn_8001E3D8(void* a, Vec* out, Task_8001E3D8* t) {
+    Vec v;
     Work_8001E3D8* w;
     fn_800615B4(a, out, &t->work->pos);
     w = t->work;
@@ -3470,9 +3466,9 @@ void fn_8001E3D8(void* a, Vec3_8001E3D8* out, Task_8001E3D8* t) {
     out->z = out->z + v.z;
 }
 
-void fn_8001E308(void *a, P3 *out, Tk1E *t)
+void fn_8001E308(void *a, Vec *out, Tk1E *t)
 {
-    P3 v;
+    Vec v;
     Wk1E *w2;
     Wk1E *w = t->work;
 
@@ -3554,7 +3550,7 @@ s32 fn_80015D78(void* t, s32 id, s32 p5, s32 p6, s32 p7, s16 mode) {
 s32 fn_800163A4(Task* t, s8 flag, s8 mode, s16 want, s16 cols, s16 rows) {
     ChrWork* w = t->work;
     ChrInfo* u = w->st;
-    V3 v;
+    Vec v;
     f32 step;
     f32 x0;
     s8 j;
@@ -3923,13 +3919,13 @@ Task *fn_8001E05C(Task *t) {
     return FindUnit(0);
 }
 
-void fn_80015A58(Vec3_80015A58 *base, s16 n, Vec3_80015A58 *out, f32 ang) {
-    Vec3_80015A58 tmp;
-    Vec3_80015A58 pts[4];
+void fn_80015A58(Vec *base, s16 n, Vec *out, f32 ang) {
+    Vec tmp;
+    Vec pts[4];
     s32 k;
     s16 t;
     s16 d;
-    Vec3_80015A58 *q;
+    Vec *q;
     s16 rem;
     s16 idx;
     s16 j;
@@ -4199,13 +4195,13 @@ static inline Task* FindOr0(s8 id) {
 
 /* Collects into out (-1 terminated) the ids of the characters standing on a w x h grid of
  * 15-unit cells centred on center, the task's target or the task itself; returns the count. */
-s8 fn_8001D628(Task* t, s16* out, s8 w, s8 h, V3* center, s8 flag)
+s8 fn_8001D628(Task* t, s16* out, s8 w, s8 h, Vec* center, s8 flag)
 {
     ChrWork* tw = t->work;
     ChrInfo* u = tw->st;
     s8 cnt = 1;
     f32 x0;
-    V3 pos;
+    Vec pos;
     s8 v;
     Task* o;
     s8 i;

@@ -177,36 +177,13 @@ typedef struct {
     s32 x10, x14, x18, x1c, x20, x24, x28;
 } Ent2c;
 extern void fn_80191A04(void *p, s32 a);
-typedef struct Sub1c_80197270 {
-    s32 x0, x4, x8, xc;
-    u8 x10[4];
-    u8 x14;
-    u8 x15[3];
-    s32 x18;
-} Sub1c_80197270;
-typedef struct Body_80197270 {
-    s32 x0;
-    s32 x4;
-    u8 pad08[4];
-    f32 xc, x10, x14, x18, x1c, x20, x24, x28, x2c, x30, x34, x38, x3c, x40;
-    s32 x44;
-    u8 x48, x49;
-    s16 x4a, x4c, x4e;
-    u8 pad50[0x74 - 0x50];
-    u8 x74[0xbc - 0x74];
-    void* xbc;
-} Body_80197270;
-typedef struct Node_80197270 {
-    u8 pad[0x24];
-    Body_80197270* body;
-} Node_80197270;
 typedef struct CampWork_80197270 {
     u8 *p0;
     u8 *p4;
     u8 *p8;
     u8 b0c;
     u8 pad0d[3];
-    Node_80197270 *objs[0xd0];
+    Node *objs[0xd0];
     u8 pad350[0x10];
 } CampWork_80197270;
 extern s32 lbl_803467CC;
@@ -1857,11 +1834,11 @@ void fn_80197270(s8 a) {
     extern void fn_8018DABC(void*, s8, s8, s8, s8);
     s32 j;
     s32 i;
-    Node_80197270 **objs = (Node_80197270 **)&camp_work;
+    Node **objs = (Node **)&camp_work;
     for (j = 0; j < 3; j++) {
         for (i = 0; i < 6; i++) {
-            Node_80197270* n;
-            Body_80197270* b;
+            Node* n;
+            Body* b;
             void* t;
             f32 y;
             switch (j) {
@@ -1874,7 +1851,7 @@ void fn_80197270(s8 a) {
             case 2:
                 break;
             }
-            n = (Node_80197270 *)fn_802268E8(lbl_8034710C, fn_8018A16C);
+            n = (Node *)fn_802268E8(lbl_8034710C, fn_8018A16C);
             n->body = fn_801E1C7C(0xc0);
             b = n->body;
             b->x0 = 0;

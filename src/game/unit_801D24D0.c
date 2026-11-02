@@ -428,8 +428,6 @@ extern void fn_80296F48(void);
 void fn_801DD5E8(Angle *rot, NJS_POINT3 *p);
 extern void njRotateX(NJS_MATRIX m, s32 a);
 extern void njRotateY(NJS_MATRIX m, s32 a);
-typedef struct { u8 pad[4]; f32 x, y, z; u8 pad2[0x1c - 0x10]; } Ent_801DFB7C;
-typedef struct { Hdr* stream; Ent_801DFB7C* ent; u8 pad[4]; } Item_801DFB7C;
 typedef struct Slot { s32 key; u8 pad[0x20]; } Slot;
 typedef struct SlotTab {
     Slot *slots;
@@ -703,19 +701,6 @@ typedef struct KeySet_801DEBE4 {
     Key_801DEBE4* keys;
     s32 count;
 } KeySet_801DEBE4;
-typedef struct Key_801DEDC0 {
-    f32 a[3];
-    f32 da[3];
-    f32 b[3];
-    f32 db[3];
-    f32 c[4];
-    f32 dc[4];
-} Key_801DEDC0;
-/* 0x50 */
-typedef struct KeySet_801DEDC0 {
-    Key_801DEDC0* keys;
-    s32 count;
-} KeySet_801DEDC0;
 /* One collision result slot of a model walk (fn_801E04E8/fn_801E0AC0). */
 typedef struct Slot801E {
     void* key;       /* 0x00 */
@@ -3613,12 +3598,12 @@ s32 fn_801DFA9C(Item_801DFA9C* items, s32 count) {
     return total;
 }
 
-s32 fn_801DFB7C(Item_801DFB7C* items, s32 count) {
+s32 fn_801DFB7C(Item_801DFA9C* items, s32 count) {
     s32 type;
     s32 size;
     s32 cnt;
     s32 total;
-    Ent_801DFB7C* e;
+    Ent_801DFA9C* e;
     Hdr* src;
     f32* in;
     f32* q;
@@ -4812,7 +4797,7 @@ void fn_801DEBE4(KeySet_801DEBE4* ks, f32* tv, s32 n) {
 }
 
 /* Fills b[0..2] of every key from (time, value) pairs, linearly between the pair times. */
-void fn_801DEDC0(KeySet_801DEDC0* ks, f32* tv, s32 n) {
+void fn_801DEDC0(KeySet_801DEBE4* ks, f32* tv, s32 n) {
     f32 t0;
     f32 v0;
     f32 last;
@@ -4820,7 +4805,7 @@ void fn_801DEDC0(KeySet_801DEDC0* ks, f32* tv, s32 n) {
     f32 f;
     f32 dt;
     s32 i1, i, cnt;
-    Key_801DEDC0* k;
+    Key_801DEBE4* k;
     if (n < 1 || (cnt = ks->count) < 3) return;
     {
         v0 = tv[1];

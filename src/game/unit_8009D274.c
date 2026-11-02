@@ -469,15 +469,9 @@ typedef struct Particle {
     u8 padae[2];
     f32 fb0;        /* 0xB0 */
 } Particle;
-typedef struct Ang3_800A1998 {
-    s32 x, y, z;
-} Ang3_800A1998;
 extern void njUnitMatrix(NJS_MATRIX m);
-extern void fn_802135B4(NJS_POINT3 *v, Ang3_800A1998 *out);
-typedef struct {
-    NJS_POINT3 v[2];
-} Pair_800A1690;
-extern Pair_800A1690 lbl_80303450;
+extern void fn_802135B4(NJS_POINT3 *v, Ang3 *out);
+extern Pair_800A13D8 lbl_80303450;
 extern f32* lbl_80346778;
 extern f32* lbl_8034677C;
 extern void njRotateZ(NJS_MATRIX m, Angle a);
@@ -1880,9 +1874,9 @@ void fn_800A1BA4(Obj_800A1BA4* o, s32 flag, f32 z, s32 a, s32 b) {
     fn_801CCD90(pb, n, textured, o->tex, idx, z, b == 1 ? a : 0);
 }
 
-void fn_800A1998(NJS_POINT3 *from, NJS_POINT3 *to, Ang3_800A1998 *out, s8 mode, u8 flags) {
+void fn_800A1998(NJS_POINT3 *from, NJS_POINT3 *to, Ang3 *out, s8 mode, u8 flags) {
     NJS_POINT3 d;
-    Ang3_800A1998 ang;
+    Ang3 ang;
 
     d.x = to->x - from->x;
     d.y = to->y - from->y;
@@ -1925,7 +1919,7 @@ void fn_800A1998(NJS_POINT3 *from, NJS_POINT3 *to, Ang3_800A1998 *out, s8 mode, 
 void fn_800A1690(f32* m, Ang3* out) {
     NJS_MATRIX mat;
     NJS_MATRIX mat2;
-    Pair_800A1690 tmp;
+    Pair_800A13D8 tmp;
     f32 x, y, z;
     f32 len;
 

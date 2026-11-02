@@ -126,7 +126,7 @@ typedef struct {
 } Obj_800C4B18;
 typedef struct {
     s32 x, y, z;
-} Ang3_800C47BC;
+} Ang;
 typedef struct Cam_800C3648 {
     u8 pad0[2];
     s16 h2;
@@ -144,7 +144,7 @@ typedef struct Cam_800C3648 {
     NJS_VECTOR tgt;         /* 0x4c */
     u8 pad58[0x64 - 0x58];
     f32 f64, f68, f6c;
-    Ang3_800C47BC rot;      /* 0x70 */
+    Ang rot;      /* 0x70 */
     u8 pad7c[0xcc - 0x7c];
     f32 fcc;
     f32 fd0;
@@ -172,12 +172,6 @@ typedef struct {
     u8 pad1[0x24 - 0x1a];
     Inner_UNIT0000* inner;   /* 0x24 */
 } Obj_800C6724_UNIT0000;
-typedef struct {
-    u8 pad0[0x19];
-    u8 state;       /* 0x19 */
-    u8 pad1[0x24 - 0x1a];
-    Inner_UNIT0000* inner;   /* 0x24 */
-} Obj_800C67A8_UNIT0000;
 typedef struct {
     u8 pad[8];
     u32 flags;      /* 0x08 */
@@ -622,7 +616,7 @@ typedef struct {
     u8 padd0[0xd8 - 0xd0];
     s32 xd8;
 } Cam_800C47BC;
-extern void fn_80090F9C(Ang3_800C47BC* out, f32* a, NJS_VECTOR* b);
+extern void fn_80090F9C(Ang* out, f32* a, NJS_VECTOR* b);
 typedef struct {
     u8 pad0[0xc];
     NJS_VECTOR pos;      /* 0x0c */
@@ -637,10 +631,6 @@ typedef struct {
 } Cam_800C4F1C;
 extern void fn_800C4C54(NJS_VECTOR* out, void* c);
 extern void fn_800914D8(NJS_VECTOR* a, NJS_VECTOR* b, f32 p, f32 q);
-typedef struct {
-    u8 pad0[0x14];
-    s16 x14;
-} Sub_800C5014;
 typedef struct {
     u8 pad0[2];
     s16 flags;
@@ -663,12 +653,8 @@ typedef struct {
     u8 padd4[0xe6 - 0xd4];
     s16 xe6;
     u8 pade8[0x108 - 0xe8];
-    Sub_800C5014* x108;
+    Sub_800C3B58* x108;
 } Obj_800C5014;
-typedef struct {
-    u8 pad0[0x14];
-    s16 x14;
-} Sub_800C51BC;
 typedef struct {
     u8 pad0[2];
     s16 flags;
@@ -690,7 +676,7 @@ typedef struct {
     NJS_VECTOR xac;
     f32 xb8, xbc;
     u8 padc0[0x108 - 0xc0];
-    Sub_800C51BC* x108;
+    Sub_800C3B58* x108;
 } Obj_800C51BC;
 typedef struct {
     u8 pad0[0xC];
@@ -808,13 +794,13 @@ typedef struct {
 /* 0x2C0 bytes */
 typedef struct {
     u32 count;
-} List_800C879C;
+} Cnt;
 typedef struct {
     u8 pad0[4];
     s32 x4;           /* 0x04 */
     u8 pad8[4];
     s32 xc;           /* 0x0C */
-    List_800C879C* list;       /* 0x10 */
+    Cnt* list;       /* 0x10 */
     u8 pad14[4];
     Obj_800C879C* objs;        /* 0x18 */
     s32 x1c;          /* 0x1C */
@@ -846,9 +832,6 @@ extern int rand(void);
 extern void fn_800C35C4(void* e, s32 n);
 extern void fn_801E7E14(void* model, s32 a, s32 b, s32 c);
 void fn_800C3428(Task* self);
-typedef struct {
-    f32 x, y, z;
-} V3;
 extern s32 fn_80091228(s32 a, s32 b, f32 c);
 extern s32 lbl_80347408;
 extern s32 fn_8015E600(void* e);
@@ -976,11 +959,11 @@ typedef struct {
     u8 pad0[0x2c];
     u32 x2c;
     u8 pad30[0x50 - 0x30];
-    V3 v50;
+    Vec3 v50;
     u8 pad5c[0xe4 - 0x5c];
     void *xe4;
     u8 padE8[0x11c - 0xe8];
-    V3 v11c;
+    Vec3 v11c;
     u8 pad128[0x176 - 0x128];
     s16 x176;
     u8 pad178[0x18c - 0x178];
@@ -993,11 +976,11 @@ typedef struct {
     s16 x1fc;
     u8 pad1fe[0x208 - 0x1fe];
     s16 x208, x20a;
-    V3 v20c;
+    Vec3 v20c;
     u8 pad218[0x21d - 0x218];
     u8 x21d;
     u8 pad21e[0x24c - 0x21e];
-    V3 v24c;
+    Vec3 v24c;
     u8 pad258[0x25c - 0x258];
     void *x25c;
 } W_800BB3DC;
@@ -1009,8 +992,8 @@ typedef struct {
     s32 x10;
     s32 x14;
     u8 pad18[0x28 - 0x18];
-    V3 a;
-    V3 b;
+    Vec3 a;
+    Vec3 b;
     u8 pad40[0x64 - 0x40];
     s32 x64, x68, x6c;
     u8 pad70[0xb4 - 0x70];
@@ -1062,9 +1045,6 @@ typedef struct {
     u8 pad1c[0x24 - 0x1c];
     W_800BBD4C *work;
 } Obj_800BBD4C;
-typedef struct {
-    u32 count;
-} Cnt;
 typedef struct {
     u8 pad[0x10];
     Cnt *cnt;
@@ -1238,13 +1218,10 @@ typedef struct S_800BA04C {
     u8 pad18[0xfa - 0x18];
     s16 hfa;
 } S_800BA04C;
-typedef struct V3_800BA220 {
-    f32 x, y, z;
-} V3_800BA220;
 typedef struct Node_800BA220 {
-    V3_800BA220 a;          /* 0x00 */
-    V3_800BA220 b;          /* 0x0c */
-    V3_800BA220 c;          /* 0x18 */
+    Vec3 a;          /* 0x00 */
+    Vec3 b;          /* 0x0c */
+    Vec3 c;          /* 0x18 */
     f32 f24;
     f32 f28;
     s16 h2c;
@@ -1262,9 +1239,9 @@ typedef struct W_800BA220 {
     u8 pad20[0x2c - 0x20];
     s32 w2c;
     u8 pad30[0x38 - 0x30];
-    V3_800BA220 a;          /* 0x38 */
-    V3_800BA220 b;          /* 0x44 */
-    V3_800BA220 c;          /* 0x50 */
+    Vec3 a;          /* 0x38 */
+    Vec3 b;          /* 0x44 */
+    Vec3 c;          /* 0x50 */
     u8 pad5c[0x100 - 0x5c];
     Hdr_800BA220 *hdr;      /* 0x100 */
     u8 pad104[0x18c - 0x104];
@@ -1280,9 +1257,6 @@ typedef struct X_800BA220 {
     f32 f11c;
 } X_800BA220;
 extern void fn_8009D994(W_800BA220 *w, s32 id, s32 q);
-typedef struct V3_800BBA70 {
-    f32 x, y, z;
-} V3_800BBA70;
 typedef struct Hook_800BBA70 {
     u8 pad0[0x1a0];
     s32 w1a0;
@@ -1290,16 +1264,16 @@ typedef struct Hook_800BBA70 {
 typedef struct Buf_800BBA70 {
     u32 flags;
     u8 pad4[0x40 - 4];
-    V3_800BBA70 a40;
-    V3_800BBA70 a4c;
+    Vec3 a40;
+    Vec3 a4c;
 } Buf_800BBA70;
 typedef struct W_800BBA70 {
     u8 pad0[0x38];
-    V3_800BBA70 a;          /* 0x38 */
-    V3_800BBA70 b;          /* 0x44 */
-    V3_800BBA70 c;          /* 0x50 */
+    Vec3 a;          /* 0x38 */
+    Vec3 b;          /* 0x44 */
+    Vec3 c;          /* 0x50 */
     u8 pad5c[0x11c - 0x5c];
-    V3_800BBA70 d;          /* 0x11c */
+    Vec3 d;          /* 0x11c */
     u8 pad128[0x1d8 - 0x128];
     Hook_800BBA70 *hook;    /* 0x1d8 */
     u8 pad1dc[0x1fa - 0x1dc];
@@ -1307,10 +1281,6 @@ typedef struct W_800BBA70 {
     u8 pad1fb[0x268 - 0x1fb];
     Buf_800BBA70 *buf;      /* 0x268 */
 } W_800BBA70;
-typedef struct Obj_800BBA70 {
-    u8 pad0[0x19];
-    u8 state;
-} Obj_800BBA70;
 typedef struct Spr_800C2650 {
     u8 pad0[0x14];
     f32 f14;
@@ -1323,16 +1293,6 @@ typedef struct Arg_800C2650 {
     f32 f8;
     f32 fc;
 } Arg_800C2650;
-typedef struct V3_800C381C {
-    f32 x, y, z;
-} V3_800C381C;
-typedef struct A3_800C381C {
-    s32 x, y, z;
-} A3_800C381C;
-typedef struct Sub_800C381C {
-    u8 pad0[0x14];
-    s16 h14;
-} Sub_800C381C;
 typedef struct Src_800C381C {
     u8 pad0[2];
     s16 flags;
@@ -1343,30 +1303,23 @@ typedef struct Obj_800C381C {
     u8 pad0[2];
     s16 flags;
     u8 pad4[0xc - 4];
-    V3_800C381C pos;        /* 0x0c */
+    Vec3 pos;        /* 0x0c */
     u8 pad18[0x30 - 0x18];
     f32 f30, f34, f38;
     u8 pad3c[0x40 - 0x3c];
     s32 w40, w44, w48;
-    V3_800C381C v4c;        /* 0x4c */
-    V3_800C381C v58;        /* 0x58 */
-    V3_800C381C v64;        /* 0x64 */
+    Vec3 v4c;        /* 0x4c */
+    Vec3 v58;        /* 0x58 */
+    Vec3 v64;        /* 0x64 */
     s32 w70, w74, w78;
     u8 pad7c[0xcc - 0x7c];
     f32 fcc, fd0, fd4;
     u8 padd8[0xf0 - 0xd8];
-    V3_800C381C vf0;        /* 0xf0 */
+    Vec3 vf0;        /* 0xf0 */
     u8 padfc[0x108 - 0xfc];
-    Sub_800C381C *sub;      /* 0x108 */
+    Part *sub;      /* 0x108 */
     s32 w10c;
 } Obj_800C381C;
-typedef struct V3_800C41D0 {
-    f32 x, y, z;
-} V3_800C41D0;
-typedef struct Sub_800C41D0 {
-    u8 pad0[0x14];
-    s16 h14;
-} Sub_800C41D0;
 typedef struct Src_800C41D0 {
     u8 pad0[2];
     s16 flags;
@@ -1377,45 +1330,42 @@ typedef struct Obj_800C41D0 {
     u8 pad0[2];
     s16 flags;
     u8 pad4[0xc - 4];
-    V3_800C41D0 pos;        /* 0x0c */
+    Vec3 pos;        /* 0x0c */
     u8 pad18[0x24 - 0x18];
-    V3_800C41D0 v24;        /* 0x24 */
-    V3_800C41D0 v30;        /* 0x30 */
+    Vec3 v24;        /* 0x24 */
+    Vec3 v30;        /* 0x30 */
     u8 pad3c[0x40 - 0x3c];
     s32 w40, w44, w48;
-    V3_800C41D0 v4c;        /* 0x4c */
+    Vec3 v4c;        /* 0x4c */
     u8 pad58[0x70 - 0x58];
     s32 w70, w74, w78;
     u8 pad7c[0xac - 0x7c];
-    V3_800C41D0 vac;        /* 0xac */
+    Vec3 vac;        /* 0xac */
     f32 fb8, fbc;
     u8 padc0[0xcc - 0xc0];
     f32 fcc;
     u8 padd0[0xd8 - 0xd0];
     s32 wd8;
     u8 padd8[0x108 - 0xdc];
-    Sub_800C41D0 *sub;      /* 0x108 */
+    Part *sub;      /* 0x108 */
 } Obj_800C41D0;
-typedef struct V3_800C43A0 {
-    f32 x, y, z;
-} V3_800C43A0;
 typedef struct Mot_800C43A0 {
     u8 pad0[4];
     u32 count;
 } Mot_800C43A0;
 typedef struct Obj_800C43A0 {
     u8 pad0[0xc];
-    V3_800C43A0 pos;        /* 0x0c */
+    Vec3 pos;        /* 0x0c */
     u8 pad18[0x24 - 0x18];
-    V3_800C43A0 v24;        /* 0x24 */
-    V3_800C43A0 v30;        /* 0x30 */
+    Vec3 v24;        /* 0x24 */
+    Vec3 v30;        /* 0x30 */
     u8 pad3c[0x58 - 0x3c];
-    V3_800C43A0 v58;        /* 0x58 */
-    V3_800C43A0 v64;        /* 0x64 */
+    Vec3 v58;        /* 0x58 */
+    Vec3 v64;        /* 0x64 */
     s32 w70;
     s32 w74;
     s32 w78;
-    V3_800C43A0 v7c;        /* 0x7c */
+    Vec3 v7c;        /* 0x7c */
     s32 w88, w8c;
     u8 pad90[0xd8 - 0x90];
     s32 wd8;
@@ -1427,9 +1377,6 @@ typedef struct Obj_800C43A0 {
     f32 frameB;
     f32 speedB;
 } Obj_800C43A0;
-typedef struct V3_800C4584 {
-    f32 x, y, z;
-} V3_800C4584;
 typedef struct Tbl_800C4584 {
     s32 count;
     void *items[1];
@@ -1445,14 +1392,10 @@ typedef struct R_800C4584 {
     u8 pad20[0x34 - 0x20];
     s32 w34;                /* 0x34 */
     u8 pad38[0x44 - 0x38];
-    V3_800C4584 v44;
+    Vec3 v44;
     u8 pad50[0x54 - 0x50];
     f32 f54;
 } R_800C4584;
-typedef struct Sub_800C4584 {
-    u8 pad0[0x14];
-    s16 h14;
-} Sub_800C4584;
 typedef struct Src_800C4584 {
     u8 pad0[2];
     s16 flags;
@@ -1470,19 +1413,19 @@ typedef struct Obj_800C4584 {
     u8 pad0[4];
     s16 h4;
     u8 pad6[0xc - 6];
-    V3_800C4584 pos;        /* 0x0c */
+    Vec3 pos;        /* 0x0c */
     u8 pad18[0x30 - 0x18];
-    V3_800C4584 v30;        /* 0x30 */
+    Vec3 v30;        /* 0x30 */
     u8 pad3c[0x40 - 0x3c];
     s32 w40, w44, w48;
-    V3_800C4584 v4c;        /* 0x4c */
-    V3_800C4584 v58;        /* 0x58 */
-    V3_800C4584 v64;        /* 0x64 */
+    Vec3 v4c;        /* 0x4c */
+    Vec3 v58;        /* 0x58 */
+    Vec3 v64;        /* 0x64 */
     s32 w70, w74, w78;
     u8 pad7c[0xd8 - 0x7c];
     s32 wd8;
     u8 padd8[0x108 - 0xdc];
-    Sub_800C4584 *sub;      /* 0x108 */
+    Part *sub;      /* 0x108 */
     u8 pad10c[0x110 - 0x10c];
     void *mA;               /* 0x110 */
     f32 frameA;
@@ -1492,16 +1435,6 @@ typedef struct Obj_800C4584 {
     f32 speedB;
 } Obj_800C4584;
 extern R_800C4584 *fn_801092C0(u16 id, Part_800D29B4 **out);
-typedef struct V3_800C48C4 {
-    f32 x, y, z;
-} V3_800C48C4;
-typedef struct A3_800C48C4 {
-    s32 x, y, z;
-} A3_800C48C4;
-typedef struct Sub_800C48C4 {
-    u8 pad0[0x14];
-    s16 h14;
-} Sub_800C48C4;
 typedef struct Src_800C48C4 {
     u8 pad0[2];
     s16 flags;
@@ -1513,18 +1446,18 @@ typedef struct Obj_800C48C4 {
     u8 pad0[2];
     s16 flags;
     u8 pad4[0xc - 4];
-    V3_800C48C4 pos;        /* 0x0c */
+    Vec3 pos;        /* 0x0c */
     u8 pad18[0x24 - 0x18];
-    V3_800C48C4 v24;        /* 0x24 */
-    V3_800C48C4 v30;        /* 0x30 */
+    Vec3 v24;        /* 0x24 */
+    Vec3 v30;        /* 0x30 */
     u8 pad3c[0x40 - 0x3c];
     s32 w40, w44, w48;
-    V3_800C48C4 v4c;        /* 0x4c */
+    Vec3 v4c;        /* 0x4c */
     u8 pad58[0x64 - 0x58];
-    V3_800C48C4 v64;        /* 0x64 */
+    Vec3 v64;        /* 0x64 */
     s32 w70, w74, w78;
     u8 pad7c[0xac - 0x7c];
-    V3_800C48C4 vac;        /* 0xac */
+    Vec3 vac;        /* 0xac */
     f32 fb8, fbc;
     u8 padc0[0xcc - 0xc0];
     f32 fcc;
@@ -1532,11 +1465,8 @@ typedef struct Obj_800C48C4 {
     f32 fd4;
     s32 wd8;
     u8 paddc[0x108 - 0xdc];
-    Sub_800C48C4 *sub;      /* 0x108 */
+    Part *sub;      /* 0x108 */
 } Obj_800C48C4;
-typedef struct V3_800CAF6C {
-    f32 x, y, z;
-} V3_800CAF6C;
 typedef struct Obj_800CAF6C {
     u8 pad0[0x38];
     f32 f38, f3c, f40;
@@ -1780,14 +1710,8 @@ typedef struct Obj_800BF7AC {
     void *f25C;
     void *f260;
 } Obj_800BF7AC;
-typedef struct Entry_800CCC48 {
-    u32 a;
-    u32 b;
-    u32 c;
-    u32 d;
-} Entry_800CCC48;
 typedef struct Table_800CCC48 {
-    Entry_800CCC48 *entries;
+    Ent *entries;
     u32 unk4;
     s16 max;
     s16 count;
@@ -1797,12 +1721,6 @@ typedef struct Table_800CCC48 {
 typedef struct { u8 pad[0x20]; void *p20; } S800C32D8b;
 typedef struct { u8 pad[0x4]; S800C32D8b *p4; } S800C32D8a;
 s32 fn_8010038C(void *p);
-typedef struct {
-    u32 a;
-    u32 b;
-    u32 key;
-    u8 pad1[4];
-} Entry_800CC9EC;
 typedef struct Tbl_800CD16C {
     Ent *list;      /* 0x00 */
     Ent *pending;   /* 0x04 */
@@ -1856,7 +1774,6 @@ typedef struct Buf_800BA564 {
     f32 f30;
     struct Buf_800BA564* next;
 } Buf_800BA564;
-typedef struct Hdr_800BA564 { u8 pad0[4]; s32 w4; } Hdr_800BA564;
 typedef struct Work_800BA564 {
     u8 pad0[0x1c];
     f32 f1c;
@@ -1865,7 +1782,7 @@ typedef struct Work_800BA564 {
     u8 pad5c[0x68 - 0x5c];
     s32 w68;
     u8 pad6c[0x100 - 0x6c];
-    Hdr_800BA564* hdr;
+    Hdr_800BA220* hdr;
     u8 pad104[0x18c - 0x104];
     f32 f18c;
     u8 pad190[0x20c - 0x190];
@@ -2029,8 +1946,8 @@ typedef struct PoolNode {
 } PoolNode;
 typedef struct {
     u8 pad0[4];
-    V3 a;
-    V3 b;
+    Vec3 a;
+    Vec3 b;
     u8 pad1c[0x30 - 0x1c];
     f32 x30;
     f32 x34;
@@ -2065,12 +1982,12 @@ typedef struct {
     u8 x1fb;
     s16 x1fc;
     u8 pad1fe[0x20c - 0x1fe];
-    V3 v20c;
+    Vec3 v20c;
     u8 pad218[0x22e - 0x218];
     u16 x22e;
     u16 x230;
     u8 pad232[0x24c - 0x232];
-    V3 v24c;
+    Vec3 v24c;
     u8 pad258[0x268 - 0x258];
     Pool *x268;
 } Work_800B4EEC;
@@ -2230,7 +2147,6 @@ extern void fn_80225930(u16 a, u16 b, void* c);
 extern void fn_80224D08(void* a, void* b, void* c, void* d);
 extern void fn_80290668(NJS_POINT3* a, NJS_POINT3* b, NJS_POINT3* c, NJS_POINT3* out);
 extern s32 fn_801DCFA0(NJS_POINT3* v, Angle* a);
-typedef struct Ang { s32 x, y, z; } Ang;
 typedef struct Work_800C4C54 {
     u8 pad0[0xc];
     f32 fc, f10, f14;
@@ -2368,9 +2284,9 @@ extern void njSetMatrix(NJS_MATRIX md, NJS_MATRIX ms);
 extern void njRotateX(NJS_MATRIX m, Angle a);
 extern void njTranslate(NJS_MATRIX m, f32 x, f32 y, f32 z);
 extern void fn_80291C44(NJS_MATRIX m);
-typedef struct Col_800B45D4 {
+typedef struct Rgba8 {
     u8 a, r, g, b;
-} Col_800B45D4;
+} Rgba8;
 typedef struct Mtx_800B45D4 {
     NJS_MATRIX m;
 } Mtx_800B45D4;
@@ -2388,7 +2304,7 @@ typedef struct Bone_800B45D4 {
 } Bone_800B45D4;
 typedef struct Vtx_800B45D4 {
     NJS_POINT3 p;
-    Col_800B45D4 col;
+    Rgba8 col;
 } Vtx_800B45D4;
 typedef struct Cfg_800B45D4 {
     u8 pad0[0x48];
@@ -2535,7 +2451,7 @@ typedef struct Ptcl_800BE6EC {
     u8 padc[4];
     s32 x10;            /* 0x10 */
     u8 pad14[4];
-    Ang3_800C47BC rot;  /* 0x18 */
+    Ang rot;  /* 0x18 */
     f32 x24;            /* 0x24 */
     f32 x28;            /* 0x28 */
     Angle x2c;          /* 0x2C */
@@ -2635,7 +2551,7 @@ typedef struct Work_800BE6EC {
     NJS_ARGB col;       /* 0x01C */
     u8 pad2c[0x38 - 0x2C];
     NJS_POINT3 x38;     /* 0x038 */
-    Ang3_800C47BC rot;  /* 0x044 */
+    Ang rot;  /* 0x044 */
     NJS_POINT3 scl;     /* 0x050 */
     NJS_POINT3 dscl;    /* 0x05C */
     u8 pad68[0xE8 - 0x68];
@@ -2665,7 +2581,7 @@ typedef struct Work_800BE6EC {
     s16 x1fc;           /* 0x1FC */
     s16 x1fe;           /* 0x1FE */
     u8 pad200[0x20C - 0x200];
-    Ang3_800C47BC x20c; /* 0x20C */
+    Ang x20c; /* 0x20C */
     u8 pad218[0x22C - 0x218];
     u16 x22c;           /* 0x22C */
     u8 pad22e[0x236 - 0x22E];
@@ -2741,9 +2657,6 @@ typedef struct TrailNode {
     struct TrailNode* next; /* 0x58 */
 } TrailNode;
 
-typedef struct Rgba8 {
-    u8 a, r, g, b;
-} Rgba8;
 
 /* parameters of the textured strip quad (fn_800A1EB0 / fn_800A2264) */
 typedef struct TrailQuad {
@@ -3710,7 +3623,7 @@ void fn_800C6724(Obj_800C6724_UNIT0000* self) {
     }
 }
 
-void fn_800C67A8(Obj_800C67A8_UNIT0000* self) {
+void fn_800C67A8(Obj_800C6724_UNIT0000* self) {
     Inner_UNIT0000* inner = self->inner;
     switch (self->state) {
     case 0:
@@ -4389,7 +4302,7 @@ void fn_800C3B58(Obj_800C3B58* o, Src_800C3B58* s) {
 
 void fn_800C47BC(Cam_800C47BC* c) {
     NJS_VECTOR v;
-    Ang3_800C47BC a;
+    Ang a;
     fn_80095360(&c->pos, 0);
     v.x = c->xac;
     v.y = c->pos.y;
@@ -4664,7 +4577,7 @@ s32 fn_800C879C(Task* task, u32 n) {
     Obj_800C879C* o;
     s32 a;
     s32 b;
-    List_800C879C* l;
+    Cnt* l;
 
     i = s->cur;
     o = s->objs + i;
@@ -5326,9 +5239,9 @@ void fn_800BA04C(W_800BA04C *w, S_800BA04C *s)
 
 void fn_800BA220(W_800BA220 *w, X_800BA220 *x)
 {
-    V3_800BA220 sa;
-    V3_800BA220 sc;
-    V3_800BA220 sb;
+    Vec3 sa;
+    Vec3 sc;
+    Vec3 sb;
     f32 save = w->f1c;
     f32 zero = 0.0f;
     Node_800BA220 *n = w->list;
@@ -5381,11 +5294,11 @@ void fn_800BA220(W_800BA220 *w, X_800BA220 *x)
     w->c = sc;
 }
 
-void fn_800BBA70(Obj_800BBA70 *o, W_800BBA70 *w)
+void fn_800BBA70(Obj_800C682C *o, W_800BBA70 *w)
 {
     extern void fn_800ADED0(W_800BBA70 *w, Hook_800BBA70 *h);
     extern void fn_8015E600(W_800BBA70 *w);
-    extern void fn_800BB3DC(Obj_800BBA70 *o, Buf_800BBA70 *b);
+    extern void fn_800BB3DC(Obj_800C682C *o, Buf_800BBA70 *b);
     extern void fn_800BAC88(W_800BBA70 *w, Buf_800BBA70 *b);
     extern void fn_800BA820(W_800BBA70 *w, Buf_800BBA70 *b);
     extern void fn_800BA564(W_800BBA70 *w, Buf_800BBA70 *b);
@@ -5404,9 +5317,9 @@ void fn_800BBA70(Obj_800BBA70 *o, W_800BBA70 *w)
     fn_800BAC88(w, b);
     t = w->hook != 0 ? w->hook->w1a0 : 1;
     if (t == 0) {
-        V3_800BBA70 sb;
-        V3_800BBA70 sc;
-        V3_800BBA70 sa;
+        Vec3 sb;
+        Vec3 sc;
+        Vec3 sa;
         sa = w->a;
         sb = w->b;
         sc = w->c;
@@ -5465,10 +5378,10 @@ f32 fn_800C2650(Arg_800C2650 *a)
 void fn_800C381C(Obj_800C381C *o, Src_800C381C *s)
 {
     extern void fn_8009539C(void *a, void *b);
-    extern void fn_80090F9C(A3_800C381C *out, V3_800C381C *a, V3_800C381C *b);
-    extern f32 fn_80090FF0(V3_800C381C *a, V3_800C381C *b);
-    V3_800C381C t;
-    A3_800C381C ang;
+    extern void fn_80090F9C(Ang *out, Vec3 *a, Vec3 *b);
+    extern f32 fn_80090FF0(Vec3 *a, Vec3 *b);
+    Vec3 t;
+    Ang ang;
     s32 a;
 
     if (o->sub != 0) {
@@ -5595,9 +5508,9 @@ void fn_800C43A0(Obj_800C43A0 *o)
     extern s32 lbl_8030EA10[3];
     extern s32 fn_801E7B2C(Mot_800C43A0 *m, void *a, void *b, f32 frame);
     extern void fn_801DCE18(void *in, void *out, s32 ang);
-    extern void fn_80090F9C(void *out, V3_800C43A0 *a, V3_800C43A0 *b);
+    extern void fn_80090F9C(void *out, Vec3 *a, Vec3 *b);
     s32 ang[3];
-    V3_800C43A0 tmp;
+    Vec3 tmp;
     f32 lim;
 
     if (o->mA != 0) {
@@ -5715,10 +5628,10 @@ void fn_800C4584(Obj_800C4584 *o, Src_800C4584 *s)
 void fn_800C48C4(Obj_800C48C4 *o, Src_800C48C4 *s)
 {
     extern void fn_80095360(void *p, s32 mode);
-    extern void fn_80090F9C(A3_800C48C4 *out, V3_800C48C4 *a, V3_800C48C4 *b);
+    extern void fn_80090F9C(Ang *out, Vec3 *a, Vec3 *b);
     extern f32 fn_80291A5C(f32 x);
-    A3_800C48C4 ang;
-    V3_800C48C4 tmp;
+    Ang ang;
+    Vec3 tmp;
     s32 a;
 
     if (o->sub != 0) {
@@ -5775,11 +5688,11 @@ void fn_800C48C4(Obj_800C48C4 *o, Src_800C48C4 *s)
 void fn_800CAF6C(Obj_800CAF6C *o)
 {
     extern s32 fn_8009761C(s32 a, s32 b);
-    extern s32 fn_802254A0(V3_800CAF6C *v, void *p);
+    extern s32 fn_802254A0(Vec3 *v, void *p);
     extern void fn_801E17E0(void *p);
     extern s32 fn_800D2924(Obj_800CAF6C *o);
     extern void fn_801E66E0(Obj_800CAF6C *o);
-    V3_800CAF6C v;
+    Vec3 v;
     s32 d;
     s32 e;
     s32 b;
@@ -5974,7 +5887,7 @@ void fn_800CE064(Obj_800CE064* o) {
 
 void fn_800C3648(Cam_800C3648 *c)
 {
-    Ang3_800C47BC ang;
+    Ang ang;
     NJS_VECTOR v;
     s32 d;
 
@@ -6317,9 +6230,9 @@ void fn_800BF7AC(Obj_800BF7AC *obj)
     }
 }
 
-Entry_800CCC48 *fn_800CCC48(u32 a, u32 b)
+Ent *fn_800CCC48(u32 a, u32 b)
 {
-    Entry_800CCC48 *e = (*(Table_800CCC48*)&lbl_80305B08).entries;
+    Ent *e = (*(Table_800CCC48*)&lbl_80305B08).entries;
     s16 n;
 
     (*(int*)&lbl_80346D80) = 0;
@@ -6365,12 +6278,12 @@ s32 fn_800C8EC0(s32 idx) {
 }
 
 void *fn_800CC9EC(u32 a, u32 b, u32 min) {
-    Entry_800CC9EC *e;
+    Entry_UNIT0000 *e;
     void *result = 0;
     u32 best = 0xFFFF;
 
     lbl_80346D80 = 0;
-    e = (Entry_800CC9EC*)lbl_80305B08.p00;
+    e = (Entry_UNIT0000*)lbl_80305B08.p00;
     while (lbl_80346D80 < lbl_80305B08.h0a) {
         if (a == e->a && b == e->b) {
             u32 k = (u16)e->key;
@@ -7519,8 +7432,8 @@ void fn_800B45D4(Work_800B45D4 *w, Fx_800B45D4 *q)
     s32 lim;
     u8 a1;
     u8 a2;
-    Col_800B45D4 c1;
-    Col_800B45D4 c0;
+    Rgba8 c1;
+    Rgba8 c0;
     f32 inv;
     Angle rz;
     NJS_POINT3 pt;
@@ -8306,7 +8219,7 @@ void fn_800C56AC(Cam_800C3648* w) {
     NJS_VECTOR d;
     NJS_VECTOR e;
     NJS_VECTOR p;
-    Ang3_800C47BC a;
+    Ang a;
     s32 r;
     s8 id;
     w->he6 = fn_800C5530(w->he6, lbl_80311A60[5]->flags);

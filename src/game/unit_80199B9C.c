@@ -293,16 +293,12 @@ typedef struct Self_8019FE64 {
     u8 pad1[0xa];
     Ctx_8019FE64 *ctx;
 } Self_8019FE64;
-typedef struct Holder_8019FF38 {
-    u8 pad0[0x28];
-    MenuPanel* ui;
-} Holder_8019FF38;
 typedef struct Ctx_8019FF38 {
     u8 pad0[4];
     u8 b4;
     u8 pad1[0x218 - 5];
-    Holder_8019FF38 *p218;
-    Holder_8019FF38 *p21c;
+    Holder_8019FDB0 *p218;
+    Holder_8019FDB0 *p21c;
 } Ctx_8019FF38;
 typedef struct Self_8019FF38 {
     u8 pad0[0x19];
@@ -433,19 +429,7 @@ typedef struct PanelTask_801ABD40 {
 } PanelTask_801ABD40;
 extern const char* lbl_80346810[2];
 void fn_801ABD40(PanelTask_801ABD40* t);
-typedef struct Task_801ABE90 {
-    u8 pad00[0x24];
-    u8* p24;
-    MenuPanel* p28;
-    u32 w2c;
-} Task_801ABE90;
 extern void fn_801ABF70();
-typedef struct Task_801AC094 {
-    u8 pad00[0x24];
-    u8* p24;
-    MenuPanel* p28;
-    u32 w2c;
-} Task_801AC094;
 extern void fn_801B6BB4(void *ui, f32 *pos, s16 id, s32 b, s16 x, s16 y, f32 alpha);
 extern const LayoutPart lbl_802B7720[4];
 typedef struct Task_801B0F1C {
@@ -458,12 +442,6 @@ typedef struct Task_801B0F1C {
 } Task_801B0F1C;
 void fn_801B0F1C(Task_801B0F1C *t);
 extern const char* fn_801F4AE4(s16 v);
-typedef struct Task_801B1104 {
-    u8 pad00[0x24];
-    u8* p24;
-    MenuPanel* p28;
-    u32 w2c;
-} Task_801B1104;
 /* A part's cursor (at the part task's 0x30): where it is drawn and the list position it points at. */
 typedef struct ShopList {
     f32 x, y;    /* 0x00 draw position */
@@ -575,11 +553,11 @@ struct Task_801B11EC;
 extern void fn_801B11EC(struct Task_801B11EC* t);
 extern void fn_801B5EA8();
 void fn_801B6950(ShopPart* t);
-typedef struct Pair_UNIT0000 {
+typedef struct NamePair {
     const char* a;
     const char* b;
-} Pair_UNIT0000;
-extern const Pair_UNIT0000 lbl_802EBFDC[8];
+} NamePair;
+extern const NamePair lbl_802EBFDC[8];
 extern const char lbl_802B8F80[];
 extern s8 lbl_80310A1C[0x120];
 typedef struct Sub2 {
@@ -609,10 +587,10 @@ typedef struct St {
     f32 x48, x4c;
     s32 x50;
 } St;
-typedef struct Flags_8019CB80 { u8 pad[0x18]; u8 flags; } Flags_8019CB80;
+typedef struct Sub { u8 pad[0x18]; u8 flags; } Sub;
 typedef struct Obj_8019CB80 {
     u8 pad00[8];
-    Flags_8019CB80* x8;
+    Sub* x8;
     u8 pad0c[0x18 - 0x0c];
     u8 flags;
     u8 state;
@@ -620,7 +598,7 @@ typedef struct Obj_8019CB80 {
     St* st;
 } Obj_8019CB80;
 extern void fn_800906E8(void*);
-typedef struct Sub28 { u8 pad[0x28]; MenuPanel* obj; } Sub28;
+typedef struct MP { u8 pad[0x28]; MenuPanel* obj; } MP;
 typedef struct Ctx_801A0B18 {
     u8 pad00[4];
     u8 idx;           /* 0x04 */
@@ -629,7 +607,7 @@ typedef struct Ctx_801A0B18 {
     u8 pad0a[0x18 - 0x0a];
     f32 x18;
     u8 pad1c[0x210 - 0x1c];
-    Sub28* x210;
+    MP* x210;
     u8 pad214[0x25c - 0x214];
     s32 slot[1];      /* 0x25c */
 } Ctx_801A0B18;
@@ -771,26 +749,8 @@ typedef struct {
 } SlotTask;
 extern void* fn_801E1A74(s32 n, s32 size);
 extern void fn_801A5FD8(void);
-typedef struct Ctx_801A6344 {
-    u8 pad0[0x18];
-    f32 f18;
-} Ctx_801A6344;
-typedef struct Parent_801A6344 {
-    u8 pad0[0x24];
-    Ctx_801A6344 *ctx;
-} Parent_801A6344;
-typedef struct Task_801A6344 {
-    u8 pad0[8];
-    Parent_801A6344 *parent;
-    u8 pad0c[0xc];
-    u8 flags;
-    u8 state;
-    u8 pad1a[0xa];
-    u8 *flag;
-    MenuPanel *pan;
-} Task_801A6344;
 extern LayoutPart lbl_802B4A28[3];
-void fn_801A6344(Task_801A6344 *t);
+void fn_801A6344(Task_801A5D08 *t);
 typedef struct {
     u8 pad0[0x10];
     u16 id;       /* 0x10 */
@@ -898,15 +858,7 @@ typedef struct {
 } Task2_801B2678;
 extern void UiDrawNumber(NJS_POINT3 *pos, u32 flags, u16 ndigits, u32 value, f32 c1);
 extern const LayoutPart lbl_802B6DF8[4];
-typedef struct Task_801B2430 {
-    u8 pad00[0x18];
-    u8 flags;     /* 0x18 */
-    u8 state;     /* 0x19 */
-    u8 pad1a[0x24 - 0x1a];
-    u8 *flag;     /* 0x24 */
-    MenuPanel *pan;  /* 0x28 */
-} Task_801B2430;
-void fn_801B2430(Task_801B2430 *t);
+void fn_801B2430(Task_801B0F1C *t);
 extern const char* lbl_802EC04C[13];
 typedef struct {
     u8 pad0[0x1E];
@@ -938,32 +890,8 @@ typedef struct {
 } AnimDef;
 extern const AnimDef lbl_802B73A4[5];
 f32 njSin(u16 a);
-typedef struct PanelTask_801B5EA8 {
-    u8 pad0[0x18];
-    u8 flags;   /* 0x18 */
-    u8 state;   /* 0x19 */
-    u8 pad1A[0x24 - 0x1A];
-    u8* flag;   /* 0x24 */
-    MenuPanel* ui;  /* 0x28 */
-} PanelTask_801B5EA8;
 extern const LayoutPart lbl_802B6DD0[2];
-void fn_801B6E5C(PanelTask_801B5EA8* t);
-typedef struct PanelTask_801B5FA8 {
-    u8 pad0[0x18];
-    u8 flags;   /* 0x18 */
-    u8 state;   /* 0x19 */
-    u8 pad1A[0x24 - 0x1A];
-    u8* flag;   /* 0x24 */
-    MenuPanel* pan; /* 0x28 */
-} PanelTask_801B5FA8;
-typedef struct PanelTask_801B66F8 {
-    u8 pad0[0x18];
-    u8 flags;   /* 0x18 */
-    u8 state;   /* 0x19 */
-    u8 pad1A[0x24 - 0x1A];
-    u8* flag;   /* 0x24 */
-    MenuPanel* pan; /* 0x28 */
-} PanelTask_801B66F8;
+void fn_801B6E5C(PanelTask_801ABF70* t);
 extern const LayoutPart lbl_802B6B0C[4];
 extern s32 lbl_803475D8;
 void MenuDummy();
@@ -1033,18 +961,14 @@ typedef struct Obj48 {
     u8 pad34[0x10];
     void *p44;
 } Obj48;
-typedef struct Holder_8019E96C {
-    u8 pad0[0x28];
-    MenuPanel* ui;
-} Holder_8019E96C;
 typedef struct Ctx_8019E96C {
     u8 pad0[4];
     u8 b4;
     u8 pad5[3];
     u8 b8;
     u8 pad9[0x217];
-    Holder_8019E96C *p220;
-    Holder_8019E96C *p224;
+    Holder_8019FDB0 *p220;
+    Holder_8019FDB0 *p224;
     u8 pad228[0x34];
     s32 w25c[1];
 } Ctx_8019E96C;
@@ -1055,10 +979,6 @@ typedef struct Self_8019E96C {
     Ctx_8019E96C *ctx;
 } Self_8019E96C;
 extern s32 fn_801A28AC(s32 obj);
-typedef struct Holder_8019EE4C {
-    u8 pad0[0x28];
-    MenuPanel* ui;
-} Holder_8019EE4C;
 typedef struct Ctx_8019EE4C {
     u8 pad0[4];
     u8 b4;
@@ -1069,7 +989,7 @@ typedef struct Ctx_8019EE4C {
     u8 pad10[8];
     f32 f18;
     u8 pad1c[0x1f4];
-    Holder_8019EE4C *p210;
+    Holder_8019FDB0 *p210;
     u8 pad214[0x44];
     s32 w258;
     s32 w25c[8];
@@ -1089,10 +1009,6 @@ extern s32 fn_801A3A10(u8 slot, SaveTask *t);
 void fn_801A2D20(SaveTask *t, u32 a, u32 b);
 u32 fn_801A4684(void *buf, u32 size);
 extern void fn_801A4354(CardSaveData *p);
-typedef struct Holder_801A0214 {
-    u8 pad0[0x28];
-    MenuPanel* ui;
-} Holder_801A0214;
 typedef struct Ctx_801A0214 {
     u8 pad0[4];
     u8 b4;
@@ -1101,7 +1017,7 @@ typedef struct Ctx_801A0214 {
     u8 pad9[0xe];
     f32 f18;
     u8 pad1c[0x1f0];
-    Holder_801A0214 *h[20];
+    Holder_8019FDB0 *h[20];
     s32 w25c[8];
 } Ctx_801A0214;
 typedef struct Self_801A0214 {
@@ -1128,31 +1044,21 @@ extern char lbl_802EBE08[];
 extern LayoutPart lbl_802B4C14[];
 #define TextPrintNumber TextPrintNumber_hdr
 #undef TextPrintNumber
-typedef struct Holder_801A6A88 {
-    u8 pad0[0x28];
-    MenuPanel* ui;
-} Holder_801A6A88;
 typedef struct Ctx_801A6A88 {
     u8 pad0[4];
     s16 h4;
     u8 pad6[0x1f2];
-    Holder_801A6A88 *h[8];
+    Holder_8019FDB0 *h[8];
 } Ctx_801A6A88;
 typedef struct Task_801A6A88 {
     u8 pad0[0x24];
     Ctx_801A6A88 *ctx;
 } Task_801A6A88;
-typedef struct Out_801AB580 {
-    s8 flag;
-    s8 type;
-    s16 id;
-    u8 pad4[2];
-} Out_801AB580;
 typedef struct Buf_801AB580 {
     u8 pad0[4];
     s16 pages;
     s16 count;
-    Out_801AB580 out[0x30];
+    ShopEntry out[0x30];
 } Buf_801AB580;
 typedef struct Self_801AB580 {
     u8 pad0[0x2c];
@@ -1163,7 +1069,6 @@ extern u16 fn_801F477C(s16 id);
 extern s8 fn_801F452C(s16 id);
 #define MenuDummy MenuDummy_hdr
 #undef MenuDummy
-typedef struct { u8 pad[0x28]; MenuPanel* obj; } MP;
 typedef struct { u8 pad[0x28]; MenuPanel* obj; MenuPanel* obj2; } MP2;
 typedef struct ShopCmpPos {
     f32 x, y;
@@ -1789,7 +1694,6 @@ extern Ent_801AC2E4 lbl_802ED258[];
 extern s8 fn_801BE608(s16 x);
 void fn_801AC16C(Task* task);
 typedef struct { u8 pad[0x24]; u8* w; MenuPanel* obj; u32 x2c; } T;
-typedef struct Flg_801A0C3C { u8 pad[8]; u32 flags; } Flg_801A0C3C;
 typedef struct Sub_801A0C3C { u8 pad[0x24]; MenuPartWork* w; MenuPanel* obj; } Sub_801A0C3C;
 typedef struct Ctx_801A0C3C {
     u8 pad00[1];
@@ -1820,7 +1724,6 @@ typedef struct Self_801A0C3C {
     u8 pad1a[0x24 - 0x1a];
     Ctx_801A0C3C *ctx;
 } Self_801A0C3C;
-typedef struct Flg_801A1B98 { u8 pad[8]; u32 flags; } Flg_801A1B98;
 extern Sub_801A0C3C *fn_801A53D4(void *o, u16 idx);
 extern const f32 lbl_802B4920[11];
 typedef struct Ent_801A1B98 { u8 idx; u8 b1; u8 b2; u8 b3; u8 b4; u8 b5; } Ent_801A1B98;
@@ -1843,14 +1746,9 @@ extern void fn_801A20AC(SaveTask* t);
 typedef struct St_801B737C { u8 pad[0x64]; s8 seen[8]; } St_801B737C;
 typedef struct Fl { u8 pad[4]; u32 f4; u8 pad8[0x18 - 8]; u32 f18; u32 f1c; u8 pad20[0x30 - 0x20]; u32 f30; u8 pad34[0x168 - 0x34]; u32 f168; u8 pad16c[4]; u32 f170; } Fl;
 typedef struct UiObj UiObj;
-typedef struct Slot { u8 pad[0x28]; MenuPanel* obj; } Slot;
 extern void UiObjSetCommand(UiObj* obj, u16 cmd, u16 delay);
-typedef struct Menu { u8 pad[0xA]; u8 cur; u8 pad2[0x230-0xB]; Slot* slot[5]; } Menu;
+typedef struct Menu { u8 pad[0xA]; u8 cur; u8 pad2[0x230-0xB]; MP* slot[5]; } Menu;
 typedef struct Task_801AB094 { u8 pad[0x24]; Menu* m; } Task_801AB094;
-typedef struct Holder_801A0E7C {
-    u8 pad0[0x28];
-    MenuPanel* ui;
-} Holder_801A0E7C;
 typedef struct Ctx_801A0E7C {
     u8 pad0[4];
     u8 b4;
@@ -1862,7 +1760,7 @@ typedef struct Ctx_801A0E7C {
     u8 pad9[0xe];
     f32 f18;
     u8 pad1c[0x1f0];
-    Holder_801A0E7C *h[20];
+    Holder_8019FDB0 *h[20];
     s32 w25c[8];
 } Ctx_801A0E7C;
 typedef struct Self_801A0E7C {
@@ -1896,16 +1794,13 @@ typedef struct PanelPos {
 extern const PanelPos lbl_802B8F20[];
 extern void fn_801AFD34(void *t);
 extern void fn_801B0014(void *t);
-typedef struct { const char* a; const char* b; } NamePair;
 typedef struct { u8 pad[0x18]; f32 f18; } Inner_801A4B40;
 typedef struct { u8 pad0[0x18]; u8 flags; u8 pad19[0x24 - 0x19]; Inner_801A4B40* in; } Par_801A4B40;
 typedef struct { u8 pad0[8]; Par_801A4B40* par; u8 pad_[0x18 - 0xc]; u8 flags; u8 state; } Tsk_801A4B40;
 extern void SpriteObjDraw(SpriteObj* obj);
 extern void SpriteObjDrawAt(SpriteObj* obj, f32* pos);
 void SpriteObjDrawAtEx(SpriteObj* obj, f32* pos);
-typedef struct Sub { u8 pad[0x18]; u8 flags; } Sub;
 typedef struct Ent_801ABA30 { u8 pad[8]; Sub* sub; u8 pad2[0x18-0xc]; u8 flags; u8 mode; } Ent_801ABA30;
-typedef struct { u8 pad[0x18]; u8 flags; } Parent;
 typedef struct {
     u8 pad[0x7c];
     f32 x7c, x80, x84;
@@ -1913,7 +1808,7 @@ typedef struct {
 } Data;
 typedef struct {
     u8 pad[8];
-    Parent* parent;
+    Sub* parent;
     u8 pad0c[0xc];
     u8 flags;
     u8 state;
@@ -1923,8 +1818,6 @@ typedef struct {
 extern void fn_8009076C(s32 a, Data* d);
 extern s32 strlen(const char* s);
 extern char* const lbl_802B9428[];
-typedef struct Flg_801A1958 { u8 pad[8]; u32 flags; } Flg_801A1958;
-typedef struct Sub_801A1958 { u8 pad[0x28]; MenuPanel* obj; } Sub_801A1958;
 typedef struct Item_801A1958 { u8 pad[0x18]; s32 kind; u8 rest[0x2c - 0x1c]; } Item_801A1958;
 typedef struct Ctx_801A1958 {
     u8 pad00[1];
@@ -1935,7 +1828,7 @@ typedef struct Ctx_801A1958 {
     u8 x7;
     Item_801A1958 items[12]; /* 0x08, kind at 0x20 from the record's start - 8 */
     u8 pad[0x228 - 8 - 12 * 0x2c];
-    Sub_801A1958 *objs[7];   /* 0x228 */
+    MP *objs[7];   /* 0x228 */
 } Ctx_801A1958;
 typedef struct Self_801A1958 {
     u8 pad00[0x19];
@@ -1969,7 +1862,6 @@ typedef struct {
 } Obj_8019BED8;
 extern void* fn_802258BC(s32 a, u32 b, s32 c);
 extern void fn_801DCE18(f32* a, f32* b, s32 c);
-typedef struct MP_801B60E8 { u8 pad[0x28]; MenuPanel* obj; } MP_801B60E8;
 typedef struct Tri { VertexCol v[3]; } Tri;
 extern Tri lbl_802B8EF0;
 typedef struct ShopEntry_801BD748 {
@@ -2000,7 +1892,7 @@ extern TaskFunc lbl_802EBD30[33];
 extern EvObj *lbl_80347450;
 typedef struct Obj_8019CB80_8019C424 {
     u8 pad00[8];
-    Flags_8019CB80* x8;
+    Sub* x8;
     u8 pad0c[0x18 - 0x0c];
     u8 flags;
     u8 state;
@@ -3163,9 +3055,9 @@ Task_801A51A8* fn_801A51A8(void* a)
     return o;
 }
 
-Task_801ABE90* fn_801ABE90(void* a)
+Task_801A51A8* fn_801ABE90(void* a)
 {
-    Task_801ABE90* o = fn_802267AC(a, fn_801ABD40);
+    Task_801A51A8* o = fn_802267AC(a, fn_801ABD40);
     o->p24 = fn_801E1A74(1, 0x58);
     o->p28 = fn_801E1A74(1, 0x6c);
     o->p28->o.alpha_en = 0;
@@ -3185,9 +3077,9 @@ Task_801ABE90* fn_801ABE90(void* a)
     return o;
 }
 
-Task_801AC094* fn_801AC094(void* a)
+Task_801A51A8* fn_801AC094(void* a)
 {
-    Task_801AC094* o = fn_802267AC(a, fn_801ABF70);
+    Task_801A51A8* o = fn_802267AC(a, fn_801ABF70);
     o->p24 = fn_801E1A74(1, 0x58);
     o->p28 = fn_801E1A74(1, 0x6c);
     o->p28->o.alpha_en = 0;
@@ -3206,9 +3098,9 @@ Task_801AC094* fn_801AC094(void* a)
     return o;
 }
 
-Task_801B1104* fn_801B1104(void* a)
+Task_801A51A8* fn_801B1104(void* a)
 {
-    Task_801B1104* o = fn_802267AC(a, fn_801B0F1C);
+    Task_801A51A8* o = fn_802267AC(a, fn_801B0F1C);
     o->p24 = fn_801E1A74(1, 0x58);
     o->p28 = fn_801E1A74(1, 0x6c);
     o->p28->o.f38 = 1.0f;
@@ -4206,7 +4098,7 @@ void fn_801B5D68(ShopPart* t) {
     }
 }
 
-void fn_801B5EA8(PanelTask_801B5EA8* t) {
+void fn_801B5EA8(PanelTask_801ABF70* t) {
     f32 z;
     switch (t->state) {
     case 0:
@@ -4231,7 +4123,7 @@ void fn_801B5EA8(PanelTask_801B5EA8* t) {
     }
 }
 
-void fn_801B5FA8(PanelTask_801B5FA8* t) {
+void fn_801B5FA8(PanelTask_801ABD40* t) {
     f32 z;
     switch (t->state) {
     case 0:
@@ -4258,7 +4150,7 @@ void fn_801B5FA8(PanelTask_801B5FA8* t) {
     }
 }
 
-void fn_801B66F8(PanelTask_801B66F8* t) {
+void fn_801B66F8(PanelTask_801ABD40* t) {
     f32 z;
     if (lbl_803475D8 != 0) {
         t->state = 0xFF;
@@ -4613,7 +4505,7 @@ void fn_801A0214(Self_801A0214 *self) {
     if (fn_801A6554(self) == 0 || fn_801C09F8(0, 4) != 0 || fn_801C09F8(0, 5) != 0) {
         for (i = 0; i < 7; i++) {
             s32 j = i + 7;
-            Holder_801A0214 *h = self->ctx->h[j];
+            Holder_8019FDB0 *h = self->ctx->h[j];
             if (h != 0 && h->ui != 0) {
                 UiObjFinish(&h->ui->o);
             }
@@ -5360,7 +5252,7 @@ void fn_801A5D08(Task_801A5D08 *t) {
     }
 }
 
-void fn_801A6344(Task_801A6344 *t) {
+void fn_801A6344(Task_801A5D08 *t) {
     f32 x;
     f32 y;
     f32 z;
@@ -5453,7 +5345,7 @@ void fn_801B0F1C(Task_801B0F1C *t) {
     }
 }
 
-void fn_801B2430(Task_801B2430 *t) {
+void fn_801B2430(Task_801B0F1C *t) {
     f32 z;
     NJS_POINT3 pos;
     if (lbl_803475D8 != 0) {
@@ -5806,7 +5698,7 @@ s32 fn_801AB094(Task_801AB094* t)
     s32 ret = 0;
     u8 old = t->m->cur;
     s32 i, cmd;
-    Slot* s;
+    MP* s;
     UiObj* o;
     if (fn_801C09F8(0, 4)) {
         ret = 1;
@@ -7382,7 +7274,7 @@ void fn_801ABA30(void* a)
 }
 
 void fn_8019D598(Self* o) {
-    Parent* p = o->parent;
+    Sub* p = o->parent;
     Data* d = o->data;
     if (p->flags & 0x40) {
         o->flags |= 0x40;
@@ -7626,7 +7518,7 @@ void fn_801A1B98(Self_801A0C3C *o, u8 mode) {
     }
 }
 
-void fn_801B60E8(MP_801B60E8* p) {
+void fn_801B60E8(MP* p) {
     Tri t = lbl_802B8EF0;
     int i;
     VertexCol* v;

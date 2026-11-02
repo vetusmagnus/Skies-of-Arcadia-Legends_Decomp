@@ -41,14 +41,10 @@ typedef struct {
     Entry8009B58C *entry260;
 } Obj8009B58C;
 typedef struct {
-    s16 flag;
-    s16 count;
-} Entry8009B5D4;
-typedef struct {
     u8 pad_000[0x188];
     u32 flags188;
     u8 pad_18c[0x264 - 0x18C];
-    Entry8009B5D4 *entry264;
+    Entry8009B58C *entry264;
 } Obj8009B5D4;
 extern u32 lbl_80346C40;
 extern void* lbl_80347588;
@@ -427,17 +423,6 @@ typedef struct Obj_8009B3F4 {
     Leaf *leaf;     /* 0x25C */
     Track *track[2]; /* 0x260 */
 } Obj_8009B3F4;
-typedef struct Obj_8009B4C0 {
-    u8 pad0[0x202];
-    s16 idx[2];     /* 0x202 */
-    u8 pad206[0x20C - 0x206];
-    s32 timer[2];   /* 0x20C */
-    u8 pad214[0x24C - 0x214];
-    f32 target[2];  /* 0x24C */
-    u8 pad254[0x25C - 0x254];
-    Leaf *leaf;     /* 0x25C */
-    Track *track[2]; /* 0x260 */
-} Obj_8009B4C0;
 extern void njUnitMatrix(NJS_MATRIX m);
 /* Byte (0..255) to a 0..1 float: __OSu8tof32(&b) * (1/255).
  * Needs the Dolphin SDK fast-cast inline __OSu8tof32 (psq_l through GQR2), which our
@@ -613,7 +598,7 @@ s32 fn_8009B58C(s32 unused, Obj8009B58C *obj, Entry8009B58C *e, s16 arg) {
     return ret;
 }
 
-s32 fn_8009B5D4(s32 unused, Obj8009B5D4 *obj, Entry8009B5D4 *e, s16 arg) {
+s32 fn_8009B5D4(s32 unused, Obj8009B5D4 *obj, Entry8009B58C *e, s16 arg) {
     s32 ret = 0;
     s32 v = ((e->count - 1) * 8 + 16) / 4;
     if (v == arg) {
@@ -1116,7 +1101,7 @@ s32 fn_8009B3F4(Obj_8009B3F4 *o)
     return ret;
 }
 
-s32 fn_8009B4C0(Obj_8009B4C0 *o)
+s32 fn_8009B4C0(Obj_8009B3F4 *o)
 {
     Track *t;
     Key *k;

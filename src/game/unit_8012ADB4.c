@@ -113,21 +113,11 @@ extern HolderE *lbl_80346F18;
 extern f32 lbl_8034A418;
 extern void *lbl_80346F04;
 void fn_8012F4F8(Obj *o);
-typedef struct Fn8012C0D8Obj {
-    u8 pad0[0x18];
-    u8 flags;
-    u8 state;
-} Fn8012C0D8Obj;
-void fn_8012C0D8(Fn8012C0D8Obj *p);
-extern s32 fn_8012C174(Fn8012C0D8Obj *);
-typedef struct Fn8012C744Obj {
-    u8 pad0[0x18];
-    u8 flags;
-    u8 state;
-} Fn8012C744Obj;
+void fn_8012C0D8(Obj *p);
+extern s32 fn_8012C174(Obj *);
 extern void fn_8012DFE0(void);
 extern void fn_8012DB18(void);
-extern s32 fn_8012C7E8(Fn8012C744Obj *);
+extern s32 fn_8012C7E8(Obj *);
 typedef struct Fn8012E640Inner {
     s8 f0;
 } Fn8012E640Inner;
@@ -135,12 +125,7 @@ typedef struct Fn8012E640Mgr {
     u8 pad0[0x24];
     Fn8012E640Inner *inner;
 } Fn8012E640Mgr;
-typedef struct Fn8012E640Obj {
-    u8 pad0[0x18];
-    u8 flags;
-    u8 state;
-} Fn8012E640Obj;
-void fn_8012E640(Fn8012E640Obj *p);
+void fn_8012E640(Obj *p);
 extern void fn_8012F13C(void);
 extern void fn_8012ECF8(void);
 extern void fn_8012E970(void);
@@ -362,7 +347,7 @@ void fn_8012C060(void) {
 
 extern void fn_801CBA60(f32 a, f32 b);
 
-s32 fn_8012C174(Fn8012C0D8Obj *unused) {
+s32 fn_8012C174(Obj *unused) {
     SysE *s = lbl_80346F18->x24;
     switch (s->x1) {
     case 0:
@@ -475,7 +460,7 @@ extern void fn_8012CFC8(void);
 extern void fn_8012CE60(void);
 extern void fn_8012CA4C(void);
 
-s32 fn_8012C7E8(Fn8012C744Obj *unused) {
+s32 fn_8012C7E8(Obj *unused) {
     switch (lbl_80346F20->x24->x1) {
     case 0:
         lbl_80346F20->x24->x50 = 0;
@@ -1036,7 +1021,7 @@ void fn_8012F4A0(void) {
     }
 }
 
-void fn_8012C0D8(Fn8012C0D8Obj *p) {
+void fn_8012C0D8(Obj *p) {
     switch (p->state) {
     case 0x0:
     case 0xfe:
@@ -1056,7 +1041,7 @@ void fn_8012C0D8(Fn8012C0D8Obj *p) {
     }
 }
 
-void fn_8012C744(Fn8012C744Obj *p) {
+void fn_8012C744(Obj *p) {
     switch (p->state) {
     case 0x0:
     case 0xfe:
@@ -1078,7 +1063,7 @@ void fn_8012C744(Fn8012C744Obj *p) {
     }
 }
 
-void fn_8012E640(Fn8012E640Obj *p) {
+void fn_8012E640(Obj *p) {
     switch (p->state) {
     case 0x0:
     case 0xfe:

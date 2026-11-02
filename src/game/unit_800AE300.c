@@ -245,11 +245,8 @@ typedef struct {
     u32 x8;
 } Hdr;
 typedef struct {
-    u32 count;
-} Cnt;
-typedef struct {
     u8 pad[0x10];
-    Cnt *cnt;
+    EvInfoCount *cnt;
 } Link;
 typedef struct {
     Hdr *hdr;

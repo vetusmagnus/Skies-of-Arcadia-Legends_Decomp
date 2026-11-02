@@ -632,19 +632,17 @@ typedef struct Spec {
 } Spec;
 extern void njCalcVector(NJS_MATRIX m, NJS_POINT3 *v, NJS_POINT3 *out);
 extern f32 njCos(Angle a);
-typedef struct Vec3_80222838 { f32 x, y, z; } Vec3_80222838;
-typedef struct Ang3_80222838 { Angle x, y, z; } Ang3_80222838;
 /* A collision object: its transform is built from two translate/rotate pairs,
    then each of its `count` parts is transformed in turn. */
 typedef struct Obj_80222838 {
     u8 pad0[0xc];
     s16 count;               /* 0x0c */
     u8 pade[0x18 - 0xe];
-    Vec3_80222838 *pos;      /* 0x18 */
+    Pos *pos;      /* 0x18 */
     void *parts;             /* 0x1c */
-    Ang3_80222838 *rot;      /* 0x20 */
-    Vec3_80222838 *pos2;     /* 0x24 */
-    Ang3_80222838 *rot2;     /* 0x28 */
+    Ang3 *rot;      /* 0x20 */
+    Pos *pos2;     /* 0x24 */
+    Ang3 *rot2;     /* 0x28 */
     u8 pad2c[0x34 - 0x2c];
     u8 data[1];              /* 0x34 */
 } Obj_80222838;
@@ -3093,7 +3091,6 @@ s32 fn_8022A728(u32_8022A36C *state, u32_8022A36C *cnt, s32 lim)
     return ret;
 }
 
-typedef struct Sub_80222010 { f32 x, y, z; } Sub_80222010;
 typedef struct V3_80222010 { s32 a, b, c; } V3_80222010;
 typedef struct Rec_80222010 {
     s32 f0;
@@ -3101,9 +3098,9 @@ typedef struct Rec_80222010 {
     s16 fc;
     u16 fe;
     u8 pad10[8];
-    Sub_80222010 *p18;
-    Sub_80222010 *p1c;
-    Sub_80222010 *p20;
+    Pos *p18;
+    Pos *p1c;
+    Pos *p20;
     s32 f24;
     s32 f28;
     s32 f2c;
@@ -3119,9 +3116,9 @@ typedef struct In_80222010 { V3_80222010 v; V3_80222010 w; f32 g; } In_80222010;
 void fn_80222010(In_80222010 *in) {
     Rec_80222010 *r = fn_801E1A74(1, 0x94);
     if (r) {
-        r->p18 = (Sub_80222010 *)((u8 *)r + 0x70);
-        r->p1c = (Sub_80222010 *)((u8 *)r->p18 + 0xc);
-        r->p20 = (Sub_80222010 *)((u8 *)r->p1c + 0xc);
+        r->p18 = (Pos *)((u8 *)r + 0x70);
+        r->p1c = (Pos *)((u8 *)r->p18 + 0xc);
+        r->p20 = (Pos *)((u8 *)r->p1c + 0xc);
         r->f24 = 0;
         r->f28 = 0;
         r->p18->z = 0.0f;

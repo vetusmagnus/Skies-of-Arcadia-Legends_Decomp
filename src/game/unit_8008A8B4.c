@@ -18,10 +18,6 @@ typedef struct Rec_8008AEAC {
     u8 pad0[0x80];
     s16 x80;
 } Rec_8008AEAC;
-typedef struct Rec_8008AEDC {
-    u8 pad0[0x80];
-    s16 x80;
-} Rec_8008AEDC;
 extern u8 lbl_80347340;
 s32 rand(void);
 extern s32 fn_80078610(s8 idx);
@@ -133,7 +129,7 @@ s32 fn_8008AEAC(s32 unused, Rec_8008AEAC* p)
     return !(t < 8);
 }
 
-s32 fn_8008AEDC(s32 unused, Rec_8008AEDC* p)
+s32 fn_8008AEDC(s32 unused, Rec_8008AEAC* p)
 {
     s32 t = (s8)lbl_8030B7F4[0xB] - p->x80;
     return !(t < 4);
