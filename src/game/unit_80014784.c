@@ -259,16 +259,6 @@ typedef struct Wk1E {
     Dat1E *d;
 } Wk1E;
 typedef struct Tk1E { u8 pad00[0x24]; Wk1E *work; } Tk1E;
-typedef struct Wk1E_8001E238 {
-    u8 pad00[0x14];
-    s16 idx;
-    u8 pad16[6];
-    f32 x1c, x20, x24;
-    NJS_POINT3 x28;
-    u8 pad34[0x18];
-    Dat1E *d;
-} Wk1E_8001E238;
-typedef struct Tk1E_8001E238 { u8 pad00[0x24]; Wk1E_8001E238 *work; } Tk1E_8001E238;
 extern void fn_8002923C(s16 id, u16 mask, s32 c);
 extern s32 fn_8001604C(void* t, s8* arr, s32 a, s32 b);
 extern s32 fn_80016234(void* t, s8 flag, s32 a, s32 b, s32 c);
@@ -3340,12 +3330,12 @@ void fn_8001E308(void *a, NJS_POINT3 *out, Tk1E *t)
     out->z = out->z + v.z;
 }
 
-void fn_8001E238(NJS_POINT3 *self, void *out, Tk1E_8001E238 *t)
+void fn_8001E238(NJS_POINT3 *self, void *out, Tk1E *t)
 {
     NJS_POINT3 v20;
     NJS_POINT3 v14;
     NJS_POINT3 v8;
-    Wk1E_8001E238 *w = t->work;
+    Wk1E *w = t->work;
 
     fn_800615B4(w->d->tbl + (w->idx - 1) * 0x34 + 8, &v20, &w->x28);
     v20.x = v20.x + w->x1c;
