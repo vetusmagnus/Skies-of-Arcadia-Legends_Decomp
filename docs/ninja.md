@@ -605,3 +605,16 @@ needs `const` parameters), `fn_8028DD5C` 1062 lines with instructions exact (fn_
 capsule axis), `fn_80296680` 18 (`cnt /= sz;` as its own statement), `fn_80293F20` 46 (cyclic Catmull-Rom;
 `f32 span[2] = {1.0f, 1.0f}` indexed by `(s32)d > 0`), plus `fn_8028ED64`, `fn_802938C8` and the TEX colour
 drawers `fn_8029FE0C`, `fn_8029F0F8`, `fn_802A02E8` (6 lines each).
+
+### Round 6 (2026-11-02)
+
+Merged `fn_8028CF20` (2D quad overlap by triangle areas; 1.3.2nj only). The last float register came from the
+edge length: written as one expression with the differences repeated,
+`l = (p0->x - p1->x) * (p0->x - p1->x) + (p0->y - p1->y) * (p0->y - p1->y);`, with no dx/dy/x/y locals, MWCC's
+common-subexpression temporaries colour like the original in all twelve inlined triangles. Declaration orders,
+statement orders, helper parameter orders, outer-loop shapes and nested distance helpers all stayed at 4 lines.
+`fn_80296680` is down to 10 lines (declaration order `c, e, a, cnt, fl, b, sz, key`); only the first block's load
+order is left. The TEX colour drawers stay at 6 lines: hill-climbs over declaration order and the order of the
+parameter copies (with `side` copied too) don't move them; without the pragma and copies the best is 12 (data and
+side swap registers). `fn_802938C8` stays at 2 lines (separate `hi = count; lo = 0;` assignments don't reorder
+the `mr`/`li`).

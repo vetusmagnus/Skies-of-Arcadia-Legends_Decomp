@@ -1,12 +1,13 @@
-/* Near miss (not matched): fn_80296680, ninja.c, goes right after fn_80296424. 18 diff lines (1.3.2nj), was 46.
- * Key: cnt /= sz; as a statement before the call (46 -> 18). Left: E80/E84 load order at the top, b (r8) vs quotient (r6) coloring. */
+/* Near miss (not matched): fn_80296680, ninja.c, goes right after fn_80296424. 10 diff lines (1.3.2nj), was 46.
+ * Key: cnt /= sz; as a statement before the call (46 -> 18); declaration order a, cnt, fl, b, sz (18 -> 10, hill-climb).
+ * Left: the first block's loads (the original loads lbl_80347E84 before lbl_80347E80, and c is r8). */
 void fn_80296680(u32* p, u32 n) {
     NjCacheCtx* c;
     NjCacheEnt* e;
     u16* a;
-    u16* b;
-    s32 fl;
     s32 cnt;
+    s32 fl;
+    u16* b;
     s32 sz;
     u16 key;
 
