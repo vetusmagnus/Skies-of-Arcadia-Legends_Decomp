@@ -19,6 +19,29 @@ typedef f32 NJS_MATRIX[16]; /* Dreamcast layout (Float[16]), 0x40 bytes */
 typedef s32 Angle;          /* 0x10000 per turn */
 
 typedef struct {
+    f32 x, y;
+} NJS_POINT2;
+
+/* A 2D polygon with per-vertex colours. */
+typedef struct {
+    NJS_POINT2* p;
+    u32* col;
+    NJS_POINT2* tex;
+    u32 num;
+} NJS_POINT2COL;
+
+/* Motion keys: frame number plus three floats or three angles. */
+typedef struct {
+    u32 keyframe;
+    f32 key[3];
+} NJS_MKEY_F;
+
+typedef struct {
+    u32 keyframe;
+    Angle key[3];
+} NJS_MKEY_A;
+
+typedef struct {
     void* filename;
     u32 attr;
     struct NjTexRef* texaddr; /* defined below */

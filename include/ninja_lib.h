@@ -18,11 +18,6 @@ extern f64 modf(f64 x, f64* ip);
 
 /* ---- Models and nodes ---- */
 
-/* 2D point (Ninja's NJS_POINT2), used by the quad-overlap tests. */
-typedef struct {
-    f32 x, y;
-} NJS_POINT2;
-
 /* Capsule (segment p0-p1 with radius r), the second argument of fn_8028DD5C and fn_802904E8. */
 typedef struct {
     NJS_POINT3 p0;

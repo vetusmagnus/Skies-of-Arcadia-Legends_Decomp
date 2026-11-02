@@ -2462,9 +2462,6 @@ typedef struct Task_800BE6EC {
     f32 x20;            /* 0x20 */
     Work_800BE6EC *work; /* 0x24 */
 } Task_800BE6EC;
-typedef struct NJS_POINT2 {
-    f32 x, y;
-} NJS_POINT2;
 extern s32 fn_800BE54C(NJS_POINT3 *p, NJS_POINT3 *c, s32 mode, f32 f);
 extern void fn_8009E804(Slots_800BE6EC *list, u16 idx);
 extern void fn_8009E630(Task_800BE6EC *o);

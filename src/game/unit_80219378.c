@@ -408,13 +408,6 @@ void fn_80221D04(f32* out, f32* a, f32* b);
 void fn_80221AAC(f32* out, Sphere_80221AAC* a, Capsule_80221AAC* b);
 void fn_802205E0(f32* out, f32* a, f32* b);
 void fn_80221328(f32* out, f32* a, f32* b);
-typedef struct { f32 x, y; } NJS_POINT2;
-typedef struct {
-    NJS_POINT2* p;
-    u32* col;
-    NJS_POINT2* tex;
-    u32 num;
-} NJS_POINT2COL;
 extern f32 fn_801DBD9C(f32 z);
 extern void fn_8000610C(NJS_POINT2COL* p, s32 n, s32 attr);
 typedef struct { s16 x, y; } Pt;

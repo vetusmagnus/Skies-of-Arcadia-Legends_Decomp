@@ -13,18 +13,7 @@ typedef struct NJS_OBJECT {
     struct NJS_OBJECT* sibling;
 } NJS_OBJECT;
 
-/* type: which channels the motion has (1 pos, 2 ang, 4 scl).
- * inp_fn: low nibble = channel count per node, bits 6+ = interpolation kind. */
-/* Motion key: frame number plus three floats or three angles. */
-typedef struct {
-    u32 keyframe;
-    f32 key[3];
-} NJS_MKEY_F;
 
-typedef struct {
-    u32 keyframe;
-    Angle key[3];
-} NJS_MKEY_A;
 
 /* Key interpolator: interpolates keys[i] .. keys[i+1] at the current frame into out. */
 typedef void (*MotionInterpFn)(void* keys, u32 i, u32 nbKeys, void* out);

@@ -345,10 +345,6 @@ extern s32 lbl_80347EC4;
 extern void fn_80061048(char* s);
 extern void fn_80035FC0(char* name, void* slot, s32 flag);
 
-typedef struct {
-    u32 keyframe;
-    f32 key[3];
-} NJS_MKEY_F;
 /* Ninja motion node data with one to four channels: key arrays, then key counts. */
 typedef struct { void* p[1]; u32 nb[1]; } NJS_MDATA1;
 typedef struct { void* p[2]; u32 nb[2]; } NJS_MDATA2;
@@ -478,10 +474,6 @@ void fn_800068C4(NJS_MKEY_F* keys, u32 i, u32 nbKeys, f32* out) {
 }
 
 extern void fn_802A9338(s32 a, s32 b, s32 c, void (*f)(void));
-typedef struct {
-    u32 keyframe;
-    Angle key[3];
-} NJS_MKEY_A;
 void fn_80006A70(NJS_MKEY_A* keys, u32 i, u32 nbKeys, Angle* out) {
     f32 div[2] = {1.0f, 1.0f};
     NJS_MKEY_A* k1 = &keys[i];

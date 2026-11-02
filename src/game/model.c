@@ -5,17 +5,7 @@
 /* Game model objects: draw state setup, transform, motion playback and draw
  * (fn_801E4C2C .. fn_801E7600). */
 
-typedef struct {
-    f32 x, y;
-} NJS_POINT2;
 
-/* Ninja NJS_POINT2COL: a 2D polygon with per-vertex colours. */
-typedef struct {
-    NJS_POINT2* p;
-    u32* col;
-    NJS_POINT2* tex;
-    u32 num;
-} NJS_POINT2COL;
 
 /* Frame-stepped value table (e.g. texture animation): value = table[index], stepping index by
  * step every delay ticks. */
