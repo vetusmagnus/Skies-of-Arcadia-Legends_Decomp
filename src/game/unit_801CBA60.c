@@ -3,6 +3,7 @@
 #include "ninja.h"
 #include "game/drawstate.h"
 #include "game/draw2d.h"
+#include "game/battle.h"
 typedef struct Ent {
     float a;
     s32 b;
@@ -218,14 +219,6 @@ void fn_801CBA60(float a, float c)
     lbl_8030E7C0[i].c = c;
 }
 
-typedef struct Msg {
-    s16 x0;
-    s16 x2;
-    s16 x4;
-    s16 x6;
-    s32 x8;
-    s32 xc;
-} Msg;
 static inline void FadePush(float a, float c)
 {
     s32 i = lbl_803474F8;

@@ -11,6 +11,7 @@
 #include "game/text.h"
 #include <dolphin/os/OSFastCast.h>
 #include "game/draw2d.h"
+#include "game/battle.h"
 void VISetNextFrameBuffer(void *fb);
 void VIFlush(void);
 void VIWaitForRetrace(void);
@@ -1269,14 +1270,6 @@ void fn_801D78A8(Quad *q, void *p, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5) {
     q->f2c = b;
 }
 
-typedef struct Msg {
-    s16 x0;
-    s16 x2;
-    s16 x4;
-    s16 x6;
-    s32 x8;
-    s32 xc;
-} Msg;
 extern void fn_80291424(Msg*, s16);
 extern void fn_802913D4(u32 colour);
 extern void fn_802911CC(f32* rect, f32 z);

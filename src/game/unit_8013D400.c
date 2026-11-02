@@ -4,6 +4,7 @@
 #include "game/save_8030B7F4.h"
 #include "game/stat_8030B4D4.h"
 #include <dolphin/types.h>
+#include "game/battle.h"
 extern void fn_80136A28(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f);
 extern s32 fn_8013DA50(s32 a, s32 b);
 /* A battle menu window's state. */
@@ -1490,14 +1491,6 @@ void fn_80148160(void) {
     lbl_8030CEA0.x1614 = (s32)lbl_803472E0;
 }
 
-typedef struct Msg {
-    s16 x0;
-    s16 x2;
-    s16 x4;
-    s16 x6;
-    s32 x8;
-    s32 xc;
-} Msg;
 extern void fn_80129994(Msg*, s16);
 void fn_80148188(void) {
 }

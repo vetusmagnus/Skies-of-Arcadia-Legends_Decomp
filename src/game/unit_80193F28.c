@@ -2,6 +2,7 @@
 #include "game/gamedata.h"
 #include "game/save_8030B7F4.h"
 #include "game/camp.h"
+#include "game/battle.h"
 extern void fn_801DBE1C(const char *fmt, ...);
 extern void fn_801F2860(s16 v);
 /* One entry of a camp menu request (fn_80195EA4 fills six). */
@@ -294,14 +295,6 @@ u32 fn_801944C4(void) {
     return lbl_80307638[15].cur[0].sel;
 }
 
-typedef struct Msg {
-    s16 x0;
-    s16 x2;
-    s16 x4;
-    s16 x6;
-    s32 x8;
-    s32 xc;
-} Msg;
 extern void fn_8021A11C(Msg*, s16);
 void fn_801949F8(Msg* a, s16 i) {
     fn_8021A11C(a, i);

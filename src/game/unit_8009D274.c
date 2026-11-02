@@ -8,6 +8,7 @@
 #include <dolphin/os/OSFastCast.h>
 #include "ninja_lib.h"
 #include "game/unit_800972AC.h"
+#include "game/battle.h"
 /* The file's .rodata, in the original order: fn_800A0028 reaches it from one pooled base. */
 const f32 lbl_802B0E30[16] = {
     1.0f, 0.0f, 0.0f, 0.0f,
@@ -326,14 +327,6 @@ typedef struct Quad {
     s32 n;
 } Quad;
 extern void fn_80035518(void* tex, s32 id, Quad* src, s32 textured, s32 flags);
-typedef struct Msg {
-    s16 x0;
-    s16 x2;
-    s16 x4;
-    s16 x6;
-    s32 x8;
-    s32 xc;
-} Msg;
 extern void fn_801E7E14(Msg*, s16);
 typedef struct Colour4 { u8 c[4]; } Colour4;
 typedef struct VertexTex {

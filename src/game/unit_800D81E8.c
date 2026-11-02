@@ -16,6 +16,7 @@
 #include "game/gamedata.h"
 #include "game/camera_803119E0.h"
 #include "game/draw2d.h"
+#include "game/battle.h"
 /* The .rodata of the warp/party code (fn_800FFA18 .. fn_801004C4) from its start: fn_801004C4
    reaches its messages through this section base, so the block is defined here, first, with every
    object at its original offset. */
@@ -4348,14 +4349,6 @@ void fn_800FF4B0(void) {
     }
 }
 
-typedef struct Msg {
-    s16 x0;
-    s16 x2;
-    s16 x4;
-    s16 x6;
-    s32 x8;
-    s32 xc;
-} Msg;
 extern void fn_80123E9C(Msg*, s16);
 void fn_800FF780(Msg* a, s16 i) {
     fn_80123E9C(a, i);

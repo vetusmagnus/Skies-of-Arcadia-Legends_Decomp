@@ -7,6 +7,7 @@
 #include "game/task.h"
 #include <dolphin/os/OSFastCast.h>
 #include "game/draw2d.h"
+#include "game/battle.h"
 typedef struct Ent_UNIT0000 {
     u8 pad[0x1C];
     u32 x1c;
@@ -1375,14 +1376,6 @@ s32 fn_80090D78(void) {
     return lbl_80346DD4;
 }
 
-typedef struct Msg {
-    s16 x0;
-    s16 x2;
-    s16 x4;
-    s16 x6;
-    s32 x8;
-    s32 xc;
-} Msg;
 extern void fn_800E36B0(Msg*, s16);
 void fn_80090D9C(Msg* a, s16 i) {
     fn_800E36B0(a, i);

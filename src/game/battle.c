@@ -1,4 +1,5 @@
 #include "types.h"
+#include "game/battle.h"
 /* Battle character state (0x8002C010 - 0x80031254): the per-character stat block lbl_80309DE4
  * (Chr: stat recompute fn_8002D72C, damage fn_8002DC14, limit gauge Lim), the event command
  * handlers that take (Msg*, slot index) and set or clear its status bits, the battle unit
@@ -68,15 +69,6 @@ typedef struct Tk {
     u8 pad1A[0x0A];
     Wk* work;                   /* 0x24 */
 } Tk;
-/* Event message: handler argument. */
-typedef struct Msg {
-    s16 x0;
-    s16 x2;
-    s16 x4;
-    s16 x6;
-    s32 x8;
-    s32 xc;
-} Msg;
 /* Per-character stat block (lbl_80309DE4[12]). */
 typedef struct Chr {
     s16 x0;                 /* 0x00 */

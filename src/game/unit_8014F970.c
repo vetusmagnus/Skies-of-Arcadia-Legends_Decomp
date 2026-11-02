@@ -6,6 +6,7 @@
 #include "game/task.h"
 #include <math.h>
 #include <dolphin/types.h>
+#include "game/battle.h"
 #define AT(T, p, off) (*(T *)((u8 *)(p) + (off)))
 typedef struct BtlShip BtlShip;
 typedef struct { u8 pad0[4]; s32 f4; u8 pad8[4]; s32 fc; } Ev;
@@ -1746,14 +1747,6 @@ void fn_801536E0(void) {
     lbl_80306758.f0 = 0;
 }
 
-typedef struct Msg {
-    s16 x0;
-    s16 x2;
-    s16 x4;
-    s16 x6;
-    s32 x8;
-    s32 xc;
-} Msg;
 extern void fn_80155FD0(s32);
 void fn_80153958(s32 a, s16 i) {
     fn_80155FD0(a);

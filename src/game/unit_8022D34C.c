@@ -3,6 +3,7 @@
 #include <dolphin/os/OSFastCast.h>
 #include "ninja.h"
 #include "game/camera_803119E0.h"
+#include "game/battle.h"
 /* lbl_80311970: the active camera mode. */
 typedef struct {
     s32 f0;           /* 0x00 mode */
@@ -441,14 +442,6 @@ void fn_8022F00C(void *p) {
 
 extern void fn_801F01E4(void);
 extern void fn_801D6850(void);
-typedef struct Msg {
-    s16 x0;
-    s16 x2;
-    s16 x4;
-    s16 x6;
-    s32 x8;
-    s32 xc;
-} Msg;
 void fn_8022F050(void *p, s32 a, s32 b);
 void fn_8022F030(void *p, s32 a, s32 b) {
     fn_8022F050(p, a, b);
