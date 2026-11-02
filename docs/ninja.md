@@ -397,6 +397,24 @@ Logged, not integrated as matches. Functions marked * are in the unit as NonMatc
   `fn_80291458` (Bezier point via `pow` and the binomial `fn_802915C8`; 52 lines with the first `pow` result
   in an `f64` temp, which gives the right instruction count). None responds to declaration order or the
   approved optimizer pragmas.
+- More near misses (2026-11-02, drafts kept out of the source):
+  - `fn_8028BAEC` (camera key: look-at target, roll, perspective): 10 lines, and only with a strip-file
+    pragma (`opt_dead_assignments off` or `opt_propagation off`) and the three components in locals per
+    branch; without one IRO forwards the loads into the stores and the stores interleave (20 lines).
+  - `fn_8028B880` (look-at matrix, fn_802974E4 inverse square roots, fn_8029CEC0): right instruction count
+    with `opt_propagation off` and a pointer to the matrix kept from the start (`addi r31,r1,8`); 44 lines of
+    float scheduling with the rows stored before the translation column. A 25-minute permuter run didn't
+    get close.
+  - `fn_80297558` (texlist entry resolve; `texaddr` is Ninja's `Uint32`, read with casts): 13 lines. The
+    only difference left is that the original addresses the previous entry as `textures + (n - 1) * 12 + 8`
+    where MWCC folds it to `&textures[n] - 4`; an index local stops the fold but then two registers swap
+    (30 lines).
+  - `fn_80296680` (shape-key stream dispatch through jumptable_80300730 to fn_80296424): 46 lines, volatile
+    registers only, with the stream read as `cnt = *a++; type = *a++;`.
+  - `fn_802A8E50` (NGDL recorder start with a cache invalidate): 28 lines with the pointer chain
+    h -> gd -> dl -> data; the rest is the inline-argument copy shape (`mr r27,r8` for the NGGD block).
+  - `fn_802A8FC0` (NGDL motion context set-up): 39-43 lines; the original is 3 instructions shorter
+    (stride kept in a register for `step`, one context load per statement).
 - Inline-argument copies (2026-11-01): `fn_802A1160` (35 lines) and the NGDL recorder start `fn_802A8D64`
   both look like a body inlined from a helper, and in both the original keeps a register copy of each value
   passed in (`mr r10,r4` for the vertex base; `mr r27,r3` for the buffer and `mr r28,r9` for the NGGD block)
