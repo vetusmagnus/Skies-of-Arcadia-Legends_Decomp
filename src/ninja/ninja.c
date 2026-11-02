@@ -2751,7 +2751,19 @@ void fn_80293544(NjObj* obj, NJS_MOTION* mot, NJS_MOTION* shape, f32 frame) {
     }
 }
 
-void fn_802936E4(NJ_KEY* src, NJS_MOTION* mot, NJ_KEYDST* dst, f32 f) {
+void fn_80293690(const NJ_KEY* src, NJS_MOTION* mot, f32 f) {
+    NJ_KEYDST dst;
+    NJ_KEY key;
+    dst.p0 = key.p0;
+    dst.p1 = key.p1;
+    dst.a = &key.a;
+    dst.b = &key.b;
+    key.mode = src->mode;
+    fn_802936E4(src, mot, &dst, f);
+    fn_8028BAEC(&key);
+}
+
+void fn_802936E4(const NJ_KEY* src, NJS_MOTION* mot, NJ_KEYDST* dst, f32 f) {
     u32 flags;
     f32* p0 = dst->p0;
     f32* p1 = dst->p1;

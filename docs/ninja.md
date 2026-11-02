@@ -584,3 +584,13 @@ objects defined in the same unit.
 `fn_80290918`'s first parameter and the `vlen` helpers): the parallel-planes copy of `a[0..2]` then loads all
 three before storing, as in the original. B3's drafts: `fn_8028ED64` (box vs sphere, instructions exact,
 registers rotated), `fn_80297E3C` 14 lines, `fn_80293690` order exact.
+
+### Round 4 (2026-11-02)
+
+Merged `fn_80293690` (camera key evaluate; stock too): `const NJ_KEY* src` (and on `fn_802936E4`) lets the
+mode load move above the four `dst` stores. Closer, not merged: `fn_8028CF20` (2D quad overlap, first attempt)
+38 lines with instructions exact (two float picks in the corner loop; a `static inline` triangle-area helper,
+`fabsf`), njSetAspect 29, `fn_80291458` 34, njSetScreen 48, `fn_80297558` 13. `fn_8028DAE4` stays at 122 (eleven
+hoisted `&qb[k].y` computations, likely the inline-argument copy difference); `fn_8028F9B0`, `fn_8028FEA4`,
+`fn_8028ED64` unchanged. `fn_8028DD5C` is fn_8028ED64's box test against a capsule; `fn_8028BE90` keeps its first
+projection's endpoints on the stack and the other two in registers.

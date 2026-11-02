@@ -237,7 +237,8 @@ typedef struct {
 } NJ_KEYDST;
 
 void fn_80293B34(s32 x);
-void fn_802936E4(NJ_KEY* src, NJS_MOTION* mot, NJ_KEYDST* dst, f32 f);
+void fn_802936E4(const NJ_KEY* src, NJS_MOTION* mot, NJ_KEYDST* dst, f32 f);
+void fn_8028BAEC(NJ_KEY* c);
 void fn_8028B880(NJ_KEY* c, NJS_POINT3* target, NJS_POINT3* up);
 void fn_802992F8(s32 fov);
 void fn_8028BA48(Angle a);
