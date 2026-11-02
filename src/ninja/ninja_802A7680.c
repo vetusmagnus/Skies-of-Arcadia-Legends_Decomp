@@ -516,6 +516,56 @@ void fn_802A8AE4(NgDlHdr* h) {
     lbl_803457A8.w4c = -1;
 }
 
+extern u8* lbl_80347FA0;
+extern NgGd* lbl_80347FA8;
+extern NgDl* lbl_80347FAC;
+extern NgDlHdr* lbl_80347FB0;
+
+s32 fn_802A8BA4(void) {
+    u8* p;
+    u32 i;
+    u32 pad;
+    s32 ret;
+
+    if (lbl_80347FA0 == 0) {
+        lbl_80346A50 = 1;
+        return 0;
+    }
+    lbl_80347FAC->size = GXEndDisplayList();
+    if (lbl_80347FB4 == 0) {
+        lbl_80346A50 = 1;
+        return 0;
+    }
+    /* the NGDL header holds byte offsets of the NGGD blocks from the buffer start */
+    switch (lbl_80346A50) {
+    case 1:
+    case 2:
+        lbl_80347FB0->off[0] = (u8*)lbl_80347FA8 - lbl_80347FA0;
+        break;
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+        lbl_80347FB0->off[1] = (u8*)lbl_80347FA8 - lbl_80347FA0;
+        break;
+    }
+    pad = 64 - (lbl_80347FAC->size & 63);
+    /* pad the display list's bytes to 64 */
+    p = (u8*)lbl_80347FAC->data + lbl_80347FAC->size;
+    for (i = 0; i < pad; i++) {
+        *p++ = 0;
+    }
+    DCFlushRange(lbl_80347FAC->data, lbl_80347FAC->size + pad);
+    p = (u8*)lbl_80347FAC->data + lbl_80347FAC->size + pad;
+    lbl_80346A50 = 1;
+    ret = p - lbl_80347FA0;
+    lbl_80347F6C = 2;
+    lbl_80347F70 = 5;
+    lbl_803457A8.w48 = -1;
+    lbl_803457A8.w4c = -1;
+    return ret;
+}
+
 void fn_802A8F40(s32 v) { lbl_80347FB4 = v; }
 
 static inline void NgStep(void) {
@@ -540,6 +590,30 @@ void fn_802A8FA0(s32 v) { lbl_80347FB8 = v; }
 void fn_802A8FA8(s32 i) { lbl_80347FBC = &lbl_80346690[i]; }
 
 #pragma optimization_level reset
+static inline void NgStepInit(void) {
+    u8* p = lbl_80347FBC->base;
+    /* the record holds `stride`-byte key-pointer tables (as fn_80293C2C) */
+    lbl_80347FBC->arrA = (void**)p;
+    lbl_80347FBC->arrB = (void**)(p + lbl_80347FBC->stride);
+    lbl_80347FBC->idx = 0;
+}
+
+#pragma opt_propagation off
+void fn_802A8FC0(const NJS_MOTION* s, f32 v) {
+    u32 n;
+    NgCtx* c = lbl_80347FBC;
+    c->base = (u8*)s->mdata; /* the motion data is walked as a byte cursor */
+    lbl_80347FBC->unk18 = s->nbFrame;
+    lbl_80347FBC->t = v;
+    lbl_80347FBC->idx = 0;
+    lbl_80347FBC->flags = s->type;
+    n = (s->inp_fn & ~0xC0) * 4;
+    lbl_80347FBC->stride = n;
+    lbl_80347FBC->step = n + n;
+    NgStepInit();
+}
+#pragma opt_propagation reset
+
 void fn_802A9040(void) {
     u8* p;
     /* step to the next motion record; the record holds `stride`-byte key-pointer tables (as fn_80293C2C) */

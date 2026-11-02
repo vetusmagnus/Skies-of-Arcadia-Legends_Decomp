@@ -574,3 +574,9 @@ The parameter-copy form brings the TEX colour drawers `fn_8029FE0C`, `fn_802A02E
 `addi` lands later), and `fn_802939C4` to 34. It does not help `fn_80298A04`, `fn_802911CC`, `fn_80287D98`,
 `fn_802871D8`, `fn_80296C00`, `fn_802AC5E8`, `fn_802A1160`, `fn_80286EE8` or the `p += nuv` drawers
 (`fn_8029F680`, `fn_802A07C0`, `fn_802A0DE8`).
+Round 3 merged `fn_802A8FC0` (NGDL motion set-up; stock too: a context pointer local for the first store
+under `opt_propagation off`) and `fn_802A8BA4` (NGDL recorder end; 1.3.2nj). Near misses: `fn_802AC31C` 12 lines
+(`u16 cnt`), `fn_802AC5E8` 4, `fn_802AB460` 10, `fn_802AC160` 13 (kept `mr r11,r5` copy of fmt), `fn_802A8E50` 43
+and `fn_802A8D64` ~56 (kept copies of `gd` / the buffer pointer: the inline-argument copy difference).
+`fn_8029CA58` also addresses three projection matrices from one `lbl_803463C0` base, which MWCC only does for
+objects defined in the same unit.
