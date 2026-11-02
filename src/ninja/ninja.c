@@ -853,6 +853,97 @@ void fn_8028AA60(NjObj* obj) {
     }
 }
 
+/* Renderer 1's vertex-chunk walk, inlined into its chunk-model callback: each chunk transforms its
+ * vertices into the vertex buffer with the paired-single routine for its format. */
+static inline void VtxChunksR1(u32* v, void* base) {
+    u32 w;
+    u32 h;
+    u32 cnt;
+    u32 size;
+    u32 flags;
+    u32 idx;
+
+    while (((w = *v) & 0xff) != 0xff) {
+        h = v[1];
+        v += 2;
+        cnt = h >> 16;
+        lbl_80346658.n = cnt;
+        lbl_80346658.data = v;
+        lbl_80347EF4 += cnt;
+        lbl_80347EF8 += cnt;
+        size = w >> 16;
+        idx = h & 0xffff;
+        flags = w & 0x7fff;
+        switch (w & 0xff) {
+        case 0x29:
+            lbl_80346658.dst = (u8*)base + idx * 0x18;
+            fn_802A21C4(cnt, lbl_80346658.dst, (NJS_VECTOR*)v);
+            break;
+        case 0x2a:
+            lbl_80346658.dst = (u8*)base + idx * 0x1c;
+            fn_802A5D20(cnt, lbl_80346658.dst, (NJS_VECTOR*)v);
+            break;
+        case 0x2c:
+            lbl_80346658.dst = (u8*)base + idx * 0x18;
+            fn_802A5F2C(cnt, lbl_80346658.dst, v, flags);
+            flags = 0x29;
+            break;
+        }
+        v += size - 1;
+    }
+    lbl_80347E30 = flags;
+}
+
+s32 fn_8028AB48(NjModel* m) {
+    u32* v;
+    s16* p;
+    void* base;
+
+    if ((_nj_control_3d_flag_ & 0x100) && m->r > 0.0f) {
+        if (fn_80288C68(m)) {
+            return -1;
+        }
+    }
+    v = m->vlist;
+    base = lbl_80347EFC;
+    if (v) {
+        VtxChunksR1(v, base);
+    }
+    p = m->plist;
+    if (p) {
+        fn_8029C8A0();
+        switch (lbl_80346A50) {
+        case 1:
+            lbl_80347E20 = 0;
+            fn_8028AD9C(p, lbl_80347E30, base);
+            break;
+        case 2:
+            lbl_80347E20 = 1;
+            fn_8028AD9C(p, lbl_80347E30, base);
+            break;
+        case 3:
+            lbl_80347E20 = 2;
+            fn_8028AD9C(p, lbl_80347E30, base);
+            break;
+        case 4:
+            lbl_80347E20 = 3;
+            fn_8028AD9C(p, lbl_80347E30, base);
+            lbl_80347E20 = 4;
+            fn_8028AD9C(p, lbl_80347E30, base);
+            break;
+        case 5:
+            lbl_80347E20 = 3;
+            fn_8028AD9C(p, lbl_80347E30, base);
+            break;
+        case 6:
+            lbl_80347E20 = 4;
+            fn_8028AD9C(p, lbl_80347E30, base);
+            break;
+        }
+    }
+    return 0;
+}
+
 void fn_8028B59C(s32 n, f32 x, f32 y) {
     if (n == 0) return;
     n--;

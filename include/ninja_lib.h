@@ -81,6 +81,8 @@ s32 fn_802A7680(NjModel* m);
 s32 fn_802873BC(NjModel* m);
 s32 fn_802A7FA0(NjModel* m);
 s32 fn_8028AB48(NjModel* m);
+void fn_8028AD9C(s16* p, s32 flags, void* base);
+extern s32 lbl_80347E30; /* flags of the last vertex chunk renderer 1 walked */
 s32 fn_80288C68(NjModel* m);
 s32 fn_80287D98(u32* vlist, void* base);
 void fn_80287F00(s16* plist, s32 n, void* base);
@@ -460,6 +462,10 @@ void fn_8029CB74(void);
 void fn_8029B248(s32 kind, s32 flag);
 void fn_8029CB1C(void);
 void fn_8029C8A0(void);
+/* Paired-single vertex transforms (hand-written assembly) the vertex-chunk walkers call. */
+void fn_802A21C4(s32 n, NJS_VECTOR* dst, NJS_VECTOR* src);
+void fn_802A5D20(s32 n, NJS_VECTOR* dst, NJS_VECTOR* src);
+void fn_802A5F2C(s32 n, void* dst, void* src, u32 flag);
 void fn_8029976C(NjTexBody* b, s32 n);
 void fn_8029EE28(NJS_ARGB* src, u8* dst);
 void fn_8029EE50(u8* src, NJS_ARGB* dst);

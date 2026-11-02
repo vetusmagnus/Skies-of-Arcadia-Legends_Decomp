@@ -491,3 +491,7 @@ symbols masked) found three that are the same code as a matched function:
   (0x8034D0A8-0x8034D0C7), so it came from a different source file than `fn_802907D0`.
 `fn_802A88C0` (renderer 2 material, lights and ambient) is `fn_802A7D74` with the light upload moved
 before the ambient colour and the second light table.
+`fn_8028AB48` (renderer 1's chunk-model callback, the `fn_80287C14` shape) matches with its vertex-chunk walk
+as a `static inline` helper: unlike `fn_802A1160` / `fn_802A6184` / `fn_802A7FA0`, the original keeps no copy
+of the vertex base there (it lives in a saved register across the transform calls), so the inline-argument
+copy difference doesn't arise.
