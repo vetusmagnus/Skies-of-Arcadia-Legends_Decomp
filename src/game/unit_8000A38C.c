@@ -9,6 +9,7 @@
 #include "game/stat_8030B4D4.h"
 #include "game/gamedata.h"
 #include <string.h>
+#include "game/unit_80005B50.h"
 #define PTR(p, off) (*(void**)((u8*)(p) + (off)))
 extern void* lbl_803475A8;
 extern void* fn_802268E8(void* a, void* cb);
@@ -22,46 +23,11 @@ extern void fn_801E17E0(void* p);
 extern void* fn_801DB1A4(u32 size);
 extern s32 fn_80227810(void* p);
 extern void fn_801DDD74(void* p, s32 n);
-typedef struct Vec3 {
-    f32 x;
-    f32 y;
-    f32 z;
-} Vec3;
 extern f32 fn_80291A5C(f32 v);
-typedef struct Sub2_BB28 {
-    u8 pad[0x4C];
-    void* x4c;
-    u32 x50;
-} Sub2_BB28;
-typedef struct Rec_BB28 {
-    void* x0;
-    u8 pad4[4];
-    u32* x8;
-    u32 xc;
-    u8 pad10[6];
-    s16 x16;
-    s16 x18;
-    u8 pad1a[0x40 - 0x1A];
-    u32 x40;
-    u8 pad44[0x4C - 0x44];
-} Rec_BB28;
-typedef struct Work_BB28 {
-    Rec_BB28 r;
-    Sub2_BB28* x4c;
-    u8 pad50[8];
-} Work_BB28;
 typedef struct Node_BB28 {
     u8 pad[0x24];
     Work_BB28* work;
 } Node_BB28;
-typedef struct Ent_BB28 {
-    Rec_BB28* recs;
-    struct { u8 pad[8]; void* x8; }* x4;
-    Work_BB28** ptrs;
-    u8 xc;              /* 0x0c record count */
-    u8 padd[3];
-    void* x10;
-} Ent_BB28;
 typedef struct {
     u16 x0;
     u8 pad2[6];
@@ -82,14 +48,6 @@ typedef struct HNode {
     struct HNode* sibling; /* 0x30 */
 } HNode;
 extern void fn_8000F6F8(HNode* n, u8 kind, s32 a, s32 b, s32 c);
-typedef struct Entry16 {
-    u8 pad[4];
-    s8 x4;              /* 0x4: partner slot */
-    u8 pad5[3];
-    s8 mode;
-    u8 b9;
-    u8 pad2[6];
-} Entry16;
 extern Entry16 lbl_80309730[];
 extern Task* lbl_80309E24[];
 extern void fn_802A9B94(s32 a, s32 b, s32 c, void (*f)(void));
@@ -109,26 +67,6 @@ extern s32 fn_8025ECC4(void);
 extern u8 *lbl_80346AA4;
 typedef void (*TaskFn)(void*);
 extern TaskFn lbl_802DAFA8[];
-/* The 0x70-byte objects lbl_80309EC8 keeps at 0x40/0x44 (fn_80014AB8); 0x20000000 in flags
- * releases one. */
-/* The 0x38-byte block at SysObj 0x6c. */
-typedef struct SysSub {
-    u8 pad0[2];
-    s16 x2;             /* 0x02 */
-    u8 pad4[0x38 - 4];
-} SysSub;
-typedef struct SysObj {
-    u8 pad0[0x3c];
-    u32 x3c;            /* 0x3c */
-    u8 pad40[0x50 - 0x40];
-    Task* owner;        /* 0x50: the character it belongs to */
-    u8 pad54[0x5a - 0x54];
-    s16 x5a;            /* 0x5a */
-    s16 x5c;            /* 0x5c */
-    u8 pad5e[0x68 - 0x5e];
-    u32 flags;          /* 0x68 */
-    SysSub x6c;         /* 0x6c: cleared as a whole by fn_80061F58 */
-} SysObj;
 extern void fn_80071CF0(void *p, void *v);
 typedef struct E0D8Anim {
     u16 cur;
@@ -153,10 +91,6 @@ extern void fn_80230280(void *, void *);
 extern s32 fn_800179E4(s16);
 extern void fn_8000B320(f32, void *, void *);
 extern void fn_801E17E0(void *);
-/* lbl_803097F0 (.bss, 0xD8 bytes): s16 header (x0 read as a state id in battle.c),
-   then 12 per-character 16-byte entries from 0x18. */
-typedef struct { f32 x0; f32 x4; f32 x8; f32 xc; } Ent;
-typedef struct { s16 x0; u8 pad[0x16]; Ent ent[12]; } Tbl;
 extern Tbl lbl_803097F0;
 /* lbl_80309730: 12 rows of 16 bytes, one per character slot; +0x8 is the slot mode
  * (0 = unused, see fn_80010538). */
@@ -315,8 +249,6 @@ typedef struct Par { f32 x0; f32 x4; f32 x8; Dst* xc; } Par;
 typedef struct Work_8000DDFC { u8 pad0[0x4c]; Par* x4c; } Work_8000DDFC;
 typedef struct Task_8000DDFC { u8 pad0[0x18]; u8 flags; u8 mode; u8 pad1a[0x24 - 0x1a]; Work_8000DDFC* work; } Task_8000DDFC;
 extern f32 njSin(Angle a);
-typedef struct B { u32 x0; u8 pad[0x24]; s32 x28; s32 x2c; s32 x30; } B;
-typedef struct A { s32 x0; s32 x4; s32 x8; s32 xc; u8 pad[0xc]; B* x1c; } A;
 typedef struct D { u8 pad[0x4c]; A* x4c; } D;
 typedef struct Obj_8000DF50 { u8 pad[0x18]; u8 flags; u8 state; u8 pad1a[0xa]; D* x24; } Obj_8000DF50;
 extern s32 rand(void);
@@ -898,23 +830,6 @@ void fn_80010538(s16 idx) {
     q = lbl_80309DE4[idx];
     q->xb4 += q->x8;
 }
-/* What a character record's x110 points at: the counter it applies (fn_80010584). */
-typedef struct ChrAux {
-    u8 pad0[0x58];
-    s8 x58;        /* counter id */
-    s8 x59;        /* stat index */
-    s8 x5a;        /* threshold */
-} ChrAux;
-/* lbl_80309174: per-character battle state (0x20). */
-typedef struct ChrStat {
-    u8 pad[6];
-    s16 x6;             /* 0x06 */
-    u8 pad8;
-    s8 x9;
-    u8 pada[0xe - 0xa];
-    s8 xe;              /* 0x0e */
-    u8 padf[0x20 - 0xf];
-} ChrStat;
 extern ChrStat lbl_80309174[12];
 static inline int Gt(s16 x, int y) { return x > y ? 1 : 0; }
 

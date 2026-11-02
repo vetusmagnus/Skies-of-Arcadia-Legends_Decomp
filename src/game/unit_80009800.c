@@ -10,40 +10,11 @@
 #include "game/gamedata.h"
 #include <string.h>
 #include <dolphin/os/OSFastCast.h>
+#include "game/unit_80005B50.h"
 #define PTR(p, off) (*(void**)((u8*)(p) + (off)))
 extern void* lbl_803475A8;
 extern void* fn_802268E8(void* a, void* cb);
 extern void fn_801E17E0(void* p);
-typedef struct Sub2_BB28 {
-    u8 pad[0x4C];
-    void* x4c;
-    u32 x50;
-} Sub2_BB28;
-typedef struct Rec_BB28 {
-    void* x0;
-    u8 pad4[4];
-    u32* x8;
-    u32 xc;
-    u8 pad10[6];
-    s16 x16;
-    s16 x18;
-    u8 pad1a[0x40 - 0x1A];
-    u32 x40;
-    u8 pad44[0x4C - 0x44];
-} Rec_BB28;
-typedef struct Work_BB28 {
-    Rec_BB28 r;
-    Sub2_BB28* x4c;
-    u8 pad50[8];
-} Work_BB28;
-typedef struct Ent_BB28 {
-    Rec_BB28* recs;
-    struct { u8 pad[8]; void* x8; }* x4;
-    Work_BB28** ptrs;
-    u8 xc;              /* 0x0c record count */
-    u8 padd[3];
-    void* x10;
-} Ent_BB28;
 typedef struct {
     u16 x0;
     u8 pad2[6];
@@ -245,7 +216,6 @@ void fn_80009860(void *v, Ent_80009860 *e)
     e->ptr = v;
 }
 
-typedef struct Slot24 { u32 flags; u32 x4; u32 x8; u32 xc; u8 pad10[0x10]; u32 x20; } Slot24;
 /* lbl_8030A6D4 entries (0x24 bytes): the pads */
 extern Slot24 lbl_8030A6D4[];
 extern s32 lbl_8034757C;
