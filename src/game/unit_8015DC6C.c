@@ -15,44 +15,7 @@
 #include <math.h>
 #include <string.h>
 #include <dolphin/types.h>
-/* A cursor of a camp menu screen: the selected row and the mask of the rows that can be
-   selected (fn_8019A21C). */
-typedef struct CampCur {
-    s32 x0;     /* 0x00 */
-    s32 sel;    /* 0x04 */
-    s32 x8;     /* 0x08 */
-    u32 mask;   /* 0x0C */
-} CampCur;
-/* The control block of one camp menu screen (lbl_80307638 has one per screen); the camp menu
-   task's work points at the current one. */
-typedef struct CampCtrl {
-    CampCur cur[7]; /* 0x00 */
-    s32 state;      /* 0x70 */
-    f32 f74;        /* 0x74 */
-} CampCtrl;
-typedef struct CampHold {
-    CampCtrl *ctrl; /* 0x00 */
-} CampHold;
-/* The camp menu task (lbl_8034710C). */
-typedef struct CampTask {
-    u8 pad0[0x24];
-    CampHold *holder; /* 0x24 */
-} CampTask;
-/* A camp menu panel's window: the panel task's work. */
-typedef struct CampWin {
-    s32 x0;          /* 0x00 */
-    s32 x4;          /* 0x04 */
-    UiObj obj;       /* 0x08 */
-    u8 pad54[0x74 - 0x54];
-    f32 f74;         /* 0x74 */
-    u8 pad78[0xBC - 0x78];
-    void *xbc;       /* 0xBC */
-} CampWin;
-/* A camp menu panel task. */
-typedef struct CampPnl {
-    u8 pad0[0x24];
-    CampWin *win;    /* 0x24 */
-} CampPnl;
+#include "game/camp.h"
 /* camp_work: the camp menu's panels and the state of each screen. */
 typedef struct CampWork {
     s8 *ids;            /* 0x000 */
@@ -331,13 +294,6 @@ typedef struct Mover {
     f32 stepY;  /* 0x14 */
     s32 steps;  /* 0x18 */
 } Mover;
-typedef struct Sys_80310A1C {
-    u8 pad0[6];
-    s8 f6;      /* 0x06 */
-    u8 pad7[0x30 - 7];
-    s8 x30;     /* 0x30 */
-    u8 pad31[0x120 - 0x31];
-} Sys_80310A1C;
 extern Sys_80310A1C lbl_80310A1C;
 extern void fn_8016B638(s8 k);
 extern void fn_8016C4C8(s8 k);
@@ -483,9 +439,6 @@ typedef struct {
     u8 pad1A[0x24 - 0x1A];
     Inner_8016EE2C* inner; /* 0x24 */
 } Self_8016EE2C;
-typedef struct { f32 f0, f4; s32 i8, ic; u8 pad10[8]; f32 f18, f1c; } Pos_80188274;
-typedef struct { u8 pad0[0x14]; s32 sel; } Sel_80188098;
-typedef struct { Sel_80188098 *sel; s8 mask; } Inn_80188098;
 typedef struct {
     s32 kind;   /* 0x00 */
     u32 pad04;
@@ -554,65 +507,10 @@ typedef struct Node_80167244 {
     struct Node_80167244 *child;
 } Node_80167244;
 Rec_80167244 *fn_801CB5F4(void *p, s32 lo, s32 hi);
-typedef struct EntD_801687E0 {
-    s32 f0, f4;
-    s32 f8;
-    u8 fc, fd; s8 fe; s8 ff;
-    s16 f10;
-    s16 f12;
-    s32 f14;
-    s32 f18;
-    f32 f1c, f20, f24, f28;
-    s32 f2c;
-    struct Ent_801687E0 *f30;
-    struct Ent_801687E0 *f34;
-    u8 pad[0x4c - 0x38];
-} EntD_801687E0;
-typedef struct Ent_801687E0 {
-    u8 pad[0x24];
-    EntD_801687E0 *d;
-} Ent_801687E0;
 extern void *lbl_8034759C;
 void *fn_802267AC(void *a, void *fn);
 void *fn_801E1A74(s32 n, s32 size);
 void fn_801684E8(void *);
-typedef struct EntD_801694FC {
-    s32 f0, f4;
-    s32 f8;
-    u8 fc, fd; s8 fe; u8 ff;
-    s16 f10;
-    s16 f12;
-    s32 f14;
-    s32 f18;
-    f32 f1c, f20, f24;
-    s32 f28;
-    s32 f2c;
-    struct Ent_801694FC *f30;
-    struct Ent_801694FC *f34;
-    u8 pad[0x4c - 0x38];
-} EntD_801694FC;
-typedef struct Ent_801694FC {
-    u8 pad[0x24];
-    EntD_801694FC *d;
-} Ent_801694FC;
-typedef struct Obj_80169360 Obj_80169360;
-typedef struct Sub_80169360 {
-    s32 w0;
-    s32 w4;
-    u8 pad8[4];
-    u8 bC;
-    u8 bD;
-    u8 pad_e[0x22];
-    Obj_80169360* prev;
-    Obj_80169360* next;
-} Sub_80169360;
-struct Obj_80169360 {
-    u8 pad0[0x18];
-    u8 flags;
-    u8 state;
-    u8 pad1a[0xA];
-    Sub_80169360* sub;
-};
 void fn_80168908(void);
 void fn_80169360(Obj_80169360* o);
 typedef struct Clk { u8 pad[0x3c]; f32 t; } Clk;
@@ -635,17 +533,8 @@ typedef struct PanelA {
 } PanelA;
 extern void *lbl_803470F0, *lbl_803470E8, *lbl_803470F4;
 void fn_80199FFC(void *p, s32 a, void *b, s32 c, s32 d, s32 e);
-typedef struct Self_8016F594 {
-    u8 pad[0x2c];
-    f32 x, y;
-    u8 pad2[0x74 - 0x34];
-    f32 z;
-    u8 pad3[0xbc - 0x78];
-    u8 *data;
-} Self_8016F594;
 extern char *lbl_802E8FD0[20];
 extern void *lbl_803470F0;
-typedef struct { s32 hide; s32 pad4; UiObj obj; } Win;
 typedef struct { u8 pad[0x24]; Win* in; } Pnl;
 extern void fn_801D4F0C(void* spr, s32 a, s32 b, s32 c, f32 f1, f32 f2, f32 f3, f32 f4);
 extern void fn_800FF348(void* spr, s32 id, f32 a, f32 b, f32 c);
@@ -851,59 +740,9 @@ extern f32 lbl_802E70C8[4];
 extern s32 fn_802256A0(Vec *p, void *q, s32 a, u16 b);
 extern void fn_802135B4(Vec *v, V3i *out);
 extern void fn_802136A8(f32 *tab, Vec *out, s32 a, s32 b, s32 c);
-typedef struct Sub_80168398 {
-    s32 w0;
-    s32 w4;
-    s32 w8;
-    u8 bC;
-    u8 bD;
-    s8 bE;
-    s8 bF;
-    s16 h10;
-    s16 h12;
-    s32 w14;
-    u32 flags;
-    f32 f1c;
-    f32 f20;
-    f32 f24;
-    f32 f28;
-    s32 w2c;
-    struct Obj_80168398* w30;
-    struct Obj_80168398* w34;
-    u8 pad[0x14];
-} Sub_80168398;
-typedef struct Obj_80168398 {
-    u8 pad[0x24];
-    Sub_80168398* sub;
-} Obj_80168398;
 void* fn_802267AC(void* a, void* b);
 void* fn_801E1A74(s32 n, s32 size);
 void fn_801680B4(Obj_80168A04 *t);
-typedef struct Sub_80169144 {
-    s32 w0;
-    s32 w4;
-    s32 w8;
-    u8 bC;
-    u8 bD;
-    s8 bE;
-    s8 bF;
-    s16 h10;
-    s16 h12;
-    s32 w14;
-    u32 flags;
-    f32 f1c;
-    f32 f20;
-    f32 f24;
-    f32 f28;
-    s32 w2c;
-    struct Obj_80169144* w30;
-    struct Obj_80169144* w34;
-    u8 pad[0x14];
-} Sub_80169144;
-typedef struct Obj_80169144 {
-    u8 pad[0x24];
-    Sub_80169144* sub;
-} Obj_80169144;
 void fn_80168E54(Obj_80168A04 *t);
 typedef struct Spr_8016E52C {
     u8 pad[0x14];
@@ -1158,17 +997,7 @@ typedef struct Obj_8016EC3C {
     void* h44;       /* 0x44 */
 } Obj_8016EC3C;
 extern void fn_8019A374(s32 spr, f32 x, f32 y, f32 z, u32 col, s32 n);
-typedef struct { s32 hide; } Win_80177D7C;
-typedef struct { u8 pad[0x24]; Win_80177D7C* in; } Pnl_80177D7C;
 #define PNL_80177D7C(off) (*(Pnl_80177D7C**)(CWB + (off)))
-typedef struct {
-    u8 pad0[8];
-    UiObj ui;
-} Win_80172C60;
-typedef struct {
-    u8 pad0[0x24];
-    Win_80172C60* win;
-} Pnl_80172C60;
 #define PNL_80172C60(off) (*(Pnl_80172C60**)(CWB + (off)))
 #define PNL_80173104(off) (*(Pnl_80172C60**)(CWB + (off)))
 #define PNL_80174F40(off) (*(Pnl_80172C60**)(CWB + (off)))
@@ -1186,38 +1015,6 @@ typedef struct Obj_8016E3E0 {
 } Obj_8016E3E0;
 extern f32 TextGetZ(void);
 char* fn_80193FAC(void);
-typedef struct Fx_801677D0 Fx_801677D0;
-typedef struct {
-    u32 x0;
-    s32 id;
-    s32 x8;
-    u8 xc;
-    u8 xd;
-    s8 xe;
-    u8 padf;
-    s16 x10;
-    u8 pad12[6];
-    u32 x18;
-    f32 x1c;
-    f32 x20;
-    f32 x24;
-    f32 x28;
-    Task *x2c;
-    Fx_801677D0 *x30;
-    Fx_801677D0 *x34;
-    s32 x38;
-    f32 x3c;
-    f32 x40;
-    f32 x44;
-    f32 x48;
-} St_801677D0;
-struct Fx_801677D0 {
-    u8 pad0[0x18];
-    u8 flags;
-    u8 state;
-    u8 pad1a[0x24 - 0x1a];
-    St_801677D0 *st;
-};
 extern void fn_801679A4(Fx_801677D0 *t);
 extern s32 fn_80167C34(St_801677D0 *s);
 extern void fn_802172C8(u32 a, s32 b);
@@ -1235,18 +1032,6 @@ typedef struct {
 } Eff_8016FB2C;
 #define PNL_8016FB2C(off) (*(u8**)(cw + (off)))
 #define PNL2(off) (*(u8**)(CWB + (off)))
-typedef struct {
-    u8 pad0[0x58];
-    s32 mask;
-} W_8017379C;
-typedef struct {
-    u8 pad0[0xbc];
-    W_8017379C* w;
-} Hm_8017379C;
-typedef struct {
-    u8 pad0[0x24];
-    Hm_8017379C* hm;
-} Mid_8017379C;
 #define MID() (*(Mid_8017379C**)(CWB + 0x218))
 typedef struct Ent_8015E174 Ent_8015E174;
 typedef struct {
@@ -1351,13 +1136,8 @@ typedef struct Node_8016B638 {
     u8 pad[0x24];
     Work_8016B638 *work;
 } Node_8016B638;
-typedef struct { u8 pad0[8]; s32 a8; u8 padc[4]; s32 a10; u8 pad14[0x5c - 0x14]; u32 f5c; } Leaf;
-typedef struct { u8 pad[8]; UiObj obj; u8 pad2[0xBC - 8 - sizeof(UiObj)]; Leaf* leaf; } Mid;
-typedef struct { u8 pad[0x24]; Mid* mid; } Elem;
 extern s32 fn_80193F78(void);
 #define OBJ(i) (&((Elem*)camp_work.pnl[i])->mid->obj)
-typedef struct { u8 pad[0x74]; f32 y; } Nd;
-typedef struct { u8 pad[0x24]; Nd* n; } Elem2;
 #define ND(i) (((Elem2*)camp_work.pnl[i])->n)
 #define CW(off, T) (*(T*)((u8*)&camp_work + (off)))
 extern void *fn_8015F1A0(u32 id);
@@ -1420,23 +1200,6 @@ typedef struct {
     u8 pad0[0x18];
     u16 id;
 } Arg_80161F04;
-typedef struct {
-    u8 pad0[8];
-    s32 f8;
-    u8 padc[4];
-    s32 f10;
-    u8 pad14[0x44];
-    s32 f58;
-    u32 f5c;
-} La_801729D0;
-typedef struct {
-    u8 pad0[0xbc];
-    La_801729D0* la;
-} In_801729D0;
-typedef struct {
-    u8 pad0[0x24];
-    In_801729D0* in;
-} Pnl_801729D0;
 #define LA(n) (((Pnl_801729D0*)camp_work.pnl[n])->in->la)
 typedef struct Ent_80166138 { u8 pad[0x2c]; u32 f2c; } Ent_80166138;
 typedef struct Tab_80166138 {
@@ -1493,7 +1256,6 @@ typedef struct Hold_80167604 { u8 pad[0x14]; Table_80167604* t; } Hold_80167604;
 typedef struct Node_80167604 Node_80167604;
 struct Node_80167604 { u8 pad0[0x1c8]; Hold_80167604* h; u8 pad1[4]; Node_80167604* parent; };
 typedef struct Vec2f { f32 x, y; } Vec2f;
-typedef struct Vec4f { f32 a, b, c, d; } Vec4f;
 typedef struct IconObj {
     f32 x;       /* 0x00 */
     f32 y;       /* 0x04 */
@@ -1514,17 +1276,6 @@ typedef struct IconObj {
     void* f40;
     void* spr44;
 } IconObj;
-typedef struct Inner801732C8 {
-    s32 kind;
-    u32 pad04;
-    UiObj obj;
-    u8 pad_[0x74 - 8 - sizeof(UiObj)];
-    f32 y74;
-} Inner801732C8;
-typedef struct Elem801732C8 {
-    u8 pad0[0x24];
-    Inner801732C8 *in;
-} Elem801732C8;
 #define IN(i) (((Elem801732C8 *)camp_work.pnl[i])->in)
 #define CW_801732C8(off, T) (*(T *)((u8 *)&camp_work + (off)))
 typedef struct Elem_80176D70 {

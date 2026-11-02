@@ -15,6 +15,7 @@ extern void TextPrint(s32 x, s32 y, const char *str);
 #include "game/gamedata.h"
 #include <math.h>
 #include <stdlib.h>
+#include "game/camp.h"
 /* A menu panel (0x6C bytes, the object at a menu part task's 0x28/0x2C): its UiObj, the text it
  * prints and four parameters (layout, item or member ids). */
 typedef struct MenuPanel {
@@ -70,11 +71,6 @@ typedef struct Obj_UNIT0000 {
 } Obj_UNIT0000;
 extern s32 lbl_80347508;
 extern void fn_801A65D4(Task *t);
-/* A controller's state; lbl_80311A60 has one per port. */
-typedef struct PadState {
-    u8 pad0[8];
-    u32 held; /* 0x08: buttons held this frame (0x100 A, 0x200 B) */
-} PadState;
 extern PadState *lbl_80311A60[];
 extern s32 fn_801A6554(void *o);
 extern void fn_801A64E0(void *o);
@@ -945,9 +941,6 @@ typedef struct P2 {
     void *p0;
     void *p4;
 } P2;
-typedef struct F4 {
-    f32 f0, f4, f8, fc;
-} F4;
 typedef struct Obj48 {
     f32 f00, f04;
     s32 i08;
@@ -2543,14 +2536,6 @@ extern void* lbl_803471B4;
 extern void* lbl_803471AC;
 extern void fn_801D6998(void* dst, void* src);
 extern void* lbl_803471A8;
-typedef struct {
-    u8 pad00[0x20];
-    void* x20;
-} Sub20;
-typedef struct {
-    u8 pad00[4];
-    Sub20* x4;
-} Obj4;
 void fn_801BD5A4(void)
 {
     if (lbl_803471A8 != 0) {
@@ -5433,14 +5418,6 @@ typedef struct {
     u8 pad1A[0x24 - 0x1A];
     Inner_8016F138* inner; /* 0x24 */
 } Self_8016F138;
-typedef struct Self_8016F594 {
-    u8 pad[0x2c];
-    f32 x, y;
-    u8 pad2[0x74 - 0x34];
-    f32 z;
-    u8 pad3[0xbc - 0x78];
-    u8 *data;
-} Self_8016F594;
 extern void fn_8019AE84(Self_8016F594 *self);
 void fn_8019ADA0(Self_8016F138* self) {
     UiObj* obj = &self->inner->obj;

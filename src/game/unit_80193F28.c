@@ -1,29 +1,9 @@
 #include "types.h"
 #include "game/gamedata.h"
 #include "game/save_8030B7F4.h"
+#include "game/camp.h"
 extern void fn_801DBE1C(const char *fmt, ...);
 extern void fn_801F2860(s16 v);
-/* A cursor of a camp menu screen (unit_8015DC6C.c). */
-typedef struct CampCur {
-    s32 x0;     /* 0x00 */
-    s32 sel;    /* 0x04 */
-    s32 x8;     /* 0x08 */
-    u32 mask;   /* 0x0C */
-} CampCur;
-/* The control block of one camp menu screen (lbl_80307638 has one per screen). */
-typedef struct CampCtrl {
-    CampCur cur[7]; /* 0x00 */
-    s32 state;      /* 0x70 */
-    f32 f74;        /* 0x74 */
-} CampCtrl;
-typedef struct CampHold {
-    CampCtrl *ctrl; /* 0x00 */
-} CampHold;
-/* The camp menu task (lbl_8034710C). */
-typedef struct CampTask {
-    u8 pad0[0x24];
-    CampHold *holder; /* 0x24 */
-} CampTask;
 /* One entry of a camp menu request (fn_80195EA4 fills six). */
 typedef struct CampEnt {
     s8 x0;            /* 0x00 */
@@ -166,15 +146,6 @@ extern void fn_80186D2C(void*);
 extern void fn_8018E82C();
 extern void fn_8018E81C(void *buf, s32 a, s8 b);
 extern void fn_80191D78(void*);
-typedef struct {
-    u8 x0;
-    u8 x1;
-    u8 pad2[2];
-    s32 x4;
-    s32 x8;
-    u32 xc;
-    s32 x10, x14, x18, x1c, x20, x24, x28;
-} Ent2c;
 extern void fn_80191A04(void *p, s32 a);
 extern s32 lbl_803467CC;
 typedef struct Body_801957D8 {
