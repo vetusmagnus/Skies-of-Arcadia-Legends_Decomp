@@ -9,9 +9,9 @@
  * free) and uses a work area whose layout is named <Type>_<handler address> when it is private. */
 #include "ninja.h"
 #include "game/drawstate.h"
+#include "game/effect.h"
 
 typedef NJS_POINT3 Vec;
-typedef struct { u8 pad[0x154]; void* x154; } Body;
 /* Task data the effect handlers read: position, yaw and the model body. */
 typedef struct {
     u8 pad0[0x1C];
@@ -29,17 +29,6 @@ typedef struct {
     u8 pad1a[0x24 - 0x1A];
     void* work;
 } Node;
-typedef struct {
-    u8 pad0[0x6C];
-    u32 input;          /* 0x6C */
-    u8 pad70[0x188 - 0x70];
-    u32 col;            /* 0x188 */
-    u8 pad18c[0x1C4 - 0x18C];
-    s32 count;          /* 0x1C4 */
-    s16 x1c8;
-    s16 x1ca;
-    u32 flags;          /* 0x1CC */
-} ObjStats;
 typedef struct { u8 pad[4]; u32 n; } TexList;
 /* Animation table entry (fn_800403AC). */
 typedef struct {
@@ -971,9 +960,7 @@ void fn_80041238(Node* node)
     fn_80037FD8(&s->c, &node->state);
 }
 
-typedef struct { void** mdata; u32 nbFrame; } Motion;
 
-typedef struct { u8 pad[8]; void* x8; } ObjSrc;
 
 /* Model object work (0x58 bytes; the head is draw2d.c's DrawObj). */
 typedef struct {
@@ -4005,7 +3992,6 @@ typedef struct {
 } N80048B08;
 extern u8 lbl_802DF030[];
 extern int fn_80230D10(u8, N80048B08*, s16**);
-typedef struct Q16 { s32 a, b, c, d; } Q16;
 typedef struct { u8 b[0x4c]; } Blk4C;
 typedef struct E80048C40 {
     u8 pad0[2];
@@ -4086,22 +4072,6 @@ typedef struct E80049130_80049130 {
     s32 x14;            /* 0x14 */
     Buf_80049130 buf;            /* 0x18 */
 } E80049130_80049130;
-typedef struct W80049130 {
-    u8 pad0[0x10];
-    char* x10;          /* 0x10 */
-    u8 pad14[0x1c - 0x14];
-    NJS_POINT3 x1c;     /* 0x1c */
-    u8 pad28[0x4c - 0x28];
-    struct I80049130* e; /* 0x4c */
-} W80049130;
-typedef struct I80049130 {
-    u8 pad0[4];
-    s32 x4;             /* 0x04 */
-    void* x8;           /* 0x08 */
-    u8 pad0C[0x1c - 0xc];
-    struct { Q16 q; u8 pad10[0x56 - 0x10]; s16 x56; }* x1c; /* 0x1c */
-} I80049130;
-typedef struct { u8 pad[0x24]; W80049130* work; } Node_80049130;
 typedef struct { u8 pad[0x10]; char* x10; u8 pad14[0x4c - 0x14]; E80049130_80049130* e; } W2_80049130;
 typedef struct { u8 pad[0x24]; W2_80049130* work; } Node2_80049130;
 typedef struct {
