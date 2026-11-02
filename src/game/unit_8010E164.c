@@ -54,7 +54,7 @@ typedef struct CharCfg {
 extern CharCfg lbl_802E54B0[];
 typedef struct {
     s32 type;   /* 0x00 */
-    void *ptr;  /* 0x04 */
+    s32 id;     /* 0x04 */
     f32 a;      /* 0x08 */
     f32 b;      /* 0x0C */
     f32 c;      /* 0x10 */
@@ -756,16 +756,6 @@ extern EvObj *lbl_80347450; /* the player */
 extern EvColl *lbl_8034741C; /* the player's current event target */
 extern s32 fn_8011768C(void);
 extern s32 fn_8010E41C(f32 *pos, Angle *ang, f32 *at);
-typedef struct Req_80118368 {
-    s32 type;
-    s32 ptr;
-    f32 a;
-    f32 b;
-    f32 c;
-    f32 d;
-    f32 e;
-    f32 f;
-} Req_80118368;
 typedef struct Sub_80118368 {
     u8 pad0[0x30];
     u16 x30;
@@ -3173,7 +3163,7 @@ void fn_80118540(void) {
     s32 mx = 0x80000000;
     mx -= 1;
     lbl_8030A380.type = 0;
-    lbl_8030A380.ptr = (void *)mx;
+    lbl_8030A380.id = mx;
     lbl_8030A380.a = big;
     lbl_8030A380.b = big;
     lbl_8030A380.c = big;
@@ -3182,9 +3172,9 @@ void fn_80118540(void) {
     lbl_8030A380.f = big;
 }
 
-void fn_80118578(void *ptr, f32 f1, f32 f2, f32 f3, f32 f4) {
+void fn_80118578(s32 id, f32 f1, f32 f2, f32 f3, f32 f4) {
     lbl_8030A380.type = 1;
-    lbl_8030A380.ptr = ptr;
+    lbl_8030A380.id = id;
     lbl_8030A380.a = f1;
     lbl_8030A380.b = f2;
     lbl_8030A380.c = f3;
@@ -3193,9 +3183,9 @@ void fn_80118578(void *ptr, f32 f1, f32 f2, f32 f3, f32 f4) {
     lbl_8030A380.f = lbl_80349E90;
 }
 
-void fn_801185A8(void *ptr, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6) {
+void fn_801185A8(s32 id, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6) {
     lbl_8030A380.type = 2;
-    lbl_8030A380.ptr = ptr;
+    lbl_8030A380.id = id;
     lbl_8030A380.a = f1;
     lbl_8030A380.b = f2;
     lbl_8030A380.c = f3;
@@ -5448,46 +5438,46 @@ s32 fn_801179B8(EvObj *obj, EvColl *ev) {
 void fn_80118368(Obj_80118368 *obj) {
     u16 save;
     s32 id;
-    if ((*(Req_80118368*)&lbl_8030A380).type != 0) {
-        if (3.4028235e38f != (*(Req_80118368*)&lbl_8030A380).a) {
-            obj->x38 = obj->x104 = (*(Req_80118368*)&lbl_8030A380).a;
-            (*(Req_80118368*)&lbl_8030A380).a = 3.4028235e38f;
+    if (lbl_8030A380.type != 0) {
+        if (3.4028235e38f != lbl_8030A380.a) {
+            obj->x38 = obj->x104 = lbl_8030A380.a;
+            lbl_8030A380.a = 3.4028235e38f;
         }
-        if (3.4028235e38f != (*(Req_80118368*)&lbl_8030A380).b) {
-            obj->x3c = obj->x108 = (*(Req_80118368*)&lbl_8030A380).b;
-            (*(Req_80118368*)&lbl_8030A380).b = 3.4028235e38f;
+        if (3.4028235e38f != lbl_8030A380.b) {
+            obj->x3c = obj->x108 = lbl_8030A380.b;
+            lbl_8030A380.b = 3.4028235e38f;
         }
-        if (3.4028235e38f != (*(Req_80118368*)&lbl_8030A380).c) {
-            obj->x40 = obj->x10c = (*(Req_80118368*)&lbl_8030A380).c;
-            (*(Req_80118368*)&lbl_8030A380).c = 3.4028235e38f;
+        if (3.4028235e38f != lbl_8030A380.c) {
+            obj->x40 = obj->x10c = lbl_8030A380.c;
+            lbl_8030A380.c = 3.4028235e38f;
         }
-        if (3.4028235e38f != (*(Req_80118368*)&lbl_8030A380).d) {
-            obj->x44 = obj->x110 = (s32)(182.04445f * (*(Req_80118368*)&lbl_8030A380).d);
-            (*(Req_80118368*)&lbl_8030A380).d = 3.4028235e38f;
+        if (3.4028235e38f != lbl_8030A380.d) {
+            obj->x44 = obj->x110 = (s32)(182.04445f * lbl_8030A380.d);
+            lbl_8030A380.d = 3.4028235e38f;
         }
-        if (3.4028235e38f != (*(Req_80118368*)&lbl_8030A380).e) {
-            obj->x48 = obj->x114 = (s32)(182.04445f * (*(Req_80118368*)&lbl_8030A380).e);
-            (*(Req_80118368*)&lbl_8030A380).e = 3.4028235e38f;
+        if (3.4028235e38f != lbl_8030A380.e) {
+            obj->x48 = obj->x114 = (s32)(182.04445f * lbl_8030A380.e);
+            lbl_8030A380.e = 3.4028235e38f;
         }
-        if (3.4028235e38f != (*(Req_80118368*)&lbl_8030A380).f) {
-            obj->x4c = obj->x118 = (s32)(182.04445f * (*(Req_80118368*)&lbl_8030A380).f);
-            (*(Req_80118368*)&lbl_8030A380).f = 3.4028235e38f;
+        if (3.4028235e38f != lbl_8030A380.f) {
+            obj->x4c = obj->x118 = (s32)(182.04445f * lbl_8030A380.f);
+            lbl_8030A380.f = 3.4028235e38f;
         }
-        if ((*(Req_80118368*)&lbl_8030A380).type != 1) {
+        if (lbl_8030A380.type != 1) {
             obj->x170 = 0x16;
             obj->x172 = 0;
         }
-        id = (*(Req_80118368*)&lbl_8030A380).ptr;
+        id = lbl_8030A380.id;
         if (id != 0x7fffffff) {
             save = obj->x1b8->x30;
             fn_80225930(0xffff, id, obj->x1b8);
             obj->x1b8->x30 = save;
-            (*(Req_80118368*)&lbl_8030A380).ptr = 0x7fffffff;
+            lbl_8030A380.id = 0x7fffffff;
         }
         if (obj->x1bc != 0) {
             fn_80222838(obj->x1bc);
         }
-        (*(Req_80118368*)&lbl_8030A380).type = 0;
+        lbl_8030A380.type = 0;
     }
 }
 
