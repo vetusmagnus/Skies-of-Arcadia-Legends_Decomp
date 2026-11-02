@@ -7,6 +7,7 @@
 #include "game/drawstate.h"
 #include <math.h>
 #include "game/evobj.h"
+#include "game/unit_800B2DA0.h"
 extern s32 lbl_803473C8;
 extern s32 lbl_803473CC;
 extern s32 lbl_803473D0;
@@ -16,18 +17,6 @@ extern s32 lbl_80346D4C;
 extern s32 lbl_80346D5C;
 extern void* fn_801DB124(void* a);
 extern s8 lbl_80310A1C[0x120];
-typedef struct Sub2 {
-    s32 f0;
-    u32 f4;
-} Sub2;
-typedef struct Sub_800C34C8 {
-    u8 pad[0x20];
-    Sub2 *f20;
-} Sub_800C34C8;
-typedef struct Obj_800C34C8 {
-    u8 pad0[0x1c8];
-    Sub_800C34C8 *f1c8;
-} Obj_800C34C8;
 typedef struct Obj_800CB610 { u8 pad0[0x260]; void *f260; } Obj_800CB610;
 typedef struct Src_UNIT0000 {
     u8 pad0[0x14];
@@ -172,10 +161,6 @@ typedef struct {
     u8 pad1[0x24 - 0x1a];
     Inner_UNIT0000* inner;   /* 0x24 */
 } Obj_800C6724_UNIT0000;
-typedef struct {
-    u8 pad[8];
-    u32 flags;      /* 0x08 */
-} Ctrl;
 extern Ctrl* lbl_80311A60[6];
 typedef struct {
     u8 pad0[0x19];
@@ -430,11 +415,6 @@ typedef struct Host_800C86EC {
     Ent_800C86EC *ents;
 } Host_800C86EC;
 extern u32 lbl_80305A5C[];
-typedef struct {
-    s32 unk0;
-    s32 map;
-    char room;
-} MapInfo2;
 extern MapInfo2 lbl_80311AC0;
 typedef struct {
     u8 pad0[0x18];
@@ -458,10 +438,6 @@ typedef struct {
 extern s32 lbl_80346D80;
 void fn_801DD9AC(void *a, void *b);
 s32 fn_800D2924(EvObj *self);
-typedef struct {
-    s32 count;
-    s32 ids[1];
-} IdList;
 f32 fn_80291A5C(f32 x);
 typedef struct {
     u8 pad[0x1fc];
@@ -836,30 +812,6 @@ extern s32 fn_80091228(s32 a, s32 b, f32 c);
 extern s32 lbl_80347408;
 extern s32 fn_8015E600(void* e);
 typedef struct {
-    s16 len;          /* 0x00 */
-    s16 id;           /* 0x02 */
-    s32 args[1];      /* 0x04 */
-} Rec_800D5210;
-typedef struct {
-    u32 count;        /* 0x00 */
-    u8 pad4[0x24 - 4];
-    Rec_800D5210 first;        /* 0x24 */
-} Blob_800D5210;
-typedef struct {
-    u8 pad0[0x10];
-    Blob_800D5210* blob;       /* 0x10 */
-} Ext_800D5210;
-typedef struct {
-    u8 pad0[0x1C8];
-    Ext_800D5210* ext;         /* 0x1C8 */
-} Ent_800D5210;
-typedef struct Handler Handler;
-struct Handler {
-    s16 id;
-    s16 arg;
-    s32 (*func)(Task* task, Ent_800D5210* e, s32* args, s32 len);
-};
-typedef struct {
     u32 flags;
     u8 pad4[0x78 - 4];
     u8 col[4];
@@ -1185,10 +1137,6 @@ typedef struct Task_800CDEF4 {
     u8 pad1a[0xa];
     EvObj* p24;
 } Task_800CDEF4;
-typedef struct Part_800D29B4 {
-    u8 pad0[0x34];
-    s32 w34;
-} Part_800D29B4;
 s32 SePlay(s32 bank, s8 arg1, s8 id);
 typedef struct Lim_800BA04C {
     u32 w0;
@@ -1377,10 +1325,6 @@ typedef struct Obj_800C43A0 {
     f32 frameB;
     f32 speedB;
 } Obj_800C43A0;
-typedef struct Tbl_800C4584 {
-    s32 count;
-    void *items[1];
-} Tbl_800C4584;
 typedef struct R_800C4584 {
     u8 pad0[4];
     s32 w4;                 /* 0x04 */
@@ -1573,16 +1517,6 @@ extern void fn_80286EE8(void);
 extern void fn_8028B498(void);
 extern s32 fn_801E7B2C(void* o, void* a, void* b, f32 frame);
 extern void fn_801DD5E8(void* dst, void* src);
-typedef struct {
-    s32 v0;
-    u8 pad4[0x1C - 4];
-    s32 v1c;
-} Sub_800D6E1C;
-typedef struct {
-    u8 pad0[8];
-    u32 kind;
-    Sub_800D6E1C* sub;
-} Ent_800D6E1C;
 extern Ent_800D6E1C* fn_800CCA6C(s32 a, s32 b);
 typedef struct Ent_800C7F64 {
     char *name;
@@ -1638,13 +1572,6 @@ extern void ClipZPush(void);
 extern void ClipZPop(void);
 extern void njClipZ(f32 near, f32 far);
 extern f32 fn_80291888(f32 x);
-typedef struct {
-    u8 pad0[0x19];
-    u8 state;
-    u8 pad1a[0x20 - 0x1A];
-    f32 f20;
-    EvObj* work;
-} MapTask;
 extern s32 lbl_803473A8;
 extern u32 lbl_80310B3C[0x356];
 extern void fn_8015EBF4(void* w);
@@ -1843,12 +1770,6 @@ typedef struct Dst {
     s16 hfa, hfc, hfe, h100, h102;
     f32 f104, f108;
 } Dst;
-typedef struct Work_800C6474 {
-    u8 pad0[0x1b8];
-    void* p1b8;
-    u8 pad1bc[0x23c - 0x1bc];
-    u32 w23c;
-} Work_800C6474;
 typedef struct Obj_800C6474 {
     u8 pad0[0x19];
     u8 state;
@@ -2171,10 +2092,6 @@ extern void* lbl_803470F0;
 extern void* lbl_803470F4;
 extern void fn_801D4F0C(Sprite* s, s32 a, s32 b, s32 c, f32 f1, f32 f2, f32 f3, f32 f4);
 extern void fn_801D52A8(Sprite* s, s32 a, s32 b, f32 f1, f32 f2, f32 f3, f32 f4);
-typedef struct Node_800B63A4 {
-    u8 pad0[0x58];
-    struct Node_800B63A4* next;
-} Node_800B63A4;
 typedef struct {
     u32 count;
     u8 pad4[0x48 - 4];
@@ -2252,10 +2169,6 @@ extern void fn_800B522C(Work_800B63A4*);
         (w)->x25c = NULL; \
     } \
 } while (0)
-typedef struct Node_800B88F8 {
-    u8 pad0[0x58];
-    struct Node_800B88F8* next;
-} Node_800B88F8;
 typedef struct Obj_800B88F8 {
     u8 pad0[0x18];
     u8 flags;
@@ -2485,64 +2398,12 @@ typedef struct Emit_800BE6EC {
     DrawState ds;       /* 0x60 */
     Ptcl_800BE6EC tmpl; /* 0x88 */
 } Emit_800BE6EC;
-typedef struct CfgAnim_800BE6EC {
-    u8 pad[0x20];
-} CfgAnim_800BE6EC;
-typedef struct Cfg_800BE6EC {
-    u32 count;          /* 0x00 */
-    u8 pad4[0x10 - 0x4];
-    s32 x10;            /* 0x10 */
-    u8 pad14[0x24 - 0x14];
-    CfgAnim_800BE6EC x24; /* 0x24 */
-    s32 x44;            /* 0x44 */
-    u32 x48;            /* 0x48 */
-    u8 pad4c[0x64 - 0x4C];
-    u32 x64;            /* 0x64 */
-    f32 x68;            /* 0x68 */
-    u8 pad6c[0x70 - 0x6C];
-    u32 x70;            /* 0x70 */
-    f32 x74;            /* 0x74 */
-    f32 x78;            /* 0x78 */
-    u8 pad7c[0x80 - 0x7C];
-    s32 x80;            /* 0x80 */
-    u8 pad84[0xA4 - 0x84];
-    s32 xa4;            /* 0xA4 */
-    u8 pada8[0xB4 - 0xA8];
-    s32 xb4;            /* 0xB4 */
-    s32 xb8;            /* 0xB8 */
-    u8 padbc[0xC0 - 0xBC];
-    f32 xc0;            /* 0xC0 */
-    u8 padc4[4];
-    u32 xc8;            /* 0xC8 */
-    f32 xcc;            /* 0xCC */
-} Cfg_800BE6EC;
-typedef struct Link_800BE6EC {
-    u8 pad[0x10];
-    Cfg_800BE6EC *cfg;
-} Link_800BE6EC;
-typedef struct Sub_800BE6EC {
-    u8 pad0[0x178];
-    s32 x178;           /* 0x178 */
-    u8 pad17c[0x1A0 - 0x17C];
-    s32 x1a0;           /* 0x1A0 */
-    u8 pad1a4[0x260 - 0x1A4];
-    void (*x260)(void); /* 0x260 */
-    u8 pad264[0x31C - 0x264];
-    void (*x31c)(void); /* 0x31C */
-} Sub_800BE6EC;
 struct Task_800BE6EC;
 /* The emitter's slots for its particle tasks. */
 typedef struct Slots_800BE6EC {
     struct Task_800BE6EC **items; /* 0x00 */
     u32 count;          /* 0x04 */
 } Slots_800BE6EC;
-/* An emission point (the emitter's w->x25c, an array of w->x22c). */
-typedef struct Spot_800BE6EC {
-    NJS_POINT3 pos;     /* 0x00 */
-    s32 xc;             /* 0x0C */
-    s32 timer;          /* 0x10 */
-    f32 x14;            /* 0x14 */
-} Spot_800BE6EC;
 /* The effect task work (0x270 bytes, see fn_8009D760), for both the emitter and its
  * particles. */
 typedef struct Work_800BE6EC {

@@ -7,14 +7,12 @@
 #include "game/drawstate.h"
 #include <math.h>
 #include "game/evobj.h"
+#include "game/unit_800B2DA0.h"
 extern s32 lbl_80346D8C;
 extern s8 lbl_80310A1C[0x120];
 extern void fn_801E1784(void *p);
 extern EvObj* lbl_80347450;
 extern void fn_801E17E0(void*);
-typedef struct {
-    s32 x, y, z;
-} Ang3_800C47BC;
 extern s32 fn_8009761C(s32 a, s32 b);
 extern void fn_801E66E0();
 extern f32 njCos(Angle a);
@@ -24,11 +22,6 @@ extern void fn_801DD95C(void *p);
 extern void fn_80100B74(void *self);
 extern s32 lbl_803474EC;
 extern void fn_801DCEB0(void *a, void *b, f32 c);
-typedef struct {
-    s32 unk0;
-    s32 map;
-    char room;
-} MapInfo2;
 extern MapInfo2 lbl_80311AC0;
 typedef struct {
     u8 pad0[0x8];
@@ -199,13 +192,6 @@ extern s32 fn_8021ADA0(void* a, void* b);
 extern void fn_80100178(void* p);
 extern void fn_801F7B04(s32 v);
 extern void fn_800EB58C(s32 v);
-typedef struct {
-    u8 pad0[0x19];
-    u8 state;
-    u8 pad1a[0x20 - 0x1A];
-    f32 f20;
-    EvObj* work;
-} MapTask;
 extern MapTask* lbl_80347454;
 extern s32 lbl_803473A8;
 extern u32 lbl_80310B3C[0x356];
@@ -263,10 +249,6 @@ extern u32 lbl_8030A3C8[3];
 extern u16 lbl_8034740E;
 extern f32 lbl_80347410;
 extern s32 fn_802256A0(V3* v, Sub_800D07F8* s, u32 a, u32 b);
-typedef struct Node_800B63A4 {
-    u8 pad0[0x58];
-    struct Node_800B63A4* next;
-} Node_800B63A4;
 #define FREE_CHAIN(w) do { \
     Node_800B63A4* p = (w)->x25c; \
     if (p != NULL) { \
@@ -278,10 +260,6 @@ typedef struct Node_800B63A4 {
         (w)->x25c = NULL; \
     } \
 } while (0)
-typedef struct Node_800B88F8 {
-    u8 pad0[0x58];
-    struct Node_800B88F8* next;
-} Node_800B88F8;
 #define FREE_CHAIN_800B88F8(w) do { \
     Node_800B88F8* p = (w)->x25c; \
     if (p != NULL) { \
@@ -294,64 +272,12 @@ typedef struct Node_800B88F8 {
     } \
 } while (0)
 #define ATAN_ANG(y, x) (((x) == 0.0f && (y) == 0.0f) ? 0 : (Angle)(10430.378f * (f32)atan2((y), (x))))
-typedef struct CfgAnim_800BE6EC {
-    u8 pad[0x20];
-} CfgAnim_800BE6EC;
-typedef struct Cfg_800BE6EC {
-    u32 count;          /* 0x00 */
-    u8 pad4[0x10 - 0x4];
-    s32 x10;            /* 0x10 */
-    u8 pad14[0x24 - 0x14];
-    CfgAnim_800BE6EC x24; /* 0x24 */
-    s32 x44;            /* 0x44 */
-    u32 x48;            /* 0x48 */
-    u8 pad4c[0x64 - 0x4C];
-    u32 x64;            /* 0x64 */
-    f32 x68;            /* 0x68 */
-    u8 pad6c[0x70 - 0x6C];
-    u32 x70;            /* 0x70 */
-    f32 x74;            /* 0x74 */
-    f32 x78;            /* 0x78 */
-    u8 pad7c[0x80 - 0x7C];
-    s32 x80;            /* 0x80 */
-    u8 pad84[0xA4 - 0x84];
-    s32 xa4;            /* 0xA4 */
-    u8 pada8[0xB4 - 0xA8];
-    s32 xb4;            /* 0xB4 */
-    s32 xb8;            /* 0xB8 */
-    u8 padbc[0xC0 - 0xBC];
-    f32 xc0;            /* 0xC0 */
-    u8 padc4[4];
-    u32 xc8;            /* 0xC8 */
-    f32 xcc;            /* 0xCC */
-} Cfg_800BE6EC;
-typedef struct Link_800BE6EC {
-    u8 pad[0x10];
-    Cfg_800BE6EC *cfg;
-} Link_800BE6EC;
-typedef struct Sub_800BE6EC {
-    u8 pad0[0x178];
-    s32 x178;           /* 0x178 */
-    u8 pad17c[0x1A0 - 0x17C];
-    s32 x1a0;           /* 0x1A0 */
-    u8 pad1a4[0x260 - 0x1A4];
-    void (*x260)(void); /* 0x260 */
-    u8 pad264[0x31C - 0x264];
-    void (*x31c)(void); /* 0x31C */
-} Sub_800BE6EC;
 extern struct Task_800BE6EC;
 /* The emitter's slots for its particle tasks. */
 typedef struct Slots_800BE6EC {
     struct Task_800BE6EC **items; /* 0x00 */
     u32 count;          /* 0x04 */
 } Slots_800BE6EC;
-/* An emission point (the emitter's w->x25c, an array of w->x22c). */
-typedef struct Spot_800BE6EC {
-    NJS_POINT3 pos;     /* 0x00 */
-    s32 xc;             /* 0x0C */
-    s32 timer;          /* 0x10 */
-    f32 x14;            /* 0x14 */
-} Spot_800BE6EC;
 /* The effect task work (0x270 bytes, see fn_8009D760), for both the emitter and its
  * particles. */
 typedef struct Work_800BE6EC {

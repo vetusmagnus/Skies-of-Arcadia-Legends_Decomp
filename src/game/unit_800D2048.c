@@ -7,6 +7,7 @@
 #include "game/drawstate.h"
 #include <math.h>
 #include "game/evobj.h"
+#include "game/unit_800B2DA0.h"
 typedef struct {
     u8 b0;
     u8 b1;
@@ -24,18 +25,6 @@ typedef struct {
 } Src_80305BA8;
 extern Src_80305BA8 lbl_80305BA8;
 extern s8 lbl_80310A1C[0x120];
-typedef struct Sub2 {
-    s32 f0;
-    u32 f4;
-} Sub2;
-typedef struct Sub_800C34C8 {
-    u8 pad[0x20];
-    Sub2 *f20;
-} Sub_800C34C8;
-typedef struct Obj_800C34C8 {
-    u8 pad0[0x1c8];
-    Sub_800C34C8 *f1c8;
-} Obj_800C34C8;
 extern void fn_801E1784(void *p);
 extern EvObj* lbl_80347450;
 typedef struct FxState {
@@ -78,14 +67,7 @@ typedef struct {
 } Unk80305B5C;
 extern Unk80305B5C lbl_80305B5C;
 extern void fn_801E17E0(void*);
-typedef struct {
-    s32 x, y, z;
-} Ang3_800C47BC;
 extern void fn_801E66E0();
-typedef struct {
-    u8 pad[8];
-    u32 flags;      /* 0x08 */
-} Ctrl;
 extern Ctrl* lbl_80311A60[6];
 extern void *fn_801E1C7C(u32 n);
 extern void fn_801DD95C(void *p);
@@ -104,10 +86,6 @@ typedef struct {
     s32 v34;
     u8 rest[0x68 - 0x38];
 } Item68;
-typedef struct {
-    s32 count;
-    s32 ids[1];
-} IdList;
 typedef struct {
     u8 pad0[0x6];
     s16 a6;
@@ -152,30 +130,6 @@ extern f32 lbl_8034678C;
 extern int rand(void);
 void fn_800C3428(Task* self);
 extern void fn_801E6438(EvObj* a);
-typedef struct {
-    s16 len;          /* 0x00 */
-    s16 id;           /* 0x02 */
-    s32 args[1];      /* 0x04 */
-} Rec_800D5210;
-typedef struct {
-    u32 count;        /* 0x00 */
-    u8 pad4[0x24 - 4];
-    Rec_800D5210 first;        /* 0x24 */
-} Blob_800D5210;
-typedef struct {
-    u8 pad0[0x10];
-    Blob_800D5210* blob;       /* 0x10 */
-} Ext_800D5210;
-typedef struct {
-    u8 pad0[0x1C8];
-    Ext_800D5210* ext;         /* 0x1C8 */
-} Ent_800D5210;
-typedef struct Handler Handler;
-struct Handler {
-    s16 id;
-    s16 arg;
-    s32 (*func)(Task* task, Ent_800D5210* e, s32* args, s32 len);
-};
 typedef struct {
     s16 frames;       /* 0x00 */
     s16 value;        /* 0x02 */
@@ -249,10 +203,6 @@ typedef struct {
     f32 f2c[3][2];  /* 0x2C */
 } Obj7D60;
 extern s32 fn_8015F1F0(EvObj* p);
-typedef struct Part_800D29B4 {
-    u8 pad0[0x34];
-    s32 w34;
-} Part_800D29B4;
 typedef struct Group_800D29B4 {
     u8 pad0[4];
     Part_800D29B4* part;
@@ -296,10 +246,6 @@ s32 SePlay(s32 bank, s8 arg1, s8 id);
 typedef struct V3_800C4584 {
     f32 x, y, z;
 } V3_800C4584;
-typedef struct Tbl_800C4584 {
-    s32 count;
-    void *items[1];
-} Tbl_800C4584;
 typedef struct R_800C4584 {
     u8 pad0[4];
     s32 w4;                 /* 0x04 */
@@ -431,40 +377,17 @@ typedef struct {
     f32 f20;
     Work_800D6390* work;
 } Obj_800D6390;
-typedef struct {
-    s32 v0;
-    u8 pad4[0x1C - 4];
-    s32 v1c;
-} Sub_800D6E1C;
-typedef struct {
-    u8 pad0[8];
-    u32 kind;
-    Sub_800D6E1C* sub;
-} Ent_800D6E1C;
 extern Ent_800D6E1C* fn_800CCA6C(s32 a, s32 b);
 extern void fn_800D6C04(EvObj* o);
 extern void fn_800D6974(EvObj* o);
 extern f32 lbl_80347560;
 extern void njClipZ(f32 near, f32 far);
-typedef struct {
-    u8 pad0[0x19];
-    u8 state;
-    u8 pad1a[0x20 - 0x1A];
-    f32 f20;
-    EvObj* work;
-} MapTask;
 extern s32 lbl_803473A8;
 extern u32 lbl_80310B3C[0x356];
 extern s32 fn_80222B30(EvColl *a, EvColl *b);
 extern void GXSetFog(s32 type, f32 startz, f32 endz, f32 nearz, f32 farz, GXColor color);
 extern void fn_80296F28(void);
 extern void fn_801DBE1C(const char* fmt, ...);
-typedef struct Work_800C6474 {
-    u8 pad0[0x1b8];
-    void* p1b8;
-    u8 pad1bc[0x23c - 0x1bc];
-    u32 w23c;
-} Work_800C6474;
 extern s32 fn_8015F218(Work_800C6474*);
 #define RND (3.0517578125e-05f * rand())
 extern void *fn_801DD984(void);
@@ -577,10 +500,6 @@ typedef struct Task_800D3F00 {
     Obj_800D3F00 *obj;
 } Task_800D3F00;
 typedef struct Hd_800D3F00 { u8 pad_00[0x19]; u8 state; } Hd_800D3F00;
-typedef struct Node_800B63A4 {
-    u8 pad0[0x58];
-    struct Node_800B63A4* next;
-} Node_800B63A4;
 #define FREE_CHAIN(w) do { \
     Node_800B63A4* p = (w)->x25c; \
     if (p != NULL) { \
@@ -592,10 +511,6 @@ typedef struct Node_800B63A4 {
         (w)->x25c = NULL; \
     } \
 } while (0)
-typedef struct Node_800B88F8 {
-    u8 pad0[0x58];
-    struct Node_800B88F8* next;
-} Node_800B88F8;
 #define FREE_CHAIN_800B88F8(w) do { \
     Node_800B88F8* p = (w)->x25c; \
     if (p != NULL) { \
@@ -609,64 +524,12 @@ typedef struct Node_800B88F8 {
 } while (0)
 extern void njTranslate(NJS_MATRIX m, f32 x, f32 y, f32 z);
 #define ATAN_ANG(y, x) (((x) == 0.0f && (y) == 0.0f) ? 0 : (Angle)(10430.378f * (f32)atan2((y), (x))))
-typedef struct CfgAnim_800BE6EC {
-    u8 pad[0x20];
-} CfgAnim_800BE6EC;
-typedef struct Cfg_800BE6EC {
-    u32 count;          /* 0x00 */
-    u8 pad4[0x10 - 0x4];
-    s32 x10;            /* 0x10 */
-    u8 pad14[0x24 - 0x14];
-    CfgAnim_800BE6EC x24; /* 0x24 */
-    s32 x44;            /* 0x44 */
-    u32 x48;            /* 0x48 */
-    u8 pad4c[0x64 - 0x4C];
-    u32 x64;            /* 0x64 */
-    f32 x68;            /* 0x68 */
-    u8 pad6c[0x70 - 0x6C];
-    u32 x70;            /* 0x70 */
-    f32 x74;            /* 0x74 */
-    f32 x78;            /* 0x78 */
-    u8 pad7c[0x80 - 0x7C];
-    s32 x80;            /* 0x80 */
-    u8 pad84[0xA4 - 0x84];
-    s32 xa4;            /* 0xA4 */
-    u8 pada8[0xB4 - 0xA8];
-    s32 xb4;            /* 0xB4 */
-    s32 xb8;            /* 0xB8 */
-    u8 padbc[0xC0 - 0xBC];
-    f32 xc0;            /* 0xC0 */
-    u8 padc4[4];
-    u32 xc8;            /* 0xC8 */
-    f32 xcc;            /* 0xCC */
-} Cfg_800BE6EC;
-typedef struct Link_800BE6EC {
-    u8 pad[0x10];
-    Cfg_800BE6EC *cfg;
-} Link_800BE6EC;
-typedef struct Sub_800BE6EC {
-    u8 pad0[0x178];
-    s32 x178;           /* 0x178 */
-    u8 pad17c[0x1A0 - 0x17C];
-    s32 x1a0;           /* 0x1A0 */
-    u8 pad1a4[0x260 - 0x1A4];
-    void (*x260)(void); /* 0x260 */
-    u8 pad264[0x31C - 0x264];
-    void (*x31c)(void); /* 0x31C */
-} Sub_800BE6EC;
 extern struct Task_800BE6EC;
 /* The emitter's slots for its particle tasks. */
 typedef struct Slots_800BE6EC {
     struct Task_800BE6EC **items; /* 0x00 */
     u32 count;          /* 0x04 */
 } Slots_800BE6EC;
-/* An emission point (the emitter's w->x25c, an array of w->x22c). */
-typedef struct Spot_800BE6EC {
-    NJS_POINT3 pos;     /* 0x00 */
-    s32 xc;             /* 0x0C */
-    s32 timer;          /* 0x10 */
-    f32 x14;            /* 0x14 */
-} Spot_800BE6EC;
 /* The effect task work (0x270 bytes, see fn_8009D760), for both the emitter and its
  * particles. */
 typedef struct Work_800BE6EC {
