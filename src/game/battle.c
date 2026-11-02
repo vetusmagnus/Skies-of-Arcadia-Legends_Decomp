@@ -209,7 +209,6 @@ typedef struct { u32 flags; s32 val; } Ent_8002EEFC;
 typedef struct { u16 val; s16 time; } Rec;
 typedef struct { s16 pos; s16 pad; Rec* recs; } Ent_8002F35C;
 typedef struct { s16 pad0; s16 pad2; s16 timer; s16 pad6; s32 pad8; Ent_8002F35C e[1]; } Q_8002F35C;
-typedef struct { s32 v[5]; } R;
 typedef struct { u8 pad0[4]; void* x4; u8 pad8[0x18 - 8]; s32 x18; } Ent_800303EC;
 typedef struct { s32 x0; s32 ids[1]; } Work_800304DC;
 typedef struct { u8 pad[0x24]; u8 work[1]; } Node;
@@ -327,7 +326,6 @@ extern void fn_8001DCA0(Unit*);
 /* forward declarations */
 extern void fn_8002F188(Tk* o, u32* out);
 extern void fn_80030E5C(Tk* task);
-typedef struct St { u8 pad[0x68]; u32 x68; u8 pad2[0x194 - 0x6C]; u32 x194[10]; u32 x1bc; u32 x1c0; } St;
 
 static inline void ChrSetTimer(s16 i) {
     Chr* e = lbl_80309DE4[i];

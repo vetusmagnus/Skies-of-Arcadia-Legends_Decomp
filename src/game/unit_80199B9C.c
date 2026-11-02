@@ -1649,7 +1649,6 @@ typedef struct Self_801AB328 {
     u8 pad00[0x24];
     Ctx_801AB328 *ctx;
 } Self_801AB328;
-typedef struct Flg_801A0FD8 { u8 pad[8]; u32 flags; } Flg_801A0FD8;
 typedef struct Sub_801A0FD8 { u8 pad[0x19]; u8 x19; u8 pad1a[0x28 - 0x1a]; MenuPanel* obj; } Sub_801A0FD8;
 typedef struct Ctx_801A0FD8 {
     u8 pad00[1];
@@ -1841,25 +1840,6 @@ typedef struct {
     u8 pad4[0x24 - 4];
     s32 f24, f28, f2c, f30, f34, f38, f3c, f40;
 } Rec;
-typedef struct { u8 pad0[4]; u32 id; u8 pad8[8]; Rec* rec; } Ent_8019BED8;
-typedef struct {
-    u8 pad0[0x38];
-    f32 f38;
-    u8 pad3c[4];
-    f32 f40;
-    u8 pad44[4];
-    s32 f48;
-    u8 pad4c[0x158 - 0x4c];
-    f32 v[3];
-    u8 pad164[0x1b8 - 0x164];
-    void* h;
-    u8 pad1bc[0x1c8 - 0x1bc];
-    Ent_8019BED8* ent;
-    u8 pad1cc[0x20c - 0x1cc];
-    s32 f20c, f210;
-    u8 pad214[0x24c - 0x214];
-    f32 f24c, f250, f254, f258;
-} Obj_8019BED8;
 extern void* fn_802258BC(s32 a, u32 b, s32 c);
 extern void fn_801DCE18(f32* a, f32* b, s32 c);
 typedef struct Tri { VertexCol v[3]; } Tri;
@@ -2308,7 +2288,6 @@ void fn_801AB98C(Obj_UNIT0000 *o)
 void fn_801AC678(ShopPart* t);
 void* fn_801BE17C(u16 id);
 s32 fn_801BDEF4(u16 id, u16 mode);
-typedef struct Ent_801AC87C { const char* a; const char* b; void* c; u16 xc; u8 pad[0x28 - 0xe]; } Ent_801AC87C;
 
 void fn_801AC87C(ShopPart* t) {
     s32 i;

@@ -1046,9 +1046,6 @@ typedef struct {
 extern void fn_801DCEB0(f32* out, f32* in, f32 scale);
 extern void* fn_801DF450(Path1644* p, s32 a);
 typedef struct {
-    u32 w[1];
-} Tbl_800FE254;
-typedef struct {
     u8 pad0[0x10];
     u32* tbl;
 } Info;
@@ -1261,10 +1258,6 @@ extern void fn_8015C8B8(void*u, s32 n);
 extern s32 fn_8015E600(void* p);
 extern void fn_801E5DF0(void*u);
 extern void fn_8015EBF4(void* p);
-typedef struct {
-    u8 pad0[0x17a];
-    u16 id;
-} Target;
 typedef struct Node_80108CC4 {
     u8 pad0[8];
     u32 id;
@@ -1287,11 +1280,6 @@ extern s32 fn_8025EF88(const char *a, const char *b);
 extern s32 fn_801E1098(void* a, void* b);
 extern void fn_80109B8C(struct Set_80109B8C *p);
 extern void fn_801CC0E4(void *p);
-typedef struct Unit_8010A740 {
-    u8 pad0[0x18c];
-    f32 f18c;
-    f32 f190;
-} Unit_8010A740;
 typedef struct Unit2 {
     u8 pad0[0x170];
     s16 s170;
@@ -1375,7 +1363,6 @@ typedef struct {
 } Obj_800F0D5C;
 typedef struct { u8 pad0[4]; u32 count; } Model;
 typedef struct { u8 pad0[0x24]; void* a; void* b; } Sub1bc;
-typedef struct { u8 pad0[0x24]; } Info_8010092C;
 typedef struct {
     u8 pad0[0xb4];
     f32 b4, b8, bc;
@@ -1568,10 +1555,6 @@ typedef struct {
     f32 *pos;   /* 0x24 */
     f32 *rot;   /* 0x28 */
 } Attach;
-typedef struct {
-    s32 pad0;
-    s32 f4;
-} Res4;
 typedef struct {
     struct { u8 pad0[8]; void *f8; } *f0;
     s32 f4;
@@ -2109,11 +2092,6 @@ static inline Cfg_800E2D0C* MarkInfo(EvObj* e) {
 }
 extern void fn_800E2D0C(s32 mode, f32 a, f32 b, f32 c, EvObj *e, f32 *ox, f32 *oy);
 typedef struct {
-    s32 n;
-    f32 x, z, w;
-    f32 r0, r1, a, f1c_pad;
-} Hdr;
-typedef struct {
     s32 n;      /* 0x00 */
     f32 f04;
     f32 f08;
@@ -2123,7 +2101,6 @@ typedef struct {
     f32 f18;
     u32 u1c;
 } Hdr2;
-typedef struct { u8 pad[0x20]; void *tex; u8 pad24[0x44 - 0x24]; } Ent_8010A834;
 typedef struct {
     u8 pad0[0x38];
     f32 x, y, z;
@@ -4864,7 +4841,6 @@ void fn_80108CA4(Task* t) {
     fn_801073B4(t);
 }
 
-typedef struct Node { u8 pad0[4]; void *x4; u8 pad8[0x28]; struct Node *next; } Node;
 static inline s32 find(s32 id, Out_80109468 *r) {
     u16 x = id;
     Entry *n;

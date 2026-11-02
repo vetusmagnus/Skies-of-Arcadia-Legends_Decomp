@@ -492,11 +492,6 @@ s8 fn_801F452C(s16 id) {
 }
 
 #ifdef NONMATCHING
-typedef struct Cannon_801F3FD0 { char name[17]; s8 ships; s8 type; u8 pad13[0x24 - 0x13]; } Cannon_801F3FD0;
-typedef struct Game_801F3B90 {
-    u8 pad[0x328];
-    s8 party[4];
-} Game_801F3B90;
 #endif
 
 /* Whether character chr can equip item id: 0 no, 1 every copy is equipped by someone else, 2 yes. */

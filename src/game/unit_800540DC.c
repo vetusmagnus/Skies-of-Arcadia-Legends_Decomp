@@ -42,10 +42,6 @@ extern void fn_80071CF0(V3* src, V3* dst);
 extern void fn_80071F84(s32* out, V3* a, V3* b);
 extern f32 fn_80071E9C(V3*, V3*);
 extern f32 njSin(s32);
-typedef struct T54B74 {
-    u8 pad0[0x10];
-    u32 f10;
-} T54B74;
 typedef struct E54B74 {
     u8 pad0[0x14];
     s16 a14[10];

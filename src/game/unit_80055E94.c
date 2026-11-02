@@ -640,7 +640,6 @@ typedef struct Wk_8006B46C {
     u8 pad0[0x28];
     Eff eff;
 } Wk_8006B46C;
-typedef struct TblEnt_8006B46C { void* f0; void* f4; u32 f8; u8 fc; u8 pad[3]; } TblEnt_8006B46C;
 extern void* memset(void*, int, u32);
 extern void fn_8006B8A8(Eff*);
 typedef NJS_POINT3 V5BF30;
@@ -1100,40 +1099,14 @@ typedef struct Inner80055EB8 {
     u8 pad0[0x4c];
     void *sub;
 } Inner80055EB8;
-typedef struct Gl80060AB4 {
-    u8 pad0[0x6c];
-    u32 flags;
-    u8 pad1[0xf8];
-    void *p168;
-    u8 p16c[2];
-    u8 b16e;
-} Gl80060AB4;
 extern void fn_801D6CBC(void *p, void *q);
 extern char lbl_802B06C0[];
-typedef struct WorkRec_8006A114 {
-    u8 pad0[4];
-    u32 x04;
-    u8 pad8[0x3c - 8];
-    s32 x3c;
-    s32 x40;
-    s16 x44;
-    s16 x46;
-    s16 x48;
-    s16 x4a;
-} WorkRec_8006A114;
 extern s16 fn_80078354(s16);
 extern void fn_8021A1C4(s8 *buf);
 typedef struct { u8 pad[0x14]; s16 x14; s16 x16; } D_8005CBA4;
 typedef struct { u8 pad0[4]; s16 cnt; u8 pad6[2]; D_8005CBA4 *d; } S_8005CBA4;
-typedef struct {
-    u8 pad0[0x6c];
-    u32 f6c;
-    u8 pad70[0x1c4 - 0x70];
-    s32 count;
-} Sys_8030A10C_8005CBA4;
 typedef NJS_POINT3 Vec3f;
 typedef struct { u8 pad[0x1c4]; s32 count; } Game;
-typedef struct { u8 pad0[0x4c]; u8 pad4c[0x154 - 0x4c]; } Dummy_8005A694;
 typedef struct W_8005A694 { u8 f0; u8 pad1[0x153]; u8 *f154; } W_8005A694;
 typedef struct { u8 pad0[0x4c]; W_8005A694 *w; } Q_8005A694;
 typedef struct { u8 pad0[0x24]; Q_8005A694 *q; } P4_8005A694;
@@ -1167,7 +1140,6 @@ extern void fn_801CBC30(void);
 extern void fn_801CBBAC(f32);
 extern void fn_801CBB9C(f32);
 extern void fn_801CBBF8(void);
-typedef struct Lim_8006EF48 { u8 pad[6]; s16 x6; s16 x8; s16 xa; } Lim_8006EF48;
 extern s16 lbl_80309DCC[];
 extern s32 fn_80078610(s8 i);
 typedef struct S62E94 {
@@ -1511,13 +1483,6 @@ typedef struct TblObj {
     u8 pad1[7];
     s16 x8;
 } TblObj;
-typedef struct TblEnt_8006B5B8 {
-    TblObj *f0;
-    void *f4;
-    u32 f8;
-    u8 fc;
-    u8 pad[3];
-} TblEnt_8006B5B8;
 extern void *fn_802268E8(void *a, void *fp);
 void fn_8006BEFC(O6BEFC *o);
 extern s8 lbl_803092F4[12];

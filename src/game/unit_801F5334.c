@@ -7893,7 +7893,6 @@ typedef struct Scpt_802074B0 {
     f32 *cur;       /* 0x1c */
 } Scpt_802074B0;
 void fn_800C8E44(f32 a, f32 b, f32 c);
-typedef struct Cmd { u8 pad_00[0x1c]; float *cur; } Cmd;
 /* One running script command (unit_801F5334.c); its argument stream mixes floats, ints and
  * length-prefixed strings, so the cursor is kept as a float pointer and the string helpers
  * take it as void*. */

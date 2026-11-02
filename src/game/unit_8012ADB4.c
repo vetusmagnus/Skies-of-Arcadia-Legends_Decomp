@@ -213,19 +213,6 @@ typedef struct {
     u8 pad[0x24];
     SysC_8012F2EC* x24;
 } HolderC_8012F2EC;
-typedef struct {
-    u8 pad0[4];
-    f32 f4;
-    f32 f8;
-} SysA_8012B308;
-typedef struct {
-    Pos* pos;
-} PosHolder_8012B308;
-typedef struct {
-    u8 pad[0x24];
-    SysA_8012B308* x24;
-    PosHolder_8012B308* x28;
-} HolderA_8012B308;
 extern void njRotate(NJS_MATRIX m, NJS_VECTOR* axis, Angle a);
 /* Returns the signed byte at +4 of the object held at lbl_80346F20->+0x24.
  * Returning int (not s8) from an s8 field gives `lbz r3` / `extsb r3,r3`. */
@@ -286,11 +273,6 @@ typedef struct {
     Sys *x24;
     void **x28;
 } Holder_8012D0F4;
-typedef struct HolderD_8012F61C {
-    u8 pad[0x24];
-    SysD *x24;
-    Spr **x28;
-} HolderD_8012F61C;
 
 s32 fn_8012ADB4(void) { return lbl_80346F10->x24->x14; }
 

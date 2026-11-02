@@ -396,10 +396,6 @@ typedef struct {
     u8 pad2E[0x3E - 0x2E];
 } Ent_8014359C;
 typedef struct {
-    u8 pad[0x134];
-    Slot_8014359C slots[1];
-} Sys_8014359C;
-typedef struct {
     u8 pad[0x20];
     s32 id;
     u8 pad24[0x34 - 0x24];
@@ -654,10 +650,6 @@ typedef struct {
     u8 padE[6];
     s16 s14;
 } Src;
-typedef struct {
-    u8 pad0[0x124];
-    Blk a;
-} SysA;
 typedef struct {
     u8 pad0[7];
     u8 b7;

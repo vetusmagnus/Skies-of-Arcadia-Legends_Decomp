@@ -371,15 +371,6 @@ void *fn_802268E8(void *a, void *b);
 void fn_801D8B94(void);
 void *memset(void *d, s32 c, u32 n);
 void fn_801D8DBC(void);
-typedef struct {
-    s32 a;
-    s32 b;
-    s32 c;
-    s32 d;
-    s32 e;
-    s32 f;
-    s32 g;
-} PadMotor6C3C;
 extern s32 lbl_80347668;
 extern Light lbl_80311E00[][12];
 /* the light stack, 8 saved copies of lbl_8030E830 */

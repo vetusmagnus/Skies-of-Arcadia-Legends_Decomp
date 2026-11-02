@@ -369,13 +369,6 @@ typedef struct {
     f32 x28;                /* 0x28 */
     Params_8004E474* params; /* 0x2C */
 } Work_8004E474;
-typedef struct {
-    u8 pad0[0x18];
-    u8 flags;
-    u8 state;
-    u8 pad1a[0x24 - 0x1A];
-    Work_8004E474* work;
-} Node_8004E474;
 extern Tgt_8004DE48* lbl_80309E24[12];
 extern Vec_8004A40C lbl_802AD3A8;
 extern void fn_80020B50(void*, s16*, s16*);

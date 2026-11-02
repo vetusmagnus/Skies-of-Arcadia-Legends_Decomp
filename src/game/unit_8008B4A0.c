@@ -212,10 +212,6 @@ typedef struct Item {
     u8 pad0[8];
     Sub sub;
 } Item;
-typedef struct Res {
-    u8 pad0[0x20];
-    void* x20;
-} Res;
 typedef struct List {
     s32 count;
     Item* items[1];
@@ -365,7 +361,6 @@ extern void fn_8007576C(void*, s32);
 extern void fn_80032E44(void*);
 extern void fn_80035380(void*, s32, f32, s32);
 extern void fn_800D2048(void);
-typedef struct { u8 b[0x2e]; } Rec_8008F9B8;
 typedef struct {
     u8 pad[0x17A];
     u16 id;

@@ -105,7 +105,6 @@ extern Spr* fn_801D68C4(void* bank, u32 n);
 extern void fn_800FF348(void* src, s32 id, f32 a, f32 b, f32 c);
 typedef struct { u8 pad[0xbc]; u8* p; } In;
 typedef struct { u8 pad[0x24]; In* in; } Ob;
-typedef struct { u8 pad[0x9c]; Ob* o[15]; } CW_80195804;
 extern void fn_801F224C(CampReq* r);
 extern void fn_801F1774(CampReq* r);
 extern void fn_801F1280(CampReq* r);
@@ -177,15 +176,6 @@ typedef struct {
     s32 x10, x14, x18, x1c, x20, x24, x28;
 } Ent2c;
 extern void fn_80191A04(void *p, s32 a);
-typedef struct CampWork_80197270 {
-    u8 *p0;
-    u8 *p4;
-    u8 *p8;
-    u8 b0c;
-    u8 pad0d[3];
-    Node *objs[0xd0];
-    u8 pad350[0x10];
-} CampWork_80197270;
 extern s32 lbl_803467CC;
 typedef struct Body_801957D8 {
     u8 pad[0xbc];

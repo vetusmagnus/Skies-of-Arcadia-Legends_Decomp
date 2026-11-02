@@ -365,7 +365,6 @@ typedef struct Rec_80125820 {
     s32 v[3];
     f32 extra[3];
 } Rec_80125820;
-typedef struct { Rec_80157684 r[1]; } Dummy_80157684;
 extern BtlTracks* lbl_80346FD4;
 typedef struct { s32 f0; s32 f4; s16 h8; s16 ha; s16 hc; s16 he; s32 f10; } Dst;
 typedef struct { u8 pad[0x1ef]; s8 b1ef; u8 pad2[0x40]; u16 h230; } In_80158250;
@@ -500,10 +499,6 @@ typedef struct {
     u8* x18;
     u8 pad1c[0];
 } Ent;
-typedef struct {
-    u8 pad00[0x20];
-    Ent ents[1];
-} ObjHead;
 typedef struct {
     u8 pad00[0x58];
     s32 x58;

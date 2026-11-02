@@ -660,7 +660,6 @@ typedef struct Blk {
 extern void *heap_main;
 extern Blk *lbl_80347804;
 extern u32 lbl_80347800;
-typedef struct { s32 x0, x4, x8, state; } State_80311AD4;
 extern u8 lbl_802D96CC[];
 extern s32 fn_8022AE94(void);
 extern void fn_80228914(void);

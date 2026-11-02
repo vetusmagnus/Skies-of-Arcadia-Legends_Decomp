@@ -179,10 +179,6 @@ typedef struct Fn80129750Obj {
 } Fn80129750Obj;
 extern void fn_801E6EC0(NJS_MATRIX m, s32 a, s32 b, s32 c, s32 d);
 extern void fn_801E6DD4(NJS_MATRIX m, Fn80129750Inner *in);
-typedef struct Fn801298E8Rec {
-    u8 pad0[0x8];
-    s32 f8;
-} Fn801298E8Rec;
 extern s32 lbl_803472C0;
 extern s32 lbl_803472D0;
 typedef struct Fn80129BD4Item {
@@ -724,10 +720,6 @@ typedef struct D_801117C4 {
     u8 pad0[0x10];
     Cnt_801117C4 *cnt;
 } D_801117C4;
-typedef struct C_801117C4 {
-    u8 pad0[4];
-    u8 pad4[0x1C8 - 4];
-} C_801117C4;
 typedef struct B_801117C4 {
     u8 pad0[4];
     struct { u8 pad0[0x1C8]; D_801117C4 *d; } *c;
@@ -1306,14 +1298,6 @@ typedef struct Tbl_801186D8 {
     f32 e[3];
     f32 f[3];
 } Tbl_801186D8;
-typedef struct New_801186D8 {
-    f32 x38;
-    f32 x3c;
-    f32 x40;
-    s32 x44;
-    s32 x48;
-    s32 x4c;
-} New_801186D8;
 typedef struct Spawn_801186D8 {
     u8 pad0[0x38];
     f32 x38;
@@ -1701,7 +1685,6 @@ typedef struct M_80127BC0 {
     u8 _00[0x23c];
     W_80127BC0* f23c;
 } M_80127BC0;
-typedef struct PadInfo_80118204 { Pad_80311A60 *pad; u8 pad4[0x14]; } PadInfo_80118204;
 extern s32 lbl_80347508;
 extern s8 fn_8009763C(void);
 typedef struct Obj_80117B9C {

@@ -348,9 +348,7 @@ extern void fn_8007B328(s32 idx, s8 val, s32 kind);
 extern s32 fn_80078478(s32 i);
 
 
-typedef struct Ent_8007BEB4 { s8 x0; u8 pad1[3]; s16 x4; u8 pad6[10]; } Ent_8007BEB4;
 
-typedef struct Menu_8007BEB4 { u8 x0; u8 pad1[2]; s8 x3; u8 x4; u8 x5; u8 x6; s8 x7; Ent_8007BEB4 ents[8]; } Menu_8007BEB4;
 
 void fn_8007B958(Task_8007BEB4* t, s32 sel, s16 item, s32 kind) {
     s8 val;

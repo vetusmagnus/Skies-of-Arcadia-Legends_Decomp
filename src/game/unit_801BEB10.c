@@ -8,9 +8,6 @@
 #undef MenuDummy
 #define TextPrint TextPrint_hdr
 #undef TextPrint
-typedef struct { UiObj o; const char* text; u16 h50, h52, h54, h56; } MObj;
-typedef struct { u8 pad[0x28]; MObj* obj; } MP;
-typedef struct { u8 pad[0x28]; MObj* obj; MObj* obj2; } MP2;
 typedef struct { s32 a; s16 b; s16 c; } Q;
 /* The choice menu task fn_801BEB10 creates: a menu task with three more blocks. */
 typedef struct { MenuTask m; void* p28; Q* p2c; void* p30; } T;
