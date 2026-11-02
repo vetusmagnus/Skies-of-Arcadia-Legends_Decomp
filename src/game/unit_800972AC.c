@@ -6,6 +6,7 @@
 #include "game/task.h"
 #include "game/evobj.h"
 #include <dolphin/os/OSFastCast.h>
+#include "game/unit_800972AC.h"
 typedef struct Obj12 {
     u8 pad_00[0x12];
     u16 v12;
@@ -50,11 +51,6 @@ extern u32 lbl_80346C40;
 extern void* lbl_80347588;
 void* fn_802267AC(void* a, void* b);
 void fn_80096DA4(void);
-typedef struct TNode8009D760 TNode8009D760;
-typedef struct {
-    TNode8009D760** slots;
-    s32 count;
-} Pool;
 extern u8 *lbl_80346C94;
 extern s32 lbl_80346C90;
 void fn_801E7DF0(void *);
@@ -166,63 +162,6 @@ typedef struct {
 extern void fn_800CD0B8(s32 a, s32 b, s32 c, s32 d);
 extern void fn_800CCE0C(s32 a, s32 b);
 extern void fn_80100B74(Task* t);
-typedef struct {
-    u8 pad00[0x48];
-    s32 count;           /* 0x48 */
-    u8 pad4C[0x58 - 0x4C];
-    s32 f58;             /* 0x58 */
-} Params8009D760;
-typedef struct {
-    u8 pad00[4];
-    s32 f04;
-    u8 pad08[0x10 - 0x08];
-    Params8009D760* params; /* 0x10 */
-    u8 pad14[0x38 - 0x14];
-    TNode8009D760* t38;  /* 0x38 */
-} Obj8009D760;
-typedef struct {
-    u8 pad00[0x14];
-    s32 f14;             /* 0x14 */
-    s32 f18;             /* 0x18 */
-    u8 pad1C[0x2C - 0x1C];
-    s32 f2C;             /* 0x2C */
-    s32 f30;             /* 0x30 */
-    s32 f34;             /* 0x34 */
-    u8 pad38[0xE4 - 0x38];
-    s32 fE4;             /* 0xE4 */
-    u8 padE8[0x178 - 0xE8];
-    u16 s178;            /* 0x178 */
-    s16 s17A;            /* 0x17A */
-    u8 pad17C[0x1BC - 0x17C];
-    s32 f1BC;            /* 0x1BC */
-    u8 pad1C0[0x1C8 - 0x1C0];
-    Obj8009D760* obj;    /* 0x1C8 */
-    u8 pad1CC[0x1D8 - 0x1CC];
-    s32 f1D8;            /* 0x1D8 */
-    u8 pad1DC[0x204 - 0x1DC];
-    s16 s204;            /* 0x204 */
-    s16 s206;            /* 0x206 */
-    u8 pad208[0x234 - 0x208];
-    u16 h234;            /* 0x234 */
-    u16 h236;            /* 0x236 */
-    s16 s238;            /* 0x238 */
-    u8 pad23A[0x25C - 0x23A];
-    s32 f25C;            /* 0x25C */
-    void* f260;          /* 0x260 */
-    Pool* f264;          /* 0x264 */
-    s32 f268;            /* 0x268 */
-} Work8009D760;
-struct TNode8009D760 {
-    u8 pad00[4];
-    TNode8009D760* f04;  /* 0x04 */
-    u8 pad08[4];
-    TNode8009D760* f0C;  /* 0x0C */
-    u8 pad10[8];
-    u8 flags;            /* 0x18 */
-    u8 state;            /* 0x19 */
-    u8 pad1A[0x24 - 0x1A];
-    Work8009D760* work;  /* 0x24 */
-};
 extern void fn_801DBE1C(const char* fmt, ...);
 typedef struct { f32 x, y; f32 pad[4]; } Pt;
 typedef struct {
@@ -266,59 +205,6 @@ typedef struct {
     s16 lim;     /* 0x1C */
 } Cfg;
 extern Cfg* lbl_80346C7C;
-typedef struct {
-    s32 x, y, z;
-} Ang3;
-typedef struct Obj_800A0BA0 Obj_800A0BA0;
-typedef struct {
-    u8 pad0[4];
-    void* x4;
-    Obj_800A0BA0* x8;
-} Aux_800A0BA0;
-struct Obj_800A0BA0 {
-    u8 pad0[0x38];
-    NJS_POINT3 pos;      /* 0x38 */
-    Ang3 ang;            /* 0x44 */
-    NJS_POINT3 scl;      /* 0x50 */
-    u8 pad5c[0xB4 - 0x5C];
-    NJS_POINT3 pivotPos; /* 0xB4 */
-    Ang3 pivotAng;       /* 0xC0 */
-    u8 padcc[0x16C - 0xCC];
-    s16 pivot;           /* 0x16C */
-    u8 pad16e[0x1D8 - 0x16E];
-    Aux_800A0BA0* aux;            /* 0x1D8 */
-    u8 pad1dc[0x20C - 0x1DC];
-    Ang3 outAng;         /* 0x20C */
-    u8 pad218[0x24C - 0x218];
-    NJS_POINT3 outPos;   /* 0x24C */
-};
-typedef struct Obj_800A0E1C Obj_800A0E1C;
-typedef struct {
-    u8 pad0[0x24];
-    Obj_800A0E1C* x24;
-} Tgt_800A0E1C;
-typedef struct {
-    u8 pad0[4];
-    Tgt_800A0E1C* x4;
-    Obj_800A0E1C* x8;
-} Aux_800A0E1C;
-struct Obj_800A0E1C {
-    u8 pad0[0x38];
-    NJS_POINT3 pos;      /* 0x38 */
-    Ang3 ang;            /* 0x44 */
-    NJS_POINT3 scl;      /* 0x50 */
-    u8 pad5c[0xB4 - 0x5C];
-    NJS_POINT3 pivotPos; /* 0xB4 */
-    Ang3 pivotAng;       /* 0xC0 */
-    u8 padcc[0x16C - 0xCC];
-    s16 pivot;           /* 0x16C */
-    u8 pad16e[0x1D8 - 0x16E];
-    Aux_800A0E1C* aux;            /* 0x1D8 */
-    u8 pad1dc[0x20C - 0x1DC];
-    Ang3 outAng;         /* 0x20C */
-    u8 pad218[0x24C - 0x218];
-    NJS_POINT3 outPos;   /* 0x24C */
-};
 extern void fn_800972AC(void);
 typedef struct Camera {
     s16 mode;            /* 0x000 */
@@ -359,32 +245,12 @@ typedef struct Camera {
     f32 ret_d0;          /* 0x1C4 */
 } Camera;
 extern void fn_801DD334(NJS_VECTOR *dir, NJS_VECTOR *up, s32 *rot);
-typedef struct SrcRec {
-    f32 v[6];
-} SrcRec;
 typedef struct SrcHdr {
     u8 pad0[4];
     s16 count;      /* 0x04 */
     u8 pad6[2];
     SrcRec recs[1]; /* 0x08 */
 } SrcHdr;
-typedef struct Axis {
-    s32 on;         /* 0x00 */
-    f32 spd;        /* 0x04 */
-    f32 val;        /* 0x08 */
-    f32 lim;        /* 0x0C */
-} Axis;
-typedef struct Particle {
-    s16 used;       /* 0x00 */
-    s16 delay;      /* 0x02 */
-    u8 pad4[4];
-    SrcRec *src;    /* 0x08 */
-    Axis axis[8];   /* 0x0C */
-    f32 v[8];       /* 0x8C */
-    s16 step;       /* 0xAC */
-    u8 padae[2];
-    f32 fb0;        /* 0xB0 */
-} Particle;
 typedef struct Owner_8009877C {
     u8 pad0[8];
     SrcHdr **data;  /* 0x08 */

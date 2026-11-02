@@ -6,10 +6,7 @@
 #include "game/task.h"
 #include "game/evobj.h"
 #include <dolphin/os/OSFastCast.h>
-typedef struct TblA {
-    u32 count;
-    u32 items[1];
-} TblA;
+#include "game/unit_800972AC.h"
 typedef struct SubA {
     u8 pad_00[0x10];
     TblA *tbl_10;
@@ -53,11 +50,6 @@ typedef struct ObjA_800AD300 {
     u8 pad_1a[0x24 - 0x1a];
     ObjB_800AD300 *obj_24;
 } ObjA_800AD300;
-typedef struct TNode8009D760 TNode8009D760;
-typedef struct {
-    TNode8009D760** slots;
-    s32 count;
-} Pool;
 void* fn_801E1A2C(s32 a, u32 size);
 extern void fn_800A0028(void *self);
 typedef struct Ctx10_800ADED0 {
@@ -94,85 +86,7 @@ extern s32 lbl_803033E0[6];
 extern s32 lbl_803033F8[6];
 extern void* fn_801C8930(void* h);
 extern void fn_80100B74(Task* t);
-typedef struct {
-    u8 pad00[0x48];
-    s32 count;           /* 0x48 */
-    u8 pad4C[0x58 - 0x4C];
-    s32 f58;             /* 0x58 */
-} Params8009D760;
-typedef struct {
-    u8 pad00[4];
-    s32 f04;
-    u8 pad08[0x10 - 0x08];
-    Params8009D760* params; /* 0x10 */
-    u8 pad14[0x38 - 0x14];
-    TNode8009D760* t38;  /* 0x38 */
-} Obj8009D760;
-typedef struct {
-    u8 pad00[0x14];
-    s32 f14;             /* 0x14 */
-    s32 f18;             /* 0x18 */
-    u8 pad1C[0x2C - 0x1C];
-    s32 f2C;             /* 0x2C */
-    s32 f30;             /* 0x30 */
-    s32 f34;             /* 0x34 */
-    u8 pad38[0xE4 - 0x38];
-    s32 fE4;             /* 0xE4 */
-    u8 padE8[0x178 - 0xE8];
-    u16 s178;            /* 0x178 */
-    s16 s17A;            /* 0x17A */
-    u8 pad17C[0x1BC - 0x17C];
-    s32 f1BC;            /* 0x1BC */
-    u8 pad1C0[0x1C8 - 0x1C0];
-    Obj8009D760* obj;    /* 0x1C8 */
-    u8 pad1CC[0x1D8 - 0x1CC];
-    s32 f1D8;            /* 0x1D8 */
-    u8 pad1DC[0x204 - 0x1DC];
-    s16 s204;            /* 0x204 */
-    s16 s206;            /* 0x206 */
-    u8 pad208[0x234 - 0x208];
-    u16 h234;            /* 0x234 */
-    u16 h236;            /* 0x236 */
-    s16 s238;            /* 0x238 */
-    u8 pad23A[0x25C - 0x23A];
-    s32 f25C;            /* 0x25C */
-    void* f260;          /* 0x260 */
-    Pool* f264;          /* 0x264 */
-    s32 f268;            /* 0x268 */
-} Work8009D760;
-struct TNode8009D760 {
-    u8 pad00[4];
-    TNode8009D760* f04;  /* 0x04 */
-    u8 pad08[4];
-    TNode8009D760* f0C;  /* 0x0C */
-    u8 pad10[8];
-    u8 flags;            /* 0x18 */
-    u8 state;            /* 0x19 */
-    u8 pad1A[0x24 - 0x1A];
-    Work8009D760* work;  /* 0x24 */
-};
 extern void* fn_80226704(void* list, void* cb, s32 size);
-typedef struct {
-    u8 pad00[0x178];
-    s32 state;        /* 0x178 */
-    u32 key;          /* 0x17C */
-    s32 i180;         /* 0x180 */
-    f32 f184, f188, f18C; /* 0x184 */
-    s32 i190, i194, i198; /* 0x190 */
-} Work8009DCA8;
-typedef struct {
-    u8 pad00[0x16C];
-    s16 active;       /* 0x16C */
-    u8 pad16E[0x1D8 - 0x16E];
-    Work8009DCA8* work; /* 0x1D8 */
-    u32 base;         /* 0x1DC */
-} Obj8009DCA8;
-typedef struct {
-    u32 key;
-    s32 i04;
-    f32 f08, f0C, f10;
-    s32 i14, i18, i1C;
-} Src8009DCA8;
 void fn_8009DCA8(Obj8009DCA8* o, Src8009DCA8* src);
 typedef struct {
     u8 pad[0x2c];
@@ -298,59 +212,6 @@ extern s32 fn_800C355C(void** out, Src_800A3ED4* ctx, s32 idx);
  * fn_8009E4D4 = __OSf32tou8((K0 + x) * 255). */
 typedef unsigned char u8;
 typedef float f32;
-typedef struct {
-    s32 x, y, z;
-} Ang3;
-typedef struct Obj_800A0BA0 Obj_800A0BA0;
-typedef struct {
-    u8 pad0[4];
-    void* x4;
-    Obj_800A0BA0* x8;
-} Aux_800A0BA0;
-struct Obj_800A0BA0 {
-    u8 pad0[0x38];
-    NJS_POINT3 pos;      /* 0x38 */
-    Ang3 ang;            /* 0x44 */
-    NJS_POINT3 scl;      /* 0x50 */
-    u8 pad5c[0xB4 - 0x5C];
-    NJS_POINT3 pivotPos; /* 0xB4 */
-    Ang3 pivotAng;       /* 0xC0 */
-    u8 padcc[0x16C - 0xCC];
-    s16 pivot;           /* 0x16C */
-    u8 pad16e[0x1D8 - 0x16E];
-    Aux_800A0BA0* aux;            /* 0x1D8 */
-    u8 pad1dc[0x20C - 0x1DC];
-    Ang3 outAng;         /* 0x20C */
-    u8 pad218[0x24C - 0x218];
-    NJS_POINT3 outPos;   /* 0x24C */
-};
-typedef struct Obj_800A0E1C Obj_800A0E1C;
-typedef struct {
-    u8 pad0[0x24];
-    Obj_800A0E1C* x24;
-} Tgt_800A0E1C;
-typedef struct {
-    u8 pad0[4];
-    Tgt_800A0E1C* x4;
-    Obj_800A0E1C* x8;
-} Aux_800A0E1C;
-struct Obj_800A0E1C {
-    u8 pad0[0x38];
-    NJS_POINT3 pos;      /* 0x38 */
-    Ang3 ang;            /* 0x44 */
-    NJS_POINT3 scl;      /* 0x50 */
-    u8 pad5c[0xB4 - 0x5C];
-    NJS_POINT3 pivotPos; /* 0xB4 */
-    Ang3 pivotAng;       /* 0xC0 */
-    u8 padcc[0x16C - 0xCC];
-    s16 pivot;           /* 0x16C */
-    u8 pad16e[0x1D8 - 0x16E];
-    Aux_800A0E1C* aux;            /* 0x1D8 */
-    u8 pad1dc[0x20C - 0x1DC];
-    Ang3 outAng;         /* 0x20C */
-    u8 pad218[0x24C - 0x218];
-    NJS_POINT3 outPos;   /* 0x24C */
-};
 typedef struct Item_800AE000 { s32 w0; u32 w4; } Item_800AE000;
 /* EvExt.info of the timed-sound kind (fn_800AE000). */
 typedef struct {
