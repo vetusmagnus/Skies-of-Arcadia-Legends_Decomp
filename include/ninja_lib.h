@@ -136,6 +136,7 @@ typedef struct {
 extern NjLightTbl lbl_80344DE0;
 extern NjLightTbl lbl_80345350;
 extern GXLightObj lbl_80344BE0[8];
+extern GXLightObj lbl_80345150[8]; /* renderer 2 light objects */
 
 /* ---- Matrix stack ---- */
 

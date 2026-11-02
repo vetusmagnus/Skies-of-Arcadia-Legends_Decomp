@@ -211,6 +211,71 @@ void fn_802A7D74(u32 flags, s32 unused1, u8* amb, s32 unused2, u8* mat) {
     }
 }
 
+void fn_802A88C0(u32 flags, s32 unused1, u8* amb, s32 unused2, u8* mat) {
+    GXColor a;
+    GXColor c;
+    s32 i;
+    u32 r, g, bl;
+    NjLightTbl* t;
+
+    switch (flags & 0xf) {
+    case 1:
+        c.a = mat[3];
+        c.r = mat[0];
+        c.g = mat[1];
+        c.b = mat[2];
+        GXSetChanMatColor(GX_COLOR0A0, c);
+        break;
+    case 2:
+        c.a = mat[3];
+        c.r = 0xff;
+        c.g = 0xff;
+        c.b = 0xff;
+        GXSetChanMatColor(GX_COLOR0A0, c);
+        break;
+    case 4:
+        break;
+    }
+    t = &lbl_80345350;
+    if (t->dirty) {
+        t->dirty = 0;
+        for (i = 0; i < 8; i++) {
+            if (t->light[i].mask) {
+                GXInitLightColor(&lbl_80345150[i], t->light[i].col);
+                GXInitLightPos(&lbl_80345150[i], t->light[i].vpos.x, t->light[i].vpos.y, t->light[i].vpos.z);
+                GXInitLightDistAttn(&lbl_80345150[i], t->light[i].f48, t->light[i].f50, t->light[i].s54);
+                GXInitLightSpot(&lbl_80345150[i], t->light[i].f58, t->light[i].s5c);
+                GXLoadLightObjImm(&lbl_80345150[i], t->light[i].mask);
+            }
+        }
+    }
+    switch (flags & 0xf00) {
+    case 0x100:
+        a.r = amb[0];
+        a.g = amb[1];
+        a.b = amb[2];
+        a.a = amb[3];
+        break;
+    case 0x300:
+        a.r = 0;
+        a.g = 0;
+        a.b = 0;
+        a.a = 0xff;
+        break;
+    case 0x200:
+    default:
+        r = amb[0] * lbl_80345350.amb.r;
+        g = amb[1] * lbl_80345350.amb.g;
+        bl = amb[2] * lbl_80345350.amb.b;
+        a.r = r >> 8;
+        a.g = g >> 8;
+        a.b = bl >> 8;
+        a.a = 0xff;
+        break;
+    }
+    GXSetChanAmbColor(GX_COLOR0A0, a);
+}
+
 s32 fn_802A8ADC(void) { return lbl_80346A50; }
 
 void fn_802A8AE4(NgDlHdr* h) {
