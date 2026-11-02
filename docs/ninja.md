@@ -544,3 +544,15 @@ Closer than before, not merged:
 - `fn_8028B6D4` is the renderer 2 twin of `fn_80287124` (its blue clamp compares with 128.0f, a bug in the
   original), with the same float-register problem. `fn_802A7680`, `fn_802A6184`, `fn_802A7FA0` have the
   inline-argument copy problem of `fn_802A1160`.
+
+**Parameter registers solved (2026-11-02, round 2).** The four chunk-model strip walkers `fn_80287F00`,
+`fn_8028AD9C`, `fn_802A6398` and `fn_802A81B4` (instructions exact, but the original gives the parameters
+the top saved registers) match with stock 1.3.2 when the parameters are copied into locals declared
+`data, n, p` and assigned `p = plist; n = num; data = dat; type = n;`, inside a per-function
+`#pragma opt_propagation off`. Without the pragma IRO propagates the copies of `n` and `data` away. With it
+each copy keeps its own later virtual register, so the parameter is coloured with the locals instead of
+last. This is probably the same original-compiler behaviour as the inline-argument copies above (copies kept
+when IR becomes PCode). The last registers came from declaration order (see each function).
+`fn_802AB8FC` (screen quad with an inverted colour) matches with SDK-style volatile FIFO macros, but only
+when the else branch writes `c.g = (u8)c.g` etc. (the original reloads and stores g and b there), so it is
+not merged.

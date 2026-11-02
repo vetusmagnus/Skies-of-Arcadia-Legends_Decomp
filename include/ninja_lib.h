@@ -395,6 +395,23 @@ void fn_802A4C20(s16* p, NjPosNrmCol* v, s32 hdr, s32 side, f32 scale);
 void fn_802A4FC8(s16* p, NjPosNrmCol* v, s32 hdr, s32 side, f32 scale);
 void fn_802A52C4(s16* p, NjPosNrmCol* v, s32 hdr, s32 side, f32 scale);
 
+/* The strip drawers renderer 1's view-space and other strip walkers (fn_80287F00, fn_8028AD9C) call. */
+void fn_802A2604(s16* p, NjColVtx* v, u32 hdr, s32 side);
+void fn_802A2A8C(s16* p, NjColVtx* v, u32 hdr, s32 side);
+void fn_802A2C84(s16* p, NjColVtx* v, u32 hdr, s32 side);
+void fn_802A2E18(s16* p, NJS_POINT3* v, u32 hdr, s32 side);
+void fn_802A3274(s16* p, NjPosNrmCol* v, u32 hdr, s32 side);
+void fn_802A3790(s16* p, NjPosNrmCol* v, u32 hdr, s32 side);
+void fn_802A3994(s16* p, NjPosNrmCol* v, u32 hdr, s32 side);
+void fn_802A3EDC(s16* p, NjColVtx* v, u32 hdr, s32 side);
+void fn_802A44F0(s16* p, NjColVtx* v, u32 hdr, s32 side);
+void fn_802A46EC(s16* p, NjColVtx* v, u32 hdr, s32 side);
+void fn_802A4884(s16* p, NJS_POINT3* v, u32 hdr, s32 side);
+void fn_802A4E4C(s16* p, NjPosNrmCol* v, u32 hdr, s32 side);
+void fn_802A5530(s16* p, NjPosNrmCol* v, u32 hdr, s32 side);
+void fn_802A5738(s16* p, NjPosNrmCol* v, u32 hdr, s32 side);
+void fn_802A58DC(s16* p, NjPosNrm* v, u32 hdr, s32 side);
+
 /* ---- GX render state ---- */
 
 /* Render state (lbl_803457A8, 0x50 bytes; the texture error status follows it). */
@@ -510,6 +527,7 @@ extern u8 lbl_80300A00[];
 s32 fn_802976F8();
 extern s32 lbl_80347F7C;
 extern s32 lbl_80347F78;
+extern s32 lbl_80347EDC;
 extern s32 lbl_80347EE0;
 
 /* Environment-map light state of a model renderer (lbl_80300760, lbl_80300794, lbl_80346620,
@@ -614,6 +632,7 @@ extern s32 lbl_80347EA0;
 void fn_8029D0F4(s32 attr, s16 v);
 void fn_80299BD8(s32 hasAlpha);
 void fn_802A7D74(u32 flags, s32 unused1, u8* amb, s32 unused2, u8* mat);
+void fn_802A88C0(u32 flags, s32 unused1, u8* amb, s32 unused2, u8* mat);
 void fn_8029DCD0(s16* p, u32* data, s32 n, s32 x, f32 f);
 void fn_8029DEDC(s16* p, u32* data, s32 n, s32 x, f32 f);
 void fn_8029E1B4(s16* p, u32* data, s32 n, s32 x, f32 f);
