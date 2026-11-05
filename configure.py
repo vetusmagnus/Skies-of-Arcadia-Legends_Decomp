@@ -422,7 +422,8 @@ config.libs = [
             Object(NonMatching, "game/unit_8008A8B4.c"),
             Object(NonMatching, "game/unit_8008B4A0.c"),
             Object(NonMatching, "game/unit_8009623C.c"),
-            Object(NonMatching, "game/unit_800972AC.c"),
+            Object(NonMatching, "game/unit_800972AC.c", extra_cflags=["-inline noauto,deferred"]),
+            Object(NonMatching, "game/unit_8009C518.c", extra_cflags=["-inline noauto,deferred"]),
             # Starts at the 0x80348D70 .sdata2 block (0.0f first; its own int-to-float double) and .rodata
             # 0x802B0E30; its short strings sit in .sdata2, so it was built with read-only strings.
             Object(NonMatching, "game/unit_8009D274.c", extra_cflags=["-str reuse,readonly"]),
