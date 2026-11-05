@@ -472,6 +472,7 @@ f32 fn_802974E4(f32 x);
 extern u32 lbl_803005A0[8];
 extern u32 lbl_80300710[8];
 extern s32 lbl_80347E50;
+extern u32 lbl_80347E54;
 extern u32 lbl_80347E58;
 extern f32 lbl_80346440[3][4];
 extern GXLightObj lbl_80346520;

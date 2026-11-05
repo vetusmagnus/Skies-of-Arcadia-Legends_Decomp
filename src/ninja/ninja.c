@@ -49,6 +49,34 @@ void fn_8028708C(s32 n, f32 x, f32 y, f32 z) {
     lbl_80344DE0.light[n].s5c = 0;
 }
 
+void fn_80287124(s32 n, f32 r, f32 g, f32 b) {
+    if (n == 0) return;
+    n--;
+    lbl_80344DE0.light[n].col.a = 0xff;
+    r *= 128.0f;
+    if (r > 255.0f) r = 255.0f;
+    g *= 128.0f;
+    if (g > 255.0f) g = 255.0f;
+    b *= 128.0f;
+    if (b > 255.0f) b = 255.0f;
+    lbl_80344DE0.light[n].col.r = r;
+    lbl_80344DE0.light[n].col.g = g;
+    lbl_80344DE0.light[n].col.b = b;
+}
+
+void fn_802871D8(f32 r, f32 g, f32 b) {
+    lbl_80344DE0.amb.a = 0xff;
+    r *= 128.0f;
+    if (r > 255.0f) r = 255.0f;
+    g *= 128.0f;
+    if (g > 255.0f) g = 255.0f;
+    b *= 128.0f;
+    if (b > 255.0f) b = 255.0f;
+    lbl_80344DE0.amb.r = r;
+    lbl_80344DE0.amb.g = g;
+    lbl_80344DE0.amb.b = b;
+}
+
 void fn_80287274(s32 n, s32 t) {
     if (n != 0) {
         n--;
@@ -1658,6 +1686,35 @@ void fn_8028B63C(s32 n, f32 x, f32 y, f32 z) {
     lbl_80345350.light[n].s5c = 0;
 }
 
+/* fn_80287124 for the second light table; the blue clamp tests 128.0f, as in the original */
+void fn_8028B6D4(s32 n, f32 r, f32 g, f32 b) {
+    if (n == 0) return;
+    n--;
+    lbl_80345350.light[n].col.a = 0xff;
+    r *= 128.0f;
+    if (r > 255.0f) r = 255.0f;
+    g *= 128.0f;
+    if (g > 255.0f) g = 255.0f;
+    b *= 128.0f;
+    if (b > 128.0f) b = 255.0f;
+    lbl_80345350.light[n].col.r = r;
+    lbl_80345350.light[n].col.g = g;
+    lbl_80345350.light[n].col.b = b;
+}
+
+void fn_8028B784(f32 r, f32 g, f32 b) {
+    lbl_80345350.amb.a = 0xff;
+    r *= 128.0f;
+    if (r > 255.0f) r = 255.0f;
+    g *= 128.0f;
+    if (g > 255.0f) g = 255.0f;
+    b *= 128.0f;
+    if (b > 255.0f) b = 255.0f;
+    lbl_80345350.amb.r = r;
+    lbl_80345350.amb.g = g;
+    lbl_80345350.amb.b = b;
+}
+
 void fn_8028B820(s32 n, s32 v) {
     if (n) {
         n--;
@@ -2068,6 +2125,55 @@ void fn_80291064(NjTexVtx* v, s32 n, s32 flag) {
         GXPosition3f32(v->x, v->y, v->z * lbl_80347F30 + lbl_80347F34);
         GXColor1u32(__rlwinm(v->col, 8, 0, 31));
         GXTexCoord2f32(v->u, v->v);
+    }
+}
+
+/* Screen quad: r = x0, y0, x1, y1, then u0, v0, u1, v1. */
+void fn_802911CC(f32* r, f32 z) {
+    f32 u0, v0, u1, v1, x0, y0, x1, y1;
+    z = z * lbl_80347F30 + lbl_80347F34;
+    x0 = r[0];
+    y0 = r[1];
+    x1 = r[2];
+    y1 = r[3];
+    u0 = r[4];
+    v0 = r[5];
+    u1 = r[6];
+    v1 = r[7];
+    if (lbl_80347E50 == 1) {
+        fn_8029B248(0, lbl_80347E5C);
+        GXBegin(GX_QUADS, GX_VTXFMT0, 4);
+        GXPosition3f32(x0, y0, z);
+        GXColor1u32(lbl_80347E58);
+        GXTexCoord2f32(u0, v0);
+        GXPosition3f32(x0, y1, z);
+        GXColor1u32(lbl_80347E58);
+        GXTexCoord2f32(u0, v1);
+        GXPosition3f32(x1, y1, z);
+        GXColor1u32(lbl_80347E58);
+        GXTexCoord2f32(u1, v1);
+        GXPosition3f32(x1, y0, z);
+        GXColor1u32(lbl_80347E58);
+        GXTexCoord2f32(u1, v0);
+    } else {
+        fn_8029B248(1, lbl_80347E5C);
+        GXBegin(GX_QUADS, GX_VTXFMT0, 4);
+        GXPosition3f32(x0, y0, z);
+        GXColor1u32(lbl_80347E58);
+        GXColor1u32(lbl_80347E54);
+        GXTexCoord2f32(u0, v0);
+        GXPosition3f32(x0, y1, z);
+        GXColor1u32(lbl_80347E58);
+        GXColor1u32(lbl_80347E54);
+        GXTexCoord2f32(u0, v1);
+        GXPosition3f32(x1, y1, z);
+        GXColor1u32(lbl_80347E58);
+        GXColor1u32(lbl_80347E54);
+        GXTexCoord2f32(u1, v1);
+        GXPosition3f32(x1, y0, z);
+        GXColor1u32(lbl_80347E58);
+        GXColor1u32(lbl_80347E54);
+        GXTexCoord2f32(u1, v0);
     }
 }
 

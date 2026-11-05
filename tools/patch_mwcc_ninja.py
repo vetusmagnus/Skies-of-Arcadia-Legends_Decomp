@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build GC/1.3.2nj: GC/1.3.2 with the late copy propagation the Ninja library was built with.
+"""Build GC/1.3.2nj: GC/1.3.2 with the copy propagation the Ninja library was built with.
 
 usage: tools/patch_mwcc_ninja.py [SRC_DIR] [DST_DIR]
        (defaults: build/compilers/GC/1.3.2 -> build/compilers/GC/1.3.2nj)
@@ -23,6 +23,12 @@ The patch:
     unused tail of .text (0x57D5C0) that answers "can't propagate" when the mode is 2, otherwise
     runs the two overwritten instructions and jumps back. .text's VirtualSize is raised to its
     raw size so the stub is mapped.
+  * 0x569909, the same callback's operand test: a copy isn't propagated into an instruction that
+    writes the copy's destination. Stock refuses only when one operand both reads and writes it
+    (the update forms); Ninja keeps `x = y; x = x op z` as a copy and an in-place update, so the
+    copy coalesces and x stays in y's register (`fmuls f1,f1,f4` for a parameter scaled in place).
+    The test `(flags & 3) == 3` becomes `(flags & 2) == 2`. Applies to every run.
+    docs/mwcc_ninja/README.md, "Copies into a redefining instruction".
 """
 import hashlib
 import os
@@ -36,6 +42,7 @@ TEXT_VA, TEXT_RAW = 0x401000, 0x400  # .text virtual address and file offset in 
 LATE_CALL_MODE = 0x4FFA15              # push 1 ; push ebx ; call 0x569780 (after VALUE NUMBERING 2)
 SITE, CAVE, RET0, BACK = 0x5699B0, 0x57D5C0, 0x5699DA, 0x5699B7
 MODE = 0x5E1C00                        # copy propagation's mode, set by 0x569780 from its argument
+DEF_TEST = 0x569909                    # and edi,3 ; cmp edi,3 (operand both used and defined)
 
 
 def off(va):
@@ -66,7 +73,11 @@ def patch(data):
         sys.exit("code cave is not empty")
     d[co:co + len(stub)] = stub
     d[o:o + 7] = b"\xe9" + rel32(SITE + 5, CAVE) + b"\x66\x90"
-    pe = struct.unpack_from("<I", d, 0x3C)[0]
+    o = off(DEF_TEST)
+    if d[o:o + 6] != bytes.fromhex("83e70383ff03"):
+        sys.exit("unexpected bytes at the operand test: not GC/1.3.2 build 81?")
+    d[o:o + 6] = bytes.fromhex("83e70283ff02")  # and edi,2 ; cmp edi,2 (operand defined)
+    pe =struct.unpack_from("<I", d, 0x3C)[0]
     nsec = struct.unpack_from("<H", d, pe + 6)[0]
     opt = struct.unpack_from("<H", d, pe + 20)[0]
     image_base = struct.unpack_from("<I", d, pe + 24 + 28)[0]

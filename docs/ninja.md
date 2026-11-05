@@ -618,3 +618,13 @@ order is left. The TEX colour drawers stay at 6 lines: hill-climbs over declarat
 parameter copies (with `side` copied too) don't move them; without the pragma and copies the best is 12 (data and
 side swap registers). `fn_802938C8` stays at 2 lines (separate `hi = count; lo = 0;` assignments don't reorder
 the `mr`/`li`).
+
+### Round 6 (2026-11-02): a second copy-propagation difference
+
+GC/1.3.2nj now also refuses to propagate a copy into an instruction that writes the copy's destination
+(`x = y; x = x op z` keeps the copy, which then coalesces): [mwcc_ninja/README.md](mwcc_ninja/README.md),
+"Copies into a redefining instruction". That matches the four colour setters `fn_80287124`, `fn_802871D8`,
+`fn_8028B6D4`, `fn_8028B784` (the "float-register" near misses above) and the screen quad `fn_802911CC`
+(its `fmr` copy of z), with every earlier match kept. It doesn't touch the inline-argument copies
+(`fn_802A1160` and the others: the copy is gone before the PCode optimizer runs), the float scheduling of
+njSetAspect / njSetScreen / `fn_802992F8` / `fn_8028B880`, or `fn_80297804`'s `mr. r0, r3`.

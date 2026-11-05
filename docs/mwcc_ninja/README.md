@@ -55,9 +55,47 @@ d8f9c36d62f66c2a044d5a20a132b79eeb2f36e5) into `build/compilers/GC/1.3.2nj`:
 - 0x5699B0, the cross-block path of the propagation legality callback (0x5698A0): a jump to a 5-instruction
   stub in the unused tail of .text that answers "can't propagate" in mode 2 and otherwise runs the two
   overwritten instructions and returns.
+- 0x569909, the same callback's operand test: `and edi,3 ; cmp edi,3` becomes `and edi,2 ; cmp edi,2`
+  (see "Copies into a redefining instruction" below).
 - .text VirtualSize is raised to its raw size so the stub is mapped, and one base-relocation block is
   appended for the stub's absolute operand (the build runs the compiler inside sjiswrap.exe, away from its
   preferred base).
+
+Copies into a redefining instruction
+------------------------------------
+
+A second difference, in the same legality callback. The four colour setters (fn_80287124, fn_802871D8 and
+their second-renderer twins fn_8028B6D4, fn_8028B784) scale each float parameter in its own register,
+and fn_802911CC does the same for its z:
+
+    fmuls f1, f1, f4           ; r *= 128.0f       (1.3.2: fmuls f5, f1, f4)
+    fmr   f23, f1 ; fmadds f23, f23, f1, f0        ; z = z * k + c   (1.3.2: fmadds f23, f1, f2, f0)
+
+For `x = y; x = x op z`, 1.3.2 propagates the copy into the second instruction (`x = y op z`) and the copy
+dies, so x is coloured freely. Ninja keeps the copy; it then coalesces and x stays in y's register. The
+callback (0x5698A0) already refuses to propagate into an instruction with an operand that both reads and
+writes the copy's destination (the update forms, `(flags & 3) == 3` at 0x569909). In the compiler Ninja
+was built with, any operand that writes the destination is enough (`(flags & 2) == 2`). That is one
+constant in the same test, it applies to every copy-propagation run, and it keeps the two-address shape
+the coalescer can use, which is the kind of choice a compiler makes on purpose.
+
+How it was found: the copy-propagation callbacks traced under cdb (which copies each run applies, with the
+mode and register class), then variants scored against every Ninja function (src/ninja plus the drafts in
+docs/near). Rejected on the way, each losing existing matches:
+- no coalescing with physical registers, coalescing named variables too, or not coalescing physical
+  registers with named variables (31 to 194 lost, none gained);
+- not propagating physical-register sources in every run, or in the loop-free run after value numbering
+  (4FF8CD) only, for all classes or FPRs only (1 to 3 lost: fn_802913E8, fn_80296EEC, fn_80296BE4,
+  fn_802A6398);
+- extending 1.3.2's GPR-only "never rewrite into a parameter's register" rule to FPRs (no effect: float
+  parameters aren't in the parameter range it uses).
+
+With this change all 307 stock matches and all 69 earlier 1.3.2nj matches still match and the five above
+match, so 74 functions match only with 1.3.2nj. It doesn't change the inline-argument copies (fn_802A1160
+and the others): the copy of an unmodified local is gone before the PCode optimizer runs (knocking out
+all sixteen copy-propagation calls, or the whole PCode optimizer, still gives one register), so no
+backend change reaches it. Nor does it change the float scheduling of njSetAspect, njSetScreen,
+fn_802992F8 or fn_8028B880, or fn_80297804's `mr. r0, r3`.
 
 Checks
 ------
