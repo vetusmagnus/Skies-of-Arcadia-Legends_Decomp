@@ -491,7 +491,11 @@ config.libs = [
             # 0.0f) and .rodata after scpteve.c's 0x802D6658; they pass fn_80210860 a u16 id.
             Object(NonMatching, "game/unit_8020EEE8.c"),
             Object(NonMatching, "game/unit_802159E0.c"),
-            Object(NonMatching, "game/unit_80219378.c"),
+            # .rodata and .data edges cut the title screen off (0x802D9688, 0x802F8A78). It was built with
+            # deferred codegen: its local array comes first in .rodata, so its source runs top address down.
+            Object(NonMatching, "game/unit_80219378.c", extra_cflags=["-str reuse,readonly"]),
+            Object(NonMatching, "game/unit_80228A20.c", extra_cflags=["-str reuse,readonly", "-inline noauto,deferred"]),
+            Object(NonMatching, "game/unit_8022A7F4.c", extra_cflags=["-str reuse,readonly"]),
             Object(NonMatching, "game/unit_8022D34C.c"),
         ],
     ),
