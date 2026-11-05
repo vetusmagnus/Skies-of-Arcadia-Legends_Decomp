@@ -23,28 +23,63 @@ typedef struct SeqReq {
     s32 x4;
     u8 key[0x20];
 } SeqReq;
-extern SeqReq lbl_80315484;
-extern SeqReq lbl_80315434;
-extern SeqReq lbl_8031545C;
+/* The playing request has one more word after the key pairs. */
+typedef struct SeqCur {
+    SeqReq r;
+    s32 x28;
+} SeqCur;
 extern s32 lbl_803477D4;
 extern s32 lbl_803477D8;
 void sndSeqVolume(u8 vol, u16 time, u32 id, u8 mode);
 void sndSeqPause(u32 id);
 void sndSeqStop(u32 id);
+extern void sndSeqContinue(u32 id);
+extern void sndStreamFrq(u32 h, u32 frq);
+extern void sndStreamADPCMParameter(u32 h, u8 *p);
+extern u32 sndStreamActivate(u32 h);
+extern s32 DVDGetDriveStatus(void);
+extern s32 DVDOpen(const char *path, void *info);
+extern s32 DVDClose(void *info);
+extern s32 DVDGetCommandBlockStatus(void *info);
+extern s32 DVDReadAsyncPrio(void *info, void *buf, u32 len, s32 ofs, void (*cb)(s32, void *), s32 prio);
+extern void sndSilence(void);
+extern u32 sndSeqGetValid(u32 id);
+extern s32 lbl_803477BC;
+extern void sndAuxCallbackUpdateSettingsReverbHI(void *p);
+extern u32 sndSeqPlayEx(u16 group, u16 song, void *data, void *info, u8 studio);
+extern s32 lbl_803477D0;
+extern s32 lbl_803477E4;
 void fn_802193BC();
-typedef struct Slot { u8 pad_00[0x10]; s32 field_10; u8 pad_14[0x24]; u8 vol; u8 pad39[3]; } Slot;
-extern Slot lbl_80315120[];
+/* Header of a loaded bank: the sequence offsets (in words) start at 0x06. */
+typedef struct SeqBank {
+    u8 bytes[6];
+    u16 off[1];
+} SeqBank;
+/* One loaded sound bank. */
+typedef struct Slot {
+    SeqBank *data;      /* 0x00 bank data: u16 sequence offsets (in words) from 0x06 */
+    s32 x4;
+    u32 x8;             /* sequence group id */
+    s32 xc;             /* first song id */
+    s32 field_10;       /* < 0 while not loaded */
+    char name[0x20];    /* 0x14 */
+    s32 x34;
+    u8 vol;             /* 0x38 */
+    u8 pad39[3];
+} Slot;
+typedef struct SlotTbl { Slot s[13]; s32 x30c; s32 x310; } SlotTbl;
 s32 fn_80219834(s32 v);
-s32 SePlay(s32 bank, s8 arg1, s8 id);
+s32 SePlay(s32 pri, s8 bank, s8 id);
+void fn_80217830(u32 arg);
 extern s32 lbl_803477DC;
-void fn_80217830(s32 arg);
 extern u32 lbl_803477E0;
 float fn_801F6120(float **p);
 extern void fn_801E1784(void* p);
 #define RDI(p) (*(p) == 3.4028235e38f ? ((p)++, 0x7FFFFFFF) : (s32)fn_801F6120(&(p)))
 void fn_80216E38(u32 n, char *p);
 u32 fn_802159E0(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g, char *path, s32 size);
-typedef struct { u8 pad[8]; u32 off; u32 len; } StrmSrc;
+typedef struct { char *path; u16 freq; u16 pad6; u32 off; u32 len; u8 adpcm[0x20]; } StrmSrc;
+extern s32 lbl_803477C0;
 /* One of the four DVD audio stream slots (lbl_80314B80). */
 typedef struct Strm {
     u8 state;           /* 0x00 in use / playing */
@@ -71,14 +106,30 @@ typedef struct Strm {
     s32 w7c;            /* 0x7C */
 } Strm;
 extern void* memset(void* dst, int c, u32 n);
+extern void* memcpy(void* dst, const void* src, u32 n);
 extern void sndStreamMixParameterEx(u32 h, u32 a, u32 b, u32 c, u32 d, u32 e);
+/* The 0x60-byte header of a DSP ADPCM file. */
+typedef struct DspHdr {
+    u32 samples;
+    u32 nibbles;
+    u32 rate;
+    u8 pad0c[0x10];
+    u8 coef[0x20];      /* 0x1C */
+    u8 pad3c[0x24];
+} DspHdr;
+/* The two stereo streams (left/right file each) that can be queued, and the headers read for them. */
+typedef struct StrmBank {
+    StrmSrc src[2][2];
+    DspHdr hdr[2][2];
+} StrmBank;
 typedef struct StrmTbl {
     Strm s[4];
     u32 counter;        /* 0x200 */
     u32 intr;           /* 0x204 */
     u32 lock;           /* 0x208 */
+    u8 pad20c[0x2D0 - 0x20C];
 } StrmTbl;
-extern StrmTbl lbl_80314B80;
+
 typedef struct {
     u32 id;
     s32 slot;
@@ -87,13 +138,22 @@ typedef struct {
     u8 vol;
     u8 pad11[3];
 } SndSlot;
-extern SndSlot lbl_80315030[12];
-extern s32 fn_80218570(s32 a, s32 b, s32 c);
+SeqCur lbl_80315484;
+SeqReq lbl_8031545C;
+SeqReq lbl_80315434;
+SlotTbl lbl_80315120;
+SndSlot lbl_80315030[12];
+StrmTbl lbl_80314B80;
+u8 lbl_80314E50[0x1E0];
+StrmBank lbl_80314940;
+char lbl_803148C0[4][0x20];
+s32 fn_802168CC(StrmSrc *a, StrmSrc *b, u8 c);
+u32 fn_80216A9C(Strm* s, StrmSrc* src, u8 a, u8 b);
+u32 fn_80216B88(Strm **out);
+s32 fn_80218570(s32 a, s32 b, s32 c);
 extern void sndStreamARAMUpdate(u32 h, u32 a, u32 b, u32 c, u32 d);
 extern void sndStreamDeactivate(u32 h);
-extern s32 fn_8023CD10(void *info);
-extern void fn_8023A8E0(void *info);
-extern void fn_80216030(void);
+extern void fn_80216030(s32 result, void *info);
 extern char *strcpy(void *dst, const char *src);
 extern char *strcat(void *dst, const char *src);
 typedef struct MapInfo {
@@ -426,10 +486,6 @@ typedef struct EvObj {
 float fn_801F6120(float **p);
 extern u32 lbl_803477C8[2];
 
-s32 fn_80215F8C(void) {
-    return 1;
-}
-
 extern u32 OSDisableInterrupts(void);
 extern void OSRestoreInterrupts(u32 level);
 void fn_80216744(Strm *s);
@@ -441,14 +497,13 @@ static inline void strm_stop(Strm *s)
         s->w74 = 1;
         sndStreamDeactivate(s->handle);
         if (s->w78 == 0) {
-            fn_8023A8E0(s->info);
+            DVDClose(s->info);
             s->state = 0;
         } else {
             s->w7c = 1;
         }
     }
 }
-
 static inline s32 strm_find(u32 id)
 {
     s32 i;
@@ -461,12 +516,10 @@ static inline s32 strm_find(u32 id)
     }
     return -1;
 }
-
-static inline void strm_stop_id(Strm *s)
+static inline void strm_stop_by_id(u32 id)
 {
     u32 idx;
     Strm *t;
-    u32 id = s->id;
     if (lbl_80314B80.lock++ == 0) {
         lbl_80314B80.intr = OSDisableInterrupts();
     }
@@ -487,9 +540,152 @@ static inline void strm_stop_id(Strm *s)
     }
 }
 
+static inline void strm_stop_id(Strm *s)
+{
+    u32 id = s->id;
+    strm_stop_by_id(id);
+}
+/* Sets the volume of an in-use stream slot (and not already stopping). */
+static inline void strm_setvol(Strm *s, u8 vol)
+{
+    if (s->state != 0 && s->w74 == 0) {
+        sndStreamMixParameterEx(s->handle, vol, s->b, 0, 0, 0);
+    }
+}
+static inline void strm_vol_id(u32 id, u8 vol)
+{
+    u32 idx;
+    Strm *t;
+    if (lbl_80314B80.lock++ == 0) {
+        lbl_80314B80.intr = OSDisableInterrupts();
+    }
+    idx = strm_find(id);
+    if (idx != -1) {
+        strm_setvol(&lbl_80314B80.s[idx], vol);
+        t = lbl_80314B80.s[idx].left;
+        if (t != 0) {
+            strm_setvol(t, vol);
+        }
+        t = lbl_80314B80.s[idx].right;
+        if (t != 0) {
+            strm_setvol(t, vol);
+        }
+    }
+    if (lbl_80314B80.lock != 0 && --lbl_80314B80.lock == 0) {
+        OSRestoreInterrupts(lbl_80314B80.intr);
+    }
+}
+extern void fn_801DBF94(s32 v);
+extern u32 lbl_803477C4;
+extern s32 lbl_803474E0;
+extern s32 lbl_803477EC;
+
+u32 fn_80215EA0(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, char *g, s32 h)
+{
+    return fn_802159E0(1, a, b, c, d, e, f, g, h);
+}
+
+u32 fn_80215F14(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, char *path)
+{
+    return fn_802159E0(1, a, b, c, d, e, f, path, 0x8000);
+}
+
+s32 fn_80215F8C(void) {
+    return 1;
+}
+
+/* Starts a prepared stream slot; 0 when the hardware voice could not be activated. */
+static inline s32 strm_start(Strm *p)
+{
+    s32 r;
+    sndStreamMixParameterEx(p->handle, p->a, p->b, 0, 0, 0);
+    sndStreamFrq(p->handle, p->src->freq);
+    sndStreamADPCMParameter(p->handle, p->src->adpcm);
+    sndStreamARAMUpdate(p->handle, 0, p->w68 >> 1, 0, 0);
+    if (sndStreamActivate(p->handle) != 0) {
+        p->state = 4;
+        fn_80216744(p);
+        r = 1;
+    } else {
+        p->state = 0;
+        DVDClose(p->info);
+        r = 0;
+    }
+    return r;
+}
+void fn_80216030(s32 result, void *info)
+{
+    Strm *s;
+    Strm *p;
+    s32 i;
+
+    for (i = 0; i < 4; i++) {
+        if (lbl_80314B80.s[i].info == info) {
+            break;
+        }
+    }
+    s = &lbl_80314B80.s[i];
+    s->w78 = 0;
+    if (s->w7c != 0) {
+        s->w7c = 0;
+        DVDClose(s->info);
+        s->state = 0;
+        return;
+    }
+    if (DVDGetCommandBlockStatus(info) == 0) {
+        switch (s->state) {
+        case 2:
+            p = s->left;
+            if (p != NULL) {
+                if (p->state != 3) {
+                    s->state = 3;
+                    return;
+                }
+                if (strm_start(p) == 0) {
+                    s->left = NULL;
+                }
+            }
+            p = s->right;
+            if (p != NULL) {
+                if (p->state != 3) {
+                    s->state = 3;
+                    return;
+                }
+                if (strm_start(p) == 0) {
+                    s->right = NULL;
+                }
+            }
+            if (strm_start(s) == 0) {
+                if (s->left != NULL) {
+                    s->left->right = NULL;
+                }
+                if (s->right != NULL) {
+                    s->right->left = NULL;
+                }
+            }
+            break;
+        case 4:
+            sndStreamARAMUpdate(s->handle, s->b6c != 0 ? 0 : s->w68 >> 1, s->w68 >> 1, 0, 0);
+            break;
+        }
+    } else {
+        if (s->state == 4) {
+            sndStreamDeactivate(s->handle);
+        }
+        DVDClose(s->info);
+        s->state = 0;
+        if (s->left != NULL) {
+            s->left->right = NULL;
+        }
+        if (s->right != NULL) {
+            s->right->left = NULL;
+        }
+    }
+}
+
 s32 fn_802163FC(s32 a, s32 b, s32 c, s32 d, Strm *s)
 {
-    s32 st = fn_8023CD10(s->info);
+    s32 st = DVDGetCommandBlockStatus(s->info);
     if (st != 0 && st != 1 && st != 2) {
         strm_stop_id(s);
         return 0;
@@ -497,7 +693,7 @@ s32 fn_802163FC(s32 a, s32 b, s32 c, s32 d, Strm *s)
     if (s->w74 != 0) {
         sndStreamDeactivate(s->handle);
         if (s->w78 == 0) {
-            fn_8023A8E0(s->info);
+            DVDClose(s->info);
             s->state = 0;
         } else {
             s->w7c = 1;
@@ -511,234 +707,55 @@ s32 fn_802163FC(s32 a, s32 b, s32 c, s32 d, Strm *s)
     return s->w68 >> 1;
 }
 
-s32 fn_80216CA4(void)
+void fn_80216744(Strm *s)
 {
-    return lbl_803477E8 == 0;
-}
+    u8 *dst;
+    u32 cnt;
 
-void fn_80216CD8(void) {
-    while (fn_80219B7C() != 0) {
-        s32 r = fn_801D168C();
-        if (r != -1) {
-            fn_801D150C(r);
-        }
+    cnt = s->size >> 1;
+    if (s->b6c != 0) {
+        dst = s->buf + cnt;
+    } else {
+        dst = s->buf;
     }
-}
-
-extern u32 lbl_803477C8[2];
-extern s32 sndSeqGetValid(u32 id);
-
-/* Whether stream id is playing; under the stream lock. */
-static inline s32 strm_active(u32 id)
-{
-    s32 r = 0;
-    u32 i;
-    if (lbl_80314B80.lock++ == 0) {
-        lbl_80314B80.intr = OSDisableInterrupts();
-    }
-    i = strm_find(id);
-    if (i != -1) {
-        r = lbl_80314B80.s[i].state != 0 && lbl_80314B80.s[i].w70 != 0;
-    }
-    if (lbl_80314B80.lock != 0 && --lbl_80314B80.lock == 0) {
-        OSRestoreInterrupts(lbl_80314B80.intr);
-    }
-    return r;
-}
-
-void fn_80216E38(u32 n, char *p)
-{
-    char buf[0x40];
-
-    strcpy(buf, "/sound/");
-    strcat(buf, p);
-    if (n == 0) {
-        lbl_803477B8 = fn_802159E0(1, 2, 0x5622, 2, 0, 0, 0, buf, 0x4000);
-    } else if (n == 1) {
-        lbl_803477B8 = fn_802159E0(1, 2, 0xAC44, 2, 0, 0, 0, buf, 0x100000);
-    }
-}
-
-s32 fn_80216F48(u32 h) {
-    if (h == 1) {
-        return lbl_803477E0 != -1;
-    }
-    if ((h & 0xfffe) == 0x10) {
-        u32 id = lbl_803477C8[h - 0x10];
-        return id != -1 && strm_active(id);
-    }
-    if (h >= 0x100) {
-        SndSlot *e = lbl_80315030;
-        s32 i;
-        for (i = 0; i < 6; i++, e++) {
-            if (e->id == h - 0x100) {
-                return sndSeqGetValid(e->id);
-            }
-        }
-    }
-    return 0;
-}
-
-void fn_802172C8(u32 mode, s8 a) {
-    if (mode != 0) {
-        s32 x = a;
-        s32 v = -0x7e;
-        if (x > -0x7f) {
-            v = x;
-        }
-        fn_802173F4(mode, v, 0);
-    }
-}
-
-void fn_80217B98(void) {
-    SndSlot *e = lbl_80315030;
-    s32 i;
-    for (i = 0; i < 6; i++, e++) {
-        if (e->id != 0xFFFFFFFF) {
-            if (e->id != lbl_803477E0) {
-                sndSeqStop(e->id);
-            }
-            e->id = 0xFFFFFFFF;
-            e->time = 0x2710;
-        }
-    }
-}
-
-void fn_80217C24(void) {
-    SndSlot *e = lbl_80315030;
-    s32 i;
-    for (i = 0; i < 6; i++, e++) {
-        if (e->id != 0xFFFFFFFF) {
-            if (e->id != lbl_803477E0) {
-                sndSeqStop(e->id);
-            }
-            e->id = 0xFFFFFFFF;
-            e->time = 0x2710;
-        }
-    }
-}
-
-static inline s32 req_commit(SeqReq *r)
-{
-    SeqReq *prev = &lbl_80315484;
-    if (r->x4 == prev->x4 && MemEqual(r->key, prev->key, r->x4 * 2)) {
-        lbl_8031545C.x4 = 0;
-        return 1;
-    }
-    if (lbl_803477E0 != -1) {
-        if (r->x4 > 1) {
-            sndSeqStop(lbl_803477E0);
-            lbl_803477E0 = -1;
+    if (s->pos + cnt > s->len) {
+        if (s->len > s->pos) {
+            cnt = s->len - s->pos;
+            memset(dst + cnt, 0, (s->size >> 1) - cnt);
         } else {
-            sndSeqVolume(0, 500, lbl_803477E0, 1);
-        }
-        prev->x4 = 0;
-    }
-    MemCopy(&lbl_8031545C, r, 0x28);
-    return 1;
-}
-
-s32 fn_802182F4(s32 unused, s32 n, s8 a, s8 b, ...)
-{
-    SeqReq q;
-    SeqReq r;
-    va_list ap;
-    s32 i;
-    if (n == 1) {
-        memset(&r, 0, 0x28);
-        r.x4 = 1;
-        r.x0 = 0;
-        r.key[0] = a;
-        r.key[1] = b;
-        return req_commit(&r);
-    }
-    memset(&q, 0, 0x28);
-    q.x4 = n;
-    q.x0 = (a < 0);
-    q.key[0] = a;
-    q.key[1] = b;
-    va_start(ap, b);
-    for (i = 1; i < n; i++) {
-        q.key[i * 2] = va_arg(ap, int);
-        q.key[i * 2 + 1] = va_arg(ap, int);
-    }
-    return req_commit(&q);
-}
-
-void fn_80218D80(char *name, u32 tag, s32 v) {
-}
-
-void fn_80218D84(void) {
-    fn_802193BC();
-    while (fn_80219B7C() != 0) {
-        s32 r = fn_801D168C();
-        if (r != -1) {
-            fn_801D150C(r);
+            memset(dst, 0, s->size >> 1);
+            sndStreamARAMUpdate(s->handle, s->b6c != 0 ? s->w68 >> 1 : 0, s->w68 >> 1, 0, 0);
+            cnt = 0;
         }
     }
-}
-
-void fn_80219324(s32 i) {
-    if (lbl_80315120[i].field_10 >= 0) {
-        s32 r;
-        do {
-            r = fn_80219834(1);
-        } while (i != r);
-    }
-}
-
-void fn_80216F1C(s8 a, s8 b) {
-    SePlay(0xf, a, b);
-}
-
-void fn_80217800(s32 v) {
-    if (v == lbl_803477DC) {
-        fn_80217830(1);
-    }
-}
-
-s32 fn_80217FD4(s32 bank, s8 arg1, s8 id) {
-    return SePlay(bank, arg1, id);
-}
-
-s32 fn_80218DC4(void) {
-    if (lbl_803477DC != 2) {
-        return -1;
-    }
-    return lbl_803477E0;
-}
-
-void fn_80216EFC(s32 a) {
-    fn_80217830(a);
-}
-
-void fn_80216CB4(char *p) {
-    fn_802193BC(p, 0);
-}
-
-u32 fn_80215EA0(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, char *g, s32 h)
-{
-    return fn_802159E0(1, a, b, c, d, e, f, g, h);
-}
-
-u32 fn_80215F14(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, char *path)
-{
-    return fn_802159E0(1, a, b, c, d, e, f, path, 0x8000);
-}
-
-void fn_80217790(void)
-{
-    SndSlot *e = lbl_80315030;
-    s32 i;
-
-    for (i = 0; i < 6; i++) {
-        if (e->id != -1) {
-            sndSeqPause(e->id);
-            e->flag = 1;
+    if (cnt != 0) {
+        if (DVDGetCommandBlockStatus(s->info) == 0) {
+            DVDReadAsyncPrio(s->info, dst, cnt, s->src->off + s->pos, fn_80216030, 2);
+            s->w78 = 1;
+            s->pos += cnt;
         }
-        e++;
+    } else if (s->w70 != 0) {
+        s->w70 = 0;
+    } else {
+        sndStreamDeactivate(s->handle);
+        if (s->w78 == 0) {
+            DVDClose(s->info);
+            s->state = 0;
+        } else {
+            s->w7c = 1;
+        }
     }
+    s->b6c ^= 1;
 }
+
+/* Rooms where opening a chest skips the item jingle. */
+#define QUIET_ROOM()                                                  \
+    ((lbl_80311AC0.area == 0x1c && lbl_80311AC0.room == 'b') ||      \
+     (lbl_80311AC0.area == 0x7a && lbl_80311AC0.room == 'a') ||      \
+     (lbl_80311AC0.area == 0x7d && lbl_80311AC0.room == 'a') ||      \
+     (lbl_80311AC0.area == 0x7d && lbl_80311AC0.room == 'b') ||      \
+     (lbl_80311AC0.area == 0x7d && lbl_80311AC0.room == 'd'))
+
 
 u32 fn_80216A9C(Strm* s, StrmSrc* src, u8 a, u8 b)
 {
@@ -771,7 +788,7 @@ u32 fn_80216A9C(Strm* s, StrmSrc* src, u8 a, u8 b)
     return ret;
 }
 
-s32 fn_80216B88(Strm **out) {
+u32 fn_80216B88(Strm **out) {
     s32 i;
     u32 j;
     u32 id;
@@ -801,45 +818,22 @@ s32 fn_80216B88(Strm **out) {
     return -1;
 }
 
-void fn_80216744(Strm *s)
+s32 fn_80216CA4(void)
 {
-    u8 *dst;
-    u32 cnt;
+    return lbl_803477E8 == 0;
+}
 
-    cnt = s->size >> 1;
-    if (s->b6c != 0) {
-        dst = s->buf + cnt;
-    } else {
-        dst = s->buf;
-    }
-    if (s->pos + cnt > s->len) {
-        if (s->len > s->pos) {
-            cnt = s->len - s->pos;
-            memset(dst + cnt, 0, (s->size >> 1) - cnt);
-        } else {
-            memset(dst, 0, s->size >> 1);
-            sndStreamARAMUpdate(s->handle, s->b6c != 0 ? s->w68 >> 1 : 0, s->w68 >> 1, 0, 0);
-            cnt = 0;
+void fn_80216CB4(char *p) {
+    fn_802193BC(p, 0);
+}
+
+void fn_80216CD8(void) {
+    while (fn_80219B7C() != 0) {
+        s32 r = fn_801D168C();
+        if (r != -1) {
+            fn_801D150C(r);
         }
     }
-    if (cnt != 0) {
-        if (fn_8023CD10(s->info) == 0) {
-            fn_8023AB88(s->info, dst, cnt, s->src->off + s->pos, fn_80216030, 2);
-            s->w78 = 1;
-            s->pos += cnt;
-        }
-    } else if (s->w70 != 0) {
-        s->w70 = 0;
-    } else {
-        sndStreamDeactivate(s->handle);
-        if (s->w78 == 0) {
-            fn_8023A8E0(s->info);
-            s->state = 0;
-        } else {
-            s->w7c = 1;
-        }
-    }
-    s->b6c ^= 1;
 }
 
 void fn_80216D14(s16 x)
@@ -853,11 +847,115 @@ void fn_80216D14(s16 x)
         } else {
             fn_802173F4(mode, -0x7f, x);
             if (mode == 1) {
-                lbl_80315484.x4 = 0;
+                lbl_80315484.r.x4 = 0;
             }
         }
     }
     lbl_803477B8 = 0;
+}
+
+extern u32 lbl_803477C8[2];
+
+/* Whether stream id is playing; under the stream lock. */
+static inline s32 strm_active(u32 id)
+{
+    s32 r = 0;
+    u32 i;
+    if (lbl_80314B80.lock++ == 0) {
+        lbl_80314B80.intr = OSDisableInterrupts();
+    }
+    i = strm_find(id);
+    if (i != -1) {
+        r = lbl_80314B80.s[i].state != 0 && lbl_80314B80.s[i].w70 != 0;
+    }
+    if (lbl_80314B80.lock != 0 && --lbl_80314B80.lock == 0) {
+        OSRestoreInterrupts(lbl_80314B80.intr);
+    }
+    return r;
+}
+void fn_80216E38(u32 n, char *p)
+{
+    char buf[0x40];
+
+    strcpy(buf, "/sound/");
+    strcat(buf, p);
+    if (n == 0) {
+        lbl_803477B8 = fn_802159E0(1, 2, 0x5622, 2, 0, 0, 0, buf, 0x4000);
+    } else if (n == 1) {
+        lbl_803477B8 = fn_802159E0(1, 2, 0xAC44, 2, 0, 0, 0, buf, 0x100000);
+    }
+}
+
+void fn_80216EFC(s32 a) {
+    fn_80217830(a);
+}
+
+void fn_80216F1C(s8 a, s8 b) {
+    SePlay(0xf, a, b);
+}
+
+s32 fn_80216F48(u32 h) {
+    if (h == 1) {
+        return lbl_803477E0 != -1;
+    }
+    if ((h & 0xfffe) == 0x10) {
+        u32 id = lbl_803477C8[h - 0x10];
+        return id != -1 && strm_active(id);
+    }
+    if (h >= 0x100) {
+        SndSlot *e = lbl_80315030;
+        s32 i;
+        for (i = 0; i < 6; i++, e++) {
+            if (e->id == h - 0x100) {
+                return sndSeqGetValid(e->id);
+            }
+        }
+    }
+    return 0;
+}
+
+/* Sets the music and the six sequence slots to m/128 of their volumes. */
+static inline void SetVol(s32 m) {
+    s32 i;
+    SndSlot *e;
+    if (lbl_803477E0 != 0xFFFFFFFF) {
+        sndSeqVolume(m * lbl_80315120.s[lbl_803477DC].vol / 128, 500, lbl_803477E0, 0);
+    }
+    for (i = 0; i < 6; i++) {
+        e = &lbl_80315030[i];
+        if (e->id != 0xFFFFFFFF) {
+            sndSeqVolume(m * e->vol / 128, 500, e->id, 0);
+        }
+    }
+}
+void fn_80217134(void) {
+    SetVol(127);
+}
+
+void fn_802171F0(s8 v) {
+    s32 m = (v + 0x80) / 2;
+    s32 i;
+    SndSlot *e;
+    if (lbl_803477E0 != 0xFFFFFFFF) {
+        sndSeqVolume(m * lbl_80315120.s[lbl_803477DC].vol / 128, 500, lbl_803477E0, 0);
+    }
+    for (i = 0; i < 6; i++) {
+        e = &lbl_80315030[i];
+        if (e->id != 0xFFFFFFFF) {
+            sndSeqVolume(m * e->vol / 128, 500, e->id, 0);
+        }
+    }
+}
+
+void fn_802172C8(u32 mode, s8 a) {
+    if (mode != 0) {
+        s32 x = a;
+        s32 v = -0x7e;
+        if (x > -0x7f) {
+            v = x;
+        }
+        fn_802173F4(mode, v, 0);
+    }
 }
 
 void fn_8021730C(u32 mode, s16 time)
@@ -869,7 +967,7 @@ void fn_8021730C(u32 mode, s16 time)
         } else {
             fn_802173F4(mode, -0x7f, time);
             if (mode == 1) {
-                lbl_80315484.x4 = 0;
+                lbl_80315484.r.x4 = 0;
             }
         }
     }
@@ -884,81 +982,10 @@ void fn_80217380(u32 mode)
         } else {
             fn_802173F4(mode, -0x7f, 1000);
             if (mode == 1) {
-                lbl_80315484.x4 = 0;
+                lbl_80315484.r.x4 = 0;
             }
         }
     }
-}
-
-/* Sets the music and the six sequence slots to m/128 of their volumes. */
-static inline void SetVol(s32 m) {
-    s32 i;
-    SndSlot *e;
-    if (lbl_803477E0 != 0xFFFFFFFF) {
-        sndSeqVolume(m * lbl_80315120[lbl_803477DC].vol / 128, 500, lbl_803477E0, 0);
-    }
-    for (i = 0; i < 6; i++) {
-        e = &lbl_80315030[i];
-        if (e->id != 0xFFFFFFFF) {
-            sndSeqVolume(m * e->vol / 128, 500, e->id, 0);
-        }
-    }
-}
-
-void fn_80217134(void) {
-    SetVol(127);
-}
-
-void fn_802171F0(s8 v) {
-    s32 m = (v + 0x80) / 2;
-    s32 i;
-    SndSlot *e;
-    if (lbl_803477E0 != 0xFFFFFFFF) {
-        sndSeqVolume(m * lbl_80315120[lbl_803477DC].vol / 128, 500, lbl_803477E0, 0);
-    }
-    for (i = 0; i < 6; i++) {
-        e = &lbl_80315030[i];
-        if (e->id != 0xFFFFFFFF) {
-            sndSeqVolume(m * e->vol / 128, 500, e->id, 0);
-        }
-    }
-}
-
-void fn_80217608(void)
-{
-    if (lbl_803477E0 != -1) {
-        sndSeqVolume(0, 500, lbl_803477E0, 2);
-        sndSeqPause(lbl_803477E0);
-        MemCopy(&lbl_80315434, &lbl_80315484, 0x28);
-        lbl_803477D8 = lbl_803477E0;
-        lbl_803477D4 = lbl_803477DC;
-        lbl_80315484.x4 = 0;
-        lbl_803477E0 = -1;
-    }
-}
-
-s32 fn_80218570(s32 unused, s32 a, s32 b) {
-    SeqReq t;
-    memset(&t, 0, sizeof(t));
-    t.x4 = 1;
-    t.x0 = 0;
-    t.key[0] = a;
-    t.key[1] = b;
-    if (t.x4 == lbl_80315484.x4 && MemEqual(t.key, lbl_80315484.key, t.x4 << 1)) {
-        lbl_8031545C.x4 = 0;
-        return 1;
-    }
-    if (lbl_803477E0 != -1) {
-        if (t.x4 > 1) {
-            sndSeqStop(lbl_803477E0);
-            lbl_803477E0 = -1;
-        } else {
-            sndSeqVolume(0, 500, lbl_803477E0, 1);
-        }
-        lbl_80315484.x4 = 0;
-    }
-    MemCopy(&lbl_8031545C, &t, 0x28);
-    return 1;
 }
 
 void fn_802173F4(u32 mode, s8 vol8, s16 time) {
@@ -970,13 +997,13 @@ void fn_802173F4(u32 mode, s8 vol8, s16 time) {
         time = 500;
     }
     if (mode == 1) {
-        sndSeqVolume(vol * lbl_80315120[lbl_803477DC].vol / 128, time, lbl_803477E0, stop);
+        sndSeqVolume(vol * lbl_80315120.s[lbl_803477DC].vol / 128, time, lbl_803477E0, stop);
     } else if (mode >= 0x100) {
         e = lbl_80315030;
         for (i = 0; i < 6; e++, i++) {
             if (mode - 0x100 == e->id) {
                 if (lbl_803477E0 != lbl_80315030[i].id) {
-                    lbl_80315030[i].vol = vol * lbl_80315120[lbl_80315030[i].slot].vol / 128;
+                    lbl_80315030[i].vol = vol * lbl_80315120.s[lbl_80315030[i].slot].vol / 128;
                     sndSeqVolume(lbl_80315030[i].vol, time, mode - 0x100, stop);
                 }
                 if (stop == 1) {
@@ -988,41 +1015,213 @@ void fn_802173F4(u32 mode, s8 vol8, s16 time) {
     }
 }
 
-/* Rooms where opening a chest skips the item jingle. */
-#define QUIET_ROOM()                                                  \
-    ((lbl_80311AC0.area == 0x1c && lbl_80311AC0.room == 'b') ||      \
-     (lbl_80311AC0.area == 0x7a && lbl_80311AC0.room == 'a') ||      \
-     (lbl_80311AC0.area == 0x7d && lbl_80311AC0.room == 'a') ||      \
-     (lbl_80311AC0.area == 0x7d && lbl_80311AC0.room == 'b') ||      \
-     (lbl_80311AC0.area == 0x7d && lbl_80311AC0.room == 'd'))
+void fn_80217554(void) {
+    if (lbl_803477E0 != 0xFFFFFFFF) {
+        if (lbl_803477D8 != 0xFFFFFFFF) {
+            sndSeqStop(lbl_803477D8);
+            lbl_803477D8 = -1;
+        }
+    } else if (lbl_803477D8 != 0xFFFFFFFF) {
+        sndSeqContinue(lbl_803477D8);
+        MemCopy(&lbl_80315484.r, &lbl_80315434, 0x28);
+        lbl_803477DC = lbl_803477D4;
+        lbl_803477E0 = lbl_803477D8;
+        sndSeqVolume(lbl_80315120.s[lbl_803477D4].vol, 500, lbl_803477D8, 0);
+        lbl_803477D8 = -1;
+    }
+}
 
-#ifdef NONMATCHING
-/* Near miss (2 lines): the original schedules `li r0, 0` after the `stwx` of the call result.
-   fn_80216D98 has the same body for id = lbl_803477B8 (also 2 lines, same cause). */
-
-typedef struct Ent60 {
-    u32 x00;
-    u8 pad04[0x2c];
-    u8 x30[0x30];
-} Ent60;
-extern Ent60 lbl_80314940[2];
-extern u32 fn_802168CC(void *p, void *q, s32 n);
-#endif
-
-#ifdef NONMATCHING
-void fn_80215F94(u32 id)
+void fn_80217608(void)
 {
-    u32 idx;
+    if (lbl_803477E0 != -1) {
+        sndSeqVolume(0, 500, lbl_803477E0, 2);
+        sndSeqPause(lbl_803477E0);
+        MemCopy(&lbl_80315434, &lbl_80315484.r, 0x28);
+        lbl_803477D8 = lbl_803477E0;
+        lbl_803477D4 = lbl_803477DC;
+        lbl_80315484.r.x4 = 0;
+        lbl_803477E0 = -1;
+    }
+}
 
-    if (id == 0x10 || id == 0x11) {
-        idx = id - 0x10;
-        if (lbl_803477C8[idx] == 0xffffffff) {
-            if (lbl_80314940[idx].x00 != 0) {
-                lbl_803477C8[idx] = fn_802168CC(&lbl_80314940[idx], lbl_80314940[idx].x30, 0x78);
-                lbl_803477C0 = 0;
-                lbl_80314940[idx].x00 = 0;
-            }
+void fn_8021768C(void) {
+    SndSlot *s;
+    s32 i;
+    if (lbl_803477E0 != 0xFFFFFFFF) {
+        if (lbl_803477D8 != 0xFFFFFFFF) {
+            sndSeqStop(lbl_803477D8);
+            lbl_803477D8 = -1;
+        }
+    } else if (lbl_803477D8 != 0xFFFFFFFF) {
+        sndSeqContinue(lbl_803477D8);
+        MemCopy(&lbl_80315484.r, &lbl_80315434, 0x28);
+        lbl_803477DC = lbl_803477D4;
+        lbl_803477E0 = lbl_803477D8;
+        sndSeqVolume(lbl_80315120.s[lbl_803477D4].vol, 500, lbl_803477D8, 0);
+        lbl_803477D8 = -1;
+    }
+    for (i = 0, s = lbl_80315030; i < 6; i++, s++) {
+        if (s->flag != 0 && s->id != 0xFFFFFFFF) {
+            sndSeqContinue(s->id);
+            s->flag = 0;
         }
     }
 }
-#endif
+
+void fn_80217790(void)
+{
+    SndSlot *e = lbl_80315030;
+    s32 i;
+
+    for (i = 0; i < 6; i++) {
+        if (e->id != -1) {
+            sndSeqPause(e->id);
+            e->flag = 1;
+        }
+        e++;
+    }
+}
+
+void fn_80217800(s32 v) {
+    if (v == lbl_803477DC) {
+        fn_80217830(1);
+    }
+}
+
+void fn_80217B98(void) {
+    SndSlot *e = lbl_80315030;
+    s32 i;
+    for (i = 0; i < 6; i++, e++) {
+        if (e->id != 0xFFFFFFFF) {
+            if (e->id != lbl_803477E0) {
+                sndSeqStop(e->id);
+            }
+            e->id = 0xFFFFFFFF;
+            e->time = 0x2710;
+        }
+    }
+}
+
+void fn_80217C24(void) {
+    SndSlot *e = lbl_80315030;
+    s32 i;
+    for (i = 0; i < 6; i++, e++) {
+        if (e->id != 0xFFFFFFFF) {
+            if (e->id != lbl_803477E0) {
+                sndSeqStop(e->id);
+            }
+            e->id = 0xFFFFFFFF;
+            e->time = 0x2710;
+        }
+    }
+}
+
+s32 fn_80217FD4(s32 bank, s8 arg1, s8 id) {
+    return SePlay(bank, arg1, id);
+}
+
+static inline s32 req_commit(SeqReq *r)
+{
+    SeqReq *prev = &lbl_80315484.r;
+    if (r->x4 == prev->x4 && MemEqual(r->key, prev->key, r->x4 * 2)) {
+        lbl_8031545C.x4 = 0;
+        return 1;
+    }
+    if (lbl_803477E0 != -1) {
+        if (r->x4 > 1) {
+            sndSeqStop(lbl_803477E0);
+            lbl_803477E0 = -1;
+        } else {
+            sndSeqVolume(0, 500, lbl_803477E0, 1);
+        }
+        prev->x4 = 0;
+    }
+    MemCopy(&lbl_8031545C, r, 0x28);
+    return 1;
+}
+s32 fn_802182F4(s32 unused, s32 n, s8 a, s8 b, ...)
+{
+    SeqReq q;
+    SeqReq r;
+    va_list ap;
+    s32 i;
+    if (n == 1) {
+        memset(&r, 0, 0x28);
+        r.x4 = 1;
+        r.x0 = 0;
+        r.key[0] = a;
+        r.key[1] = b;
+        return req_commit(&r);
+    }
+    memset(&q, 0, 0x28);
+    q.x4 = n;
+    q.x0 = (a < 0);
+    q.key[0] = a;
+    q.key[1] = b;
+    va_start(ap, b);
+    for (i = 1; i < n; i++) {
+        q.key[i * 2] = va_arg(ap, int);
+        q.key[i * 2 + 1] = va_arg(ap, int);
+    }
+    return req_commit(&q);
+}
+
+s32 fn_80218570(s32 unused, s32 a, s32 b) {
+    SeqReq t;
+    memset(&t, 0, sizeof(t));
+    t.x4 = 1;
+    t.x0 = 0;
+    t.key[0] = a;
+    t.key[1] = b;
+    if (t.x4 == lbl_80315484.r.x4 && MemEqual(t.key, lbl_80315484.r.key, t.x4 << 1)) {
+        lbl_8031545C.x4 = 0;
+        return 1;
+    }
+    if (lbl_803477E0 != -1) {
+        if (t.x4 > 1) {
+            sndSeqStop(lbl_803477E0);
+            lbl_803477E0 = -1;
+        } else {
+            sndSeqVolume(0, 500, lbl_803477E0, 1);
+        }
+        lbl_80315484.r.x4 = 0;
+    }
+    MemCopy(&lbl_8031545C, &t, 0x28);
+    return 1;
+}
+
+void fn_80218D80(char *name, u32 tag, s32 v) {
+}
+
+void fn_80218D84(void) {
+    fn_802193BC();
+    while (fn_80219B7C() != 0) {
+        s32 r = fn_801D168C();
+        if (r != -1) {
+            fn_801D150C(r);
+        }
+    }
+}
+
+s32 fn_80218DC4(void) {
+    if (lbl_803477DC != 2) {
+        return -1;
+    }
+    return lbl_803477E0;
+}
+
+static inline void strm_drop(u32 i)
+{
+    strm_stop_by_id(lbl_803477C8[i]);
+    lbl_803477C8[i] = -1;
+    lbl_80314940.src[i][0].path = NULL;
+}
+void fn_80219324(s32 i) {
+    if (lbl_80315120.s[i].field_10 >= 0) {
+        s32 r;
+        do {
+            r = fn_80219834(1);
+        } while (i != r);
+    }
+}
+

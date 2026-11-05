@@ -63,19 +63,18 @@ typedef struct {
     s32 x2c;
     u8 pad30[4];
     void* buf;    /* 0x34 */
-    void* x38;
-    u8 x3c[0xc];
-    u8* x48;
-    s32 x4c;
+    s32 x38;
+    NJS_TEXNAME x3c;
+    NJS_TEXLIST tl;   /* 0x48 */
     u8 x50[0x48];
 } State_800B016C;
 extern State_800B016C lbl_80303650;
-extern void* fn_80227E74(void);
+extern s32 fn_80227E74(void);
 extern void fn_80297DB4(void* a, void* b, s32 c, s32 d, s32 e);
-extern void fn_80297DA4(void* a, void* b, void* c, s32 d);
-extern s32 fn_80007528(u8** p);
+extern void fn_80297DA4(void* a, void* b, s32 c, s32 d);
+extern s32 fn_80007528(NJS_TEXLIST* pk);
 extern s32* fn_80298E6C(void);
-extern void fn_80297B5C(void* p);
+extern void fn_80297B5C(s32 p);
 extern void fn_801E1784(void* p);
 typedef struct {
     u8 pad[4];
@@ -90,8 +89,13 @@ typedef struct {
 } Obj_800B0FD0;
 typedef struct {
     s32 mode;
-    void *x4;
-    u8 pad[0x14];
+    WaveVtx *pts;   /* 0x04 */
+    u16 n;          /* 0x08 */
+    u8 pad_0a[4];
+    u16 limit;      /* 0x0e */
+    u32 frame;      /* 0x10 */
+    f32 scale;      /* 0x14 */
+    f32 num;        /* 0x18 */
 } Blk_80303618;
 /* Defined (not extern) so that MWCC addresses the three from one pooled base, as the original does. */
 Blk_80303618 lbl_80303618;
@@ -149,20 +153,6 @@ typedef struct {
 extern void fn_80227810(void* p);
 extern void fn_800ABEB0();
 extern void fn_800ABE9C();
-typedef struct {
-    s32 mode;
-    f32 *pts;
-    u16 n;
-    u8 pad_0a[4];
-    u16 limit;
-    u32 frame;
-    f32 scale;
-    f32 num;
-} Blk;
-typedef struct {
-    u8 pad[4];
-    DrawState ds;
-} Fx;
 extern void fn_80297DC8(s32 a);
 extern void fn_80291064(void *p, s32 a, s32 b);
 typedef struct {
@@ -303,29 +293,23 @@ void fn_800B0F0C(void) {
     memset(&lbl_80303634, 0, 0x1c);
 }
 
-static inline void Free_800B0900(void **pp)
-{
-    if (*pp != NULL) {
-        fn_801E1784(*pp);
-        *pp = NULL;
-    }
-}
+#define Free_800B0900(lv)        do {                             if ((lv) != NULL) {              fn_801E1784(lv);             (lv) = NULL;             }                        } while (0)
 
 void fn_800B0900(void)
 {
     Blk_80303618 *b;
     State_800B016C *s;
     if (lbl_80303634.x0 != NULL) {
-        Free_800B0900(&lbl_80303634.x0);
+        Free_800B0900(lbl_80303634.x0);
     }
     b = &lbl_80303618;
-    if (b->x4 != NULL) {
-        Free_800B0900(&b->x4);
+    if (b->pts != NULL) {
+        Free_800B0900(b->pts);
     }
     s = &lbl_80303650;
     if (s->buf != NULL) {
         fn_80297B5C(s->x38);
-        Free_800B0900(&s->buf);
+        Free_800B0900(s->buf);
     }
     lbl_80303650.x2c = 0;
     lbl_80303650.flags &= ~1;
@@ -472,7 +456,7 @@ void fn_800B0F54(void) {
     memset(&lbl_80303618, 0, sizeof(Blk_80303618));
     memset(&lbl_80303634, 0, sizeof(Blk_80303634));
     lbl_80303634.x0 = 0;
-    lbl_80303618.x4 = 0;
+    lbl_80303618.pts = 0;
     lbl_80303634.x4 = 0;
     lbl_80303650.flags = 0;
     lbl_80303650.x2c = 0;
@@ -508,10 +492,10 @@ void fn_800B016C(void) {
     if (lbl_80303650.buf != NULL) {
         lbl_80303650.x38 = fn_80227E74();
         fn_80297DB4(lbl_80303650.x50, lbl_80303650.buf, 6, 0x400, 0x200);
-        fn_80297DA4(lbl_80303650.x3c, lbl_80303650.x50, lbl_80303650.x38, 0x8800000);
-        lbl_80303650.x4c = 1;
-        lbl_80303650.x48 = lbl_80303650.x3c;
-        if (fn_80007528(&lbl_80303650.x48) < 0) {
+        fn_80297DA4(&lbl_80303650.x3c, lbl_80303650.x50, lbl_80303650.x38, 0x8800000);
+        lbl_80303650.tl.nbTexture = 1;
+        lbl_80303650.tl.textures = &lbl_80303650.x3c;
+        if (fn_80007528(&lbl_80303650.tl) < 0) {
             lbl_80303650.x2c = fn_80298E6C()[2];
             fn_80297B5C(lbl_80303650.x38);
             if (lbl_80303650.buf != NULL) {
@@ -603,31 +587,122 @@ void fn_800AF780(void) {
     s32 i;
     s32 count;
     f32 *p;
-    DrawStatePush(&(*(Fx*)&lbl_80303650).ds);
-    if ((*(Blk*)&lbl_80303618).frame == 0) {
+    DrawStatePush(&lbl_80303650.ds);
+    if (lbl_80303618.frame == 0) {
         fn_80226D14();
     }
-    count = (*(Blk*)&lbl_80303618).n * (*(Blk*)&lbl_80303618).n * 4;
+    count = lbl_80303618.n * lbl_80303618.n * 4;
     for (i = 0; i < count; i++) {
-        f32 *pt = (f32 *)((u8 *)(*(Blk*)&lbl_80303618).pts + i * 0x18);
-        f32 dx = (*(Blk*)&lbl_80303618).scale * (pt[0] - 320.0f);
-        f32 dy = (*(Blk*)&lbl_80303618).scale * (pt[1] - 240.0f);
+        WaveVtx *pt = &lbl_80303618.pts[i];
+        f32 dx = lbl_80303618.scale * (pt->x - 320.0f);
+        f32 dy = lbl_80303618.scale * (pt->y - 240.0f);
         f32 d;
         dx = dx * dx;
         dy = dy * dy;
         d = dx + dy;
         if (d) {
-            pt[2] = (*(Blk*)&lbl_80303618).num / d;
+            pt->z = lbl_80303618.num / d;
         } else {
-            pt[2] = (*(Blk*)&lbl_80303618).num;
+            pt->z = lbl_80303618.num;
         }
         if (i % 4 == 3) {
             fn_80297DC8(0x1869E);
-            fn_80291064((u8 *)(*(Blk*)&lbl_80303618).pts + (i - 3) * 0x18, 4, 0);
+            fn_80291064(&lbl_80303618.pts[i - 3], 4, 0);
         }
     }
-    (*(Blk*)&lbl_80303618).frame++;
-    if ((*(Blk*)&lbl_80303618).frame >= (*(Blk*)&lbl_80303618).limit) {
+    lbl_80303618.frame++;
+    if (lbl_80303618.frame >= lbl_80303618.limit) {
+        fn_800B0900();
+    }
+    DrawStatePop(0);
+}
+
+extern void GXSetTexCopySrc(u16 left, u16 top, u16 wd, u16 ht);
+extern void GXSetTexCopyDst(u16 wd, u16 ht, s32 fmt, u8 mipmap);
+extern void GXCopyTex(void* dest, u8 clear);
+extern void GXDrawDone(void);
+extern void fn_80298ED0(s32 a);
+extern f32 fn_80291A5C(f32 x);
+
+void fn_800AF8F8(void) {
+    WaveVtx v[4];
+    f32 z = lbl_80303618.num;
+    s32 col;
+    v[0].x = v[1].x = 0.0f;
+    v[2].x = v[3].x = 640.0f;
+    v[0].y = v[2].y = 0.0f;
+    v[1].y = v[3].y = 480.0f;
+    v[0].z = v[1].z = v[2].z = v[3].z = z;
+    v[0].u = v[1].u = 0.0f;
+    v[2].u = v[3].u = 0.625f;
+    v[0].v = v[2].v = 0.0f;
+    v[1].v = v[3].v = 0.9375f;
+    DrawStatePush(&lbl_80303650.ds);
+    if (lbl_80303618.frame != 0) {
+        switch (lbl_80303618.mode) {
+        case 4:
+        case 5: {
+            f32 t = lbl_80303618.scale - 1.0f;
+            f32 dx = 320.0f * t;
+            f32 dy = 240.0f * t;
+            v[0].x = v[1].x = -dx;
+            v[2].x = v[3].x = 640.0f + dx;
+            v[0].y = v[2].y = -dy;
+            v[1].y = v[3].y = 480.0f + dy;
+        }
+            break;
+        }
+        col = ((s32)(255.0f * fn_80291A5C((f32)(lbl_80303618.limit - lbl_80303618.frame) / (1.0f + (f32)lbl_80303618.limit))) << 24) | 0xFFFFFF;
+        v[3].w = col;
+        v[2].w = col;
+        v[1].w = col;
+        v[0].w = col;
+        if (lbl_80303650.buf != NULL) {
+            if (lbl_80303650.flags & 0x10) {
+                fn_80297DC8(lbl_80303650.x38);
+                fn_80291064(v, 4, 1);
+                lbl_80303650.flags &= ~0x10;
+            } else {
+                fn_80297DC8(0x1869E);
+                fn_80291064(v, 4, 1);
+                lbl_80303650.flags |= 0x10;
+            }
+        } else {
+            fn_80297DC8(0x1869E);
+            fn_80291064(v, 4, 1);
+        }
+    }
+    if (lbl_80303650.flags & 0x10) {
+        NjTexMem* m;
+        fn_80299040(&lbl_80303650.tl);
+        fn_80298ED0(0);
+        GXDrawDone();
+        GXSetTexCopySrc(0, 0, 0x400, 0x200);
+        m = lbl_80303650.tl.textures->texaddr->mem;
+        GXSetTexCopyDst(m->body.w0c, m->body.w10, m->body.w00, 0);
+        GXCopyTex(lbl_80303650.tl.textures->texaddr->mem->body.data, 1);
+    } else {
+        fn_80226D14();
+    }
+    v[0].x = v[1].x = 0.0f;
+    v[2].x = v[3].x = 640.0f;
+    v[0].y = v[2].y = 0.0f;
+    v[1].y = v[3].y = 480.0f;
+    v[0].z = v[1].z = v[2].z = v[3].z = z;
+    v[0].w = v[1].w = v[2].w = v[3].w = -1;
+    if (lbl_80303650.buf != NULL) {
+        if (lbl_80303650.flags & 0x10) {
+            fn_80297DC8(0x1869E);
+            fn_80291064(v, 4, 0);
+        } else {
+            fn_80297DC8(0x1869E);
+            fn_80291064(v, 4, 0);
+        }
+    } else {
+        fn_80297DC8(0x1869E);
+        fn_80291064(v, 4, 0);
+    }
+    if (++lbl_80303618.frame >= lbl_80303618.limit) {
         fn_800B0900();
     }
     DrawStatePop(0);
