@@ -9,6 +9,7 @@
 #include "game/stat_8030B4D4.h"
 #include "game/gamedata.h"
 #include <string.h>
+#include <dolphin/os/OSFastCast.h>
 #include "game/unit_80005B50.h"
 #define PTR(p, off) (*(void**)((u8*)(p) + (off)))
 typedef struct {
@@ -41,13 +42,14 @@ typedef struct AnimHdr {
 } AnimHdr;
 typedef struct AnimPlay {
     AnimHdr* anim;
-    u8 pad4[4];
+    AnimHdr* anim2;
     u32 end;
     u32 idx;
-    u8 pad10[4];
+    u32 idx2;
     f32 speed;
     f32 time;
     f32 out[3];
+    f32 out2[3];
 } AnimPlay;
 extern void fn_80061C80(void*, f32, f32, f32, int);
 extern u32 fn_800153E0(s32, s16);
@@ -69,7 +71,7 @@ extern u32 fn_800153E0(s32, s16);
 extern s16 fn_80009030(Ent_80008800* list, s16 p1, s16 p2, s16 c, s16 d);
 extern void fn_800120D0(s32*);
 extern s8 lbl_80347334;
-extern int fn_80078610(u8);
+extern int fn_80078610(s8);
 extern void fn_80290EA8(int);
 extern void fn_80290E98(u32);
 /* The camera task's state block (its work's x6c). */
@@ -81,9 +83,11 @@ typedef struct CamState {
     u8 pad6[2];
     f32 x8;
     f32 xc;
-    u8 pad10[0x2c - 0x10];
+    f32 x10;            /* 0x10 height offset */
+    f32 x14[3];         /* 0x14 eye step */
+    f32 x20[3];         /* 0x20 target step */
     s16 x2c;
-    u8 x2e;
+    s8 x2e;
     s8 x2f;             /* 0x2f camera kind */
     s16 state;          /* 0x30 */
     u8 pad32[2];
@@ -95,7 +99,9 @@ typedef struct CamWork {
     f32 x20[3];
     f32 x2c[3];
     f32 x38[3];
-    u8 pad44[0x68 - 0x44];
+    f32 x44[3];         /* 0x44 destination eye */
+    f32 x50[3];         /* 0x50 destination target */
+    u8 pad5c[0x68 - 0x5c];
     u32 x68;            /* 0x68 flags */
     CamState* u;        /* 0x6c */
 } CamWork;
@@ -605,6 +611,221 @@ void fn_80013504(NJS_POINT3* obj, NJS_POINT3* src, void* p5, f32 a, f32 b) {
     fn_80071F84(p5, src, obj);
 }
 
+extern void fn_800125A8(Task* t);
+void fn_80014474(Task* t);
+void fn_80013D58(s8 id, s8 flag);
+extern void fn_80012F58(Task* t);
+extern void fn_800143A0(Task* t);
+extern void fn_80013FD0(Task* t);
+extern void fn_800317B8(void);
+extern int fn_8006D888(void);
+extern u8 fn_80017324(int);
+extern void fn_8006D524(void);
+extern void fn_80017430(u8);
+extern Slot24 lbl_8030A6D4[];
+extern s32 lbl_8034737C;
+
+void fn_800136DC(Task* t)
+{
+    CamWork* w = t->work;
+    CamState* u = w->u;
+    s8 i;
+    f32 b, a;
+    f32 v[3];
+    f32 c, d;
+    f32* eye;
+    f32* at;
+    CamWork* w2;
+
+    switch (t->state) {
+    case 0:
+        t->state = 1;
+        for (i = 0; i < 4; i++) {
+            lbl_8030A6D4[i].x20 &= ~0x80000000;
+            if (i == 2) {
+                lbl_8030A6D4[i].x20 |= 0x80000000;
+            }
+        }
+        break;
+    case 1:
+        if (lbl_80309EC8.x48 & 0x10000000) {
+            u->mode = 11;
+            lbl_80309EC8.x48 &= ~0x10000000;
+            lbl_80309EC8.x48 |= 0x08000000;
+        } else {
+            s8 m;
+            if (lbl_80347394 != NULL) {
+                m = -1;
+            } else {
+                switch (lbl_8034733C) {
+                case 1:
+                    m = 1;
+                    break;
+                case 4:
+                    m = 2;
+                    break;
+                case 7:
+                    m = 5;
+                    break;
+                case 8:
+                    m = 4;
+                    break;
+                case 5:
+                    m = 7;
+                    break;
+                case 3:
+                    m = 8;
+                    break;
+                case 6:
+                    m = 9;
+                    break;
+                default:
+                    m = -1;
+                    break;
+                }
+            }
+            u->mode = m;
+        }
+        if (lbl_80309EC8.x48 & 0x20000000) {
+            u->mode = 10;
+        }
+        if (u->prev != u->mode) {
+            fn_80013D58(u->mode, 1);
+            u->prev = u->mode;
+            u->state = 0;
+        }
+        switch (u->mode) {
+        case 11:
+            fn_800143A0(t);
+            break;
+        case 10:
+            w2 = t->work;
+            u = w2->u;
+            switch (u->state) {
+            case 0:
+                eye = w2->x38;
+                fn_800114AC(v, &a, &b, 0);
+                if (a > b) {
+                    u->xc = a;
+                } else {
+                    u->xc = b;
+                }
+                u->xc = 2.0f * u->xc;
+                v[1] = 0.0f;
+                fn_80071CF0(v, eye);
+                fn_800608C8(&u->x8);
+                c = u->xc;
+                eye = w2->x20;
+                at = w2->x38;
+                fn_80061C80(eye, 0.0f, u->x8, c, 0);
+                eye[0] = eye[0] + at[0];
+                eye[2] = eye[2] + at[2];
+                eye[1] = c;
+                fn_80071F84(w2->x2c, at, eye);
+                fn_80014AB8(2, 0);
+                u->state = 1;
+                break;
+            case 1:
+                fn_80011208(-1, -1, 0);
+                break;
+            }
+            d = u->xc;
+            c = u->x8;
+            lbl_80309EC8.mv.x19a = 11;
+            lbl_80309EC8.mv.x110 = d;
+            fn_80071CF0(w2->x38, lbl_80309EC8.mv.xc0);
+            lbl_80309EC8.mv.x160 = c;
+            break;
+        case 1:
+            fn_800125A8(t);
+            break;
+        case 8:
+            u->x2 = -1;
+            fn_80032B4C();
+            fn_80014474(t);
+            ResetChrs(1);
+            fn_80011208(-1, -1, 0);
+            break;
+        case 7:
+            if (!(lbl_80309EC8.x48 & 0x08000000)) {
+                fn_80071CF0(&lbl_80309EC8.x4c, w->x20);
+                fn_80071CF0(&lbl_80309EC8.x58, w->x38);
+                fn_800614FC(lbl_80309EC8.x64, w->x2c);
+            }
+            ResetChrs(1);
+            fn_80011208(-1, -1, 1);
+            fn_800317B8();
+            break;
+        case 2:
+            fn_80012F58(t);
+            if (lbl_80309EC8.x40 == 0) {
+                fn_80011208(-1, -1, 0);
+            }
+            break;
+        case 5:
+            fn_80032B4C();
+            w2 = t->work;
+            u = w2->u;
+            switch (u->state) {
+            case 0:
+                if (!fn_8006D888()) {
+                    break;
+                }
+                u->state = 1;
+            case 1:
+                u->x2e = fn_80017324(1);
+                fn_8006D524();
+                fn_80017430(u->x2e);
+                u->state = 2;
+                ResetChrs(0);
+            case 2:
+                fn_80011208(u->x2e, -1, 1);
+                break;
+            }
+            fn_80071CF0(&lbl_80309EC8.x4c, w->x20);
+            fn_80071CF0(&lbl_80309EC8.x58, w->x38);
+            fn_800614FC(lbl_80309EC8.x64, w->x2c);
+            break;
+        case 4:
+            w2 = t->work;
+            u = w2->u;
+            switch (u->state) {
+            case 0:
+                fn_80032B4C();
+                u->state = 1;
+            case 1:
+                break;
+            }
+            fn_80011208(-1, -1, 0);
+            break;
+        case 9:
+            fn_800121D8(t);
+            break;
+        default:
+            switch (lbl_8034737C) {
+            case 5:
+                fn_80071CF0(&lbl_80309EC8.x4c, w->x20);
+                fn_80071CF0(&lbl_80309EC8.x58, w->x38);
+                fn_800614FC(lbl_80309EC8.x64, w->x2c);
+                fn_80011208(-1, -1, 0);
+                fn_80032B4C();
+                break;
+            default:
+                fn_80013FD0(t);
+                break;
+            }
+            break;
+        }
+        if (w->x68 & 0x20000000) {
+            t->state = 2;
+        }
+        break;
+    case 2:
+        fn_801E17E0(u);
+        t->flags |= 0x40;
+        break;
+    }
+}
 extern void fn_80032BBC(s8, s32);
 extern void fn_80032B6C(s8, s32);
 extern Task* fn_8003DB34(void* fn);

@@ -3,6 +3,8 @@
 #include "game/task.h"
 #include "game/save_8030B7F4.h"
 #include "game/sprite.h"
+#include "game/text.h"
+#include "game/menu.h"
 #include <math.h>
 /* The argument block fn_80023D14 hands the task: a vertical list with a cursor. */
 typedef struct ListArg {
@@ -39,10 +41,8 @@ typedef struct StTask {
     Task task;
     void** tab; /* 0x28: 28 model pointers per party member */
 } StTask;
-typedef struct Inner { u8 pad0[0x6]; s16 f6; s16 f8; u8 pad1[0xa]; s16 f14; s16 f16; u8 pad2[0x68-0x18]; float f68; u8 pad3[0xec-0x6c]; u32 fec; u32 ff0; } Inner;
-typedef struct Mid { u8 pad[0x4c]; Inner *inner; } Mid;
-typedef struct Top { u8 pad[0x24]; Mid *mid; } Top;
-void fn_8002E5D0(Top *t);
+struct Tsk;
+void fn_8002E5D0(struct Tsk *t);
 extern void *lbl_803475A8;
 extern void *lbl_80346BA0;
 typedef struct Holder { u8 pad[0x24]; void *ptr; } Holder;
@@ -137,7 +137,9 @@ typedef struct HudEnt {
     u8 pad_0[0x14];
     s32 x14;
     s32 s18;
-    u8 pad_1c[0xe4];
+    u8 pad_1c[0xb6 - 0x1c];
+    s16 xb6;
+    u8 padb8[0x100 - 0xb8];
     s8 kind;
     u8 pad_101[0x3];
 } HudEnt;
@@ -210,13 +212,16 @@ typedef struct Dat {
     s16 x8;
     u8 pad_0a[8];
     s16 x12;
-    u8 pad_14[4];
+    s16 x14;
+    s16 x16;
     s16 x18;
     s16 x1a;
     s16 x1c;
     u8 pad_1e[0x50 - 0x1e];
     u32 x50;
-    u8 pad54[0xe0 - 0x54];
+    u8 pad54[0x5a - 0x54];
+    u8 x5a;
+    u8 pad5b[0xe0 - 0x5b];
     void (*xe0)(struct Tsk*);
     s16 xe4;
     s16 xe6_pad;
@@ -366,24 +371,77 @@ extern s32 fn_80020250(Tsk *t, s16 cmd, s32 arg);
 extern void fn_801D5340(Sprite* m, s32 c, s32 d, f32 z, f32 ang, f32 a, f32 b);
 extern void fn_800277F4(Sprite** m, s32 n, f32* ang);
 
-void fn_80020B50(Top *t, s16 *out1, s16 *out2) {
-  Inner *i = t->mid->inner;
-  if (i->fec & 0x8000) {
-    *out1 = i->f14;
-    *out2 = i->f16;
+void fn_80020B50(Tsk *t, s16 *out1, s16 *out2) {
+  Dat *d = t->work->x4c;
+  if (d->xec & 0x8000) {
+    *out1 = d->x14;
+    *out2 = d->x16;
   } else {
-    *out1 = i->f6;
-    *out2 = i->f8;
+    *out1 = d->x6;
+    *out2 = d->x8;
   }
 }
 
-void fn_80021784(Top *t) {
-  Mid *m = t->mid;
-  Inner *i = m->inner;
-  if (i->fec & 0x8000) {
-    i->fec = i->fec & ~0x8000;
-    i->f6 = i->f14;
-    i->f8 = i->f16;
+static inline Tsk *Find21(s8 id)
+{
+    s8 i;
+    for (i = 0; i < 14; i++) {
+        Tsk *t = lbl_80309E24[i];
+        if (t != NULL && t->work->x4c->kind == id) {
+            return lbl_80309E24[i];
+        }
+    }
+    return NULL;
+}
+
+static inline Tsk *F2(s8 id)
+{
+    Tsk *r = Find21(id);
+    if (r != NULL) return r;
+    return Find21(0);
+}
+
+static inline void Take(Tsk* t) {
+    Dat* d = t->work->x4c;
+    if (d->xec & 0x8000) {
+        d->xec &= ~0x8000;
+        d->x6 = d->x14;
+        d->x8 = d->x16;
+    }
+}
+
+void fn_80020B8C(Tsk* t, s16 a, s16 b, s32 flag) {
+    Dat* u = t->work->x4c;
+    s16 sx;
+    s16 sy;
+    s32 key;
+    if (flag != 0) {
+        key = u->x4;
+        if (u->xec & 0x80) key = u->x5a;
+        F2(key)->work->x4c->xec |= 0x2000;
+    }
+    if (u->xec & 0x8000) {
+        Take(t);
+        fn_8002E5D0(t);
+    } else {
+        sx = u->x6;
+        sy = u->x8;
+        u->x6 = a;
+        u->x8 = b;
+        Take(t);
+        fn_8002E5D0(t);
+        u->x6 = sx;
+        u->x8 = sy;
+    }
+}
+
+
+void fn_80021784(Tsk *t) {
+  Dat *d = t->work->x4c;
+  if (d->xec & 0x8000) {
+    d->xec = d->xec & ~0x8000;
+    d->x6 = d->x14;
+    d->x8 = d->x16;
   }
   fn_8002E5D0(t);
 }
@@ -821,7 +879,142 @@ void fn_80028E0C(void)
     }
 }
 
-void fn_80025518(Ent80025518 *self)
+/* The stat-row list a HUD task draws (task->work->list). */
+typedef struct HudRow {
+    s8 kind;
+    s8 b;
+    u8 pad2[2];
+    s16 x4;
+    u8 pad6[2];
+    char* text;
+    u8 padc[4];
+} HudRow;
+typedef struct HudList {
+    s8 count;
+    s8 mode;
+    s8 bits;
+    u8 pad3[5];
+    HudRow rows[1];
+} HudList;
+typedef struct HudWk { HudList* list; } HudWk;
+typedef struct HudTask { u8 pad[0x24]; HudWk* work; } HudTask;
+extern char* lbl_80346AE8;
+extern f32 lbl_80346AD4;
+extern s16 lbl_80346B0C;
+extern s16 lbl_80346B0A;
+extern s16 lbl_80346B08;
+extern s16 lbl_80346B06;
+
+void fn_80025518(Sprite* self);
+
+void fn_800250F4(HudTask* t)
+{
+    Sprite* o;
+    int i;
+    s8 b;
+
+    for (i = 0; i < t->work->list->count; i++) {
+        lbl_80346AE8 = t->work->list->rows[i].text;
+        switch (t->work->list->rows[i].kind) {
+        case 1:
+            TextPrint(lbl_80346B0C, lbl_80346B0A + i * 24, lbl_80346AE8);
+            b = t->work->list->rows[i].b;
+            if (b == -1) {
+                TextPrint(lbl_80346B08, lbl_80346B06 + i * 24, "E");
+            } else if (b != -2) {
+                TextPrintf(lbl_80346B08, lbl_80346B06 + i * 24, "%2d", b);
+            }
+            lbl_80346AD4 = 1.0f;
+            break;
+        case 0:
+            TextPushColor();
+            TextSetColor(0xff606060);
+            TextPrint(lbl_80346B0C, lbl_80346B0A + i * 24, lbl_80346AE8);
+            b = t->work->list->rows[i].b;
+            if (b == -1) {
+                TextPrint(lbl_80346B08, lbl_80346B06 + i * 24, "\x82\x64");
+            } else if (b != -2) {
+                TextPrintf(lbl_80346B08, lbl_80346B06 + i * 24, "%2d", b);
+            }
+            TextPopColor(1);
+            lbl_80346AD4 = 0.5f;
+            break;
+        }
+        switch (t->work->list->mode) {
+        case 4:
+            o = fn_801D68C4(lbl_80347628, 0x4e);
+            break;
+        case 6:
+            o = fn_801D68C4(lbl_80347628, 0x50);
+            break;
+        case 7:
+            o = fn_801D68C4(lbl_80347628, 0x51);
+            break;
+        case 3:
+            o = fn_801D68C4(lbl_80347628, 0x4d);
+            break;
+        case 5:
+            o = fn_801D68C4(lbl_80347628, 0x4f);
+            break;
+        case 8:
+            o = fn_801D68C4(lbl_80347628, 0x52);
+            break;
+        case 0:
+        case 10:
+            switch (lbl_8030B7F4.party[lbl_8034732C]) {
+            case 0:
+                o = fn_801D68C4(lbl_80347628, 0x53);
+                break;
+            case 1:
+                o = fn_801D68C4(lbl_80347628, 0x54);
+                break;
+            case 2:
+                o = fn_801D68C4(lbl_80347628, 0x55);
+                break;
+            case 3:
+                o = fn_801D68C4(lbl_80347628, 0x56);
+                break;
+            case 4:
+                o = fn_801D68C4(lbl_80347628, 0x57);
+                break;
+            case 5:
+                o = fn_801D68C4(lbl_80347628, 0x58);
+                break;
+            case -1:
+            case 6:
+                o = fn_801D68C4(lbl_80347628, 0x53);
+                break;
+            }
+            if (t->work->list->rows[i].x4 == lbl_80309DE4[lbl_8034732C]->xb6 && t->work->list->mode == 10) {
+                fn_80025518(o);
+            } else {
+                o->pieces->colour = -1;
+            }
+            break;
+        case 11:
+            o = fn_801D68C4(lbl_80347628, 0x5a);
+            break;
+        case 12:
+            o = fn_801D68C4(lbl_80347628, 0x5b);
+            break;
+        case 9:
+            o = fn_801D68C4(lbl_80347628, 0x59);
+            break;
+        case 1:
+        case 2:
+        case 13:
+        case 14:
+        default:
+            o = fn_801D68C4(lbl_80347628, 0x59);
+            break;
+        }
+        o->x = 284.0f;
+        o->y = 301 + i * 24;
+        fn_801D5340(o, 0, 0, -1.188f, 0.0f, lbl_80346AD4, 1.0f);
+    }
+}
+
+void fn_80025518(Sprite *self)
 {
     HudEnt *s = lbl_80309DE4[lbl_8034732C];
     s32 v;
@@ -848,7 +1041,7 @@ void fn_80025518(Ent80025518 *self)
         v = -1;
         break;
     }
-    *(s32 *)((u8 *)self->out_ptr + 0x14) = v;
+    self->pieces->colour = v;
 }
 
 void fn_800294E8(void) {
@@ -1030,6 +1223,24 @@ void fn_80021CBC(Task* task) {
         task->flags |= 0x40;
         break;
     }
+}
+
+s16 fn_800290E8(s16 idx)
+{
+    Ent* e = lbl_80302AB0[idx];
+    if (e == NULL) {
+        return -1;
+    }
+    if (e->w4 == 0) {
+        return -1;
+    }
+    if (e->h44 != 0) {
+        return e->h44;
+    }
+    if (e->w0 & 0x10000000 || e->w0 & 0x04000000 || e->w0 & 0x01000000 || e->w0 & 0x00400000 || e->w0 & 0x00200000) {
+        return 3;
+    }
+    return 0;
 }
 
 void fn_80029168(s16 idx, s32 v)
@@ -1289,17 +1500,43 @@ void BattleLabelPlace(Ent* e, s8 mode, u32 c) {
     }
 }
 
-static inline Tsk *Find21(s8 id)
+
+static inline Tsk* FindFrom(Tsk** p, s8 id)
 {
     s8 i;
-    for (i = 0; i < 14; i++) {
-        Tsk *t = lbl_80309E24[i];
-        if (t != NULL && t->work->x4c->kind == id) {
+    Tsk** q;
+    for (i = 0, q = p; i < 14; q++, i++) {
+        if (*q != NULL && (*q)->work->x4c->kind == id) {
             return lbl_80309E24[i];
         }
     }
     return NULL;
 }
+
+Tsk* fn_800215EC(s8 id)
+{
+    return FindFrom(lbl_80309E24, id);
+}
+
+
+
+static inline s32 ExistsFrom(Tsk** p, s8 id)
+{
+    s8 i;
+    Tsk** q;
+    for (i = 0, q = p; i < 14; q++, i++) {
+        if (*q != NULL && (*q)->work->x4c->kind == id) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+s32 fn_80021728(s8 id)
+{
+    return ExistsFrom(lbl_80309E24, id);
+}
+
 Tsk *fn_80021658(s8 id)
 {
     Tsk *r = Find21(id);
@@ -2385,17 +2622,86 @@ s32 fn_80028B90(void)
     }
 }
 
-static inline Tsk *F2(s8 id)
-{
-    Tsk *r = Find21(id);
-    if (r != NULL) return r;
-    return Find21(0);
-}
 
 /* Passes cmd/arg to fn_80020250 for the task of kind id (or kind 0's when there is none). */
 s32 fn_800214FC(s8 id, s16 cmd, s32 arg)
 {
     return fn_80020250(F2(id), cmd, arg);
+}
+
+extern f32 lbl_80302A1C[7];
+extern s32 lbl_80346B50;
+extern f32 lbl_80346B54;
+
+s32 fn_80026FEC(RingTask* t, s32* state)
+{
+    s32 done = 0;
+    s32 i;
+    switch (*state) {
+    case 0:
+        lbl_80346B50 = 0;
+        for (i = 0; i < 7; i++)
+            fn_801D4954(t->mdl[i]);
+        t->mdl[0] = RING_LOAD(0xd);
+        t->mdl[1] = RING_LOAD(0xf);
+        t->mdl[2] = RING_LOAD(0x11);
+        t->mdl[3] = RING_LOAD(0xb);
+        t->mdl[4] = RING_LOAD(0xc);
+        t->mdl[5] = RING_LOAD(0xe);
+        t->mdl[6] = RING_LOAD(0x10);
+        lbl_80346B54 = 0.0f;
+        *state = 1;
+        break;
+    case 1:
+        fn_801D4954(t->mdl[6]);
+        t->mdl[6] = RING_LOAD(0x13);
+        *state = 2;
+        lbl_80346B54 += 0.1f;
+        break;
+    case 2:
+        fn_801D4954(t->mdl[6]);
+        t->mdl[6] = RING_LOAD(0x14);
+        lbl_80346B50++;
+        if (lbl_80346B50 > 10)
+            *state = 4;
+        else
+            *state = 3;
+        lbl_80346B54 += 0.1f;
+        break;
+    case 3:
+        fn_801D4954(t->mdl[6]);
+        t->mdl[6] = RING_LOAD(8);
+        t->mdl[6]->x = fn_801D68C4(lbl_80347628, 0x10)->x;
+        t->mdl[6]->y = fn_801D68C4(lbl_80347628, 0x10)->y;
+        *state = 1;
+        lbl_80346B54 += 0.1f;
+        break;
+    case 4:
+        SePlay(0, 7, 0x35);
+        fn_801D4954(t->mdl[6]);
+        t->mdl[6] = RING_LOAD(0x12);
+        fn_801D4954(t->mdl[13]);
+        t->mdl[13] = RING_LOAD(0x39);
+        done = 1;
+        lbl_80346B54 += 0.1f;
+        break;
+    default:
+        done = 1;
+        break;
+    }
+    fn_800277F4(t->mdl, t->holder->menu->count, lbl_80302A1C);
+    for (i = 0; i < 7; i++) {
+        Sprite* sp = t->mdl[i];
+        if (t->holder->menu->avail[i] == 0)
+            fn_801D5340(sp, 0, 0, RING_Z(i), lbl_80302A1C[i], 0.5f, 1.0f);
+        else
+            fn_801D5340(sp, 0, 0, RING_Z(i), lbl_80302A1C[i], 1.0f, 1.0f);
+    }
+    fn_801D5340(t->mdl[20], 0, 0, -1.1880001f, 0.0f, 1.0f, 1.0f);
+    fn_801D5340(t->mdl[21], 0, 0, -1.1880001f, 0.0f, 1.0f, 1.0f);
+    fn_801D5340(t->mdl[19], 0, 0, RING_Z(i), 0.0f, 1.0f, 1.0f);
+    fn_801D5340(t->mdl[18], 0, 0, RING_Z(i + 1), 0.0f, 1.0f, 1.0f);
+    return done;
 }
 
 void fn_80027484(Sprite** objs, s32 count, s32 mode)
