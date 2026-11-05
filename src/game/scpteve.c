@@ -395,28 +395,150 @@ const u32 lbl_802D624C[31] = {
     0x00000010, 0x08000A00, 0x0000001D, 0x00000029, 0x5000000A, 0x0000001D,
     0x0000000C,
 };
-const u32 lbl_802D62C8[22] = {
-    0x00000000, 0x50000021, 0x08000100, 0x00000004, 0x0000001D, 0x00000018,
-    0x00000010, 0x08000100, 0x0000001D, 0x0000000A, 0xFFFFFFD8, 0x00000029,
-    0x5000000A, 0x0000001D, 0x0000000C, 0x73637074, 0x5052494E, 0x54204D45,
-    0x533A204E, 0x4F204C41, 0x42454C21, 0x00000000,
-};
-const u32 lbl_802D6320[17] = {
-    0x73637074, 0x5052494E, 0x543A206D, 0x616C6C6F, 0x63206661, 0x696C6564,
-    0x20310000, 0x73637074, 0x5052494E, 0x54284D45, 0x53293A20, 0x6D657373,
-    0x61676520, 0x706F7374, 0x2074696D, 0x6564206F, 0x75740000,
-};
-const u32 lbl_802D6364[9] = {
-    0x73637074, 0x53454E4E, 0x494E3A20, 0x6D657373, 0x61676520, 0x706F7374,
-    0x2074696D, 0x6564206F, 0x75740000,
-};
-const char lbl_802D6388[0x38] = "\\h(\201@)This treasure chest used to contain \012%s [%s].\\c";
-const char lbl_802D63C0[0x30] = "\\h(\201@)This treasure chest used to contain %s.\\c";
-const char lbl_802D63F0[0x20] = "\\h(\201@)You received %s [%s]!\\c";
-const char lbl_802D6410[0x1C] = "\\h(\201@)You received %s!\\c";
-const char lbl_802D642C[0x3C] = "\\h(\201@)This chest has %s [%s]\012but you can't hold any more!\\c";
-const char lbl_802D6468[0x3C] = "\\h(\201@)You have found %s, but you cannot carry\\n anymore!\\c";
-const char lbl_802D64A4[0x14] = "OP TREASURE:No Task";
+const u32 lbl_802D62C8[15] = {0x00000000, 0x50000021, 0x08000100, 0x00000004, 0x0000001D, 0x00000018, 0x00000010, 0x08000100, 0x0000001D, 0x0000000A, 0xFFFFFFD8, 0x00000029, 0x5000000A, 0x0000001D, 0x0000000C};
+
+/* The work of the type-5 message window: slides in from x = 640 while the message plays. */
+typedef struct MesWin {
+    f32 x;                  /* 0x00 */
+    f32 y;                  /* 0x04 */
+    s32 state;              /* 0x08 */
+    Work_8020A938 *link;    /* 0x0c: the posted message */
+    s16 idx;                /* 0x10: next lbl_802F7538 entry */
+    s16 t;                  /* 0x12 */
+    s16 shown;              /* 0x14 */
+    s16 x16;                /* 0x16 */
+    s16 count;              /* 0x18 */
+} MesWin;
+extern s32 lbl_803477B0;
+extern Work_8020A938 *lbl_803477B4;
+extern void fn_800C3348(void);
+extern void fn_800C32D8(void);
+extern void fn_800C3054(f32 a, f32 b);
+extern void* fn_801E1C7C(s32 n);
+extern void fn_801E17E0(void *p);
+extern void fn_8020EAF4(MesWin *m);
+typedef struct MesEnt {
+    char text[0x20];
+    s16 s20;
+    s16 kind;               /* 0x22 */
+    s16 s24;
+    s16 s26;
+} MesEnt;
+extern MesEnt lbl_802F7538[];
+
+static inline u32 StrWord(void* p)
+{
+    u32* w = p;
+    return *w;
+}
+
+s32 fn_8020AAA8(u32 flags, Scpt* o)
+{
+    u16 fl = flags;
+    MesWin* e;
+    f32* q;
+    char* r;
+    void* t;
+    s32 idx;
+    s32 uninit;  /* the original stores this register unset */
+
+    if (flags & 1) {
+        f32* p;
+        e = fn_801E1A2C(1, 0x1c);
+        p = o->cur.f;
+        q = p + 1;
+        if (*q == 3.4028235e38f) {
+            q++;
+            idx = 0x7fffffff;
+        } else {
+            idx = (s32)fn_801F6120(&q);
+        }
+        lbl_8030CEA0.x1544[lbl_803477B0] = idx;
+        t = q;
+        r = t;
+        q++;
+        o->cur.f = q;
+        r += StrWord(r) & ~3;
+        if (StrWord(r) == 9) {
+            r += 4;
+            while (StrWord(r) != 0x1d) {
+                r += 4;
+            }
+            r += 4;
+        } else {
+            fn_801DBE1C("scptPRINT MES: NO LABEL!");
+        }
+        lbl_8030CEA0.x15c8 = 1;
+        if (e == 0) {
+            fn_801DBE1C("scptPRINT: malloc failed 1");
+        }
+        lbl_803477B4 = fn_801E1C7C(12);
+        lbl_803477B4->hd.kind = 0;
+        lbl_803477B4->hd.x04 = uninit;
+        if (uninit != 0x7fffffff) {
+            u32 n = strlen(r);
+            r[n - 2] = 0x5c;
+            r[n - 1] = 0x63;
+        }
+        lbl_803477B4->x08 = r;
+        e->x = 640.0f;
+        e->y = 0.0f;
+        e->state = 0;
+        e->t = lbl_802F7538[0].s20;
+        e->idx = 0;
+        e->shown = 0;
+        e->x16 = lbl_8030CEA0.x1544[lbl_803477B0];
+        e->count = 0;
+        e->link = lbl_803477B4;
+        o->work.mes = e;
+        fn_800C3348();
+    }
+    if (fl & 2) {
+        e = o->work.mes;
+        switch (e->state) {
+        case 0:
+            e->state++;
+        case 1:
+            {
+                f32 dx = 0.2f * -e->x;
+                f32 dy = 0.05f * (1.0f + e->y);
+                e->x += dx;
+                e->y += dy;
+            }
+            if (e->y >= 1.0f) {
+                e->y = 1.0f;
+            }
+            if (e->x <= 1.0f) {
+                e->state++;
+                fn_802110E8(o, 5, 0, 0, lbl_8030CEA0.x08, &e->link->hd);
+            }
+            fn_800C3054(e->x, 1.0f);
+            fn_8020EAF4(e);
+            break;
+        case 2:
+            fn_800C3054(0.0f, 1.0f);
+            fn_8020EAF4(e);
+            break;
+        }
+        if (o->handle == 0) {
+            o->handle = fn_800CD0B8(o->a20, o->a24, o->a28, o->a2c);
+            o->cnt++;
+            if (o->cnt == 5) {
+                fn_801DBE1C("scptPRINT(MES): message post timed out");
+            }
+        } else if (e->link->hd.kind == 2) {
+            lbl_8030CEA0.x15c8 = 0;
+            fn_800C32D8();
+            fn_801E17E0(lbl_803477B4);
+            return 0;
+        }
+    }
+    if (fl & 8) {
+        lbl_8030CEA0.x15c8 = 0;
+        return 0;
+    }
+    return 1;
+}
 
 s32 fn_8020AE04(u32 flags, Scpt* s)
 {
@@ -707,6 +829,94 @@ s32 fn_8020BDB0(u16 flags, Scpt* obj)
 }
 
 /* Script "treasure": opens the chest actor named by the argument and gives its contents. */
+s32 fn_8020BEE8(u16 flags, Scpt* c)
+{
+    f32 v[3];
+    char num[0x18];
+    char name[0x18];
+    f32* p;
+    s32 id;
+    u32 bit;
+    s32 amt;
+    s32 can;
+    s32 i;
+    if (flags & 1) {
+        p = c->cur.f;
+        p = p + 1;
+        id = (u16)ReadInt(&p);
+        bit = (u16)ReadInt(&p);
+        c->cur.f = p;
+        if (id < 0x200) {
+            amt = fn_801F452C(id);
+            sprintf(num, "%d", 1);
+            sprintf(name, "%s", num);
+        } else {
+            sprintf(num, "%d", 1);
+            sprintf(name, "%s gold", num);
+            amt = lbl_8030B7F4.w34c;
+        }
+        lbl_8030CEA0.x15c8 = 1;
+        if (FlagTest(bit) == 1) {
+            fn_8020FC7C(0xffff, 1, 0, 100);
+            fn_8020FB10(0xffff, 5.0f, 1, 0x7fffffff, 100, 1);
+            if (id < 0x200) {
+                sprintf(lbl_803146A8, "\\h(\201@)This treasure chest used to contain \n%s [%s].\\c", fn_801F4AE4(id), name);
+            } else {
+                sprintf(lbl_803146A8, "\\h(\201@)This treasure chest used to contain %s.\\c", name);
+            }
+            fn_8021026C(lbl_803146A8);
+            lbl_8030CEA0.stack[++lbl_8030CEA0.sp] = c->cur.f;
+            c->cur.rom = lbl_802D624C;
+        } else {
+            can = 0;
+            if (id < 0x200) {
+                if (amt < 0x63u) can = 1;
+            } else if (amt < 99999999u) {
+                can = 1;
+            }
+            if (can) {
+                if (id < 0x200) {
+                    if (amt + 1 > 0x63u) amt = 0x63 - amt;
+                    else amt = 1;
+                } else {
+                    if (amt + 1 > 99999999u) amt = 99999999 - amt;
+                    else amt = 1;
+                }
+                if (id < 0x200) {
+                    sprintf(lbl_803146A8, "\\h(\201@)You received %s [%s]!\\c", fn_801F4AE4(id), name);
+                } else {
+                    sprintf(lbl_803146A8, "\\h(\201@)You received %s!\\c", name);
+                }
+                fn_8021026C(lbl_803146A8);
+                lbl_80310B3C[bit >> 5] |= 1 << (bit & 31);
+                if (id < 0x200) {
+                    for (i = 0; i < amt; i++) fn_801EFF0C(id);
+                } else {
+                    lbl_8030B7F4.w34c += amt;
+                }
+                fn_8020FC7C(0xffff, 1, 0, 100);
+                v[1] = 0.005493164f * (f32)lbl_80311970.w[1];
+                v[2] = 0.0f;
+                v[0] = 0.0f;
+                fn_8020F998(0xffff, v, 5, 2, 0x7fffffff, 0xc8);
+                fn_8020FF44(0xffff, 1);
+                fn_8020FDE0(0xffff, 0x32, 0x7fffffff, 100);
+            } else {
+                fn_8020FC7C(0xffff, 1, 0, 100);
+                if (id < 0x200) {
+                    sprintf(lbl_803146A8, "\\h(\201@)This chest has %s [%s]\nbut you can't hold any more!\\c", fn_801F4AE4(id), name);
+                } else {
+                    sprintf(lbl_803146A8, "\\h(\201@)You have found %s, but you cannot carry\\n anymore!\\c", name);
+                }
+                fn_8021026C(lbl_803146A8);
+            }
+            lbl_8030CEA0.stack[++lbl_8030CEA0.sp] = c->cur.f;
+            c->cur.rom = lbl_802D624C;
+        }
+    }
+    return 0;
+}
+
 s32 fn_8020C390(u32 flags, Scpt* s) {
     f32* cur;
     u32 id;
@@ -732,7 +942,7 @@ s32 fn_8020C390(u32 flags, Scpt* s) {
         s->cur.f = cur;
         act = fn_8015F1A0(id);
         if (act == NULL) {
-            fn_801DBE1C(lbl_802D64A4);
+            fn_801DBE1C("OP TREASURE:No Task");
         }
         src = act->x1c8->x10;
         chest = (*src > 8) ? src[9] : 0;
@@ -751,9 +961,9 @@ s32 fn_8020C390(u32 flags, Scpt* s) {
         lbl_8030CEA0.x15c8 = 1;
         if (FlagTest(bit) == 1) {
             if (item < 0x200) {
-                sprintf(lbl_803146A8, lbl_802D6388, fn_801F4AE4(item), str);
+                sprintf(lbl_803146A8, "\\h(\201@)This treasure chest used to contain \012%s [%s].\\c", fn_801F4AE4(item), str);
             } else {
-                sprintf(lbl_803146A8, lbl_802D63C0, str);
+                sprintf(lbl_803146A8, "\\h(\201@)This treasure chest used to contain %s.\\c", str);
             }
             fn_8021026C(lbl_803146A8);
             lbl_8030CEA0.stack[++lbl_8030CEA0.sp] = s->cur.f;
@@ -790,9 +1000,9 @@ s32 fn_8020C390(u32 flags, Scpt* s) {
                     n = count;
                 }
                 if (item < 0x200) {
-                    sprintf(lbl_803146A8, lbl_802D63F0, fn_801F4AE4(item), str);
+                    sprintf(lbl_803146A8, "\\h(\201@)You received %s [%s]!\\c", fn_801F4AE4(item), str);
                 } else {
-                    sprintf(lbl_803146A8, lbl_802D6410, str);
+                    sprintf(lbl_803146A8, "\\h(\201@)You received %s!\\c", str);
                 }
                 fn_8021026C(lbl_803146A8);
                 lbl_80310B3C[bit >> 5] |= 1 << (bit & 31);
@@ -830,9 +1040,9 @@ s32 fn_8020C390(u32 flags, Scpt* s) {
                     fn_8020FC7C(0xffff, 1, 0, 100);
                 }
                 if (item < 0x200) {
-                    sprintf(lbl_803146A8, lbl_802D642C, fn_801F4AE4(item), str);
+                    sprintf(lbl_803146A8, "\\h(\201@)This chest has %s [%s]\012but you can't hold any more!\\c", fn_801F4AE4(item), str);
                 } else {
-                    sprintf(lbl_803146A8, lbl_802D6468, str);
+                    sprintf(lbl_803146A8, "\\h(\201@)You have found %s, but you cannot carry\\n anymore!\\c", str);
                 }
                 fn_8021026C(lbl_803146A8);
             }

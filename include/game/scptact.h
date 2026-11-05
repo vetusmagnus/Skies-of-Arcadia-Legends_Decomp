@@ -62,6 +62,7 @@ typedef struct Scpt {
         struct Rec_80208A20 *rec_80208A20;
         struct Rec_80209974 *rec_80209974;
         struct Work_8020A938 *work_8020A938;
+        struct MesWin *mes;
         struct Work_8020A584 *work_8020A584;
         struct Work_8020D2A8 *work_8020D2A8;
         struct Work_8020DBC4 *work_8020DBC4;
