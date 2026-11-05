@@ -472,12 +472,6 @@ void * fn_801094C8(u32 key);
 void fn_801DBE1C(const char *fmt, ...);
 void fn_800E1A58(void *p);
 void fn_80297CC0(s32 a, s32 b, s32 c, s32 d);
-typedef struct K06Obj_800EC3EC {
-    u8 pad0[0x38];
-    f32 f38;
-    u8 pad1[0x40 - 0x3c];
-    f32 f40;
-} K06Obj_800EC3EC;
 extern f32 lbl_802E3CB0[];
 extern f32 lbl_802E3CD0[];
 typedef struct K06A {
@@ -647,25 +641,36 @@ typedef struct {           /* 0x6C */
     UiObj o;
     u8 pad4c[0x20];
 } ResPanel;
+typedef struct {           /* 0x04 */
+    s16 id;      /* 0x00 */
+    s16 age;     /* 0x02 */
+} ResSnd;
 typedef struct {           /* 0x0C */
-    u8 pad0[4];
+    u32 handle;  /* 0x00 sound handle */
     s16 id;      /* 0x04 */
     s16 arg;     /* 0x06 */
     s16 flags;   /* 0x08 */
     s16 ha;      /* 0x0A */
 } ResEv;
-typedef struct {           /* 0x14 */
-    s16 sel;     /* 0x00 */
-    s8 on[6];    /* 0x02 */
-    s16 slot[6]; /* 0x08 */
+typedef struct {           /* 0x14, one per party member: the two panels sliding in and out */
+    s16 sel;     /* 0x00 which of the two is shown */
+    s8 on[2];    /* 0x02 */
+    s16 type[2]; /* 0x04 what each panel shows (the event kind) */
+    s16 slot[2]; /* 0x08 index into spr/obj */
+    f32 z[2];    /* 0x0C draw z */
 } ResMem;
 typedef struct {           /* 0x42 */
     u8 b0;       /* 0x00 */
     u8 pad1;
     u8 b2;       /* 0x02 */
-    u8 pad3[0x14];
-    u8 b17;      /* 0x17 */
-    u8 pad18[0x2a];
+    u8 pad3;
+    u16 h4, h6, h8, ha, hc, he, h10, h12, h14; /* 0x04 */
+    u8 pad16;
+    u8 cnt;      /* 0x17 queued stat gains */
+    u8 head;     /* 0x18 */
+    u8 which;    /* 0x19 */
+    s8 out[2][2]; /* 0x1A */
+    s8 list[0x24]; /* 0x1E */
 } ResRow;
 typedef struct {           /* 0x6E */
     s16 h[2];    /* 0x00 indexed by ResSwap.sel */
@@ -726,7 +731,8 @@ typedef struct {
     ResRow row[4];       /* 0x1C0 */
     ResMem mem[4];       /* 0x2C8 */
     f32 z318[4];         /* 0x318 per-member draw z */
-    u8 pad328[0x20];
+    f32 z328[4];         /* 0x328 */
+    f32 z338[4];         /* 0x338 */
     f32 x348[4];         /* 0x348 */
     f32 x358[4];         /* 0x358 */
     u8 pad368[4];
@@ -738,7 +744,9 @@ typedef struct {
     u8 pad10d0[0x420];
     s16 evIdx;           /* 0x14F0 */
     s16 h14f2;           /* 0x14F2 */
-    u8 pad14f4[0x44];
+    s16 nsnd;            /* 0x14F4 */
+    ResSnd snd[16];      /* 0x14F6 sounds in flight */
+    u8 pad1536[2];
     ResEv ev[16];        /* 0x1538 */
     u8 sub[0x14];        /* 0x15F8 */
     s32 active;          /* 0x160C */
@@ -1790,7 +1798,7 @@ typedef struct {
 typedef struct {
     u8 on;
     u8 pad1;
-    s16 x2;    /* 0x02 */
+    u16 x2;    /* 0x02 */
 } Mark;
 /* The board screen's work (lbl_80346DF4). */
 typedef struct {
@@ -1800,7 +1808,9 @@ typedef struct {
     s16 mode;          /* 0x0C */
     u8 padE[2];
     Board board;       /* 0x10 */
-    u8 pad1c90[8];
+    u8 pad1c90[4];
+    s16 cnt;           /* 0x1C94 */
+    s16 timer;         /* 0x1C96 */
     Obj50 base;        /* 0x1C98: the board's offset */
     Obj50 cursor;      /* 0x1CE8 */
     Obj50 slot[10];    /* 0x1D38 */
@@ -1811,10 +1821,11 @@ typedef struct {
 /* lbl_80305C78 */
 typedef struct {
     s16 flag;
-    u8 pad2[2];
+    s16 h2;
     s16 x;
     s16 y;
-    u8 pad8[0xc];
+    f32 pos;
+    u8 padC[8];
     u16 x14;
     u16 count;
     u16 piece[10];
@@ -4205,6 +4216,47 @@ static inline s32 CellSetFrame(Desc* d, s8 f) {
     return 0;
 }
 
+extern void fn_800E9424(f32 z, s16 row, u32 exp, s32 next, s16 idx);
+extern void fn_800E9044(s16 kind, s16 p, s32 a, s32 b, s32 c, s32 d, s32 q, f32 z);
+extern void fn_800E8C6C(s16 p, ResGrow* row, s16 q, f32 z);
+extern void fn_800E88FC(s16 row, s32 a, s32 b, s32 idx, f32 z);
+
+void fn_800E6554(void) {
+    s16 j;
+    s16 i;
+    for (i = 0; i < lbl_80346DCC->count; i++) {
+        ResMem* ev = &lbl_80346DCC->mem[i];
+        ResRow* row = &lbl_80346DCC->row[i];
+        for (j = 0; j < 2; j++) {
+            s32 val = ev->slot[j];
+            s16 t = ev->z[j];
+            switch (ev->type[j]) {
+            case 1:
+                fn_800E9424(ev->z[j], i, lbl_80346DCC->member[i].exp, lbl_80346DCC->member[i].next, val);
+                break;
+            case 2:
+                fn_800E9044(2, i, row->h4, row->h6, row->h8, row->h14, val, t);
+                break;
+            case 3:
+                fn_800E9044(3, i, row->ha, row->hc, row->he, -1, val, t);
+                break;
+            case 4:
+                fn_800E9044(4, i, row->h10, -1, row->h12, -1, val, t);
+                break;
+            case 5:
+                fn_800E8C6C(i, &lbl_80346DCC->grow[i], val, t);
+                break;
+            case 6:
+                fn_800E88FC(i, row->out[0][0], row->out[0][1], val, t);
+                break;
+            case 7:
+                fn_800E88FC(i, row->out[1][0], row->out[1][1], val, t);
+                break;
+            }
+        }
+    }
+}
+
 static inline s16 GrowStep(s16 i, s8 j, s8 k) {
     return lbl_803082F8.level->grow[lbl_80346DCC->member[i].chr][j][k];
 }
@@ -4382,6 +4434,14 @@ void fn_800EB754(void) {
         break;
     }
 }
+
+extern s16 fn_800EC040(void);
+extern s16 fn_800EC3EC(EvObj *p);
+extern void fn_800EC488(void);
+extern void fn_800EC210(void);
+extern void fn_801D8840(Obj50* o);
+extern s32 lbl_80346DE0;
+extern s32 lbl_80346DE4;
 
 void fn_800EC488(void) {
     Desc* d;
@@ -5778,7 +5838,7 @@ void fn_800E2924(s32 idx) {
     lbl_80346DB8 = 0;
 }
 
-s16 fn_800EC3EC(K06Obj_800EC3EC *p) {
+s16 fn_800EC3EC(EvObj *p) {
     s16 i;
     s16 n6;
     s16 n7;
@@ -5786,13 +5846,13 @@ s16 fn_800EC3EC(K06Obj_800EC3EC *p) {
     n7 = 0;
     n6 = 0;
     for (i = 0; i < 7; i++) {
-        if (p->f38 > lbl_802E3CB0[i]) {
+        if (p->pos.x > lbl_802E3CB0[i]) {
             break;
         }
         n6++;
     }
     for (i = 0; i < 8; i++) {
-        if (p->f40 > lbl_802E3CD0[i]) {
+        if (p->pos.z > lbl_802E3CD0[i]) {
             break;
         }
         n7++;

@@ -7,6 +7,7 @@
 #include "game/evobj.h"
 #include <dolphin/os/OSFastCast.h>
 #include "game/unit_800972AC.h"
+#include "game/camera_803119E0.h"
 typedef struct SubA {
     u8 pad_00[0x10];
     TblA *tbl_10;
@@ -129,7 +130,8 @@ typedef struct {
     u16* w0;
     NJS_POINT3* w4;
     Angle* w8;
-    u8 pad0[0x24 - 0xc];
+    NJS_POINT3 off;
+    u8 pad18[0x24 - 0x18];
     f32 f24, f28, f2c, f30;
     s32 w34, w38;
     s32 w3c, w40;
@@ -140,7 +142,7 @@ typedef struct {
     s32 w60;
     u32* w64;
     s32 w68;
-    u32* w6c;
+    s32 w6c;
     s32 w70;
     f32 f74, f78;
 } P;
@@ -151,13 +153,13 @@ typedef struct Tbl_800A3ED4 {
 } Tbl_800A3ED4;
 typedef struct Tbl2_800A3ED4 {
     u32 n;
-    u32 w[2];
+    void* w[2];
 } Tbl2_800A3ED4;
 typedef struct Src_800A3ED4 {
     u8 pad0[4];
     s32 w4;
     u8 pad8[8];
-    Tbl_800A3ED4* p10;
+    void* p10; /* per-kind info record; Tbl_800A3ED4 for the effect list */
     u8 pad14[0x1c - 0x14];
     Tbl2_800A3ED4* p1c;
     u8 pad20[0x38 - 0x20];
@@ -167,42 +169,79 @@ typedef struct Src_800A3ED4 {
     f32 f50, f54, f58;
     NJS_POINT3 v5c;
 } Src_800A3ED4;
-typedef struct Sub_800A3ED4 {
+typedef struct Sub_800A3ED4 Sub_800A3ED4;
+struct Sub_800A3ED4 {
     s16 h0;
-    u8 pad2[0x2c - 2];
+    u8 pad2[0x18 - 2];
+    u32 x18;
+    f32 alpha;
+    u8 pad20[0x2c - 0x20];
     s32 w2c;
     s32 w30;
     s32 w34;
     NJS_POINT3 v38;
-    s32 w44, w48, w4c;
+    Angle ang[3];
     NJS_POINT3 v50;
-    u8 pad5c[0xe4 - 0x5c];
-    s32 we4;
-    s32 we8;
-    s32 wec;
+    NJS_POINT3 vel;
+    u8 pad68[0xe4 - 0x68];
+    void* we4;
+    NJS_MOTION* motion;
+    void* wec;
     u8 padf0[0x100 - 0xf0];
-    void* w100;
+    NJS_TEXLIST* w100;
     u8 pad104[0x16e - 0x104];
     s16 h16e;
-    u8 pad170[0x178 - 0x170];
+    u8 pad170[0x176 - 0x170];
+    u16 id;
     s16 h178;
     s16 h17a;
-    u8 pad17c[0x190 - 0x17c];
+    u8 pad17c[0x184 - 0x17c];
+    s32 hidden;
+    u8 pad188[4];
+    f32 x18c;
     f32 f190;
-    u8 pad194[0x1a8 - 0x194];
+    u8 pad194[4];
+    s32 x198;
+    s32 x19c;
+    s32 w1a0;
+    u8 pad1a4[0x1a8 - 0x1a4];
     f32 f1a8;
     u8 pad1ac[0x1c8 - 0x1ac];
     Src_800A3ED4* p1c8;
-} Sub_800A3ED4;
-typedef struct Obj_800A3ED4 {
-    u8 pad0[0x18];
+    u8 pad1cc[0x1d8 - 0x1cc];
+    Sub_800A3ED4* p1d8;
+    u8 pad1dc[0x208 - 0x1dc];
+    s16 x208, x20a;
+    Ang3 x20c;
+    u8 pad218[0x21d - 0x218];
+    u8 x21d;
+    u8 pad21e[0x232 - 0x21e];
+    u16 point;
+    u8 pad234[0x238 - 0x234];
+    u16 x238;
+    u8 pad23a[0x24c - 0x23a];
+    NJS_POINT3 x24c;
+    u8 pad258[0x25c - 0x258];
+    void* x25c;
+    void* x260; /* per-kind record: P (fn_800A9708/fn_800A8FE0), Emit (fn_800A6F30...) */
+    ItemList* x264;
+};
+typedef struct Obj_800A3ED4 Obj_800A3ED4;
+struct Obj_800A3ED4 {
+    u8 pad0[8];
+    Obj_800A3ED4* parent;
+    u8 pad0c[0x18 - 0xc];
     u8 flags;
-    u8 pad19[0x24 - 0x19];
+    u8 state;
+    u8 pad1a;
+    u8 prio;
+    u8 pad1c[4];
+    f32 f20;
     Sub_800A3ED4* sub;
     u8 pad28[0x40 - 0x28];
     u8 area[0x270 - 0x40];
-} Obj_800A3ED4;
-extern s32 fn_800C355C(void** out, Src_800A3ED4* ctx, s32 idx);
+};
+extern void* fn_800C355C(NJS_TEXLIST** out, Src_800A3ED4* ctx, s32 idx);
 /* Scales a 0..1 float to a u8 (x * 255) with the SDK fast cast (psq_st through GQR2).
  * The original calls the Dolphin SDK inline __OSf32tou8 from <dolphin/os/OSFastCast.h>.
  * The game code itself is plain C. Siblings: fn_8009E4B8 = __OSu8tof32(b) * K,
@@ -222,7 +261,7 @@ static inline EvInfoTimer* TimerInfo(EvObj* e) {
 }
 extern s32 fn_8015E600(EvObj*);
 extern void fn_800972AC(void);
-extern EvObj* fn_8015F180(EvObj*);
+extern void* fn_8015F180(void*);
 extern void fn_80097294(s32);
 extern void fn_800970D8(u16, s32, f32);
 extern void fn_800970B4(u16, s32, f32);
@@ -381,7 +420,7 @@ typedef struct {
     s32 x10;         /* 0x10 */
     u8 pad14[4];
 } RingPart;
-u32 *fn_800A10A8(u32 *base, u32 i, s32 n);
+u32 fn_800A10A8(u32 *base, u32 i, s32 n);
 void *fn_800A1ABC(EvObj *b, u32 i);
 u32 fn_800A1AE8(EvObj* o, u32 idx);
 void fn_800A1210(NJS_VECTOR *out, NJS_VECTOR *in, Angle deg, f32 radius);
@@ -501,9 +540,9 @@ Obj_800A3ED4* fn_800A3ED4(void* list, void* cb, s16 v, Src_800A3ED4* src) {
         s->v38.y = y;
         s->v38.x = x;
     }
-    s->w44 = (s32)(182.04445f * src->f50);
-    s->w48 = (s32)(182.04445f * src->f54);
-    s->w4c = (s32)(182.04445f * src->f58);
+    s->ang[0] = (s32)(182.04445f * src->f50);
+    s->ang[1] = (s32)(182.04445f * src->f54);
+    s->ang[2] = (s32)(182.04445f * src->f58);
     {
         f32 x = src->v5c.x;
         f32 y = src->v5c.y;
@@ -524,7 +563,7 @@ Obj_800A3ED4* fn_800A3ED4(void* list, void* cb, s16 v, Src_800A3ED4* src) {
     if (src != 0) {
         s->we4 = fn_800C355C(&s->w100, src, 0);
         if (src->p1c->n != 0) {
-            s->we8 = src->p1c->w[0];
+            s->motion = src->p1c->w[0];
             if (src->p1c->n > 1) {
                 s->wec = src->p1c->w[1];
             }
@@ -532,6 +571,335 @@ Obj_800A3ED4* fn_800A3ED4(void* list, void* cb, s16 v, Src_800A3ED4* src) {
     }
     return o;
 }
+
+extern void fn_80227810(NJS_TEXLIST *p);
+extern void fn_8009E630(Obj_800A3ED4 *t);
+extern void fn_801E1784(void *p);
+extern void fn_802275A4(NJS_TEXLIST *h, s32 a);
+extern void fn_801E5608(Sub_800A3ED4 *w, s32 a, u32 b);
+extern f32 njCos(Angle a);
+extern f32 njSin(Angle a);
+s32 fn_800A10C4(u32 *base, s32 i, s32 n);
+void fn_800A1948(NJS_POINT3 *unused, Angle *dst, u8 flags);
+NJS_TEXLIST *fn_800A1B50(Sub_800A3ED4 *obj);
+void fn_800A10E8(NJS_POINT3 *p, NJS_POINT3 *origin, f32 extra);
+extern void fn_800D2924(Sub_800A3ED4* o);
+extern void fn_801DBE1C(const char* fmt, ...);
+extern f32 fn_8009E3D0(s32 kind, void* model, NJS_POINT3* scl);
+extern void njProjectScreen(void* m, NJS_POINT3* p, f32* out);
+extern void fn_80296EEC(s32 a, s32 b, s32 c);
+extern void fn_800A12D8(NJS_POINT3* p, NJS_POINT3* origin, s32 ang);
+extern void fn_8009E804(ItemList* list, s32 idx);
+static inline s32 SubFlag(Sub_800A3ED4* o) {
+    return o->p1d8 != NULL ? o->p1d8->w1a0 : 1;
+}
+
+typedef struct {
+    u8 pad0[0x44];
+    s32 follow; /* <= -1 follows the parent every frame */
+} EvInfoSmoke_800A8FE0;
+
+void fn_800A8FE0(Obj_800A3ED4* task) {
+    Sub_800A3ED4* obj = task->sub;
+    Sub_800A3ED4* pw;
+    P* em = obj->x260;
+    f32 scr[2];
+    NJS_POINT3 v;
+    NJS_MATRIX m;
+    f32 margin;
+    EvInfoSmoke_800A8FE0* si;
+
+    if (task->parent->flags & 0x40) {
+        task->state = 0xFF;
+    } else {
+        pw = task->parent->sub;
+        fn_800D2924(pw);
+    }
+    if (task->flags & 0x20) {
+        task->state = 0xFF;
+    }
+    switch (task->state) {
+    case 0:
+        task->prio = 0xFB;
+        obj->x24c.x = pw->x24c.x;
+        obj->x24c.y = pw->x24c.y;
+        obj->x24c.z = pw->x24c.z;
+        obj->x20c.x = pw->x20c.x;
+        obj->x20c.y = pw->x20c.y;
+        obj->x20c.z = pw->x20c.z;
+        em->off.x = obj->v38.x - obj->x24c.x;
+        em->off.y = obj->v38.y - obj->x24c.y;
+        em->off.z = obj->v38.z - obj->x24c.z;
+        (*em->w0)++;
+        if (em->w5c != NULL) {
+            obj->w100 = em->w5c;
+        }
+        if (em->w48 > 0) {
+            obj->alpha = -1.0f;
+        } else {
+            obj->alpha = 0.0f;
+        }
+        obj->v50.x = pw->v50.x;
+        obj->v50.y = pw->v50.y;
+        obj->v50.z = pw->v50.z;
+        obj->x18 |= 0x1000;
+        obj->id = 3;
+        obj->h16e = 1;
+        task->state = 1;
+    case 1:
+        if ((si = pw->p1c8->p10)->follow <= -1) {
+            obj->x24c.x = pw->x24c.x;
+            obj->x24c.y = pw->x24c.y;
+            obj->x24c.z = pw->x24c.z;
+            obj->x20c.x = pw->x20c.x;
+            obj->x20c.y = pw->x20c.y;
+            obj->x20c.z = pw->x20c.z;
+        }
+        if (obj->w100 != NULL) {
+            fn_80299040(obj->w100);
+            if (em->w64 != NULL) {
+                u32 idx = fn_800A10C4(em->w64, em->w70, em->w60);
+                if (idx < obj->w100->nbTexture) {
+                    fn_80298FE4(idx);
+                } else {
+                    fn_801DBE1C("eff_smoke2: Texture No.%d not found.", idx);
+                }
+            } else {
+                fn_80298FE4(0);
+            }
+        }
+        if (em->w68 < em->w48) {
+            obj->alpha = 1.0f / (f32)em->w48 * (f32)em->w68 + -1.0f;
+        } else if (em->w68 == em->w48) {
+            obj->alpha = 0.0f;
+        } else if (em->w68 > em->w4c - em->w50) {
+            obj->alpha = 1.0f / (f32)em->w50 * (f32)(em->w4c - em->w68) + -1.0f;
+        } else if (em->w68 == em->w4c) {
+            obj->alpha = -1.0f;
+        }
+        if (SubFlag(pw) == 0) {
+            if (obj->hidden == 0) {
+                njUnitMatrix(m);
+                njRotateXYZ(m, obj->x20c.x, obj->x20c.y, obj->x20c.z);
+                njCalcPoint(m, &em->off, &obj->v38);
+                obj->v38.x += obj->x24c.x;
+                obj->v38.y += obj->x24c.y;
+                obj->v38.z += obj->x24c.z;
+            }
+            margin = fn_8009E3D0(7, fn_801C8930(obj->we4), &obj->v50);
+            njProjectScreen(NULL, &obj->v38, scr);
+            njCalcPoint(NULL, &obj->v38, &v);
+            task->f20 = -200.0f + v.z;
+            if (scr[0] < 640.0f + margin && scr[0] > -margin && scr[1] < 480.0f + margin && scr[1] > -margin) {
+                fn_80296EEC(1, 3, 0);
+                if (em->w64 != NULL) {
+                    fn_801E5608(obj, fn_800A10C4(em->w64, em->w70, em->w60), obj->w100->nbTexture);
+                } else {
+                    fn_801E5608(obj, 0, obj->w100->nbTexture);
+                }
+                fn_80296EEC(1, 3, 1);
+            }
+        }
+        {
+            NJS_POINT3 org = { 0.0f, 0.0f, 0.0f };
+            em->off.y = em->f24 * njCos(182.04445f * em->w44) + em->off.y;
+            fn_800A10E8(&em->off, &org, em->f24 * njSin(182.04445f * em->w44));
+            em->f24 += em->f2c;
+            fn_800A12D8(&em->off, &org, em->w3c);
+            em->w3c += em->w40;
+        }
+        obj->v50.x += pw->v50.x * em->f54 - pw->v50.x;
+        obj->v50.y += pw->v50.y * em->f54 - pw->v50.y;
+        obj->v50.z += pw->v50.z * em->f54 - pw->v50.z;
+        if (obj->v50.x < 0.0f) {
+            obj->v50.x = 0.0f;
+        }
+        if (obj->v50.y < 0.0f) {
+            obj->v50.y = 0.0f;
+        }
+        if (obj->v50.z < 0.0f) {
+            obj->v50.z = 0.0f;
+        }
+        if (em->w6c == 0 && em->w70 < em->w60) {
+            em->w70++;
+            if (em->w70 == em->w60 && em->w58 == 1) {
+                em->w70 = 0;
+            }
+            if (em->w70 < em->w60) {
+                em->w6c = fn_800A10A8(em->w64, em->w70, em->w60) - 1;
+            }
+        } else if (em->w70 != em->w60) {
+            em->w6c--;
+        }
+        if (em->w70 == em->w60 && em->w70 > 0) {
+            em->w70 = em->w60 - 1;
+        }
+        if (em->w68 == em->w4c) {
+            task->state = 2;
+        } else {
+            em->w68++;
+        }
+        break;
+    case 2:
+        (*em->w0)--;
+        if (*em->w0 == 0xFFFF) {
+            *em->w0 = 0;
+        }
+        fn_8009E804(pw->x264, obj->x238);
+    case 0xFF:
+        if (em != NULL) {
+            fn_801E1784(em);
+        }
+        obj->x264 = NULL;
+        obj->x260 = NULL;
+        obj->x25c = NULL;
+        fn_8009E630(task);
+        break;
+    case 0xfe:
+        break;
+    }
+}
+
+
+void fn_800A9708(Obj_800A3ED4 *t)
+{
+    Sub_800A3ED4 *w = t->sub;
+    Sub_800A3ED4 *pw;
+    P *fx = w->x260;
+    NJS_MATRIX m;
+    NJS_POINT3 c;
+
+    if (t->parent->flags & 0x40) {
+        t->state = 0xff;
+    } else {
+        pw = t->parent->sub;
+    }
+    if (t->flags & 0x20) {
+        t->state = 0xff;
+    }
+    switch (t->state) {
+    case 0:
+        t->prio = 0xfb;
+        fx->off.x = w->v38.x - fx->w4->x;
+        fx->off.y = w->v38.y - fx->w4->y;
+        fx->off.z = w->v38.z - fx->w4->z;
+        (*fx->w0)++;
+        if (fx->w5c != NULL) {
+            w->w100 = fx->w5c;
+        } else {
+            w->w100 = fn_800A1B50(w);
+            fx->w5c = w->w100;
+        }
+        if (w->w100 != NULL) {
+            fn_80227810(w->w100);
+        }
+        if (fx->w48 > 0) {
+            w->alpha = -1.0f;
+        } else {
+            w->alpha = 0.0f;
+        }
+        w->v50.x = pw->v50.x;
+        w->v50.y = pw->v50.y;
+        w->v50.z = pw->v50.z;
+        w->id &= 0xff00;
+        w->id |= 1;
+        t->state = 1;
+    case 1:
+        if (w->w100 != NULL) {
+            fn_80299040(w->w100);
+            if (fx->w64 != NULL) {
+                fn_80298FE4(fn_800A10C4(fx->w64, fx->w70, fx->w60));
+            } else {
+                fn_80298FE4(0);
+            }
+        }
+        if (fx->w68 < fx->w48) {
+            w->alpha = 1.0f / fx->w48 * fx->w68 + -1.0f;
+        } else if (fx->w68 == fx->w48) {
+            w->alpha = 0.0f;
+        } else if (fx->w68 > fx->w4c - fx->w50) {
+            w->alpha = 1.0f / fx->w50 * (fx->w4c - fx->w68) + -1.0f;
+        } else if (fx->w68 == fx->w4c) {
+            w->alpha = -1.0f;
+        }
+        if ((pw->p1d8 != NULL ? pw->p1d8->w1a0 : 1) == 0) {
+            njUnitMatrix(m);
+            njRotateXYZ(m, fx->w8[0], fx->w8[1], fx->w8[2]);
+            njCalcPoint(m, &fx->off, &w->v38);
+            w->v38.x += fx->w4->x;
+            w->v38.y += fx->w4->y;
+            w->v38.z += fx->w4->z;
+            fn_800A1948(&w->v38, w->ang, 3);
+            if (fx->w64 != NULL) {
+                fn_801E5608(w, fn_800A10C4(fx->w64, fx->w70, fx->w60), w->w100->nbTexture);
+            } else {
+                fn_801E5608(w, 0, w->w100->nbTexture);
+            }
+        }
+        {
+            NJS_POINT3 c2 = { 0.0f, 0.0f, 0.0f };
+            c = c2;
+        }
+        fx->off.y = fx->f24 * njCos((Angle)(182.04445f * fx->w44)) + fx->off.y;
+        fn_800A10E8(&fx->off, &c, fx->f24 * njSin((Angle)(182.04445f * fx->w44)));
+        fx->f24 = fx->f24 + fx->f2c;
+        fx->w34 = fx->w34 + fx->w38;
+        w->v50.x = w->v50.x + (pw->v50.x * fx->f54 - pw->v50.x);
+        w->v50.y = w->v50.y + (pw->v50.y * fx->f54 - pw->v50.y);
+        w->v50.z = w->v50.z + (pw->v50.z * fx->f54 - pw->v50.z);
+        if (w->v50.x < 0.0f) {
+            w->v50.x = 0.0f;
+        }
+        if (w->v50.y < 0.0f) {
+            w->v50.y = 0.0f;
+        }
+        if (w->v50.z < 0.0f) {
+            w->v50.z = 0.0f;
+        }
+        if (fx->w6c == 0 && fx->w70 < fx->w60) {
+            fx->w70++;
+            if (fx->w70 == fx->w60 && fx->w58 == 1) {
+                fx->w70 = 0;
+            }
+            if (fx->w70 < fx->w60) {
+                fx->w6c = fn_800A10A8(fx->w64, fx->w70, fx->w60) - 1;
+            }
+        } else if (fx->w70 != fx->w60) {
+            fx->w6c--;
+        }
+        if (fx->w70 == fx->w60 && fx->w70 > 0) {
+            fx->w70 = fx->w60 - 1;
+        }
+        if (fx->w68 == fx->w4c) {
+            t->state = 2;
+        } else {
+            fx->w68++;
+        }
+        break;
+    case 2:
+        (*fx->w0)--;
+        if (*fx->w0 == 0xffff) {
+            *fx->w0 = 0;
+        }
+    case 0xff:
+        if (w->w100 != NULL && w->w100->textures->texaddr != NULL) {
+            fn_802275A4(w->w100, 0);
+        }
+        if (fx != NULL) {
+            fn_801E1784(fx);
+        }
+        w->x264 = NULL;
+        w->x260 = NULL;
+        w->x25c = NULL;
+
+        fn_8009E630(t);
+        break;
+    case 0xfe:
+        break;
+    }
+}
+
+/*@@NEW@@*/
 
 void fn_800AE000(Task* o) {
     EvObj* w = o->work;

@@ -4,6 +4,7 @@
 usage: tools/match/fdiff.py SRC FN [FN...]
   CCV=<version>  compiler (default GC/1.3.2, the game's)
   XF="<flags>"   extra compiler flags
+  INC=<dir>      an include directory searched before include/ (to try header changes)
 Prints `== FN: orig N mine M` per function, then a unified diff (empty = match). Function names
 are looked up in build/match/asmindex.pickle: run tools/match/asmindex.py build after renames.
 
@@ -23,7 +24,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 WORK = os.path.join(ROOT, "build", "match")
 FLAGS = ('-nodefaults -proc gekko -align powerpc -enum int -fp hardware -Cpp_exceptions off -O4,p '
          '-inline auto -pragma "cats off" -pragma "warn_notinlined off" -maxerrors 1 -nosyspath -RTTI off '
-         '-fp_contract on -str reuse -multibyte -i include -i build/GEAE8P/include -use_lmw_stmw on '
+         '-fp_contract on -str reuse -multibyte ' + (('-i ' + os.environ['INC'] + ' ') if os.environ.get('INC') else '') + '-i include -i build/GEAE8P/include -use_lmw_stmw on '
          '-i extern/sdk/include -i extern/sdk/libc -inline noauto')
 INS = re.compile(r"^/\* ([0-9A-F]{8}) [0-9A-F]{8}  (?:[0-9A-F]{2} ){4}\*/\s+(.*)$")
 SYM = re.compile(r"(\"[^\"]*\"|[A-Za-z_@$.][\w@$.]*)((?:[+-]0x[0-9A-Fa-f]+)?)@(ha|l|h|sda21)\b")
