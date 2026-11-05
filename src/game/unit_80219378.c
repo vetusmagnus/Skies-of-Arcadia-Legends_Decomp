@@ -11,6 +11,8 @@
 #include "game/gamedata.h"
 #include "game/sprite.h"
 #include <stdio.h>
+#include <string.h>
+#include <dolphin/dvd.h>
 #include "game/draw2d.h"
 /* Digit glyph codes for the ones, tens, hundreds and thousands places. These are the start of
  * the original file's .data (lbl_802F8A20, 0x58 bytes): separate arrays, addressed from one
@@ -19,7 +21,7 @@ u16 lbl_802F8A20[10] = { 0x0000, 0x6800, 0x7800, 0x1800, 0x1400, 0x0100, 0x1200,
 u16 lbl_802F8A34[12] = { 0x0000, 0x0001, 0x0002, 0x0003, 0x0004, 0x0005, 0x0006, 0x0007, 0x0008, 0x0009, 0x0000, 0x0000 };
 u16 lbl_802F8A4C[8] = { 0x0000, 0x0010, 0x0020, 0x0030, 0x0040, 0x0050, 0x0060, 0x0000 };
 u16 lbl_802F8A5C[14] = { 0x0000, 0x8000, 0x8200, 0x8400, 0x8600, 0x8800, 0x8A00, 0x8C00, 0x8E00, 0x9000, 0x0000, 0x0000, 0x0000, 0x0000 };
-extern void fn_802193BC(s32 a, s32 b);
+extern void fn_802193BC(const char *path, void *samp);
 extern s32 fn_801D168C(void);
 extern void fn_801D150C(s32 v);
 extern s32 fn_80219B7C(void);
@@ -287,17 +289,40 @@ typedef struct Ent { u8 pad_0[0x1c];
 extern Node_UNIT0000 *lbl_80315530[];
 extern s32 lbl_803477F0;
 typedef struct { u8 pad0[0x54]; u32 stream; u8 pad58[8]; void *buf; u8 pad64[0x80 - 0x64]; } Stream_803148C0;
-typedef struct { void *buf; u8 pad4[0xc]; s32 group; u8 pad14[0x3c - 0x14]; } Group_803148C0;
+/* A sound group slot (0x3c bytes): its .info pool and .samp sample data, loaded from the DVD. */
+typedef struct {
+    void *buf;                    /* 0x00 the .info data (OS heap) */
+    void *samp;                   /* 0x04 the .samp data */
+    s32 id;                       /* 0x08 */
+    s32 song;                     /* 0x0c */
+    s32 group;                    /* 0x10 >= 0 loaded; -1 free; < -1 loading (counts down) */
+    char name[0x20];              /* 0x14 */
+    u32 flags;                    /* 0x34 */
+    u8 pad38[0x3c - 0x38];
+} Group_803148C0;
+typedef struct { s32 id; s32 grp; s32 x8; u8 padc[8]; } Seq_803148C0;
+typedef struct { s32 x0; s32 x4; u8 pad8[0x2c - 8]; } Req_803148C0;
 typedef struct {
     u8 pad0[0x2c0];
     Stream_803148C0 streams[4];   /* 0x2c0 */
     u8 pad4c0[0x4f4 - 0x4c0];
     u8 chorus[0x590 - 0x4f4];     /* 0x4f4 */
-    u8 reverb[0x860 - 0x590];     /* 0x590 */
+    u8 reverb[0x770 - 0x590];     /* 0x590 */
+    Seq_803148C0 seqs[6];         /* 0x770 */
+    DVDFileInfo samp_fi;          /* 0x7e8 */
+    DVDFileInfo info_fi;          /* 0x824 */
     Group_803148C0 groups[11];    /* 0x860 */
+    u8 padaf4[0xbc4 - 0xaf4];
+    Req_803148C0 req;             /* 0xbc4 */
 } Snd_803148C0;
 extern Snd_803148C0 lbl_803148C0;
 extern s32 lbl_803474E0;
+extern s32 lbl_803477EC;
+extern u32 lbl_803477E0;
+extern s32 lbl_803477DC;
+extern u32 lbl_803477D8;
+extern s32 lbl_803477D4;
+extern void sndSeqStop(s32 id);
 extern void *lbl_80346720;
 extern void *lbl_8034769C;
 extern void sndAuxCallbackShutdownReverbHI(void *rev);
@@ -643,8 +668,7 @@ extern Slot lbl_803154B0[8];
 extern u32 lbl_803474C0;
 extern u32 lbl_803474C4;
 void fn_8022291C(void);
-typedef struct Obj_80219ACC { u8 pad[0x34]; u32 flags; } Obj_80219ACC;
-extern Obj_80219ACC *lbl_803477E8;
+extern Group_803148C0 *lbl_803477E8;
 extern void fn_8023A8E0(void *p);
 typedef struct Blk {
     u8 pad0[0x30];
@@ -811,7 +835,7 @@ typedef struct Mode {
 extern Mode lbl_80311AC0;
 extern void fn_801D0F80(int);
 
-void fn_80219378(s32 a)
+void fn_80219378(const char *a)
 {
     fn_802193BC(a, 0);
     while (fn_80219B7C() != 0) {
@@ -822,15 +846,158 @@ void fn_80219378(s32 a)
     }
 }
 
+extern s32 lbl_803477E4;
+extern void *OSAllocFromHeapClear(void *heap, u32 size);
+extern s32 fn_80219998(const char *path);
+extern s32 fn_80219834(s32 stop);
+extern void fn_801E17E0(void *p);
+extern void *fn_801E1C7C(u32 size);
+extern void fn_80219ACC(s32 result, DVDFileInfo *fi);
+extern void fn_80219B24(s32 result, DVDFileInfo *fi);
+static inline s32 IsLower(const char c) {
+    s32 lower = 0;
+    if (c >= 'a' && c <= 'z') {
+        lower = 1;
+    }
+    return lower;
+}
+
+static inline s32 NameCmp(const char* a, const char* b) {
+    while (*a != 0) {
+        s32 cb = IsLower(*b) ? *b - 0x20 : *b;
+        s32 ca = IsLower(*a) ? *a - 0x20 : *a;
+        if (ca != cb) {
+            return -1;
+        }
+        a++;
+        b++;
+    }
+    return 0;
+}
+
+/* Loads sound group `name` (path up to its extension): its .info into the OS heap and, unless the
+ * caller passes the sample data, its .samp. */
+/* NEAR: only the .bss pooling is left. The original reaches lbl_80315484 (the sequence request,
+ * +4 at 0xbc4) as its own object (`addi r3, base, 0xbc4; lwz r0, 4(r3)`); the Snd_803148C0 view folds it
+ * into `lwz r0, 0xbc8(base)`. Separate defined objects pool only when their first uses follow address
+ * order, which this unit alone cannot give. Also the info/samp DVDFileInfo pointers colour differently. */
+#ifdef NONMATCHING
+void fn_802193BC(const char* path, void* samp) {
+    Snd_803148C0* b = &lbl_803148C0;
+    Group_803148C0* g;
+    char name[0x40];
+    char* d;
+    s32 n;
+    void* p;
+    void* q;
+    DVDFileInfo* fi;
+    u32 size;
+    s32 id;
+    char info_path[0x40];
+    char samp_path[0x40];
+
+    d = name;
+    for (n = 0; n < 63; n++) {
+        if (*path == '.' || *path == '\0') {
+            break;
+        }
+        *d++ = *path++;
+    }
+    *d = '\0';
+    id = fn_80219998(name);
+    if (id == 3 || (id == 7 && lbl_803477E4 == 2)) {
+        lbl_803477E4 = 0;
+    } else if (id == 9) {
+        lbl_803477E4 = 1;
+    } else if (id == 10) {
+        lbl_803477E4 = 2;
+    } else if (id == 11) {
+        lbl_803477E4 = 2;
+        id = 9;
+    }
+    while (fn_80219B7C() != 0) {
+        s32 v = fn_801D168C();
+        if (v != -1) {
+            fn_801D150C(v);
+        }
+    }
+    if (b->req.x4 == 0 && lbl_803477E0 != -1) {
+        sndSeqStop(lbl_803477E0);
+        lbl_803477E0 = -1;
+    }
+    g = b->groups;
+    g += id;
+    if (g->group >= 0) {
+        if (NameCmp(name, g->name) == 0) {
+            if (samp != 0) {
+                fn_801E17E0(samp);
+            }
+            return;
+        }
+        do {
+            fn_80219834(1);
+        } while (g->group >= 0);
+    }
+    lbl_803477E8 = g;
+    strcpy(g->name, name);
+    g->flags = samp ? 2 : 0;
+    fi = &b->info_fi;
+    p = 0;
+    sprintf(info_path, "%s.%s", name, "info");
+    if (DVDOpen(info_path, fi) && fi->length != 0) {
+        size = (fi->length + 0x1f) & ~0x1f;
+        p = OSAllocFromHeapClear(lbl_8034769C, size);
+        if (p != 0) {
+            if (!DVDReadAsync(fi, p, size, 0, fn_80219B24)) {
+                p = 0;
+            }
+        }
+    }
+    g->buf = p;
+    if (samp != 0) {
+        q = samp;
+    } else {
+        fi = &b->samp_fi;
+        q = 0;
+        sprintf(samp_path, "%s.%s", name, "samp");
+        if (DVDOpen(samp_path, fi) && fi->length != 0) {
+            size = (fi->length + 0x1f) & ~0x1f;
+            q = fn_801E1C7C(size);
+            if (q != 0) {
+                if (!DVDReadAsync(fi, q, size, 0, fn_80219ACC)) {
+                    q = 0;
+                }
+            }
+        }
+    }
+    g->samp = q;
+    if (lbl_803477E8->group > -2) {
+        lbl_803477E8->group = -2;
+    } else {
+        lbl_803477E8->group--;
+    }
+    if (g->buf == 0 || g->samp == 0) {
+        lbl_803477E8 = 0;
+        if (g->buf != 0) {
+            DVDCancel(&b->info_fi.cb);
+            fn_80005AD8(lbl_8034769C, g->buf);
+        }
+        if (g->samp != 0) {
+            DVDCancel(&b->samp_fi.cb);
+            fn_801E17E0(g->samp);
+        }
+    }
+}
+#endif
+
 extern void *lbl_80346720;
 extern void fn_80005AD8(void *p, void *q);
 void fn_8021A044(void *p) {
     fn_80005AD8(lbl_80346720, p);
 }
 
-extern void OSAllocFromHeapClear(void *p, void *q);
-void fn_8021A06C(void *p) {
-    OSAllocFromHeapClear(lbl_80346720, p);
+void fn_8021A06C(u32 size) {
+    OSAllocFromHeapClear(lbl_80346720, size);
 }
 
 s32 fn_8021A094(void) {
@@ -1844,6 +2011,14 @@ s32 fn_8021A09C(s32 v) {
     return r;
 }
 
+s32 fn_8021A0BC(s32 v) {
+    s32 r = 0;
+    if (v >= 0 && v < 0x16) {
+        r = 1;
+    }
+    return r;
+}
+
 s32 fn_8021A0DC(s32 v) {
     s32 r = 0;
     if (v >= 0x190 && v <= 0x1b7) {
@@ -2523,6 +2698,61 @@ void fn_80226AE8(Node_UNIT0000 *e) {
     lbl_803477F0++;
 }
 
+/* NEAR (3 lines): same lbl_80315484 problem as fn_802193BC: `addi r3, r28, 0xbc4; stw r0, 4(r3)` in the
+ * original, `stw r0, 0xbc8(r28)` here. */
+#ifdef NONMATCHING
+s32 fn_80219834(s32 stop)
+{
+    Snd_803148C0 *b = &lbl_803148C0;
+    Group_803148C0 *e = b->groups;
+    Seq_803148C0 *q;
+    Req_803148C0 *r;
+    s32 i;
+    s32 j;
+    s32 key;
+
+    lbl_803477EC--;
+    key = lbl_803477EC;
+    for (i = 0; i < 11; i++, e++) {
+        if (e->group != key) {
+            continue;
+        }
+        if (lbl_803477E0 != -1 && lbl_803477DC == i) {
+            if (stop == 0) {
+                lbl_803477EC++;
+                return -1;
+            }
+            sndSeqStop(lbl_803477E0);
+            lbl_803477E0 = -1;
+            b->req.x4 = 0;
+        }
+        if (lbl_803477D8 != -1 && lbl_803477D4 == i) {
+            if (stop == 0) {
+                lbl_803477EC++;
+                return -1;
+            }
+            sndSeqStop(lbl_803477D8);
+            lbl_803477D8 = -1;
+        }
+        q = b->seqs;
+        for (j = 0; j < 6; j++, q++) {
+            if (q->grp == i) {
+                if (q->id != lbl_803477E0) {
+                    sndSeqStop(q->id);
+                }
+                q->id = -1;
+                q->x8 = 10000;
+            }
+        }
+        sndPopGroup();
+        fn_80005AD8(lbl_8034769C, e->buf);
+        e->group = -1;
+        return i;
+    }
+    return -1;
+}
+#endif
+
 void fn_80219C84(void) {
     Snd_803148C0 *b = &lbl_803148C0;
     s32 i;
@@ -2713,21 +2943,21 @@ void fn_802287F4(Sys_UNIT0000 *o, s32 n, f32 g)
     }
 }
 
-s32 fn_80219998(const u8 *path)
+s32 fn_80219998(const char *path)
 {
     s32 id = 0;
-    const u8 *name = path;
+    const char *name = path;
     s32 val = 0x7f;
-    while ((s8)*path != 0) {
-        if ((s32)*path++ == '/') name = path;
+    while (*path != 0) {
+        if ((s32)(u8)*path++ == '/') name = path;
     }
-    switch ((s8)*name) {
+    switch (*name) {
     case 't':
         id = 0;
         break;
     case 'S':
     case 's':
-        if ((s32)name[1] == '1') {
+        if ((s32)(u8)name[1] == '1') {
             id = 1;
             val = 0x78;
         } else {
@@ -2736,10 +2966,10 @@ s32 fn_80219998(const u8 *path)
         break;
     case 'M':
     case 'm':
-        if ((s32)name[1] == '5') {
+        if ((s32)(u8)name[1] == '5') {
             id = 5;
-        } else if ((s8)name[2] >= '2' && (s8)name[2] <= '4') {
-            id = (s8)name[2] - '0';
+        } else if (name[2] >= '2' && name[2] <= '4') {
+            id = name[2] - '0';
             val = 100;
         }
         break;
@@ -2749,7 +2979,7 @@ s32 fn_80219998(const u8 *path)
         break;
     case 'C':
     case 'c':
-        id = ((s8)name[2] == '0') ? 11 : 10;
+        id = (name[2] == '0') ? 11 : 10;
         break;
     case 'B':
     case 'b':
@@ -2757,11 +2987,11 @@ s32 fn_80219998(const u8 *path)
         break;
     case 'F':
     case 'f':
-        id = ((s32)name[1] == '3') ? 3 : 7;
+        id = ((s32)(u8)name[1] == '3') ? 3 : 7;
         break;
     case 'K':
     case 'k':
-        if ((s32)name[1] == '8') id = 8;
+        if ((s32)(u8)name[1] == '8') id = 8;
         break;
     }
     lbl_80315120[id].x38 = val;
@@ -3829,7 +4059,7 @@ void fn_8022638C(void **list) {
     }
 }
 
-void fn_80219ACC(s32 x, void *p)
+void fn_80219ACC(s32 x, DVDFileInfo *p)
 {
     fn_8023A8E0(p);
     if (lbl_803477E8 != 0) {
@@ -4118,9 +4348,53 @@ s16 fn_80224040(s32 a, Tab_80224040 *b) {
     return r;
 }
 
-void fn_80219B24(s32 x, void *p)
+extern u8 sndPushGroup(void *prj, u16 gid, void *samples, void *sdir, void *pool);
+extern s32 lbl_803477EC;
+/* The head of a group's .info data: byte offsets (in words) of its pool, project and sample
+ * directory. */
+typedef struct BankInfo { u16 pool; u16 prj; u16 sdir; } BankInfo;
+/* The project data (at the offset above): the group id at +4, the first song's offset at +0x24. */
+typedef struct BankPrj { u8 pad0[4]; u8 id[2]; u8 pad6[0x24 - 6]; u32 song_off; } BankPrj;
+
+s32 fn_80219B7C(void)
 {
-    Obj_80219ACC *q;
+    Group_803148C0 *g = lbl_803477E8;
+    s32 flags;
+    if (g == NULL) {
+        return 0;
+    }
+    flags = g->flags;
+    if ((flags & 3) != 3) {
+        return 1;
+    }
+    if (flags & 0x10) {
+        fn_80005AD8(lbl_80346720, g->buf);
+        fn_801E17E0(g->samp);
+        lbl_803477E8 = 0;
+        return 0;
+    } else {
+        BankInfo *h = g->buf;
+        u8 *ib = g->buf;
+        u8 *pool = ib + h->pool * 4;
+        u8 *sdir = ib + h->sdir * 4;
+        void *pv = ib + h->prj * 4;
+        u8 *pb = pv;
+        BankPrj *pr = pv;
+        u32 off;
+        g->id = pb[5] + (pb[4] << 8);
+        off = pr->song_off;
+        g->song = pb[off + 1] + (pb[off] << 8);
+        sndPushGroup(pv, g->id, g->samp, sdir, pool);
+        fn_801E17E0(g->samp);
+        g->group = lbl_803477EC++;
+        lbl_803477E8 = 0;
+        return 0;
+    }
+}
+
+void fn_80219B24(s32 x, DVDFileInfo *p)
+{
+    Group_803148C0 *q;
 
     fn_8023A8E0(p);
     q = lbl_803477E8;
@@ -4681,6 +4955,84 @@ static inline s32 InRange6(s32 v)
 
 s32 fn_8021A2B0(Save1568* a, void* b, s32 code);
 
+static inline s32 Min(s32 a, s32 b)
+{
+    return (a < b) ? a : b;
+}
+
+static inline s32 ShipDodgeCalc(ShipData* e, Save1568* p, void* q)
+{
+    s32 v = e->dodge;
+    v += fn_8021A2B0(p, q, 6);
+    v += p->x1569 * e->dodge_up;
+    return Min(v, 999);
+}
+
+static inline s32 ShipDodge(Save1568* p, void* q)
+{
+    s32 res = 0;
+    if (p != NULL && q != NULL) {
+        ShipData* e = GetEnt(p->b1568);
+        if (e != NULL) {
+            res = ShipDodgeCalc(e, p, q);
+        }
+    }
+    return res;
+}
+
+s32 fn_8021A880(Save1568* p, void* q)
+{
+    return ShipDodge(p, q);
+}
+
+static inline s32 ShipSpCalc(ShipData* e, Save1568* p, void* q)
+{
+    s32 v = e->sp;
+    v += p->x1569 * e->sp_up;
+    return Min(v, 99);
+}
+
+static inline s32 ShipSp(Save1568* p, void* q)
+{
+    s32 res = 0;
+    if (p != NULL && q != NULL) {
+        ShipData* e = GetEnt(p->b1568);
+        if (e != NULL) {
+            res = ShipSpCalc(e, p, q);
+        }
+    }
+    return res;
+}
+
+s32 fn_8021A940(Save1568* p, void* q)
+{
+    return ShipSp(p, q);
+}
+
+static inline s32 ShipSpMaxCalc(ShipData* e, Save1568* p, void* q)
+{
+    s32 v = e->sp_max;
+    v += p->x1569 * e->sp_max_up;
+    return Min(v, 99);
+}
+
+static inline s32 ShipSpMax(Save1568* p, void* q)
+{
+    s32 res = 0;
+    if (p != NULL && q != NULL) {
+        ShipData* e = GetEnt(p->b1568);
+        if (e != NULL) {
+            res = ShipSpMaxCalc(e, p, q);
+        }
+    }
+    return res;
+}
+
+s32 fn_8021A9C4(Save1568* p, void* q)
+{
+    return ShipSpMax(p, q);
+}
+
 s32 fn_8021AA48(Save1568* p, void* q, s32 k)
 {
     s32 r = 0;
@@ -4702,6 +5054,81 @@ s32 fn_8021AA48(Save1568* p, void* q, s32 k)
         }
     }
     return r;
+}
+
+static inline s32 ShipQuickCalc(ShipData* e, Save1568* p, void* q)
+{
+    s32 v = e->quick;
+    v += fn_8021A2B0(p, q, 4);
+    v += p->x1569 * e->quick_up;
+    return Min(v, 999);
+}
+
+static inline s32 ShipQuick(Save1568* p, void* q)
+{
+    s32 res = 0;
+    if (p != NULL && q != NULL) {
+        ShipData* e = GetEnt(p->b1568);
+        if (e != NULL) {
+            res = ShipQuickCalc(e, p, q);
+        }
+    }
+    return res;
+}
+
+s32 fn_8021AB60(Save1568* p, void* q)
+{
+    return ShipQuick(p, q);
+}
+
+static inline s32 ShipMagDefCalc(ShipData* e, Save1568* p, void* q)
+{
+    s32 v = e->mag_def;
+    v += fn_8021A2B0(p, q, 3);
+    v += p->x1569 * e->mag_def_up;
+    return Min(v, 999);
+}
+
+static inline s32 ShipMagDef(Save1568* p, void* q)
+{
+    s32 res = 0;
+    if (p != NULL && q != NULL) {
+        ShipData* e = GetEnt(p->b1568);
+        if (e != NULL) {
+            res = ShipMagDefCalc(e, p, q);
+        }
+    }
+    return res;
+}
+
+s32 fn_8021AC20(Save1568* p, void* q)
+{
+    return ShipMagDef(p, q);
+}
+
+static inline s32 ShipDefCalc(ShipData* e, Save1568* p, void* q)
+{
+    s32 v = e->defense;
+    v += fn_8021A2B0(p, q, 2);
+    v += p->x1569 * e->defense_up;
+    return Min(v, 999);
+}
+
+static inline s32 ShipDef(Save1568* p, void* q)
+{
+    s32 res = 0;
+    if (p != NULL && q != NULL) {
+        ShipData* e = GetEnt(p->b1568);
+        if (e != NULL) {
+            res = ShipDefCalc(e, p, q);
+        }
+    }
+    return res;
+}
+
+s32 fn_8021ACE0(Save1568* p, void* q)
+{
+    return ShipDef(p, q);
 }
 
 void fn_8022445C(Slot* g, Seg* segs, s32 count)
@@ -5079,6 +5506,62 @@ static inline void SetTexture(NJS_TEXLIST* t, s16 n)
     fn_80298FE4(n);
 }
 
+/* NEAR (about 39 lines): scheduling of the int to float conversions and the s16 x update. */
+#ifdef NONMATCHING
+void fn_8021C0BC(f32 z, s16 x, s16 y, NJS_TEXLIST* tex, s16 n, s32 blend, u32 alpha)
+{
+    DrawState st;
+    Vertex2D v[4];
+    f32 zz;
+    s32 i;
+    Vertex2D* p;
+    s32 j;
+
+    DrawStateDefault2D(&st);
+    if (blend != 0) {
+        st.blend_src = 8;
+        st.blend_dst = 10;
+    }
+    if (tex != NULL) {
+        fn_80299040(tex);
+        SetTexture(tex, n);
+    } else {
+        return;
+    }
+    if (DrawStatePush(&st) == 0) {
+        return;
+    }
+    alpha = (alpha << 24) | 0xffffff;
+    zz = fn_801DBD9C(z);
+    p = v;
+    for (i = 0; i < 2; i++) {
+        x = x + i * 64;
+        for (j = 0; j < 4; j++) {
+            v[j].z = zz;
+            v[j].colour = alpha;
+        }
+        v[0].x = x;
+        v[0].y = y;
+        v[0].u = 0.0f;
+        v[0].v = 0.003921569f * ((i + 2) * 64);
+        v[1].x = x;
+        v[1].y = 16.0f + y;
+        v[1].u = 0.0f;
+        v[1].v = 0.003921569f * ((i + 3) * 64 - 1);
+        v[2].x = x + (f32)(64 / (i + 1));
+        v[2].y = v[0].y;
+        v[2].u = 0.003921569f * (256 / (i + 1) - 1);
+        v[2].v = v[0].v;
+        v[3].x = v[2].x;
+        v[3].y = v[1].y;
+        v[3].u = v[2].u;
+        v[3].v = v[1].v;
+        fn_80291064(p, 4, 1);
+    }
+    DrawStatePop(0);
+}
+#endif
+
 void fn_8021D648(f32 z, s16 x, s16 y, s16 mode, NJS_TEXLIST* tex, s32 blend, u32 alpha)
 {
     DrawState st;
@@ -5140,6 +5623,79 @@ void fn_8021D648(f32 z, s16 x, s16 y, s16 mode, NJS_TEXLIST* tex, s32 blend, u32
     fn_80291064(v, 4, 1);
     DrawStatePop(0);
 }
+
+/* Draws `value` as `digits` decimal digits, each a 52x64 cell of a digit atlas (4 per row). */
+/* NEAR (18 lines): x and colour swap callee-saved registers (r29/r28); no declaration order, init
+ * placement or colour test form changed the colouring order. */
+#ifdef NONMATCHING
+void fn_8021D8D8(NJS_TEXLIST* tex, f32 z, s16 x, s16 y, s32 value, s16 digits, s16 colour, u32 alpha) {
+    u32 colors[4] = {0x00FFFFFF, 0x00E62020, 0x0020FA20, 0x0014DCFA};
+    DrawState st;
+    Vertex2D v[4];
+    s16 d;
+    s32 j;
+    s32 px;
+    s32 i;
+    s16 pw;
+    s32 p = 1;
+    s32 q;
+    f32 u1, v1, u0, v0, x0, y0, x1, y1;
+
+    DrawStateDefault2D(&st);
+    if (DrawStatePush(&st)) {
+        fn_80299040(tex);
+        SetTexture(tex, fn_8021EE1C(tex, lbl_802F8968[1]));
+        alpha <<= 24;
+        if (colour >= 1 && colour <= 3) {
+            alpha |= colors[colour];
+        } else {
+            alpha |= colors[0];
+        }
+        z = fn_801DBD9C(z);
+        pw = digits - 1;
+        px = x;
+        for (i = 0; i < digits; i++) {
+            for (j = 0; j < pw; j++) {
+                p *= 10;
+            }
+            q = value / p;
+            d = q;
+            u0 = (1.0f / 255.0f) * (f32)(d % 4 * 0x38);
+            v0 = (1.0f / 255.0f) * (f32)(d / 4 * 0x44);
+            x0 = px;
+            y0 = y;
+            x1 = 13.0f + x0;
+            y1 = 16.0f + y0;
+            u1 = 0.20392158f + u0;
+            v1 = 0.2509804f + v0;
+            value -= q * p;
+            for (j = 0; j < 4; j++) {
+                if (j < 2) {
+                    v[j].x = x0;
+                    v[j].u = u0;
+                } else {
+                    v[j].x = x1;
+                    v[j].u = u1;
+                }
+                if (j % 2 != 0) {
+                    v[j].y = y1;
+                    v[j].v = v1;
+                } else {
+                    v[j].y = y0;
+                    v[j].v = v0;
+                }
+                v[j].z = z;
+                v[j].colour = alpha;
+            }
+            fn_80291064(v, 4, 1);
+            p = 1;
+            pw--;
+            px += 13;
+        }
+        DrawStatePop(0);
+    }
+}
+#endif
 
 typedef struct Line3_80221AAC { Vec o; Vec d; } Line3_80221AAC;
 extern f32 fn_8028FEA4(Vec *p, Line3_80221AAC *l, Vec *out);
@@ -5845,11 +6401,6 @@ Ctx802281DC *fn_80227E84(u32 id)
     return 0;
 }
 
-static inline s32 Min(s32 a, s32 b)
-{
-    return (a < b) ? a : b;
-}
-
 static inline s32 ShipHpCalc(ShipData* e, Save1568* p, void* q)
 {
     s32 v = e->hp_max;
@@ -6122,44 +6673,3 @@ s32 fn_8022BDD0(AngObj_8022BDD0* dst, AngObj_8022BDD0* a, AngObj_8022BDD0* b, Li
 }
 #endif
 
-/* NEAR (4 lines): the original copies the zero for GetEnt's e and InRange's r from the
-   result register (mr r4,r6 / mr r0,r6); we get li r4,0 / mr r0,r4. */
-#ifdef NONMATCHING
-s32 fn_8021A940(s8* p, void* q)
-{
-    s32 r = 0;
-    if (p != NULL && q != NULL) {
-        ShipData* e = GetEnt(p[0]);
-        if (e != NULL) {
-            s32 v;
-            r = 0x63;
-            v = e->sp; v += p[1] * e->sp_up;
-            if (v < 0x63) {
-                r = v;
-            }
-        }
-    }
-    return r;
-}
-#endif
-
-/* NEAR (4 lines): the original copies the zero for GetEnt's e and InRange's r from the
-   result register (mr r4,r6 / mr r0,r6); we get li r4,0 / mr r0,r4. */
-#ifdef NONMATCHING
-s32 fn_8021A9C4(s8* p, void* q)
-{
-    s32 r = 0;
-    if (p != NULL && q != NULL) {
-        ShipData* e = GetEnt(p[0]);
-        if (e != NULL) {
-            s32 v;
-            r = 0x63;
-            v = e->sp_max; v += p[1] * e->sp_max_up;
-            if (v < 0x63) {
-                r = v;
-            }
-        }
-    }
-    return r;
-}
-#endif

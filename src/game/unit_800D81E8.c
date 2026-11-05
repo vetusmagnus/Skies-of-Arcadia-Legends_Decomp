@@ -470,7 +470,7 @@ extern char lbl_802B19D4[];
 extern u16 lbl_80346DC0;
 void * fn_801094C8(u32 key);
 void fn_801DBE1C(const char *fmt, ...);
-void fn_800E1A58(K06Obj_800E2924 *p);
+void fn_800E1A58(void *p);
 void fn_80297CC0(s32 a, s32 b, s32 c, s32 d);
 typedef struct K06Obj_800EC3EC {
     u8 pad0[0x38];
@@ -584,6 +584,8 @@ extern void fn_8010C0E4(struct Obj_8010C0E4 *obj, struct Src_8010C0E4 *n);
 typedef VertexCol Quad;
 extern f32 fn_801DBD9C(f32 v);
 extern void fn_80290ED4(Quad *q, s32 n, s32 m);
+extern void njPushMatrixEx(void);
+extern void njPopMatrixEx(void);
 typedef struct {
     u32 pad0;
     u32 code; /* 0x04 */
@@ -594,8 +596,6 @@ typedef struct {
 } Obj_800DE440;
 extern s32 fn_801C60A4(void *p);
 extern void* fn_800CCA6C(s32 a, s32 b);
-extern void njPushMatrixEx(void);
-extern void njPopMatrixEx(void);
 extern void fn_80286EE8(void);
 extern void fn_8028B498(void);
 extern void njProjectScreen(void* m, NJS_VECTOR* p, f32* out);
@@ -1206,6 +1206,7 @@ extern void fn_80123EE4(void);
 extern void CampMenuCreate(void);
 extern void fn_800E3554(void);
 extern void OSGetTick(void);
+extern f32 fn_80291978(f32 x);
 extern void fn_8025ECBC(void);
 extern void fn_801DA1C0(void);
 extern void fn_80118540(void);
@@ -1245,7 +1246,6 @@ extern void fn_8012A26C(void);
 extern void fn_8022642C(void);
 extern void fn_801E1CCC(void);
 extern void fn_801DBE6C(s32 n);
-extern f32 fn_80291978(f32 x);
 extern s32 fn_801C6068(void* p, s32 n);
 extern f32 fn_801C5C80(void *obj, s32 n);
 typedef struct Unit_80104B70 Unit_80104B70;
@@ -1310,7 +1310,7 @@ typedef struct {
 extern void* fn_800DE440(Obj_800DE440* o);
 extern void fn_800DE2E4(K06Obj_800DE2E4 *p, s8 *a, s8 *b, s8 *c);
 extern s32 fn_800E0B08(Obj_800DE440* o, s32 limit);
-extern s32 fn_800DE228(void *p, f32 f);
+extern s32 fn_800DE228(f32 *p, f32 f);
 typedef struct Unit_80107B18 {
     u8 pad0[0x74];
     s16 s74;
@@ -1994,7 +1994,7 @@ typedef struct {
 extern s32 fn_8015F218(void *o);
 extern s32 lbl_80346DA0[2];
 extern u16 lbl_8034740C;
-extern void fn_800DA010(void* o);
+extern void fn_800DA010(Task* o);
 extern void fn_800B2C1C(void* o);
 extern void fn_800B2DA0(void* p, u32 v);
 typedef struct {
@@ -2105,7 +2105,7 @@ typedef struct Obj_800E07AC {
     f32 f254;
 } Obj_800E07AC;
 /* The info record (EvExt.info) of the map marker objects fn_800E29CC and fn_800E2D0C work with. */
-typedef struct Cfg_800E2D0C { s32 n; u8 pad4[0x20]; s32 i24, i28, i2c, i30; u32 u34; u32 u38; } Cfg_800E2D0C;
+typedef struct Cfg_800E2D0C { s32 n; u8 pad4[0x20]; s32 i24, i28; u32 i2c, i30; u32 u34; u32 u38; u32 u3c; s32 x40; } Cfg_800E2D0C;
 static inline Cfg_800E2D0C* MarkInfo(EvObj* e) {
     return e->ext->info;
 }
@@ -2146,9 +2146,9 @@ extern void fn_8009090C(DrawObj *o);
 extern void fn_8009076C(s32 a, DrawObj *o);
 extern void fn_80296EEC(s32 a, s32 b, s32 c);
 extern f32 fn_80291A5C(f32 x);
+extern void fn_80298FE4(s32 i);
 extern f32 njSin(s32 a);
 extern f32 njCos(s32 a);
-extern void fn_80298FE4(s32 i);
 typedef struct { u8 pad0[0x24]; s32 w24; } X10;
 typedef struct { u8 pad0[0x10]; X10* x; } Y1c8;
 typedef struct {
@@ -2234,13 +2234,13 @@ typedef struct {
     void* ctx;
 } Src_800DA564;
 typedef struct {
-    Src_800DA564* src;
+    Task* src;
     s32 s4;
     s32 s8;
     s32 list[(0xA0 - 0xC) / 4];
     s32 count;
 } Work_800DA564;
-typedef struct {
+typedef struct Obj_800DA564 {
     u8 pad0[8];
     Src_800DA564* par;
     u8 pad0c[0x18 - 0xC];
@@ -2248,6 +2248,8 @@ typedef struct {
     u8 state;
     u8 pad1a[0x24 - 0x1A];
     Work_800DA564* work;
+    u8 pad28[0x40 - 0x28];
+    Work_800DA564 w;
 } Obj_800DA564;
 extern s32 fn_800B2DC0(void* c, s32 idx, s32 a, s16 b, f32 f);
 extern void fn_800DA744(s32 id, s32* out);
@@ -2337,7 +2339,7 @@ typedef struct Obj20 {
     f32 x, y;      /* 0x00 */
     f32 pad08;     /* 0x08 */
     f32 sx, sy;    /* 0x0C */
-    u32 colour;    /* 0x14 */
+    s32 colour;    /* 0x14 */
     NJS_TEXLIST* texlist; /* 0x18 */
     Obj14* data;   /* 0x1C */
 } Obj20;
@@ -2731,7 +2733,8 @@ static inline f32 Abs(f32 x) {
     return x < 0.0f ? -x : x;
 }
 extern char lbl_802B1604[];
-
+extern char lbl_802B15E0[];
+extern void fn_802229F8(void* p);
 
 extern void fn_802229F8(void* p);
 
@@ -3711,6 +3714,208 @@ s32 fn_800E0C38(u32 id) {
     }
     return r;
 }
+
+extern s32 fn_801C5E94(void* p);
+
+static inline s32 IdValid_800E0C58(u32 id) {
+    s32 r = 0;
+    if (id >= 0x4E20 && id < 0x6FB7) {
+        r = 1;
+    }
+    return r;
+}
+
+static inline s32 IdKind_800E0C58(u32 x) {
+    s32 inr;
+    s32 ret;
+    ret = -1;
+    inr = IdValid_800E0C58(x);
+    if (inr != 0) {
+        ret = x >= 0x59d8;
+    }
+    return ret;
+}
+
+static inline s32 IdRank_800E0C58(u32 id) {
+    s32 r = -1;
+    s32 in = IdValid_800E0C58(id);
+    if (in) {
+        r = id % 100 / 10;
+    }
+    return r;
+}
+
+static inline s32 IdPage_800E0C58(u32 x) {
+    s32 inr;
+    s32 ret;
+    ret = -1;
+    inr = IdValid_800E0C58(x);
+    if (inr != 0) {
+        if (x < 0x59d8) {
+            x -= 0x4e20;
+        } else if (x < 0x6590) {
+            x -= 0x59d8;
+        } else {
+            x -= 0x6590;
+        }
+        ret = ((x % 10000) / 100);
+    }
+    return ret;
+}
+
+static inline s32 RankOk_800E0C58(s32 mode, s32 a, s32 b) {
+    s32 ret = 0;
+    if (a > 0) {
+        if ((mode == 0 && a >= b) || (mode == 1 && a > b)) {
+            ret = 1;
+        }
+    }
+    return ret;
+}
+
+static inline s32 EntValid_800E0C58(EvObj* e) {
+    s32 v = 0;
+    if (fn_801C60A4(e)) {
+        v = IdValid_800E0C58(e->ext->x04);
+    }
+    return v;
+}
+
+static inline s32 EntKind_800E0C58(EvObj* e) {
+    s32 v = -1;
+    if (fn_801C60A4(e)) {
+        v = IdKind_800E0C58(e->ext->x04);
+    }
+    return v;
+}
+
+static inline s32 EntRank_800E0C58(EvObj* e) {
+    s32 v = -1;
+    if (fn_801C60A4(e)) {
+        v = IdRank_800E0C58(e->ext->x04);
+    }
+    return v;
+}
+
+static inline s32 EntPage_800E0C58(EvObj* e) {
+    s32 v = -1;
+    if (fn_801C60A4(e)) {
+        v = IdPage_800E0C58(e->ext->x04);
+    }
+    return v;
+}
+
+static inline void* EntMapEnt_800E0C58(EvObj* e, s32 kind, s32 n) {
+    void* res = 0;
+    if (fn_801C6068(e, n) != 0) {
+        res = 0;
+        if (EntValid_800E0C58(e)) {
+            res = fn_800CCA6C(kind, EntPage_800E0C58(e));
+        }
+    }
+    return res;
+}
+
+static inline s32 EntReady_800E0C58(EvObj* e, s32 limit) {
+    s32 a = EntRank_800E0C58(e);
+    s32 b = EntKind_800E0C58(e);
+    return RankOk_800E0C58(b, a, limit);
+}
+
+static inline void EntDraw_800E0C58(EvObj* e) {
+    DrawState st;
+    if (e != 0) {
+        if (e->texlist == 0 || e->texlist->nbTexture == 0) {
+            DrawStateGet(&st);
+            DrawStatePush(&st);
+            fn_801E5DF0(e);
+            DrawStatePop(0);
+        } else {
+            fn_801E5DF0(e);
+        }
+    }
+}
+
+void fn_800E0C58(Task* t) {
+    EvObj* e;
+    void* m;
+    s32 n;
+
+    if (t == 0) return;
+    e = t->work;
+    if (e == 0) return;
+    m = EntMapEnt_800E0C58(e, 7, 8);
+    if (e != 0 && m != 0) {
+        fn_800DE2E4(m, &e->x1ec, &e->x1ed, &e->x1ee);
+    }
+    switch (t->state) {
+    case 0:
+        if (e->texlist != 0 && e->texlist->nbTexture != 0) {
+            fn_80227810(e->texlist);
+        }
+        fn_801173DC(0, e);
+        e->x74 = 5;
+        t->state = 1;
+    case 1:
+        if (fn_801C5E94(e) == 0) {
+            return;
+        }
+        t->state = 2;
+    case 2:
+        if (e->x1ec != 0) {
+            if (EntReady_800E0C58(e, e->x1ed) != 0) {
+                if (e != 0) {
+                    e->x24c.y = -0.04f;
+                }
+                t->state = 3;
+                if (e->x17a < 0x59d8) {
+                    EvInfo* info = e->ext->info;
+                    n = info->count > 3 ? info->w10 : 0;
+                    t->f20 = n > 0 ? (f32)(-n) : -10000.0f;
+                }
+            }
+        }
+        EntDraw_800E0C58(e);
+        break;
+    case 3:
+        if (fn_800DE228(&e->colour.a, e->x24c.y) != 0) {
+            t->state = 4;
+        }
+        EntDraw_800E0C58(e);
+        break;
+    case 4:
+        if (e->x1ec != 0 && EntReady_800E0C58(e, e->x1ed) != 0) {
+            break;
+        }
+        if (e != 0) {
+            e->x24c.y = 0.04f;
+        }
+        t->state = 5;
+        break;
+    case 5:
+        if (fn_800DE228(&e->colour.a, e->x24c.y) != 0) {
+            t->state = 2;
+            t->f20 = 0.0f;
+        }
+        EntDraw_800E0C58(e);
+        break;
+    case 7:
+    case 0xFF:
+        if (t != 0) {
+            e = t->work;
+            if (e != 0) {
+                if (e->texlist != 0 && e->texlist->nbTexture != 0) {
+                    fn_802275A4(e->texlist, 0);
+                }
+                fn_80100B74(t);
+            }
+        }
+        break;
+    case 0xFE:
+        break;
+    }
+}
+
 
 /* A sign: the name shown when the player is near the object with that id (lbl_802E38B8, 36 of them). */
 typedef struct {
@@ -5134,6 +5339,26 @@ s32 fn_8010CED4(void) {
         return 1;
     }
     return 0;
+}
+
+s32 fn_800DE228(f32 *p, f32 step) {
+    s32 ret = 1;
+    f32 v;
+    if (p != 0) {
+        ret = 0;
+        v = fn_801C60C8(*p, step);
+        if (step == 0.0f) {
+            ret = 1;
+        } else if (step < 0.0f && v <= -1.0f) {
+            v = -1.0f;
+            ret = 1;
+        } else if (step > 0.0f && v >= 0.0f) {
+            v = 0.0f;
+            ret = 1;
+        }
+        *p = v;
+    }
+    return ret;
 }
 
 s32 fn_800DE390(Key* p, Key* q) {
@@ -11590,6 +11815,103 @@ void fn_8010C384(Seg *p, s32 a, s16 b)
     }
 }
 
+void fn_800DA564(struct Obj_800DA564* o);
+
+#define ATAN_ANG(y, x) (((x) == 0.0f && (y) == 0.0f) ? 0 : (s32)(10430.378f * (f32)atan2((y), (x))))
+
+static inline s32 RingSum1(s32 n) {
+    s32 i;
+    s32 s = 1;
+    for (i = 1; i < n; i++) {
+        s += i * 6;
+    }
+    return s;
+}
+
+static inline s32 RingSum0(s32 n) {
+    s32 i;
+    s32 s = 0;
+    for (i = 1; i <= n; i++) {
+        s += i * 6;
+    }
+    return s;
+}
+
+static inline f32 Step(f32 k, s32 i) {
+    k *= njCos(i * 0x555);
+    return k;
+}
+
+#define RING_FIRSTE(n) ((n) == 0 ? 0 : RingSum1(n))
+#define RING_LASTE(n) ((n) == 0 ? 0 : RingSum0(n))
+
+extern void* lbl_80346C30;
+
+void fn_800DA010(Task* o) {
+    f32 dx;
+    f32 dz;
+    f32 y;
+    f32 dist;
+    s32 ang;
+    s32 cur;
+    s32 len;
+    s32 ring;
+    s32 steps;
+    Obj_800DA564* t;
+
+    if (lbl_80346C30 == NULL) {
+        return;
+    }
+    lbl_80310B3C[0xc8 / 4] |= 8;
+    if (lbl_80310B3C[0x13c / 4] & 0x200) {
+        return;
+    }
+    SePlay(8, 5, 11);
+    dz = lbl_80347450->pos.z - 600.0f;
+    dx = lbl_80347450->pos.x - 1800.0f;
+    y = 40.0f + lbl_80347450->pos.y;
+    ang = ATAN_ANG(dx, dz);
+    dist = fn_80291A5C(dx * dx + dz * dz);
+    if (dist < 430.0f) {
+        for (ring = 0; ring < 12; ring++) {
+            if (dist < 37.5f) {
+                break;
+            }
+            dist -= 70.0f * njCos(ring * 0x555);
+        }
+    } else if (y < 270.0f) {
+        for (ring = 12; ring > 0; ring--) {
+            if (y < 37.5f) {
+                break;
+            }
+            y -= Step(54.0f, 11 - ring);
+        }
+    } else {
+        ring = 7;
+    }
+    len = 1;
+    if (ring * 6 >= 1) {
+        len = ring * 6;
+    }
+    if (ang > 0) {
+        steps = (s32)(ang / 65536.0f * len);
+    } else {
+        steps = (s32)((ang + 0x10000) / 65536.0f * len);
+    }
+    cur = RING_FIRSTE(ring);
+    while (steps > 0) {
+        cur = cur == RING_LASTE(ring) ? RING_FIRSTE(ring) : cur + 1;
+        steps--;
+    }
+    t = fn_80226704(lbl_80346C30, fn_800DA564, 0xa8);
+    if (t != NULL) {
+        t->work = &t->w;
+        t->work->src = o;
+        t->work->s4 = cur;
+        t->work->s8 = 3;
+    }
+}
+
 static inline s32 Has_800DA564(Work_800DA564* w, s32 v) {
     s32 n = w->count;
     for (;;) {
@@ -11616,7 +11938,7 @@ void fn_800DA564(Obj_800DA564* o) {
     }
     switch (o->state) {
     case 0:
-        fn_800B2DC0(w->src->ctx, w->s4, 2, 13, 1.0f);
+        fn_800B2DC0(w->src->work, w->s4, 2, 13, 1.0f);
         w->list[w->count++] = w->s4;
         o->state++;
         break;
@@ -11627,7 +11949,7 @@ void fn_800DA564(Obj_800DA564* o) {
             for (k = 0; k < 6; k++) {
                 s32 found = Has_800DA564(w, buf[k]);
                 if (found == 0) {
-                    fn_800B2DC0(w->src->ctx, buf[k], 2, 13, 0.25f * (f32)w->s8);
+                    fn_800B2DC0(w->src->work, buf[k], 2, 13, 0.25f * (f32)w->s8);
                     w->list[w->count++] = buf[k];
                 }
             }
