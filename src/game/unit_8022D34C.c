@@ -26,17 +26,19 @@ typedef struct {
 extern Unk8022D34C lbl_80311970;
 extern f32 lbl_80347570;
 extern void fn_8022F64C(void *p, u32 flags);
-typedef struct Node { u8 pad_00[0x2c]; struct Node *child; struct Node *next; } Node;
+typedef struct Tab { void *x0; void *x4; } Tab;
+typedef struct Node { u8 pad_00[4]; Tab *tab; u8 pad_08[0x24]; struct Node *child; struct Node *next; } Node;
+typedef Node Src;
 extern void fn_8022F408(Node *n, s32 a, s32 b);
 void fn_8022F0CC(Node *n, s32 a, s32 b);
-s32 fn_8022E068(f32 *p, u16 i, f32 *a, f32 *b, f32 *c, f32 *d);
+s32 fn_8022E068(f32 *p, s32 i, f32 *a, f32 *b, f32 *c, f32 *d);
 extern s32 lbl_80347884;
 extern void fn_8023182C(void);
-typedef struct Res230 { void *x0; void *x4; u8 pad08[0xc]; f32 x14; } Res230;
+typedef struct Res230 { u32 *x0; s16 *x4; u8 pad08[0xc]; f32 x14; } Res230;
 s32 fn_80230FCC(Res230 *r);
 extern void fn_80288DE4(void *p, s32 (*f)(Res230 *));
 extern void fn_80296F28(void);
-extern s32 fn_8022E734(u8 kind, void *p, void *a, void *b, s32 f1, s32 f2, s32 f3);
+s32 fn_8022E734(u8 kind, Node *node, s16 **cur, s16 **next, s32 first, u8 lo, u8 hi);
 typedef struct Rng {
     f32 x0;
     u8 pad4[4];
@@ -51,11 +53,10 @@ typedef struct Rng {
     f32 dx;
     f32 dz;
 } Rng;
-typedef struct { u8 pad[4]; void* x4; } Src;
 /* fn_802301A0's view of a 0x20..0x37 track: kind, key count, id, then x8 points at the keys (lbl_802F9360[kind - 0x20] floats each) after the four header halfwords. */
 typedef struct { s16 x0; s16 x2; s16 x4; u8 pad6[2]; void* x8; } Out;
 extern s32 fn_80230D10(u8 id, Src* s, s16** out);
-extern void fn_80230BD4(u8 id, void *node, u32 **out, u16 idx);
+s32 fn_80230BD4(u8 id, Node *node, u32 **out, u16 idx);
 #define STEP(n)                  \
     p += (n);                    \
     count++;                     \
@@ -78,7 +79,11 @@ typedef struct Ctx {
     f32 f74;
 } Ctx;
 extern Ctx lbl_8030E830;
-typedef struct Vtx Vtx;
+typedef struct Vtx {
+    f32 x, y, z;
+    u8 pad_c[0xc];
+    u32 color;
+} Vtx;
 typedef struct Hdr {
     u16 len;
     s16 flags;
@@ -149,6 +154,7 @@ typedef struct {
 } Blk40;
 extern Blk40 lbl_803118DC;
 extern Blk40 lbl_8031191C;
+extern Blk40 lbl_802F92F0;
 extern NJS_POINT3 lbl_803119D4;
 extern Angle lbl_803119C8[3];
 extern s32 lbl_80347574;
@@ -174,11 +180,18 @@ extern int strncmp(const char *a, const char *b, u32 n);
 extern char lbl_8034C760;
 extern void fn_80230920(s16 *p, s16 *v);
 typedef struct Ent28 { u8 pad[0x1c]; } Ent28;
-typedef struct Rec3 { u32 hi; u32 *cmd; Ent28 *base; } Rec3;
+typedef struct Rec3 { u32 hi; void *cmd; Ent28 *base; } Rec3;
 extern u32 lbl_80347EF4;
 extern u32 lbl_80347EF8;
 extern Rec3 lbl_80316930;
 extern void fn_802A5D20(u32 hi, Ent28 *dst, u32 *src);
+extern Ent28 *lbl_80347EFC;
+extern u32 lbl_80347880;
+extern s32 fn_80288C68(void);
+extern void fn_8029CA58(void);
+extern s32 fn_802A8ADC(void);
+u32 fn_8023109C(u32 *cmd, Ent28 *base);
+void fn_8023114C(s16 *p, u32 kind, Vtx *verts, s32 mode);
 
 void fn_8022D34C(s32 a, f32 b) {
     if (a > 0) {
@@ -362,6 +375,86 @@ s32 fn_8022DAE8(NJS_POINT3* pos, Angle* id, Blk40* req) {
         }
     }
     return ret;
+}
+
+s32 fn_8022E734(u8 kind, Node *node, s16 **cur, s16 **next, s32 first, u8 lo, u8 hi)
+{
+    Tab *tab = node->tab;
+    s16 *p;
+    s16 hdr;
+    u8 mode = 1;
+    u8 found = 0;
+    u16 cnt;
+    s32 two = 0;
+    u8 type;
+    if (tab == 0) {
+        *cur = 0;
+        return 0;
+    }
+    if ((s8)first) {
+        if (kind >= 0x20 && kind < 0x38) {
+            p = tab->x0;
+            two = 1;
+        } else {
+            p = tab->x4;
+            two = 0;
+        }
+    } else {
+        p = *cur;
+    }
+    if (p == 0) {
+        return 0;
+    }
+    if (kind >= 0x20 && kind < 0x38) {
+        mode = 2;
+    }
+    if (two != 0) {
+        hdr = p[1];
+    } else {
+        hdr = p[0];
+    }
+    while ((hdr & 0xff) != 0xff) {
+        if (two != 0) {
+            cnt = p[0];
+            hdr = p[1];
+            p += 2;
+        } else {
+            cnt = p[1];
+            hdr = p[0];
+            p += 2;
+        }
+        if (lo < hi) {
+            if (!(lo > (u8)hdr || hi < (u8)hdr)) {
+                *cur = p - 2;
+                found = 1;
+            }
+        } else if ((u8)hdr == kind) {
+            *cur = p - 2;
+            found = 1;
+        }
+        if (mode > 1) {
+            return 0;
+        }
+        type = hdr;
+        if (type < 1) {
+            p -= 1;
+        } else if (type < 8) {
+            p -= 1;
+        } else if (type >= 16) {
+            cnt *= mode;
+            while (cnt != 0) {
+                p += 1;
+                cnt -= 1;
+            }
+        }
+        if (found) {
+            *next = p;
+            return 1;
+        }
+    }
+    *cur = 0;
+    *next = 0;
+    return 0;
 }
 
 void fn_8022E8F8(void* p, s32 arg) {
@@ -601,6 +694,38 @@ void fn_8022F0CC(Node *n, s32 a, s32 b)
     }
 }
 
+s32 fn_8022E068(f32 *p, s32 i, f32 *a, f32 *b, f32 *c, f32 *d)
+{
+    s32 ret = 1;
+    f32 diff;
+    f32 old;
+    if (i > 300) {
+        return 0;
+    }
+    if (i == 0) {
+        *c = p[2];
+        *b = p[3];
+        *a = -p[0] * *b - *c * (p[1] * p[1]);
+        *b = *a * p[4] / 2.0f + *b;
+        *c = *b * p[4] + *c;
+        *d = -*c;
+        return 1;
+    }
+    old = *d;
+    *a = -p[0] * *b - *c * (p[1] * p[1]);
+    *b = *a * p[4] + *b;
+    *c = *b * p[4] + *c;
+    *d = -*c;
+    diff = old - *d;
+    if (diff < 0.0f) {
+        diff *= -1.0f;
+    }
+    if (diff < 0.0001) {
+        ret = 0;
+    }
+    return ret;
+}
+
 s32 fn_8022DFFC(void *p) {
     f32 d;
     f32 a;
@@ -609,13 +734,101 @@ s32 fn_8022DFFC(void *p) {
     s32 i = 0;
     s32 ret;
     for (;;) {
-        ret = fn_8022E068(p, (u16)i, &a, &b, &c, &d);
+        ret = fn_8022E068(p, i & 0xffff, &a, &b, &c, &d);
         if (ret == 0 && (u16)i != 0) {
             break;
         }
         i++;
     }
     return i;
+}
+
+void fn_8022F408(Node *n, s32 val, s32 kind) {
+    u16 idx;
+    u16 id;
+    u32 *p = 0;
+    kind &= 0xff;
+    for (id = 0x10; id < 0x20; id++) {
+        for (idx = 1;; idx++) {
+            fn_80230BD4(id, n, &p, idx);
+            if (p == 0) break;
+            switch (kind) {
+            case 0:
+                switch (id) {
+                case 0x11:
+                case 0x13:
+                case 0x15:
+                case 0x17:
+                    p += 1;
+                    *p = val;
+                    break;
+                }
+                break;
+            case 1:
+                switch (id) {
+                case 0x13:
+                case 0x17:
+                    p += 2;
+                    *p = val;
+                    break;
+                case 0x12:
+                case 0x16:
+                    p += 1;
+                    *p = val;
+                    break;
+                }
+                break;
+            case 2:
+                switch (id) {
+                case 0x17:
+                    p += 3;
+                    *p = val;
+                    break;
+                case 0x14:
+                    p += 1;
+                    *p = val;
+                    break;
+                case 0x15:
+                case 0x16:
+                    p += 2;
+                    *p = val;
+                    break;
+                }
+                break;
+            }
+        }
+    }
+}
+
+s32 fn_80230FCC(Res230 *r)
+{
+    u32 *p;
+    Ent28 *v;
+    s16 *q;
+    if (r->x14 > 0.0f) {
+        if (fn_80288C68() != 0) {
+            return -1;
+        }
+    }
+    p = r->x0;
+    v = lbl_80347EFC;
+    if (p != NULL) {
+        lbl_80347880 = fn_8023109C(p, v);
+    }
+    q = r->x4;
+    if (q != NULL) {
+        fn_8029CA58();
+        switch (fn_802A8ADC()) {
+        case 2:
+            fn_8023114C(q, lbl_80347880, lbl_80316930.cmd, 0);
+            break;
+        case 3:
+        case 4:
+            fn_8023114C(q, lbl_80347880, lbl_80316930.cmd, 1);
+            break;
+        }
+    }
+    return 0;
 }
 
 void fn_80230F6C(void *p) {
@@ -687,7 +900,7 @@ s32 fn_80230E48(Rng *r, f32 t, u16 i) {
 s32 fn_802301A0(Src* src, Out* out) {
     s16* p;
     u16 i;
-    if (src->x4 == NULL) {
+    if (src->tab == NULL) {
         return 0;
     }
     for (i = 0x20; i < 0x38; i++) {
@@ -916,7 +1129,7 @@ void fn_8023152C(GXColor *mat, GXColor *amb) {
     GXSetChanAmbColor(GX_COLOR1A1, out);
 }
 
-void fn_8023114C(s16 *p, u8 kind, Vtx *verts, s32 mode) {
+void fn_8023114C(s16 *p, u32 kind, Vtx *verts, s32 mode) {
     Cur h;
     s32 k;
     GXColor col_mat = {255, 255, 255, 255};
@@ -934,7 +1147,7 @@ void fn_8023114C(s16 *p, u8 kind, Vtx *verts, s32 mode) {
     njInvertMatrix(0);
     fn_802928F4(&lbl_802F93E8, &nrm);
     njPopMatrixEx();
-    k = kind;
+    k = (u8)kind;
     while ((op = *p++) != 0xff) {
         code = op & 0xff;
         if (code < 8) {
@@ -1043,7 +1256,7 @@ s32 fn_80230634(Src *src, Out_80230634 *out) {
     u8 kind;
     f32 x, y, z;
     f32 dx, dy, dz;
-    if (src->x4 == 0) {
+    if (src->tab == 0) {
         return 0;
     }
     if (out->dist == 0) {

@@ -255,7 +255,7 @@ extern void fn_8006C5A4(void);
 extern void fn_8006DBDC(void);
 extern int sprintf(char*, const char*, ...);
 extern void fn_801DBE1C(const char*, ...);
-extern s16 fn_80008274(s32);
+extern s16 fn_80008274(s16);
 extern void strcpy(char*, const char*);
 extern void fn_80061048(char*);
 extern void fn_80046BB0(const char*, s32*);
@@ -1348,9 +1348,9 @@ inline int NoPending(Unit* w, u32 fl) {
 
 int fn_8002E5D0(Tk* o) {
     u32 flags = 0;
-    int c;
     Tk* o2;
     Unit* w2;
+    int c;
     Unit* w = o->work->w;
     int a = 0;
     u8 x4;
@@ -1710,29 +1710,30 @@ void fn_8002F188(Tk* o, u32* out) {
 }
 
 void fn_8002F35C(void) {
-    u8* g = (u8*)lbl_8030A6D4;
-    s32 off = lbl_8034757C * 0x24;
-    if (*(u32*)(g + off) & 0x1000) {
+    if (lbl_8030A6D4[lbl_8034757C].flags & 0x1000) {
         lbl_8034737C = 8;
     }
-    *(u32*)(g + off) = 0;
-    *(u32*)(g + 8 + off) = 0;
-    *(u32*)(g + 0xc + off) = 0;
+    lbl_8030A6D4[lbl_8034757C].flags = 0;
+    lbl_8030A6D4[lbl_8034757C].x8 = 0;
+    lbl_8030A6D4[lbl_8034757C].xc = 0;
     if (lbl_8034733C == 1) {
         Q_8002F35C* q = &lbl_80302AE0;
         Ent_8002F35C* e;
         Rec* r;
-        if (--q->timer > 0) return;
+        u16 v;
+        if (q->timer-- > 0) return;
         e = &q->e[lbl_80347330];
-        r = &e->recs[e->pos++];
-        if (r->val == 0xffff) {
+        r = &q->e[lbl_80347330].recs[e->pos++];
+        v = r->val;
+        if (v == 0xffff) {
             e->pos = 0;
             r = &e->recs[e->pos++];
+            v = r->val;
         }
         q->timer = r->time;
-        *(u32*)(g + off) = r->val;
-        *(u32*)(g + 8 + off) = r->val;
-        *(u32*)(g + 0xc + off) = r->val;
+        lbl_8030A6D4[lbl_8034757C].flags = v;
+        lbl_8030A6D4[lbl_8034757C].x8 = v;
+        lbl_8030A6D4[lbl_8034757C].xc = v;
     }
 }
 
@@ -1778,13 +1779,13 @@ s32 fn_8002F598(s8 row) {
         {8, 1, 8, 2, 4, 4, 8, 4, 1, 2},
         {8, 8, 4, 4, 2, 1, 2, 1, 4, 8},
     };
-    s32* m = tbl[row];
-    GameState* p = &lbl_8030A10C;
     s8 i = 0;
+    s32* m = tbl[row];
+    s32* p = lbl_8030A10C.x194;
     while (i < 10) {
-        if ((p->x194[0] & *m) == 0) break;
+        if ((*p & *m) == 0) break;
         m++;
-        p = (GameState*)((s32*)p + 1);
+        p++;
         i++;
     }
     return i >= 10;
@@ -1826,10 +1827,12 @@ static inline s32 NeedsAdd(Tk* t, s32 hash) {
 }
 
 s32 fn_8002F80C(s8 mode, Tk* tab) {
-    s32 count = 0;
-    s16 i;
+    char* st = lbl_802AD0F8;
+    s8 first;
     s8 end;
     Tk** pp;
+    s32 count = 0;
+    s16 i;
     char buf[0x20];
     char name1[0x20];
     char name2[0x20];
@@ -1837,18 +1840,19 @@ s32 fn_8002F80C(s8 mode, Tk* tab) {
     fn_8006C5A4();
     switch (mode) {
     case 0:
-        i = 0;
+        first = 0;
         end = 4;
         break;
     case 1:
-        i = 4;
+        first = 4;
         end = 12;
         break;
     default:
-        i = 0;
+        first = 0;
         end = 12;
         break;
     }
+    i = first;
     pp = &lbl_80309700[i];
     for (; i < end; pp++, i++) {
         if (*pp != NULL) {
@@ -1856,15 +1860,18 @@ s32 fn_8002F80C(s8 mode, Tk* tab) {
             s16 type = info->type;
             s16 id = info->id;
             if (type < 4) {
-                sprintf(buf, "MA%03d.MLD", id);
+                sprintf(buf, st + 0x78, id);
             } else {
                 if (id < 0) {
-                    fn_801DBE1C("incorrect load character No[%d]", id);
+                    fn_801DBE1C(st + 0x84, id);
                 }
                 if (id < 128) {
-                    sprintf(buf, "MB%03d.MLD", id);
+                    sprintf(buf, st + 0xa0, id);
                 } else {
-                    sprintf(buf, "MG%03d.MLD", fn_80008274(id) - 128);
+                    {
+                        s16 nn = fn_80008274(id);
+                        sprintf(buf, st + 0xac, nn - 128);
+                    }
                 }
             }
             strcpy(name1, buf);
@@ -1883,13 +1890,13 @@ s32 fn_8002F80C(s8 mode, Tk* tab) {
 }
 
 s32 fn_8002FA00(s8 mode, s32 flag, Tk* tab) {
+    char* st = lbl_802AD0F8;
     Tk** pp;
     s32 count = 0;
     s16 i;
     s32 n = 0;
+    s8 first;
     s8 end;
-    s32 a;
-    s32 b;
     Wk* info;
     char buf[0x20];
     char name1[0x20];
@@ -1899,7 +1906,7 @@ s32 fn_8002FA00(s8 mode, s32 flag, Tk* tab) {
     fn_8006C5A4();
     if (flag != 0) {
         void* h = lbl_80347398;
-        fn_80046BB0("E1800000.MLD", &key);
+        fn_80046BB0(st + 0xb8, &key);
         if (fn_80009500(h, key, -1) != 0) {
             n = 1;
         }
@@ -1908,21 +1915,20 @@ s32 fn_8002FA00(s8 mode, s32 flag, Tk* tab) {
     case 0:
     case 3:
     case 5:
-        a = 0;
-        b = 4;
+        first = 0;
+        end = 4;
         break;
     case 1:
     case 4:
-        a = 4;
-        b = 12;
+        first = 4;
+        end = 12;
         break;
     default:
-        a = 0;
-        b = 12;
+        first = 0;
+        end = 12;
         break;
     }
-    i = (s8)a;
-    end = (s8)b;
+    i = first;
     pp = &lbl_80309700[i];
     for (; i < end; pp++, i++) {
         if (*pp != NULL) {
@@ -1931,15 +1937,18 @@ s32 fn_8002FA00(s8 mode, s32 flag, Tk* tab) {
             type = info->type;
             id = info->id;
             if (type < 4) {
-                sprintf(buf, "MA%03d.MLD", id);
+                sprintf(buf, st + 0x78, id);
             } else {
                 if (id < 0) {
-                    fn_801DBE1C("incorrect load character No[%d]", id);
+                    fn_801DBE1C(st + 0x84, id);
                 }
                 if (id < 128) {
-                    sprintf(buf, "MB%03d.MLD", id);
+                    sprintf(buf, st + 0xa0, id);
                 } else {
-                    sprintf(buf, "MG%03d.MLD", fn_80008274(id) - 128);
+                    {
+                        s16 nn = fn_80008274(id);
+                        sprintf(buf, st + 0xac, nn - 128);
+                    }
                 }
             }
             strcpy(name1, buf);
@@ -1964,8 +1973,10 @@ s32 fn_8002FA00(s8 mode, s32 flag, Tk* tab) {
                 }
                 {
                     s16 c = fn_8000F8F8(lbl_80347398, name2, info->id, info->type, hash);
+                    s16 j = n;
                     while (c != 0) {
-                        ((s32*)tab->work)[(s16)n + 1] = hash;
+                        ((s32*)tab->work)[j + 1] = hash;
+                        j++;
                         n++;
                         c--;
                     }
@@ -2325,17 +2336,18 @@ void fn_800308A8(void) {
 }
 
 static inline int Fmt(char* buf, s16 id, s16 kind) {
+    char* st = lbl_802AD0F8;
     if (kind < 4) {
-        sprintf(buf, "MA%03d.MLD", id);
+        sprintf(buf, st + 0x78, id);
     } else {
         if (id < 0) {
-            fn_801DBE1C("incorrect load chara No[%d]", id);
+            fn_801DBE1C(st + 0x84, id);
         }
         if (id < 0x80) {
-            sprintf(buf, "MB%03d.MLD", id);
+            sprintf(buf, st + 0xa0, id);
         } else {
             s16 n = fn_80008274(id);
-            sprintf(buf, "MG%03d.MLD", n - 0x80);
+            sprintf(buf, st + 0xac, n - 0x80);
         }
     }
     return 1;
