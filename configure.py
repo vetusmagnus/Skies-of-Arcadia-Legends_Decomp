@@ -449,7 +449,7 @@ config.libs = [
             Object(NonMatching, "game/unit_801719D0.c"),
             Object(NonMatching, "game/unit_80193F28.c"),
             Object(NonMatching, "game/unit_80199B9C.c"),
-            Object(NonMatching, "game/unit_801A2D20.c"),
+            Object(NonMatching, "game/unit_801A2D20.c", extra_cflags=["-inline noauto,deferred"]),
             Object(NonMatching, "game/unit_801A4B40.c"),
             Object(NonMatching, "game/unit_801A6A88.c"),
             # Batch 4: 56-88 byte functions, one unit per agent run and gap (guessed ranges).

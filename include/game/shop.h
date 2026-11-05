@@ -216,7 +216,7 @@ typedef struct CardSaveData {
 } CardSaveData;
 /* The 0x6000-byte card file image. */
 typedef struct CardImage {
-    u8 hdr[0x1440];
+    char hdr[0x1440];
     CardSaveData save;
 } CardImage;
 /* The open card file (lbl_803081A4): its image, name and slot. */
@@ -982,7 +982,7 @@ extern s32 lbl_803475E0;
 s32 fn_801A4070(SaveTask *t);
 void fn_801A4060(SaveTask *t);
 void fn_801A41C0(CardRec *rec);
-extern s32 fn_801A3A10(u8 slot, SaveTask *t);
+extern s32 fn_801A3A10(s32 chan, SaveTask *t);
 void fn_801A2D20(SaveTask *t, u32 a, u32 b);
 u32 fn_801A4684(void *buf, u32 size);
 extern void fn_801A4354(CardSaveData *p);
@@ -2252,6 +2252,18 @@ extern s32 CARDFreeBlocks(s32 chan, s32 *bytes, s32 *files);
 extern s32 CARDOpen(s32 chan, const char *name, CARDFileInfo *info);
 extern s32 CARDRead(CARDFileInfo *info, void *buf, s32 len, s32 ofs);
 extern s32 CARDClose(CARDFileInfo *info);
+extern CARDFileInfo lbl_80308164;
+extern const char lbl_802B4984[];
+extern s32 CARDReadAsync(CARDFileInfo *info, void *buf, s32 len, s32 ofs, void *cb);
+extern s32 CARDWriteAsync(CARDFileInfo *info, const void *buf, s32 len, s32 ofs, void *cb);
+extern s32 CARDCreateAsync(s32 chan, const char *name, u32 size, CARDFileInfo *info, void *cb);
+extern s32 CARDDeleteAsync(s32 chan, const char *name, void *cb);
+extern s32 CARDSetStatus(s32 chan, s32 fileNo, CardStat *stat);
+extern s32 CARDSetAttributes(s32 chan, s32 fileNo, u8 attr);
+extern s32 CARDGetXferredBytes(s32 chan);
+typedef struct TPLImage { u8 pad0[8]; void *data; } TPLImage;
+typedef struct TPLDescriptor { TPLImage *textureHeader; TPLImage *CLUTHeader; } TPLDescriptor;
+extern TPLDescriptor *TPLGet(void *pal, u32 id);
 extern int strcmp(const char *, const char *);
 
 static inline u32 CardSum(const void *p) {
