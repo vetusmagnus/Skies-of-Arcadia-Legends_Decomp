@@ -1886,7 +1886,7 @@ u16 fn_801ED074(EvObj* obj, s32 force) {
         } else if (obj->x1fe <= 0 && 3.0517578125e-05f * rand() < 0.5f) {
             obj->x1fe = 300;
             ret = ObjTurn(obj, ObjWalkTarget(obj), 0x10, 0xE);
-        } else if (force != 0 || dist >= 16.0f) {
+        } else if (force != 0 || dist >= 4.0f) {
             ret = ObjTurn(obj, fn_801EDF24(obj, ObjDir8(obj, obj->x20c)), 4, 2);
         } else {
             ret = obj->state;

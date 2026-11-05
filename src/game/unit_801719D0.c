@@ -119,7 +119,9 @@ typedef struct {
     s32 v;
     u8 b;
 } Rec_8018E81C;
-extern void* lbl_80347114;
+extern Task* lbl_80347114;
+extern void* lbl_8034759C;
+extern u8 lbl_80347104[8];
 /* lbl_80310B3C: the event flag bits, 32 per word. */
 extern u32 lbl_80310B3C[];
 extern u32 lbl_80308088[];
@@ -3059,6 +3061,16 @@ void fn_80192800(void)
 {
     TaskDelete(lbl_80347114);
     lbl_80347114 = 0;
+}
+
+void CampMenuCreate(void)
+{
+    lbl_80347114 = fn_802267AC(lbl_8034759C, fn_801920AC);
+    lbl_80347114->work = fn_801E1C7C(4);
+    lbl_803473E8 = 1;
+    lbl_803473E0 = 1;
+    lbl_803473E4 = 0;
+    lbl_80347100 = lbl_80347104;
 }
 
 void fn_80192920(void)

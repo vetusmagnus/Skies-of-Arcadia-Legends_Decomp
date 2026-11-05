@@ -114,6 +114,39 @@ void fn_801F2E44(s32 id)
     } while (i < 0x3c);
 }
 
+void fn_801EFF90(s16 id);
+void fn_801EFF48(s16 id);
+
+s32 fn_801F3844(s32 idx)
+{
+    SaveChar *c;
+    s32 i;
+    u32 b, d;
+    b = idx + 0x408;
+    d = idx + 0x402;
+    lbl_80310B3C[b >> 5] &= ~(1 << (b & 31));
+    lbl_80310B3C[d >> 5] |= 1 << (d & 31);
+    c = &lbl_8030B7F4.chr[idx];
+    for (i = 0; i < 4; i++) {
+        if (lbl_8030B7F4.party[i] == idx) {
+            for (; i < 3; i++) {
+                lbl_8030B7F4.party[i] = lbl_8030B7F4.party[i + 1];
+            }
+            lbl_8030B7F4.party[i] = -1;
+            lbl_8030B4D4.x2d4--;
+            fn_801EFFD8(c->slot0);
+            fn_801EFF90(c->slot1);
+            fn_801EFF48(c->slot2);
+            fn_801EF7E0();
+            if (idx == 2) {
+                lbl_8030B7F4.xb50 &= ~4;
+            }
+            return 1;
+        }
+    }
+    return 0;
+}
+
 s32 fn_801F39EC(s32 idx) {
     SaveChar* c;
     s32 i;
@@ -226,6 +259,20 @@ s32 fn_801F4A60(s16 id) {
     default:
         return 0x0;
     }
+}
+
+u32 fn_801F4C24(s16 id)
+{
+    u32 k;
+    if (id < 0x50) k = 0;
+    else if (id < 0xa0) k = 1;
+    else if (id < 0xf0) k = 2;
+    else if (id < 0x140) k = 3;
+    else if (id < 0x190) k = 4;
+    else if (id < 0x1b8) k = 5;
+    else if (id < 0x1e0) k = 6;
+    else k = 7;
+    return k;
 }
 
 s8 fn_801F4CA0(void) {
