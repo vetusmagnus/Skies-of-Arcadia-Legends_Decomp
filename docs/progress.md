@@ -2564,3 +2564,39 @@ Left, and why:
   fn_801A3A10, fn_801A3B30, fn_801A4070), 0x801A4B40 and 0x801A6A88 (`.rodata` 0x802B4A00-0x802B6A18:
   fn_801A5FD8). It needs 0x2000 bytes of LayoutPart tables generated first.
 - fn_800A6F30, fn_800A7860: pool offsets depend on local arrays of unmatched neighbours.
+
+## Lower-half pass (2026-11-05, from ee59937)
+
+Every unmatched function below 0x80140460 (401, of which 7 were left out as blocked on header calls) was split into
+40 work lists on private unit copies, merged three-way and re-checked as in the per-unit pass above.
+45 new functions, main.dol byte-identical. Most of the rest are register colouring only; the near drafts are in
+`build/agents/lo/` on the machine that ran the pass.
+
+Header changes made: `ModelFiles` is a count-prefixed list (`items[1..3]` were `body`, `extra`, `spark`),
+`EvSlot.w8`, the `EvScript` head (`w4`, `f8`..`f14`), `EvExt.scl` at 0x5C, `EvObj.x1ef` as `s8` with `x1f0`/`x1f1`.
+`unit_8020EEE8.c` and `unit_802159E0.c` still carry their own older `ModelFiles`.
+
+Things that came up more than once:
+
+- `if (c ? 0 : 0)` in fn_800F850C is real: the original computes `0 & ~mask` branchlessly, so a debug-key test
+  defined to nothing is the likely source.
+- An empty `case N:` before `default:` can decide between a jump table and a compare tree (fn_800BD9E4).
+- `o != NULL && o != NULL` gives the doubled `beq` in fn_800576B0, like the redundant stores in the ring ending.
+- `UseItemData.use_up` stays `u8`: fn_8007B328 reads it through an `s8` helper, the same way evobj.c reads it into
+  an `s8` local. As `s8`, fn_801F0588 stops matching.
+- `lbl_802D7E4C` stays `const`: fn_80134D1C matches without it, fn_801C2CF4 stops matching. Those two functions
+  look like different files.
+
+Still open, each with a draft that matches or is close once decided:
+
+- `EvHit` as three `NJS_POINT3` with an unsigned key word (fn_80114C84), `Wk.xc/xd` and `Chr_UNIT0000.xac/xad` as `u8`
+  (fn_800839D8, fn_8008328C; eight matched functions then need `s8` locals), `EvObj.x260`/`x264` as `void*`
+  (fn_800C5EE8, fn_800CB6D0, six functions in unit_800A3ED4 that also want a Task twin), `UiObj`-style byte access to
+  `TextState.colour` (MessageWindowDraw), `EvObj.x248` as `u32` (fn_800D0970, which also wants string addresses
+  as `u32` in a `.data` table).
+- Unit splits: `unit_800972AC.c` between fn_80097CEC and fn_8009C518 (fn_80097720, fn_80097A1C match once the four
+  `.bss` objects are defined in the first half), `unit_800D81E8.c` at fn_800EAE2C (fn_800EAAAC),
+  `unit_80074D9C.c` around fn_80077428/fn_800786C0 (three separate string pools).
+- Private views to fold into `EvObj`: the callees of fn_800F1AD8, which matches once they take `EvObj*`/`Task*`.
+- fn_8008FC50 matches with the same `(u16*)` cast fn_8008F9B8 already has; held for the cast rule.
+- fn_8001C6CC is instruction-exact and guarded: only its three string offsets differ.

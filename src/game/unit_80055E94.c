@@ -2344,7 +2344,6 @@ extern void fn_801EFF0C(s16 v);
 extern s8 fn_801EF300(void);
 extern void MemCopy(void *dst, const void *src, s32 size);
 
-#ifdef NONMATCHING
 typedef struct PtCmd {
     u8 pad0[8];
     s32 x8;          /* 0x08 texture/model key */
@@ -2407,10 +2406,11 @@ extern void fn_800354DC(NJS_TEXLIST *t, s16 frame);
 extern void fn_801D0DCC(void);
 extern void fn_80296EEC(s32 a, s32 b, s32 c);
 extern void fn_80296B60(s16 frame, u32 col, s32 a);
-extern void fn_80296918(V3 *pts, s16 n, f32 size);
+extern void fn_80296918(V3 *pts, s16 n, f32 a, f32 s);
 extern void fn_80296B34(void);
 extern void fn_802A8F40(s32 a);
 extern void fn_801D0D70(s32 a, f32 b);
+#ifdef NONMATCHING
 typedef struct Rec16_80072B3C { void* w[4]; } Rec16_80072B3C;
 typedef struct Rec24_80072B3C { void* w[6]; } Rec24_80072B3C;
 #endif
@@ -3089,6 +3089,155 @@ void fn_80057038(WobTask* t)
     }
     s->cnt = s->cnt + 1;
     fn_80037FD8(s->cfg, &t->state);
+}
+
+typedef struct Cfg576B0 {
+    u8 pad0[0x10];
+    u32 flags;
+    s16 s14;
+    s16 s16;
+    u8 pad18[2];
+    s16 s1a;
+    s16 s1c;
+} Cfg576B0;
+typedef struct W576B0 {
+    s16 frame;
+    s16 timer;
+    ChrTask *a;
+    Cfg576B0 *cfg;
+} W576B0;
+void fn_80014D0C(void);
+void fn_80014CFC(void);
+void fn_800324B8(u8 id, s32 a);
+void fn_80032BBC(u8 id, s32 a);
+void fn_80032B6C(u8 id, s32 a);
+void fn_80031580(s32 id, s8 a, s16 b, s32 c);
+void fn_8002DF0C(void *t, s32 a, s32 b);
+void fn_800576B0(Task *t)
+{
+    ChrInfo *u;
+    W576B0 *w = t->work;
+    ChrInfo *u2;
+    Task *o;
+    ChrWork *cw;
+    s16 j;
+    s16 i;
+
+    u = w->a->work->u;
+    if (lbl_80347394 != NULL && !(lbl_80347394->work->f3c & 0x10)) {
+        t->state = 0xfa;
+        return;
+    }
+    switch (t->state) {
+    case 0:
+        if (!(w->cfg->flags & 0x20000000) && !(w->cfg->flags & 0x40000000)) {
+            for (i = 0; i < 12; i++) {
+                o = lbl_80309E24[i];
+                if (o != NULL && o != NULL) {
+                    cw = o->work;
+                    cw->u->ff0 |= 0x800000;
+                }
+            }
+        }
+        t->state = 2;
+    case 2:
+        if (w->cfg->flags & 0x20000000) {
+            u2 = w->a->work->u;
+            if (w->cfg->flags & 0x80000000)
+                lbl_80347378 |= 1 << u2->x0;
+            if (w->frame >= w->cfg->s14) {
+                fn_800324B8(u2->x0, w->cfg->s1a);
+                t->state = 3;
+            } else {
+                fn_80032BBC(u2->x0, 0);
+            }
+        } else if (w->cfg->flags & 0x40000000) {
+            if (w->frame == w->cfg->s14) {
+                if (w->cfg->s1c != 0)
+                    fn_80031580(u->x0, 2, w->cfg->s1c, 1);
+                else
+                    fn_80032BBC(u->x0, 0);
+            }
+        } else {
+            if (w->frame >= w->cfg->s14 && w->frame <= w->cfg->s16 && (w->cfg->flags & 0x80000000))
+                fn_80014D0C();
+            if (w->frame == w->cfg->s14) {
+                for (j = 0; j < 12; j++) {
+                    o = lbl_80309E24[j];
+                    if (o != NULL && o != NULL) {
+                        cw = o->work;
+                        if (cw->u->ff0 & 0x08000000)
+                            fn_8002DF0C(o, 0, w->cfg->s1a);
+                    }
+                }
+            } else if (w->frame == w->cfg->s16) {
+                t->state = 0xfa;
+                for (j = 0; j < 12; j++) {
+                    o = lbl_80309E24[j];
+                    if (o != NULL && o != NULL) {
+                        cw = o->work;
+                        u2 = cw->u;
+                        if (u2->ff0 & 0x08000000) {
+                            if (w->cfg->s1c != 0)
+                                fn_80031580(u2->x0, 2, w->cfg->s1c, 1);
+                            else
+                                fn_80032BBC(u2->x0, 0);
+                        }
+                        u2->ff0 &= ~0x08000000;
+                    }
+                }
+                if (w->cfg->flags & 0x80000000)
+                    fn_80014CFC();
+            }
+        }
+        break;
+    case 3:
+        if (w->cfg->flags & 0x80000000)
+            lbl_80347378 |= 1 << u->x0;
+        if (w->frame >= w->cfg->s16) {
+            if (w->cfg->s1c != 0) {
+                t->state = 4;
+            } else {
+                if (w->cfg->flags & 0x80000000)
+                    lbl_80347378 &= ~(1 << u->x0);
+                fn_80032BBC(u->x0, 0);
+                t->state = 0xfa;
+            }
+        }
+        break;
+    case 4:
+        if (fn_800290E8(u->x0) == 3)
+            break;
+        fn_80031580(u->x0, 2, w->cfg->s1c, 1);
+        w->timer = w->cfg->s1c;
+        t->state = 5;
+    case 5:
+        if (w->timer == 0) {
+            if (w->cfg->flags & 0x80000000)
+                lbl_80347378 &= ~(1 << u->x0);
+            t->state = 0xfa;
+        } else {
+            w->timer--;
+        }
+        break;
+    case 0xf9:
+        lbl_80347378 &= ~(1 << u->x0);
+        fn_80014CFC();
+        fn_80032B6C(u->x0, 1);
+        u->ff0 &= ~0x800000;
+        t->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    case 0xfa:
+        if (fn_800290E8(u->x0) == 3)
+            return;
+        fn_80032B6C(u->x0, 1);
+        t->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    w->frame++;
+    fn_80037FD8(w->cfg, &t->state);
 }
 
 void fn_800581B8(O581B8 *o) {
@@ -7203,6 +7352,68 @@ void fn_80064CA4(O80064CA4 *o) {
     }
 }
 
+void fn_80064E38(O80064CA4 *o) {
+    s32 i;
+    s32 n;
+    S80064CA4 *s = o->s;
+    U80064CA4 *u = s->p0->work->u;
+    if (o->state != 3) {
+        if (u->kind != s->s80) {
+            o->state = 2;
+        }
+    }
+    switch (o->state) {
+    case 0: {
+        n = 0;
+        for (i = 0; i < 3; i++) {
+            if (lbl_80346BD8->v[i] > s->v[i]) {
+                lbl_80346BD8->v[i] = lbl_80346BD8->v[i] - 5.0f;
+                if (lbl_80346BD8->v[i] <= s->v[i]) {
+                    lbl_80346BD8->v[i] = s->v[i];
+                    n++;
+                }
+            } else {
+                lbl_80346BD8->v[i] += 5.0f;
+                if (lbl_80346BD8->v[i] >= s->v[i]) {
+                    lbl_80346BD8->v[i] = s->v[i];
+                    n++;
+                }
+            }
+        }
+        if (n == 3) {
+            o->state = 1;
+        }
+        break;
+    }
+    case 2: {
+        n = 0;
+        for (i = n; i < 3; i++) {
+            f32 x = lbl_80346BD8->v[i];
+            if (x > 0.0f) {
+                lbl_80346BD8->v[i] = x - 5.0f;
+                if (lbl_80346BD8->v[i] <= 0.0f) {
+                    lbl_80346BD8->v[i] = 0.0f;
+                    n++;
+                }
+            } else {
+                lbl_80346BD8->v[i] += 5.0f;
+                if (lbl_80346BD8->v[i] >= 0.0f) {
+                    lbl_80346BD8->v[i] = 0.0f;
+                    n++;
+                }
+            }
+        }
+        if (n == 3) {
+            o->state = 3;
+        }
+        break;
+    }
+    case 3:
+        o->flags |= 0x40;
+        break;
+    }
+}
+
 void fn_800651D0(O80064CA4 *o) {
     S80064CA4 *s = o->s;
     U80064CA4 *u = s->p0->work->u;
@@ -10850,6 +11061,7 @@ void fn_8005DEB8(Task* o)
     fn_80037FD8(w->cmd, &o->state);
 }
 
+
 void fn_80072318(Block* src, Block* dst, s16 n)
 {
     Rec16* d16;
@@ -11436,6 +11648,7 @@ s32 fn_8006721C(T5C188 *o) {
     }
     return 0;
 }
+
 void fn_80061450(NJS_POINT3* a, NJS_POINT3* b, NJS_POINT3* out)
 {
     Mid(a->x, b->x, &out->x);
@@ -11728,7 +11941,6 @@ void fn_8006F4B0(void)
     }
 }
 
-#ifdef NONMATCHING
 void fn_80055F0C(PtTask *t) {
     PtWork *w = t->work;
     PtSt *s = w->st;
@@ -11842,7 +12054,7 @@ void fn_80055F0C(PtTask *t) {
             fn_801D0DCC();
             fn_80296EEC(1, 3, 0);
             fn_80296B60(s->frame, col, 1);
-            fn_80296918(s->pts, s->cfg->n, 0.01f + s->scl);
+            fn_80296918(s->pts, s->cfg->n, 0.01f + s->scl, s->scl);
             fn_80296B34();
             fn_80296EEC(1, 3, 1);
             fn_802A8F40(1);
@@ -11867,7 +12079,6 @@ void fn_80055F0C(PtTask *t) {
     s->cnt++;
     fn_80037FD8(s->cfg, &t->state);
 }
-#endif
 
 
 #ifdef NONMATCHING

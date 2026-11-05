@@ -927,6 +927,142 @@ void fn_800D1174(EvObj* e) {
     e->ang[1] = save;
 }
 
+extern void fn_801DBE1C(const char* fmt, ...);
+extern void* fn_801E1C7C(s32 n);
+/* EvExt.info of a script object: the common head, then one kind word per script entry from 0x24. */
+typedef struct EvInfoScript {
+    s32 count;      /* 0x00 number of words present */
+    u8 pad4[0x20];
+    s32 kind[1];    /* 0x24 */
+} EvInfoScript;
+extern void* fn_800C355C(NJS_TEXLIST** out, EvExt* ctx, s32 idx);
+extern void fn_801E7600(void* model, s32 a, s32 b, s32 c);
+extern void* fn_801DDAB0(void* a, void* b, void* c, void* d, s16* e);
+extern EvSlot* fn_801DD984(void);
+extern char lbl_802B1538[];
+
+void fn_800D1324(EvObj* self) {
+    EvScript* h;
+    s32 count;
+    s32 i;
+    s32 nk;
+    s32 nv;
+    s32 j;
+    EvExt* ext;
+    EvScriptEntry* e;
+    s32* kp;
+    void** vp;
+    s32 kind;
+    EvInfoScript* kinds;
+    ItemList* vals;
+    s16 sz[2];
+
+    self->x25c = 0;
+    ext = self->ext;
+    count = ext->files->count;
+    if (count > 0) {
+        h = fn_801E1C7C((count - 1) * 0x2c + 0x44);
+        if (h != 0) {
+            h->h0 = 0;
+            h->h2 = count;
+            h->w4 = lbl_80310A1C[6];
+            h->f8 = lbl_802E1154[h->w4].f0;
+            h->fc = h->f10 = h->f14 = 0.0f;
+            e = h->entries;
+            j = 0;
+            i = 0;
+            kinds = ext->info;
+            vals = ext->items;
+            nk = kinds->count;
+            kp = kinds->kind;
+            nv = vals->count;
+            vp = vals->items;
+            self->x25c = h;
+            for (; i < count; e++, i++) {
+                e->wc = fn_800C355C(&e->w8, ext, i);
+                if (e->w8 != 0) {
+                    fn_80227810(e->w8);
+                }
+                if (e->wc != 0) {
+                    kind = (nk > i + 8) ? *kp : 6;
+                    switch (kind) {
+                    case 0:
+                        if (nv > j) {
+                            e->motion = *vp;
+                            vp++;
+                            j++;
+                        } else {
+                            e->motion = 0;
+                        }
+                        if (nv > j) {
+                            e->w14 = *vp;
+                            vp++;
+                            j++;
+                        } else {
+                            e->w14 = 0;
+                        }
+                        e->h0 = 1;
+                        e->h2 = 0;
+                        e->f18 = 0.0f;
+                        e->f1c = 0.0f;
+                        e->w20 = 0;
+                        e->w24 = 0;
+                        break;
+                    case 1:
+                        e->h0 = 1;
+                        e->h2 = 1;
+                        fn_801E7600(e->wc, 1, -3, 0);
+                        e->f18 = 0.0f;
+                        e->w20 = 0;
+                        e->w24 = 0;
+                        break;
+                    case 2:
+                        e->h0 = 1;
+                        e->h2 = 2;
+                        fn_801E7600(e->wc, 1, -3, 0);
+                        e->f18 = 0.0f;
+                        e->w20 = 0;
+                        e->w24 = 0;
+                        break;
+                    case 3:
+                        e->h0 = 0;
+                        e->f4 = -1.0f;
+                        e->h2 = 3;
+                        sz[0] = 0x20;
+                        sz[1] = 0x20;
+                        e->w20 = fn_801DDAB0(&lbl_803474EC, e->wc, e->w8, e->w8, sz);
+                        e->w24 = fn_801DD984();
+                        break;
+                    case 4:
+                        e->h0 = 1;
+                        e->h2 = 4;
+                        break;
+                    case 5:
+                        e->h0 = (lbl_80310B3C[0x38] >> 22) & 1;
+                        e->h2 = 5;
+                        e->w20 = 0;
+                        e->w24 = 0;
+                        break;
+                    default:
+                        e->h0 = 0;
+                        e->h2 = kind;
+                        break;
+                    }
+                    kp++;
+                } else {
+                    fn_801DBE1C(lbl_802B1538, i);
+                    break;
+                }
+            }
+        } else {
+            count = 0;
+        }
+        self->x218 = count;
+    } else {
+        self->x218 = 0;
+    }
+}
+
 void fn_800D1A34(Task* task) {
     s32 old;
     EvObj* e = task->work;

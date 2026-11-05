@@ -1406,6 +1406,73 @@ void fn_80133154(void) {
     }
 }
 
+extern void fn_80133478(void);
+extern void fn_80133750(void);
+extern void fn_8013360C(void);
+
+static inline void SetKind(s32 *src) {
+    if (lbl_80346F58 == 0) return;
+    lbl_80346F58->x24->kind[0] = src[0];
+    lbl_80346F58->x24->kind[1] = src[1];
+    lbl_80346F58->x24->kind[2] = src[2];
+}
+
+void fn_801331AC(Task_801303D0 *t) {
+    s32 loc[3];
+    switch (t->state) {
+    case 0:
+    case 0xfe:
+        lbl_80346F58->x28 = fn_801E1C7C(0x2c);
+        lbl_80346F58->x28[0] = fn_801D68C4(lbl_80346EFC, 0);
+        lbl_80346F58->x28[1] = fn_801D68C4(lbl_80346EFC, 8);
+        lbl_80346F58->x28[2] = fn_801D68C4(lbl_80346EFC, 2);
+        lbl_80346F58->x28[3] = fn_801D68C4(lbl_80346EFC, 0xe);
+        lbl_80346F58->x28[4] = fn_801D68C4(lbl_80346EFC, 0x10);
+        lbl_80346F58->x28[5] = fn_801D68C4(lbl_80346EFC, 0xf);
+        lbl_80346F58->x28[6] = fn_801D68C4(lbl_80346EFC, 0x14);
+        lbl_80346F58->x28[7] = fn_801D68C4(lbl_80346EFC, 1);
+        lbl_80346F58->x28[8] = fn_801D68C4(lbl_80346EFC, 0x13);
+        lbl_80346F58->x28[9] = fn_801D68C4(lbl_80346EFC, 0x11);
+        lbl_80346F58->x28[10] = fn_801D68C4(lbl_80346EFC, 0x12);
+        lbl_80346F58->x24->x2 = 0;
+        lbl_80346F58->x24->x3 = 0;
+        lbl_80346F58->x24->v0 = 10;
+        lbl_80346F58->x24->v1 = 7;
+        lbl_80346F58->x24->v2 = 7;
+        lbl_80346F58->x24->v3 = 60000;
+        lbl_80346F58->x24->v4 = 100000;
+        if (lbl_80346F58 != NULL) lbl_80346F58->x24->msg = 0;
+        loc[0] = 0;
+        loc[1] = 2;
+        loc[2] = 3;
+        { s32 *lp = loc; SetKind(lp); }
+        t->state = 1;
+        break;
+    case 1:
+        switch (lbl_80346F58->x24->x1) {
+        case 0x11:
+            fn_80133478();
+            if (lbl_80346F58 != NULL) lbl_80346F58->x24->x1 = 0;
+            break;
+        case 0:
+        default:
+            break;
+        }
+        if (lbl_80346F58->x24->x0 == 0) {
+            fn_80133900();
+            fn_80133750();
+            fn_8013360C();
+        }
+        break;
+    case 2:
+        t->state = 0xff;
+        break;
+    case 0xff:
+        t->flags |= 0x40;
+        break;
+    }
+}
+
 void fn_80136FDC(s32 a, s32 b, s8 *tbl, s32 idx) {
     s32 v = 0x16;
     s32 ok = 0;
@@ -3087,6 +3154,7 @@ void fn_80134D1C(Member* out, Save1568* t, void* b, s32 idx)
 }
 
 #endif
+
 
 static inline s32 NameCount(void) {
     s32 n = 0;

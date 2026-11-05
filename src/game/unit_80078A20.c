@@ -33,14 +33,14 @@ extern struct Task_8007BEB4 *lbl_80347318;
 typedef struct Ent {
     s8 on;      /* 0x0 */
     s8 id;      /* 0x1 */
-    u8 pad2[2];
+    s16 sort;   /* 0x2 */
     s16 type;   /* 0x4 */
     u8 pad6[2];
     const SkillData* p; /* 0x8 */
     u32 w;      /* 0xC */
 } Ent;
 typedef struct List {
-    u8 count;   /* 0x0 */
+    s8 count;   /* 0x0 */
     s8 x1;      /* selected page, 3..8 */
     s8 x2;      /* page availability bitmask */
     s8 x3;
@@ -110,7 +110,136 @@ void fn_80078AD4(const char* src);
     case 2: (n)->flags ^= mask; break; \
     }
 
-extern void fn_8007B010(List* w);
+extern s32 fn_801F3F88(void* p, s8 i);
+extern s32 fn_800786B0(s16* a, s16* b);
+extern void qsort(void* base, s32 n, s32 size, s32 (*cmp)(s16*, s16*));
+
+static inline s32 Has_8007B010(SaveChar* pl, s32 kind) {
+    s32 j;
+    for (j = 0; j < 0x24; j++) {
+        if (fn_801F3F88(pl, j) != 0 && kind == lbl_802C4BF0[j].element) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void fn_8007B010(List* w) {
+    s32 mask;
+    s32 cur;
+    s32 sel;
+    s32 j;
+    s32 i;
+    s32 k;
+    s32 lim;
+    SaveChar* pl;
+    w->x2 = 0;
+    pl = &lbl_8030B7F4.chr[lbl_8030B7F4.party[lbl_80347330]];
+    for (i = 0; i < 6; i++) {
+        if (Has_8007B010(pl, i)) {
+            w->x2 |= 1 << i;
+        }
+    }
+    cur = w->x1;
+    mask = w->x2;
+    for (;;) {
+        if (mask & (1 << (cur - 3))) {
+            w->x1 = cur;
+            break;
+        }
+        cur++;
+        if (cur > 8) cur = 3;
+    }
+    sel = w->x1 - 3;
+    lim = lbl_80347390->xa;
+    for (j = k = 0; j < 0x24; j++) {
+        if (fn_801F3F88(pl, j) != 0 && sel == lbl_802C4BF0[j].element) {
+            Ent* e = &w->e[k];
+            const SkillData* it = &lbl_802C4BF0[j];
+            s32 cost;
+            e->type = j;
+            e->p = it;
+            e->sort = it->sort;
+            cost = it->cost;
+            e->id = cost;
+            e->w = lbl_802F6918[j];
+            if (lim >= cost && lbl_80309DE4[lbl_80347330]->xfe > 0) {
+                e->on = 1;
+            } else {
+                e->on = 0;
+            }
+            k++;
+        }
+    }
+    w->count = k;
+    for (; k < 8; k++) {
+        w->e[k].type = -1;
+        w->e[k].sort = 10000;
+        w->e[k].p = 0;
+        w->e[k].id = -1;
+        w->e[k].on = 0;
+    }
+    qsort(w->e, w->count, 0x10, fn_800786B0);
+    w->x6 = 0;
+    w->x7 = 0;
+}
+
+extern void fn_80077D40(s16 id);
+extern void fn_80077DA0(s16 id);
+
+static inline UseItemData* UseOf(s32 item) {
+    return &lbl_802C7C34[item - 0xF0];
+}
+
+static inline s8 UsedUp(s32 item) {
+    return UseOf(item)->use_up;
+}
+
+static inline void Release_8007B328(s32 idx) {
+    s8 n = lbl_80309174[idx].bd;
+    if (n > 0) {
+        switch (lbl_80309174[lbl_80347330].x0) {
+        case 5: {
+            s16 item = lbl_80309174[lbl_80347330].x6;
+            if (item != -1 && UsedUp(item) != 0) {
+                fn_80077DA0(item);
+            }
+            break;
+        }
+        case 1:
+            lbl_80309DE4[idx]->xfe++;
+        case 2:
+        case 8:
+            lbl_80347390->xa += n;
+            break;
+        }
+        lbl_80309174[idx].bd = 0;
+    }
+}
+
+void fn_8007B328(s32 idx, s8 val, s32 kind) {
+    switch (kind) {
+    case 5: {
+        s16 item;
+        Release_8007B328(idx);
+        item = lbl_80347308->work->e[lbl_80347308->work->x3].type;
+        lbl_80309174[lbl_80347330].x6 = item;
+        if (UsedUp(item) != 0) {
+            fn_80077D40(item);
+        }
+        lbl_80309174[idx].bd = 1;
+        break;
+    }
+    case 1:
+        lbl_80309DE4[idx]->xfe--;
+    case 2:
+    case 8:
+        Release_8007B328(idx);
+        lbl_80347390->xa -= val;
+        lbl_80309174[idx].bd = val;
+        break;
+    }
+}
 
 void fn_8007B5B0(Task_8007BEB4* t) {
     List* w;
@@ -1301,7 +1430,7 @@ void fn_8007D42C(Obj_8007DE54_8007D42C* p)
 }
 #endif
 
-#ifdef NONMATCHING
+extern s8 lbl_80346C00[4];
 int fn_80078D24(int arg)
 {
     int i;
@@ -1331,11 +1460,15 @@ int fn_80078D24(int arg)
         }
         break;
     }
-    for (i = 0; i < 4; i++) {
-        if (lbl_80346C00[i] == v) {
-            return i;
+    {
+        s8* p = lbl_80346C00;
+        for (i = 0; i < 4; i++) {
+            s32 c = p[i];
+            if (c == v) {
+                return i;
+            }
         }
     }
     return 0;
 }
-#endif
+

@@ -67,7 +67,7 @@ extern void *fn_80021658(s8 idx);
 extern s16 lbl_80347378;
 extern u32 lbl_803472F4;
 extern void fn_80015580(void);
-extern void fn_8001C6CC(void* a, void* b, void* c, void* d);
+
 extern void fn_8006C860(const char* s, void* p);
 typedef struct Wk_8001D1D8 { u8 pad[0x1C]; } Wk_8001D1D8;
 typedef struct Tk_8001D1D8 { u8 pad[0x24]; Wk_8001D1D8* work; } Tk_8001D1D8;
@@ -526,6 +526,30 @@ s32 fn_80014EC4(ChrInfo* u)
         return 1;
     }
     return 1;
+}
+
+void fn_80015020(s8 id) {
+    u16 mask = 0;
+    Task* t = fn_800215EC(id);
+    if (t != 0) {
+        ChrInfo* c = ChrW(t)->st;
+        u32 st = c->x44;
+        u32 bits = lbl_80309DE4[c->id]->bits;
+        st &= ~bits;
+        if (st & 0x80) mask |= 0x1;
+        if (st & 0x200) mask |= 0x20;
+        if (st & 0x400) mask |= 0x8;
+        if (st & 0x800) mask |= 0x10;
+        if (st & 0x4000) mask |= 0x4;
+        if (st & 0x1000) mask |= 0x40;
+        if (st & 0x80000) mask |= 0x80;
+        if (st & 0x40000) mask |= 0x100;
+        if (st & 0x100000) mask |= 0x200;
+        if (st & 0x200000) mask |= 0x400;
+        if (mask != 0) {
+            fn_8002923C(c->id, mask, 0);
+        }
+    }
 }
 
 void fn_80015138(u8 flag) {
@@ -3140,7 +3164,37 @@ void fn_8001C31C(Task* t) {
     u->xf4 = 0;
 }
 
-void fn_8001C7B8(void* a, void* b, void* c) {
+extern void fn_8001C6CC(Task* t, s16 kind, s16 c, void* buf);
+
+/* Instruction-exact; only the three string offsets differ (0x208/0x218/0x224 in the original). */
+#ifdef NONMATCHING
+extern s32 sprintf(char*, const char*, ...);
+void fn_8001C6CC(Task* t, s16 kind, s16 c, void* buf) {
+    s8 id = 'D';
+    ChrInfo* p;
+    s16 cc;
+    if (fn_80020E10(ChrW(t)->x10->xc) < 0) id = 'F';
+    cc = c;
+    p = ChrW(t)->st;
+    switch (kind) {
+    case 0x18:
+        sprintf(buf, "D%02d%03d.MLK", kind, cc);
+        break;
+    case 0x1a:
+    case 0x1b:
+    case 0x1c:
+        strcpy(buf, "PCWIN.MLK");
+        break;
+    default:
+        if (cc < 0) cc = 0;
+        sprintf(buf, "%c%02d%03d%02X.MLK", id, kind, cc, fn_80008274(p->x2));
+        break;
+    }
+}
+#endif
+
+
+void fn_8001C7B8(Task* a, s16 b, s16 c) {
     NJS_POINT3 v;
     fn_8001C6CC(a, b, c, &v);
     fn_8006C860("/BEFF/", &v);

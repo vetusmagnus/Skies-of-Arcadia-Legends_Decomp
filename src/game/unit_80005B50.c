@@ -939,6 +939,71 @@ void fn_800091A4(s16* p) {
     }
 }
 
+typedef struct HitEnt {
+    s32 x0;
+    void* x4;
+    u8 pad8[0x10];
+    s32 x18;
+} HitEnt;
+
+extern u32 fn_8006E810(s32 id);
+static inline s32 NotGroup99(s32 v) {
+    switch (v / 100000) {
+    case 99:
+        return 0;
+    }
+    return 1;
+}
+
+void fn_800093C0(HitEnt* dst, s16 a, s16 b, Ent_80008800* e) {
+    Ent_80008800* p;
+    s16 i;
+    HitEnt* q;
+    s32 v;
+    s32 w;
+    if (e != NULL) {
+    p = e;
+    while (1) {
+        s16 k = p->x0;
+        s16 t = p->x2;
+        if (k < 0) {
+            return;
+        }
+        switch (t) {
+        case 3: {
+            Key* in = p->xc;
+            if (in->x8 != 0 && fn_8003DE8C(a, b, in->x0, in->x4) != 0) {
+                v = in->x8;
+                if (NotGroup99(v)) {
+                    i = 0;
+                    if (fn_8006E810(v) == 0) goto set;
+                    goto next;
+                loop:
+                    while ((w = q->x0) > 0) {
+                        if (v == w) goto next;
+                        i++;
+                        q++;
+                        if (i >= 0x80) goto next;
+                    }
+                    dst[i].x0 = v;
+                    dst[i].x4 = 0;
+                    dst[i].x18 = -1;
+                    dst[i + 1].x0 = -1;
+                }
+            }
+            break;
+        }
+        }
+    next:
+        p++;
+    }
+    }
+    return;
+set:
+    q = dst;
+    goto loop;
+}
+
 typedef struct Slot1C {
     s32 id;
     s32 x4;
@@ -1174,6 +1239,35 @@ void fn_80006C00(NJS_MKEY_F* keys, u32 i, u32 nbKeys, f32* out) {
     out[0] = k1->key[0] * u + k2->key[0] * t;
     out[1] = k1->key[1] * u + k2->key[1] * t;
     out[2] = k1->key[2] * u + k2->key[2] * t;
+}
+
+s32 fn_8000775C(ArcSet* set, s32 idx) {
+    ArcHdr hdr;
+    u32 a;
+    s32 b;
+    s32 out;
+    s32 r;
+    ArcInfo* info;
+    fn_80298E48();
+    r = fn_80297558(set, idx, &a, &b);
+    if (r != 0) {
+        return r;
+    }
+    info = set->slots[idx].info;
+    hdr.x4 = info->x10;
+    hdr.x6 = info->x14;
+    hdr.x0 = info->x4;
+    r = set->slots[idx].x8;
+    if (a != -1) {
+        r = a;
+    }
+    if (fn_80298A04(set, idx, r, b, &hdr, &out) >= 0) {
+        lbl_803457F8.err = 6;
+        return 1;
+    }
+    set->slots[idx].x4 &= ~0x200000;
+    set->slots[idx].x8 = 0;
+    return -1;
 }
 
 s32 fn_8000785C(ArcSet* set, s32 idx) {
@@ -1623,14 +1717,6 @@ s32 fn_80007528(ArcPack* pk) {
     return 1;
 }
 
-typedef struct HitEnt {
-    s32 x0;
-    void* x4;
-    u8 pad8[0x10];
-    s32 x18;
-} HitEnt;
-
-#ifdef NONMATCHING
 typedef struct HitWork {
     u8 pad0[0x50];
     u32 flags;
@@ -1650,15 +1736,12 @@ typedef struct HitObj {
     HitInner* inner;
 } HitObj;
 extern s32 fn_8001C7E8(HitObj* obj);
-extern void fn_800093C0(HitEnt* out, s16 a, s16 b, void* tbl);
 extern int fn_80020700(s16 a, s16 b, void* obj);
 extern s32 fn_8001C7B8(HitObj* obj, s16 a, s16 b);
 extern void fn_8006DCFC(HitObj* obj, s16 a, s16 b);
-#endif
 
-/* Matches, but it uses the result of fn_8001C7B8, which unit_8000A38C defines as returning void
- * (and calls with an s32 last argument); kept here until those agree. */
-#ifdef NONMATCHING
+/* Uses the result of fn_8001C7B8, which unit_80014784 defines as returning void (and calls with an
+ * s32 last argument); the declaration here is the one this caller needs. */
 s32 fn_800091E0(HitObj* obj, HitEnt* out, s16 a, s16 b) {
     s16 n = 0;
     HitInner* in = obj->inner;
@@ -1697,5 +1780,4 @@ s32 fn_800091E0(HitObj* obj, HitEnt* out, s16 a, s16 b) {
     }
     return 1;
 }
-#endif
 

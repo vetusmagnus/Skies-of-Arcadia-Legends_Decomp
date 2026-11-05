@@ -208,8 +208,8 @@ void fn_801E8CA4(Task* task) {
         obj->state = 0;
 
         lbl_80347780 = fn_801C6180(task, fn_801EB01C);
-        ((EvObj*)lbl_80347780->work)->model = obj->ext->files->body->model;
-        ((EvObj*)lbl_80347780->work)->texlist = &obj->ext->files->body->texlist;
+        ((EvObj*)lbl_80347780->work)->model = obj->ext->files->items[1]->model;
+        ((EvObj*)lbl_80347780->work)->texlist = &obj->ext->files->items[1]->texlist;
         ((EvObj*)lbl_80347780->work)->ext = obj->ext;
         ObjSetMotion(lbl_80347780->work, 10);
         fn_80227810(((EvObj*)lbl_80347780->work)->texlist);
@@ -245,8 +245,8 @@ void fn_801E8CA4(Task* task) {
 
         if (lbl_80310B3C[18] & 0x10) {
             t = fn_801C6180(task, fn_801EA2DC);
-            ((EvObj*)t->work)->model = obj->ext->files->extra->model;
-            ((EvObj*)t->work)->texlist = &obj->ext->files->extra->texlist;
+            ((EvObj*)t->work)->model = obj->ext->files->items[2]->model;
+            ((EvObj*)t->work)->texlist = &obj->ext->files->items[2]->texlist;
             ((EvObj*)t->work)->ext = obj->ext;
             fn_80227810(((EvObj*)t->work)->texlist);
             ObjSetMotion(t->work, 14);
@@ -269,8 +269,8 @@ void fn_801E8CA4(Task* task) {
         obj->x210 = 0;
         for (i = 0; i < 4; i++) {
             t = fn_801C6180(task, fn_801E9AE0);
-            ((EvObj*)t->work)->model = obj->ext->files->spark->model;
-            ((EvObj*)t->work)->texlist = &obj->ext->files->spark->texlist;
+            ((EvObj*)t->work)->model = obj->ext->files->items[3]->model;
+            ((EvObj*)t->work)->texlist = &obj->ext->files->items[3]->texlist;
             ((EvObj*)t->work)->ext = obj->ext;
             ((EvObj*)t->work)->shape = ItemGet(obj->ext->items, 3);
             fn_80227810(((EvObj*)t->work)->texlist);
@@ -286,8 +286,8 @@ void fn_801E8CA4(Task* task) {
         }
         for (i = 0; i < 30; i++) {
             t = fn_801C6180(task, fn_801E9EA8);
-            ((EvObj*)t->work)->model = obj->ext->files->spark->model;
-            ((EvObj*)t->work)->texlist = &obj->ext->files->spark->texlist;
+            ((EvObj*)t->work)->model = obj->ext->files->items[3]->model;
+            ((EvObj*)t->work)->texlist = &obj->ext->files->items[3]->texlist;
             ((EvObj*)t->work)->ext = obj->ext;
             ((EvObj*)t->work)->shape = ItemGet(obj->ext->items, 3);
             fn_80227810(((EvObj*)t->work)->texlist);

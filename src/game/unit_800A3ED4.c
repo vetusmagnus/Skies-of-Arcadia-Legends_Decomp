@@ -590,8 +590,343 @@ extern void njProjectScreen(void* m, NJS_POINT3* p, f32* out);
 extern void fn_80296EEC(s32 a, s32 b, s32 c);
 extern void fn_800A12D8(NJS_POINT3* p, NJS_POINT3* origin, s32 ang);
 extern void fn_8009E804(ItemList* list, s32 idx);
+typedef struct {
+    Task* parent;          /* 0x00 */
+    s32 loop;              /* 0x04 */
+    NJS_TEXLIST* texlist;  /* 0x08 */
+    s32 n;                 /* 0x0C */
+    u32* item;            /* 0x10 */
+    u32 frame;             /* 0x14 */
+    s32 wait;              /* 0x18 */
+    s32 index;             /* 0x1C */
+    f32 f20;               /* 0x20 */
+    f32 f24;               /* 0x24 */
+} Emit_800A7860;
+inline Sub_800A3ED4* PWORKS(Emit_800A7860* em) {
+    return em->parent->work;
+}
+typedef struct {
+    f32 x, y;        /* 0x00 */
+    s16 tex;         /* 0x08 */
+    u8 pad0A[2];
+    s32 add;         /* 0x0C */
+    s32 tint;        /* 0x10 */
+    u8 a, r, g, b;   /* 0x14 */
+    s16 x18;         /* 0x18 */
+    s16 x1a;         /* 0x1A */
+    NJS_TEXLIST* texlist; /* 0x1C */
+} Sprite_800A432C;
+extern void fn_80227810(NJS_TEXLIST *p);
+extern void fn_8009E630(Obj_800A3ED4 *t);
+extern void fn_801E1784(void *p);
+extern void fn_802275A4(NJS_TEXLIST *h, s32 a);
+extern void fn_801E5608(Sub_800A3ED4 *w, s32 a, u32 b);
+extern f32 njCos(Angle a);
+extern f32 njSin(Angle a);
+s32 fn_800A10C4(u32 *base, s32 i, s32 n);
+void fn_800A1948(NJS_POINT3 *unused, Angle *dst, u8 flags);
+NJS_TEXLIST *fn_800A1B50(Sub_800A3ED4 *obj);
+void fn_800A10E8(NJS_POINT3 *p, NJS_POINT3 *origin, f32 extra);
+extern s32 fn_801E78C8(NJS_MOTION* a, NJS_POINT3* pos, Ang3* ang, NJS_POINT3* scl, f32 frame);
+extern void fn_801E7DF0(void* p);
+extern void fn_8009D274(void* model, s16 u, s16 v, s32 mode);
+extern void fn_802135B4(NJS_POINT3* v, Ang3* out);
+extern void fn_800A13D8(f32* m, Angle* out);
+extern void fn_800A1690(f32* m, Angle* out);
+extern s32 lbl_80347530;
+extern void fn_8009D6C0(Sub_800A3ED4* obj, s32 idx, f32 f);
+extern void fn_8009D67C(Sub_800A3ED4* o, s32 idx);
+extern void fn_800A322C(Sprite_800A432C* s, NJS_POINT3* pos, s32 a, NJS_POINT3* scl, u16 id, s32 c);
+extern void fn_80296E4C(s32 a);
+extern void njRotateZXY(NJS_MATRIX m, Angle x, Angle y, Angle z);
+extern void fn_8009D994(Sub_800A3ED4* o, s32 idx, u32 count);
+extern void fn_800D2924(Sub_800A3ED4* o);
+extern void fn_801DBE1C(const char* fmt, ...);
+extern f32 fn_8009E3D0(s32 kind, void* model, NJS_POINT3* scl);
+extern void njProjectScreen(void* m, NJS_POINT3* p, f32* out);
+extern void fn_80296EEC(s32 a, s32 b, s32 c);
+extern void fn_800A12D8(NJS_POINT3* p, NJS_POINT3* origin, s32 ang);
+extern void fn_8009E804(ItemList* list, s32 idx);
 static inline s32 SubFlag(Sub_800A3ED4* o) {
     return o->p1d8 != NULL ? o->p1d8->w1a0 : 1;
+}
+
+void fn_800A6F30(Sub_800A3ED4* obj, Emit_800A7860* em);
+void fn_800A7860(Sub_800A3ED4* obj, Emit_800A7860* em);
+
+typedef struct {
+    s32 count;       /* 0x00 */
+    u8 pad04[0x0C];
+    s32 depth;       /* 0x10 */
+    u8 pad14[4];
+    u32 flags;       /* 0x18 */
+    u8 pad1C[0x48 - 0x1C];
+    u32 drawMode;    /* 0x48 */
+    u32 alphaMode;   /* 0x4C */
+    u32 x50;         /* 0x50 */
+    u32 animated;    /* 0x54 */
+    u32 noLoopCtl;   /* 0x58 */
+    u8 pad5C[0x6C - 0x5C];
+    u32 life;        /* 0x6C */
+    u8 pad70[0xC4 - 0x70];
+    s32 spinX;       /* 0xC4 */
+    s32 spinY;       /* 0xC8 */
+    u8 padCC[4];
+    f32 xd0;         /* 0xD0 */
+} EvInfoSpriteC_800A816C;
+
+
+inline s32 EvDepth(Sub_800A3ED4* obj) {
+    EvInfoSpriteC_800A816C* ci;
+    if ((ci = obj->p1c8->p10)->count > 3) {
+        return (ci = obj->p1c8->p10)->depth;
+    }
+    return 0;
+}
+
+inline s32 IsBillboardC(EvInfoSpriteC_800A816C* info, Sub_800A3ED4* obj) {
+    s32 r = 0;
+    if (info->drawMode == 0 || (info->drawMode == 1 && obj->we4 == NULL)) {
+        r = 1;
+    }
+    return r;
+}
+
+void fn_800A816C(Obj_800A3ED4* task) {
+    Sub_800A3ED4* obj = task->sub;
+    Emit_800A7860* em = obj->x260;
+    NJS_POINT3 v;
+    DrawState ds;
+    EvInfoSpriteC_800A816C* ci;
+    NJS_MATRIX m;
+
+    if (task->parent->flags & 0x40) {
+        task->state = 0xFF;
+    }
+    if (task->flags & 0x20) {
+        task->state = 0xFF;
+    }
+    switch (task->state) {
+    case 0:
+        task->prio = 0xFB;
+        if (em->texlist != NULL) {
+            obj->w100 = em->texlist;
+        } else {
+            obj->w100 = fn_800A1B50(obj);
+            em->texlist = obj->w100;
+        }
+        if (obj->w100 != NULL) {
+            fn_80227810(obj->w100);
+        }
+        obj->v50.x = PWORKS(em)->v50.x;
+        obj->v50.y = PWORKS(em)->v50.y;
+        obj->v50.z = PWORKS(em)->v50.z;
+        obj->ang[2] = 0;
+        obj->ang[1] = 0;
+        obj->ang[0] = 0;
+        obj->x20a = 0;
+        obj->x208 = 0;
+        obj->x18 |= 0x1000;
+        fn_8009D6C0(obj, 0, (ci = PWORKS(em)->p1c8->p10)->xd0);
+        fn_8009D67C(obj, 1);
+        obj->id &= 0xFF00;
+        if ((ci = PWORKS(em)->p1c8->p10)->x50 == 0) {
+            obj->id |= 3;
+        }
+        if ((ci = PWORKS(em)->p1c8->p10)->alphaMode != 0) {
+            obj->w30 = 8;
+            obj->w34 = 10;
+        }
+        {
+            s32 d = EvDepth(obj);
+            if (d >= 0) {
+                task->f20 = -10000.0f + d;
+            }
+        }
+        task->state = 1;
+    case 1:
+        if (em->parent->state == 1) {
+            task->state = 2;
+        }
+        fn_800A6F30(obj, em);
+        if (EvDepth(obj) == 0) {
+            njCalcPoint(NULL, &obj->v38, &v);
+            task->f20 = -200.0f + v.z;
+        }
+        {
+            Sub_800A3ED4* pw;
+            if (SubFlag(PWORKS(em)) == 0) {
+                EvInfoSpriteC_800A816C* info = PWORKS(em)->p1c8->p10;
+                if (IsBillboardC(info, obj)) {
+                    if (obj->w100 != NULL) {
+                        Sprite_800A432C* bb;
+                        obj->x208 += (s16)info->spinX;
+                        obj->x20a += (s16)(ci = PWORKS(em)->p1c8->p10)->spinY;
+                        if (obj->x208 < -0xFF) {
+                            obj->x208 += 0x1FE;
+                        }
+                        if (obj->x208 > 0xFF) {
+                            obj->x208 -= 0x1FE;
+                        }
+                        if (obj->x20a < -0xFF) {
+                            obj->x20a += 0x1FE;
+                        }
+                        if (obj->x20a > 0xFF) {
+                            obj->x20a -= 0x1FE;
+                        }
+                        bb = fn_801E1A2C(1, 0x20);
+                        bb->x = obj->v50.x;
+                        bb->y = obj->v50.y;
+                        if (0.0f != obj->vel.x) {
+                            bb->x *= obj->vel.x;
+                        }
+                        if (0.0f != obj->vel.y) {
+                            bb->y *= obj->vel.y;
+                        }
+                        bb->x18 = obj->x208;
+                        bb->x1a = obj->x20a;
+                        if (em->item != NULL) {
+                            bb->tex = fn_800A10C4(em->item, em->index, em->n);
+                        } else {
+                            bb->tex = 0;
+                        }
+                        bb->a = 255.0f * (1.0f + obj->alpha);
+                        bb->add = 0;
+                        bb->tint = 0;
+                        bb->texlist = obj->w100;
+                        DrawStateDefault2D(&ds);
+                        if ((ci = PWORKS(em)->p1c8->p10)->alphaMode != 0) {
+                            ds.blend_src = 8;
+                            ds.blend_dst = 10;
+                        }
+                        ds.fog = obj->w2c;
+                        DrawStatePush(&ds);
+                        fn_80296E4C(0);
+                        if ((ci = obj->p1c8->p10)->flags & 0x80000) {
+                            fn_800A322C(bb, &obj->v38, obj->ang[2], &obj->v50, obj->id, 1);
+                        } else {
+                            fn_800A322C(bb, &obj->v38, obj->ang[2], &obj->v50, obj->id, 0);
+                        }
+                        if (obj->motion != NULL) {
+                            obj->x18c += obj->f190;
+                            if (0.0f > obj->f190) {
+                                if (0.0f > obj->x18c) {
+                                    obj->x198 = 1;
+                                    obj->x18c = (f32)obj->motion->nbFrame - 1.0f;
+                                }
+                            } else if (obj->x18c > (f32)obj->motion->nbFrame - 1.0f) {
+                                obj->x198 = 1;
+                                obj->x18c = 0.0f;
+                            }
+                        }
+                        DrawStatePop(NULL);
+                        if (bb != NULL) {
+                            fn_801E1784(bb);
+                        }
+                    }
+                } else {
+                    Angle ax, ay, az;
+                    s32 saved;
+                    u32 count;
+                    if (info->animated == 1) {
+                        njUnitMatrix(m);
+                        fn_800A1948(&obj->v38, obj->ang, 3);
+                    }
+                    if (obj->w100 != NULL) {
+                        fn_80299040(obj->w100);
+                        if (em->item != NULL) {
+                            fn_80298FE4(fn_800A10C4(em->item, em->index, em->n));
+                        } else {
+                            fn_80298FE4(0);
+                        }
+                    }
+                    ax = obj->ang[0];
+                    ay = obj->ang[1];
+                    az = obj->ang[2];
+                    njUnitMatrix(m);
+                    pw = PWORKS(em);
+                    if ((ci = pw->p1c8->p10)->animated == 0) {
+                        njRotateXYZ(m, pw->x20c.x, pw->x20c.y, pw->x20c.z);
+                    }
+                    njRotateZXY(m, obj->ang[0], obj->ang[1], obj->ang[2]);
+                    fn_800A13D8(m, obj->ang);
+                    saved = lbl_80347530;
+                    lbl_80347530 = 1;
+                    if (obj->w100 != NULL) {
+                        count = obj->w100->nbTexture;
+                    } else {
+                        count = 0;
+                    }
+                    if (em->item != NULL) {
+                        fn_8009D994(obj, fn_800A10C4(em->item, em->index, em->n), count);
+                    } else {
+                        fn_8009D994(obj, 0, count);
+                    }
+                    lbl_80347530 = saved;
+                    obj->ang[0] = ax;
+                    obj->ang[1] = ay;
+                    obj->ang[2] = az;
+                }
+            }
+        }
+        if (em->frame > (ci = PWORKS(em)->p1c8->p10)->life && -1.0f == obj->alpha) {
+            task->state = 2;
+        } else {
+            em->frame++;
+        }
+        if ((ci = PWORKS(em)->p1c8->p10)->noLoopCtl == 0 && obj->motion != NULL && obj->x21d != 3) {
+            if (obj->x21d == 1) {
+                obj->x18c = 0.0f;
+            } else if (obj->x21d == 2) {
+                obj->x18c = (f32)obj->motion->nbFrame - 1.0f;
+            }
+            if (0.0f < obj->f190) {
+                if (obj->x18c >= (f32)obj->motion->nbFrame - 1.001f) {
+                    obj->f190 = 0.0f;
+                    obj->x21d = 3;
+                } else if (obj->x18c + obj->f190 > (f32)obj->motion->nbFrame - 1.0f) {
+                    obj->x21d = 2;
+                }
+            } else if (obj->x18c < fabs(obj->f190)) {
+                if (0.0f != obj->x18c) {
+                    obj->x21d = 1;
+                } else {
+                    obj->f190 = 0.0f;
+                    obj->x21d = 3;
+                }
+            } else if (obj->x18c + obj->f190 < 0.0f) {
+                obj->x21d = 1;
+            }
+        }
+        {
+            Sub_800A3ED4* w = fn_8015F180(PWORKS(em));
+            w->x18c = obj->x18c;
+            w->f190 = obj->f190;
+            w->x19c = obj->x19c;
+            w->x198 = obj->x198;
+        }
+        break;
+    case 2:
+        PWORKS(em)->point--;
+        if (PWORKS(em)->point == 0xFFFF) {
+            PWORKS(em)->point = 0;
+        }
+        fn_8009E804(PWORKS(em)->x264, obj->x238);
+    case 0xFF:
+        if (obj->w100 != NULL && obj->w100->textures->texaddr != 0) {
+            fn_802275A4(obj->w100, 0);
+        }
+        if (em != NULL) {
+            fn_801E1784(em);
+        }
+        obj->x264 = NULL;
+        obj->x260 = NULL;
+        obj->x25c = NULL;
+        fn_8009E630(task);
+        break;
+    case 0xfe:
+        break;
+    }
 }
 
 typedef struct {

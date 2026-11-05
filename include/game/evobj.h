@@ -13,11 +13,10 @@ typedef struct {
     NJS_TEXLIST texlist;  /* 0x08 */
 } ModelFile;
 
+/* The model files of an object: items[1] is the body, items[2] the extra model, items[3] the sparkle. */
 typedef struct {
-    u8 pad0[8];
-    ModelFile* body;    /* 0x08 */
-    ModelFile* extra;   /* 0x0C */
-    ModelFile* spark;   /* 0x10 */
+    u32 count;
+    ModelFile* items[8]; /* count entries */
 } ModelFiles;
 
 typedef struct {
@@ -29,7 +28,8 @@ typedef struct {
     u8 pad0[2];
     s16 h2;           /* 0x02 */
     void* w4;         /* 0x04 */
-    u8 pad8[8];
+    s32 w8;           /* 0x08 */
+    u8 padc[4];
     s16 h10;          /* 0x10 */
 } EvSlot;
 
@@ -56,7 +56,11 @@ typedef struct {
 typedef struct {
     s16 h0;
     s16 h2;
-    u8 pad4[0x14];
+    s32 w4;           /* 0x04 */
+    f32 f8;           /* 0x08 */
+    f32 fc;           /* 0x0C */
+    f32 f10;          /* 0x10 */
+    f32 f14;          /* 0x14 */
     EvScriptEntry entries[1];
 } EvScript;
 
@@ -267,6 +271,7 @@ typedef struct {
     u8 pad3d[0x44 - 0x3d];
     NJS_POINT3 target;     /* 0x44 */
     NJS_POINT3 rot;        /* 0x50 */
+    NJS_POINT3 scl;        /* 0x5C */
 } EvExt;
 
 typedef struct {
@@ -435,8 +440,10 @@ typedef struct EvObj {
     s8 x1ec;                 /* 0x1EC */
     s8 x1ed;                 /* 0x1ED */
     s8 x1ee;                 /* 0x1EE */
-    u8 x1ef;                 /* 0x1EF */
-    u8 pad1F0[0x1FA - 0x1F0];
+    s8 x1ef;                 /* 0x1EF */
+    s8 x1f0;                 /* 0x1F0 */
+    s8 x1f1;                 /* 0x1F1 */
+    u8 pad1F2[0x1FA - 0x1F2];
     s8 x1fa;                 /* 0x1FA */
     s8 x1fb;                 /* 0x1FB */
     s16 x1fc;                /* 0x1FC */

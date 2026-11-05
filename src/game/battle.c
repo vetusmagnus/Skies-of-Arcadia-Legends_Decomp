@@ -1722,8 +1722,8 @@ void fn_8002F35C(void) {
         Rec* r;
         u16 v;
         if (q->timer-- > 0) return;
-        e = &q->e[lbl_80347330];
-        r = &q->e[lbl_80347330].recs[e->pos++];
+        e = &lbl_80302AE0.e[lbl_80347330];
+        r = &e->recs[e->pos++];
         v = r->val;
         if (v == 0xffff) {
             e->pos = 0;

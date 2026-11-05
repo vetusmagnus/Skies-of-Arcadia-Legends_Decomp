@@ -223,36 +223,18 @@ typedef struct Out {
 extern s32 fn_800A1AE8(void *s, s32 a);
 extern void *fn_800A1ABC(void *s, s32 a);
 extern s32 fn_800A10A8(void *a, u32 b, u32 c);
-typedef struct X_800BD904 {
-    u8 pad0[0x6c];
-    u32 w6c;
-} X_800BD904;
-typedef struct Inner_800BD904 {
-    u8 pad0[0x10];
-    X_800BD904 *p10; /* 0x10 */
-} Inner_800BD904;
-typedef struct Sub_800BD904 {
-    u8 pad0[0x50];
-    f32 f50;
-    f32 f54;
-    u8 pad58[0x1c8 - 0x58];
-    Inner_800BD904 *p1c8; /* 0x1c8 */
-} Sub_800BD904;
+struct Work_800BD668;
 typedef struct Actor_800BD904 {
-    u8 pad0[0x24];
-    Sub_800BD904 *sub; /* 0x24 */
+    u8 pad0[0xc];
+    struct Actor_800BD904 *xc; /* 0x0C */
+    u8 pad10[8];
+    u8 flags;            /* 0x18 */
+    u8 state;            /* 0x19 */
+    u8 pad1a;
+    u8 x1b;              /* 0x1B */
+    u8 pad1c[0x24 - 0x1c];
+    struct Work_800BD668 *sub; /* 0x24 */
 } Actor_800BD904;
-typedef struct Rec_UNIT0000 {
-    u32 w0;
-    u32 w4;
-    void* w8;
-    u32 wc;
-    u32 w10;
-    u32 w14;
-    f32 f18;
-    f32 f1c;
-    f32 f20;
-} Rec_UNIT0000;
 extern f32 njCos(Angle a);
 extern f32 njSin(Angle a);
 extern void *fn_801E49D8(void *s);
@@ -1798,7 +1780,15 @@ extern void fn_800A1690(s32, void*);
 extern s32 fn_800A10C4(void *base, s32 i, s32 n);
 extern void fn_801DBE1C(const char* fmt, ...);
 typedef struct Src {
-    u8 pad0[0x78];
+    u32 count;
+    u8 pad4[0x18 - 4];
+    u32 x18;
+    u8 pad1c[0x48 - 0x1c];
+    u32 x48;
+    u8 pad4c[0x6c - 0x4c];
+    u32 w6c;
+    u8 pad70[4];
+    f32 x74;
     s32 w78, w7c, w80, w84;
     u8 pad88[0x8c - 0x88];
     s32 w8c, w90, w94, w98, w9c, wa0, wa4, wa8;
@@ -1811,13 +1801,59 @@ typedef struct Cfg_800BD668 {
     u8 pad0[0x10];
     Src* p10;
 } Cfg_800BD668;
+typedef struct Slots_800BD9E4 {
+    void *items;
+    u32 count;
+} Slots_800BD9E4;
+typedef struct Xe4_800BD9E4 {
+    u8 pad0[8];
+    u8 x8;
+} Xe4_800BD9E4;
 typedef struct Work_800BD668 {
-    u8 pad0[0x1c8];
+    u8 pad0[0x50];
+    f32 f50;
+    f32 f54;
+    u8 pad58[0xe4 - 0x58];
+    Xe4_800BD9E4 *xe4;
+    u8 padE8[0x100 - 0xE8];
+    NJS_TEXLIST *x100;
+    u8 pad104[0x176 - 0x104];
+    u16 x176;
+    u16 x178;
+    u16 x17a;
+    u8 pad17c[0x1c8 - 0x17c];
     Cfg_800BD668* cfg;
+    u8 pad1cc[0x1d8 - 0x1cc];
+    Hook *x1d8;
+    u8 pad1dc[0x1fa - 0x1dc];
+    s8 x1fa;
+    s8 x1fb;
+    s16 x1fc;
+    u8 pad1fe[0x21c - 0x1fe];
+    u8 x21c;
+    u8 pad21d[0x232 - 0x21d];
+    s16 x232;
+    u8 pad234[2];
+    u16 x236;
+    s16 x238;
+    u8 pad23a[0x25c - 0x23a];
+    void *x25c;
+    void *x260;
+    Slots_800BD9E4 *x264;
+    struct Dst *x268;
+    u8 x26c;
 } Work_800BD668;
 typedef struct Dst {
     u32 flags;
-    u8 pad4[0xb8 - 4];
+    u32 w4;
+    void* w8;
+    u32 wc;
+    u32 w10;
+    u32 w14;
+    f32 f18;
+    f32 f1c;
+    f32 f20;
+    u8 pad24[0xb8 - 0x24];
     f32 fb8, fbc, fc0;
     s16 hc4, hc6;
     s32 wc8, wcc, wd0;
@@ -1829,7 +1865,9 @@ typedef struct Dst {
     u8 padf8[0xfa - 0xf8];
     s16 hfa, hfc, hfe, h100, h102;
     f32 f104, f108;
+    u8 pad10c[0x124 - 0x10c];
 } Dst;
+typedef Dst Rec_UNIT0000;
 typedef struct Obj_800C6474 {
     u8 pad0[0x19];
     u8 state;
@@ -2112,7 +2150,7 @@ typedef struct Obj_800C09E4 {
     void *f25c;
 } Obj_800C09E4;
 extern void fn_800C04D8(Obj_800C09E4 *o);
-extern void fn_8009D6C0(Obj_800C09E4 *o, s32 idx, f32 f);
+extern void fn_8009D6C0(void *o, s32 idx, f32 f);
 typedef struct HookCmd {
     u32 type;
     u8 pad4[0x24 - 4];
@@ -3653,13 +3691,13 @@ void fn_800BC02C(Self_800BC02C *self, Out *out)
 
 void fn_800BD904(Actor_800BD904 *a, Rec_UNIT0000 *r)
 {
-    Sub_800BD904 *s = a->sub;
-    X_800BD904 *x = s->p1c8->p10;
+    Work_800BD668 *s = a->sub;
+    Src *x = s->cfg->p10;
     if (s != 0 && r != 0) {
         if (x->w6c != 0) {
-            r->w0 |= 2;
+            r->flags |= 2;
         } else {
-            r->w0 &= ~2;
+            r->flags &= ~2;
         }
         r->w4 = fn_800A1AE8(s, 0x3b);
         r->w8 = fn_800A1ABC(s, 0x3b);
@@ -3668,7 +3706,7 @@ void fn_800BD904(Actor_800BD904 *a, Rec_UNIT0000 *r)
         r->w10 = fn_800A10A8(r->w8, r->w14, r->w4) + 1;
         r->f1c = s->f50;
         r->f20 = s->f54;
-        r->w0 &= ~0x80;
+        r->flags &= ~0x80;
         fn_800BC02C((Self_800BC02C *)s, (Out *)r);
     }
 }
@@ -8415,6 +8453,431 @@ void fn_800CA3C0(Task* t)
             t->flags |= 0x40;
         }
         break;
+    }
+}
+
+extern void fn_800BC960(Actor_800BD904 *o);
+extern void *fn_8009D5BC(void *o);
+extern void *fn_8009E8B0(s32 n);
+extern Actor_800BD904 *fn_8009E530(Slots_800BD9E4 *s, s32 n);
+extern void fn_8009E63C(Slots_800BD9E4 *s, s32 n);
+extern s32 fn_8009E840(Slots_800BD9E4 *s, Actor_800BD904 *t, s32 n);
+extern void fn_8009E71C(Slots_800BD9E4 *s, s32 n);
+extern void fn_8009E578(Actor_800BD904 *t);
+extern Actor_800BD904 *fn_8009D760(Actor_800BD904 *parent, void *cb, u16 a, void *link);
+extern void fn_8009D67C(void *w, s32 x);
+extern s32 lbl_80346D10;
+
+void fn_800BD9E4(Actor_800BD904 *o)
+{
+    Src *cfg;
+    Work_800BD668 *w = o->sub;
+    Actor_800BD904 *child;
+    Dst *dst;
+    Hook *hook;
+
+    cfg = w->cfg->p10;
+    if (w->x17a == 0x4e17) {
+        lbl_80346D10 = 0x4e17;
+    } else if (w->x17a == 0x7562) {
+        lbl_80346D10 = 0x7562;
+    } else {
+        lbl_80346D10 = 0;
+    }
+    if (o->flags & 0x20) {
+        o->state = 0xff;
+    }
+    if (lbl_80311AD4[6] == 15) {
+        o->state = 0xff;
+    }
+    switch (o->state) {
+    case 0:
+        o->x1b = 0xfa;
+        w->x26c = 1;
+        if (w->cfg->p10->count < 0x3c) {
+            o->state = 4;
+            break;
+        }
+        w->x1fc = 0;
+        w->x1fa = 0;
+        w->x1fb = 0;
+        w->x232 = 0;
+        w->x21c = 0;
+        if (w->xe4 != NULL && w->x25c == NULL) {
+            w->x25c = fn_8009D5BC(&w->xe4->x8);
+        }
+        fn_8015ED90(o);
+        hook = w->x1d8;
+        if (hook != NULL) {
+            hook->x1a0 = 0;
+            hook->x260 = fn_800ABEB0;
+            hook->x31c = fn_800ABE9C;
+        }
+        fn_800ADF98(w);
+        w->x236 = 1;
+        w->x264 = fn_8009E8B0(w->x236);
+        w->x268 = fn_801E1A2C(1, 0x124);
+        w->x100 = fn_800A1B50(w);
+        if (w->x100 != NULL) {
+            fn_80227810(w->x100);
+        }
+        fn_800BD668(w, w->x268);
+        if (cfg->x48 != 0) {
+            o->sub->x1fa = 1;
+            o->state = 2;
+        } else {
+            o->sub->x1fb = 1;
+            o->state = 1;
+        }
+    case 1:
+        if (w->x1fb) {
+            fn_8009D6C0(w, 0, cfg->x74);
+            fn_8009D67C(w, 1);
+            if (w->x25c != NULL) {
+                fn_801E8580(w->x25c);
+                w->x25c = NULL;
+            }
+            w->x260 = NULL;
+            w->x1fb = 0;
+        }
+        if (!MapInRange() && fn_8015E600(w) && cfg->x48 != 0 && fn_8015F218(w) == 1) {
+            o->sub->x1fa = 1;
+            o->state = 2;
+        }
+        break;
+    case 2:
+        hook = w->x1d8;
+        child = w->x260;
+        if (w->x1fa) {
+            fn_800ADED0(w, hook);
+        }
+        fn_8015E600(w);
+        fn_800A0E1C(w);
+        if (w->x1fa) {
+            w->x1fc = 0;
+            w->x1fa = 0;
+            w->x1fb = 0;
+            w->x232 = 0;
+            w->x21c = 0;
+            if (w->xe4 != NULL && w->x25c == NULL) {
+                w->x25c = fn_8009D5BC(&w->xe4->x8);
+            }
+            child = fn_8009E530(w->x264, w->x236);
+            if (child == NULL) {
+                if (w->x264->count >= w->x236) {
+                    fn_8009E63C(w->x264, w->x236);
+                }
+                child = fn_8009D760(o, fn_800BC960, w->x178, w->cfg);
+                child->sub->x260 = fn_801E1A2C(1, 0x124);
+                child->sub->x238 = fn_8009E840(w->x264, child, w->x236);
+                child->sub->x176 = child->sub->cfg->p10->x18;
+                if (child->sub->x17a == 0x32c8) {
+                    lbl_80346D10 = 0x32c8;
+                } else if (child->sub->x17a == 0x32cd) {
+                    lbl_80346D10 = 0x32cd;
+                } else {
+                    lbl_80346D10 = 0;
+                }
+            } else {
+                child->state = 6;
+            }
+            dst = child->sub->x260;
+            *dst = *w->x268;
+            fn_800BD904(o, dst);
+            w->x1fa = 0;
+            w->x260 = child;
+        }
+        if (child->state == 3) {
+            o->sub->x1fb = 1;
+            o->state = 1;
+        }
+        break;
+    case 3:
+    case 0xff:
+        fn_8015EBF4(w);
+        fn_8009E71C(w->x264, w->x236);
+        if (w->x25c != NULL) {
+            fn_801E8580(w->x25c);
+        }
+        if (w->x100 != NULL && w->x100->textures->texaddr != NULL) {
+            fn_802275A4(w->x100, 0);
+        }
+        if (w->x268 != NULL) {
+            if (w->x268 != NULL) {
+                fn_801E1784(w->x268);
+                w->x268 = NULL;
+            }
+        }
+        w->x268 = NULL;
+        w->x264 = NULL;
+        w->x260 = NULL;
+        w->x25c = NULL;
+        fn_80100B74(o);
+        break;
+    case 4:
+        if (w->cfg->p10->count >= 0x3c) {
+            o->state = 0;
+        }
+        break;
+    case 5:
+    default:
+        break;
+    }
+    fn_8009E578(o->xc);
+}
+
+extern void njCalcVector(NJS_MATRIX m, NJS_POINT3 *src, NJS_POINT3 *dst);
+extern void njGetTranslation(NJS_MATRIX m, NJS_POINT3 *out);
+extern void njUnitTransPortion(NJS_MATRIX m);
+extern struct { u8 pad[0x18]; f32 z; } lbl_803118AC;
+extern NJS_POINT3 lbl_802B1288;
+void fn_800B8CB8(Task_800BE6EC *o)
+{
+    Cfg_800BE6EC *cfg;
+    Task_800BE6EC *par;
+    Work_800BE6EC *w;
+    Work_800BE6EC *pw;
+    Emit_800BE6EC *src;
+    Ptcl_800BE6EC *rec;
+    s32 done;
+    NJS_MATRIX m;
+    NJS_POINT3 v;
+    NJS_POINT3 t;
+    NJS_POINT3 tr;
+    NJS_POINT3 c;
+    NJS_POINT2 scr;
+    s32 ok;
+    Angle ang;
+    f32 sn;
+    f32 dx;
+    f32 dz;
+    f32 f;
+    f32 s;
+    f32 cs;
+    f32 depth;
+    f32 rad;
+
+    w = o->work;
+    done = 0;
+    cfg = w->link->cfg;
+    rec = w->x260;
+    par = o->parent;
+    if (o->flags & 0x20) {
+        o->state = 0xff;
+    } else if (par->flags & 0x40) {
+        if (o->state == 3) {
+            o->state = 5;
+        } else {
+            o->state = 0xff;
+        }
+    } else {
+        pw = par->work;
+        src = pw->x260;
+    }
+    switch (o->state) {
+    case 0:
+        o->x1b = 0xfb;
+        w->x100 = pw->x100;
+        w->x176 = pw->x176;
+        w->flags |= 0x1000;
+        o->state = 6;
+    case 6:
+        memcpy(rec->mtx, src->tmpl.mtx, 0x40);
+        rec->pos = w->x38;
+        w->x24c = pw->x24c;
+        w->x20c = pw->x20c;
+        if (src->x1a == 3) {
+            rec->rot = pw->rot;
+        }
+        w->scl = pw->scl;
+        w->col = pw->col;
+        rec->x7c = (src->x24 - 1.0f) * rec->x78;
+        f = cfg->xc0;
+        if (f >= 0.001f) {
+            s = (f - 1.0f) * RND + 1.0f;
+            w->scl.x *= s;
+            w->scl.y *= s;
+            w->scl.z *= s;
+            rec->x78 *= s;
+        }
+        if (src->x14 > 0) {
+            w->col.a = -1.0f;
+        } else {
+            w->col.a = 0.0f;
+        }
+        w->x1fc = cfg->xa4;
+        if (cfg->xc8 != 0) {
+            w->rot.z = 65536.0f * RND;
+        } else {
+            w->rot.z = 182.04445f * cfg->xcc;
+        }
+        if (pw->xe8 != NULL) {
+            w->xe8 = pw->xe8;
+            w->x18c = 0.0f;
+            w->x190 = pw->x190;
+            w->x19c = 1;
+        }
+        if (pw->xec != NULL) {
+            w->xec = pw->xec;
+        }
+        o->state = 1;
+    case 1:
+        if (cfg->x44 <= -1) {
+            memcpy(rec->mtx, src->tmpl.mtx, 0x40);
+            w->x24c = pw->x24c;
+            w->x20c = pw->x20c;
+            if (src->x1a == 3) {
+                rec->rot = pw->rot;
+            }
+        }
+        if (rec->x30 < src->x14) {
+            w->col.a = src->x1c * rec->x30 + -1.0f;
+        } else if (rec->x30 == src->x14) {
+            w->col.a = 0.0f;
+        } else if (rec->x30 > src->x16 - src->x18) {
+            w->col.a = src->x20 * (src->x16 - rec->x30) + -1.0f;
+        } else if (rec->x30 == src->x16) {
+            w->col.a = -1.0f;
+        }
+        if ((pw->x1d8 != NULL ? pw->x1d8->x1a0 : 1) == 0) {
+            if (w->x184 == 0) {
+                v = rec->pos;
+                if (cfg->x70 != 0) {
+                    v.x *= cfg->x74;
+                    v.z *= cfg->x78;
+                }
+                njPushMatrixEx();
+                fn_80286EE8();
+                fn_8028B498();
+                njSetMatrix(NULL, rec->mtx);
+                njUnitTransPortion(NULL);
+                njCalcPoint(NULL, &v, &w->x38);
+                njPopMatrixEx();
+                w->x38.x += w->x24c.x;
+                w->x38.y += w->x24c.y;
+                w->x38.z += w->x24c.z;
+            }
+            if (w->x1fc == 0) {
+                fn_80291C44(m);
+                njCalcVector(m, &w->x38, &t);
+                njGetTranslation(m, &tr);
+                depth = t.z + tr.z;
+                rad = 0.2f * (lbl_803118AC.z * (rec->x78 * (1.0f / depth)));
+                njProjectScreen(NULL, &w->x38, &scr);
+                if (scr.x < 640.0f + rad && scr.x > -rad && scr.y < 480.0f + rad && scr.y > -rad && depth >= 0.0f) {
+                    fn_800BDF14(w, pw);
+                }
+            }
+        }
+        c = lbl_802B1288;
+        rec->pos.y = rec->x24 * src->x30 + rec->pos.y;
+        f = rec->x24 * src->x34;
+        if (fabs(f) >= 0.001f) {
+            if (cfg->x64 == 0 || cfg->x64 == 4) {
+                ok = fn_800BE54C(&rec->pos, &c, 0, f);
+            } else {
+                c.y = rec->pos.y;
+                ok = fn_800BE54C(&rec->pos, &c, 1, f);
+            }
+        }
+        rec->x24 += rec->x28;
+        ang = rec->x2c;
+        if ((ang != 0 || src->xc != 0) && ok) {
+            dx = rec->pos.x - c.x;
+            dz = rec->pos.z - c.z;
+            if (dx || dz) {
+                sn = njSin(ang);
+                cs = njCos(ang);
+                rec->pos.x = dx * cs - dz * sn;
+                rec->pos.z = dx * sn + dz * cs;
+                rec->pos.x += c.x;
+                rec->pos.z += c.z;
+            }
+            rec->x10 -= rec->x2c;
+            rec->x2c += src->xc;
+        }
+        w->scl.x += pw->dscl.x;
+        w->scl.y += pw->dscl.y;
+        w->scl.z += pw->dscl.z;
+        rec->x78 += rec->x7c;
+        if (w->scl.x < 0.0f) {
+            w->scl.x = 0.0f;
+        }
+        if (w->scl.y < 0.0f) {
+            w->scl.y = 0.0f;
+        }
+        if (w->scl.z < 0.0f) {
+            w->scl.z = 0.0f;
+        }
+        if (!w->scl.x && !w->scl.y && !w->scl.z) {
+            o->state = 4;
+            break;
+        }
+        if ((src->flags & 4) && w->x1fc == 0) {
+            if (rec->x32 == 0 && rec->x34 < src->x28) {
+                rec->x34++;
+                if (rec->x34 == src->x28 && (src->flags & 1)) {
+                    rec->x34 = 0;
+                }
+                if (rec->x34 < src->x28) {
+                    rec->x32 = fn_800A10A8(src->x2c, rec->x34, src->x28) - 1;
+                }
+            } else if (rec->x34 != src->x28) {
+                rec->x32--;
+            }
+            if (rec->x34 == src->x28 && rec->x34 > 0) {
+                rec->x34 = src->x28 - 1;
+            }
+        }
+        if (rec->x30 == src->x16) {
+            if (par->state != 1) {
+                o->state = 4;
+            } else {
+                o->state = 2;
+            }
+        } else if (w->x1fc == 0) {
+            rec->x30++;
+        } else {
+            w->x1fc--;
+        }
+        break;
+    case 4:
+        if (rec != NULL) {
+            fn_801E1784(rec);
+        }
+        w->x264 = NULL;
+        w->x260 = NULL;
+        w->x25c = NULL;
+        o->state = 3;
+        break;
+    case 2:
+        fn_8009E804(pw->x264, w->x238);
+    case 0xff:
+        if (rec != NULL) {
+            fn_801E1784(rec);
+        }
+        w->x264 = NULL;
+        w->x260 = NULL;
+        w->x25c = NULL;
+        o->state = 5;
+    case 5:
+        fn_8009E630(o);
+        done = 1;
+        break;
+    default:
+        if (par->state == 1) {
+            fn_8009E804(pw->x264, w->x238);
+            o->state = 5;
+        }
+        break;
+    case 0xfe:
+        break;
+    }
+    if (src != NULL && !done) {
+        pw->x1fe++;
+    }
+    if (src != NULL && pw->x1fe == pw->x264->count && (src->flags & 2)) {
+        DrawStatePop(NULL);
     }
 }
 

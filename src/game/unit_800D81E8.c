@@ -106,7 +106,7 @@ extern void fn_801E17E0(void* p);
 extern void *fn_801E1C7C(u32 size);
 extern s32 fn_800F7D6C(EvObj *e);
 extern s32 fn_801D6E38(s32 a);
-extern void fn_801E1AC8(u16 a, char b, s32 c, s32 d);
+extern s32 *fn_801E1AC8(u16 a, char b, s32 c, s32 d);
 typedef struct {
     u32 a;
     u32 b;
@@ -575,14 +575,6 @@ extern f32 fn_801DBD9C(f32 v);
 extern void fn_80290ED4(Quad *q, s32 n, s32 m);
 extern void njPushMatrixEx(void);
 extern void njPopMatrixEx(void);
-typedef struct {
-    u32 pad0;
-    u32 code; /* 0x04 */
-} Code1c8;
-typedef struct {
-    u8 pad0[0x1c8];
-    Code1c8* info; /* 0x1c8 */
-} Obj_800DE440;
 extern s32 fn_801C60A4(void *p);
 extern void* fn_800CCA6C(s32 a, s32 b);
 extern void fn_80286EE8(void);
@@ -759,17 +751,6 @@ typedef struct {
     u8 pad20[0x130 - 0x20];
 } GameFiles;
 extern GameFiles lbl_803082F8;
-typedef struct Item_8010C5BC {
-    struct Item_8010C5BC *next;
-    u8 pad4[4];
-    u32 colour;
-    f32 sx;
-    f32 sy;
-    u16 skip;
-    u8 pad16[2];
-    s16 len;
-    char text[1];
-} Item_8010C5BC;
 extern void fn_800EA4A8(ResSpr* spr);
 extern void fn_801D4F0C(Sprite* it, s32 a, s32 b, s32 c, f32 f1, f32 f2, f32 f3, f32 f4);
 
@@ -937,16 +918,6 @@ typedef struct Mob {
     u8 pad11C[0x190 - 0x11c];
     f32 speed;          /* 0x190 */
 } Mob;
-/* The message window's work (MessageWindowDraw passes it). */
-typedef struct MsgWin {
-    u8 pad0[0x10];
-    s16 x;      /* 0x10 */
-    s16 y;      /* 0x12 */
-    u8 pad14[0x1c - 0x14];
-    s16 row;    /* 0x1C cursor row */
-    u8 pad1e[0x32 - 0x1e];
-    s16 base;   /* 0x32 */
-} MsgWin;
 
 static inline s32 FlagTest(s32 n)
 {
@@ -1065,7 +1036,9 @@ typedef struct ShipRoute {
     u8 pad14[0x24 - 0x14];
     u32 mode;           /* 0x24 0: none, 1/2: sail the route */
     u32 speed;          /* 0x28 */
-    u8 pad2c[0x38 - 0x2c];
+    u32 turn;           /* 0x2C turn rate limit */
+    s32 bankRate;       /* 0x30 */
+    s32 bankMode;       /* 0x34 1, 2: bank into the turn */
     u32 count;          /* 0x38 route points */
     u32 pts[1];         /* 0x3C x, y, z (signed) per point, then the option list */
 } ShipRoute;
@@ -1093,7 +1066,8 @@ typedef struct ShipBlk {
     u8 pad1[0x10 - 1];
     s16 x1fc;           /* 0x1FC */
     s16 x1fe;           /* 0x1FE, word index of the area flag */
-    u8 pad14[0x24 - 0x14];
+    u8 pad14[0x20 - 0x14];
+    s32 x20c;           /* 0x20C */
     s32 cur;            /* 0x210 current route point */
     s32 flip;           /* 0x214 */
     u32 idx;            /* 0x218 word index of the option list */
@@ -1288,16 +1262,6 @@ typedef struct {
 extern f32 fn_801C60C8(f32 a, f32 b);
 extern s32 fn_800D2924(void *p);
 extern void fn_801E5608(void *o, s32 a, s32 b);
-typedef struct Unit_80105058 {
-    u8 pad0[0x1c];
-    f32 f1c;
-    u8 pad20[0x38 - 0x20];
-    NJS_POINT3 pos;
-    u8 pad44[0x100 - 0x44];
-    void *p100;
-    u8 pad104[0x20c - 0x104];
-    s32 s20c;
-} Unit_80105058;
 /* A task's work as the model object it drives. */
 static inline EvObj* TaskEv(Task* t) {
     return t->work;
@@ -1306,22 +1270,12 @@ static inline EvObj* TaskEv(Task* t) {
 static inline s32* EvSlots(EvObj* e) {
     return e->x25c;
 }
-extern void fn_80104D64(void*u);
+extern void fn_80104D64(EvObj* u);
 extern void fn_80104B70(Unit_80104B70 *u, Other_80104B70 *o);
 extern s32 fn_801C5FFC(void*u);
-typedef struct {
-    u8 pad0[0x1c];
-    f32 f1c;
-    u8 pad20[0x168 - 0x20];
-    s16 state;
-    u8 pad16a[0x1ef - 0x16a];
-    s8 b1ef;
-    s8 b1f0;
-    s8 b1f1;
-} Unit_801051A0;
-extern void* fn_800DE440(Obj_800DE440* o);
+extern void* fn_800DE440(EvObj* o);
 extern void fn_800DE2E4(K06Obj_800DE2E4 *p, s8 *a, s8 *b, s8 *c);
-extern s32 fn_800E0B08(Obj_800DE440* o, s32 limit);
+extern s32 fn_800E0B08(EvObj* o, s32 limit);
 extern s32 fn_800DE228(f32 *p, f32 f);
 typedef struct Unit_80107B18 {
     u8 pad0[0x74];
@@ -1403,14 +1357,15 @@ typedef struct Queue_8010B78C {
     s16 s12;
     s16 s14;
     s16 s16;
-    u8 pad18[2];
+    u16 phase;    /* 0x18 */
     s16 s1a;
     s16 s1c;
     s16 s1e;
     s16 s20;
     s16 s22;
     MsgRec *p24;
-    u8 pad28[0x30 - 0x28];
+    f32 hl;       /* 0x28 highlight alpha */
+    f32 hlstep;   /* 0x2C */
     s16 s30;
     s16 s32;
     u8 pad34[2];
@@ -1425,7 +1380,7 @@ typedef struct Queue_8010B78C {
     f32 f4c;
     f32 f50;
     s16 s54;
-    u8 b56;
+    char b56;
 } Queue_8010B78C;
 extern u16 TextReadChar(const u8** pp);
 extern Seg* fn_8010B88C(Queue_8010B78C* q, s32 n);
@@ -1437,13 +1392,6 @@ extern s32 fn_8010D12C(Queue_8010B78C *o);
 extern s32 fn_8010CF78(Queue_8010B78C *o);
 extern u16 fn_8010C2AC(Queue_8010B78C *obj, s16 v);
 extern void* memcpy(void* dst, const void* src, u32 n);
-typedef struct {
-    u16 flags;  /* 0x00 */
-    u8 pad02[0x0A];
-    u32 colour; /* 0x0C */
-    u8 pad10[2];
-    s16 y;      /* 0x12 */
-} FadeObj;
 extern void fn_8010C87C(f32 x, f32 y, f32 w, f32 h, f32 z, u32 colour);
 extern void fn_8010C7A0(f32 a, f32 b, f32 c, f32 d, f32 e, u32 id);
 extern void njSubVector(NJS_POINT3* a, NJS_POINT3* b);
@@ -1528,13 +1476,20 @@ typedef struct {
     s32 d;   /* 0xC */
 } SeqEnt;
 typedef struct {
-    s32 pad0;
-    s32 pad4;
+    s32 w0;         /* 0 */
+    s32 w4;         /* 4 */
     s32 count;      /* 8 */
     SeqEnt ent[1];  /* 0xC */
 } SeqTbl;
+/* The sequenced model's info record (EvExt.info): the common head, then its SeqTbl. */
 typedef struct {
-    u8 pad0[0xe8];
+    s32 count;      /* 0 */
+    u8 pad4[0x24 - 4];
+    SeqTbl seq;     /* 0x24 */
+} SeqInfo;
+typedef struct {
+    u8 pad0[0xe4];
+    void *model;    /* 0xE4 */
     struct { s32 p0; u32 len; } *anim; /* 0xE8 */
     u8 pad_ec[0x180 - 0xec];
     s32 timer;      /* 0x180 */
@@ -1543,7 +1498,13 @@ typedef struct {
     f32 f190;
     u8 pad194[4];
     s32 state;      /* 0x198 */
-    u8 pad19c[0x20c - 0x19c];
+    u8 pad19c[0x1c8 - 0x19c];
+    EvExt *ext;     /* 0x1C8 */
+    u8 pad1cc[0x1fc - 0x1cc];
+    s16 mode;       /* 0x1FC */
+    s16 near;       /* 0x1FE */
+    s16 far;        /* 0x200 */
+    u8 pad202[0x20c - 0x202];
     s32 idx;        /* 0x20C */
     s32 cnt;        /* 0x210 */
     u8 pad214[0x23c - 0x214];
@@ -1554,6 +1515,8 @@ typedef struct {
     SeqTbl *tbl;    /* 0x25C */
 } Obj_80107C24;
 extern void fn_801E735C(s32 a, Obj_80107C24 *o, f32 f);
+extern void fn_801E7DF0(void *model);
+extern s32 fn_801E183C(void);
 typedef struct {
     s32 count;      /* 0 */
     u8 pad4[0x24 - 4];
@@ -2201,12 +2164,6 @@ extern s32 fn_801F39EC(s32 n);
 extern s32 fn_801F3844(s32 n);
 extern void fn_801F3E6C(s32 n);
 extern void fn_801F3CB0(s32 n);
-typedef struct {
-    u8 pad0[0x19];
-    u8 f19;
-    u8 pad1a[0x24 - 0x1a];
-    Obj_80107C24 *obj;   /* 0x24 */
-} Parent_80107D90;
 typedef struct {
     u8 pad0[0x38];
     f32 x38;
@@ -3203,9 +3160,17 @@ typedef struct {
 
 
 extern void* fn_801C8930(void* p);
-extern void fn_800DBF5C(void* a, s32* count);
-extern void fn_800DC220(void* a, f32** buf);
-extern void fn_800DC524(void* a, f32** buf);
+/* A node of a model tree (child at 0x2C, sibling at 0x30); the walkers below visit its position. */
+typedef struct PNode_800DBF5C {
+    u8 pad0[8];
+    NJS_POINT3 pos; /* 0x08 */
+    u8 pad14[0x2C - 0x14];
+    struct PNode_800DBF5C* child;
+    struct PNode_800DBF5C* next;
+} PNode_800DBF5C;
+extern void fn_800DBF5C(PNode_800DBF5C* n, s32* count);
+extern void fn_800DC220(PNode_800DBF5C* n, f32** buf);
+extern void fn_800DC524(PNode_800DBF5C* n, f32** buf);
 extern void* fn_801E1C34(s32 size);
 extern s32 fn_8025ECC4(void);
 
@@ -3312,6 +3277,123 @@ extern void fn_801D9BFC(void);
 extern void fn_801D9CF0(f32 a, f32 b, f32 c);
 extern void fn_801D9B34(void);
 extern void fn_8029CE6C(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f);
+
+static inline void fn_800DBF5C_w3(PNode_800DBF5C* n, s32* count) {
+    (*count)++;
+    if (n->child) {
+        fn_800DBF5C(n->child, count);
+    }
+    if (n->next) {
+        fn_800DBF5C(n->next, count);
+    }
+}
+static inline void fn_800DBF5C_w2(PNode_800DBF5C* n, s32* count) {
+    (*count)++;
+    if (n->child) {
+        fn_800DBF5C_w3(n->child, count);
+    }
+    if (n->next) {
+        fn_800DBF5C_w3(n->next, count);
+    }
+}
+static inline void fn_800DBF5C_w1(PNode_800DBF5C* n, s32* count) {
+    (*count)++;
+    if (n->child) {
+        fn_800DBF5C_w2(n->child, count);
+    }
+    if (n->next) {
+        fn_800DBF5C_w2(n->next, count);
+    }
+}
+void fn_800DBF5C(PNode_800DBF5C* n, s32* count) {
+    (*count)++;
+    if (n->child) {
+        fn_800DBF5C_w1(n->child, count);
+    }
+    if (n->next) {
+        fn_800DBF5C_w1(n->next, count);
+    }
+}
+
+static inline void fn_800DC220_w2(PNode_800DBF5C* n, f32** buf) {
+    (*buf)[0] = n->pos.x;
+    (*buf)[1] = n->pos.y;
+    (*buf)[2] = n->pos.z;
+    if (n->child) {
+        *buf += 3;
+        fn_800DC220(n->child, buf);
+    }
+    if (n->next) {
+        *buf += 3;
+        fn_800DC220(n->next, buf);
+    }
+}
+static inline void fn_800DC220_w1(PNode_800DBF5C* n, f32** buf) {
+    (*buf)[0] = n->pos.x;
+    (*buf)[1] = n->pos.y;
+    (*buf)[2] = n->pos.z;
+    if (n->child) {
+        *buf += 3;
+        fn_800DC220_w2(n->child, buf);
+    }
+    if (n->next) {
+        *buf += 3;
+        fn_800DC220_w2(n->next, buf);
+    }
+}
+void fn_800DC220(PNode_800DBF5C* n, f32** buf) {
+    (*buf)[0] = n->pos.x;
+    (*buf)[1] = n->pos.y;
+    (*buf)[2] = n->pos.z;
+    if (n->child) {
+        *buf += 3;
+        fn_800DC220_w1(n->child, buf);
+    }
+    if (n->next) {
+        *buf += 3;
+        fn_800DC220_w1(n->next, buf);
+    }
+}
+
+static inline void fn_800DC524_w2(PNode_800DBF5C* n, f32** buf) {
+    n->pos.x = (*buf)[0];
+    n->pos.y = (*buf)[1];
+    n->pos.z = (*buf)[2];
+    if (n->child) {
+        *buf += 3;
+        fn_800DC524(n->child, buf);
+    }
+    if (n->next) {
+        *buf += 3;
+        fn_800DC524(n->next, buf);
+    }
+}
+static inline void fn_800DC524_w1(PNode_800DBF5C* n, f32** buf) {
+    n->pos.x = (*buf)[0];
+    n->pos.y = (*buf)[1];
+    n->pos.z = (*buf)[2];
+    if (n->child) {
+        *buf += 3;
+        fn_800DC524_w2(n->child, buf);
+    }
+    if (n->next) {
+        *buf += 3;
+        fn_800DC524_w2(n->next, buf);
+    }
+}
+void fn_800DC524(PNode_800DBF5C* n, f32** buf) {
+    n->pos.x = (*buf)[0];
+    n->pos.y = (*buf)[1];
+    n->pos.z = (*buf)[2];
+    if (n->child) {
+        *buf += 3;
+        fn_800DC524_w1(n->child, buf);
+    }
+    if (n->next) {
+        *buf += 3;
+        fn_800DC524_w1(n->next, buf);
+    }
+}
 
 void fn_800DC828(Task *self)
 {
@@ -4035,7 +4117,7 @@ static inline void SignUpdate(EvObj* obj)
 s32 fn_800E126C(EvObj* obj)
 {
     NJS_POINT3 b, a;
-    Camera803119E0* look;
+    Camera803119E0* lon;
     s32 near;
     s32 ret = 0;
     if (lbl_80310B3C[0x84 / 4] & 0x80000000) {
@@ -4044,21 +4126,21 @@ s32 fn_800E126C(EvObj* obj)
     if (!HasSign(obj->x17a)) {
         return 0;
     }
-    look = &lbl_803119E0;
+    lon = &lbl_803119E0;
     lbl_80346DA8 = 175.0f;
     lbl_80346DA8 = SignDist(obj->x17a);
     a.x = obj->pos.x;
     a.y = obj->pos.y;
     a.z = obj->pos.z;
-    b.x = look->pos.x;
-    b.y = look->pos.y;
-    b.z = look->pos.z;
+    b.x = lon->pos.x;
+    b.y = lon->pos.y;
+    b.z = lon->pos.z;
     njSubVector(&a, &b);
     near = njScalor(&a) < lbl_80346DA8;
     if (near == 0) {
         lbl_80305C28.step = -1;
         lbl_80305C28.mode = 2;
-    } else if (fn_800E1894(look, obj) == 0) {
+    } else if (fn_800E1894(lon, obj) == 0) {
         lbl_80305C28.step = -1;
         lbl_80305C28.mode = 2;
     } else {
@@ -4719,8 +4801,8 @@ void* fn_801005F8(Tbl_UNIT0000* t, u16 key) {
     return NULL;
 }
 
-void fn_80100684(s32 a, s32 b) {
-    fn_801E1AC8((u16)lbl_80311AC0.w4, lbl_80311AC0.room, a, b);
+s32 *fn_80100684(s32 a, s32 b) {
+    return fn_801E1AC8((u16)lbl_80311AC0.w4, lbl_80311AC0.room, a, b);
 }
 
 s32 fn_801006C0(EvObj* p) {
@@ -4877,6 +4959,302 @@ static inline s32 TurnOf(EvObj* e) {
         }
     }
     return v;
+}
+
+extern void fn_8010690C(u8 *obj);
+
+static inline void SpeedFromInfo_699C(EvObj* e) {
+    f32 f = 0.0f;
+    if (fn_801C6068(e, 19) != 0) {
+        f = fn_801C5D04(e, 8);
+    }
+    e->speed = f;
+}
+
+static inline void GetPair_699C(EvObj* e, EvPair* out) {
+    if (out != NULL) {
+        if (fn_801C602C(e, 15) != 0 && fn_801C602C(e, 16) != 0) {
+            out->a = PathInfo(e)->x40;
+            out->b = PathInfo(e)->x44;
+        } else {
+            out->a = 0;
+            out->b = 0;
+        }
+    }
+}
+
+static inline s32 TurnOf_699C(EvObj* e) {
+    s32 v = 0;
+    if (fn_801C6068(e, 19) != 0) {
+        v = 0;
+        switch (PathInfo(e)->actDist) {
+        case 0: break;
+        case 1: v = 2; break;
+        case 2: v = 3; break;
+        case 3: v = 4; break;
+        case 4: v = 1; break;
+        }
+    }
+    return v;
+}
+
+static inline void SetHold_80106428(EvObj* e) {
+    e->x180 = HoldOf(e);
+}
+
+static inline void ResetAnim_80106428(EvObj* e) {
+    if (e != NULL) {
+        if (e != NULL) {
+            e->x18c = 0.0f;
+            e->x198 = 0;
+            fn_801E5EA4(e, 0);
+        }
+        SpeedFromInfo(e);
+    }
+}
+
+void fn_80106428(Task* t) {
+    EvObj* e;
+    if (t == NULL) return;
+    e = t->work;
+    if (e == NULL) return;
+    switch (t->state) {
+    case 0: {
+        NJS_TEXLIST* old = e->texlist;
+        NJS_TEXLIST* tl = NULL;
+        if (e != NULL) {
+            if (fn_801C5FC0(e) != 0) {
+                tl = e->ext->texlist;
+            } else {
+                tl = e->texlist;
+            }
+        }
+        e->texlist = tl;
+        if (fn_801C5FFC(e) != 0) {
+            fn_80227810(e->texlist);
+        }
+        t->state = (Setup(e, old) == 1) ? 1 : 6;
+        fn_8015ED90(t);
+        if (t->state == 6) break;
+        fn_8015C8B8(e, 4);
+        e->shape = fn_801C5D88(e, 1);
+        SpeedFromInfo(e);
+        e->x16e = TurnOf(e);
+    }
+    case 1:
+        SetHold_80106428(e);
+        t->state = 2;
+    case 2: {
+        s32 n;
+        if (fn_8015E600(e) != 0) break;
+        n = e->x180;
+        if (n > 0) n--;
+        e->x180 = n;
+        if (n > 0) break;
+        if (0.000030517578125f * (f32)rand() < 0.5f) {
+            t->state = 3;
+        } else {
+            t->state = 1;
+        }
+        break;
+    }
+    case 3:
+        ResetAnim_80106428(e);
+        t->state = 4;
+    case 4:
+        if (fn_8015E600(e) != 0) break;
+        fn_801E5E2C(e);
+        if (e->x1b0->w8 == 1) {
+            t->state = 1;
+        }
+        break;
+    case 0xff:
+    case 5:
+        fn_8015EBF4(e);
+        if (e != NULL) {
+            if (e->x1b0 != NULL) {
+                e->x1b0->w4 = 0;
+                fn_801DD95C(e->x1b0);
+                e->x1b0 = NULL;
+            }
+            if (e->x1ac != NULL) {
+                fn_801DD9AC(lbl_803474EC, e->x1ac);
+                e->x1ac = NULL;
+            }
+        }
+        if (fn_801C5FFC(e) != 0) {
+            fn_802275A4(e->texlist, 0);
+        }
+        fn_80100B74(t);
+        break;
+    case 6:
+        fn_801E66E0(e);
+        break;
+    case 0xfe:
+        break;
+    }
+}
+
+void fn_8010699C(Task* t) {
+    EvObj* e;
+    Task* c;
+    s32 f;
+    s32 d;
+    s32 b;
+    s32 a;
+    s32 r;
+    s32 turn;
+    s32 hold;
+    s32 kind;
+    s32 mode;
+    s32* pts;
+    if (t == NULL) return;
+    e = t->work;
+    if (e == NULL) return;
+    switch (t->state) {
+    case 0: {
+        NJS_TEXLIST* old = e->texlist;
+        NJS_TEXLIST* tl = NULL;
+        if (e != NULL) {
+            if (fn_801C5FC0(e) != 0) {
+                tl = e->ext->texlist;
+            } else {
+                tl = e->texlist;
+            }
+        }
+        e->texlist = tl;
+        if (fn_801C5FFC(e) != 0) {
+            fn_80227810(e->texlist);
+        }
+        r = 0;
+        if (e != NULL) {
+            EvPair pair;
+            GetPair_699C(e, &pair);
+            kind = 0;
+            if (fn_801C6068(e, 19) != 0) {
+                kind = 0;
+                if (fn_801C602C(e, 18) != 0) {
+                    kind = PathInfo(e)->count - 18;
+                }
+            }
+            mode = 0;
+            if (fn_801C6068(e, 19) != 0) {
+                mode = 0;
+                if (fn_801C602C(e, 17) != 0) {
+                    mode = PathInfo(e)->x48;
+                }
+            }
+            pts = NULL;
+            if (fn_801C6068(e, 19) != 0) {
+                pts = NULL;
+                if (fn_801C602C(e, 18) != 0) {
+                    pts = &PathInfo(e)->x4c;
+                }
+            }
+            r = fn_80107904(e, &pair, kind, mode, pts, old);
+        }
+        t->state = (r == 1) ? 1 : 6;
+        fn_8015ED90(t);
+        if (t->state == 6) break;
+        fn_8015C8B8(e, 4);
+        e->shape = fn_801C5D88(e, 1);
+        SpeedFromInfo_699C(e);
+        turn = 0;
+        if (fn_801C6068(e, 19) != 0) {
+            turn = 0;
+            switch (PathInfo(e)->actDist) {
+            case 0: break;
+            case 1: turn = 2; break;
+            case 2: turn = 3; break;
+            case 3: turn = 4; break;
+            case 4: turn = 1; break;
+            }
+        }
+        e->x16e = turn;
+    }
+    case 1:
+        if (e != NULL) {
+            if (e != NULL) {
+                e->x18c = 0.0f;
+                e->x198 = 0;
+                fn_801E5EA4(e, 0);
+            }
+            SpeedFromInfo_699C(e);
+            hold = 0;
+            if (fn_801C6068(e, 19) != 0) {
+                hold = 0;
+                if (fn_801C602C(e, 10) != 0) {
+                    {
+                        s32 x = PathInfo(e)->x2c;
+                        hold = x < 0 ? 0 : x;
+                    }
+                }
+            }
+            e->x180 = hold;
+        }
+        t->state = 2;
+    case 2: {
+        s32 n;
+        if (fn_8015E600(e) != 0) break;
+        n = e->x180;
+        if (n > 0) n--;
+        e->x180 = n;
+        if (n > 0) break;
+        if (0.000030517578125f * (f32)rand() < 0.5f) {
+            t->state = 3;
+        } else {
+            t->state = 1;
+        }
+        break;
+    }
+    case 3:
+        if (fn_801C6068(e, 19) != 0) {
+            EvInfoPath* p = e->ext->info;
+            a = p->speed;
+            b = p->x34;
+            d = p->mode;
+            f = p->pts[0];
+            c = fn_801C6180(t, fn_8010690C);
+            if (c != NULL) {
+                TaskEv(c)->x20c = a;
+                TaskEv(c)->x210 = b;
+                TaskEv(c)->x214 = d;
+                TaskEv(c)->x180 = f;
+            }
+        }
+        t->state = 4;
+    case 4:
+        if (fn_8015E600(e) != 0) break;
+        fn_801E5E2C(e);
+        if (e->x198 == 1) {
+            t->state = 1;
+        }
+        break;
+    case 0xff:
+    case 5:
+        fn_8015EBF4(e);
+        if (e != NULL) {
+            if (e->x1b0 != NULL) {
+                e->x1b0->w4 = 0;
+                fn_801DD95C(e->x1b0);
+                e->x1b0 = NULL;
+            }
+            if (e->x1ac != NULL) {
+                fn_801DD9AC(lbl_803474EC, e->x1ac);
+                e->x1ac = NULL;
+            }
+        }
+        if (fn_801C5FFC(e) != 0) {
+            fn_802275A4(e->texlist, 0);
+        }
+        fn_80100B74(t);
+        break;
+    case 6:
+        fn_801E66E0(e);
+        break;
+    case 0xfe:
+        break;
+    }
 }
 
 void fn_80106EE0(Task* t) {
@@ -5861,6 +6239,55 @@ void fn_800E2924(s32 idx) {
     lbl_80346DB8 = 0;
 }
 
+void fn_800EC210(void) {
+    s16 i;
+    s16 j;
+    s16 k;
+    s16 m;
+    s16 x2;
+    s16 n;
+    s16 flag;
+    s16 x;
+    s16 y;
+    flag = 0;
+    for (i = 0; i < 3; i++) {
+        x = lbl_80305C78.x - 1 + i;
+        if (x >= 0 && x < 8) {
+            for (j = 0; j < 3; j++) {
+                y = lbl_80305C78.y - 1 + j;
+                for (k = 0; k < 3; k++) {
+                    Ent_800EC040* e = &lbl_802E3D44[k];
+                    if (x == e->x && y == e->y && e->used == 0) {
+                        flag = 1;
+                        lbl_80346DF4->timer = 0x5b;
+                    }
+                }
+            }
+        }
+    }
+    for (m = 0; m < 3; m++) {
+        x2 = lbl_80305C78.x - 1 + m;
+        if (x2 >= 0 && x2 < 8) {
+            for (n = 0; n < 3; n++) {
+                y = lbl_80305C78.y - 1 + n;
+                if (y >= 0 && y < 9) {
+                    u8 c = lbl_80305C78.cell[x2][y];
+                    if (c & 3) {
+                        fn_800ED530(x2, y, 2, 0x5b);
+                    } else if (c & 4) {
+                        fn_800ED530(x2, y, 4, 0x5b);
+                    } else if (flag == 1) {
+                        fn_800ED530(x2, y, 8, 0x5b);
+                    } else {
+                        fn_800ED530(x2, y, 4, 0x5b);
+                    }
+                }
+            }
+        }
+    }
+    lbl_80346DF4->cnt = 0x5b;
+}
+
 s16 fn_800EC3EC(EvObj *p) {
     s16 i;
     s16 n6;
@@ -6115,9 +6542,14 @@ f32 fn_80103B38(NJS_POINT3 *a, NJS_POINT3 *b) {
     return res;
 }
 
-void fn_80104C7C(u8 *obj, f32 *out) {
-    u8 *p;
-    u8 *q;
+typedef struct {
+    u8 pad0[0x28];
+    u32 w28;
+    s32 w2c;
+} Tbl_80104C7C;
+
+void fn_80104C7C(EvObj *obj, f32 *out) {
+    Tbl_80104C7C *q;
     u32 v;
     u32 idx;
     f32 f;
@@ -6131,11 +6563,10 @@ void fn_80104C7C(u8 *obj, f32 *out) {
     out[0] = 0.0f;
     out[1] = 0.0f;
     out[2] = 0.0f;
-    p = *(u8 **)(obj + 0x1c8);
-    q = *(u8 **)(p + 0x10);
-    v = *(u32 *)(q + 0x28);
+    q = obj->ext->info;
+    v = q->w28;
     f = (f32)v / 100.0f;
-    idx = *(u32 *)(q + 0x2c) + 1;
+    idx = q->w2c + 1;
     switch (idx) {
     case 0:
         out[0] = f;
@@ -6630,7 +7061,7 @@ void fn_8010D4F4(Task *o) {
     lbl_80346E64 = o->state;
 }
 
-void* fn_800DE440(Obj_800DE440* o)
+void* fn_800DE440(EvObj* o)
 {
     s32 v = 0;
     void* res = 0;
@@ -6639,7 +7070,7 @@ void* fn_800DE440(Obj_800DE440* o)
 
     if (fn_801C60A4(o)) {
         v = 0;
-        if (o->info->code >= 20000 && o->info->code < 28599) {
+        if (o->ext->x04 >= 20000 && o->ext->x04 < 28599) {
             v = 1;
         }
     }
@@ -6648,7 +7079,7 @@ void* fn_800DE440(Obj_800DE440* o)
         if (fn_801C60A4(o)) {
             v = -1;
             ok2 = 0;
-            t = o->info->code;
+            t = o->ext->x04;
             if (t >= 20000 && t < 28599) {
                 ok2 = 1;
             }
@@ -6668,7 +7099,7 @@ void* fn_800DE440(Obj_800DE440* o)
     return res;
 }
 
-s32 fn_800E0B08(Obj_800DE440* o, s32 limit)
+s32 fn_800E0B08(EvObj* o, s32 limit)
 {
     s32 a = -1;
     s32 b;
@@ -6679,7 +7110,7 @@ s32 fn_800E0B08(Obj_800DE440* o, s32 limit)
     if (fn_801C60A4(o)) {
         a = -1;
         ok = 0;
-        t = o->info->code;
+        t = o->ext->x04;
         if (t >= 20000 && t < 28599) {
             ok = 1;
         }
@@ -6691,7 +7122,7 @@ s32 fn_800E0B08(Obj_800DE440* o, s32 limit)
     if (fn_801C60A4(o)) {
         b = -1;
         ok = 0;
-        t = o->info->code;
+        t = o->ext->x04;
         if (t >= 20000 && t < 28599) {
             ok = 1;
         }
@@ -7139,6 +7570,282 @@ extern void fn_800FE354(Ship* s);
 extern void fn_800FEAF4(Ship* s);
 extern s32 fn_800FE254(Ship* s);
 
+
+extern void njRotate(NJS_MATRIX m, NJS_POINT3* axis, Angle a);
+extern void njCalcVector(NJS_MATRIX m, NJS_POINT3* in, NJS_POINT3* out);
+
+void fn_800FE354(Ship* s) {
+    ShipRoute* r = s->ext->route;
+    u32* p = r->pts;
+    s32 i = s->blk.cur * 3;
+    s32 turn = (s32)(1.82 * r->turn);
+    s32 nturn = -turn;
+    NJS_POINT3 d;
+    NJS_POINT3 c;
+    s32 ang;
+    s32 zero;
+
+    if ((lbl_80310B3C[0x22] & 0x8000) == 0) {
+        d.x = (s32)p[i] - s->pos.x;
+        d.y = (s32)p[i + 1] - s->pos.y;
+        d.z = (s32)p[i + 2] - s->pos.z;
+        c.x = s->blk.vel.y * d.z - s->blk.vel.z * d.y;
+        c.y = s->blk.vel.z * d.x - s->blk.vel.x * d.z;
+        c.z = s->blk.vel.x * d.y - s->blk.vel.y * d.x;
+        if (c.x != 0.0f || c.y != 0.0f || c.z != 0.0f) {
+            f32 len = fn_80291A5C(d.z * d.z + (d.x * d.x + d.y * d.y));
+            f32 l2 = fn_80291A5C(s->blk.vel.z * s->blk.vel.z + (s->blk.vel.x * s->blk.vel.x + s->blk.vel.y * s->blk.vel.y));
+            len = l2 * len;
+            ang = (s32)(10430.381f * (f32)acos(njInnerProduct(&s->blk.vel, &d) / len));
+            if (ang > 0) {
+                while (ang >= 0x8000) {
+                    ang -= 0x10000;
+                }
+            } else {
+                while (ang < -0x8000) {
+                    ang += 0x10000;
+                }
+            }
+            njUnitVector(&c);
+            njPushMatrixEx();
+            fn_80286EE8();
+            fn_8028B498();
+            njUnitMatrix(0);
+            if (ang > turn) {
+                njRotate(0, &c, turn);
+            } else if (ang < nturn) {
+                njRotate(0, &c, nturn);
+            } else {
+                njRotate(0, &c, ang);
+            }
+            njCalcVector(0, &s->blk.vel, &s->blk.vel);
+            njPopMatrixEx();
+        }
+        s->ang[0] = -(s32)(182.04445f * (200.0f * s->blk.vel.y));
+        if (s->ang[0] > 0x2000) {
+            s->ang[0] = 0x2000;
+        } else if (s->ang[0] < -0x2000) {
+            s->ang[0] = -0x2000;
+        }
+        zero = 0;
+        if (0.0f == s->blk.vel.x && 0.0f == s->blk.vel.z) {
+            zero = 1;
+        }
+        if (zero != 0) {
+            i = 0;
+        } else {
+            i = (s32)(10430.378f * (f32)atan2(s->blk.vel.z, s->blk.vel.x));
+        }
+        s->blk.x20c = s->ang[1] = 0x4000 - i;
+    }
+}
+
+
+void fn_800FE688(Ship* s) {
+    ShipRoute* r = s->ext->route;
+    s32 turn = (s32)(1.82 * r->turn);
+    s32 nturn = -turn;
+    NJS_POINT3 d;
+    NJS_POINT3 c;
+    s32 ang;
+    s32 zero;
+    EvObj* pl;
+
+    if ((lbl_80310B3C[0x22] & 0x8000) == 0 && (pl = lbl_80347450) != NULL && lbl_803473A8 != 0) {
+        d.x = pl->pos.x - s->pos.x;
+        d.y = pl->pos.y - s->pos.y;
+        d.z = pl->pos.z - s->pos.z;
+        c.x = s->blk.vel.y * d.z - s->blk.vel.z * d.y;
+        c.y = s->blk.vel.z * d.x - s->blk.vel.x * d.z;
+        c.z = s->blk.vel.x * d.y - s->blk.vel.y * d.x;
+        if (c.x != 0.0f || c.y != 0.0f || c.z != 0.0f) {
+            f32 len = fn_80291A5C(d.z * d.z + (d.x * d.x + d.y * d.y));
+            f32 l2 = fn_80291A5C(s->blk.vel.z * s->blk.vel.z + (s->blk.vel.x * s->blk.vel.x + s->blk.vel.y * s->blk.vel.y));
+            len = l2 * len;
+            ang = (s32)(10430.381f * (f32)acos(njInnerProduct(&s->blk.vel, &d) / len));
+            if (ang > 0) {
+                while (ang >= 0x8000) {
+                    ang -= 0x10000;
+                }
+            } else {
+                while (ang < -0x8000) {
+                    ang += 0x10000;
+                }
+            }
+            njUnitVector(&c);
+            njPushMatrixEx();
+            fn_80286EE8();
+            fn_8028B498();
+            njUnitMatrix(0);
+            if (ang > turn) {
+                njRotate(0, &c, turn);
+            } else if (ang < nturn) {
+                njRotate(0, &c, nturn);
+            } else {
+                njRotate(0, &c, ang);
+            }
+            njCalcVector(0, &s->blk.vel, &s->blk.vel);
+            njPopMatrixEx();
+        }
+        s->pos.x = s->pos.x + s->blk.vel.x;
+        s->pos.y = s->pos.y + s->blk.vel.y;
+        s->pos.z = s->pos.z + s->blk.vel.z;
+        s->ang[0] = (s32)((f32)s->ang[0] + ((f32)-(s32)(182.04445f * (200.0f * s->blk.vel.y)) - (f32)s->ang[0]) / 5.0f);
+        if (s->ang[0] > 0x1555) {
+            s->ang[0] = 0x1555;
+        } else if (s->ang[0] < -0x1555) {
+            s->ang[0] = -0x1555;
+        }
+        zero = 0;
+        if (0.0f == s->blk.vel.x && 0.0f == s->blk.vel.z) {
+            zero = 1;
+        }
+        if (zero != 0) {
+            ang = 0;
+        } else {
+            ang = (s32)(10430.378f * (f32)atan2(s->blk.vel.z, s->blk.vel.x));
+        }
+        s->ang[1] = 0x4000 - ang;
+        switch (s->ext->route->bankMode) {
+        case 1:
+            ang = s->ang[1] - s->blk.x20c;
+            if (ang > 0) {
+                while (ang >= 0x8000) {
+                    ang -= 0x10000;
+                }
+            } else {
+                while (ang < -0x8000) {
+                    ang += 0x10000;
+                }
+            }
+
+            ang = ang * s->ext->route->bankRate;
+            s->ang[2] = (ang + s->ang[2] * 7) >> 3;
+            s->blk.x20c = s->ang[1];
+            break;
+        case 2:
+            ang = s->blk.x20c - s->ang[1];
+            if (ang > 0) {
+                while (ang >= 0x8000) {
+                    ang -= 0x10000;
+                }
+            } else {
+                while (ang < -0x8000) {
+                    ang += 0x10000;
+                }
+            }
+
+            ang = ang * s->ext->route->bankRate;
+            s->ang[2] = (ang + s->ang[2] * 3) >> 2;
+            s->blk.x20c = s->ang[1];
+            break;
+        }
+    }
+}
+
+
+void fn_800FEAF4(Ship* s) {
+    ShipRoute* r = s->ext->route;
+    u32* p = r->pts;
+    s32 i = s->blk.cur * 3;
+    s32 turn = (s32)(1.82 * r->turn);
+    s32 nturn = -turn;
+    NJS_POINT3 d;
+    NJS_POINT3 c;
+    s32 ang;
+    s32 zero;
+
+    if ((lbl_80310B3C[0x22] & 0x8000) == 0) {
+        d.x = (s32)p[i] - s->pos.x;
+        d.y = (s32)p[i + 1] - s->pos.y;
+        d.z = (s32)p[i + 2] - s->pos.z;
+        c.x = s->blk.vel.y * d.z - s->blk.vel.z * d.y;
+        c.y = s->blk.vel.z * d.x - s->blk.vel.x * d.z;
+        c.z = s->blk.vel.x * d.y - s->blk.vel.y * d.x;
+        if (c.x != 0.0f || c.y != 0.0f || c.z != 0.0f) {
+            f32 len = fn_80291A5C(d.z * d.z + (d.x * d.x + d.y * d.y));
+            f32 l2 = fn_80291A5C(s->blk.vel.z * s->blk.vel.z + (s->blk.vel.x * s->blk.vel.x + s->blk.vel.y * s->blk.vel.y));
+            len = l2 * len;
+            ang = (s32)(10430.381f * (f32)acos(njInnerProduct(&s->blk.vel, &d) / len));
+            if (ang > 0) {
+                while (ang >= 0x8000) {
+                    ang -= 0x10000;
+                }
+            } else {
+                while (ang < -0x8000) {
+                    ang += 0x10000;
+                }
+            }
+            njUnitVector(&c);
+            njPushMatrixEx();
+            fn_80286EE8();
+            fn_8028B498();
+            njUnitMatrix(0);
+            if (ang > turn) {
+                njRotate(0, &c, turn);
+            } else if (ang < nturn) {
+                njRotate(0, &c, nturn);
+            } else {
+                njRotate(0, &c, ang);
+            }
+            njCalcVector(0, &s->blk.vel, &s->blk.vel);
+            njPopMatrixEx();
+        }
+        s->pos.x = s->pos.x + s->blk.vel.x;
+        s->pos.y = s->pos.y + s->blk.vel.y;
+        s->pos.z = s->pos.z + s->blk.vel.z;
+        s->ang[0] = (s32)((f32)s->ang[0] + ((f32)-(s32)(182.04445f * (200.0f * s->blk.vel.y)) - (f32)s->ang[0]) / 5.0f);
+        if (s->ang[0] > 0x1555) {
+            s->ang[0] = 0x1555;
+        } else if (s->ang[0] < -0x1555) {
+            s->ang[0] = -0x1555;
+        }
+        zero = 0;
+        if (0.0f == s->blk.vel.x && 0.0f == s->blk.vel.z) {
+            zero = 1;
+        }
+        if (zero != 0) {
+            ang = 0;
+        } else {
+            ang = (s32)(10430.378f * (f32)atan2(s->blk.vel.z, s->blk.vel.x));
+        }
+        s->ang[1] = 0x4000 - ang;
+        switch ((r = s->ext->route)->bankMode) {
+        case 1:
+            ang = s->ang[1] - s->blk.x20c;
+            if (ang > 0) {
+                while (ang >= 0x8000) {
+                    ang -= 0x10000;
+                }
+            } else {
+                while (ang < -0x8000) {
+                    ang += 0x10000;
+                }
+            }
+
+            ang = ang * r->bankRate;
+            s->ang[2] = (ang + s->ang[2] * 7) >> 3;
+            s->blk.x20c = s->ang[1];
+            break;
+        case 2:
+            ang = s->blk.x20c - s->ang[1];
+            if (ang > 0) {
+                while (ang >= 0x8000) {
+                    ang -= 0x10000;
+                }
+            } else {
+                while (ang < -0x8000) {
+                    ang += 0x10000;
+                }
+            }
+
+            ang = ang * r->bankRate;
+            s->ang[2] = (ang + s->ang[2] * 3) >> 2;
+            s->blk.x20c = s->ang[1];
+            break;
+        }
+    }
+}
 
 /* 1 when the player is out of range (on the wrapping world map), else updates by distance. */
 static inline Ship* ShipOf_800FC8EC(Task* t) {
@@ -7804,6 +8511,198 @@ void fn_800FC8EC(Task* t) {
     ClipZPop();
 }
 
+extern char lbl_802B22E8[];
+
+void fn_800FD63C(Task* t) {
+    Ship* s = t->work;
+    ShipRoute* r;
+    u32* p;
+    s32 i;
+    f32 dist;
+    f32 len;
+    f32 step;
+    f32 f;
+    NJS_POINT3 v1;
+    NJS_POINT3 v2;
+    NJS_POINT3 v3;
+
+    ClipZPush();
+    lbl_80346788 = lbl_80347560;
+    lbl_8034678C = -1200.0f;
+    njClipZ(lbl_80346788, lbl_8034678C);
+    switch (t->state) {
+    case 0:
+        fn_80227810(s->texlist);
+        s->clipNear = -1100.0f;
+        s->clipFar = -1200.0f;
+        s->x08 = 1;
+        s->x2c = 1;
+        fn_8015ED90(t);
+        s->xec = s->ext->items->count > 1 ? s->ext->items->items[1] : 0;
+        s->save = fn_8008FC50(s, 0x70);
+        if (fn_8008FC48() != 0) {
+            r = s->ext->route;
+            switch (r->mode) {
+            case 0:
+                s->blk.state = t->state = 4;
+                if (s->coll != NULL) {
+                    fn_80222838(s->coll);
+                }
+                fn_801E5DF0(s);
+                ClipZPop();
+                return;
+            case 1:
+            case 2:
+                s->pos.x = (s32)r->pts[0];
+                s->pos.y = (s32)r->pts[1];
+                s->pos.z = (s32)r->pts[2];
+                s->blk.cur = 1;
+                s->blk.idx = s->ext->route->count * 3 + 14;
+                r = s->ext->route;
+                if (r->size < s->blk.idx + r->pts[s->blk.idx - 14] + 1) {
+                    fn_801DBE1C(lbl_802B22E8);
+                }
+                s->blk.vel.x = 0.01 * njCos(s->ang[1] - 0x4000);
+                s->blk.vel.z = 0.01 * -njSin(s->ang[1] - 0x4000);
+                fn_800FE354(s);
+                s->blk.state = t->state = 1;
+                break;
+            }
+        } else {
+            memcpy(&s->blk, s->save, 0x70);
+            memcpy(&s->pos, &s->blk.pos, 12);
+            memcpy(s->ang, s->blk.ang, 12);
+            t->state = s->blk.state;
+            break;
+        }
+    case 1:
+        if (ShipFar(s, s->ext->route->kind)) {
+            fn_8015E600(s);
+            break;
+        }
+        if (fn_8015E600(s) != 0) {
+            break;
+        }
+        r = s->ext->route;
+        p = r->pts;
+        i = s->blk.cur * 3;
+        step = 0.01f * r->speed;
+        len = 0.0f;
+        dist = fn_80291A5C((s->pos.z - (s32)p[i + 2]) * (s->pos.z - (s32)p[i + 2]) +
+                           ((s->pos.x - (s32)p[i]) * (s->pos.x - (s32)p[i]) + (s->pos.y - (s32)p[i + 1]) * (s->pos.y - (s32)p[i + 1])));
+        memcpy(&v1, &s->blk.vel, 12);
+        if (v1.x != 0.0f || v1.y != 0.0f || v1.z != 0.0f) {
+            len = njUnitVector(&v1);
+            if (len >= step) {
+                s->blk.state = t->state = 2;
+            } else {
+                s->blk.vel.x = 0.01f * v1.x + s->blk.vel.x;
+                s->blk.vel.y = 0.01f * v1.y + s->blk.vel.y;
+                s->blk.vel.z = 0.01f * v1.z + s->blk.vel.z;
+            }
+            fn_800FEAF4(s);
+        } else {
+            s->blk.vel.x = 0.01 * njCos(s->ang[1] - 0x4000);
+            s->blk.vel.z = 0.01 * -njSin(s->ang[1] - 0x4000);
+            fn_800FE354(s);
+        }
+        if (len >= dist) {
+            if (fn_800FE254(s) != 0) {
+                s->blk.state = t->state = 3;
+            } else {
+                s->blk.state = t->state = 2;
+            }
+        }
+        if (s->coll != NULL) {
+            fn_80222838(s->coll);
+        }
+        fn_801E5DF0(s);
+        break;
+    case 2:
+        if (ShipFar(s, s->ext->route->kind)) {
+            fn_8015E600(s);
+            break;
+        }
+        if (fn_8015E600(s) != 0) {
+            break;
+        }
+        r = s->ext->route;
+        p = r->pts;
+        i = s->blk.cur * 3;
+        dist = fn_80291A5C((s->pos.z - (s32)p[i + 2]) * (s->pos.z - (s32)p[i + 2]) +
+                           ((s->pos.x - (s32)p[i]) * (s->pos.x - (s32)p[i]) + (s->pos.y - (s32)p[i + 1]) * (s->pos.y - (s32)p[i + 1])));
+        memcpy(&v2, &s->blk.vel, 12);
+        len = njUnitVector(&v2);
+        fn_800FEAF4(s);
+        if (len >= dist && fn_800FE254(s) != 0) {
+            s->blk.state = t->state = 3;
+        }
+        if (s->coll != NULL) {
+            fn_80222838(s->coll);
+        }
+        fn_801E5DF0(s);
+        break;
+    case 3:
+        if (ShipFar(s, s->ext->route->kind)) {
+            fn_8015E600(s);
+            break;
+        }
+        if (fn_8015E600(s) != 0) {
+            break;
+        }
+        r = s->ext->route;
+        p = r->pts;
+        i = s->blk.cur * 3;
+        dist = fn_80291A5C((s->pos.z - (s32)p[i + 2]) * (s->pos.z - (s32)p[i + 2]) +
+                           ((s->pos.x - (s32)p[i]) * (s->pos.x - (s32)p[i]) + (s->pos.y - (s32)p[i + 1]) * (s->pos.y - (s32)p[i + 1])));
+        memcpy(&v3, &s->blk.vel, 12);
+        if (dist > 0.1f) {
+            len = 30.0f * njUnitVector(&v3);
+            if (len > dist) {
+                f = dist / len;
+                s->blk.vel.x *= f;
+                s->blk.vel.y *= f;
+                s->blk.vel.z *= f;
+            }
+        } else {
+            fn_800FE254(s);
+            s->blk.state = t->state = 1;
+        }
+        fn_800FEAF4(s);
+        if (s->coll != NULL) {
+            fn_80222838(s->coll);
+        }
+        fn_801E5DF0(s);
+        break;
+    case 4:
+        if (ShipFar(s, s->ext->route->kind)) {
+            fn_8015E600(s);
+            break;
+        }
+        if (fn_8015E600(s) != 0) {
+            break;
+        }
+        if (s->coll != NULL) {
+            fn_80222838(s->coll);
+        }
+        fn_801E5DF0(s);
+        break;
+    case 0xFF:
+        memcpy(s->blk.ang, s->ang, 12);
+        memcpy(&s->blk.pos, &s->pos, 12);
+        memcpy(s->save, &s->blk, 0x70);
+        fn_8008F9B8(s->x17a, s->save);
+        fn_8015EBF4(s);
+        fn_802275A4(s->texlist, 0);
+        fn_80100B74(t);
+        break;
+    }
+    if (t->state != 0xFF && fn_8015F218(s) == 2) {
+        t->state = 0xFF;
+    }
+    ClipZPop();
+}
+
 void fn_800FF218(void)
 {
     s32 i;
@@ -8305,8 +9204,78 @@ void fn_80104B70(Unit_80104B70 *u, Other_80104B70 *o) {
     }
 }
 
+/* The info record of a "part" generator: the number of parts, the fade and the scale. */
+typedef struct EvInfoPart {
+    s32 count;     /* 0x00 */
+    u8 pad4[0x24 - 4];
+    s32 parts;     /* 0x24 parts alive at once */
+    u8 pad28[0x30 - 0x28];
+    u32 scale;     /* 0x30 */
+    u32 slopeA;    /* 0x34 */
+    u32 slopeB;    /* 0x38 */
+} EvInfoPart;
+
+static inline f32 Min_80104D64(f32 v, f32 hi) {
+    return v > hi ? hi : v;
+}
+static inline f32 Max_80104D64(f32 v, f32 lo) {
+    return v < lo ? lo : v;
+}
+
+static inline void Init_80104D64(EvObj* e) {
+    f32 v;
+    if (e != 0) {
+        e->x16e = 3;
+        fn_801173DC(0, e);
+        v = 0.0f;
+        if (fn_801C6068(e, 14) != 0) {
+            EvInfoPart* t = e->ext->info;
+            v = Max_80104D64(Min_80104D64(-1.0f + (f32)t->slopeA / 100.0f, 0.0f), -1.0f);
+        }
+        e->colour.a = v;
+        v = -1.0f;
+        if (fn_801C6068(e, 14) != 0) {
+            EvInfoPart* t = e->ext->info;
+            v = Min_80104D64(-(f32)t->slopeB / 100.0f, -0.01f);
+        }
+        e->x24c.y = v;
+        if (&e->x11c != 0 && fn_801C60A4(e) != 0 && fn_801C6068(e, 14) != 0) {
+            EvInfoPart* t = e->ext->info;
+            f32 k = (f32)t->scale / 100.0f;
+            e->x11c.x = k * e->ext->scl.x;
+            e->x11c.y = k * e->ext->scl.y;
+            e->x11c.z = k * e->ext->scl.z;
+        }
+        fn_80104C7C(e, &e->vel.x);
+        e->tpl.x0 = 5;
+    }
+}
+
+void fn_80104D64(EvObj* e) {
+    if (e != 0) {
+        e->x21d = 0;
+        e->x21e = 0;
+        if (fn_801C5FFC(e) != 0) {
+            e->x21d = e->texlist->nbTexture;
+        }
+        if (fn_801C5FC0(e) != 0) {
+            e->texlist = e->ext->texlist;
+            if (e->x21d != 0) {
+                e->x21e = e->x21d * (e->x21c % (e->ext->texlist->nbTexture / e->x21d));
+            }
+        }
+        if (fn_801C5FFC(e) != 0) {
+            fn_80227810(e->texlist);
+        }
+        Init_80104D64(e);
+        e->pos.y += 0.3f * (0.000030517578125f * (f32)rand()) - 0.15f;
+        e->pos.x += 0.5f * (f32)(e->x21c & 1) - 0.25f;
+        e->pos.z += 0.5f * (f32)(e->x21c & 1) - 0.25f;
+    }
+}
+
 void fn_80105058(Task *t) {
-    Unit_80105058 *u;
+    EvObj *u;
     if (t == 0) {
         return;
     }
@@ -8328,8 +9297,8 @@ void fn_80105058(Task *t) {
         fn_80104B70((Unit_80104B70 *)u, (Other_80104B70 *)t->parent);
         njCalcPoint(0, &u->pos, &p);
         t->f20 = -1000.0f + p.z;
-        if (u->f1c <= -1.0f) {
-            u->f1c = -1.0f;
+        if (u->colour.a <= -1.0f) {
+            u->colour.a = -1.0f;
             t->state = 4;
         }
         break;
@@ -8337,46 +9306,163 @@ void fn_80105058(Task *t) {
     case 4:
     case 0xff:
         if (fn_801C5FFC(u) != 0) {
-            fn_802275A4(u->p100, 0);
+            fn_802275A4(u->texlist, 0);
         }
-        if (t->parent != 0 && TaskEv(t->parent) != 0 && EvSlots(TaskEv(t->parent)) != 0 && u->s20c >= 0) {
-            EvSlots(TaskEv(t->parent))[u->s20c] = 0;
+        if (t->parent != 0 && TaskEv(t->parent) != 0 && EvSlots(TaskEv(t->parent)) != 0 && u->x20c >= 0) {
+            EvSlots(TaskEv(t->parent))[u->x20c] = 0;
         }
         fn_80100B74(t);
         break;
     }
 }
 
-void fn_801051A0(Unit_801051A0 *u) {
+void fn_801051A0(EvObj *u) {
     if (u == 0) {
         return;
     }
-    fn_800DE2E4(fn_800DE440((Obj_800DE440 *)u), &u->b1ef, &u->b1f0, &u->b1f1);
+    fn_800DE2E4(fn_800DE440(u), &u->x1ef, &u->x1f0, &u->x1f1);
     switch (u->state) {
     case 0:
-        if (u->b1ef != 0) {
-            if (fn_800E0B08((Obj_800DE440 *)u, u->b1f0) != 0) {
+        if (u->x1ef != 0) {
+            if (fn_800E0B08(u, u->x1f0) != 0) {
                 u->state = 1;
             }
         }
         break;
     case 1:
-        if (fn_800DE228(&u->f1c, -0.04f) != 0) {
+        if (fn_800DE228(&u->colour.a, -0.04f) != 0) {
             u->state = 2;
         }
         break;
     case 2:
-        if (u->b1ef == 0 || fn_800E0B08((Obj_800DE440 *)u, u->b1f0) == 0) {
+        if (u->x1ef == 0 || fn_800E0B08(u, u->x1f0) == 0) {
             u->state = 3;
         }
         break;
     case 3:
-        if (fn_800DE228(&u->f1c, 0.04f) != 0) {
+        if (fn_800DE228(&u->colour.a, 0.04f) != 0) {
             u->state = 0;
         }
         break;
     }
 }
+
+extern void **UiAllocPtrArray(s32 n);
+extern void UiFree(void *p);
+extern void PartKillList(Task **list, s32 n);
+
+static inline EvInfoPart *PartInfo_801052A8(EvObj *w) {
+    return w->ext->info;
+}
+/* The child tasks a generator has spawned (EvObj.x25c). */
+static inline Task **PartSlots(EvObj *w) {
+    return w->x25c;
+}
+
+static inline s32 Count_801052A8(EvObj *w) {
+    s32 n = 1;
+    if (fn_801C6068(w, 0xE)) {
+        s32 v;
+        n = 1;
+        v = PartInfo_801052A8(w)->parts;
+        if (v >= 1) {
+            n = v;
+        }
+    }
+    return n;
+}
+
+static inline f32 Min_801052A8(f32 v, f32 hi) {
+    return v > hi ? hi : v;
+}
+static inline f32 Max_801052A8(f32 v, f32 lo) {
+    return v < lo ? lo : v;
+}
+/* The fade-in end and fade-out slope of a part generator. */
+static inline f32 FadeIn_801052A8(EvObj *w) {
+    f32 v = 0.0f;
+    if (fn_801C6068(w, 0xE)) {
+        v = Max_801052A8(Min_801052A8(-1.0f + (f32)PartInfo_801052A8(w)->slopeA / 100.0f, 0.0f), -1.0f);
+    }
+    return v;
+}
+static inline f32 FadeOut_801052A8(EvObj *w) {
+    f32 v = -1.0f;
+    if (fn_801C6068(w, 0xE)) {
+        v = Min_801052A8(-(f32)PartInfo_801052A8(w)->slopeB / 100.0f, -0.01f);
+    }
+    return v;
+}
+
+void fn_801052A8(Task *t) {
+    EvObj *w;
+    s32 n;
+    f32 lo, hi, f;
+
+    if (t == NULL) return;
+    w = t->work;
+    if (w == NULL) return;
+    switch (t->state) {
+    case 0:
+        n = 0;
+        if (fn_801C6068(w, 0xE)) {
+            n = Count_801052A8(w);
+            lo = FadeIn_801052A8(w);
+            hi = FadeOut_801052A8(w);
+            f = 2.0f + (f32)ceil((-1.0f - lo) / hi);
+            n = (s32)(f32)ceil(f / (f32)n);
+        }
+        w->x210 = n;
+        w->x25c = UiAllocPtrArray(w->x210);
+        w->x20c = 0;
+        w->colour.a = 0.0f;
+        if (w->x210 <= 0) {
+            t->state = 2;
+            return;
+        }
+        w->x180 = Count_801052A8(w);
+        t->state = 1;
+    case 1:
+        fn_801051A0(w);
+        n = w->x180;
+        if (n > 0) n--;
+        w->x180 = n;
+        if (n > 0) return;
+        if (w->x20c >= w->x210) {
+            w->x20c = 0;
+        }
+        if (PartSlots(w) != NULL && PartSlots(w)[w->x20c] == NULL && w->x210 > 0) {
+            Task *c = fn_80100E10(t, fn_80105058, w->x178, w->ext);
+            if (c != NULL && c->work != NULL) {
+                PartSlots(w)[w->x20c] = c;
+                {
+                    u8 b = w->x21c;
+                    w->x21c = b + 1;
+                    TaskEv(c)->x21c = b;
+                }
+                {
+                    s32 i = w->x20c;
+                    w->x20c = i + 1;
+                    TaskEv(c)->x20c = i;
+                }
+            }
+        }
+        w->x180 = Count_801052A8(w);
+        break;
+    case 0xFE:
+        break;
+    case 3:
+    case 0xFF:
+        PartKillList(PartSlots(w), w->x210);
+        UiFree(w->x25c);
+        w->x25c = NULL;
+        w->x20c = 0;
+        w->x210 = 0;
+        fn_80100B74(t);
+        break;
+    }
+}
+
 
 void fn_80107B18(Task *t) {
     Unit_80107B18 *u = t->work;
@@ -8694,10 +9780,50 @@ void fn_8010C87C(f32 x, f32 y, f32 w, f32 h, f32 z, u32 colour) {
     }
 }
 
-void fn_8010CB3C(FadeObj* o, f32 scale) {
+#ifdef NONMATCHING
+void fn_8010C978(Queue_8010B78C* o, f32 alpha) {
+    VertexCol v[3];
+    s32 flag = 1;
+    f32 z, s, x0, y0;
+    u32 a;
+    u8 c1, c2;
+    if (!(0.0f >= alpha)) {
+    if (o->flags & 8) {
+        if (alpha == 1.0f) {
+            flag = 0;
+        }
+        z = fn_801DBD9C(-1.022f);
+        o->phase += 0x1000;
+        s = njSin(o->phase);
+        c2 = (s32)(93.0f * s + 157.0f);
+        y0 = 60.0f + o->s12;
+        x0 = 576.0f + o->s10;
+        a = (s32)(255.0f * alpha);
+        c1 = (s32)(50.0f * s + 200.0f);
+        v[0].x = x0;
+        v[0].y = y0;
+        v[0].z = z;
+        v[0].colour = (a << 24) | (c1 << 16) | (c1 << 8) | c1;
+        v[1].x = 12.0f + x0;
+        v[1].y = y0;
+        v[1].z = z;
+        v[1].colour = (a << 24) | (c1 << 16) | (c1 << 8) | c1;
+        v[2].x = 6.0f + x0;
+        v[2].y = 12.0f + y0;
+        v[2].z = z;
+        v[2].colour = (a << 24) | (c2 << 16) | (c2 << 8) | c2;
+        njColorBlendingMode(0, 8);
+        njColorBlendingMode(1, 6);
+        fn_80290ED4(v, 3, flag);
+    }
+    }
+}
+#endif
+
+void fn_8010CB3C(Queue_8010B78C* o, f32 scale) {
     union { u32 w; u8 a; } c;
     f32 y;
-    c.w = o->colour;
+    c.w = o->w0c;
     if (1.0f > scale) {
         if (0.0f < scale) {
             c.a = (u8)(c.a * scale);
@@ -8710,7 +9836,7 @@ void fn_8010CB3C(FadeObj* o, f32 scale) {
     if (o->flags & 0x800) {
         fn_8010C87C(0.0f, 0.0f, 640.0f, 480.0f, -1.023f, c.w);
     } else {
-        y = o->y - 24.0f;
+        y = o->s12 - 24.0f;
         fn_8010C87C(0.0f, y, 640.0f, 128.0f, -1.023f, c.w);
         y -= 8.0f;
         fn_8010C7A0(0.0f, y, 640.0f, 8.0f, -1.023f, c.w);
@@ -8975,6 +10101,157 @@ void fn_801034BC(Task* o) {
     }
 }
 
+extern void **UiAllocPtrArray(s32 n);
+extern void UiFree(void *p);
+extern void PartKillList(Task **list, s32 n);
+extern f32 fn_802918DC(f32 x);
+Task* fn_801032C8(Task* o, s32 a, s32 b);
+
+/* The info record of a part generator that stacks its parts in time (EvObj.ext->info). */
+typedef struct {
+    u8 pad0[0x28];
+    u32 w28;
+    u32 w2c;
+    s32 w30;
+} Tbl_8010361C;
+
+static inline Tbl_8010361C* Info_8010361C(EvObj* e) {
+    return e->ext->info;
+}
+
+/* The slots of the children a generator keeps (EvObj.x25c). */
+static inline Task** Slots_8010361C(EvObj* e) {
+    return e->x25c;
+}
+
+static inline f32 Rate_8010361C(EvObj* e) {
+    f32 v = 0.0f;
+    if (fn_801C6068(e, 12)) {
+        v = -(f32)Info_8010361C(e)->w2c / 100.0f;
+    }
+    return v;
+}
+
+static inline f32 Span_8010361C(EvObj* e) {
+    f32 v = 0.0f;
+    if (e != NULL && fn_801C6068(e, 12)) {
+        v = (f32)Info_8010361C(e)->w28;
+    }
+    return v;
+}
+
+/* How many frames until the next child. */
+static inline s32 Count_8010361C(EvObj* e) {
+    s32 n = 0;
+    if (fn_801C6068(e, 12)) {
+        f32 rate = Rate_8010361C(e);
+        f32 span = Span_8010361C(e);
+        if (0.0f == rate || e->x22e == 0) {
+            n = 0;
+        } else {
+            f32 f = span / ((f32)e->x22e * rate);
+            if (f < 0.0f) {
+                f = -f;
+            }
+            n = (s32)fn_802918DC(f);
+        }
+    }
+    return n;
+}
+
+void fn_8010361C(Task* t) {
+    EvObj* e;
+    if (t == NULL) {
+        return;
+    }
+    e = t->work;
+    if (e == NULL) {
+        return;
+    }
+    switch (t->state) {
+    case 0: {
+        s32 n;
+        e->x22c = n = 0;
+        if (fn_801C6068(e, 12)) {
+            n = Info_8010361C(e)->w30;
+        }
+        e->x22e = n;
+        e->x25c = UiAllocPtrArray(e->x22e);
+        if (e->x25c == NULL) {
+            t->state = 3;
+            return;
+        }
+        t->state = 1;
+    }
+    case 1:
+        if (fn_8015F218(e) == 1) {
+            f32 step = Rate_8010361C(e);
+            s32 n = Count_8010361C(e);
+            s32 k;
+            f32 dy;
+            e->x22c = 0;
+            k = e->x22e;
+            dy = step * (f32)n;
+            while (k > 0) {
+                Task* c;
+                if (e->x22c >= e->x22e) {
+                    e->x22c %= e->x22e;
+                }
+                c = fn_801032C8(t, e->x22c, e->x22e);
+                if (c == NULL) {
+                    break;
+                }
+                TaskEv(c)->pos.y = dy * (f32)k + TaskEv(c)->pos.y;
+                k--;
+                Slots_8010361C(e)[e->x22c++] = c;
+            }
+            e->x180 = 0;
+            t->state = 2;
+        }
+        break;
+    case 2:
+        if (fn_8015F218(e) != 2) {
+            s32 n = e->x180;
+            if (n > 0) {
+                n--;
+            }
+            e->x180 = n;
+            if (n > 0) {
+                break;
+            }
+            if (e->x22c >= e->x22e) {
+                e->x22c %= e->x22e;
+            }
+            if (Slots_8010361C(e)[e->x22c] != NULL) {
+                return;
+            }
+            {
+                Task* c = fn_801032C8(t, e->x22c, e->x22e);
+                if (c != NULL) {
+                    Slots_8010361C(e)[e->x22c++] = c;
+                }
+            }
+            e->x180 = Count_8010361C(e);
+        } else {
+            PartKillList(Slots_8010361C(e), e->x22e);
+            e->x22c = 0;
+            t->state = 1;
+        }
+        break;
+    case 0xFE:
+        break;
+    case 4:
+    case 0xFF:
+        PartKillList(Slots_8010361C(e), e->x22e);
+        UiFree(e->x25c);
+        e->x25c = NULL;
+        e->x22e = 0;
+        e->x22c = 0;
+        fn_80100B74(t);
+        break;
+    }
+}
+
 static inline s32 check(Obj_80105660* o) {
     s32 r = 1;
     if (o != 0) {
@@ -9201,6 +10478,78 @@ void fn_80108828(Task* p) {
             fn_802275A4(o->f100, 0);
         }
         fn_80100B74(p);
+        break;
+    }
+}
+
+extern void fn_801E7E14(void *model, s16 a, s16 b, s32 mode);
+
+void fn_801089B8(Task* t) {
+    EvObj* e = t->work;
+    EvInfoMap* info;
+    s16 a;
+    s16 b;
+    s32 mode;
+    s32 v;
+    s32 cnt;
+
+    fn_801006C0(e);
+    switch (t->state) {
+    case 0:
+    case 0xfe:
+        if (e->texlist != 0) {
+            fn_80227810(e->texlist);
+        }
+        fn_801E7DF0(e->model);
+        fn_8015ED90(t);
+        e->motion = e->ext->items->count > 0 ? e->ext->items->items[0] : 0;
+        e->shape = e->ext->items->count > 1 ? e->ext->items->items[1] : 0;
+        info = e->ext->info;
+        e->speed = (f32)(u32)(info->count > 10 ? info->x2c : 0) / 100.0f;
+        info = e->ext->info;
+        v = info->count > 3 ? info->w10 : 0;
+        if (v > 0) {
+            t->f20 = -10000.0f + (f32)v;
+        }
+        t->state = 10;
+        break;
+    case 10:
+        if (lbl_80311AC0.map == 0x74 && lbl_80311AC0.room == 0x63 && e->colour.a <= -1.0f) {
+            fn_8015E600(t->work);
+            break;
+        }
+        info = e->ext->info;
+        cnt = info->count;
+        a = cnt > 8 ? info->nearDist : 0;
+        b = cnt > 9 ? info->actDist : 0;
+        mode = -1;
+        if (a != 0 && b != 0) {
+            mode = 2;
+        } else if (a != 0) {
+            mode = 0;
+        } else if (b != 0) {
+            mode = 1;
+        }
+        if (mode != -1) {
+            fn_801E7E14(e->model, a, b, mode);
+        }
+        if (fn_8015E600(t->work) == 0) {
+            info = e->ext->info;
+            if ((info->count > 4 ? info->flags : 0) & 4) {
+                fn_8029CE6C(6, 0x80, 0, 6, 0x80, 1);
+                fn_801E5DF0(e);
+                fn_8029CE6C(4, 0, 0, 7, 0, 1);
+            } else {
+                fn_801E5DF0(e);
+            }
+        }
+        break;
+    case 0xff:
+        if (e->texlist != 0) {
+            fn_802275A4(e->texlist, 0);
+        }
+        fn_8015EBF4(t->work);
+        fn_80100B74(t);
         break;
     }
 }
@@ -9622,6 +10971,113 @@ void fn_801022FC(EvObj* e) {
         e->x180 = 0;
         InitVec_801022FC(&e->home, e);
         fn_80222838(e->coll);
+    }
+}
+
+extern s32 fn_801C5F84(EvObj* e);
+typedef struct {
+    u8 pad0[0x24];
+    s32 w24, w28, w2c, w30, w34, w38;
+} Tbl_80103C10;
+
+static inline Tbl_80103C10* Info_80103C10(EvObj* e) {
+    return e->ext->info;
+}
+
+void fn_80103C10(Task* o) {
+    EvObj* e;
+    if (o == NULL || (e = o->work) == NULL) {
+        return;
+    }
+    if (o->state != 0xfe && o->state != 0xff && o->state != 0 && o->state != 3) {
+        if (fn_800D2924(e) == 0) {
+            return;
+        }
+    }
+    switch (o->state) {
+    case 0: {
+        if (fn_801C5FFC(e) != 0) {
+            fn_80227810(e->texlist);
+        }
+        if (e != NULL) {
+            f32 f;
+            f32* a;
+            f32* b;
+            fn_801173DC(0, e);
+            if (fn_801C5F84(e) != 0) {
+                ItemList* r = e->ext->items;
+                if (r->count >= 2u) {
+                    e->shape = r->items[1];
+                }
+            }
+            f = 0.0f;
+            e->speed = f;
+            e->x1a8 = f;
+            if (e->motion != NULL) {
+                f = (f32)e->motion->nbFrame - 1.0f;
+            }
+            e->x24c.x = f;
+            a = &e->home.x;
+            if (a != NULL) {
+                *a = 0.0f;
+                e->home.y = 0.0f;
+                e->home.z = 0.0f;
+            }
+            if (a != NULL && fn_801C6068(e, 14) != 0) {
+                *a = (f32)Info_80103C10(e)->w24;
+                e->home.y = (f32)Info_80103C10(e)->w28;
+                e->home.z = (f32)Info_80103C10(e)->w2c;
+            }
+            b = &e->x128.x;
+            if (b != NULL) {
+                *b = 0.0f;
+                e->x128.y = 0.0f;
+                e->x128.z = 0.0f;
+            }
+            if (b != NULL && fn_801C6068(e, 14) != 0) {
+                *b = (f32)Info_80103C10(e)->w30;
+                e->x128.y = (f32)Info_80103C10(e)->w34;
+                e->x128.z = (f32)Info_80103C10(e)->w38;
+            }
+            e->vel.x = *b - *a;
+            e->vel.y = e->x128.y - e->home.y;
+            e->vel.z = e->x128.z - e->home.z;
+            e->tpl.x0 = 5;
+        }
+        o->state = 1;
+        break;
+    }
+    case 1: {
+        if (lbl_80347450 == NULL || lbl_80347450->hit == NULL || fn_801C60A4(e) == 0 ||
+            e->ext->x04 != lbl_80347450->hit->key.id) {
+            e->x18c = 0.0f;
+        } else {
+            EvObj* t = lbl_80347450;
+            NJS_POINT3 d;
+            f32 f;
+            s32 bad;
+            d.x = t->pos.x - e->home.x;
+            d.y = t->pos.y - e->home.y;
+            d.z = t->pos.z - e->home.z;
+            f = fn_80103B38(&d, &e->vel);
+            bad = 0;
+            if (f <= 0.0f || f > 1.0f) {
+                bad = 1;
+            }
+            e->x18c = bad ? 0.0f : f * e->x24c.x;
+        }
+        fn_801E5DF0(e);
+        break;
+    }
+    case 0xfe:
+        break;
+    case 3:
+    case 0xff:
+        if (fn_801C5FFC(e) != 0) {
+            fn_802275A4(e->texlist, 0);
+        }
+        fn_80100B74(o);
+        break;
     }
 }
 
@@ -10152,11 +11608,10 @@ void fn_801081BC(Obj_801081BC *self)
     extern void fn_80107EF0(void *p);
     extern void fn_801E7E14(void *o, s16 a, s16 b, s32 mode);
     extern void fn_801E5DF0(void *p);
-    extern u32 *fn_80100684(u16 id, s32 n);
     extern void fn_800C3428(void *p);
     Sub_801081BC *s = self->sub;
     s16 m;
-    u32 *r;
+    s32 *r;
 
     switch (self->state) {
     case 0:
@@ -10210,7 +11665,7 @@ void fn_801081BC(Obj_801081BC *self)
         fn_801DBE1C(lbl_802B2460, s->h17a);
         break;
     default:
-        r = fn_80100684(*(u32 *)(s->p1c8 + 4), 4);
+        r = fn_80100684((u16)*(u32 *)(s->p1c8 + 4), 4);
         if (r != 0) {
             *r = s->w23c;
         }
@@ -10380,7 +11835,7 @@ s32 fn_8010CF78(Queue_8010B78C *m) {
     return ret;
 }
 
-static inline Rec_800F1264* lookup(Obj_800F1264* o, s32 id) {
+static inline Rec_800F1264* lonup(Obj_800F1264* o, s32 id) {
     Rec_800F1264* r = 0;
     if (o->p1c8 != 0) {
         Tbl* t = o->p1c8->t;
@@ -10390,8 +11845,8 @@ static inline Rec_800F1264* lookup(Obj_800F1264* o, s32 id) {
 }
 
 void fn_800F1264(Ctl* c, Obj_800F1264* o) {
-    s32 ok = 0;
-    Rec_800F1264* a = lookup(o, 2);
+    s32 n = 0;
+    Rec_800F1264* a = lonup(o, 2);
     Rec_800F1264* b;
     if (a != 0) {
         s32 f;
@@ -10403,10 +11858,10 @@ void fn_800F1264(Ctl* c, Obj_800F1264* o) {
             o->dst = (u8*)a + 4;
             f = 1;
         }
-        ok = f;
+        n = f;
     }
-    b = lookup(o, 5);
-    if (ok != 0 && b != 0) {
+    b = lonup(o, 5);
+    if (n != 0 && b != 0) {
         MemCopy((u8*)o->src + 4, o->dst + 4, *o->src * 8);
         o->dst = (u8*)b + 4;
         if (c->mode == 0) {
@@ -11226,6 +12681,83 @@ void fn_80108DF8(Task* o)
     }
 }
 
+
+extern s32 fn_80222B30(void *a, void *b);
+extern void fn_801DCE18(f32 *a, f32 *b, s32 c);
+extern void fn_800CF8F8(f32 *a, s32 *b);
+extern char lbl_802B24B0[];
+
+#ifdef NONMATCHING
+static inline TblEntry *FindExt_80108E30(Tbl_UNIT0000 *l, u16 id) {
+    TblEntry *e = l->entries;
+    s32 i;
+    for (i = l->count; i != 0; i--, e++) {
+        if ((u16)e->id == id) return e;
+    }
+    return 0;
+}
+
+void fn_80108E30(Task *self) {
+    EvExt *a;
+    EvObj *g;
+    f32 vec[3];
+    s32 iv;
+    TblEntry *te;
+    EvExt *e;
+    EvInfoMap *h;
+    s32 s30, s31, s30b;
+    u16 id;
+    EvObj *c;
+    switch (self->state) {
+    case 0:
+    case 0xfe: {
+        c = self->work;
+        h = c->ext->info;
+        id = h->count > 8 ? h->nearDist : 0;
+        te = FindExt_80108E30(c->x1cc, id);
+        c->x25c = te;
+        if (te == 0) fn_801DBE1C(lbl_802B24B0);
+        self->state = 1;
+        self->f20 = -1.023f;
+        break;
+    }
+    case 1:
+        if (lbl_80347450 != 0 && lbl_80347450->coll != 0) {
+            c = self->work;
+            if (fn_80222B30(c->coll, lbl_80347450->coll) != 0) {
+                a = c->ext;
+                g = lbl_80347450;
+                vec[0] = g->pos.x - a->target.x;
+                vec[1] = g->pos.y - a->target.y;
+                vec[2] = g->pos.z - a->target.z;
+                s31 = (u16)(s32)(182.04445f * a->rot.y);
+                iv = (u16)g->ang[1] - s31;
+                e = TaskEv(self)->x25c;
+                h = e->info;
+                s30 = h->count > 8 ? h->nearDist : 0;
+                fn_801000F0(s30, h->count > 9 ? h->actDist : 0);
+                if (lbl_80347450->hit != 0) {
+                    lbl_80347450->hit->key.id = s30;
+                    lbl_80347450->hit->x2e = -1;
+                    lbl_80347450->hit->x2c = -1;
+                }
+                s30b = (u16)(s32)(182.04445f * e->rot.y);
+                fn_801DCE18(vec, vec, s30b - s31);
+                vec[0] = e->target.x + vec[0];
+                vec[1] = e->target.y + vec[1];
+                vec[2] = e->target.z + vec[2];
+                iv = s30b + iv;
+                fn_800CF8F8(vec, &iv);
+            }
+        }
+        break;
+    case 0xff:
+        fn_80100B74(self);
+        break;
+    }
+}
+#endif
+
 /* -1 when x is outside the 20000..28598 id range, else 0 below 23000 and 1 from 23000 up. */
 s32 fn_800DE554(u32 x)
 {
@@ -11655,29 +13187,106 @@ static inline void SeqStart(Obj_80107C24 *o) {
     o->cnt = t->ent[0].d;
 }
 
-s32 fn_80107D90(Parent_80107D90 *p) {
+s32 fn_80107D90(Task *p) {
     Obj_80107C24 *o;
 
-    switch (fn_8015F218((void *)(p->obj))) {
+    switch (fn_8015F218(p->work)) {
     case 1:
-        o = p->obj;
-        if (p->f19 != 1) {
+        o = p->work;
+        if (p->state != 1) {
             SeqStart(o);
         }
         o->f190 = o->f24c;
         o->state3 = 3;
-        p->f19 = 3;
+        p->state = 3;
         return 1;
     case 2:
-        o = p->obj;
+        o = p->work;
         SeqStart(o);
         o->state3 = 4;
-        p->f19 = 4;
+        p->state = 4;
         return 1;
     default:
         return 0;
     }
 }
+
+#ifdef NONMATCHING
+void fn_80107EF0(Task *self) {
+    Obj_80107C24 *o;
+    ItemList *items;
+    SeqEnt *e;
+    SeqInfo *info;
+    SeqTbl *t;
+    EvExt *ext;
+    s32 *r;
+    s32 cnt;
+    s32 idx;
+    s32 total;
+    void **ip;
+    s32 n;
+
+    self->state = 5;
+    o = self->work;
+    fn_800C3518(o);
+    if ((ext = o->ext) != 0 && (info = ext->info) != 0 && (items = ext->items) != 0 && (cnt = info->count) >= 15) {
+        t = &info->seq;
+        n = t->count;
+        if (cnt == (n - 1) * 4 + 15 && n > 0) {
+            idx = t->ent[0].b;
+            total = items->count;
+            do {
+                if (total <= idx || items->items[idx] == 0) {
+                    break;
+                }
+            } while (--n > 0);
+            if (n != 0) {
+                return;
+            }
+            o->tbl = t;
+            if (t->w0 != 0 || t->w4 != 0) {
+                fn_801E7DF0(o->model);
+                if (t->w0 != 0 && t->w4 == 0) {
+                    o->mode = 0;
+                } else if (t->w0 == 0 && t->w4 != 0) {
+                    o->mode = 1;
+                } else {
+                    o->mode = 2;
+                }
+                o->near = t->w0;
+                o->far = t->w4;
+            } else {
+                o->mode = -1;
+            }
+            SeqStart(o);
+            o->state3 = 0;
+            self->state = 1;
+            o = self->work;
+            r = fn_80100684((u16)o->ext->x04, 4);
+            if (fn_801E183C() == 0) {
+                if (r[0] == 4) {
+                    self->state = 4;
+                } else if (r[0] == 3) {
+                    t = o->tbl;
+                    e = t->ent;
+                    o->idx = t->count - 1;
+                    e += o->idx;
+                    o->timer = 0;
+                    fn_801E735C(e->b, o, (f32)e->c / 100.0f);
+                    o->f18c = (f32)(o->anim->len - 1);
+                    if (e->d > 0) {
+                        o->cnt = 0;
+                    } else {
+                        o->cnt = -1;
+                    }
+                    self->state = 3;
+                }
+            }
+            fn_80107D90(self);
+        }
+    }
+}
+#endif
 
 /* Parses a "(r,g,b)" colour after the cursor; "()" gives the default grey.
  * On a syntax error the cursor is put back and 0 is returned. */
@@ -11749,8 +13358,8 @@ void fn_8010E074(Task* o) {
 }
 
 void fn_800F113C(Ctl* c, Obj_800F1264* o) {
-    s32 ok = 0;
-    Rec_800F1264* a = lookup(o, 3);
+    s32 n = 0;
+    Rec_800F1264* a = lonup(o, 3);
     if (a != 0) {
         s32 f;
         u32 k = (u32)(a->n * 8 + 4) >> 2;
@@ -11761,9 +13370,9 @@ void fn_800F113C(Ctl* c, Obj_800F1264* o) {
             o->dst = (u8*)a + 4;
             f = 1;
         }
-        ok = f;
+        n = f;
     }
-    if (ok != 0) {
+    if (n != 0) {
         if (c->mode == 0) {
             o->w20c = 1;
             fn_800F0C68((void *)(o));
@@ -12522,12 +14131,11 @@ s32 fn_800F1E5C(EvObj *o, Angle *rot, NJS_POINT3 *dir) {
     return result;
 }
 
-extern EvHit *fn_802258BC(s32 a, s32 b, s32 c);
+extern EvHit *fn_802258BC(s32 a, u16 b, s32 c);
 extern f32 fn_801C59F8(NJS_POINT3 *a, NJS_POINT3 *b);
 /* Its floats come first: the call evaluates them before the 0. */
 extern void fn_800D23A8(f32 b, f32 c, s32 a, s32 n);
 extern void fn_8022B8BC(s32 a, s32 b);
-extern s32 fn_80222B30(void *a, void *b);
 extern s32 fn_801C5758(NJS_POINT3 *p, NJS_POINT3 *target, NJS_POINT3 *vel);
 
 static inline s32 Ok_8010250C(NJS_POINT3 *p, EvHit *h) {
@@ -12651,7 +14259,7 @@ void fn_8010250C(Task *t) {
     EvObj *e;
     NJS_POINT3 p;
     NJS_POINT3 q;
-    s32 ok;
+    s32 n;
 
     if (t == NULL || (e = t->work) == NULL) return;
     switch (t->state) {
@@ -12674,8 +14282,8 @@ void fn_8010250C(Task *t) {
     case 3:
         Tick_8010250C(e);
         Move_8010250C(e);
-        ok = Ground_8010250C(&p, e);
-        if (!ok) {
+        n = Ground_8010250C(&p, e);
+        if (!n) {
             t->state = 7;
         } else if (e->pos.y <= p.y) {
             fn_801021EC(e, &e->home, &e->vel);
@@ -12688,8 +14296,8 @@ void fn_8010250C(Task *t) {
         Tick_8010250C(e);
         Move_8010250C(e);
         e->vel.y -= e->x258;
-        ok = Ground_8010250C(&q, e);
-        if (!ok || fn_801C5758(&e->pos, &e->home, &e->vel) != 0) {
+        n = Ground_8010250C(&q, e);
+        if (!n || fn_801C5758(&e->pos, &e->home, &e->vel) != 0) {
             t->state = 5;
         } else if (e->pos.y <= q.y) {
             Land_8010250C(e, q.y);
@@ -12867,13 +14475,13 @@ static inline void Timer_800F7D6C(EvObj* e, s16 t) {
 }
 
 s32 fn_800F7D6C(EvObj* e) {
-    s32 ok;
+    s32 n;
     s32 v = 10;
-    ok = 0;
+    n = 0;
     if (e != NULL && fn_801C5F84(e) != 0 && fn_801C6068(e, 14) != 0) {
-        ok = 1;
+        n = 1;
     }
-    if (ok != 0) {
+    if (n != 0) {
         EvSub* t = e->sub;
         s32 idx;
         if (t != NULL) {
@@ -12930,6 +14538,249 @@ s32 fn_800F7D6C(EvObj* e) {
         }
     }
     return v;
+}
+
+static inline void Reset_800F81B8(EvObj* e) {
+    if (e != NULL) {
+        e->state = 0;
+    }
+}
+
+s32 fn_800F81B8(EvObj* e) {
+    s32 v = 10;
+    if (e != NULL && fn_801C6068(e, 14) != 0) {
+        switch (EvMapInfo(e)->actDist) {
+        case 0:
+            Reset_800F81B8(e);
+            v = 2;
+            break;
+        case 1:
+            Reset_800F81B8(e);
+            Timer_800F7D6C(e, 20);
+            v = 3;
+            break;
+        case 2:
+            Reset_800F81B8(e);
+            Timer_800F7D6C(e, 30);
+            v = 4;
+            break;
+        case 3:
+            Reset_800F81B8(e);
+            Timer_800F7D6C(e, 20);
+            v = 5;
+            break;
+        case 4:
+            Reset_800F81B8(e);
+            Timer_800F7D6C(e, 30);
+            v = 6;
+            break;
+        case 5:
+            Reset_800F81B8(e);
+            Timer_800F7D6C(e, 20);
+            v = 7;
+            break;
+        case 6:
+            Reset_800F81B8(e);
+            Timer_800F7D6C(e, 30);
+            v = 8;
+            break;
+        case 7:
+        case 8:
+        default:
+            Reset_800F81B8(e);
+            v = 2;
+            break;
+        }
+    }
+    return v;
+}
+
+extern void fn_800F78C0(EvObj* e);
+extern void fn_800F642C(EvObj* e);
+extern void fn_800F374C(EvObj* e);
+extern void fn_800F2464(EvObj* e);
+extern void fn_80118AA4(EvObj* e);
+extern void fn_801C5BF4(EvObj* e, u16 motion);
+extern s32 lbl_80347578;
+extern s32 lbl_80347544;
+
+static inline u32 ItemsLast_800F850C(EvObj* e) {
+    return e->ext->items->count - 1;
+}
+
+void fn_800F850C(Task* t) {
+    EvObj* e = t->work;
+    if (fn_8015E600(e) != 0 || e->colour.a <= -1.0f || fn_800D2924(e) == 0) {
+        return;
+    }
+    {
+        switch (t->state) {
+        case 2:
+            fn_800F78C0(e);
+            break;
+        case 3:
+            fn_800F642C(e);
+            break;
+        case 4:
+            fn_800F642C(e);
+            break;
+        case 5:
+            fn_800F374C(e);
+            break;
+        case 6:
+            fn_800F374C(e);
+            break;
+        case 7:
+            fn_800F2464(e);
+            break;
+        case 8:
+            fn_800F2464(e);
+            break;
+        case 9: {
+            s32 c = 0;
+            if (lbl_80347578 == 0 && lbl_80347544 == 0) {
+                c = 1;
+            }
+            if (c ? 0 : 0) {
+                if (e->motionId < ItemsLast_800F850C(e)) {
+                    e->motionId++;
+                }
+                while (e->motionId < ItemsLast_800F850C(e) && e->ext->items->items[e->motionId] == 0) {
+                    e->motionId++;
+                }
+                if (e->motionId >= ItemsLast_800F850C(e)) {
+                    e->motionId = 1;
+                }
+                fn_801C5BF4(e, e->motionId);
+            }
+            if (e != NULL) {
+                fn_80118AA4(e);
+                fn_801E5DF0(e);
+            }
+            break;
+        }
+        case 10:
+            if (e != NULL) {
+                fn_801C5F84(e);
+                fn_801C6068(e, 14);
+                if (e != NULL) {
+                    fn_80118AA4(e);
+                    fn_801E66E0(e);
+                }
+            }
+            break;
+        case 0xfe:
+            break;
+        case 0xff:
+            break;
+        }
+        if (e->coll != NULL) {
+            e->coll->pos[0] = e->pos.x;
+            e->coll->pos[1] = e->pos.y;
+            e->coll->pos[2] = e->pos.z;
+            e->coll->ang[0] = e->ang[0];
+            e->coll->ang[1] = e->ang[1];
+            e->coll->ang[2] = e->ang[2];
+            fn_80222838(e->coll);
+        }
+    }
+}
+
+extern s32 fn_800F816C(u8* obj);
+extern s32 lbl_80347530;
+
+static inline s32 Ready_800F87A0(EvObj* e) {
+    s32 ok = 0;
+    if (e != NULL && fn_801C5F84(e) != 0 && fn_801C6068(e, 14) != 0) {
+        ok = 1;
+    }
+    return ok;
+}
+
+void fn_800F87A0(Task* t) {
+    EvObj* e;
+    s32 n;
+    s32 saved = lbl_80347530;
+    lbl_80347530 = 1;
+    e = t->work;
+    switch (t->state) {
+    case 0: {
+        EvHit* h;
+        n = 0;
+        if (fn_801C6068(e, 14) != 0) {
+            n = EvMapInfo(e)->w4;
+        }
+        h = fn_802258BC(0xFFFF, n, 2);
+        e->hit = h;
+        if (h == NULL) {
+            return;
+        }
+        if (e->texlist != NULL && e->texlist->nbTexture != 0) {
+            fn_80227810(e->texlist);
+        }
+        t->state = 1;
+    }
+    case 1: {
+        u8 v;
+        fn_801173DC(0, e);
+        e->tpl.x0 = 5;
+        e->kind = 0;
+        if (e != NULL) {
+            e->x21c = 10;
+        }
+        v = 1;
+        if (e != NULL) {
+            v = e->x21c;
+        }
+        if (e != NULL) {
+            e->motionId = v;
+            fn_801C5BF4(e, e->motionId);
+        }
+        e->speed = fn_801C5D04(e, 12);
+        n = 0;
+        e->x1a8 = 0.33333334f;
+        e->x172 = n;
+        n = Ready_800F87A0(e);
+        if (n == 0) {
+            t->state = 10;
+        } else {
+            t->state = fn_800F81B8(e);
+            fn_8015ED90(t);
+            fn_8015EB8C(e, 13, fn_800F816C);
+            fn_800F850C(t);
+        }
+        if ((EvMapInfo(e)->count > 3 ? EvMapInfo(e)->w10 : 0) >= 0) {
+            e->id |= 0x1000;
+        }
+        break;
+    }
+    default:
+        fn_800F850C(t);
+        break;
+    case 10:
+        if (e != NULL) {
+            fn_801C5F84(e);
+            fn_801C6068(e, 14);
+            if (e != NULL) {
+                fn_80118AA4(e);
+                fn_801E66E0(e);
+            }
+        }
+        break;
+    case 0xff:
+    case 11:
+        fn_8015EBF4(e);
+        if (e->texlist != NULL && e->texlist->nbTexture != 0) {
+            fn_802275A4(e->texlist, 0);
+        }
+        fn_801E1784(e->hit);
+        e->hit = NULL;
+        fn_80100B74(t);
+        break;
+    case 0xfe:
+        break;
+    }
+    lbl_80347530 = saved;
 }
 
 extern void fn_801D7ED4(Sprite* s, f32 z, f32 a, f32 b);
@@ -13160,7 +15011,7 @@ inline void FreeBufs_80101828(void) {
 }
 
 inline s32 SavePlayer_80101828(void) {
-    s32 ok;
+    s32 n;
     lbl_80346E44 = fn_800C1C24();
     if (lbl_80346E44 > 0) {
         fn_80226D14();
@@ -13169,15 +15020,15 @@ inline s32 SavePlayer_80101828(void) {
         lbl_80347480 = lbl_80347450->pos.z;
         lbl_8034747C = lbl_80347450->ang[1];
         lbl_80347478 = lbl_80347450->hit->key.id;
-        ok = 1;
+        n = 1;
     } else {
-        ok = 0;
+        n = 0;
     }
-    return ok;
+    return n;
 }
 
 void fn_80101828(void) {
-    s32 ok = 0;
+    s32 n = 0;
 
     if (lbl_803475D8 == 1) {
         lbl_80311AD4[6] = 15;
@@ -13211,21 +15062,21 @@ void fn_80101828(void) {
         }
         break;
     case 5:
-        ok = 0;
+        n = 0;
         lbl_80311AC0.p0c = fn_80109D74(lbl_80346E54);
         if (lbl_80311AC0.p0c != NULL) {
             if (lbl_80346E50 != NULL) {
                 lbl_80311AC0.p10 = fn_80109D74(lbl_80346E50);
                 if (lbl_80311AC0.p10 == NULL) {
-                    ok = 0;
+                    n = 0;
                 } else {
-                    ok = 1;
+                    n = 1;
                 }
             } else {
-                ok = 1;
+                n = 1;
             }
         }
-        if (ok == 1) {
+        if (n == 1) {
             if (fn_800C7DD4() == 1) {
                 lbl_80311AD4[6] = 6;
             } else {
@@ -13242,15 +15093,15 @@ void fn_80101828(void) {
         fn_8022642C();
         if (lbl_80311AC0.map == 0x83 && lbl_80311AC0.room == 'e') {
             fn_802126C8();
-            for (ok = 0; ok < 200; ok++) {
+            for (n = 0; n < 200; n++) {
                 fn_80212130();
             }
-            ok = 1;
+            n = 1;
         }
         fn_8012A39C();
         fn_8022642C();
         lbl_80311AD4[6] = 8;
-        if (ok == 0) {
+        if (n == 0) {
             fn_802126C8();
         }
         lbl_803473EC = 0;
@@ -13887,7 +15738,7 @@ void fn_800F1DB4(Mob* e, s16 a, s32 step, f32* out)
 }
 
 /* The highlight band behind the selected row. */
-void fn_8010C404(MsgWin *w, f32 alpha) {
+void fn_8010C404(Queue_8010B78C *w, f32 alpha) {
     Quad v[4];
     u32 col;
     u32 a, c, t0, t1, t2, t3;
@@ -13907,15 +15758,15 @@ void fn_8010C404(MsgWin *w, f32 alpha) {
         col = (t0 << 24) | (t1 << 16) | (t2 << 8) | t3;
     }
     z = fn_801DBD9C(-1.021f);
-    v[0].x = w->x;
-    v[0].y = w->y + w->base + w->row * 0x18;
+    v[0].x = w->s10;
+    v[0].y = w->s12 + w->s32 + w->s1c * 0x18;
     v[0].z = z;
     v[0].colour = col;
-    v[1].x = w->x;
+    v[1].x = w->s10;
     v[1].y = 24.0f + v[0].y;
     v[1].z = z;
     v[1].colour = col;
-    v[2].x = w->x + 0x240;
+    v[2].x = w->s10 + 0x240;
     v[2].y = v[0].y;
     v[2].z = z;
     v[2].colour = col;
@@ -13954,25 +15805,25 @@ void *fn_80109E7C(void *name, s32 id) {
     return e->p8;
 }
 
-static inline void Style_8010C5BC(TextNode *o, Item_8010C5BC *p, f32 a)
+static inline void Style_8010C5BC(TextNode *o, Seg *p, f32 a)
 {
     u32 c;
-    o->st.sx = p->sx;
-    o->st.sy = p->sy;
+    o->st.sx = p->f0c;
+    o->st.sy = p->f10;
     if (a == 1.0f) {
-        o->st.colour = p->colour;
+        o->st.colour = p->w08;
     } else {
-        c = p->colour * a;
-        o->st.colour = (p->colour & 0x00FFFFFF) | (c & 0xFF000000);
+        c = p->w08 * a;
+        o->st.colour = (p->w08 & 0x00FFFFFF) | (c & 0xFF000000);
     }
     o->st.z = -1.02f;
 }
 
-void fn_8010C5BC(f32 a, s16 x, s16 y, Item_8010C5BC *p, s16 n)
+void fn_8010C5BC(f32 a, s16 x, s16 y, Seg *p, s16 n)
 {
     TextNode *o;
     s32 left;
-    Item_8010C5BC *q;
+    Seg *q;
 
     if (a == 0.0f) {
         return;
@@ -13980,7 +15831,7 @@ void fn_8010C5BC(f32 a, s16 x, s16 y, Item_8010C5BC *p, s16 n)
     left = n;
     q = p;
     while (q != 0) {
-        if (q->skip == 0) {
+        if (q->kind == 0) {
             break;
         }
         q = q->next;
@@ -13989,7 +15840,7 @@ void fn_8010C5BC(f32 a, s16 x, s16 y, Item_8010C5BC *p, s16 n)
     if (q == 0) {
         return;
     }
-    if (q->sx != 2.0f) {
+    if (q->f0c != 2.0f) {
         o = TextPrintN(x, y, q->text, left);
     } else {
         o = TextPrintN(x + 12, y + 12, q->text, left);
@@ -13997,15 +15848,15 @@ void fn_8010C5BC(f32 a, s16 x, s16 y, Item_8010C5BC *p, s16 n)
     if (o != 0) {
         Style_8010C5BC(o, q, a);
     }
-    left -= q->len;
+    left -= q->chars;
     q = q->next;
     while (q != 0 && left > 0) {
-        if (q->skip == 0) {
+        if (q->kind == 0) {
             o = TextContinueN(q->text, left);
             if (o != 0) {
                 Style_8010C5BC(o, q, a);
             }
-            left -= q->len;
+            left -= q->chars;
         } else {
             left--;
         }

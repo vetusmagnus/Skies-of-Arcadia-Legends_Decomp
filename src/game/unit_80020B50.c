@@ -464,6 +464,32 @@ void fn_80020B8C(Tsk* t, s16 a, s16 b, s32 flag) {
 }
 
 
+s32 fn_8002111C(s8 id, s32 arg, s16 sel)
+{
+    Tsk* o = F2(id);
+    s32 r;
+
+    o->work->x4c->xec &= ~1;
+    switch (sel) {
+    case 8:
+    case 0x18:
+    case 0x1d:
+        o = F2(id);
+        if (fn_80020250(o, 0x20, arg) == 0) {
+            o = F2(id);
+            r = fn_80020250(o, 0xb, arg);
+        } else {
+            r = 1;
+        }
+        break;
+    default:
+        o = F2(id);
+        r = fn_80020250(o, 0xb, arg);
+        break;
+    }
+    return r;
+}
+
 void fn_80021784(Tsk *t) {
   Dat *d = t->work->x4c;
   if (d->xec & 0x8000) {
