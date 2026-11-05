@@ -3522,6 +3522,15 @@ void fn_80295EB8(NjModel* m) {
     }
 }
 
+void fn_80295FEC(NjCacheEnt* buf, s32 size) {
+    s32 i;
+    lbl_80347E84 = buf;
+    size = (u32)size >> 4;
+    for (i = 0; i < size; i++) {
+        buf->key = 0;
+    }
+}
+
 #pragma optimization_level 1
 void fn_80296090(s32 i) { lbl_80347E88 = &lbl_80345770[i]; }
 #pragma optimization_level reset

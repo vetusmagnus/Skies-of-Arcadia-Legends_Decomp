@@ -206,14 +206,15 @@ typedef struct Ent_802EE7C0 {
 extern Ent_802EE7C0 lbl_802EE7C0[];
 extern int strncmp(const char *a, const char *b, u32 n);
 extern int fn_8025EF88(const char *a, const char *b);
-/* lbl_80308428: 8 pairs of 3-word vectors (0xc0 bytes). */
+/* lbl_80308428: 8 entries of 6 callbacks (0x18 bytes each): a[] and b[] are run pairwise. */
+typedef void (*SlotFn)(void* obj);
 typedef struct Pair_801C86D8 {
-    void* a[3];
-    s32 b[3];
+    SlotFn a[3];
+    SlotFn b[3];
 } Pair_801C86D8;
 extern Pair_801C86D8 lbl_80308428[8];
-extern void fn_801C8590(void);
-extern void fn_802938C0(void (*cb)(void));
+extern void fn_801C8590(void* obj);
+extern void fn_802938C0(void (*cb)(void* obj));
 typedef struct Rec_801C5D88 {
     u8 pad0[0x1c];
     u32* lst;
@@ -1027,8 +1028,9 @@ s32 fn_801C8A0C(char *s) {
 }
 
 extern char lbl_802C3BE8[];
+extern char lbl_802C3C00[];
 extern void fn_801DBE1C(const char* fmt, ...);
-static inline void SlotRemove(Pair_801C86D8* tab, void* id) {
+static inline void SlotRemove(Pair_801C86D8* tab, SlotFn id) {
     s32 i;
     for (i = 0; i < 8; i++) {
         if (tab[i].a[1] == id) {
@@ -1040,14 +1042,14 @@ static inline void SlotRemove(Pair_801C86D8* tab, void* id) {
     }
     fn_801DBE1C(lbl_802C3BE8);
 }
-void fn_801C83B4(void* id) {
+void fn_801C83B4(SlotFn id) {
     if (!id) {
         fn_801DBE1C(lbl_802C3BE8);
     }
     SlotRemove(lbl_80308428, id);
 }
 
-/* Clears the 8 vector pairs and registers fn_801C8590 as a callback. */
+/* Clears the 8 callback entries and registers fn_801C8590 as a callback. */
 void fn_801C86D8(void)
 {
     s32 i, j;
@@ -1097,6 +1099,38 @@ void *fn_801C8930(void *h) {
         return (u8 *)h + 8;
     }
     return h;
+}
+
+static inline s32 Known2(s32 id) {
+    u32 *q;
+    s32 r;
+    if (id > 0) {
+        q = lbl_802EE798;
+        while (*q != 0 && id != *q) {
+            q++;
+        }
+        r = *q != 0;
+    } else {
+        r = 0;
+    }
+    return r;
+}
+
+/* A resource header: the id, then 8 bytes in, the payload. */
+typedef struct ResHdr { s32 id; u8 pad4[4]; } ResHdr;
+
+s32 fn_801C8994(ResHdr **pp) {
+    ResHdr *h = *pp;
+    s32 known;
+    if (h == NULL) {
+        *pp = NULL;
+        return 0;
+    }
+    known = Known2(h->id);
+    if (known == 1) {
+        *pp = h + 1;
+    }
+    return known;
 }
 
 void fn_801C8828(u8 *base) {
@@ -1153,12 +1187,44 @@ void fn_801C8828(u8 *base) {
     }
 }
 
+static inline f32 DistXZ(NJS_POINT3 *a, NJS_POINT3 *b) {
+    f32 r = 0.0f;
+    if (a && b) {
+        NJS_POINT3 d;
+        d.x = a->x - b->x;
+        d.y = r;
+        d.z = a->z - b->z;
+        r = njScalor(&d);
+    }
+    return r;
+}
+
+BOOL fn_801C57F4(NJS_POINT3 *a, NJS_POINT3 *b, f32 range) {
+    BOOL r = TRUE;
+    if (a && b) {
+        r = DistXZ(a, b) <= range;
+    }
+    return r;
+}
+
 f32 fn_801C599C(NJS_POINT3 *a, NJS_POINT3 *b) {
     f32 r = 0.0f;
     if (a && b) {
         NJS_POINT3 d;
         d.x = a->x - b->x;
         d.y = r;
+        d.z = a->z - b->z;
+        r = njScalor(&d);
+    }
+    return r;
+}
+
+f32 fn_801C59F8(NJS_POINT3 *a, NJS_POINT3 *b) {
+    f32 r = 0.0f;
+    if (a && b) {
+        NJS_POINT3 d;
+        d.x = a->x - b->x;
+        d.y = a->y - b->y;
         d.z = a->z - b->z;
         r = njScalor(&d);
     }
