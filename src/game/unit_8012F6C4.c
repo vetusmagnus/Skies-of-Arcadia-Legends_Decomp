@@ -7,7 +7,23 @@
 #include <string.h>
 #include "game/util.h"
 typedef struct {
-    u8 pad0[1];
+    u8 pad0[4];
+    f32 f4;
+    u8 pad8[4];
+    f32 fc;
+    u8 pad10[4];
+    u32 x14;
+} Fx;
+typedef struct {
+    u8 pad0[4];
+    Fx *x4;
+    s32 x8;
+    u8 padc[0x14 - 0xc];
+    f32 f14;
+    f32 f18;
+} Obj;
+typedef struct {
+    s8 x0;
     u8 x1;
     u8 pad2[2];
     s32 x4;
@@ -31,28 +47,31 @@ typedef struct {
 typedef struct {
     u8 pad[0x24];
     Sys_8012FF48 *x24;
-    void **x28;         /* sprites */
+    Obj **x28;          /* sprites */
 } Holder_8012FF48;
 typedef struct {
-    u8 pad_0[0x4];
+    s8 x0;
+    s8 x1;
+    s8 x2;
+    s8 x3;
     s8 v0;
     u8 pad_5[0x3];
     s32 v1;
     s32 v2;
     s32 v3;
-    u8 pad_14[0x4];
+    s32 v4;
     char* msg;
     s32 kind[3];
 } Sys_8013360C;
 typedef struct {
     u8 pad[0x24];
     Sys_8013360C *x24;
+    Obj **x28;
 } Holder_8013360C;
 extern Holder_8012FF48 *lbl_80346F40;
 extern Holder_8013360C *lbl_80346F58;
 extern void* lbl_80346F50;
 extern void* lbl_803475A8;
-extern u8 lbl_80305FC0[];
 s32 fn_80136A28(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f);
 s32 fn_801365D8(s32 a, s32 b, s32 c, s32 d, s32 e);
 void *fn_802268E8(void *a, void *);
@@ -62,9 +81,8 @@ typedef struct {
     u8 flags;
     u8 state;
 } Task_801303D0;
-extern s32 lbl_80305FA0[8];
+extern void *lbl_80305FA0[2][4];
 extern void fn_80131254(void);
-extern s32 fn_801305E4(void);
 void fn_801303D0(Task_801303D0 *t);
 struct Mgr;
 void fn_80131734(struct Mgr *s);
@@ -119,7 +137,7 @@ extern void *lbl_80346F00;
 extern Sys_80132458 *lbl_80346EF8;
 extern void FieldPartyStatusDraw(void);
 void fn_80132458(Task_801303D0 *t);
-void fn_801331AC(void);
+void fn_801331AC(Task_801303D0 *t);
 typedef struct Fn80130040Inner {
     u8 pad0[0xa8];
     s32 dst[8];
@@ -130,6 +148,8 @@ typedef struct Fn80130040Mgr {
     Fn80130040Inner *inner;
 } Fn80130040Mgr;
 extern void fn_80130C6C(void);
+extern void fn_80130D30(void);
+extern s32 fn_801305E4(void);
 typedef struct Fn80130264Inner {
     u8 pad0[0xc];
     s32 dst[8];
@@ -163,26 +183,7 @@ typedef struct Fn80131500Mgr {
 } Fn80131500Mgr;
 extern void *lbl_80346F04;
 extern void *lbl_80346F08;
-typedef struct {
-    u32 id;
-    f32 x;
-    f32 y;
-    u32 flags;
-    u32 aux;
-    f32 sx;
-    f32 sy;
-} FnBlock;
-typedef struct {
-    u8 pad[0x28];
-    u32 *table;
-} FnRoot;
-extern void fn_8012A9A8(FnBlock *b);
 extern void* fn_801D68C4(void* a, u32 n);
-typedef struct {
-    u8 pad0[0x14];
-    f32 f14;
-    f32 f18;
-} Obj;
 typedef struct {
     Obj *obj;
     f32 f4;
@@ -194,6 +195,8 @@ typedef struct {
 } Args;
 extern void* lbl_80346EFC;
 extern void fn_8012A954(Args *a);
+extern void fn_8012A9A8(Args *a);
+extern s32 lbl_80347620;
 /* fn_80133BE0's number record: a value drawn at (x, y). */
 typedef struct {
     s16 x;
@@ -246,6 +249,7 @@ typedef struct {
     s32 x5c;
     Member mem[5];
 } Party;
+extern Party lbl_80305FC0[];
 /* lbl_803063F0: the battle menu's system record (fn_80135598). */
 typedef struct {
     s8 order[4];
@@ -261,13 +265,6 @@ void fn_80134E7C(Party *party);
 void fn_80135290(Item *v, s32 slot, s32 add);
 s32 fn_8021A1C4(s8 *out);
 s32 fn_8021A83C(Save1568 *ship, void *crew);
-typedef struct {
-    s16 v0;
-    s16 v2;
-    s16 v4;
-    s16 v6;
-    s16 v8;
-} Src;
 extern Big *fn_80135598(void);
 /* fn_80131658's record: grid[x][y][a] = b, sel[x][y] = c. */
 typedef struct {
@@ -330,17 +327,25 @@ typedef struct Rec5 {
 extern Rec5 lbl_80308E90[8];
 typedef struct Inner {
     s8 x0;              /* 0 while idle (fn_80131734) */
-    u8 pad1[8];
-    u8 grid[8][4][4];
-    u8 sel[8][4];
+    u8 pad1;
+    s8 x2;
+    s8 x3;
+    f32 f4;
+    s8 x8;
+    s8 grid[8][4][4];
+    s8 sel[8][4];
+    s8 slot[4];         /* 0xA9 */
+    s8 psel;            /* 0xAD */
+    s8 xae;
 } Inner;
+
 typedef struct Mgr {
     u8 pad0[0x18];
     u8 flags;           /* 0x18 */
     u8 state;           /* 0x19 */
     u8 pad1a[0x24 - 0x1a];
     Inner *inner;
-    void **x28;         /* 0x28: two sprites (fn_80131734) */
+    Obj **x28;          /* 0x28: two sprites (fn_80131734) */
 } Mgr;
 extern Mgr *lbl_80346F48;
 typedef struct Pad_8013A794 {
@@ -770,8 +775,309 @@ void fn_80131734(Mgr *s) {
     }
 }
 
+void fn_80131A04(void) {
+    Args r;
+    Obj *o;
+    f32 fx, fy;
+    s8 i, j, k, sel;
+
+    fx = 0.0001f * (lbl_80346F48->x28[0]->x8 + lbl_80346F48->x28[1]->x8) + -1.2f;
+    lbl_80346F48->inner->f4 = lbl_80346F48->inner->f4 + (0.54f * lbl_80346F48->inner->x8) / 15.0f;
+    if (lbl_80346F48->inner->f4 < 0.16f || 0.7f < lbl_80346F48->inner->f4) {
+        lbl_80346F48->inner->x8 *= -1;
+        lbl_80346F48->inner->f4 = lbl_80346F48->inner->f4 + (0.54f * lbl_80346F48->inner->x8) / 15.0f;
+    }
+    fy = 0.0004f + fx;
+    for (i = 0; i < 8; i++) {
+        for (j = 0; j < 4; j++) {
+            sel = lbl_80346F48->inner->sel[i][j];
+            for (k = 0; k < 4; k++) {
+                s8 v = lbl_80346F48->inner->grid[i][j][k];
+                if (v == -1) continue;
+                switch (v) {
+            case 0:
+                o = fn_801D68C4(lbl_80346F04, 0x54);
+                break;
+            case 1:
+                o = fn_801D68C4(lbl_80346F04, 0x55);
+                break;
+            case 2:
+                o = fn_801D68C4(lbl_80346F04, 0x56);
+                break;
+            case 3:
+                o = fn_801D68C4(lbl_80346F04, 0x57);
+                break;
+            case 4:
+                o = fn_801D68C4(lbl_80346F04, 0x58);
+                break;
+            case 5:
+                o = fn_801D68C4(lbl_80346F04, 0x59);
+                break;
+            case 6:
+                o = fn_801D68C4(lbl_80346F04, 0x5b);
+                break;
+            case 7:
+                o = fn_801D68C4(lbl_80346F04, 0x5a);
+                break;
+            case 8:
+                o = fn_801D68C4(lbl_80346F04, 0x5c);
+                break;
+            case 9:
+                o = fn_801D68C4(lbl_80346F04, 0x5d);
+                break;
+            case 10:
+                o = fn_801D68C4(lbl_80346F04, 0x5e);
+                break;
+            case 11:
+                o = fn_801D68C4(lbl_80346F04, 0x5f);
+                break;
+            case 12:
+                o = fn_801D68C4(lbl_80346F04, 0x60);
+                break;
+            case 13:
+                o = fn_801D68C4(lbl_80346F04, 0x61);
+                break;
+            case 14:
+                o = fn_801D68C4(lbl_80346F04, 0x62);
+                break;
+            case 15:
+                o = fn_801D68C4(lbl_80346F04, 0x71);
+                break;
+            case 16:
+                o = fn_801D68C4(lbl_80346F04, 0x63);
+                break;
+            case 17:
+                o = fn_801D68C4(lbl_80346F04, 0x78);
+                break;
+            case 18:
+                o = fn_801D68C4(lbl_80346F04, 0x79);
+                break;
+            case 19:
+                o = fn_801D68C4(lbl_80346F04, 0x7f);
+                break;
+            case 20:
+                o = fn_801D68C4(lbl_80346F04, 0x80);
+                break;
+            case 21:
+                o = fn_801D68C4(lbl_80346F04, 0x81);
+                break;
+            case 22:
+                o = fn_801D68C4(lbl_80346F04, 0x89);
+                break;
+            case 23:
+                o = fn_801D68C4(lbl_80346F04, 0x8a);
+                break;
+            case 24:
+                o = fn_801D68C4(lbl_80346F04, 0x8b);
+                break;
+            case 25:
+                o = fn_801D68C4(lbl_80346F04, 0x88);
+                break;
+                default:
+                    o = fn_801D68C4(lbl_80346F04, 0x54);
+                    break;
+                }
+                o->f14 = 0xfa + i * 0x19;
+                o->f18 = 0x6d + j * 0x19;
+                r.obj = o;
+                r.f4 = 0.0001f * k + fx;
+                r.f8 = 1.0f;
+                r.c = 0;
+                r.d = 0;
+                r.e = 1.0f;
+                r.g = 1.0f;
+                if (o == fn_801D68C4(lbl_80346F04, 0x63)) lbl_80347620 = 1;
+                fn_8012A9A8(&r);
+                lbl_80347620 = 0;
+            }
+            if (sel != -1) {
+                u32 col;
+                f32 w;
+                o = fn_801D68C4(lbl_80346F04, 0x6c);
+                switch (sel) {
+                case 1:
+                    col = 0x28808040;
+                    w = 1.0f;
+                    break;
+                case 2:
+                    col = 0xb4404080;
+                    w = 1.0f;
+                    break;
+                case 0:
+                    col = 0xb4808040;
+                    w = lbl_80346F48->inner->f4;
+                    break;
+                default:
+                    col = 2;
+                    w = 1.0f;
+                    break;
+                }
+                o->f14 = 0xfa + i * 0x19;
+                o->f18 = 0x6d + j * 0x19;
+                o->x4->x14 = col;
+                r.obj = o;
+                r.f4 = fy;
+                r.f8 = 1.0f;
+                r.c = 0;
+                r.d = 1;
+                r.e = 1.0f;
+                r.g = w;
+                fn_8012A9A8(&r);
+            }
+        }
+    }
+    if (lbl_80346F48->inner->x2 == 0) {
+        Obj *o2;
+        f32 fz;
+        if (lbl_80346F48->inner->xae == 3) {
+            o2 = fn_801D68C4(lbl_80346F04, 0x6f);
+        } else {
+            o2 = fn_801D68C4(lbl_80346F08, 0x6f);
+        }
+        o2->f14 = 235.0f;
+        o2->f18 = lbl_80346F48->inner->x3 * 0x19 + 0x72;
+        r.obj = o2;
+        r.f4 = -1.1f;
+        r.f8 = 1.0f;
+        r.c = 0;
+        r.d = 0;
+        r.e = 1.0f;
+        r.g = 1.0f;
+        fn_8012A9A8(&r);
+        fz = lbl_80346F48->inner->f4;
+        if (lbl_80346F48->inner->xae == 3) {
+            o2 = fn_801D68C4(lbl_80346F04, 0x70);
+        } else {
+            o2 = fn_801D68C4(lbl_80346F08, 0x70);
+        }
+        o2->f14 = 230.0f;
+        o2->f18 = lbl_80346F48->inner->x3 * 0x19 + 0x6d;
+        r.obj = o2;
+        r.f4 = -1.0998f;
+        r.f8 = 1.0f;
+        r.c = 0;
+        r.d = 1;
+        r.e = 1.0f;
+        r.g = fz;
+        fn_8012A9A8(&r);
+    }
+}
+
+void fn_80131820(void) {
+    s32 v;
+    s32 y;
+    s8 i;
+    f32 x;
+    f32 one;
+    Args r;
+    Obj *spr;
+
+    x = 0.0001f * (lbl_80346F48->x28[0]->x8 + lbl_80346F48->x28[1]->x8) + -1.2f;
+    x = x + 0.0002f;
+    for (i = 0, y = 0x6d; i < 4; i++) {
+        v = lbl_80346F48->inner->slot[i];
+        if (v == -1) {
+            goto next;
+        }
+        switch (v) {
+        case 0:
+            spr = fn_801D68C4(lbl_80346F04, 0x72);
+            break;
+        case 1:
+            spr = fn_801D68C4(lbl_80346F04, 0x73);
+            break;
+        case 2:
+            spr = fn_801D68C4(lbl_80346F04, 0x74);
+            break;
+        case 3:
+            spr = fn_801D68C4(lbl_80346F04, 0x75);
+            break;
+        case 4:
+            spr = fn_801D68C4(lbl_80346F04, 0x76);
+            break;
+        case 5:
+            spr = fn_801D68C4(lbl_80346F04, 0x77);
+            break;
+        default:
+            spr = fn_801D68C4(lbl_80346F04, 0x72);
+            break;
+        }
+        spr->f14 = 216.0f;
+        spr->f18 = (f32)y;
+        one = (i == lbl_80346F48->inner->psel) ? 1.0f : 0.5f;
+        r.obj = spr;
+        r.f4 = x;
+        r.f8 = 1.0f;
+        r.c = 0;
+        r.d = 0;
+        r.e = one;
+        r.g = 1.0f;
+        fn_8012A9A8(&r);
+    next:
+        y += 0x19;
+    }
+}
+
 void fn_801323F0(void) {
     ((u8*)lbl_80346F50)[0x19] = 2;
+}
+
+typedef struct {
+    u8 c[4];
+} Colour4;
+extern void fn_801D65B4(u32 colour, Colour4 *out, f32 a, f32 b);
+
+void fn_80133900(void) {
+    Args a;
+    Colour4 c;
+    f32 ratio;
+    f32 t;
+    s32 i;
+
+    for (i = 0; i < 11; i++) {
+        if (i >= 0 && i < 7) {
+            a.obj = lbl_80346F58->x28[i];
+            a.f4 = 0.0001f * (f32)i + -1.3f;
+            a.f8 = 1.0f;
+            a.c = 0;
+            a.d = 0;
+            a.e = 1.0f;
+            a.g = 1.0f;
+        } else if (i == 10) {
+            ratio = (f32)lbl_80346F58->x24->v3 / (f32)lbl_80346F58->x24->v4;
+            a.obj = lbl_80346F58->x28[i];
+            a.obj->x4->fc = a.obj->x4->f4 + 80.0f * ratio;
+            fn_801D65B4(a.obj->x4->x14, &c, 1.0f, 1.0f);
+            if (ratio > 0.5f) {
+                t = 1.0f - ratio;
+                c.c[0] = 0xfa;
+                c.c[3] = 0x20;
+                c.c[1] = (s32)(376.0f * t) + 0x20;
+                c.c[2] = 0xfa - (s32)(100.0f * t);
+            } else {
+                c.c[0] = 0xfa;
+                c.c[3] = 0x20;
+                c.c[1] = (s32)(30.0f * (1.0f - 2.0f * ratio)) + 0xdc;
+                c.c[2] = 0xc8 - (s32)(168.0f * (1.0f - 2.0f * ratio));
+            }
+            a.obj->x4->x14 = (c.c[0] << 24) + (c.c[1] << 16) + (c.c[2] << 8) + c.c[3];
+            a.f4 = 0.0001f * (f32)i + -1.3f;
+            a.f8 = 1.0f;
+            a.c = 0;
+            a.d = 1;
+            a.e = 1.0f;
+            a.g = 1.0f;
+        } else {
+            a.obj = lbl_80346F58->x28[i];
+            a.f4 = 0.0001f * (f32)i + -1.3f;
+            a.f8 = 1.0f;
+            a.c = 0;
+            a.d = 0;
+            a.e = 1.0f;
+            a.g = 1.0f;
+        }
+        fn_8012A954(&a);
+    }
 }
 
 void fn_80133030(s32* src) {
@@ -1491,16 +1797,16 @@ void fn_80131500(s8 c) {
 void fn_80132128(void)
 {
     s32 i;
-    FnBlock b;
+    Args b;
 
     for (i = 0; i < 2; i++) {
-        b.id = ((FnRoot *)lbl_80346F48)->table[i];
-        b.x = -1.2f;
-        b.y = 1.0f;
-        b.flags = 0;
-        b.aux = 0;
-        b.sx = 1.0f;
-        b.sy = 1.0f;
+        b.obj = lbl_80346F48->x28[i];
+        b.f4 = -1.2f;
+        b.f8 = 1.0f;
+        b.c = 0;
+        b.d = 0;
+        b.e = 1.0f;
+        b.g = 1.0f;
         fn_8012A9A8(&b);
     }
 }
@@ -1591,7 +1897,7 @@ void fn_80134900(void)
     }
 }
 
-void fn_80134C24(Member *p, Src *src, const char *name)
+void fn_80134C24(Member *p, ShipArm *src, const char *name)
 {
     if (p != NULL) {
         if (src == NULL) {
@@ -1616,13 +1922,13 @@ void fn_80134C24(Member *p, Src *src, const char *name)
                 p->name[0x10] = 0;
             }
             p->id = -1;
-            p->b14 = src->v0;
-            p->b15 = src->v8;
-            p->s16 = src->v2;
+            p->b14 = src->type;
+            p->b15 = src->element;
+            p->s16 = src->attack;
             p->s18 = 0;
-            p->s1a = src->v6;
+            p->s1a = src->accuracy;
             p->s1c = 0;
-            p->b1e = src->v4;
+            p->b1e = src->range;
             p->b1f = 0;
             p->b20 = 0;
         }
@@ -1888,14 +2194,14 @@ void fn_801303D0(Task_801303D0 *t) {
         lbl_80346F40->x28[1] = fn_801D68C4(lbl_80346F04, 0x83);
         lbl_80346F40->x28[6] = fn_801D68C4(lbl_80346F04, 0x84);
         fn_80131254();
-        lbl_80305FA0[0] = (s32)fn_801D68C4(lbl_80346F04, 0x84);
-        lbl_80305FA0[1] = (s32)fn_801D68C4(lbl_80346F04, 0x85);
-        lbl_80305FA0[2] = (s32)fn_801D68C4(lbl_80346F04, 0x86);
-        lbl_80305FA0[3] = (s32)fn_801D68C4(lbl_80346F04, 0x87);
-        lbl_80305FA0[4] = (s32)fn_801D68C4(lbl_80346F08, 0x84);
-        lbl_80305FA0[5] = (s32)fn_801D68C4(lbl_80346F08, 0x85);
-        lbl_80305FA0[6] = (s32)fn_801D68C4(lbl_80346F08, 0x86);
-        lbl_80305FA0[7] = (s32)fn_801D68C4(lbl_80346F08, 0x87);
+        lbl_80305FA0[0][0] = fn_801D68C4(lbl_80346F04, 0x84);
+        lbl_80305FA0[0][1] = fn_801D68C4(lbl_80346F04, 0x85);
+        lbl_80305FA0[0][2] = fn_801D68C4(lbl_80346F04, 0x86);
+        lbl_80305FA0[0][3] = fn_801D68C4(lbl_80346F04, 0x87);
+        lbl_80305FA0[1][0] = fn_801D68C4(lbl_80346F08, 0x84);
+        lbl_80305FA0[1][1] = fn_801D68C4(lbl_80346F08, 0x85);
+        lbl_80305FA0[1][2] = fn_801D68C4(lbl_80346F08, 0x86);
+        lbl_80305FA0[1][3] = fn_801D68C4(lbl_80346F08, 0x87);
         t->state = 1;
         break;
     case 1:
@@ -2755,9 +3061,7 @@ inline void ClearOut(Member* o)
         o->b20 = 0;
     }
 }
-#endif
 
-#ifdef NONMATCHING
 void fn_80134D1C(Member* out, Save1568* t, void* b, s32 idx)
 {
     if (out != 0) {
@@ -2781,9 +3085,9 @@ void fn_80134D1C(Member* out, Save1568* t, void* b, s32 idx)
         }
     }
 }
+
 #endif
 
-#ifdef NONMATCHING
 static inline s32 NameCount(void) {
     s32 n = 0;
     s8 *p = fn_80135598()->order;
@@ -2838,7 +3142,6 @@ static inline s32 GetW(s32 a) {
     }
     return w;
 }
-#endif
 
 
 
@@ -2898,9 +3201,7 @@ static inline void Shift(s32 i)
     for (; i < 8; i++)
         lbl_80346F40->x24->dst[i] = lbl_80346F40->x24->src[i - m];
 }
-#endif
 
-#ifdef NONMATCHING
 void fn_801300E0(s32* in)
 {
     s32 i;

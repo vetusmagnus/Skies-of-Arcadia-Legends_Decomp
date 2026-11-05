@@ -45,7 +45,7 @@ typedef struct Node {
     MdlBlk *blk;         /* 0x08 */
     char name[0x20];     /* 0x0C */
     void *x2c;           /* 0x2C */
-    void *x30;           /* 0x30 */
+    struct Arg80067CA4 *x30; /* 0x30 */
     struct Node* prev;   /* 0x34 */
     struct Node* x38;    /* 0x38 next */
     u8 pad3c[8];
@@ -296,10 +296,14 @@ void fn_80015554(void);
 typedef NJS_POINT3 V3;
 /* Model table entry of a battle character record. */
 typedef struct Rec18 {
-    u32 flags;          /* 0x00 */
-    u8 pad4[4];
+    s16 type;           /* 0x00 */
+    s16 s2;             /* 0x02 */
+    s16 s4;             /* 0x04 */
+    u8 pad6[2];
     u32 flags8;         /* 0x08 */
-    u8 padc[8];
+    s16 sc;             /* 0x0C */
+    u8 pade[2];
+    f32 f10;            /* 0x10 */
     f32 f14;            /* 0x14 */
 } Rec18;
 /* Battle character record (character task work +0x4C). */
@@ -326,7 +330,7 @@ typedef struct U5C188 {
     u8 a74[0x10];       /* 0x074 */
     u8 a84[0xdc - 0x84]; /* 0x084 */
     Rec18 *tbl;         /* 0x0DC */
-    u8 pad_e0[4];
+    void *xe0;          /* 0x0E0 */
     s16 xe4;            /* 0x0E4 */
     s16 xe6;            /* 0x0E6 */
     s16 xe8;            /* 0x0E8 */
@@ -350,6 +354,8 @@ typedef struct U5C188 {
     NJS_MATRIX *x1fc;   /* 0x1FC */
     u8 pad200[4];
     s16 s204;           /* 0x204 */
+    u8 pad206[0x298 - 0x206];
+    struct CondLink *f298; /* 0x298 */
 } U5C188;
 typedef struct M5D8F8 {
     void *model;
@@ -479,37 +485,7 @@ typedef struct O5C328 {
     S5C328 *s;
 } O5C328;
 extern s32 rand(void);
-extern void fn_80071CF0(V3 *, V3 *);
-typedef struct P5D47C {
-    u8 pad0[0x10];
-    u32 flags;
-    s16 s14;
-    u8 pad16[6];
-    V3 v1c;
-    V3 v28;
-    V3 v34;
-    V3 v40;
-    V3 v4c;
-    V3 v58;
-    u8 pad64[4];
-    V3 v68;
-} P5D47C;
-typedef struct O5D47C {
-    u8 pad0[0x20];
-    V3 v20;
-    s32 ang[3];
-    V3 v38;
-    u8 pad44[0x2c];
-    s16 s70;
-    s16 state;
-    s8 b74;
-    u8 pad75[3];
-    void *p78;
-    void *p7c;
-    u8 pad80[0x34];
-    P5D47C *p;
-} O5D47C;
-extern void fn_80014AB8(s32, O5D47C *);
+extern void fn_80071CF0(void *, void *);
 extern void fn_8001E4A0(V3 *, V3 *, void *);
 extern void fn_80061518(V3 *, V3 *, void *);
 extern void fn_80071F84(s32 *, NJS_POINT3 *, NJS_POINT3 *);
@@ -626,12 +602,8 @@ typedef struct Eff {
     u8 padA[2];
     V3 pos;             /* 0x0C */
     u8 pad18[0x30 - 0x18];
-    f32 x30;            /* 0x30 */
-    f32 x34;            /* 0x34 */
-    f32 x38;            /* 0x38 */
-    f32 x3c;            /* 0x3C */
-    f32 x40;            /* 0x40 */
-    f32 x44;            /* 0x44 */
+    f32 x30[3];         /* 0x30 */
+    f32 x3c[3];         /* 0x3C */
     f32 x48;            /* 0x48 */
     f32 x4c;            /* 0x4C */
     u8 pad50[0x64 - 0x50];
@@ -768,26 +740,37 @@ extern void fn_8007D3D0(void);
 extern void fn_8007181C(void);
 extern u32 fn_8022ABEC(char *);
 extern void *fn_8022ACA8(u32);
+typedef struct PtBuf { V3 *p; u32 n; } PtBuf;
 typedef struct ChrInfo {
     s8 x0;              /* 0x00 id */
     u8 pad1[0x5];
     s16 x6;
     s16 x8;
-    u8 pad_a[0xec - 0xa];
+    u8 pad_a[0x68 - 0xa];
+    f32 f68;            /* 0x68 */
+    u8 pad_6c[0xec - 0x6c];
     u32 fec;
     u32 ff0;
-    u8 pad_f4[0x164 - 0xf4];
+    u8 pad_f4[0x158 - 0xf4];
+    void *p158;         /* 0x158 */
+    u8 pad_15c[4];
+    f32 f160;           /* 0x160 */
     f32 f164;
     u8 pad_168[0x1dc - 0x168];
     u32 x1dc;           /* 0x1DC */
-    u8 pad_1e0[0x1fc - 0x1e0];
+    u8 pad_1e0[0x1f4 - 0x1e0];
+    PtBuf *x1f4;        /* 0x1F4 */
+    u8 pad_1f8[4];
     void *f1fc;
 } ChrInfo;
-typedef struct ChrModel { u8 pad0[0xc]; char name[1]; } ChrModel;
+typedef struct ChrModel { u8 pad0[0xc]; char name[0x20]; void *x2c; } ChrModel;
 typedef struct ChrWork {
-    u8 pad0[0x10];
+    u8 pad0[8];
+    PtBuf *x8;          /* 0x08 */
+    u8 padc[4];
     ChrModel *model;    /* 0x10 */
-    u8 pad14[0x1c - 0x14];
+    s16 x14;            /* 0x14 */
+    u8 pad16[0x1c - 0x16];
     V3 v1c;
     s32 rot[3];
     u8 pad34[0x4c - 0x34];
@@ -1305,38 +1288,38 @@ typedef struct Work_80057DFC {
     Data_80057DFC* d;
 } Work_80057DFC;
 typedef NJS_POINT3 Vec3_8005D108;
-typedef struct Info_8005D108 { s8 id; } Info_8005D108;
-typedef struct Par_8005D108 { u8 pad[0x4c]; Info_8005D108* x4c; } Par_8005D108;
 typedef struct Data_8005D108 {
     u8 pad0[0x10];
-    u32 x10;
-    s16 x14;
-    u8 pad16[2];
+    u32 flags;          /* 0x10 */
+    s16 s14;
+    s16 e16;
     s16 x18;
     u8 pad1a[2];
     Vec3_8005D108 v1c;
     Vec3_8005D108 v28;
     Vec3_8005D108 v34;
-    u8 pad40[4];
-    f32 x44;
-    u8 pad48[4];
-    f32 x4c;
-    u8 pad50[0x68 - 0x50];
+    Vec3_8005D108 v40;
+    Vec3_8005D108 v4c;
+    Vec3_8005D108 v58;
+    s16 s64;
+    u8 pad66[2];
     Vec3_8005D108 v68;
     f32 x74;
+    s16 s78;
 } Data_8005D108;
 typedef struct W_8005D108 {
     u8 pad0[0x20];
-    f32 x20;
-    f32 x24;
-    u8 pad28[0x2c - 0x28];
-    Vec3_8005D108 v2c;
+    Vec3_8005D108 v20;
+    s32 ang[3];         /* 0x2c */
     Vec3_8005D108 v38;
-    u8 pad44[0x70 - 0x44];
+    u8 pad44[0x68 - 0x44];
+    u32 f68;
+    u8 pad6c[4];
     s16 t;
     s16 state;
-    u8 pad74[4];
-    Task* owner;
+    s8 b74;
+    u8 pad75[3];
+    struct ChrTask* owner;
     void* x7c;
     f32 x80;
     f32 x84;
@@ -1350,9 +1333,10 @@ typedef struct W_8005D108 {
     u8 padb0[4];
     Data_8005D108* d;
 } W_8005D108;
+extern void fn_80014AB8(s32, W_8005D108 *);
 extern Vec3_8005D108 lbl_802AD434;
-extern void fn_8001D1D8(Task*, Vec3_8005D108*);
-extern void fn_8001D288(f32*, s32, f32, f32);
+extern void fn_8001D1D8(struct ChrTask*, Vec3_8005D108*);
+extern void fn_8001D288(Vec3_8005D108*, s32, f32, f32);
 typedef struct Tb_8005DB1C {
     u8 pad0[0x10];
     u32 f10;
@@ -1487,7 +1471,7 @@ void fn_8006BEFC(O6BEFC *o);
 extern s8 lbl_803092F4[12];
 extern s8 lbl_80347335;
 extern void fn_8006C8DC(char *, char *);
-extern void fn_80074E2C(char *, char *, void *, int, int);
+extern Node *fn_80074E2C(char *, char *, void *, int, int);
 typedef struct S80062674 {
     W80064CA4 *p0;
     s16 kind;   /* 0x04 */
@@ -1504,7 +1488,7 @@ extern s32 fn_8001C1F0(void* t);
 extern s16 fn_8001552C(U5C188 *);
 extern s16 fn_8002188C(U5C188 *);
 extern void fn_800208F4(s16 *, s16 *, T5C188 *);
-extern s16 fn_800670E4(W5C188 *, s16, s16, s32);
+extern s16 fn_800670E4(W5C188 *, s16, s16, s8);
 extern s32 fn_801F52AC(void);
 /* A particle-cloud effect task (unit_80055E94; the point-sprite sibling of fn_80057038's wobble). */
 typedef NJS_POINT3 V3;
@@ -1678,7 +1662,7 @@ void fn_8007638C(void *p, void *q, u16 a);
 s32 fn_80018498(V3 *p);
 s8 fn_80018178(V3 *a, V3 *b, V3 *c, s8 *ids);
 s32 fn_8001DC7C(u8 id, CamObj *t);
-s32 fn_8001D944(u8 id, CamObj *t);
+s32 fn_8001D944(u8 id, void *t);
 void fn_8004BFD8(CamObj *t);
 void fn_80032FC4(V3 *a, V3 *b, Col_800565B0 *c, Col_800565B0 *d);
 
@@ -2158,6 +2142,18 @@ extern s16 fn_800403AC(s16, s16*, s16, s16);
 extern s32 fn_80040010(u32);
 extern void fn_80032E78(s32, void*, s16, f32, void*, s16, s32);
 
+s32 fn_80056FC4(f32 *p, s16 n)
+{
+    if (n == 0) {
+        return 0;
+    }
+    *p = *p - 1.0f / (f32)n;
+    if (*p <= -1.0f) {
+        *p = -1.0f;
+        return 0;
+    }
+    return 1;
+}
 void fn_80057038(WobTask* t)
 {
     WobWork* w = t->work;
@@ -2878,10 +2874,100 @@ extern void fn_80021AE0(char *path, char *name);
 extern void fn_80021934(char *path, char *name);
 extern s8 fn_800365FC(void);
 extern s16 fn_80008274(s16 v);
-extern s16 fn_800085EC(ChrTask *t, s16 a, s16 b, struct Ent_80008800 *d, struct CondLink *p);
+extern s16 fn_800085EC(void *t, s16 a, s16 b, struct Ent_80008800 *d, struct CondLink *p);
 extern s16 fn_8006D2C4(s32 a);
 s32 fn_8006E6E4(Hdr* h);
 
+typedef struct D5B2C8 {
+    u8 pad0[8];
+    s32 x8;
+    u8 padc[4];
+    u32 x10;
+    s16 x14;
+    u8 pad16[6];
+    u8 x1c;
+    u8 pad1d[0x2c - 0x1d];
+    u8 x2c[0x4e - 0x2c];
+    s16 x4e;
+} D5B2C8;
+typedef struct W5B2C8 {
+    s16 t;
+    u8 pad2[2];
+    ChrTask *owner;
+    f32 f8;
+    f32 fc;
+    u8 pad10[0xc];
+    V3 **x1c;
+    u8 pad20[0x60 - 0x20];
+    D5B2C8 *d;
+} W5B2C8;
+extern void fn_80073F14(void *, void *, s16, void *, s32);
+extern void fn_800325B8(void *);
+extern void fn_80056FA4(f32 *, s16);
+s32 fn_80056F30(f32 *val, s16 frames);
+s32 fn_8006DA04(s32 x);
+void fn_8005B2C8(Task *t)
+{
+    ChrWork *par;
+    W5B2C8 *w;
+    ChrInfo *info;
+    s16 i;
+    s32 k;
+    w = t->work;
+    par = w->owner->work;
+    info = par->u;
+    if (info->fec & 0x100) {
+        if (fn_80020E10(par->model->name) < 0) t->state = 4;
+    }
+    switch (t->state) {
+    case 0:
+        fn_8006D954(w->d->x8);
+        t->state = 1;
+    case 1:
+        if (w->t < w->d->x14) break;
+        if (info->x1f4 == 0) {
+            fn_80061F58(&info->x1f4, 8, 0);
+            *info->x1f4 = *par->x8;
+            fn_80061F58(&info->x1f4->p, par->x8->n * 12, 0);
+            memcpy(info->x1f4->p, par->x8->p, par->x8->n * 12);
+            for (i = 0, k = 0; i < par->x8->n; i++, k++) {
+                info->x1f4->p[k] = **w->x1c;
+            }
+        }
+        w->f8 = -1.0f + (f32)w->d->x1c / 255.0f;
+        fn_80056FA4(&w->f8, w->d->x4e);
+        t->state = 2;
+        if (w->d->x10 & 0x80000000) w->fc = info->f68;
+        fn_80073F14(par->model->x2c, info->p158, par->x14, w->d->x2c, 0x100);
+    case 2:
+        if (w->t < w->d->x14 + w->d->x4e) fn_80056F30(&w->f8, w->d->x4e);
+        info->f160 = w->f8;
+        info->ff0 |= 0x1000;
+        if (w->f8 == 0.0f) {
+            info->ff0 &= ~0x1000;
+            info->fec |= 0x400;
+            info->ff0 |= 0x800;
+        }
+        if (w->f8 >= 0.0f) t->state = 3;
+        if (fn_8006DA04(w->d->x8) && w->f8 >= 0.0f) fn_8006D8DC(w->d->x8);
+        break;
+    case 3:
+        if (fn_80014C90(info->x0, 0x4000) == 0) {
+            if (lbl_8034733C != 4) t->state = 4;
+            else switch (info->x6) { case 0xe: t->state = 4; }
+        }
+        switch (lbl_8034733C) { case 7: t->state = 4; }
+        break;
+    case 4:
+        fn_800325B8(w->owner);
+        t->state = 0xfa;
+    case 0xfa:
+        t->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    w->t++;
+}
 void fn_8005BF30(O5BF30 *o) {
     f32 tmp;
     V5BF30 b = {0.0f, 0.0f, 0.0f};
@@ -3892,6 +3978,113 @@ extern s32 fn_8002F598(s8 row);
 extern void fn_8002F630(void);
 extern void fn_80073D18(void *a, void *b, s32 n);
 
+typedef struct D5C73C {
+    u8 pad0[0x14];
+    u32 x14;
+    s16 x18;
+    s16 x1a;
+    f32 x1c;
+    f32 x20;
+    s8 x24;
+} D5C73C;
+typedef struct W5C73C {
+    s16 t;
+    u8 pad2[2];
+    ChrTask *owner;
+    s8 ids[8];
+    V3 v[8];
+    s32 x70[8];
+    D5C73C *d;
+} W5C73C;
+extern Task *lbl_80309E24[14];
+void fn_80071EEC(s32 *out, NJS_POINT3 *a, NJS_POINT3 *b);
+void fn_8005C73C(Task *t)
+{
+    W5C73C *w = t->work;
+    ChrInfo *info;
+    s16 i;
+    s16 n = 0;
+    U5C188 *i2;
+    W5C188 *cw;
+    V3 vA;
+    V3 vB;
+    s32 vC[3];
+    V3 v8;
+    f32 f31;
+    T5C188 *o2;
+    int k;
+    s32 sv;
+    ChrTask *obj;
+    info = w->owner->work->u;
+    switch (t->state) {
+    case 0:
+        for (i = 0; i < 8; i++) w->ids[i] = -1;
+        for (i = 0; i < 12; i++) {
+            if (lbl_80309E24[i] != 0) {
+                cw = lbl_80309E24[i]->work;
+                i2 = cw->u;
+                if (info->x0 != i2->id) {
+                    if (w->d->x14 & 0x40000000) {
+                        if (fn_8001D944(i2->id, w->owner)) w->ids[n++] = i2->id;
+                    } else {
+                        if (!fn_8001D944(i2->id, w->owner)) w->ids[n++] = i2->id;
+                    }
+                }
+            }
+            if (n >= 8) break;
+        }
+        t->state = 1;
+        break;
+    case 1:
+        if (w->t < w->d->x18) break;
+        f31 = 360.0f / w->d->x24;
+        if (w->d->x14 & 0x80000000) obj = fn_8001E05C(w->owner);
+        else obj = w->owner;
+        fn_80071CF0(&obj->work->v1c, &v8);
+        sv = obj->work->rot[1];
+        k = 0;
+        for (i = 0; i < 8; i++) {
+            if (w->ids[i] >= 0) {
+                o2 = fn_80021658(w->ids[i]);
+                i2 = o2->work->u;
+                fn_80071CF0(&o2->work->pos, &w->v[i]);
+                w->x70[k] = o2->work->rot[1];
+                fn_80061C80(&vA, 0, 0.0f, i * f31 + w->d->x20, w->d->x1c);
+                fn_8001E4A0(&vA, &vB, obj);
+                fn_80071CF0(&vB, &o2->work->pos);
+                if (w->d->x14 & 0x20000000) {
+                    fn_80071EEC(vC, &vB, &v8);
+                    o2->work->rot[1] = vC[1];
+                } else {
+                    o2->work->rot[1] = sv;
+                }
+                i2->ff0 |= 0x40000000;
+                k++;
+            }
+        }
+        t->state = 2;
+    case 2:
+        if (w->t != w->d->x1a) break;
+        for (i = 0; i < 8; i++) {
+            if (w->ids[i] >= 0) {
+                o2 = fn_80021658(w->ids[i]);
+                i2 = o2->work->u;
+                fn_80071CF0(&w->v[i], &o2->work->pos);
+                o2->work->rot[1] = w->x70[i];
+                i2->ff0 &= ~0x40000000;
+            }
+        }
+        t->state = 0xfa;
+        break;
+    case 0xf9:
+    case 0xfa:
+        t->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    w->t++;
+    fn_80037FD8(w->d, &t->state);
+}
 void fn_8005CAF4(s8 idx) {
     T5C188 *o;
     W5C188 *p;
@@ -3918,6 +4111,461 @@ void fn_8005CAF4(s8 idx) {
     }
 }
 
+typedef struct B5CDF0 {
+    u8 pad[0x48];
+    u32 f48;
+} B5CDF0;
+extern B5CDF0 lbl_80309EC8;
+extern void fn_80014A54(s32, W_8005D108 *);
+extern void fn_80011370(s8, s32);
+extern void fn_80011400(s32, s32);
+void fn_8005D47C(W_8005D108 *o);
+void fn_8005D108(W_8005D108* w);
+void fn_8005CDF0(Task *o) {
+    W_8005D108 *s = o->work;
+    ChrInfo *u = s->owner->work->u;
+    if (u->fec & 0x00400000) {
+        o->state = 0xfa;
+    } else {
+        fn_8001E05C(s->owner);
+    }
+    switch (o->state) {
+    case 0:
+        if ((lbl_80347394 != 0 && (lbl_80347394->work->f3c & 0x80)) || (lbl_803472F4 & 0x40000000)) {
+            o->state = 3;
+            return;
+        }
+        if ((s->d->flags & 0x80000000) && lbl_80347394 == 0) {
+            fn_8006D954(1);
+        }
+        o->state = 2;
+        if (s->d->flags & 0x00080000) {
+            fn_80040150(2, s->owner, s->d->s64, &s->x7c);
+            break;
+        }
+    case 2:
+        if (s->t >= s->d->s14 && (s->d->flags & 0x80000000) && lbl_80347394 == 0) {
+            lbl_80309EC8.f48 |= 0x40000000;
+        }
+        if (s->d->s14 < s->d->e16 && s->t >= s->d->e16) {
+            o->state = 0xfa;
+            return;
+        }
+        if (s->f68 & 0x20000000) {
+            o->state = 0xfa;
+            return;
+        }
+        switch (s->d->s78) {
+        case 0:
+            fn_8005D47C(s);
+            break;
+        case 1:
+            fn_8005D108(s);
+            break;
+        }
+        if (!(s->d->flags & 0x8000)) {
+            fn_80011370(u->x0, -1);
+            fn_80011400(u->x0, 0);
+        } else {
+            fn_80011370(-1, -1);
+        }
+        break;
+    case 0xf9:
+    case 0xfa:
+        fn_800400D8(2, s->owner, s->d->s64, &s->x7c);
+        fn_80014A54(1, s);
+        if ((s->d->flags & 0x80000000) && lbl_80347394 == 0) {
+            fn_8006D8DC(1);
+        }
+        o->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    case 3:
+        o->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    if (s->d->s14 < s->d->e16 && s->t >= s->d->e16) {
+        o->state = 0xfa;
+        return;
+    }
+    if (s->f68 & 0x20000000) {
+        o->state = 0xfa;
+        return;
+    }
+    switch (o->state) {
+    case 0:
+    case 1:
+        break;
+    default:
+        s->t++;
+        break;
+    }
+    fn_80037FD8(s->d, &o->state);
+}
+/* Script of a light fade: up to three phases, each a start frame and duration, target colours
+ * and an optional flicker. */
+typedef struct LightCfg {
+    u8 pad0[0x14];
+    s16 start[4];       /* 0x14 */
+    s16 dur[4];         /* 0x1C */
+    s16 light;          /* 0x24 */
+    u8 pad26[2];
+    f32 col1[3][3];     /* 0x28 */
+    f32 col2[3][3];     /* 0x4C */
+    s16 waveStart[3];   /* 0x70 */
+    s16 waveEnd[3];     /* 0x76 */
+    f32 waveAmp[3];     /* 0x7C */
+    s16 waveMul[3];     /* 0x88 */
+    s16 waveOff[3];     /* 0x8E */
+    s16 period[3];      /* 0x94 */
+    s16 count;          /* 0x9A */
+} LightCfg;
+/* A scene light (fn_8006B6F4): position and two colours, as fn_8004F664 reads them. */
+typedef struct Light {
+    u8 pad0[0xc];
+    f32 pos[3];         /* 0x0C */
+    u8 pad18[0x30 - 0x18];
+    f32 col1[3];        /* 0x30 */
+    f32 col2[3];        /* 0x3C */
+} Light;
+typedef struct LightWork {
+    s16 timer;          /* 0x00 */
+    s16 frame;          /* 0x02 */
+    u8 pad4[4];
+    f32 vel1[3];        /* 0x08 */
+    f32 vel2[3];        /* 0x14 */
+    f32 vel3[3];        /* 0x20 */
+    f32 cur1[3];        /* 0x2C */
+    f32 cur2[3];        /* 0x38 */
+    f32 cur3[3];        /* 0x44 */
+    f32 end1[3];        /* 0x50 */
+    f32 end2[3];        /* 0x5C */
+    f32 end3[3];        /* 0x68 */
+    f32 pos[3];         /* 0x74 */
+    Eff eff;            /* 0x80 */
+    s16 phase;          /* 0xE4 */
+    u8 padE6[2];
+    s32 saved;          /* 0xE8 */
+    u32 savedVal;       /* 0xEC */
+    LightCfg* cfg;      /* 0xF0 */
+} LightWork;
+typedef struct { u8 pad0[8]; u32 flags; } Cam_8003801C;
+extern Cam_8003801C lbl_80309E5C;
+extern void fn_8004F84C(f32* v);
+extern void fn_8004F664(Light* base, f32* out1, f32* out2, f32* src, s16 div, s8 mode);
+s32 fn_8006B670(s16 idx);
+void fn_8006B6A4(s16 idx, u32 v);
+u32 fn_8006B6C8(s16 idx);
+void *fn_8006B6F4(s16 idx);
+void fn_8005F8D8(Task* t)
+{
+    LightWork* w = t->work;
+    s16 idx = w->cfg->light;
+    Light* light;
+    s16 i;
+    f32 s;
+
+    switch (t->state) {
+    case 0:
+        if (w->timer < w->cfg->start[0]) {
+            break;
+        }
+        if (!fn_8006B670(idx)) {
+            lbl_80309E5C.flags |= 0x2000000;
+            if (idx == 0) {
+                if (w->phase == 0) {
+                    w->savedVal = fn_8006B6C8(idx);
+                    w->saved = 1;
+                    fn_8006B6A4(idx, 1);
+                }
+                fn_8004F84C(w->pos);
+                light = fn_8006B6F4(idx);
+                if (w->phase == 0) {
+                    fn_80071CF0(light->col2, w->end2);
+                    fn_80071CF0(light->col1, w->end1);
+                    fn_80071CF0(light->pos, w->end3);
+                }
+                if (w->cfg->dur[0] != 0 && w->phase == 0) {
+                    fn_8004F664(light, w->vel2, w->cur2, w->cfg->col2[w->phase], w->cfg->dur[0], 0);
+                    fn_8004F664(light, w->vel1, w->cur1, w->cfg->col1[w->phase], w->cfg->dur[0], 1);
+                    fn_8004F664(light, w->vel3, w->cur3, w->pos, w->cfg->dur[0], 2);
+                } else {
+                    w->cur1[0] = w->cfg->col1[w->phase][0];
+                    w->cur2[0] = w->cfg->col2[w->phase][0];
+                    w->cur3[0] = w->pos[0];
+                    w->cur1[1] = w->cfg->col1[w->phase][1];
+                    w->cur2[1] = w->cfg->col2[w->phase][1];
+                    w->cur3[1] = w->pos[1];
+                    w->cur1[2] = w->cfg->col1[w->phase][2];
+                    w->cur2[2] = w->cfg->col2[w->phase][2];
+                    w->cur3[2] = w->pos[2];
+                }
+            } else {
+                t->state = 0xfa;
+                return;
+            }
+        }
+        t->state = 2;
+        break;
+    case 1:
+        break;
+    case 2:
+        if (w->phase == 0 && w->timer < w->cfg->start[0] + w->cfg->dur[0]) {
+            w->cur1[0] = w->cur1[0] + w->vel1[0];
+            w->cur2[0] = w->cur2[0] + w->vel2[0];
+            w->cur3[0] = w->cur3[0] + w->vel3[0];
+            w->cur1[1] = w->cur1[1] + w->vel1[1];
+            w->cur2[1] = w->cur2[1] + w->vel2[1];
+            w->cur3[1] = w->cur3[1] + w->vel3[1];
+            w->cur1[2] = w->cur1[2] + w->vel1[2];
+            w->cur2[2] = w->cur2[2] + w->vel2[2];
+            w->cur3[2] = w->cur3[2] + w->vel3[2];
+        }
+        if (w->timer >= w->cfg->start[w->phase + 1] + w->cfg->dur[w->phase + 1]) {
+            w->phase++;
+            if (w->phase >= w->cfg->count) {
+                if (w->saved) {
+                    fn_8006B6A4(idx, w->savedVal);
+                }
+                t->state = 0xfa;
+            } else {
+                t->state = 0;
+            }
+        } else if (w->timer == w->cfg->start[w->phase + 1]) {
+            light = fn_8006B6F4(idx);
+            if (w->cfg->dur[w->phase + 1] != 0) {
+                if (!fn_8006B670(idx)) {
+                    if (w->cfg->count != 0) {
+                        if (w->cfg->count - 1 == w->phase) {
+                            fn_8004F664(light, w->vel2, w->cur2, w->end2, w->cfg->dur[w->phase + 1], 4);
+                            fn_8004F664(light, w->vel1, w->cur1, w->end1, w->cfg->dur[w->phase + 1], 4);
+                            fn_8004F664(light, w->vel3, w->cur3, w->end3, w->cfg->dur[w->phase + 1], 4);
+                        } else {
+                            fn_8004F664(light, w->vel2, w->cur2, w->cfg->col2[w->phase + 1], w->cfg->dur[w->phase + 1], 4);
+                            fn_8004F664(light, w->vel1, w->cur1, w->cfg->col1[w->phase + 1], w->cfg->dur[w->phase + 1], 4);
+                            fn_8004F664(light, w->vel3, w->cur3, w->cur3, w->cfg->dur[w->phase + 1], 4);
+                        }
+                    } else {
+                        fn_8004F664(light, w->vel2, w->cur2, w->end2, w->cfg->dur[w->phase + 1], 4);
+                        fn_8004F664(light, w->vel1, w->cur1, w->end1, w->cfg->dur[w->phase + 1], 4);
+                        fn_8004F664(light, w->vel3, w->cur3, w->end3, w->cfg->dur[w->phase + 1], 4);
+                    }
+                }
+            } else {
+                w->phase++;
+                if (w->phase >= w->cfg->count) {
+                    t->state = 0xfa;
+                } else {
+                    t->state = 0;
+                }
+            }
+        } else if (w->timer > w->cfg->start[w->phase + 1]) {
+            for (i = 0; i < 3; i++) {
+                w->cur1[i] = w->cur1[i] + w->vel1[i];
+                w->cur2[i] = w->cur2[i] + w->vel2[i];
+                w->cur3[i] = w->cur3[i] + w->vel3[i];
+                if (w->cfg->count - 1 == w->phase) {
+                    if (w->vel1[i] > 0.0f) {
+                        if (w->cur1[i] > w->end1[i]) {
+                            w->cur1[i] = w->end1[i];
+                        }
+                    } else if (w->vel1[i] < 0.0f) {
+                        if (w->cur1[i] < w->end1[i]) {
+                            w->cur1[i] = w->end1[i];
+                        }
+                    }
+                    if (w->vel2[i] > 0.0f) {
+                        if (w->cur2[i] > w->end2[i]) {
+                            w->cur2[i] = w->end2[i];
+                        }
+                    } else if (w->vel2[i] < 0.0f) {
+                        if (w->cur2[i] < w->end2[i]) {
+                            w->cur2[i] = w->end2[i];
+                        }
+                    }
+                    if (w->vel3[i] > 0.0f) {
+                        if (w->cur3[i] > w->end3[i]) {
+                            w->cur3[i] = w->end3[i];
+                        }
+                    } else if (w->vel3[i] < 0.0f) {
+                        if (w->cur3[i] < w->end3[i]) {
+                            w->cur3[i] = w->end3[i];
+                        }
+                    }
+                }
+            }
+        }
+        w->eff.x4 = 0;
+        w->eff.kind = 4;
+        w->eff.x8 = w->cfg->light;
+        fn_80071CF0(w->cur2, w->eff.x3c);
+        fn_80071CF0(w->cur1, w->eff.x30);
+        fn_80071CF0(w->cur3, &w->eff.pos);
+        if (w->cfg->period[w->phase] != 0) {
+            if (w->frame % w->cfg->period[w->phase] == 0) {
+                w->eff.x4 |= 0x40000000;
+            }
+        } else {
+            w->eff.x4 |= 0x40000000;
+        }
+        if (w->timer >= w->cfg->waveStart[w->phase] && w->timer < w->cfg->waveEnd[w->phase]) {
+            s = njSin(182.04445f * (w->frame * w->cfg->waveMul[w->phase] + w->cfg->waveOff[w->phase]));
+            s = w->cfg->waveAmp[w->phase] * s;
+            w->eff.x3c[0] = w->eff.x3c[0] + s;
+            w->eff.x3c[1] = w->eff.x3c[1] + s;
+            w->eff.x3c[2] = w->eff.x3c[2] + s;
+            w->eff.x30[0] = w->eff.x30[0] + s;
+            w->eff.x30[1] = w->eff.x30[1] + s;
+            w->eff.x30[2] = w->eff.x30[2] + s;
+        }
+        fn_8006B8A8(&w->eff);
+        w->frame++;
+        break;
+    case 0xf9:
+        if (w->saved) {
+            fn_8006B6A4(idx, w->savedVal);
+        }
+    case 3:
+    case 0xfa:
+        lbl_80309E5C.flags &= ~0x2000000;
+        t->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    w->timer++;
+    fn_80037FD8(w->cfg, &t->state);
+}
+typedef struct D601C0 {
+    u8 pad0[0x14];
+    u32 flags;          /* 0x14 */
+    s16 s18;            /* 0x18 */
+    s16 s1a;            /* 0x1A */
+    f32 f1c;            /* 0x1C */
+    f32 f20;            /* 0x20 */
+} D601C0;
+typedef struct W601C0 {
+    s16 cnt;            /* 0x00 */
+    u8 pad2[2];
+    T5C188* owner;      /* 0x04 */
+    s8 n;               /* 0x08 */
+    s8 ids[8];          /* 0x09 */
+    u8 pad11[3];
+    V3 saved[8];        /* 0x14 */
+    u8 pad74[0x80 - 0x74];
+    s32 ang[8];         /* 0x80 */
+    u8 padA0[0xA4 - 0xA0];
+    D601C0* cmd;        /* 0xA4 */
+} W601C0;
+extern V3 lbl_802AD428;
+extern Task *lbl_80309E24[14];
+void fn_800601C0(Task* o)
+{
+    V3 tmp = lbl_802AD428;
+    W601C0* w = o->work;
+    U5C188* obj = w->owner->work->u;
+    T5C188* t;
+    W5C188* cw;
+    U5C188* ob;
+    f32 step;
+    s16 n = 0;
+    s16 i;
+    s16 j;
+    s16 k;
+
+    switch (o->state) {
+    case 0:
+        fn_8006D954(1);
+        w->ids[0] = -1;
+        w->ids[1] = -1;
+        w->ids[2] = -1;
+        w->ids[3] = -1;
+        w->ids[4] = -1;
+        w->ids[5] = -1;
+        w->ids[6] = -1;
+        w->ids[7] = -1;
+        for (i = 0; i < 12; i++) {
+            if (lbl_80309E24[i] != NULL) {
+                cw = lbl_80309E24[i]->work;
+                ob = cw->u;
+                if (w->cmd->flags & 0x40000000) {
+                    if (fn_8001D944(ob->id, w->owner)) {
+                        w->ids[n++] = ob->id;
+                    }
+                } else if (!fn_8001D944(ob->id, w->owner) && !(ob->tbl[ob->xe4].flags8 & 0x1000000)) {
+                    w->ids[n++] = ob->id;
+                }
+            }
+            if (n >= 8) {
+                break;
+            }
+        }
+        w->n = n;
+        o->state = 1;
+        break;
+    case 1:
+        if (w->cnt < w->cmd->s18) {
+            break;
+        }
+        if (!(w->cmd->flags & 0x40000000) && (w->cmd->flags & 0x8000000)) {
+            step = 360.0f / (f32)(w->n - 1);
+        } else {
+            step = 360.0f / (f32)w->n;
+        }
+        k = 0;
+        for (i = 0, j = 0; i < 8; i++) {
+            if (w->ids[i] >= 0) {
+                t = fn_80021658(w->ids[i]);
+                ob = t->work->u;
+                fn_80071CF0(&t->work->pos, &w->saved[i]);
+                w->ang[k] = t->work->rot[1];
+                memset(&tmp, 0, sizeof(tmp));
+                if (w->n > 1) {
+                    if (!(w->cmd->flags & 0x40000000) && (w->cmd->flags & 0x8000000) && ob->id == obj->id) {
+                        fn_80071CF0(&tmp, &t->work->pos);
+                    } else {
+                        fn_80061C80(&tmp, 0, 0.0f, j * step + w->cmd->f20, w->cmd->f1c);
+                        fn_80071CF0(&tmp, &t->work->pos);
+                        j++;
+                    }
+                } else {
+                    fn_80071CF0(&tmp, &t->work->pos);
+                }
+                if (w->cmd->flags & 0x20000000) {
+                    t->work->rot[1] = -(s32)(10430.381f * (f32)atan2(tmp.x, -tmp.z));
+                } else {
+                    t->work->rot[1] = 0;
+                }
+                ob->ff0 |= 0x40000000;
+                ob->f164 = 0.0f;
+                k++;
+            }
+        }
+        o->state = 2;
+    case 2:
+        if (w->cnt == w->cmd->s1a) {
+            for (i = 0; i < 8; i++) {
+                if (w->ids[i] >= 0) {
+                    t = fn_80021658(w->ids[i]);
+                    ob = t->work->u;
+                    fn_80071CF0(&w->saved[i], &t->work->pos);
+                    t->work->rot[1] = w->ang[i];
+                    ob->ff0 &= ~0x40000000;
+                }
+            }
+            o->state = 0xFA;
+        }
+        break;
+    case 0xF9:
+    case 0xFA:
+        fn_8006D8DC(1);
+        o->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    w->cnt++;
+    fn_80037FD8(w->cmd, &o->state);
+}
 void fn_80060950(u8 *p) {
     fn_800D208C(*(void **)(p + 0x34), *(f32 *)(p + 0x38));
 }
@@ -3948,6 +4596,23 @@ void fn_8006097C(Shake *a)
     lbl_8030A10C.f6c |= 0x200000;
 }
 
+s16 fn_80060F6C(s16 idx, u32 *arr, s16 mode)
+{
+    s16 w = idx / 32;
+    s16 b = idx % 32;
+    u32 m = 1 << b;
+    switch (mode) {
+    case 0:
+        arr[w] |= m;
+        break;
+    case 1:
+        arr[w] &= ~(1 << b);
+        break;
+    case 2:
+        return (arr[w] & m) != 0;
+    }
+    return 1;
+}
 void fn_80061014(Vec3f *a, Vec3f *b, Vec3f *out) {
     out->x = b->x - a->x;
     out->y = b->y - a->y;
@@ -4312,6 +4977,54 @@ void fn_80065AB0(T5C188* o, s16 idx)
     }
 }
 
+extern void *lbl_802DF2B8[18];
+s16 fn_800670E4(W5C188* w, s16 type, s16 sub, s8 flag) {
+    U5C188* u = w->u;
+    Rec18* list = u->tbl;
+    s16 i;
+    for (i = 0; list[i].s2 != 3; i++) {
+        if (type == u->tbl[i].type) {
+            switch (type) {
+            case 0x18:
+            case 0x19:
+            case 0x1d:
+            case 0x1e:
+                if (sub == u->tbl[i].sc) {
+                    if (flag == 0) {
+                        u->xe0 = lbl_802DF2B8[list[i].s4];
+                    }
+                    return i;
+                }
+                break;
+            default:
+                if (flag == 0) {
+                    u->xe0 = lbl_802DF2B8[list[i].s4];
+                }
+                return i;
+            }
+        }
+    }
+    if (type == 0xe && flag == 0) {
+        u->xe0 = lbl_802DF2B8[13];
+        return 0;
+    }
+    if (type == 0x25 && flag == 0) {
+        u->xe0 = lbl_802DF2B8[14];
+        return 0;
+    }
+    return -1;
+}
+s32 fn_80068128(s32 key)
+{
+    char name[0x20];
+    s32 out;
+    fn_80068190(name);
+    if (strcmp(name, "") != 0) {
+        fn_80046BB0(name, &out);
+        return key == out;
+    }
+    return 0;
+}
 void fn_80068810(s16 a, s16 i, s32 kind, s8 v) {
     s16 power;
     const SkillData *sk;
@@ -4835,25 +5548,25 @@ void fn_8006B8A8(Eff* e)
                 py = e->pos.y;
                 pz = e->pos.z;
                 fn_8028708C(1, px, py, pz);
-                r = e->x30;
-                b = e->x38;
-                g = e->x34;
+                r = e->x30[0];
+                b = e->x30[2];
+                g = e->x30[1];
                 CLAMP3(r, g, b)
                 fn_80287124(1, r, g, b);
-                r = e->x3c;
-                b = e->x44;
-                g = e->x40;
+                r = e->x3c[0];
+                b = e->x3c[2];
+                g = e->x3c[1];
                 CLAMP3(r, g, b)
                 fn_802871D8(r, g, b);
                 fn_8028B63C(1, px, py, pz);
-                r = e->x30;
-                b = e->x38;
-                g = e->x34;
+                r = e->x30[0];
+                b = e->x30[2];
+                g = e->x30[1];
                 CLAMP3(r, g, b)
                 fn_8028B6D4(1, r, g, b);
-                r = e->x3c;
-                b = e->x44;
-                g = e->x40;
+                r = e->x3c[0];
+                b = e->x3c[2];
+                g = e->x3c[1];
                 CLAMP3(r, g, b)
                 fn_8028B784(r, g, b);
             } else {
@@ -4863,10 +5576,10 @@ void fn_8006B8A8(Eff* e)
                 fn_8028703C(e->x8 + 1, e->pos.x, e->pos.y, e->pos.z);
                 r = e->x4c;
                 fn_80286FEC(e->x8 + 1, e->x48, 8.0f * r);
-                r = e->x30;
+                r = e->x30[0];
                 n = e->x8 + 1;
-                b = e->x38;
-                g = e->x34;
+                b = e->x30[2];
+                g = e->x30[1];
                 CLAMP3(r, g, b)
                 fn_80287124(n, r, g, b);
             }
@@ -4876,14 +5589,14 @@ void fn_8006B8A8(Eff* e)
         }
         break;
     case 3:
-        r = e->x3c;
-        b = e->x44;
-        g = e->x40;
+        r = e->x3c[0];
+        b = e->x3c[2];
+        g = e->x3c[1];
         CLAMP3(r, g, b)
         fn_802871D8(r, g, b);
-        r = e->x3c;
-        b = e->x44;
-        g = e->x40;
+        r = e->x3c[0];
+        b = e->x3c[2];
+        g = e->x3c[1];
         CLAMP3(r, g, b)
         fn_8028B784(r, g, b);
         break;
@@ -5731,48 +6444,48 @@ void fn_8005C328(O5C328 *o) {
     }
 }
 
-void fn_8005D47C(O5D47C *o) {
+void fn_8005D47C(W_8005D108 *o) {
     V3 *a;
     V3 *b;
     switch (o->state) {
     case 0:
-        if (o->s70 < o->p->s14) {
+        if (o->t < o->d->s14) {
             return;
         }
         fn_80014AB8(1, o);
         o->state = 1;
-        if (o->p->flags & 0x2000) {
+        if (o->d->flags & 0x2000) {
             o->b74 = rand() % 3;
         }
     case 1:
-        if (o->p->flags & 0x2000) {
+        if (o->d->flags & 0x2000) {
             switch (o->b74) {
             case 0:
-                a = &o->p->v1c;
-                b = &o->p->v28;
+                a = &o->d->v1c;
+                b = &o->d->v28;
                 break;
             case 1:
-                a = &o->p->v34;
-                b = &o->p->v40;
+                a = &o->d->v34;
+                b = &o->d->v40;
                 break;
             case 2:
-                a = &o->p->v4c;
-                b = &o->p->v58;
+                a = &o->d->v4c;
+                b = &o->d->v58;
                 break;
             }
         } else {
-            a = &o->p->v1c;
-            b = &o->p->v28;
+            a = &o->d->v1c;
+            b = &o->d->v28;
         }
-        if (o->p->flags & 0x10000) {
+        if (o->d->flags & 0x10000) {
             fn_80071CF0(a, &o->v20);
             fn_80071CF0(b, &o->v38);
         } else {
-            fn_8001E4A0(a, &o->v20, o->p78);
-            if ((o->p->flags & 0x80000) && o->p7c != 0) {
-                fn_80061518(&o->p->v68, &o->v38, o->p7c);
+            fn_8001E4A0(a, &o->v20, o->owner);
+            if ((o->d->flags & 0x80000) && o->x7c != 0) {
+                fn_80061518(&o->d->v68, &o->v38, o->x7c);
             } else {
-                fn_8001E4A0(b, &o->v38, o->p78);
+                fn_8001E4A0(b, &o->v38, o->owner);
             }
         }
         fn_80071F84(o->ang, &o->v38, &o->v20);
@@ -6276,9 +6989,9 @@ void fn_8006B46C(Task* t) {
     case 0:
         memset(e, 0, 0x64);
         e->x8 = 1;
-        e->x30 = 0.1f;
-        e->x34 = 0.5f;
-        e->x38 = 0.3f;
+        e->x30[0] = 0.1f;
+        e->x30[1] = 0.5f;
+        e->x30[2] = 0.3f;
         e->pos.y = 60.0f;
         e->x48 = 80.0f;
         e->x4c = 300.0f;
@@ -7028,7 +7741,9 @@ void fn_80073D10(void) {
 void fn_80073D14(void) {
 }
 
-void fn_80071CF0(V3 *src, V3 *dst) {
+void fn_80071CF0(void *a, void *b) {
+    V3 *src = a;
+    V3 *dst = b;
     dst->x = src->x;
     dst->y = src->y;
     dst->z = src->z;
@@ -7388,20 +8103,12 @@ s16 fn_8006E924(char* path, char* name, Node** out, void* key) {
     return m->count;
 }
 
-typedef struct Ent80067CA4 {
-    u8 pad0[4];
-    s16 type;
-    u8 pad6[0xa];
-    f32 f10;
-    f32 f14;
-} Ent80067CA4;
-
 typedef struct U80067CA4 {
     s8 slot;
     u8 pad1;
     s16 s2;
     u8 pad4[0xdc - 4];
-    Ent80067CA4 *list;
+    Rec18 *list;
     u8 pade0[0x128 - 0xe0];
     f32 f128;
     f32 f12c;
@@ -7428,16 +8135,21 @@ typedef struct Arg80067CA4 {
     s16 x0;
     s16 x2;
     Src80067CA4 *src;
-    u8 pad8[4];
-    Ent80067CA4 *list;
+    s32 count;
+    Rec18 *list;
+    s16 s10;
+    s16 s12;
+    s32 w14;
+    s32 w18;
+    s32 w1c;
 } Arg80067CA4;
 
 extern void *lbl_802DF2B8[18];
 
-extern s16 fn_80020060(Ent80067CA4 *);
+extern s16 fn_80020060(Rec18 *);
 
 void fn_80067CA4(Arg80067CA4 *arg) {
-    Ent80067CA4 *list = arg->list;
+    Rec18 *list = arg->list;
     Task *task;
     U80067CA4 *u;
     W80067CA4 *w;
@@ -7446,7 +8158,7 @@ void fn_80067CA4(Arg80067CA4 *arg) {
     idx = fn_80020060(list);
     while (idx < 0) {
     }
-    task = fn_802268E8(lbl_803475A8, lbl_802DF2B8[list[idx].type]);
+    task = fn_802268E8(lbl_803475A8, lbl_802DF2B8[list[idx].s4]);
     fn_80061F58(&task->work, 0x58, 0);
     w = task->work;
     w->base = *src->base;
@@ -7484,7 +8196,7 @@ typedef struct Obj_72190 {
 } Obj_72190;
 typedef struct Wk_72190 { u8 pad0[0x14]; s16 x14; u8 pad16[0x4C - 0x16]; Obj_72190* obj; } Wk_72190;
 
-extern s16 fn_80060F6C(s16, void*, int);
+
 
 void fn_80072190(Task* t) {
     Wk_72190* w = t->work;
@@ -9821,50 +10533,49 @@ void fn_8005D108(W_8005D108* w)
 {
     Vec3_8005D108 base = lbl_802AD434;
     Vec3_8005D108 v8;
-    Par_8005D108* p = w->owner->work;
-    Info_8005D108* info = p->x4c;
+    ChrInfo* info = w->owner->work->u;
     switch (w->state) {
     case 0:
-        if (w->t < w->d->x14) break;
-        fn_80014AB8(1, (void *)(w));
+        if (w->t < w->d->s14) break;
+        fn_80014AB8(1, w);
         w->x80 = fn_80071E5C((void *)(&base), (void *)(&w->d->v1c));
-        if (w->d->x10 & 0x40000) {
+        if (w->d->flags & 0x40000) {
             w->x84 = fn_80071E5C((void *)(&base), (void *)(&w->d->v34));
             w->x8c = (w->x84 - w->x80) / (f32)w->d->x18;
         }
-        if (w->d->x10 & 0x4000) {
+        if (w->d->flags & 0x4000) {
             w->x94 = (w->d->v34.y - w->d->v1c.y) / (f32)w->d->x18;
         }
-        if (w->d->x10 & 0x20000) {
-            w->xac = (w->d->x44 - w->d->v28.y) / (f32)w->d->x18;
+        if (w->d->flags & 0x20000) {
+            w->xac = (w->d->v40.y - w->d->v28.y) / (f32)w->d->x18;
             fn_8001D1D8(w->owner, &v8);
             w->v38.x = v8.x;
             w->v38.z = v8.z;
             w->v38.y = w->d->v28.y;
         }
-        if (w->d->x4c) w->x90 = w->d->x4c;
+        if (w->d->v4c.x) w->x90 = w->d->v4c.x;
         w->x98 = w->d->x74;
-        if (w->d->x10 & 0x2000) {
+        if (w->d->flags & 0x2000) {
             if (rand() % 2 != 0) w->x98 = -1.0f * w->d->x74;
         }
         w->x88 = w->x80;
         w->state = 1;
     case 1:
-        fn_8001D288(&w->x20, info->id, w->x90, w->x88);
-        w->x24 = w->d->v1c.y;
-        if (w->d->x10 & 0x4000) w->x24 = w->x94 * (f32)(w->t - w->d->x14) + w->x24;
-        if ((w->d->x10 & 0x80000) && w->x7c != 0) {
+        fn_8001D288(&w->v20, info->x0, w->x90, w->x88);
+        w->v20.y = w->d->v1c.y;
+        if (w->d->flags & 0x4000) w->v20.y = w->x94 * (f32)(w->t - w->d->s14) + w->v20.y;
+        if ((w->d->flags & 0x80000) && w->x7c != 0) {
             fn_80061518((void *)(&w->d->v68), (void *)(&w->v38), (void *)(w->x7c));
-        } else if (w->d->x10 & 0x20000) {
-            if (w->t < w->d->x14 + w->d->x18) w->v38.y = w->v38.y + w->xac;
+        } else if (w->d->flags & 0x20000) {
+            if (w->t < w->d->s14 + w->d->x18) w->v38.y = w->v38.y + w->xac;
         } else {
             fn_8001E4A0((void *)(&w->d->v28), (void *)(&w->v38), (void *)(w->owner));
             fn_8001D1D8(w->owner, &v8);
             w->v38.x = v8.x;
             w->v38.z = v8.z;
         }
-        fn_80071F84((void *)(&w->v2c), (void *)(&w->v38), (void *)(&w->x20));
-        if (w->t < w->d->x14 + w->d->x18 && (w->d->x10 & 0x40000)) w->x88 = w->x88 + w->x8c;
+        fn_80071F84(w->ang, (void *)(&w->v38), (void *)(&w->v20.x));
+        if (w->t < w->d->s14 + w->d->x18 && (w->d->flags & 0x40000)) w->x88 = w->x88 + w->x8c;
         w->x90 = w->x90 + w->x98;
     }
 }
@@ -11153,28 +11864,6 @@ extern void fn_80296918(V3 *pts, s16 n, f32 size);
 extern void fn_80296B34(void);
 extern void fn_802A8F40(s32 a);
 extern void fn_801D0D70(s32 a, f32 b);
-typedef struct U80064E38 {
-    u8 pad0[6];
-    s16 kind;
-} U80064E38;
-typedef struct W80064E38 {
-    u8 pad0[0x24];
-    struct { u8 pad[0x4c]; U80064E38 *u; } *work;
-} W80064E38;
-typedef struct S80064E38 {
-    W80064E38 *p0;
-    u8 pad4[0x3c - 4];
-    f32 v[3];
-    u8 pad48[0x80 - 0x48];
-    s16 s80;
-} S80064E38;
-typedef struct O80064E38 {
-    u8 pad0[0x18];
-    u8 flags;
-    u8 state;
-    u8 pad1A[10];
-    S80064E38 *s;
-} O80064E38;
 typedef struct Rec16_80072B3C { void* w[4]; } Rec16_80072B3C;
 typedef struct Rec24_80072B3C { void* w[6]; } Rec24_80072B3C;
 #endif
@@ -11320,70 +12009,6 @@ void fn_80055F0C(PtTask *t) {
 }
 #endif
 
-#ifdef NONMATCHING
-void fn_80064E38(O80064E38 *o) {
-    S80064E38 *s = o->s;
-    U80064E38 *u = s->p0->work->u;
-    if (o->state != 3) {
-        if (u->kind != s->s80) {
-            o->state = 2;
-        }
-    }
-    switch (o->state) {
-    case 0: {
-        s32 i;
-        s32 n = 0;
-        for (i = 0; i < 3; i++) {
-            f32 x = lbl_80346BD8->v[i];
-            if (x > s->v[i]) {
-                lbl_80346BD8->v[i] = x - 5.0f;
-                if (lbl_80346BD8->v[i] <= s->v[i]) {
-                    lbl_80346BD8->v[i] = s->v[i];
-                    n++;
-                }
-            } else {
-                lbl_80346BD8->v[i] += 5.0f;
-                if (lbl_80346BD8->v[i] >= s->v[i]) {
-                    lbl_80346BD8->v[i] = s->v[i];
-                    n++;
-                }
-            }
-        }
-        if (n == 3) {
-            o->state = 1;
-        }
-        break;
-    }
-    case 2: {
-        s32 n;
-        s32 i;
-        for (i = n = 0; i < 3; i++) {
-            f32 x = lbl_80346BD8->v[i];
-            if (x > 0.0f) {
-                lbl_80346BD8->v[i] = x - 5.0f;
-                if (lbl_80346BD8->v[i] <= 0.0f) {
-                    lbl_80346BD8->v[i] = 0.0f;
-                    n++;
-                }
-            } else {
-                lbl_80346BD8->v[i] += 5.0f;
-                if (lbl_80346BD8->v[i] >= 0.0f) {
-                    lbl_80346BD8->v[i] = 0.0f;
-                    n++;
-                }
-            }
-        }
-        if (n == 3) {
-            o->state = 3;
-        }
-        break;
-    }
-    case 3:
-        o->flags |= 0x40;
-        break;
-    }
-}
-#endif
 
 #ifdef NONMATCHING
 int fn_80072B3C(f32 f, void* unused, Obj* o, void** a, void** b, void** c, s16 i) {
@@ -11417,3 +12042,4 @@ int fn_80072B3C(f32 f, void* unused, Obj* o, void** a, void** b, void** c, s16 i
     return flags;
 }
 #endif
+

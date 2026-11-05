@@ -262,7 +262,7 @@ extern void *fn_801E1584(void *p, u32 n);
 extern void fn_801D6998(void *p, void *q);
 extern char lbl_802B13BC[];
 extern void *lbl_80346D40;
-extern void *lbl_80346D44;
+extern SpriteOuter* lbl_80346D44;
 extern void *lbl_80346D3C;
 extern void fn_801DD9AC(void *a, void *b);
 extern void fn_801DD95C(void *p);
@@ -3443,6 +3443,33 @@ s32 fn_800C355C(Sub_UNIT0000** out, Ctx_800C355C_UNIT0000* ctx, s32 idx) {
         *out = sub;
     }
     return value;
+}
+
+extern void fn_801D5A50(Sprite* s, s32 a, s32 b, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6, void* tex);
+
+f32 fn_800C3054(f32 a, f32 b) {
+    f32 x = -2.0f;
+    Sprite* s;
+    s32 i;
+
+    s = fn_801D68C4(lbl_80346D3C, 0);
+    s->x = (f32)((s32)s->x + (s32)a);
+    fn_801D4C54(s, 0, 0, 1, -2.0f, 0.0f, 1.0f, b);
+    s->x = (f32)((s32)s->x - (s32)a);
+    x += 0.010000001f;
+    s = fn_801D68C4(lbl_80346D3C, 1);
+    s->x = (f32)((s32)s->x + (s32)a);
+    fn_801D4C54(s, 0, 0, 1, x, 0.0f, 1.0f, b);
+    s->x = (f32)((s32)s->x - (s32)a);
+    x += 0.010000001f;
+    for (i = 2; i < 10; i++) {
+        s = fn_801D68C4(lbl_80346D3C, i);
+        s->x = (f32)((s32)s->x + (s32)a);
+        fn_801D5A50(s, 0, 0, 1.0f, 1.0f, x, 0.0f, 1.0f, b, lbl_80346D44->inner->texlist);
+        x += 0.010000001f;
+        s->x = (f32)((s32)s->x - (s32)a);
+    }
+    return x;
 }
 
 void fn_800C4B18(Obj_800C4B18* self) {

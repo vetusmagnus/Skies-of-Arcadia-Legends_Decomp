@@ -4,6 +4,7 @@
 #include "game/drawstate.h"
 #include "game/draw2d.h"
 #include "game/battle.h"
+#include <dolphin/os.h>
 typedef struct Ent {
     float a;
     s32 b;
@@ -121,13 +122,15 @@ extern f32 lbl_803471F4;
 void fn_801CBC90(void);
 void fn_801CB744(void);
 void fn_802267AC(s32 a, void* b);
-typedef struct FadeVtx {
+/* A vertex of the 2D quads (position and packed colour). */
+typedef struct DrawVtx {
     f32 x, y, z;
     u32 col;
-} FadeVtx;
+} DrawVtx;
 extern f32 fn_801DBD9C(f32 z);
 void fn_801CBA98(Task *o);
-extern FadeVtx lbl_80308C78[4];
+extern DrawVtx lbl_80308C78[4];
+void fn_80290ED4(DrawVtx *v, s32 n, s32 a);
 extern s32 lbl_803471F8;
 void* fn_801E1C7C(s32 size);
 s32 fn_801CBD48(FioReq *s);
@@ -360,6 +363,10 @@ FioName* fn_801CC2A0(const char* name, void (*cb)(void* arg, struct FioCb* io), 
     return s;
 }
 
+s32 fn_801CC1A4(AkFio* f) {
+    return f->state == 0;
+}
+
 void fn_801CC3A4(void) {
     fn_801CBE38();
 }
@@ -414,9 +421,6 @@ AkFio* fn_801CC69C(const char* name) {
     return fn_801C64DC(name);
 }
 
-typedef struct DrawVtx {
-    f32 x, y, z, w;
-} DrawVtx;
 extern s32 lbl_8034720C;
 extern s16 lbl_80347256;
 extern u32 lbl_80347218;
@@ -520,6 +524,92 @@ void fn_801CD73C(DrawVtx *v, s32 n, s32 a, u32 flags) {
     } else {
         DrawStateReapply();
         fn_80290ED4(v, n, a);
+    }
+}
+
+#define TEX_SET_M() if (textured == 1) { if (tex != NULL) { fn_80299040(tex); if (tex->nbTexture <= (u16)id) { id = tex->nbTexture - 1; } } fn_80298FE4(id); }
+
+typedef struct MapInfo {
+    s32 map;
+    s32 x4;
+    char room;
+} MapInfo;
+extern MapInfo lbl_80311AC0;
+void fn_8000610C(NJS_POINT2COL* p, s32 n, s32 attr, f32 z);
+void fn_8029CFF8(s32 a);
+/* The fog buffer flush of FogBuf for a given mode, without its conditions. */
+static inline void FogFlush(s32 mode) {
+    u32 len;
+    void *p;
+    len = lbl_80347218 - lbl_80347258;
+    p = lbl_8034725C;
+    if (lbl_803475D8 != 0) {
+        p = 0;
+    }
+    if (p != 0) {
+        GXFlush();
+        if (lbl_8034721C == 0) {
+            fn_802A8E50(p, lbl_80347218, mode);
+            lbl_8034721C = 1;
+        } else {
+            fn_802A8D64(p, len, mode);
+        }
+        fn_8024DE74();
+    } else {
+        fn_802A8E50(p, len, mode);
+    }
+}
+
+void fn_801CCD90(NJS_POINT2COL *b, s32 n, s32 textured, NJS_TEXLIST *tex, s16 id, f32 z, u32 flags) {
+    s32 hide;
+    s32 special;
+
+    if (n <= 0) {
+        return;
+    }
+    hide = flags & 0x2000;
+    if (hide) {
+        fn_8029CFF8(1);
+    }
+    if (lbl_8034720C != 0 && (flags & 0x1000)) {
+        if (lbl_80347256 < 0x400 && lbl_80347218 > lbl_80347258 && lbl_80347208 != 0 && lbl_8034720C != 0) {
+            special = lbl_803475CC == 6 && lbl_80311AC0.map == 't' && lbl_80311AC0.room == 'a';
+            if (special) {
+                FogFlush(6);
+            } else {
+                FogFlush(4);
+            }
+            DrawStateApplyFog();
+        }
+        if (flags & 0x4000) {
+            fn_80296EEC(1, 3, 0);
+        }
+        DrawStateReapply();
+        TEX_SET_M();
+        fn_8000610C(b, n, textured, z);
+        fn_80296EEC(1, 3, 1);
+        fn_802A8F40(1);
+        if (lbl_80311AC0.map >= 500 && lbl_80311AC0.map <= 599) {
+            if (lbl_80347256 < 0x400 && lbl_80347218 > lbl_80347258 && lbl_80347208 != 0 && lbl_8034720C != 0) {
+                fn_801D0BC0(8, 10000.0f + z);
+            }
+        } else {
+            if (lbl_80347256 < 0x400 && lbl_80347218 > lbl_80347258 && lbl_80347208 != 0 && lbl_8034720C != 0) {
+                fn_801D0BC0(7, 10000.0f + z);
+            }
+        }
+        fn_802A8F40(0);
+    } else {
+        if (flags & 0x4000) {
+            fn_80296EEC(1, 3, 0);
+        }
+        DrawStateReapply();
+        TEX_SET_M();
+        fn_8000610C(b, n, textured, z);
+        fn_80296EEC(1, 3, 1);
+    }
+    if (hide) {
+        fn_8029CFF8(0);
     }
 }
 

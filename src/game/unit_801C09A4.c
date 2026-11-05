@@ -7,13 +7,14 @@ extern char lbl_802EE634[];
 void *fn_801F4AE4(s16 idx);
 /* A party member's record in the shop work (0x24 bytes; as in unit_80199B9C.c). */
 typedef struct ShopMember {
-    const char* name; /* 0x00 */
+    SaveChar* ch;     /* 0x00: the member's save record (its name is first) */
     s8 id;            /* 0x04: the member's lbl_8030B7F4 character index */
     s8 b5, b6, b7;    /* 0x05 level and the two values shown after it */
-    u8 pad8[2];
+    u8 b8, b9;        /* 0x08 */
     s16 ha, hc, he;   /* 0x0A */
     s16 h10, h12;     /* 0x10 */
-    u8 pad14[0x24 - 0x14];
+    s16 stat[7];      /* 0x14: values copied from the stat record */
+    u8 pad22[2];
 } ShopMember;
 /* The shop work (as in unit_80199B9C.c). */
 typedef struct ShopWork {
@@ -40,7 +41,7 @@ typedef struct ShopWork {
     s16 xd0;
     u8 padd2[2];
     s32 xd4;
-    struct { s16 v; s16 z; s16 a; s16 b; u8 c; u8 d; } d8[5]; /* 0xD8 */
+    struct { s16 v; s16 z; s16 a; s16 b; s8 c; s8 d; } d8[5]; /* 0xD8 */
     s16 h10a[3];         /* 0x10A */
     u8 pad110[2];
     s16 x112;
@@ -50,6 +51,7 @@ typedef struct ShopWork {
 typedef struct ShopTask {
     u8 pad0[0x24];
     ShopWork* w;     /* 0x24 */
+    void* x28;       /* 0x28: the window's comparison records (ShopCmp or ShopEquipCmp) */
 } ShopTask;
 extern ShopTask* lbl_803471B8;
 extern s32 fn_801F4C24(s16 id);
@@ -58,6 +60,7 @@ extern void fn_801F4E6C(s32 i, s16 v);
 extern void fn_801F4E38(s32 i, s16 v);
 extern void fn_801F4E04(s32 i, s16 v);
 void fn_801C1364(u8 i);
+extern void fn_801DBE1C(const char* fmt, ...);
 void fn_801C1E48(void);
 typedef struct Info {
     s16 id;
@@ -73,6 +76,27 @@ typedef struct Info {
     s16 x14;
     s16 x16;
 } Info;
+/* One side of the shop's stat comparison: the stats and the colour each is drawn in. */
+typedef struct ShopCmpRec {
+    s16 id, x2, x4;
+    s16 v[9];      /* 0x06 */
+    u32 col[9];    /* 0x18 */
+} ShopCmpRec;
+/* A party member's comparison (0xA8 bytes): with the current and with the new equipment. */
+typedef struct ShopCmpRow {
+    ShopCmpRec cur;   /* 0x00 */
+    ShopCmpRec nw;    /* 0x3C */
+    Info eq;          /* 0x78 */
+    Info eq2;         /* 0x90 */
+} ShopCmpRow;
+typedef struct ShopCmp {
+    u8 pad0[0x270];
+    ShopCmpRow row[4]; /* 0x270 */
+} ShopCmp;
+extern char lbl_802C3B14[];
+extern void fn_8021B2B4(void);
+s32 fn_801C2CF4(Info* o, s16 id);
+
 extern s16 fn_801EE344(s16 id, s32 stat);
 extern s8 fn_801F4A60(void);
 
@@ -144,6 +168,20 @@ u8 fn_801C0C14(s16 id)
         i++;
     } while (i < lbl_803471B8->w->count);
     return 0;
+}
+
+u8 fn_801C0CA0(s16 id)
+{
+    u32 i;
+    u32 n;
+    i = n = 0;
+    do {
+        if (fn_801F3FD0(lbl_803471B8->w->m[i].id, id)) {
+            n++;
+        }
+        i++;
+    } while (i < lbl_803471B8->w->count);
+    return n;
 }
 
 u8 fn_801C0D34(s16 id)
@@ -260,6 +298,16 @@ s32 fn_801C16D0(s16 id) {
     return lbl_802D7E4C[id - 400].type;
 }
 
+#define COL(a, b) ((a) == (b) ? 0xFF201008 : (a) < (b) ? 0xFF00A000 : 0xFFA00000)
+
+static inline void Check(u16 i) { if (i >= 4) fn_801DBE1C(lbl_802C3B14); }
+static inline u32 CmpCol(s16 a, s16 b)
+{
+    if (a == b) return 0xFF201008;
+    if (a < b) return 0xFF00A000;
+    return 0xFFA00000;
+}
+
 void fn_801C1E48(void) {
     Save1568* o = &lbl_8030B7F4.x1568;
     ShipStat* l = &lbl_8030B4D4.ship;
@@ -284,6 +332,132 @@ void fn_801C1E48(void) {
     lbl_803471B8->w->x114 = l->x8;
     lbl_803471B8->w->x116 = l->x1c;
 }
+
+/* the equip comparison of one member (0x9C) */
+typedef struct ShopEquipCmp {
+    u8 who;           /* 0x00 */
+    u8 pad1[3];
+    Info cur;         /* 0x04 the piece worn now */
+    Info sel;         /* 0x1C the item tried */
+    s16 curId;        /* 0x34 */
+    s16 x36;
+    s16 xf;           /* 0x38 */
+    s16 old[7];       /* 0x3A stats now */
+    u8 pad48[4];
+    u32 col[7];       /* 0x4C */
+    s16 selId;        /* 0x68 */
+    s16 x6a;
+    s16 x6c;
+    s16 now[7];       /* 0x6E stats with the item */
+    u8 pad7c[4];
+    u32 col2[7];      /* 0x80 */
+} ShopEquipCmp;
+s32 fn_801C2E48(Info* o, s16 id);
+static inline s32 EqKind(s16 id) {
+    if (id == -1) {
+        return -1;
+    }
+    return fn_801F4C24(id);
+}
+
+static inline s8 EqXf(u8 i) {
+    u16 c = lbl_803471B8->w->m[i].id;
+    SaveChar* m = &lbl_8030B7F4.chr[c];
+    return m->xf;
+}
+
+#define W lbl_803471B8->w
+
+#define STATS(dst) \
+    dst[0] = W->m[who].stat[0]; \
+    dst[1] = W->m[who].stat[1]; \
+    dst[2] = W->m[who].stat[2]; \
+    dst[3] = W->m[who].stat[3]; \
+    dst[4] = W->m[who].stat[4]; \
+    dst[5] = W->m[who].stat[5]; \
+    dst[6] = W->m[who].stat[6];
+
+/* the equip comparison for one gear slot: EQUIP is fn_801F4E6C/38/04, piece the worn one */
+#define TRY(piece, EQUIP, XF) \
+    fn_801C2E48(&c->sel, -1); \
+    cur = W->m[who].piece; \
+    fn_801C2E48(&c->cur, cur); \
+    c->curId = cur; \
+    STATS(c->old); \
+    c->xf = XF; \
+    if (fn_801F3FD0(W->m[who].id, id) == 0 && id != -1) { \
+        break; \
+    } \
+    EQUIP(W->m[who].id, id); \
+    fn_801C1364(who); \
+    c->selId = id; \
+    STATS(c->now); \
+    c->x6c = -1; \
+    EQUIP(W->m[who].id, cur); \
+    fn_801C1364(who); \
+    if (fn_801F3FD0(W->m[who].id, id)) { \
+        fn_801C2E48(&c->sel, id); \
+    } \
+    break;
+
+static inline u32 EqCol(s16 b, s16 a, s16 id, u16 who) {
+    if (fn_801F3FD0(W->m[who].id, id) == 0) {
+        return 0x40201008;
+    }
+    if (b == a) {
+        return 0xFF201008;
+    }
+    if (b < a) {
+        return 0xFF00A000;
+    }
+    return 0xFFA00000;
+}
+
+void fn_801C1FC0(s16 id, u16 who) {
+    ShopEquipCmp* c;
+    ShopEquipCmp* cm;
+    s16 cur;
+
+    if (who >= 4) {
+        fn_801DBE1C("WshopEquipMakeParameta WorkNumber Error: %s", who);
+    }
+    cm = lbl_803471B8->x28;
+    c = &cm[who];
+    c->who = who;
+    switch (EqKind(id)) {
+    case 0:
+        TRY(ha, fn_801F4E6C, EqXf(who));
+    case 1:
+        TRY(hc, fn_801F4E38, -1);
+    case 2:
+        TRY(he, fn_801F4E04, -1);
+    case 5:
+    case 6:
+        break;
+    default:
+        fn_801C2E48(&c->sel, -1);
+        fn_801C2E48(&c->cur, -1);
+        break;
+    }
+    c->col[0] = EqCol(c->old[0], c->now[0], id, who);
+    c->col[1] = EqCol(c->old[1], c->now[1], id, who);
+    c->col[2] = EqCol(c->old[2], c->now[2], id, who);
+    c->col[3] = EqCol(c->old[3], c->now[3], id, who);
+    c->col[4] = EqCol(c->old[4], c->now[4], id, who);
+    c->col[5] = EqCol(c->old[5], c->now[5], id, who);
+    c->col[6] = EqCol(c->old[6], c->now[6], id, who);
+    c->col2[0] = EqCol(c->now[0], c->old[0], id, who);
+    c->col2[1] = EqCol(c->now[1], c->old[1], id, who);
+    c->col2[2] = EqCol(c->now[2], c->old[2], id, who);
+    c->col2[3] = EqCol(c->now[3], c->old[3], id, who);
+    c->col2[4] = EqCol(c->now[4], c->old[4], id, who);
+    c->col2[5] = EqCol(c->now[5], c->old[5], id, who);
+    c->col2[6] = EqCol(c->now[6], c->old[6], id, who);
+}
+
+#undef W
+#undef STATS
+#undef TRY
 
 void fn_801C2C4C(u8 i, u8 v) {
     u16 c = lbl_803471B8->w->m[i].id;
