@@ -6,6 +6,34 @@
 #include "game/text.h"
 #include "game/menu.h"
 #include <math.h>
+
+/* These strings open the file's .rodata, but no function left in the DOL uses them. */
+const char lbl_802ACFA0[0x10] = "D%02d%03d00.MLK";
+const char lbl_802ACFB0[0xC] = "PCWIN.MLK";
+const char lbl_802ACFBC[0x14] = "%c%02d%03d%02X.MLK";
+
+s32 fn_80020E10(const char* name) {
+    if (strcmp(name, "MA000.MLD") == 0 || strcmp(name, "ma000.mld") == 0) {
+        return 0;
+    }
+    if (strcmp(name, "MA001.MLD") == 0 || strcmp(name, "ma001.mld") == 0) {
+        return 1;
+    }
+    if (strcmp(name, "MA002.MLD") == 0 || strcmp(name, "ma002.mld") == 0) {
+        return 2;
+    }
+    if (strcmp(name, "MA003.MLD") == 0 || strcmp(name, "ma003.mld") == 0) {
+        return 3;
+    }
+    if (strcmp(name, "MA004.MLD") == 0 || strcmp(name, "ma004.mld") == 0) {
+        return 4;
+    }
+    if (strcmp(name, "MA005.MLD") == 0 || strcmp(name, "ma005.mld") == 0) {
+        return 5;
+    }
+    return -1;
+}
+
 /* The argument block fn_80023D14 hands the task: a vertical list with a cursor. */
 typedef struct ListArg {
     s8 count;   /* 0x00 */

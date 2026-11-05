@@ -465,7 +465,7 @@ config.libs = [
             Object(NonMatching, "game/unit_80011160.c"),
             # Starts at the 0x80348238 .sdata2 block (a second 182.04445f after 0x8034816C).
             Object(NonMatching, "game/unit_80014784.c"),
-            Object(NonMatching, "game/unit_80020B50.c"),
+            Object(NonMatching, "game/unit_80020B50.c", extra_cflags=["-str reuse,readonly"]),
             Object(NonMatching, "game/unit_800553B4.c"),
             Object(NonMatching, "game/unit_801C09A4.c"),
             Object(NonMatching, "game/unit_801C5A60.c"),
