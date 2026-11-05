@@ -156,7 +156,16 @@ game/unit_80193F28.c:
 	.text       start:0x80193F28 end:0x80199B9C
 
 game/unit_80199B9C.c:
-	.text       start:0x80199B9C end:0x801BEB10
+	.text       start:0x80199B9C end:0x801A2D20
+
+game/unit_801A2D20.c:
+	.text       start:0x801A2D20 end:0x801A4B40
+
+game/unit_801A4B40.c:
+	.text       start:0x801A4B40 end:0x801A6A88
+
+game/unit_801A6A88.c:
+	.text       start:0x801A6A88 end:0x801BEB10
 
 game/unit_801BEB10.c:
 	.text       start:0x801BEB10 end:0x801C09A4
