@@ -2516,3 +2516,51 @@ What is left, by cause:
 - Held for rule reasons: self-relative offset reads in unit_801D24D0 (fn_801DA51C, fn_801DB1A4, fn_801DB2C8,
   fn_801DF500), MenuTask casts in the shop (fn_801BCFD0, fn_801BE670), fn_802107A4 (pointer-to-int store),
   fn_802AB8FC/fn_802ABB9C (identity byte stores).
+
+## Real file edges from the string pools (2026-11-05, from 10b2ec7)
+
+14 functions merged (6,300 to 6,314) by cutting merged units at their real file edges. None of them
+needed new code: every one was instruction-exact and only its pool offsets differed.
+
+| Old unit | New files | Evidence |
+|---|---|---|
+| `unit_801F5334.c` | `unit_801F5334.c`, `rdt_scriptact.c` (0x801F5468), `unit_801F570C.c`, `unit_801F7B14.c`, `unit_801FCFF0.c`, `scpteve.c` (0x8020AAA8) | FLT_MAX repeats in `.sdata2` at 0x8034C160, C168, C1A0, C1E0, C248; `.rodata` edges 0x802D46A0, 4720, 4838, 4D40, 5648; both names are in the files' own strings. `unit_801F7B14.c`'s `.sdata2` starts at 0x8034C190 ("/sound/", from a `.sdata` pointer) |
+| `unit_80219378.c` | `unit_80219378.c`, `unit_80228A20.c` (the title screen), `unit_8022A7F4.c` | `.rodata` 0x802D9688-0x802D9768, `.data` 0x802F8A78-0x802F91F8; `unit_80219378.c` has more edges not cut yet |
+| `unit_80055E94.c` | `unit_80055E94.c`, `unit_80072DD4.c` | `.rodata` 0x802B06F0, `.sdata2` 0x80348A58 |
+
+`include/game/scptact.h` and `unit_80219378.h`, `unit_80055E94.h` hold what the new files share; the
+rest of each old unit's declarations moved into the one file that uses them.
+
+What this showed:
+
+- **A base-pooled string only matches when the whole file's strings come first, in order.** That
+  means the unit in address order, `-str reuse,readonly`, and literals where the code had
+  `lbl_` externs. Checking the compiled `.rodata` against the DOL finds wrong literals that fdiff
+  can't see (it masks them): "rdt_script.c" for "rdt_scriptact.c", "Cl malloc" for "Cl: malloc", and
+  a `\h` that had lost its backslash.
+- **A local array first in a file's `.rodata` means deferred codegen.** It's the signature from
+  `tasks.c` again: `unit_80228A20.c` (fn_80229BEC's `lim`) and `unit_80072DD4.c` (fn_80073B48's
+  `pat`). Those two use `-inline noauto,deferred` with the source running top address down.
+  `unit_801FCFF0.c` looks the same (0x802D4D40, 4D54, 4D68 are used by descending addresses) and
+  hasn't been converted. It needs fn_8020527C and fn_8020A338 first: fn_8020A734 waits on their strings.
+- **Strings a file keeps after the linker dropped their function.** 0x802ACFA0's first 0x30 bytes
+  have no user, so `unit_80020B50.c` defines them as const arrays ahead of fn_80020E10.
+- **Reading words from a byte stream, cast-free.** fn_8020AAA8 walks with a `char *`, reads through
+  `static inline u32 StrWord(void *p)`, and takes the stream through a `void *` local. A `ScptCur`
+  union or a `u32 *` walker both change registers or scheduling.
+- `unit_80228A20.c` keeps "ME201A.sct" and "/sound/m02s.p16" as named const arrays, and
+  0x802D969C (0x30 zero bytes, fn_802297C4's by the look of it) as a const array, until
+  fn_80228E00 and fn_802297C4 match. fn_80228E00 is the string's first user.
+- `scpteve.c`'s `.rodata` is byte-exact except for fn_8020DD1C's three strings.
+
+Left, and why:
+
+- fn_80228C50, fn_80228E00, fn_80229124, fn_802293E0: the file's `.data` (34 objects, typed) isn't
+  in C yet, so the base register question from the per-unit pass is still open. The arrays that were
+  in the way now sit in another file.
+- fn_80073164: exact in the a10 draft but its task and chr types need folding with `T5C188`,
+  `Node`, and fn_800085EC's real prototype.
+- The shop split, not done: `.sdata2` and `.rodata` edges say 0x801A2D20 (bss 0x803080F8 pool:
+  fn_801A3A10, fn_801A3B30, fn_801A4070), 0x801A4B40 and 0x801A6A88 (`.rodata` 0x802B4A00-0x802B6A18:
+  fn_801A5FD8). It needs 0x2000 bytes of LayoutPart tables generated first.
+- fn_800A6F30, fn_800A7860: pool offsets depend on local arrays of unmatched neighbours.
