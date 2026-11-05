@@ -489,6 +489,17 @@ typedef struct ShopChar {
     s16 h6c;
     u8 pad6e[0x2e];
 } ShopChar;
+/* One party member's stat row in the shop's character block (0xA8 bytes). */
+typedef struct ShopRow {
+    u8 pad0[6];
+    s16 h6, h8, ha, hc, he, h10, h12, h14;
+    u8 pad16[0xa8 - 0x16];
+} ShopRow;
+typedef struct ShopSave {
+    ShopChar c[4];
+    u8 pad270[0x2e8 - 0x270];
+    ShopRow rows[4];
+} ShopSave;
 /* A sell tab's list: a count and the items' entries. */
 typedef struct SellList {
     u32 n;
@@ -526,20 +537,20 @@ typedef struct ShopEntry {
     s8 flag;
     s8 type;
     s16 id;
-    u8 pad4[2];
+    s16 key;
 } ShopEntry;
 typedef struct ShopBuf {
-    u8 pad0[4];
+    u32 shop;
     u16 pages;
     u16 count;
-    ShopEntry out[0x30];
+    ShopEntry out[0x5a];
 } ShopBuf;
 typedef struct ShopTask {
     u8 pad0[0x19];
     u8 state;        /* 0x19 */
     u8 pad1a[0xa];
     ShopWork* w;     /* 0x24 */
-    ShopChar* chr;   /* 0x28 */
+    ShopSave* chr;   /* 0x28 */
     ShopBuf* buf;    /* 0x2C */
     SellList* sell;  /* 0x30: the five sell tabs' lists */
 } ShopTask;
@@ -1541,9 +1552,9 @@ typedef struct { u8 pad[0x10]; u32 v; } W;
 void fn_801B277C(Task* t);
 typedef struct { u8 pad[0x24]; MenuPartWork* w; MenuPanel* obj; MenuPanel* obj2; u8 pad30[0xC]; void* p3c; } T_801B54D4;
 typedef struct { f32 a, b; } FP;
+typedef struct { s16 id; s8 count; s8 pad; } Ent_801B9810;
 extern u8 fn_801F464C(s32 id);
 extern u16 fn_801B995C(s32 id);
-typedef struct { s16 id; s8 count; s8 pad; } Ent_801B9810;
 typedef struct { u8 pad0[0x2c]; f32 x, y; u8 pad34[0x74 - 0x34]; f32 z; } Obj_8019B980;
 typedef struct { u8 pad0[0x18]; u8 flags; } Par_8019D168;
 typedef struct { s32 ready; } Sig_8019D168;
@@ -1652,7 +1663,7 @@ typedef struct { void* a; void* b; void* c; u16 xc;
  s32 f18;
  s32 f1c;
  s32 f20;
- u8 pad_24[0x4]; } Ent_801AC2E4;
+ s32 f24; } Ent_801AC2E4;
 extern Ent_801AC2E4 lbl_802ED258[];
 extern s8 fn_801BE608(s16 x);
 void fn_801AC16C(Task* task);
@@ -1792,6 +1803,8 @@ typedef struct {
     u8 state;
     u8 pad1a[0xa];
     Data* data;
+    u8 pad28[0x40 - 0x28];
+    Data buf;           /* 0x40 */
 } Self;
 extern void fn_8009076C(s32 a, Data* d);
 extern s32 strlen(const char* s);
@@ -5108,6 +5121,50 @@ u32 fn_801B9810(Ent_801B9810* list, Ent_801B9810** out, u32 n) {
     return k;
 }
 
+#ifdef NONMATCHING
+/* Exact, but its s16 parameter changes fn_801B8F48: that caller then needs an s32 parameter and a narrowing copy, which is not real source. */
+u16 fn_801B995C(s16 key) {
+    u32 n;
+    u32 i;
+    switch (fn_801F4C24(key)) {
+    case 0:
+        n = 0;
+        for (i = 0; i < lbl_803471B8->w->count; i++) {
+            if (lbl_803471B8->w->m[i].ha == key) n++;
+        }
+        break;
+    case 1:
+        n = 0;
+        for (i = 0; i < lbl_803471B8->w->count; i++) {
+            if (lbl_803471B8->w->m[i].hc == key) n++;
+        }
+        break;
+    case 2:
+        n = 0;
+        for (i = 0; i < lbl_803471B8->w->count; i++) {
+            if (lbl_803471B8->w->m[i].he == key) n++;
+        }
+        break;
+    case 5:
+        n = 0;
+        for (i = 0; i < 4; i++) {
+            if (lbl_803471B8->w->d8[i].v == key) n++;
+        }
+        break;
+    case 6:
+        n = 0;
+        for (i = 0; i < 3; i++) {
+            if (lbl_803471B8->w->h10a[i] == key) n++;
+        }
+        break;
+    default:
+        n = 0;
+        break;
+    }
+    return n;
+}
+#endif
+
 void fn_801A66AC(Node *t) {
     VertexCol v[3] = {
         { 0.0f, 0.0f, 0.0f, 0xFF201008 },
@@ -5877,7 +5934,7 @@ extern ShopPart* fn_801B06CC(ShopTask* t, u16 i, u16 who, f32 alpha);
 extern void* fn_801AFBE8(void* t, u16 i, u16 kind, f32 alpha);
 extern void fn_801C1FC0(s16 id, s32 who);
 extern s32 fn_801C16D0(s16 id);
-extern void fn_801C1728(s16 id, s32 slot);
+extern void fn_801C1728(s16 id, u16 slot);
 extern s32 fn_801AAFAC(ShopTask* t);
 extern void fn_801C0AB4(u16 id, u8 who);
 extern void fn_801C2C4C(u8 who, s8 v);
@@ -6492,7 +6549,7 @@ void fn_801A6BDC(ShopTask* t) {
             }
             t->w->parts[14]->x38->state = 1;
             t->w->xc[t->w->who[0]] = 0;
-            lbl_803471B8->chr[t->w->who[0]].h6c = -1;
+            lbl_803471B8->chr->c[t->w->who[0]].h6c = -1;
             fn_801C0AB4(t->w->stat[0][0], t->w->who[0]);
             fn_801C2C4C(t->w->who[0], t->w->b34);
             fn_801C12C8();
@@ -6508,11 +6565,11 @@ void fn_801A6BDC(ShopTask* t) {
                     fn_801C0AB4(t->w->item, t->w->who[0]);
                     if (fn_801F4CA0()) {
                         fn_801C2C4C(t->w->who[0], t->w->parts[14]->list->page);
-                        lbl_803471B8->chr[t->w->who[0]].h6c = t->w->parts[14]->list->page;
+                        lbl_803471B8->chr->c[t->w->who[0]].h6c = t->w->parts[14]->list->page;
                         t->w->xc[t->w->who[0]] = 1;
                     } else {
                         fn_801C2C4C(t->w->who[0], t->w->b34);
-                        lbl_803471B8->chr[t->w->who[0]].h6c = t->w->b34;
+                        lbl_803471B8->chr->c[t->w->who[0]].h6c = t->w->b34;
                         t->w->xc[t->w->who[0]] = 1;
                     }
                     fn_801C12C8();
@@ -8053,6 +8110,47 @@ ShopPart* fn_801B06CC(ShopTask* t, u16 kind, u16 who, f32 alpha) {
 extern void fn_801B4F78(s32 x, s32 y, u16 cur, u16 id);
 extern s16 fn_801C153C(s16 i, s16 cur);
 
+static inline void ShopNums3(MenuPanel* o, s32 n) {
+    s16 ix = o->o.rect[0];
+    s16 iy = 60.0f + o->o.rect[1] + 24 * n;
+    ShopRow* r = &lbl_803471B8->chr->rows[n];
+    TextPrintNumber(ix + lbl_802B8ECC[0], iy, r->h8, 0xC004);
+    TextPrintNumber(ix + lbl_802B8ECC[1], iy, r->ha, 0xC004);
+    TextPrintNumber(ix + lbl_802B8ECC[2], iy, r->he, 0xC004);
+    TextPrintNumber(ix + lbl_802B8ECC[3], iy, r->h14, 0xC004);
+}
+
+void fn_801B42F8(ShopPart* t) {
+    MenuPanel* o = t->obj;
+    s32 i;
+    s16 id;
+    s16 ix;
+    s16 iy;
+    ShopRow* r;
+
+    for (i = 0; i < 3; i++) {
+        fn_801C1728(o->h56, i);
+    }
+    for (i = 0; i < 3; i++) {
+        id = lbl_803471B8->w->h10a[i];
+        if (id != -1) {
+            if (id == o->h56) {
+                TextSetColor(0x40201008);
+                TextPrint(260.0f + o->o.rect[0], 60.0f + o->o.rect[1] + 25 * i, lbl_802EC04C[2]);
+            } else {
+                TextSetColor(0xff201008);
+                ShopNums3(o, i);
+            }
+            TextPrint(44.0f + o->o.rect[0], 60.0f + o->o.rect[1] + 25 * i, fn_801F4AE4(lbl_803471B8->w->h10a[i]));
+            fn_801B6BB4(o, &o->o.rect[0], lbl_803471B8->w->h10a[i], -1, 0x10, 0x3c + 25 * i, o->o.alpha);
+        } else {
+            TextSetColor(0xff201008);
+            TextPrint(44.0f + o->o.rect[0], 60.0f + o->o.rect[1] + 25 * i, lbl_802EC04C[0]);
+            ShopNums3(o, i);
+        }
+    }
+}
+
 void fn_801B46EC(void* arg) {
     ShopPart* t = arg;
     MenuPanel* v = t->obj;
@@ -8074,6 +8172,55 @@ void fn_801B46EC(void* arg) {
             TextSetColor(0xFF201008);
             TextPrint(44.0f + v->o.rect[0], 60.0f + v->o.rect[1] + (f32)(i * 25), lbl_802EC04C[0]);
             fn_801B4F78(v->o.rect[0], 60.0f + v->o.rect[1] + (f32)(i * 24), v->h56, lbl_803471B8->w->h10a[i]);
+        }
+    }
+}
+
+static inline void ShopNums4(MenuPanel* o, s32 n) {
+    s16 ix = o->o.rect[0];
+    s16 iy = 60.0f + o->o.rect[1] + 24 * n;
+    ShopRow* r = &lbl_803471B8->chr->rows[n];
+    TextPrintNumber(ix + lbl_802B8EBC[0], iy, r->h6, 0xC004);
+    TextPrintNumber(ix + lbl_802B8EBC[1], iy, r->hc, 0xC004);
+    TextPrintNumber(ix + lbl_802B8EBC[2], iy, r->h10, 0xC004);
+    TextPrintNumber(ix + lbl_802B8EBC[3], iy, r->h12, 0xC001);
+}
+
+void fn_801B49B0(ShopPart* t) {
+    MenuPanel* v = t->obj;
+    s32 i;
+    s32 sel;
+    u32 color;
+    f32 f;
+
+    for (i = 0; i < 4; i++) {
+        fn_801C1728(v->h56, i);
+    }
+    for (i = 0; i < 4; i++) {
+        switch (fn_801C153C(i, v->h56)) {
+        case 0:
+            f = v->o.alpha;
+            color = 0xFF201008;
+            sel = -1;
+            TextSetColor(color);
+            ShopNums4(v, i);
+            break;
+        case 1:
+            f = 0.7f * v->o.alpha;
+            color = 0x40201008;
+            sel = 2;
+            break;
+        case 2:
+            f = 0.7f * v->o.alpha;
+            color = 0x40201008;
+            sel = 1;
+            break;
+        }
+        TextSetColor(color);
+        fn_801B6BB4(v, &v->o.rect[0], lbl_803471B8->w->d8[i].v, -1, 0x10, 0x3C + i * 25, f);
+        TextPrint(44.0f + v->o.rect[0], 60.0f + v->o.rect[1] + (f32)(i * 25), fn_801F4AE4(lbl_803471B8->w->d8[i].v));
+        if (sel != -1) {
+            TextPrint(236.0f + v->o.rect[0], 60.0f + v->o.rect[1] + (f32)(i * 25), lbl_802EC04C[sel]);
         }
     }
 }
@@ -8385,9 +8532,9 @@ inline s8 fn_801BE608(s16 x) {
         return -1;
     }
     r = 0;
-    if (lvl >= ((Ent_801BE608*)lbl_802ED258)[x].lo) {
+    if (lvl >= lbl_802ED258[x].lo) {
         r = 2;
-    } else if (lvl >= ((Ent_801BE608*)lbl_802ED258)[x].hi) {
+    } else if (lvl >= lbl_802ED258[x].hi) {
         r = 1;
     }
     return r;
@@ -8412,7 +8559,7 @@ s32 fn_801BD748(ShopTask_801BD748* t, ShopEntry_801BD748* tmp, s32 start) {
         if ((Test_801BD748(i + 0xc62) & 1) == 0 && Test_801BD748(i + 0xb54) == 1) {
             tmp[n].id = i;
             tmp[n].flag = fn_801BE608(i);
-            tmp[n].val = ((Ent_801BE608*)lbl_802ED258)[i].f24;
+            tmp[n].val = lbl_802ED258[i].f24;
             n++;
         }
     }
@@ -8898,6 +9045,35 @@ static inline void SlideBut_801A038C(Self_801A0C3C *o)
         if (i != o->ctx->x7 && o->ctx->objs[lbl_802B494C[i].idx] != 0
             && UiObjMoveToXIfChanged(&o->ctx->objs[lbl_802B494C[i].idx]->obj->o, 6, 5, 676.0f) != 0) {
             UiObjSetCommand(&o->ctx->objs[lbl_802B494C[i].idx]->obj->o, 0xf, lbl_802B494C[i].b3);
+        }
+    }
+}
+
+void fn_801A0018(Self_801A0C3C *o) {
+    s32 v;
+    fn_801A66AC(o->ctx->objs[0]);
+    if (o->ctx->slot[o->ctx->idx] != 1 && (v = fn_801A28AC(o->ctx->idx)) == 1) {
+        o->ctx->slot[o->ctx->idx] = v;
+        MenuPlaySe(3);
+        fn_801A64B4(o, 4);
+        o->ctx->x26c = 0;
+    }
+    if (lbl_80311A60[0]->held & 0x100) {
+        if (o->ctx->x26c != 0) {
+            fn_801A64B4(o, o->ctx->x26c);
+            o->ctx->x26c = 0;
+        } else {
+            if (1.0f != o->ctx->x18) fn_801A4DCC(o, 1);
+            if (o->ctx->objs[5] != 0) {
+                UiObjMoveToX(&o->ctx->objs[5]->obj->o, 6, 5, -240.0f);
+                UiObjSetCommand(&o->ctx->objs[5]->obj->o, 0x1a, 2);
+                UiObjMoveToX(&o->ctx->objs[6]->obj->o, 6, 5, -240.0f);
+                UiObjSetCommand(&o->ctx->objs[6]->obj->o, 0x1a, 0);
+            }
+            if (o->ctx->objs[7] != 0) {
+                SlideAll_801A038C(o);
+            }
+            o->state = 0xc;
         }
     }
 }

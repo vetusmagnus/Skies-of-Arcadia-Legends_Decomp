@@ -116,7 +116,7 @@ extern s32 fn_8021026C(const char* name);
 typedef struct Args { s32 i[5]; f32 f[20]; } Args;
 void fn_80155994(Args *a);
 #define RDI(p) (*(p) == 3.4028235e38f ? ((p)++, 0x7FFFFFFF) : (s32)fn_801F6120(&(p)))
-extern void ScreenFadeDraw(void *p, f32 a, f32 b, f32 c, f32 d, f32 e);
+void ScreenFadeDraw(u32 *col, f32 a, f32 x0, f32 x1, f32 y0, f32 y1);
 extern void njUnitMatrix(f32 *m);
 extern void njRotateXYZ(f32 *m, s32 x, s32 y, s32 z);
 extern void fn_80148188(s32 v);
@@ -1430,7 +1430,7 @@ void fn_80210338(void)
 {
     if (lbl_8030CEA0.xc5c != 0) {
         if (lbl_8030CEA0.xc60.w & 0xFF000000) {
-            ScreenFadeDraw(&lbl_8030CEA0.xc60, lbl_8030CEA0.xc64, 0.0f, 640.0f, 0.0f, 480.0f);
+            ScreenFadeDraw(&lbl_8030CEA0.xc60.w, lbl_8030CEA0.xc64, 0.0f, 640.0f, 0.0f, 480.0f);
         }
     }
 }
@@ -1512,7 +1512,7 @@ s32 fn_80210064(s32 id)
 {
     Scpt s;
 
-    if (fn_80210860(&s, (u16)id) == 0) {
+    if (fn_80210860(&s, id) == 0) {
         return 0;
     }
     s.owner = 0x1a;
@@ -1850,6 +1850,48 @@ static inline u8 *find(const char *name) {
         }
     }
     return 0;
+}
+
+f32 fn_801DBD9C(f32 z);
+void fn_8028A26C(s32 a);
+void fn_8028A0F4(void *verts, s32 n);
+void fn_8028A268(void);
+
+/* One vertex of the screen fade quad: position, depth and the fade colour. */
+typedef struct FadeVtx {
+    f32 x;   /* 0x00 */
+    f32 y;   /* 0x04 */
+    f32 z;   /* 0x08 */
+    u32 col; /* 0x0C */
+} FadeVtx;
+
+void ScreenFadeDraw(u32 *col, f32 a, f32 x0, f32 x1, f32 y0, f32 y1) {
+    FadeVtx v[4];
+    f32 z;
+
+    z = fn_801DBD9C(a);
+    v[0].x = x0;
+    v[0].y = y0;
+    v[0].z = z;
+    v[0].col = *col;
+    v[1].x = x1;
+    v[1].y = y0;
+    v[1].z = z;
+    v[1].col = *col;
+    v[2].x = x0;
+    v[2].y = y1;
+    v[2].z = z;
+    v[2].col = *col;
+    v[3].x = x1;
+    v[3].y = y1;
+    v[3].z = z;
+    v[3].col = *col;
+
+    njColorBlendingMode(0, 8);
+    njColorBlendingMode(1, 6);
+    fn_8028A26C(1);
+    fn_8028A0F4(v, 4);
+    fn_8028A268();
 }
 
 /* Opens the archive entry called name once (x1874 guards it): its data becomes x4. */

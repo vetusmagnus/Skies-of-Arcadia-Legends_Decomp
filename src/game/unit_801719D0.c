@@ -16,6 +16,7 @@
 #include <string.h>
 #include <dolphin/types.h>
 #include "game/camp.h"
+extern PadState* lbl_80311A60[];
 /* camp_work: the camp menu's panels and the state of each screen. */
 typedef struct CampWork {
     s8 *ids;            /* 0x000 */
@@ -83,7 +84,7 @@ typedef struct CampEnt {
     s16 x4;           /* 0x04 */
     s16 x6;           /* 0x06 */
     u8 pad8[4];
-    s32 xc;           /* 0x0C */
+    const char *xc;   /* 0x0C the entry's text */
     const char *x10;  /* 0x10 */
 } CampEnt;
 /* A camp menu request (0x88): who, which list and page, then the entries. */
@@ -388,18 +389,18 @@ extern void fn_8018796C(Inner_80186E4C* p);
 extern void fn_80186F58(Inner_80186E4C* p);
 typedef struct {
     u8 pad0;
-    u8 a;  /* 0x01 */
-    s8 b;  /* 0x02 */
-    u8 c;  /* 0x03 */
+    s8 a;  /* 0x01 */
+    s8 b;  /* 0x02: 1 = selectable */
+    s8 c;  /* 0x03 */
     s32 d; /* 0x04 */
-    u32 e; /* 0x08 */
+    const char *e; /* 0x08 the line's text */
     const char *f; /* 0x0C */
 } DstRec;
 typedef struct Dst_80189958 {
     s8 id;        /* 0x00 */
-    u8 x1;        /* 0x01 */
-    u8 x2;        /* 0x02 */
-    u8 ok;        /* 0x03 */
+    s8 x1;        /* 0x01 */
+    s8 x2;        /* 0x02 */
+    s8 ok;        /* 0x03 */
     DstRec rec[6]; /* 0x04 */
 } Dst_80189958;
 extern void* lbl_80347100;
@@ -490,7 +491,7 @@ typedef struct {
 } Self_8018A16C;
 extern void fn_80296EEC(s32 a, s32 b, s32 c);
 void fn_8018A2D8(Inner_8018A16C *self);
-extern void fn_8018D250(void* p);
+extern void fn_8018D250(Inner_8018A16C* p);
 extern void fn_8018C8B4(Inner_8018A16C* p);
 extern void fn_80194F88(void* p);
 /* A camp menu option: its id, three label lines and the help line (lbl_802E9908). */
@@ -559,8 +560,7 @@ extern s32 fn_801952D0(s32 v);
 void fn_80217830(u32 a);
 typedef struct { s32 hide; u8 pad4[4]; UiObj obj; u8 pad_[0xbc - 8 - sizeof(UiObj)]; } Win_8017BF14;
 typedef struct { u8 pad[0x24]; Win_8017BF14* in; } Pnl_8017BF14;
-typedef struct { s8 kind; u8 pad1[2]; s8 b3; } In_801887EC;
-typedef struct { s32 x0, x4; u8 ui[0x74 - 8]; f32 z; u8 pad78[0xbc - 0x78]; In_801887EC *in; } Node_801887EC;
+typedef struct { s32 x0, x4; UiObj ui; u8 pad54[0x74 - 8 - sizeof(UiObj)]; Pos_80188274 pos; u8 pad94[0xbc - 0x94]; Dst_80189958 *in; } Node_801887EC;
 typedef struct { u8 pad0[0x18]; u8 flags; u8 state; u8 pad1a[0x24 - 0x1a]; Node_801887EC *node; } Obj_801887EC;
 typedef struct { u8 pad0[0x24]; Node_801887EC *node; } Ent_801887EC;
 typedef struct { u8 pad0[0x2c]; f32 x, y; } Pos_801887EC;
@@ -2604,6 +2604,62 @@ void fn_8018C8B4(Inner_8018A16C *self)
     TextSetZ(savez);
 }
 
+#define NUM10(V, DX, DY) fn_8019A374(V, x + (DX), y + (DY), 10.0f + self->pos.f0, 0xff201008, 0)
+
+void fn_8018D250(Inner_8018A16C *self)
+{
+    s16 x;
+    s16 y;
+    Sub_8018A16C *d;
+    f32 savez;
+
+    d = self->sub;
+    fn_8018DABC(d, d->ch, d->b, d->c, d->mode);
+    if (self->obj.rdy > 0.0f) {
+        self->pos.f0 = 150.0f + (150.0f * d->b + -6940.0f);
+    } else {
+        self->pos.f0 = 150.0f * d->b + -6940.0f;
+    }
+    x = self->obj.rect[0];
+    y = self->obj.rect[1];
+    savez = TextGetZ();
+    TextPushColor();
+    TextSetColor(0xff201008);
+    TextSetZ(100.0f + self->pos.f0);
+    switch (d->c) {
+    case 0:
+        NUM10(d->stat[0].cur, 0x8b, 0xa);
+        NUM10(d->stat[1].cur, 0x10d, 0xa);
+        NUM10(d->stat[2].cur, 0x8b, 0x22);
+        NUM10(d->stat[3].cur, 0x10d, 0x22);
+        break;
+    case 1:
+        NUM10(d->stat[4].cur, 0x8b, 0xa);
+        NUM10(d->stat[5].cur, 0x10d, 0xa);
+        NUM10(d->stat[6].cur, 0x8b, 0x22);
+        break;
+    case 2:
+        NAME(d->name[0], 6);
+        NAME(d->name[1], 0x1e);
+        break;
+    case 3:
+        NAME(d->name[2], 6);
+        break;
+    case 4:
+        TextPrint(x + 0x1c, y + 6, lbl_803467C0[0]);
+        TextPrint(x + 0x1c, y + 0x1e, lbl_803467C0[1]);
+        NUM10(d->x58, 0x110, 0xa);
+        if (d->lv != 99) {
+            NUM10(d->x5c, 0x110, 0x22);
+        } else {
+            TextPrint(x + 0xbc, y + 0x22, lbl_802B45CC);
+        }
+        break;
+    }
+    TextPopColor(1);
+    TextSetZ(savez);
+}
+
 void fn_8018D7F0(Sub_8018A16C* self) {
     s32 k;
     s32 old;
@@ -2766,7 +2822,6 @@ extern s32 lbl_803473EC;
 extern s8 fn_8009763C(void);
 extern s32 lbl_80347508;
 extern s32 lbl_803473E8;
-extern PadState* lbl_80311A60[];
 extern f32 fn_801CBBAC(f32);
 extern void fn_801CBB9C(f32);
 extern s32 lbl_80347130;
@@ -6212,8 +6267,8 @@ void fn_801887EC(Obj_801887EC *self) {
     const char *str;
     s16 x, y;
     s32 id;
-    void *ui = node->ui;
-    In_801887EC *in = node->in;
+    UiObj *ui = &node->ui;
+    Dst_80189958 *in = node->in;
     if (lbl_803475D8 != 0) {
         self->state = 0xff;
     }
@@ -6226,10 +6281,10 @@ void fn_801887EC(Obj_801887EC *self) {
         UiObjCalcRect(ui);
         if (self->node->x0 == 1) {
             CampPanelDrawFrame();
-            if (in->b3 == 1) {
+            if (in->ok == 1) {
                 fn_80188A18(self->node);
             } else {
-                switch (in->kind) {
+                switch (in->id) {
                 case 1: id = 0x3a; str = (const char *)lbl_802EBB54; break;
                 case 0: id = 0x33; str = (const char *)lbl_802EBB48; break;
                 case 3: id = 0x41; str = (const char *)lbl_802EBB34; break;
@@ -6244,7 +6299,7 @@ void fn_801887EC(Obj_801887EC *self) {
                     TextPushColor();
                     TextSetColor(0xff201008);
                     z = TextGetZ();
-                    TextSetZ(self->node->z);
+                    TextSetZ(self->node->pos.f0);
                     TextPrint(x + 0x34, y + 0xc, str);
                     TextSetZ(z);
                     TextPopColor(1);
@@ -8551,4 +8606,159 @@ void fn_80186F58(Inner_80186E4C* self) {
     ICON_80186F58(0x16, 0x94, 0x36, 6, 0xc3, 0x3a);
     TextPopColor(1);
     TextSetZ(savez);
+}
+
+extern void* fn_801DB244(void* p);
+extern s16 lbl_803470D4;
+extern s16 lbl_803470D6;
+extern int sprintf(char* buf, const char* fmt, ...);
+extern char *strcat(char *dst, const char *src);
+extern void fn_801866B4(void);
+extern void fn_80186348(void);
+static inline s32 Test2_80192EDC(u32 b)
+{
+    s32 f = (lbl_80310B3C[b >> 5] & (1 << (b & 31))) != 0;
+    return f != 0;
+}
+
+s32 fn_80185C00(void)
+{
+    char buf[0x20];
+    s32 i;
+    s32 cnt = 0;
+    s32 first = 0;
+    CampWork *cw;
+
+    for (i = 0; i < 8; i++) {
+        if (Test2_80192EDC(i + 0xac8)) {
+            if (first == 0) {
+                first = i + 1;
+            }
+            cnt++;
+        }
+    }
+    cw = &camp_work;
+    switch (cw->state[19]) {
+    case 0:
+        cw->state[19] = 2;
+        fn_801866B4();
+        lbl_803470D4 = 0x280;
+        lbl_803470D6 = first - 1;
+        sprintf(buf, "/field/wanted%02d", lbl_803470D6 + 1);
+        if (lbl_80310A1C.x64[lbl_803470D6] < 3) {
+            strcat(buf, "a.mld");
+        } else {
+            strcat(buf, "b.mld");
+        }
+        lbl_803470D0 = fn_801DB244(buf);
+        fn_80227810(lbl_803470D0->x4->x20);
+        SePlay(2, 1, 4);
+        break;
+    case 2:
+        fn_801863E8(lbl_803470D4, lbl_803470D6, 0);
+        lbl_803470D4 -= 0x60;
+        if (lbl_803470D4 <= 0) {
+            lbl_803470D4 = 0;
+            cw->state[19] = 3;
+        }
+        break;
+    case 3:
+        fn_801863E8(lbl_803470D4, lbl_803470D6, cnt);
+        if ((lbl_80311A60[0]->held & 0x200) != 0) {
+            cw->state[19] = 0x18;
+            SePlay(2, 1, 4);
+        } else if ((lbl_80311A60[0]->held & 0x40) != 0 && cnt > 1) {
+            cw->state[19] = 0x14;
+            lbl_803470D4 = 0;
+            SePlay(2, 1, 4);
+        } else if ((lbl_80311A60[0]->held & 0x20) != 0 && cnt > 1) {
+            cw->state[19] = 0x15;
+            lbl_803470D4 = 0;
+            SePlay(2, 1, 4);
+        }
+        break;
+    case 24:
+        fn_801863E8(lbl_803470D4, lbl_803470D6, 0);
+        fn_801861F8();
+        cw->state[19] = 0x12;
+        break;
+    case 18:
+        fn_801863E8(lbl_803470D4, lbl_803470D6, 0);
+        lbl_803470D4 += 0x60;
+        if (lbl_803470D4 >= 0x280) {
+            lbl_803470D4 = 0;
+            cw->state[19] = 0x13;
+            fn_802275A4(lbl_803470D0->x4->x20, 1);
+            fn_801E17E0(lbl_803470D0);
+            lbl_803470D0 = 0;
+            fn_80186348();
+        }
+        break;
+    case 19:
+        if (CampMenuAnyPanelBusy() == 0) {
+            camp_work.state[2] = 0;
+            camp_screen = 2;
+            fn_801959D4(2);
+        } else if (fn_801C09F8(lbl_80347154, 2) != 0 || fn_801C09F8(lbl_80347154, 1) != 0) {
+            CampMenuFinishAllPanels();
+            camp_work.state[2] = 0;
+            camp_screen = 2;
+            fn_801959D4(2);
+        }
+        break;
+    case 20:
+        lbl_803470D4 += 0x60;
+        fn_801863E8(lbl_803470D4, lbl_803470D6, 0);
+        if (lbl_803470D4 >= 0x2e0) {
+            lbl_803470D4 = 0x280;
+            while (1) {
+                lbl_803470D6--;
+                if (lbl_803470D6 < 0) {
+                    lbl_803470D6 = 7;
+                }
+            if (Test2_80192EDC(lbl_803470D6 + 0xac8)) break;
+            }
+            cw->state[19] = 0x16;
+        }
+        break;
+    case 21:
+        lbl_803470D4 += 0x60;
+        fn_801863E8(lbl_803470D4, lbl_803470D6, 0);
+        if (lbl_803470D4 >= 0x2e0) {
+            lbl_803470D4 = 0x280;
+            while (1) {
+                lbl_803470D6++;
+                if (lbl_803470D6 > 7) {
+                    lbl_803470D6 = 0;
+                }
+            if (Test2_80192EDC(lbl_803470D6 + 0xac8)) break;
+            }
+            cw->state[19] = 0x16;
+        }
+        break;
+    case 22:
+        fn_802275A4(lbl_803470D0->x4->x20, 1);
+        fn_801E17E0(lbl_803470D0);
+        lbl_803470D0 = 0;
+        sprintf(buf, "/field/wanted%02d", lbl_803470D6 + 1);
+        if (lbl_80310A1C.x64[lbl_803470D6] < 3) {
+            strcat(buf, "a.mld");
+        } else {
+            strcat(buf, "b.mld");
+        }
+        lbl_803470D0 = fn_801DB244(buf);
+        fn_80227810(lbl_803470D0->x4->x20);
+        cw->state[19] = 0x17;
+        SePlay(2, 1, 4);
+        /* fall through */
+    case 23:
+        fn_801863E8(lbl_803470D4, lbl_803470D6, 0);
+        lbl_803470D4 -= 0x60;
+        if (lbl_803470D4 <= 0) {
+            lbl_803470D4 = 0;
+            cw->state[19] = 3;
+        }
+        break;
+    }
+    return 0;
 }

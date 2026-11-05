@@ -436,14 +436,16 @@ typedef struct EvObj {
     EvSub* sub;              /* 0x1D8 */
     u8* x1dc;                /* 0x1DC */
     f32 x1e0;                /* 0x1E0 */
-    u8 pad1E4[0x1EC - 0x1E4];
+    s32 x1e4;                /* 0x1E4 */
+    u8 pad1E8[0x1EC - 0x1E8];
     s8 x1ec;                 /* 0x1EC */
     s8 x1ed;                 /* 0x1ED */
     s8 x1ee;                 /* 0x1EE */
     s8 x1ef;                 /* 0x1EF */
     s8 x1f0;                 /* 0x1F0 */
     s8 x1f1;                 /* 0x1F1 */
-    u8 pad1F2[0x1FA - 0x1F2];
+    s8 x1f2;                 /* 0x1F2 */
+    u8 pad1F3[0x1FA - 0x1F3];
     s8 x1fa;                 /* 0x1FA */
     s8 x1fb;                 /* 0x1FB */
     s16 x1fc;                /* 0x1FC */

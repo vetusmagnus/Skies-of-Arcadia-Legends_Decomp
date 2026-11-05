@@ -12,11 +12,15 @@
 #include <dolphin/os/OSFastCast.h>
 #include "game/draw2d.h"
 #include "game/battle.h"
+#include "game/work_8030CEA0.h"
+#include <stdarg.h>
+#include <stdio.h>
+
 void VISetNextFrameBuffer(void *fb);
 void VIFlush(void);
 void VIWaitForRetrace(void);
 extern void *lbl_803476AC;
-extern u32 *lbl_803476C0;
+extern GXRenderModeObj *lbl_803476C0;
 extern NJS_TEXLIST lbl_80347568;
 typedef struct Sub { u8 pad[0x20]; NJS_TEXLIST *texlist; } Sub;
 typedef struct Outer { u8 pad[4]; Sub *sub; } Outer;
@@ -229,7 +233,7 @@ typedef struct Pad {
     u32 released;  /* 0x0C */
     u8 pad10[4];
     s16 sx, sy;    /* 0x14 */
-    u8 pad18[4];
+    s16 cx, cy;    /* 0x18 */
 } Pad;
 extern s32 lbl_80347658;
 extern Pad* lbl_80311A60[6];
@@ -243,7 +247,7 @@ struct Node801D {
 };
 void fn_801DA748(Node801D* n);
 typedef struct Node801DF6 Node801DF6;
-typedef struct { u16* x0; } Data801DF6;
+typedef struct { u16* x0; u32 x4; } Data801DF6;
 /* A model tree node (a Ninja object): flags, model, position, angles, scale, child, sibling. */
 struct Node801DF6 {
     u32 flags;       /* 0x00 */
@@ -622,11 +626,14 @@ extern void fn_80291428(s32 a);
 extern void fn_802913E8(s32 a, s32 b);
 s32 fn_80227AF0(s32 i, void *p);
 void *fn_801E13B0(void *p, u32 size);
-void fn_801DAEB8(void *p);
+/* Header of a loaded MLD block: entry table (self-relative until relocated), then the offset at 0x10. */
 typedef struct TexHdr {
-    u8 pad0[0x10];
-    u32 off;
+    s32 count;      /* 0x00 */
+    u32 entries;    /* 0x04 */
+    u8 pad08[8];
+    u32 off;        /* 0x10 */
 } TexHdr;
+void fn_801DAEB8(TexHdr *d);
 typedef struct SpinObj {
     u8 pad00[0x2];
     s16 k02;
@@ -1339,6 +1346,95 @@ Obj20 *fn_801D665C(void);
 void fn_801D61C4(void* p);
 extern Rect14* fn_801D6398(Layout* s);
 
+/* NEAR (140 diff lines, fn_801D7C44.c): colour packing and register colouring of q/c0..c3 differ. */
+#ifdef NONMATCHING
+typedef struct QuadReq {
+    u16 enable;      /* 0x00 */
+    u16 pad02[3];
+    f32 z;           /* 0x08 */
+    u32 pad0c;
+    u32 attr;        /* 0x10 */
+    u32 blend;       /* 0x14 */
+    f32 a, b;        /* 0x18 colour modulation */
+    s32 mode;        /* 0x20 */
+    u32 col[4];      /* 0x24 */
+    f32 u, v;        /* 0x34 */
+    f32 w, h;        /* 0x3c */
+    f32 x, y;        /* 0x44 */
+} QuadReq;
+
+void fn_801D7C44(NJS_TEXLIST* h, QuadReq* q) {
+    DrawState st;
+    u8 col[4];
+    VertexTex vt[4];
+    u32 c3;
+    u32 c2;
+    u32 c1;
+    u32 c0;
+    NjTexMem* tex;
+    f32 z;
+    if (h == NULL) return;
+    if (q->enable == 0) return;
+    DrawStateDefault2D(&st);
+    st.attr_or |= q->attr;
+    if (q->blend != 0) {
+        st.blend_src = 8;
+        st.blend_dst = 10;
+    }
+    DrawStatePush(&st);
+    fn_80299040(h);
+    tex = h->textures->texaddr->mem;
+    fn_80297DC8(tex->id);
+    z = q->z;
+    fn_801D65B4(q->col[0], col, q->a, q->b);
+    c0 = (col[0] << 24) + (col[1] << 16) + (col[2] << 8) + col[3];
+    fn_801D65B4(q->col[1], col, q->a, q->b);
+    c1 = (col[0] << 24) + (col[1] << 16) + (col[2] << 8) + col[3];
+    fn_801D65B4(q->col[2], col, q->a, q->b);
+    c2 = (col[0] << 24) + (col[1] << 16) + (col[2] << 8) + col[3];
+    fn_801D65B4(q->col[3], col, q->a, q->b);
+    c3 = (col[0] << 24) + (col[1] << 16) + (col[2] << 8) + col[3];
+    z = fn_801DBD9C(z);
+    {
+        f32 su = 1.0f / tex->body.w0c;
+        f32 sv = 1.0f / tex->body.w10;
+        f32 x = q->x;
+        f32 y = q->y;
+        f32 x1 = x + q->w;
+        f32 y1 = y + q->h;
+        f32 u1 = su * (q->u + q->w);
+        f32 v1 = sv * (q->v + q->h);
+        vt[0].x = x;
+        vt[0].y = y;
+        vt[0].z = z;
+        vt[0].u = su * q->u;
+        vt[0].v = sv * q->v;
+        vt[0].colour = c0;
+        vt[2].x = x1;
+        vt[2].y = y;
+        vt[2].z = z;
+        vt[2].u = u1;
+        vt[2].v = vt[0].v;
+        vt[2].colour = c2;
+        vt[3].x = x1;
+        vt[3].y = y1;
+        vt[3].z = z;
+        vt[3].u = u1;
+        vt[3].v = v1;
+        vt[3].colour = c3;
+        vt[1].x = x;
+        vt[1].y = y1;
+        vt[1].z = z;
+        vt[1].u = vt[0].u;
+        vt[1].v = v1;
+        vt[1].colour = c1;
+    }
+    fn_80291064(vt, 4, q->mode);
+    DrawStatePop(NULL);
+    DrawStateRestore();
+}
+#endif
+
 void fn_801D81C0(Layout* sprite, Rec23* req, f32 z, f32 a, f32 b, u32 attr, u32 blend, NJS_TEXLIST* texlist) {
     DrawState st;
     NJS_ARGB argb;
@@ -1878,6 +1974,25 @@ void fn_801DAE18(RelocTbl *t, u32 off) {
     }
 }
 
+/* Offsets inside a loaded MLD block are made absolute in place. */
+typedef struct PtrList {
+    s32 count;
+    u32 v[1];
+} PtrList;
+typedef struct MldEntry {
+    u8 pad00[8];
+    u32 f08, f0c, f10;
+    u32 f14;
+    u32 f18;
+    u32 f1c;
+    u32 f20;
+    u8 pad24[0x68 - 0x24];
+} MldEntry;
+
+extern s16 fn_801DA51C(void* p);
+extern void fn_801C8828(u32 p);
+
+
 s32 fn_801DB5F8(Task *o)
 {
     s32 i;
@@ -1941,7 +2056,8 @@ void fn_801DBE1C(const char *fmt, ...) {
 
 void fn_801DBF90(void);
 extern u32 lbl_80310B3C[]; /* story-flag bitset */
-extern s32 lbl_803475D8, lbl_80347470, lbl_803476D0, lbl_803476CC, lbl_80347674;
+extern s32 lbl_803475D8, lbl_80347470, lbl_803476CC, lbl_80347674;
+extern u32 lbl_803476D0;
 extern s32 lbl_80347578, lbl_80347280, lbl_803473A4, lbl_803475B4;
 extern f32 lbl_80347488;
 extern u32 lbl_803476D4;
@@ -2008,6 +2124,92 @@ void fn_801DBE88(void) {
 
 void fn_801DBF90(void) {
 }
+
+f32 fn_801DBD9C(f32 z) {
+    if (z > -1.0f) z = -1.0f;
+    if (z < -65535.0f) fn_801DBE1C("Mistake Priority. (%f)", z);
+    return lbl_80347F28 - ((z + 1.0f) / -65535.0f) * (lbl_80347F28 - lbl_80347F2C);
+}
+
+extern s32 lbl_80347670;
+extern s32 lbl_803475D0;
+extern s32 lbl_803475DC;
+extern s32 fn_8023D160(void);
+extern void fn_80217CB0(void);
+extern s32 fn_801D168C(void);
+extern void fn_801DC504(void);
+
+void fn_801DBF94(s32 a);
+
+#ifdef NONMATCHING
+/* Exact except for its string offsets, which need OSPanic in this file ahead of it. */
+void fn_801DBF94(s32 a) {
+    s32 action = 0;
+    s32 disc = fn_8023D160();
+    if (lbl_803476CC != 0) {
+        lbl_80347674 = 1;
+    } else {
+        lbl_80347674 = 0;
+        if (lbl_80347670 != 0 && lbl_80311A60[0]->held != 0x1600) {
+            lbl_80347670 = 0;
+        }
+        if (lbl_80347470 != 0) {
+            lbl_80347674 = 1;
+        } else if ((lbl_803476D4 & 2) && lbl_803475D0 == 0) {
+            lbl_80347674 = 1;
+        } else if (lbl_80347670 == 0) {
+            Pad *pad = lbl_80311A60[0];
+            if (pad->held == 0x1600 && pad->cx == 0 && pad->cy == 0) {
+                if (lbl_803476D0 == 0) {
+                    lbl_803476D0 = OSGetTick();
+                } else if (OSTicksToMilliseconds(OSGetTick() - lbl_803476D0) >= 500) {
+                    lbl_80347674 = 1;
+                }
+            } else {
+                lbl_803476D0 = 0;
+            }
+        }
+    }
+    if (lbl_80347674 != 0) {
+        if (a != 0) {
+            if (lbl_803475D0 != 0) {
+                lbl_803476CC = 1;
+            } else {
+                fn_80217CB0();
+                if (disc == 0 || fn_801D168C() != -1) {
+                    action = 1;
+                } else {
+                    action = 2;
+                }
+            }
+        } else if (disc == 0) {
+            action = 1;
+        }
+    }
+    if (action == 1) {
+        lbl_803476D8 = 0;
+        lbl_803476DC = 0;
+        fn_801DC504();
+        if (lbl_803475AC != 0) {
+            OSReport("[Reset] Hardware Reset. %s\n", disc == 0 ? "(Not Identified Disc Check)" : "");
+            OSReport("[System] OSResetSystem (%s:%d)\n", "main.c", 0x6f8);
+        }
+        OSResetSystem(1, 0, 0);
+        while (1) {}
+    } else if (action == 2) {
+        lbl_803475DC = 0;
+        lbl_803475D8 = 1;
+        lbl_80347670 = 1;
+        lbl_803476CC = 0;
+        lbl_803476D4 = 0;
+        lbl_803476DC = 1;
+        lbl_803476D8 = 0;
+        if (lbl_803475AC != 0) {
+            OSReport("[Reset] Application Reset.\n");
+        }
+    }
+}
+#endif
 
 extern u32 lbl_803476D4;
 extern s32 lbl_803475AC;
@@ -3074,6 +3276,9 @@ void fn_801DA748(Node801D* n) {
     }
 }
 
+/* NEAR (130 diff lines, fn_801DAA5C.c): everything but the last (sibling) branch matches; the inlined
+   sibling node takes the parent's register in ours (r30) and r31 in the original. */
+
 inline void CountNode(Node801DF6* n, s32* count, s32* total) {
     s32 v;
     if (!(n->flags & 8) && n->d != 0) {
@@ -3211,12 +3416,6 @@ void fn_801DB9B4(void) {
     for (i = 0; i < 16; i++) {
         if (lbl_80312D00[i] != 0) TaskDelete(lbl_80312D00[i]);
     }
-}
-
-f32 fn_801DBD9C(f32 z) {
-    if (z > -1.0f) z = -1.0f;
-    if (z < -65535.0f) fn_801DBE1C(lbl_802C456C, z);
-    return lbl_80347F28 - ((z + 1.0f) / -65535.0f) * (lbl_80347F28 - lbl_80347F2C);
 }
 
 void fn_801DBE6C(s32 i) {
@@ -5522,3 +5721,95 @@ void fn_801DCDC0(NJS_POINT3 *out, f32 x, f32 y, f32 z) {
     out->z = z;
 }
 #endif
+
+extern VertexCol lbl_802F6620[4];
+extern void (*lbl_80347490)(s32 a);
+extern s32 fn_801DC62C(void);
+extern void fn_801D23E0(void);
+extern void fn_80296F6C(s32 a);
+extern void fn_80296C00(s32 a, s32 b, s32 c);
+extern void fn_801D6E58(void);
+extern void fn_801C7904(void);
+extern void fn_801D1268(s32 a);
+extern void fn_801D0F80(s32 a);
+extern void fn_80210338(void);
+extern void fn_800FF4B0(void);
+extern void MessageWindowDraw(void);
+extern void ScreenWipeDraw(void);
+extern void fn_801CB8E0(void);
+extern void fn_801C6224(void);
+extern void fn_801D150C(void);
+
+int main(void) {
+    lbl_803475DC = 1;
+    lbl_803475D8 = 0;
+    lbl_803475D0 = 0;
+    lbl_803476DC = 1;
+    while (lbl_803476DC != 0) {
+        lbl_803476D8 = fn_801DC62C();
+        while (lbl_803476D8 != 0) {
+            GXRenderModeObj* rm;
+            s32 i;
+            s32 flag;
+            lbl_8034768C = VIGetRetraceCount();
+            fn_801D23E0();
+            fn_80296F6C(0);
+            rm = lbl_803476C0;
+            if (rm->field_rendering != 0) {
+                GXSetViewportJitter(0.0f, 0.0f, rm->fbWidth, rm->efbHeight, 0.0f, 1.0f, VIGetNextField());
+            }
+            flag = 0;
+            fn_80296C00(0, 0, 0);
+            for (i = 0; i < 4; i++) {
+                lbl_802F6620[i].colour = lbl_80312D40[i];
+                if ((lbl_80312D40[i] & 0xFF000000) != 0xFF000000) {
+                    flag = 1;
+                }
+            }
+            fn_80290ED4(lbl_802F6620, 4, flag);
+            fn_801D6E58();
+            fn_801D74FC();
+            fn_801C7904();
+            fn_801DBF94(1);
+            if (lbl_803475D8 != 0) {
+                continue;
+            }
+            fn_801D1268(1);
+            fn_801DC288();
+            fn_801D0F80(1);
+            if (lbl_803475CC == 6 && lbl_8030CEA0.xc64 < -1.023f) {
+                fn_80210338();
+            }
+            if (lbl_80347490 != 0) {
+                MessageWindowDraw();
+                TextFlush();
+                if (lbl_803475CC == 6) {
+                    fn_800FF4B0();
+                }
+                ScreenWipeDraw();
+            } else {
+                if (lbl_803475CC == 6) {
+                    fn_800FF4B0();
+                }
+                ScreenWipeDraw();
+                MessageWindowDraw();
+                TextFlush();
+            }
+            if (lbl_803475CC == 6 && lbl_8030CEA0.xc64 >= -1.023f) {
+                fn_80210338();
+            }
+            fn_801CB8E0();
+            fn_801C6224();
+            if (fn_801D168C() != -1) {
+                fn_801D150C();
+            }
+            fn_801DC420();
+        }
+        fn_801DC504();
+    }
+    if (lbl_803475AC != 0) {
+        OSReport("[System] OSResetSystem (%s:%d)\n", "main.c", 0x242);
+    }
+    OSResetSystem(1, 0, 0);
+    while (1) {}
+}

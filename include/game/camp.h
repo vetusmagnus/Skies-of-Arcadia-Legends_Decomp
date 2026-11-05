@@ -62,7 +62,9 @@ typedef struct Sys_80310A1C {
     s8 f6;      /* 0x06 */
     u8 pad7[0x30 - 7];
     s8 x30;     /* 0x30 */
-    u8 pad31[0x120 - 0x31];
+    u8 pad31[0x64 - 0x31];
+    s8 x64[8];  /* 0x64 */
+    u8 pad6c[0x120 - 0x6c];
 } Sys_80310A1C;
 typedef struct { f32 f0, f4; s32 i8, ic; u8 pad10[8]; f32 f18, f1c; } Pos_80188274;
 typedef struct { u8 pad0[0x14]; s32 sel; } Sel_80188098;

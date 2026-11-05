@@ -390,6 +390,19 @@ s32 fn_80194E64(void) {
     return 1;
 }
 
+s16 fn_80194ECC(void) {
+    CampReq r;
+    CampCtrl *k = &lbl_80307638[11];
+    CampCtrl *c = lbl_8034710C->holder->ctrl;
+    s32 b = k->cur[2].sel + 6;
+    s32 d = c->cur[4].sel;
+    r.a = (s8)k->cur[0].sel;
+    r.b = b;
+    r.d = d;
+    fn_801F1280(&r);
+    return r.e[c->cur[0].sel].x6;
+}
+
 void fn_80194F3C(Msg* a, s16 i) {
     fn_8021B2B4(a, i);
 }

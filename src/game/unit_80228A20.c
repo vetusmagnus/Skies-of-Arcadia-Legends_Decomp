@@ -35,7 +35,7 @@ typedef struct Blk3c {                    /* 0x3c .. 0xc8, cleared together */
     u8 pad94[0xc8 - 0x94];
 } Blk3c;
 typedef struct Blkf4 {                    /* 0xf4 .. 0x128, cleared together */
-    s16 sf4;
+    u16 sf4;
     u16 hf6;
     u8 idx[2];                            /* 0xf8 */
     s16 sfa;
@@ -90,19 +90,6 @@ typedef struct Cfg {
     f32 d;
     f32 e;
 } Cfg;
-typedef struct Obj_80229BEC {
-    u8 pad0[0xf4];
-    u16 state;
-    u8 padf6[2];
-    u8 prev;
-    u8 cur;
-    s16 timer;
-    u8 padfc[4];
-    f32 fade;
-    u8 pad104[0x2b8 - 0x104];
-    Lerp4 sub;
-    Lerp4 sub2;
-} Obj_80229BEC;
 extern Cfg lbl_802F915C[];
 extern f32 lbl_8034C648;
 extern f32 lbl_8034C688;
@@ -417,39 +404,39 @@ void fn_80229D74(void) {
     fn_8022642C();
 }
 
-void fn_80229BEC(Obj_80229BEC *o) {
+void fn_80229BEC(C0 *o) {
     u32 lim[5] = {0, 0x30c, 0xf0, 0x30c, 0x10e};
     Lerp4 *s;
     s32 i;
-    switch (o->state) {
+    switch (o->blkf4.sf4) {
     case 0:
-        if (o->timer < lim[o->cur]) {
-            o->timer++;
+        if (o->blkf4.sfa < lim[o->blkf4.idx[1]]) {
+            o->blkf4.sfa++;
         } else {
-            o->fade = lbl_8034C648;
-            o->prev = o->cur;
-            if (o->cur < 4) {
-                o->cur++;
+            o->blkf4.f100 = lbl_8034C648;
+            o->blkf4.idx[0] = o->blkf4.idx[1];
+            if (o->blkf4.idx[1] < 4) {
+                o->blkf4.idx[1]++;
             } else {
-                o->cur = 1;
+                o->blkf4.idx[1] = 1;
             }
-            o->timer = 0;
-            o->state = 1;
-            s = &o->sub;
-            i = (u8)(o->cur - 1);
+            o->blkf4.sfa = 0;
+            o->blkf4.sf4 = 1;
+            s = &o->items[5];
+            i = (u8)(o->blkf4.idx[1] - 1);
             fn_801D89D4(s, 200, 10, s->cur[0], s->cur[1], s->cur[2], s->cur[3], lbl_802F915C[i].a, lbl_802F915C[i].b, lbl_802F915C[i].c, lbl_802F915C[i].d);
             fn_801D8AB4(&s[1], 0x104, 0x1e, s[1].cur[0], lbl_802F915C[i].e);
         }
         break;
     case 1:
-        if (o->fade > lbl_8034C688) {
-            o->fade -= lbl_8034C68C;
+        if (o->blkf4.f100 > lbl_8034C688) {
+            o->blkf4.f100 -= lbl_8034C68C;
         } else {
-            o->state = 0;
+            o->blkf4.sf4 = 0;
         }
         break;
     default:
-        o->state = 0;
+        o->blkf4.sf4 = 0;
         break;
     }
 }

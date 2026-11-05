@@ -2600,3 +2600,29 @@ Still open, each with a draft that matches or is close once decided:
 - Private views to fold into `EvObj`: the callees of fn_800F1AD8, which matches once they take `EvObj*`/`Task*`.
 - fn_8008FC50 matches with the same `(u16*)` cast fn_8008F9B8 already has; held for the cast rule.
 - fn_8001C6CC is instruction-exact and guarded: only its three string offsets differ.
+
+## Upper-half pass (2026-11-05, from ee59937)
+
+Every unmatched function from 0x80140460 up (402) was listed; 351 went to 40 work lists on private unit copies
+(left out: the ones blocked on header calls, and untried functions of 1.5 KB and up), merged three-way and re-checked
+as in the per-unit pass above. 19 new functions, main.dol byte-identical. The rest are mostly register colouring;
+near drafts are in `build/agents/w8/` on the machine that ran the pass.
+
+What matched came from retyping a unit's own structs (s8 vs u8 fields, s32 for signed compares, fake views folded into
+the real type), or from writing a function as the twin of a matched neighbour with the same inline.
+
+Exact but kept under `#ifdef NONMATCHING`, because the only form that matches is too close to a shortcut:
+
+- fn_801F4EA0: the comparator goes through a `void *` local. The real `qsort` wants `const void *` parameters, and
+  comparators written that way don't match.
+- fn_801B995C: its `s16` parameter forces fn_801B8F48 into an `s32` parameter with a narrowing copy.
+- fn_80222224: the third vector goes through a `void *` local to avoid a pointer cast.
+- fn_802223E4, fn_802224D4, fn_802225C0: the shape is held as `void *` with a typed copy per case.
+- fn_801DBF94: exact apart from string offsets, which need OSPanic in the file ahead of it. OSPanic
+  and fn_801DAEB8 match only with pointer casts, so neither is in the file.
+
+Header calls these would release, none made: `CrewData.x1e` as bytes, `ShipItemData.effect`/`use_up` and
+`UseItemData.use_up` signedness (fn_80143928, fn_80144400); `text.h` heaps as `s32` (fn_801DC62C); `Work8030CEA0`
+fields (fn_802126C8, fn_80212130, fn_80200460 family); the `CampWin` and `CampTask` fields in `camp.h`.
+fn_801D61F4 and fn_801D6398 use the Dolphin fast cast to s16 (`OSf32tos16` is missing from our `OSFastCast.h`); even
+with it, the stack order of the temporaries still differs.

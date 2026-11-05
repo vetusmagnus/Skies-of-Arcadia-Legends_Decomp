@@ -6,6 +6,8 @@
 #include <dolphin/types.h>
 #include "game/battle.h"
 #include "ninja.h"
+#include "game/drawstate.h"
+#include <math.h>
 extern void fn_80136A28(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f);
 extern s32 fn_8013DA50(s32 a, s32 b);
 /* A battle menu window's state. */
@@ -105,7 +107,8 @@ typedef struct {
     s8 x3;
     s8 x4;
     s8 x5;
-    u8 x6, x7;
+    s8 x6;
+    s8 x7;
     s16 x8;
     s16 xa;
     u32 xc;
@@ -123,7 +126,7 @@ typedef struct Member {
     u8 pad0[0x12];
     s16 id;         /* 0x12 */
     s8 state;       /* 0x14: < 0 empty */
-    u8 pad15;
+    s8 b15;
     s16 x16;
     s16 x18;        /* x16's boost */
     s16 x1a;        /* -1: none */
@@ -152,7 +155,8 @@ typedef struct Party {
     u8 pad34[0x40 - 0x34];
     s16 x40;
     s16 x42;
-    u8 pad44[0x50 - 0x44];
+    s16 x44;
+    u8 pad46[0x50 - 0x46];
     s16 x50;        /* status turns */
     s16 x52;
     s16 x54;
@@ -186,7 +190,7 @@ typedef struct Big {
 } Big;
 /* A ship battle command (0x18): what a slot does this turn. */
 typedef struct BtlCmd {
-    char x0;            /* 0x00: kind */
+    s8 x0;              /* 0x00: kind */
     s8 x1;              /* 0x01 */
     s8 x2;              /* 0x02 */
     s8 x3;              /* 0x03 */
@@ -201,11 +205,12 @@ typedef struct BtlCmd {
     s16 x10;            /* 0x10 */
     s16 x12;            /* 0x12 */
     s16 x14;            /* 0x14 */
-    u8 pad16[2];
+    u8 x16[2];
 } BtlCmd;
 typedef struct BtlSlot {
     s16 mode;
-    u8 pad2[4];
+    s16 x2;
+    s16 x4;
     s16 x6;
     s16 x8;
     s16 xa;             /* 0x0A */
@@ -213,18 +218,15 @@ typedef struct BtlSlot {
     BtlCmd head;        /* 0x0E */
     BtlCmd body;        /* 0x26 */
 } BtlSlot;
+typedef struct BtlLink {
+    s16 a;
+    s16 b;
+} BtlLink;
 /* *lbl_8034727C: the ship battle state (0xAB4). */
 typedef struct BtlWork {
     s16 flag[2];        /* 0x000: player, enemy */
     s16 x4;
-    s16 x6;
-    s16 x8;
-    s16 xa;
-    s16 xc;
-    s16 xe;
-    s16 x10;
-    s16 x12;
-    s16 x14;
+    BtlLink link[4];    /* 0x006 */
     u8 pad16[2];
     s32 x18;
     s32 x1c;
@@ -240,6 +242,9 @@ typedef struct BtlWork {
     Blk out;            /* 0xA24 */
 } BtlWork;
 extern void fn_8014549C(s32 a, s32 b);
+extern s16 fn_80147CC8(BtlSlot *a);
+extern void fn_801457C4(s32 a, s32 b);
+extern s32 fn_8014419C(s32 a, s32 b);
 s32 fn_8013A538(s32 a, s32 b, s32 cur, s32 step, s32 d);
 void fn_80131630(s8 a, s8 b, s8 v);
 extern void fn_8014359C(BtlCmd *in, s32 a, s32 b);
@@ -304,7 +309,7 @@ extern void fn_80131500(s8 a);
 extern void fn_80131658(Cell *c);
 extern void fn_80140264(void);
 extern void fn_8013FB48(s32 a, s32 b);
-extern s32 fn_80140D04(s32 a);
+extern s32 fn_80140D04(void);
 extern Big *fn_80135598(void);
 extern BtlWork *lbl_8034727C;
 extern s32 lbl_80347278;
@@ -787,7 +792,7 @@ typedef struct {
     Rec90 b[8];
 } Work_80144680;
 extern s32 lbl_80346F78;
-extern void fn_80144400(void *p, s32 idx);
+extern void fn_80144400(BtlCmd *p, s32 idx);
 extern s32 lbl_803472B4;
 extern s32 lbl_802E5EA8[4];
 extern s32 fn_8015C4A0(s32 a, s32 b);
@@ -969,6 +974,11 @@ typedef struct Ang3 {
     AnglePair xy;
     Angle z;
 } Ang3;
+typedef struct Slot18 {
+    u8 pad0[0x14];
+    f32 x14;
+    u8 pad18[4];
+} Slot18;
 typedef struct FxList {
     u8 pad0[4];
     u32 x4;
@@ -976,7 +986,8 @@ typedef struct FxList {
 typedef struct Ctx_8014D398 {
     u8 pad0[0x1c];
     NJS_ARGB colour;    /* 0x1c */
-    u8 pad2c[0x38 - 0x2c];
+    s32 x2c;            /* 0x2c */
+    u8 pad30[0x38 - 0x30];
     NJS_POINT3 pos;     /* 0x38 */
     Ang3 ang;           /* 0x44 */
     NJS_POINT3 scl;     /* 0x50 */
@@ -1014,16 +1025,21 @@ typedef struct Ctx_8014D398 {
     u8 f1fb;
     s16 f1fc;
     s16 f1fe;
-    u8 pad200[0x20c - 0x200];
+    u8 pad200[2];
+    s16 x202;
+    u8 pad204[0x20c - 0x204];
     Ang3 rot;           /* 0x20c */
-    u8 pad218[0x238 - 0x218];
+    u8 pad218[0x22c - 0x218];
+    u16 x22c;
+    u8 pad22e[0x236 - 0x22e];
+    u16 x236;
     u16 x238;
     u8 pad23a[0x23c - 0x23a];
     void *x23c;     /* the per-type record: Node_8014D398, CamNode, Leader */
     u8 pad240[0x24c - 0x240];
     NJS_POINT3 vec;     /* 0x24c */
-    u8 pad258[4];
-    void *x25c;
+    f32 x258;
+    Slot18 *x25c;
     void *x260;     /* the per-type record of an effect object */
     FxList *x264;
     u8 pad268[0x26c - 0x268];
@@ -1033,10 +1049,14 @@ static inline Info *CamInfo(Ctx_8014D398 *c) {
     return c->x1c8->x10;
 }
 typedef struct Task_8014D398 {
-    u8 pad0[0x18];
+    u8 pad0[8];
+    struct Task_8014D398 *parent;
+    u8 pad0c[0x18 - 0xc];
     u8 f18;
     u8 b19;
-    u8 pad1a[0x24 - 0x1a];
+    u8 pad1a;
+    u8 x1b;
+    u8 pad1c[0x24 - 0x1c];
     Ctx_8014D398 *x24;
 } Task_8014D398;
 typedef struct {
@@ -1106,7 +1126,6 @@ extern s32 fn_800E0C38(s32 id);
 extern void *fn_801C8930(void *h);
 extern void *fn_80167244(void *a, u32 mask);
 extern s32 fn_8025ECC4(void);
-typedef struct Arg { u8 pad[4]; s16 mode; } Arg;
 #define DECAY(v, d) { d = -v / 4; v += d; }
 
 void fn_8013D400(s32 a, s32 b) {
@@ -1356,7 +1375,7 @@ void fn_80146480(IdxArg* a) {
     }
 }
 
-s32 fn_80146BF4(s32 a, s32 b, s32 c, s32 idx, Req_UNIT0000 *p) {
+s32 fn_80146BF4(s32 a, s32 b, s32 c, s32 idx, Slot_8014359C *p) {
     s32 d;
     s32 flag;
     Party *arr;
@@ -2211,7 +2230,7 @@ s32 fn_80140FBC(s32 x)
     Party *q;
     Member *t;
 
-    if (fn_80140D04(x) != 0) {
+    if (fn_80140D04() != 0) {
         over = 0;
         lim = 100;
         base = fn_80135598();
@@ -2247,14 +2266,14 @@ void fn_801453D0(void)
     lbl_8034727C->x4 = 0;
     lbl_8034727C->x18 = 0;
     lbl_8034727C->x1c = 0;
-    lbl_8034727C->x6 = -1;
-    lbl_8034727C->x8 = 0;
-    lbl_8034727C->xa = -1;
-    lbl_8034727C->xc = 0;
-    lbl_8034727C->xe = -1;
-    lbl_8034727C->x10 = 0;
-    lbl_8034727C->x12 = -1;
-    lbl_8034727C->x14 = 0;
+    lbl_8034727C->link[0].a = -1;
+    lbl_8034727C->link[0].b = 0;
+    lbl_8034727C->link[1].a = -1;
+    lbl_8034727C->link[1].b = 0;
+    lbl_8034727C->link[2].a = -1;
+    lbl_8034727C->link[2].b = 0;
+    lbl_8034727C->link[3].a = -1;
+    lbl_8034727C->link[3].b = 0;
     base = fn_80135598();
     r = fn_8013558C();
     lbl_8034727C->x20 = &base->party;
@@ -3476,7 +3495,7 @@ void fn_80144680(void)
     for (i = 0; i < n; i++) {
         (*(Work_80144680 **)&lbl_8034727C)->a[i] = (*(Work_80144680 **)&lbl_8034727C)->a[i + n];
         fn_801E0FD4((void *)(&(*(Work_80144680 **)&lbl_8034727C)->a[i + n]), 0x90);
-        fn_80144400((*(Work_80144680 **)&lbl_8034727C)->slot[i].head, i);
+        fn_80144400(&lbl_8034727C->slot[i].head, i);
         (*(Work_80144680 **)&lbl_8034727C)->b[i] = (*(Work_80144680 **)&lbl_8034727C)->b[i + n];
         fn_801E0FD4((void *)(&(*(Work_80144680 **)&lbl_8034727C)->b[i + n]), 0x90);
         fn_80143734((void *)((*(Work_80144680 **)&lbl_8034727C)->slot[i].body), i);
@@ -4004,6 +4023,169 @@ static inline s32 Pick_80141390(void) {
     return sel;
 }
 
+static inline s32 Clamp(s32 v, s32 lo, s32 hi) {
+    v = v > lo ? v : lo;
+    return v < hi ? v : hi;
+}
+
+static inline Party *Sys_801410D4(void) {
+    return &fn_80135598()->party;
+}
+
+static inline s32 Idx_801410D4(s32 i) {
+    s32 ok = 0;
+    if (i >= 0 && i < 0x16) {
+        ok = 1;
+    }
+    return ok;
+}
+
+static inline s32 Bit_801410D4(s32 i) {
+    s32 bit = 0;
+    Party *a = Sys_801410D4();
+    if (a != 0) {
+        if (Idx_801410D4(i)) {
+            bit = (a->flags & (1 << i)) != 0;
+        }
+    }
+    return bit;
+}
+
+static inline s32 Any_801410D4(void) {
+    s32 count;
+    s32 i;
+    s32 flag = 0;
+    Party *a = Sys_801410D4();
+    if (a != 0 && a->b11 >= 2) {
+        count = 0;
+        for (i = 0; i < 0x16; i++) {
+            if (Bit_801410D4(i)) {
+                count++;
+            }
+        }
+        if (count > 0) {
+            flag = 1;
+        }
+    }
+    return flag;
+}
+
+static inline s32 FcValid_801410D4(Party *b) {
+    s32 ok = 0;
+    if (b != 0 && b->mem[4].state >= 0) {
+        ok = 1;
+    }
+    return ok;
+}
+
+static inline s32 FcGet_801410D4(void) {
+    s32 k;
+    Party *b = &fn_80135598()->party;
+    k = 4;
+    if (FcValid_801410D4(b)) {
+        k = b->mem[4].state;
+    }
+    return k;
+}
+
+static inline s32 FcIs3_801410D4(void) {
+    s32 flag = 0;
+    if (FcValid_801410D4(Sys_801410D4())) {
+        if (FcGet_801410D4() == 3) {
+            flag = 1;
+        }
+    }
+    return flag;
+}
+
+static inline s32 MaxSel_801410D4(void) {
+    if (Any_801410D4()) {
+        return 7;
+    }
+    if (FcIs3_801410D4()) {
+        return 6;
+    }
+    return 5;
+}
+
+typedef struct Pair_801298CC {
+    s16 s0;
+    s16 s2;
+} Pair_801298CC;
+extern Pair_801298CC *fn_801298CC(void);
+
+static inline s32 RecSlot_80140D04(s32 who, s32 n) {
+    s32 i = -1;
+    s32 last;
+    if (n > 0 && n <= 4) {
+        last = n - 1;
+        if (last < 4) {
+            for (i = 0; i <= last; i++) {
+                if (lbl_80308E90[i + 4].kind == 4 && lbl_80308E90[i + 4].member == who) {
+                    break;
+                }
+            }
+        }
+    }
+    return i;
+}
+
+static inline s32 Placed_80140D04(s32 who) {
+    s32 ok = 1;
+    s32 n = party_count();
+    s32 i = RecSlot_80140D04(who, n);
+    if (i >= 0 && i == n) {
+        ok = 0;
+    }
+    return ok;
+}
+
+static inline s32 State2_80140D04(s32 i) {
+    s32 r = 0;
+    s32 n = party_count();
+    if (i >= 0 && i < n && fn_801298CC()[i].s0 == 2) {
+        r = 1;
+    }
+    return r;
+}
+
+static inline s32 Stage2_80140D04(void) {
+    s32 f = 0;
+    if (FcValid_801410D4(Sys_801410D4())) {
+        if (!Placed_80140D04(4)) {
+            f = 1;
+        }
+    }
+    return f;
+}
+
+static inline s32 Stage3_80140D04(s32 n) {
+    s32 i;
+    s32 f = 0;
+    for (i = 0; i < n; i++) {
+        if (State2_80140D04(i)) {
+            f = 1;
+            break;
+        }
+    }
+    return f;
+}
+
+s32 fn_80140D04(void)
+{
+    s32 result = 0;
+    s32 n = party_count();
+
+    if (FcIs3_801410D4()) {
+        if (Stage2_80140D04()) {
+            if (Stage3_80140D04(n)) {
+                result = 1;
+            }
+        }
+    }
+    return result;
+}
+
 s32 fn_80141390(MenuObj *o) {
     s32 res;
     s32 sel;
@@ -4258,11 +4440,6 @@ static inline s32 Wrap(s32 x, s32 lo, s32 hi) {
         x = lo;
     }
     return x;
-}
-
-static inline s32 Clamp(s32 v, s32 lo, s32 hi) {
-    v = v > lo ? v : lo;
-    return v < hi ? v : hi;
 }
 
 s32 fn_8013DA50(s32 a, s32 b) {
@@ -4903,13 +5080,13 @@ void fn_8014836C(u16 ship, s32 path)
     }
 }
 
-s16 fn_80147CC8(Arg* a) {
+s16 fn_80147CC8(BtlSlot* a) {
     s32 res;
     s16 x;
     s16 y;
     s16 n;
     s32 t;
-    switch (a->mode) {
+    switch (a->x4) {
     case 1:
         res = 1;
         break;
@@ -4966,9 +5143,6 @@ inline void fn_80148EDC(Node* n)
     }
 }
 
-#ifdef NONMATCHING
-#include "game/drawstate.h"
-#include <math.h>
 /* Config record of an effect emitter (Link.cfg). */
 typedef struct Cfg_8014A1FC {
     u8 pad0[0x50];
@@ -4996,15 +5170,6 @@ typedef struct Cfg_8014A1FC {
     u32 xd8;
     u8 xdc[1];
 } Cfg_8014A1FC;
-typedef struct Link_8014A1FC {
-    u8 pad[0x10];
-    Cfg_8014A1FC* cfg;
-} Link_8014A1FC;
-typedef struct Slot18 {
-    u8 pad0[0x14];
-    f32 x14;
-    u8 pad18[4];
-} Slot18;
 /* Per-emitter state, 0x108 bytes */
 typedef struct Emit {
     u32 flags;     /* 0x00 */
@@ -5024,7 +5189,7 @@ typedef struct Emit {
     u8 pad54;
     u8 cr, cg, cb;
     s16 x58, x5a;
-    s32 x5c;
+    NJS_TEXLIST *x5c;
     DrawState ds;  /* 0x60 */
     u8 pad88[0xac - 0x88];
     f32 xac, xb0;
@@ -5034,32 +5199,6 @@ typedef struct Emit {
     u8 padc0[0x100 - 0xc0];
     f32 x100;
 } Emit;
-typedef struct Fx {
-    u8 pad0[0x20];
-    f32 x20, x24, x28;
-    s32 x2c;
-    u8 pad30[0x50 - 0x30];
-    f32 x50, x54;
-    u8 pad58[0xe4 - 0x58];
-    void* xe4;
-    u8 padE8[0x100 - 0xe8];
-    void* x100;
-    u8 pad104[0x176 - 0x104];
-    s16 x176;
-    u8 pad178[0x1c8 - 0x178];
-    Link_8014A1FC* link;
-    u8 pad1cc[0x202 - 0x1cc];
-    s16 x202;
-    u8 pad204[0x22c - 0x204];
-    u16 x22c;
-    u8 pad22e[0x236 - 0x22e];
-    u16 x236;
-    u8 pad238[0x258 - 0x238];
-    f32 x258;
-    Slot18* x25c;
-    u8 pad260[4];
-    void* x264;
-} Fx;
 extern void fn_801E1784(void* p);
 extern void fn_8009E910(DrawState* o, s32 mode, u8* out);
 extern f32 fn_8009E4F8(u8 v);
@@ -5067,7 +5206,7 @@ extern f32 njSin(s32 a);
 extern f32 njCos(s32 a);
 extern s32 fn_800A1AE8(void* o, s32 idx);
 extern s32 fn_800A10A8(void* base, s32 i, s32 n);
-extern s32 fn_800BE430(Fx* o);
+extern s32 fn_800BE430(Ctx_8014D398* o);
 extern f32 fn_80291A5C(f32 x);
 extern f32 fn_8009E3D0(s32 kind, void* model, f32* v);
 extern void* fn_8009E8B0(s32 n);
@@ -5082,7 +5221,6 @@ static inline void DecayAll(Party* f) {
         DECAY(f->mem[k].x1a, f->mem[k].x1c);
     }
 }
-#endif
 
 #ifdef NONMATCHING
 void fn_801477A8(Slot_8014359C *c) {
@@ -5244,16 +5382,15 @@ void fn_8013FF50(s32 who, s32 lo, s32 mem, s32 pts)
 }
 #endif
 
-#ifdef NONMATCHING
-void fn_8014A1FC(Fx* o, Emit* s)
+void fn_8014A1FC(Ctx_8014D398* o, Emit* s)
 {
-    Cfg_8014A1FC* c = o->link->cfg;
+    Cfg_8014A1FC* c = o->x1c8->x10;
     u8 col[4];
     f32 v;
-    u8 r, g, b;
     s32 ang, deg;
     s32 n;
     s16 sh;
+    u8 r, g, b;
     f32 inv, a;
 
     if (o->x25c != NULL) {
@@ -5270,19 +5407,19 @@ void fn_8014A1FC(Fx* o, Emit* s)
     } else {
         s->x50 = 1;
     }
-    o->x20 = fn_8009E4F8(r);
-    o->x24 = fn_8009E4F8(g);
-    o->x28 = fn_8009E4F8(b);
-    if (o->x20 == -1.0f && o->x24 == -1.0f && o->x28 == -1.0f) {
-        o->x20 = o->x24 = o->x28 = 0.0f;
+    o->colour.r = fn_8009E4F8(r);
+    o->colour.g = fn_8009E4F8(g);
+    o->colour.b = fn_8009E4F8(b);
+    if (o->colour.r == -1.0f && o->colour.g == -1.0f && o->colour.b == -1.0f) {
+        o->colour.r = o->colour.g = o->colour.b = 0.0f;
     }
     if (c->x60 != 0) {
-        o->x176 = 0;
+        o->id = 0;
     } else {
-        o->x176 = 3;
+        o->id = 3;
     }
     s->x1a = c->x64;
-    { f32 t = c->x6c; v = t == 0.0f ? 360.0f : t; }
+    { f32 t = c->x6c; v = !t ? 360.0f : t; }
     o->x22c = c->count;
     if (o->x22c != 0) {
         o->x25c = fn_801E1A2C(1, o->x22c * 0x18);
@@ -5298,21 +5435,22 @@ void fn_8014A1FC(Fx* o, Emit* s)
         s->x8 = c->x94;
         s->xb4 = 182.04445f * c->x98;
         s->xc = 182.04445f * c->x9c;
-        s->x10 = 182.04445f * -(f32)c->xa0;
+        deg = c->xa0;
+        s->x10 = 182.04445f * -(f32)deg;
         s->x14 = c->xa8;
         s->x16 = c->xac;
         s->x18 = c->xb0;
         s->x1c = s->x14 == 0 ? 1.0f : 1.0f / s->x14;
         s->x20 = s->x18 == 0 ? 1.0f : 1.0f / s->x18;
         s->x24 = c->xc4;
-        if (s->x24 == 0.0f) {
+        if (!s->x24) {
             s->x24 = 1.0f;
         }
         s->x38 = 182.04445f * c->xd0;
         if (c->xd4 != 0) {
             s->flags |= 1;
         }
-        ang = 182.04445f * (f32)c->xa0;
+        ang = 182.04445f * (f32)deg;
         s->x30 = njCos(ang);
         s->x34 = njSin(ang);
         s->x2c = c->xdc;
@@ -5325,10 +5463,10 @@ void fn_8014A1FC(Fx* o, Emit* s)
         }
         s->x5a = 0;
         s->x58 = 0;
-        s->x5c = (s32)o->x100;
+        s->x5c = o->x100;
         s->x4a = 0;
+        c = o->x1c8->x10;
         s->x3c = 0.003921569f * col[0];
-        c = o->link->cfg;
         s->ds.fog = o->x2c;
         if (c->mode == 3) {
             s->x4c = 1;
@@ -5339,9 +5477,9 @@ void fn_8014A1FC(Fx* o, Emit* s)
             s->flags |= 2;
         }
         if (s->flags & 2) {
-            s->x100 = fn_80291A5C((f32)pow(o->x50, 2.0) + (f32)pow(o->x54, 2.0));
+            s->x100 = fn_80291A5C((f32)pow(o->scl.x, 2.0) + (f32)pow(o->scl.y, 2.0));
         } else {
-            s->x100 = fn_8009E3D0(7, fn_801C8930(o->xe4), &o->x50);
+            s->x100 = fn_8009E3D0(7, fn_801C8930(o->xe4), &o->scl.x);
         }
         sh = c->xbc;
         o->x202 = sh;
@@ -5351,11 +5489,7 @@ void fn_8014A1FC(Fx* o, Emit* s)
         }
         inv = 1.0f / inv;
         if (c->xd8 != 0) {
-            if ((u32)s->x16 > c->xd8) {
-                a = c->xd8;
-            } else {
-                a = s->x16;
-            }
+            a = s->x16 > c->xd8 ? (f32)c->xd8 : (f32)s->x16;
         } else {
             a = s->x16;
         }
@@ -5367,7 +5501,6 @@ void fn_8014A1FC(Fx* o, Emit* s)
         o->x236 = n;
     }
 }
-#endif
 
 typedef struct ResPc_801491CC {
     s32 f0;

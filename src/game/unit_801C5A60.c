@@ -1049,6 +1049,25 @@ void fn_801C83B4(SlotFn id) {
     SlotRemove(lbl_80308428, id);
 }
 
+static inline void SlotAdd(Pair_801C86D8* tab, SlotFn id) {
+    s32 i;
+    for (i = 0; i < 8; i++) {
+        if (tab[i].a[1] == 0) {
+            lbl_80308428[i].a[0] = 0;
+            lbl_80308428[i].a[1] = id;
+            lbl_80308428[i].a[2] = 0;
+            return;
+        }
+    }
+    fn_801DBE1C(lbl_802C3C00);
+}
+void fn_801C8450(SlotFn obj) {
+    if (!obj) {
+        fn_801DBE1C(lbl_802C3C00);
+    }
+    SlotAdd(lbl_80308428, obj);
+}
+
 /* Clears the 8 callback entries and registers fn_801C8590 as a callback. */
 void fn_801C86D8(void)
 {

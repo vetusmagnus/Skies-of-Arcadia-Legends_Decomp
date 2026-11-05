@@ -200,7 +200,7 @@ void *fn_8010A164(s32 a);
 s32 fn_80129CA8(void *p);
 void *memset(void *d, s32 c, u32 n);
 void fn_8020EFD4(void *p);
-void fn_801575C4(void *a);
+void fn_801575C4(s32 a);
 typedef struct Slot_80154C34 {
     s32 active;
     s16 id;
@@ -2862,7 +2862,7 @@ void fn_80150A80(u8 *p)
     AT(s32, p, 0x68) = 0;
 }
 
-s32 fn_801531DC(u8 *obj, void *ptr)
+s32 fn_801531DC(u8 *obj, s32 ptr)
 {
     void *r;
 
@@ -2871,10 +2871,10 @@ s32 fn_801531DC(u8 *obj, void *ptr)
             fn_8020EF30(AT(void *, obj, 4));
             AT(s32, obj, 0xc) = 0;
         }
-        r = fn_8010A164((s32)ptr);
+        r = fn_8010A164(ptr);
         if (r != 0) {
             AT(void *, obj, 0xc) = r;
-            AT(void *, obj, 4) = ptr;
+            AT(s32, obj, 4) = ptr;
             fn_8020EFD4(AT(void *, obj, 4));
             AT(s32, obj, 8) = 0x78;
         } else {
@@ -5075,7 +5075,7 @@ void fn_80158374(void *p) {
     fn_801E17E0(p);
 }
 
-void fn_801575C4(void *a) {
+void fn_801575C4(s32 a) {
 }
 
 void fn_8015596C(void *p) {
@@ -6269,3 +6269,94 @@ s32 fn_80159948(s8 a, Arg *b, Cmd *c)
     }
 }
 #endif
+
+extern void fn_800A3E90(u16 a);
+extern u32 fn_800A40B0(u16 a, u16 b);
+extern void fn_801575C0(s32 a);
+
+void fn_80152B58(Obj_8015259C *h, s32 a4, s32 idx, s32 f68, s32 mode, s32 ship, s32 keyA, s32 keyB, s32 keyC, s32 keyD, s32 f48, s32 unused)
+{
+    h->idx = idx;
+    h->f68 = f68;
+    h->f04 = a4;
+    h->mode = mode;
+    h->f48 = f48;
+    if (keyA != 0) {
+        if (fn_8010A164(keyA) == 0) {
+            fn_801575C4(keyA);
+            h->resA = 0;
+            keyA = 0x2774;
+        }
+        if (h->keyA != keyA) {
+            if (h->keyA != 0) fn_800A3E90(h->x3c);
+            h->keyA = keyA;
+            h->resA = fn_800A40B0(keyA, h->x3c);
+        }
+    }
+    h->resB = 0;
+    if (keyB != 0) {
+        if (fn_8010A164(keyB) == 0) {
+            fn_801575C4(keyB);
+            h->resB = 0;
+        } else if (h->keyB != keyB) {
+            if (h->keyB != 0) fn_800A3E90(h->x34);
+            h->keyB = keyB;
+            h->resB = fn_800A40B0(keyB, h->x34);
+        }
+    }
+    h->resC = 0;
+    if (keyC != 0) {
+        if (fn_8010A164(keyC) == 0) {
+            fn_801575C4(keyC);
+            h->resC = 0;
+        } else if (h->keyC != keyC) {
+            if (h->keyC != 0) fn_800A3E90(h->x50);
+            h->keyC = keyC;
+            h->resC = fn_800A40B0(keyC, h->x50);
+        }
+    }
+    h->resD = 0;
+    if (keyD != 0) {
+        if (fn_8010A164(keyD) == 0) {
+            fn_801575C4(keyD);
+            h->resD = 0;
+        } else if (h->keyD != keyD) {
+            if (h->keyD != 0) fn_800A3E90(h->x58);
+            h->keyD = keyD;
+            h->resD = fn_800A40B0(keyD, h->x58);
+        }
+    }
+    if (ship != 0) {
+        EvTask *t = fn_8010A164(ship);
+        if (t == 0) {
+            fn_801575C4(ship);
+            h->partner = 0;
+            h->pos[0] = 0.0f;
+            h->pos[1] = 0.0f;
+            h->pos[2] = 0.05f;
+        } else {
+            h->f24 = ship;
+            h->partner = t;
+            h->partner->work->x1e4 = f68;
+            if (h->partner->work->x1f2 != 0) fn_801575C0(ship);
+            h->partner->work->x1f2 = 1;
+        }
+    }
+    if (mode < 2) {
+        if (h->resB != 0 && h->resC != 0 && h->partner != 0) h->ready = 1;
+    } else if (mode == 3) {
+        if (h->resC != 0 && h->partner != 0) h->ready = 1;
+    }
+    if (h->x6c != 0 && h->ready != 0) {
+        fn_80158358(h->x6c, lbl_80346FC8[idx]->ship->x18, mode, keyC, keyD, f68, h->partner);
+    }
+    if (h->partner != 0) {
+        h->pos[0] = h->partner->work->ext->target.x;
+        h->pos[1] = h->partner->work->ext->target.y;
+        h->pos[2] = 0.05 + h->partner->work->ext->target.z;
+    } else {
+        h->pos[0] = 0.0f;
+        h->pos[1] = 0.0f;
+        h->pos[2] = 0.05f;
+    }
+}

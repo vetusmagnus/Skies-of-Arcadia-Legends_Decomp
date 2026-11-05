@@ -1,4 +1,5 @@
 #include "types.h"
+#include <stdlib.h>
 #include "game/save_8030B7F4.h"
 #include "game/gamedata.h"
 #include "game/stat_8030B4D4.h"
@@ -414,6 +415,24 @@ s32 fn_801F4F54(s16* pa, s16* pb) {
     }
     return ka - kb;
 }
+
+s32 fn_801F5100(s16 *a, s16 *b);
+s32 fn_801F4F54(s16 *a, s16 *b);
+
+#ifdef NONMATCHING
+/* Exact only with the comparator held in a void *: the real qsort prototype wants const void * parameters, and comparators written that way do not match. */
+void fn_801F4EA0(s32 kind, s32 byId)
+{
+    s16 count[8] = { 0x50, 0x50, 0x50, 0x50, 0x50, 0x28, 0x28, 0x1e };
+    s16 start[8] = { 0x0, 0x50, 0xa0, 0xf0, 0x140, 0x1ae, 0x1d6, 0x190 };
+    void *cmp;
+    InvEnt *inv;
+    if (byId & 1) cmp = fn_801F5100; else cmp = fn_801F4F54;
+    inv = lbl_8030B7F4.s354;
+    inv += start[kind];
+    qsort(inv, count[kind], 4, cmp);
+}
+#endif
 
 s32 fn_801F52AC(void)
 {
