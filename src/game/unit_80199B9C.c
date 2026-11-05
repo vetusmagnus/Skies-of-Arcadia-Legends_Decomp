@@ -188,13 +188,23 @@ typedef struct CardStampBuf {
     SaveStamp stamp;
     u8 pad8[4];
 } CardStampBuf;
+/* A party member's position record (lbl_8030A794 + 0x38, and the save's copy of it). */
+typedef struct PartyPos {
+    f32 f[3];
+    u32 w[3];
+    s16 h;
+    u8 pad1a[2];
+} PartyPos;
 typedef struct CardSaveData {
     char magic[0x10];  /* 0x00 lbl_802EBDD0 */
-    u8 pad10[0x1b - 0x10];
-    s8 b1b;            /* 0x1B */
-    u8 pad1c[0x338 - 0x1c];
-    u8 b338, b339, b33a, b33b; /* 0x338 */
-    u8 pad33c[0x31e8 - 0x33c];
+    SaveData data;     /* 0x10 */
+    u32 x16b0;
+    u8 x16b4;
+    u8 pad16b5[0x16e8 - 0x16b5];
+    PartyPos pos[2];   /* 0x16E8 */
+    u8 pad1720[0x2370 - 0x1720];
+    u8 blk2370[0xd58];
+    u8 blk30c8[0x120];
     u16 x31e8;
     u16 x31ea;
     u32 x31ec;
@@ -232,7 +242,7 @@ typedef struct {
     u16 h6;          /* 0x06 */
     u32 w8;          /* 0x08 */
     s16 hc;          /* 0x0C */
-    u8 be, bf, b10, b11; /* 0x0E-0x11 */
+    s8 fe[4];        /* 0x0E-0x11 */
     SaveStamp stamp; /* 0x12 */
     u8 pad[0x2c - 0x1a];
 } E2c;
@@ -250,7 +260,7 @@ typedef struct SaveWork {
     u8 fa;           /* 0x0A */
     u8 padB;
     s32 fc;          /* 0x0C */
-    u8 pad10[2];
+    u16 h10;         /* 0x10 */
     s16 h12;         /* 0x12 */
     s32 w14;         /* 0x14 files found */
     f32 f18;         /* 0x18 */
@@ -298,7 +308,7 @@ typedef struct Self_8019FF38 {
     u8 pad1[0xa];
     Ctx_8019FF38 *ctx;
 } Self_8019FF38;
-extern void fn_801A47D8(void *o);
+extern void fn_801A47D8(void);
 extern void fn_80227068(s32 a);
 extern void fn_801A69DC(void);
 extern void fn_801A686C(void *o);
@@ -641,31 +651,14 @@ extern CardStat lbl_803080F8;
 extern s32 CARDGetStatus(s32 chan, s32 fileNo, CardStat* stat);
 extern char *strstr(const char *str, const char *pat);
 typedef struct Misc {
-    u8 pad00[4];
+    u32 x0;
     u32 x4;
     u8 x8;
 } Misc;
 typedef struct Flt {
     u8 pad00[0x38];
-    f32 f38, f3c, f40;
-    u32 w44, w48, w4c;
-    u8 pad50[4];
-    f32 f54, f58, f5c;
-    u32 w60, w64, w68;
+    PartyPos pos[2];
 } Flt;
-typedef struct Save {
-    u8 pad00[0x16b0];
-    u32 x16b0;
-    u8 x16b4;
-    u8 pad16b5[0x16e8 - 0x16b5];
-    f32 x16e8, x16ec, x16f0;
-    u32 x16f4, x16f8, x16fc;
-    u8 pad1700[4];
-    f32 x1704, x1708, x170c;
-    u32 x1710, x1714, x1718;
-    u8 pad171c[0x31ea - 0x171c];
-    s16 x31ea;
-} Save;
 extern char lbl_802EBDD0[0x10];
 extern Misc lbl_80311AC0;
 extern Flt lbl_8030A794;
@@ -2045,6 +2038,37 @@ s32 fn_801A2670(s32 idx, s32 *out)
     return done;
 }
 
+extern u32 lbl_80347568;
+void SaveLoadTask(Task *task);
+
+SaveTask* SaveLoadOpenSave(void* parent, u16 id) {
+    SaveTask* t;
+    lbl_803473C4 = 0;
+    t = fn_802267AC(parent, SaveLoadTask);
+    t->w = fn_801E1A74(1, 0x270);
+    t->w->f1 = 0;
+    t->w->f18 = 1.0f;
+    t->w->h10 = id;
+    t->w->p[0] = 0;
+    t->w->p[1] = 0;
+    t->w->p[2] = 0;
+    t->w->p[3] = 0;
+    t->w->p[4] = 0;
+    t->w->p[5] = 0;
+    t->w->p[6] = 0;
+    t->w->p[7] = 0;
+    t->w->p[8] = 0;
+    t->w->p[9] = 0;
+    t->w->p[10] = 0;
+    t->w->p[11] = 0;
+    t->w->p[12] = 0;
+    t->w->p[13] = 0;
+    t->w->p[14] = 0;
+    t->w->p[15] = 0;
+    t->w->x0 = 0;
+    return t;
+}
+
 void fn_801A289C(void) {
     lbl_80347180 = 0;
 }
@@ -2065,6 +2089,67 @@ void fn_801A2D20(SaveTask *t, u32 a, u32 b) {
     f32 done = a;
     f32 total = b;
     t->w->f1c = done / total;
+}
+
+extern s32 CARDProbeEx(s32 chan, s32 *mem, s32 *sector);
+s32 fn_801A37D8(s32 chan);
+s32 fn_801A3510(void) {
+    s32 i;
+    s32 result;
+    s32 more;
+    more = 1;
+    i = 0;
+    result = 0;
+    while (more != 0) {
+        s32 r = CARDProbeEx(i, 0, 0);
+        if (r == -1) {
+            lbl_8034717C[i] |= 0x20;
+        } else if (r == 0) {
+            u8 b = lbl_8034717C[i];
+            if (b & 1) {
+                lbl_8034717C[i] &= ~0x20;
+                if (lbl_8034717C[i] & 2) result = 1;
+            } else if (b & 8) {
+                if (fn_801A37D8(i) != 0) lbl_8034717C[i] |= 2;
+                fn_801DC214();
+                CARDUnmount(i);
+                if (lbl_8034718C[i] != 0) {
+                    fn_801E17E0(lbl_8034718C[i]);
+                    lbl_8034718C[i] = 0;
+                }
+                lbl_8034717C[i] |= 1;
+                lbl_8034717C[i] &= ~0x20;
+            } else if (b & 4) {
+                s32 c = CARDGetResultCode(i);
+                if (c == 0) {
+                    lbl_8034717C[i] &= ~4;
+                    lbl_8034717C[i] |= 8;
+                } else if (c != -1) {
+                    lbl_8034717C[i] |= 0x10;
+                    lbl_8034717C[i] |= 1;
+                    lbl_8034717C[i] &= ~0x20;
+                }
+            } else if ((b & 0x10) == 0) {
+                void (*cb)(void);
+                if (i == 0) cb = fn_801A2CC4; else cb = fn_801A2C58;
+                if (lbl_8034718C[i] == 0) lbl_8034718C[i] = fn_801E1C7C(0xA000);
+                CARDMountAsync(i, lbl_8034718C[i], cb, 0);
+                lbl_8034717C[i] |= 0x24;
+            }
+        } else {
+            lbl_8034717C[i] = 0;
+        }
+        if (i == 0) {
+            if (lbl_8034717C[i] & 0x20) {
+                more = 0;
+                if ((lbl_8034717C[1] & 1) && (lbl_8034717C[1] & 2)) result = 1;
+            }
+        } else {
+            more = 0;
+        }
+        i++;
+    }
+    return result;
 }
 
 void fn_801A37C4(void) {
@@ -2858,7 +2943,7 @@ void fn_801A1834(Self_801A1834 *o) {
     if (o->ctx->b1 == 1 && lbl_80347508 != 0) {
         return;
     }
-    fn_801A47D8(o->ctx);
+    fn_801A47D8();
     if (o->ctx->b1 == 1 && o->ctx->b0 == 0) {
         fn_80227068(0);
     }
@@ -3578,28 +3663,27 @@ s32 fn_801A388C(s32 chan, const char *name, s32* out) {
 }
 
 void* fn_801A456C(void) {
-    u8* p = fn_801E1A74(1, 0x3200);
-    Save* s = (Save*)p;
-    MemCopy(p, lbl_802EBDD0, 0x10);
+    CardSaveData* s = fn_801E1A74(1, 0x3200);
+    MemCopy(s, lbl_802EBDD0, 0x10);
     s->x31ea = lbl_80310A1C[0x32];
-    MemCopy(p + 0x10, &lbl_8030B7F4, 0x16a0);
+    MemCopy(&s->data, &lbl_8030B7F4, 0x16a0);
     s->x16b0 = lbl_80311AC0.x4;
     s->x16b4 = lbl_80311AC0.x8;
-    s->x16e8 = lbl_8030A794.f38;
-    s->x16ec = lbl_8030A794.f3c;
-    s->x16f0 = lbl_8030A794.f40;
-    s->x16f4 = lbl_8030A794.w44;
-    s->x16f8 = lbl_8030A794.w48;
-    s->x16fc = lbl_8030A794.w4c;
-    s->x1704 = lbl_8030A794.f54;
-    s->x1708 = lbl_8030A794.f58;
-    s->x170c = lbl_8030A794.f5c;
-    s->x1710 = lbl_8030A794.w60;
-    s->x1714 = lbl_8030A794.w64;
-    s->x1718 = lbl_8030A794.w68;
-    MemCopy(p + 0x2370, lbl_80310B3C, 0xd58);
-    MemCopy(p + 0x30c8, lbl_80310A1C, 0x120);
-    return p;
+    s->pos[0].f[0] = lbl_8030A794.pos[0].f[0];
+    s->pos[0].f[1] = lbl_8030A794.pos[0].f[1];
+    s->pos[0].f[2] = lbl_8030A794.pos[0].f[2];
+    s->pos[0].w[0] = lbl_8030A794.pos[0].w[0];
+    s->pos[0].w[1] = lbl_8030A794.pos[0].w[1];
+    s->pos[0].w[2] = lbl_8030A794.pos[0].w[2];
+    s->pos[1].f[0] = lbl_8030A794.pos[1].f[0];
+    s->pos[1].f[1] = lbl_8030A794.pos[1].f[1];
+    s->pos[1].f[2] = lbl_8030A794.pos[1].f[2];
+    s->pos[1].w[0] = lbl_8030A794.pos[1].w[0];
+    s->pos[1].w[1] = lbl_8030A794.pos[1].w[1];
+    s->pos[1].w[2] = lbl_8030A794.pos[1].w[2];
+    MemCopy(s->blk2370, lbl_80310B3C, 0xd58);
+    MemCopy(s->blk30c8, lbl_80310A1C, 0x120);
+    return s;
 }
 
 void fn_801A49E0(Hdr_801A49E0* h) {
@@ -3622,6 +3706,61 @@ void fn_801A49E0(Hdr_801A49E0* h) {
                 h->table[i].b->x8 = (u32)h + h->table[i].b->x8;
                 h->table[i].b->flag2 = 1;
             }
+        }
+    }
+}
+
+extern s32 UiSpriteDraw(Sprite* sprite, f32 x, f32 y, f32 z, NJS_TEXLIST* texlist, u16 flags, f32 a, f32 b);
+extern void UiDrawNumberAt(u32 flags, u16 ndigits, u32 value, f32 x, f32 y, f32 z, f32 c1);
+extern u16 lbl_802B69B4[];
+
+void fn_801A58A0(Task_801A54AC* t, E2c* e) {
+    MenuPanel* o;
+    u32 v;
+    SpriteObj obj;
+    s32 j;
+    f32 pos[2];
+    s32 s;
+    s32 c;
+    s32 m;
+    u32 t2;
+    TextPrint(8.0f + t->pan->o.x, 27.0f + t->pan->o.y, lbl_802B9428[e->h6]);
+    o = t->pan;
+    UiSpriteDraw(fn_801D68C4(menu_sprites.banks[3], (e->h4 & 1) + 0x1e), 6.0f + o->o.x, 51.0f + o->o.y, -31.5f + o->o.z,
+                 menu_sprites.texlist8, 1, o->o.alpha * t->parent->w->f18, 1.0f);
+    UiDrawNumberAt(2, 2, e->hc, 12.0f + (27.0f + t->pan->o.x), 71.0f + t->pan->o.y, -32.1f + t->pan->o.z,
+                   t->pan->o.alpha * t->parent->w->f18);
+    v = e->w8;
+    if (v >= 35996459) {
+        m = 9999;
+        s = 59;
+    } else {
+        t2 = v / 60;
+        m = t2 / 60;
+        s = t2 % 60;
+    }
+    UiDrawNumberAt(2, 5, m, 36.0f + (60.0f + t->pan->o.x), 71.0f + t->pan->o.y, -32.0f + t->pan->o.z,
+                   t->pan->o.alpha * t->parent->w->f18);
+    UiDrawNumberAt(0x8002, 2, s, 24.0f + (105.0f + t->pan->o.x), 71.0f + t->pan->o.y, -31.8f + t->pan->o.z,
+                   t->pan->o.alpha * t->parent->w->f18);
+    pos[1] = 58.0f + t->pan->o.y;
+    pos[0] = 144.0f + t->pan->o.x;
+    obj.a = t->pan->o.alpha * t->parent->w->f18;
+    obj.b = 1.0f;
+    obj.z = -32.5f + t->pan->o.z;
+    obj.texlist = menu_sprites.textlistC;
+    obj.flags = 5;
+    obj.colour = -1;
+    for (j = 0; j < 4; j++) {
+        c = e->fe[j];
+        if (c != -1) {
+            obj.sprite = fn_801D68C4(menu_sprites.banks[0], lbl_802B69B4[c]);
+            SpriteObjDrawAt(&obj, pos);
+            obj.z -= 0.1f;
+            obj.sprite = fn_801D68C4(menu_sprites.banks[0], 5);
+            SpriteObjDrawAt(&obj, pos);
+            obj.z -= 0.05f;
+            pos[0] += 40.0f;
         }
     }
 }
@@ -3650,6 +3789,68 @@ Node* fn_801A5BE8(void* parent, u16 mode) {
     n->obj->o.alpha = 1.0f;
     UiObjSetLowered(&n->obj->o);
     return n;
+}
+
+void SaveLoadCursorDraw(Task_801A54AC* t);
+
+SlotTask* SaveLoadCursorCreate(void* parent) {
+    SlotTask* t = fn_802267AC(parent, SaveLoadCursorDraw);
+    t->w = fn_801E1A74(1, 0x58);
+    t->obj = fn_801E1A74(1, 0x6c);
+    t->obj->h54 = 0;
+    t->w->b0 = 0;
+    t->obj->o.alpha_en = 0;
+    t->obj->o.z = -4050.0f;
+    t->obj->o.x = -330.0f;
+    t->obj->o.tx = -330.0f;
+    t->obj->o.y = 160.0f;
+    t->obj->o.ty = 160.0f;
+    t->obj->o.rdx = 1.0f;
+    t->obj->o.rdy = 0.0f;
+    t->obj->o.alpha = 1.0f;
+    return t;
+}
+
+extern const LayoutDef lbl_802B4DB8[];
+
+void SaveLoadCursorDraw(Task_801A54AC* t) {
+    SpriteObjScaled so;
+    SaveTask* par = t->parent;
+    switch (t->state) {
+    case 0:
+    case 1:
+        t->pan->o.rdx = 30.0f * par->w->f1c;
+        if (par->w->f1c >= 1.0f) {
+            t->state = 0;
+        }
+        UiObjUpdate(&t->pan->o);
+        UiLayoutDraw(&menu_sprites.texlist8, lbl_802B4DB8[t->pan->h54].parts, lbl_802B4DB8[t->pan->h54].count,
+                     &t->pan->o.x, t->pan->o.z, t->pan->o.alpha, 1.0f);
+        if (t->pan->h54 != 0) {
+            so.colour = 0xFF0080FF;
+            so.flags = 9;
+        } else {
+            so.colour = 0;
+            so.flags = 1;
+        }
+        so.sprite = fn_801D68C4(menu_sprites.banks[3], 0x1d);
+        so.texlist = menu_sprites.texlist8;
+        so.x = 52.0f + t->pan->o.x;
+        so.y = 19.0f + t->pan->o.y;
+        so.z = -32.5f + t->pan->o.z;
+        so.a = 1.0f;
+        so.b = 1.0f;
+        so.sx = t->pan->o.rdx;
+        so.sy = 1.0f;
+        so.flip = 0;
+        SpriteObjDrawScaled(&so);
+        break;
+    case 0xFE:
+        break;
+    case 0xFF:
+        t->flags |= 0x40;
+        break;
+    }
 }
 
 SlotTask* fn_801A5EB4(void* a, u16 slot) {
@@ -8504,11 +8705,11 @@ void fn_801A2D60(Task_801A343C* t) {
             par->w->ent[t->p24->b14].h4 = save->x31ea;
             par->w->ent[t->p24->b14].h6 = save->x31e8;
             par->w->ent[t->p24->b14].w8 = save->x31ec;
-            par->w->ent[t->p24->b14].hc = save->b1b;
-            par->w->ent[t->p24->b14].be = save->b338;
-            par->w->ent[t->p24->b14].bf = save->b339;
-            par->w->ent[t->p24->b14].b10 = save->b33a;
-            par->w->ent[t->p24->b14].b11 = save->b33b;
+            par->w->ent[t->p24->b14].hc = save->data.chr[0].xb;
+            par->w->ent[t->p24->b14].fe[0] = save->data.party[0];
+            par->w->ent[t->p24->b14].fe[1] = save->data.party[1];
+            par->w->ent[t->p24->b14].fe[2] = save->data.party[2];
+            par->w->ent[t->p24->b14].fe[3] = save->data.party[3];
             memcpy(&par->w->ent[t->p24->b14].stamp, save->stamp, 8);
         }
         fn_801E17E0(t->buf);
@@ -8885,7 +9086,6 @@ void SaveLoadSlideAllOut(Self_801A0C3C *o) {
     o->state = 0x1d;
 }
 
-extern Sub_801A0C3C *SaveLoadCursorCreate(Self_801A0C3C *o);
 void SaveLoadCreateParts(Self_801A0C3C *o) {
     s32 k;
     if (lbl_80347508 != 0) return;
