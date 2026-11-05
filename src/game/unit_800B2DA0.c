@@ -3368,6 +3368,8 @@ s32 fn_800CB68C(void *unused, Obj_800CB68C_UNIT0000 *obj, Src_UNIT0000 *src) {
     return 1;
 }
 
+extern s32 fn_8025ECC4(void);
+
 void fn_800CD11C(void) {
     if (lbl_80305B08.p00 != NULL) {
         fn_801E1784(lbl_80305B08.p00);
@@ -5019,6 +5021,135 @@ s32 fn_800CCF68(u32 a) {
     return 0;
 }
 
+/* Leaping object: target offset and jump height from its info record. */
+typedef struct EvInfoLeap {
+    s32 count;     /* 0x00 */
+    s32 w4;        /* 0x04 */
+    u8 pad8[8];
+    s32 w10;       /* 0x10 */
+    u32 flags;     /* 0x14 */
+    u8 pad18[0x2c - 0x18];
+    s32 height;    /* 0x2C */
+    s32 tx;        /* 0x30 */
+    s32 ty;        /* 0x34 */
+    s32 tz;        /* 0x38 */
+} EvInfoLeap;
+
+void fn_800CDA38(Task* task)
+{
+    extern Task_800CDEF4* fn_80100E10(void* o, void* fn, u16 id, void* p);
+    extern void fn_800CD924(void);
+    extern void fn_800CD72C(void);
+    extern void fn_800CD56C(void);
+    extern void fn_800CDEF4(void);
+    extern void fn_801687E0(s32 a, s32 b, s32 c, s32 d, void* e, f32 f1, f32 f2, f32 f3, f32 f4);
+    Task* parent = task->parent;
+    EvObj* e = task->work;
+    EvObj* src;
+    Task_800CDEF4* t;
+    s32 i;
+
+    if ((parent->flags & 0x40) == 0) {
+        src = parent->work;
+    } else {
+        task->state = 0xFF;
+        src = NULL;
+    }
+    switch (task->state) {
+    case 0:
+    case 0xFE: {
+        EvInfoLeap* info;
+        f32 k;
+        fn_800C35C4(e, 3);
+        fn_800C3518(e);
+        info = e->ext->info;
+        e->home.x = 0.01f * info->tx;
+        e->home.y = 0.01f * info->ty;
+        e->home.z = 0.01f * info->tz;
+        k = 0.01f * info->height;
+        e->vel.y = fn_80291A5C(0.4f * k);
+        k = 10.0f * e->vel.y;
+        e->vel.x = (e->home.x - e->pos.x) / k;
+        e->vel.z = (e->home.z - e->pos.z) / k;
+        e->x158.y = -0.2f;
+        e->x16e = 0;
+        fn_80100E10(task, fn_800CD924, e->x178, e->ext);
+        for (i = 0; i < 3; i++) {
+            t = fn_80100E10(task, fn_800CD72C, e->x178, e->ext);
+            if (t != NULL && t->p24 != NULL) {
+                t->p24->x202 = i;
+            }
+        }
+        task->state = 1;
+        e->x180 = 2;
+        break;
+    }
+    case 1:
+        if (src->hidden == 0) {
+            Angle a = e->ang[2];
+            fn_801DD5E8(e->ang, &e->vel);
+            e->ang[2] = a + 0x1000;
+            fn_801E66E0(e);
+            if (e->pos.y < e->home.y) {
+                task->state = 2;
+                for (i = 0; i < 3; i++) {
+                    t = fn_80100E10(task, fn_800CDEF4, e->x178, e->ext);
+                    if (t != NULL && t->p24 != NULL) {
+                        t->p24->pos.x = e->pos.x;
+                        t->p24->pos.y = e->pos.y;
+                        t->p24->pos.z = e->pos.z;
+                        t->p24->x200 = i;
+                        e->x1fc++;
+                        if (i == 0) {
+                            fn_801687E0(1, 5, 8, 0, t, 0.0f, 0.0f, 0.0f, 500.0f);
+                        }
+                    }
+                }
+            } else {
+                e->x180--;
+                if (e->x180 == 0) {
+                    i = 2.0f * (0.000030517578125f * rand());
+                    i++;
+                    do {
+                        t = fn_80100E10(task, fn_800CD56C, e->x178, e->ext);
+                        if (t != NULL && t->p24 != NULL) {
+                            t->p24->x206 = e->x206;
+                            t->p24->x20c = 65536.0f * (0.000030517578125f * rand());
+                            t->p24->pos.x = e->pos.x;
+                            t->p24->pos.y = e->pos.y;
+                            t->p24->pos.z = e->pos.z;
+                            t->p24->dir.x = e->vel.x;
+                            t->p24->dir.y = e->vel.y;
+                            t->p24->dir.z = e->vel.z;
+                            e->x206 = (e->x206 + 1) % 3;
+                        }
+                    } while (--i > 0);
+                    e->x180 = 2;
+                }
+            }
+        } else {
+            task->state = 4;
+        }
+        e->pos.x += e->vel.x;
+        e->pos.y += e->vel.y;
+        e->pos.z += e->vel.z;
+        e->vel.y += e->x158.y;
+        break;
+    case 2:
+        if (e->x204 <= 0 && e->x1fc <= 0) {
+            task->state = 4;
+            e->hidden = 1;
+        }
+        break;
+    default:
+        if (src != NULL) {
+            src->x1fe--;
+        }
+        fn_800C3428(task);
+        break;
+    }
+}
+
 void fn_800CDEF4(Task_800CDEF4* t) {
     extern void fn_800C35C4(EvObj* a, s32 i);
     extern void* fn_801C5D88(EvObj* a, s32 i);
@@ -5561,6 +5692,7 @@ void fn_800C48C4(Obj_800C48C4 *o, Src_800C48C4 *s)
     }
     fn_800967F0(o, a, 6);
 }
+
 
 void fn_800CAF6C(Obj_800CAF6C *o)
 {

@@ -7670,6 +7670,13 @@ extern s32 fn_800154BC(Task *t);
 typedef struct Snd { u8 pad_00[7]; s8 x7; u8 pad_08[0x20]; s32 x28; s32 x2c; } Snd;
 extern void fn_80218D84(void *dst, u32 src, u32 size);
 
+f32 fn_80071E9C(NJS_VECTOR *a, NJS_VECTOR *b) {
+    f32 dx = b->x - a->x;
+    f32 dy = b->y - a->y;
+    f32 dz = b->z - a->z;
+    return fn_80291A5C(dx * dx + dy * dy + dz * dz);
+}
+
 void fn_80071F84(s32 *out, NJS_POINT3 *a, NJS_POINT3 *b) {
     Vec3f d;
     f32 *p;

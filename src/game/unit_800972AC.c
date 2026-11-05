@@ -173,7 +173,7 @@ typedef struct {
 extern s16 lbl_80346CA0;
 extern f32 lbl_80346C70;
 extern s32 lbl_80346C6C;
-extern s32 lbl_80346C50;
+extern u32 lbl_80346C50;
 extern f32 lbl_80345878[];
 extern s32 lbl_80311AD4[11];
 extern NJS_TEXLIST lbl_80347568;
@@ -1107,6 +1107,47 @@ void fn_8009CBBC(void) {
     }
 }
 
+typedef struct DvdFile {
+    u8 pad0[0x34];
+    u32 length;         /* 0x34 */
+    u8 pad38[0x3C - 0x38];
+} DvdFile;
+typedef struct SampLoad {
+    DvdFile file[2];    /* 0x00 */
+    char path[2][0x40]; /* 0x78 */
+} SampLoad;
+extern SampLoad lbl_80303248;
+extern u32 lbl_80346C68;
+extern s32 lbl_803474A8;
+extern s32 lbl_80346C54;
+extern u32 lbl_80346C5C;
+extern void *lbl_80346C60;
+extern s32 lbl_80346C58;
+extern s32 lbl_803472E8;
+extern void *lbl_80346C64;
+extern s8 fn_801010CC(void);
+extern int sprintf(char *buf, const char *fmt, ...);
+extern s32 DVDGetCommandBlockStatus(DvdFile *file);
+extern s32 DVDClose(DvdFile *file);
+extern s32 DVDOpen(const char *path, DvdFile *file);
+extern void StvSampPath(char *path);
+extern void *fn_801E1C7C(u32 size);
+extern s32 DVDReadAsyncPrio(DvdFile *file, void *buf, u32 len, s32 ofs, void *cb, s32 prio);
+typedef struct Ent_80098A68 {
+    u8 pad0[2];
+    s16 h2;
+    u8 pad4[0x8c - 4];
+    f32 f8c;
+    f32 f90;
+    u8 pad94[0xb4 - 0x94];
+} Ent_80098A68;
+extern s32 fn_801010C4(void);
+extern s32 fn_801F4D14(void);
+extern void fn_802182F4(s32 n, ...);
+extern void fn_80217830(s32 a);
+extern s32 fn_80218570(s32 a, s32 b, s32 c);
+extern void fn_80218D84(void *path, void *data, s32 size);
+
 typedef struct Preset { s32 w0; s32 w4; } Preset;
 extern Owner_8009877C* lbl_80346CB8;
 extern void* lbl_80346CB4;
@@ -1264,6 +1305,29 @@ void fn_8009CFD8(void) {
     }
 }
 
+extern const char lbl_802B0E14[];
+extern s32 fn_8009014C(void *arr, const void *key, s32 n, s32 size);
+
+void fn_8009D190(s32 key)
+{
+    s32 i;
+    s32 zero;
+
+    i = fn_8009014C(lbl_803033E0, &key, 6, 4);
+    if (i == -1 || lbl_803033B0[i] == 0) {
+        zero = 0;
+        i = fn_8009014C(lbl_803033B0, &zero, 6, 4);
+        if (i == -1) {
+            fn_801DBE1C(lbl_802B0E14);
+        }
+        lbl_803033E0[i] = key;
+        lbl_803033C8[i] = 1;
+    } else {
+        lbl_803033C8[i]++;
+    }
+    lbl_803033B0[i] = 50;
+}
+
 void fn_8009BED8(Task* t) {
     EvObj* o;
     EvInfoSlide* info;
@@ -1379,6 +1443,7 @@ void fn_8009BED8(Task* t) {
     }
 }
 
+
 #ifdef NONMATCHING
 typedef struct Spark {
     s32 on;
@@ -1402,39 +1467,6 @@ typedef struct SparkDef {
     f32 yb;
     u8 pad1C[4];
 } SparkDef;
-typedef struct DvdFile {
-    u8 pad0[0x34];
-    u32 length;         /* 0x34 */
-    u8 pad38[0x3C - 0x38];
-} DvdFile;
-typedef struct SampLoad {
-    DvdFile file[2];    /* 0x00 */
-    char path[2][0x40]; /* 0x78 */
-} SampLoad;
-extern SampLoad lbl_80303248;
-extern u32 lbl_80346C68;
-extern s32 lbl_803474A8;
-extern s32 lbl_80346C54;
-extern u32 lbl_80346C5C;
-extern s32 lbl_80346C60;
-extern void *lbl_80346C64;
-extern s8 fn_801010CC(void);
-extern int sprintf(char *buf, const char *fmt, ...);
-extern s32 DVDOpen(const char *path, DvdFile *file);
-extern void StvSampPath(char *path);
-extern void *fn_801E1C7C(u32 size);
-extern s32 DVDReadAsyncPrio(DvdFile *file, void *buf, u32 len, s32 ofs, void *cb, s32 prio);
-typedef struct Ent_80098A68 {
-    u8 pad0[2];
-    s16 h2;
-    u8 pad4[0x8c - 4];
-    f32 f8c;
-    f32 f90;
-    u8 pad94[0xb4 - 0x94];
-} Ent_80098A68;
-#endif
-
-#ifdef NONMATCHING
 void fn_80098C58(SparkSet* set, s32 n, SparkDef* def) {
     s32 i;
     s32 j;
