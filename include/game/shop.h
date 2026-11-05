@@ -59,10 +59,10 @@ extern CampStats_8030741C lbl_8030741C;
 extern u32 lbl_80347180;
 extern u8 lbl_8034717C[2];
 
-extern u32 lbl_802B6810[];
+extern const char* const lbl_802B6810[51];
 void UiSpritesFree(void);
-void UiSpritesLoad(void* p);
-extern char lbl_802B69D4[];
+void UiSpritesLoad(const char* p);
+extern const char lbl_802B69D4[0x14];
 extern u8 lbl_802EBEA4[];
 void fn_801BEB10(void* a, s32 b, s32 c, s32 d);
 extern void fn_801DC214(void);
@@ -97,7 +97,7 @@ extern s32 lbl_80347184[2];
 extern s32 CARDUnmount(s32 slot);
 extern void strcpy(void *, const char *);
 extern void strcat(void *, const char *);
-extern char lbl_802B69C0[];
+extern const char lbl_802B69C0[0x14];
 extern void *fn_801CC3C4(const char *path);
 extern s16 fn_800ED8C4(void *p);
 extern u8 lbl_8030B4D4[];
@@ -415,7 +415,7 @@ typedef struct Task_801A5274 {
     u8 *flag;
     MenuPanel *pan;
 } Task_801A5274;
-extern LayoutPart lbl_802B4A00[2];
+extern const LayoutPart lbl_802B4A00[2];
 void fn_801A5274(Task_801A5274 *t);
 typedef struct PanelTask_801ABD40 {
     u8 pad0[0x18];
@@ -723,13 +723,13 @@ typedef struct Task_801A5D08 {
     u8 *flag;
     MenuPanel *pan;
 } Task_801A5D08;
-extern LayoutPart lbl_802B4B88[1];
-extern LayoutPart lbl_802B4B4C[3];
+extern const LayoutPart lbl_802B4B88[1];
+extern const LayoutPart lbl_802B4B4C[3];
 void fn_801A5D08(Task_801A5D08 *t);
 typedef Node SlotTask;
 extern void* fn_801E1A74(s32 n, s32 size);
-extern void fn_801A5FD8(void);
-extern LayoutPart lbl_802B4A28[3];
+void fn_801A5FD8(Task_801A5D08 *t);
+extern const LayoutPart lbl_802B4A28[3];
 void fn_801A6344(Task_801A5D08 *t);
 typedef struct {
     u8 pad0[0x10];
@@ -1014,11 +1014,11 @@ typedef struct Task_801A54AC {
     u8 *flag;
     MenuPanel *pan;
 } Task_801A54AC;
-extern LayoutPart lbl_802B4B9C[6];
+extern const LayoutPart lbl_802B4B9C[6];
 void fn_801A5600(Task_801A54AC *t);
 extern void fn_801A58A0(Task_801A54AC *t, E2c *e);
 extern char lbl_802EBE08[];
-extern LayoutPart lbl_802B4C14[];
+extern const LayoutPart lbl_802B4C14[11];
 #define TextPrintNumber TextPrintNumber_hdr
 #undef TextPrintNumber
 typedef struct Ctx_801A6A88 {
@@ -1712,14 +1712,14 @@ void fn_801A49E0(Hdr_801A49E0* h);
 
 extern s32 UiSpriteDraw(Sprite* sprite, f32 x, f32 y, f32 z, NJS_TEXLIST* texlist, u16 flags, f32 a, f32 b);
 extern void UiDrawNumberAt(u32 flags, u16 ndigits, u32 value, f32 x, f32 y, f32 z, f32 c1);
-extern u16 lbl_802B69B4[];
+extern const u16 lbl_802B69B4[6];
 void fn_801A58A0(Task_801A54AC* t, E2c* e);
 Node* fn_801A5BE8(void* parent, u16 mode);
 
 void SaveLoadCursorDraw(Task_801A54AC* t);
 SlotTask* SaveLoadCursorCreate(void* parent);
 
-extern const LayoutDef lbl_802B4DB8[];
+extern const LayoutDef lbl_802B4DB8[2];
 void SaveLoadCursorDraw(Task_801A54AC* t);
 SlotTask* fn_801A5EB4(void* a, u16 slot);
 SlotTask* fn_801A6244(void* a, u16 slot);
@@ -1818,7 +1818,7 @@ typedef struct ShopSlotPos {
     f32 x;   /* shown */
     f32 x2;  /* hidden */
 } ShopSlotPos;
-extern const ShopSlotPos lbl_802B69E8[];
+extern const ShopSlotPos lbl_802B69E8[4];
 extern ShopPart* fn_801AD00C(ShopTask* t, u8 kind, u16 who);
 extern ShopPart* fn_801B057C(ShopTask* t, u16 kind, u16 who);
 extern ShopPart* fn_801B06CC(ShopTask* t, u16 i, u16 who, f32 alpha);
@@ -2227,7 +2227,7 @@ typedef struct PanelStart {
     f32 z;
     f32 alpha;
 } PanelStart;
-extern const PanelStart lbl_802B690C[];
+extern const PanelStart lbl_802B690C[7];
 Sub_801A0C3C *fn_801A53D4(void *o, u16 idx);
 void fn_8019F898(SaveTask *t);
 
