@@ -2490,3 +2490,29 @@ Not merged (the reason per function is in build/agents/skip.txt of the worktree;
 - big views not yet folded: the ship-battle command/state (fn_80143928, fn_8014EF34), the EvObj per-kind records in
   unit_8010E164/unit_800B2DA0/unit_800A3ED4/unit_800D81E8, the save menu (fn_801A038C, fn_801A4070), battle.c's
   readonly strings (fn_80030280, fn_800308FC).
+
+## Per-unit pass over every unmatched function (2026-11-05, from 2c618c3)
+
+All 990 unmatched functions were split into 67 work lists, one per unit (or per stretch of a large unit), each
+worked on a private copy of the unit so the new code had to match next to the unit's own types; copies were then
+merged three-way into src/ and every unit re-checked (no function that matched before may stop matching, floats
+checked, added lines scanned for casts/unions/pragmas). 6,127 -> 6,300 functions (+173), main.dol byte-identical.
+Header fields that released matches: ChrInfo x1e0-x1e8/xa/x1f0/x1f1/x214 and ChrRec x88 (chr.h), Entry16.xd and
+Ent.xc as Angle (unit_80005B50.h), UiObj.f3c as s32, EvObj x128/x218 and a Tpl block at 0x74, EvInfoMap.mode u32,
+EvHit 0x34 bytes, EvColl.p4 as void*, Chr_UNIT0000 fields (unit_80074D9C.h).
+
+What is left, by cause:
+
+- Register colouring only (the majority): instruction streams equal, callee-saved or temp registers swapped.
+- String/.bss/.rodata pool offsets: functions that match except for `addi rX, base, off` on the pooled data.
+  The merged units span several original files (unit_801F5334 and unit_80219378 especially: fn_801F5468,
+  fn_801F8158 and seven more match except for string offsets; fn_80229E54, fn_80073024, fn_80073164,
+  fn_80020E10, fn_800EAAAC, fn_800A7860, fn_800BAC88). They need the real file splits, not source changes.
+- Needs a header decision: TextPrint's real parameter types (s16 vs s32; fn_801B4F78), SaveData.party s8 vs u8
+  (fn_80180414, fn_80199024), the party block at SaveData+0x328/+0xC48 (fn_801F35A0, fn_801F0020, fn_8013506C),
+  gamedata.h signedness (WeaponData.owner, CannonData/ShipGearData.ships, ShipItemData.effect), EvObj x23c/x260
+  per-kind records (fn_800DF74C, fn_800DE9BC, fn_800B96D8), Ang3 for EvObj.ang (fn_8009F22C family; would touch
+  ~600 indexed uses), lbl_80347EB4 as `f32 (*)[4]` in Ninja (fn_8029CB1C matches with it).
+- Held for rule reasons: self-relative offset reads in unit_801D24D0 (fn_801DA51C, fn_801DB1A4, fn_801DB2C8,
+  fn_801DF500), MenuTask casts in the shop (fn_801BCFD0, fn_801BE670), fn_802107A4 (pointer-to-int store),
+  fn_802AB8FC/fn_802ABB9C (identity byte stores).
