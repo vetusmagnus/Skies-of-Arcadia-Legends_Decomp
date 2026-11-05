@@ -1539,6 +1539,26 @@ void fn_8000BB28(u8 idx)
     }
 }
 
+s32 fn_8000FB4C(Task* t, Task** out, s16 which) {
+    ChrWork* w = t->work;
+    ChrInfo* info = w->st;
+    switch (which) {
+    case 1:
+        if (info->x1e0 != 0) {
+            *out = info->x1e0;
+            return 1;
+        }
+        break;
+    case 2:
+        if (info->x1e4 != 0) {
+            *out = info->x1e4;
+            return 1;
+        }
+        break;
+    }
+    return 0;
+}
+
 void fn_8000FBA8(Actor* o) {
     Owner_8000FBA8* ow = (Owner_8000FBA8*)o->r->m;
 

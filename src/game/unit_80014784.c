@@ -2375,6 +2375,468 @@ void fn_8001977C(Task* t)
     }
 }
 
+void fn_8001C410(Task* t);
+void fn_8001FD7C(Task* t);
+extern CondLink* fn_80008800(Ent_80008800* list);
+extern s32 fn_80029678(s32);
+extern void fn_8002969C(s32);
+extern void fn_800295E0(s32);
+extern s8 fn_8000FA30(s8);
+extern s8 fn_8000F86C(s8);
+void fn_8001AB60(Task* t)
+{
+    ChrWork* w = t->work;
+    ChrInfo* u = w->st;
+    Ent_80008800* list = w->x10->x30;
+    s16 r;
+    s8 i;
+    s16 tmp;
+    s16 slot;
+
+    switch (u->state) {
+    case 7:
+        if (!(lbl_8030A10C.x6c & 0x40000)) {
+            u->state = 3;
+        }
+        return;
+    case 1:
+        if (lbl_8030A10C.x6c & 0x400000) {
+            return;
+        }
+        u->xf0 |= 0x20;
+        if (VoiceRequest(t, 0x1e, 0, -1, -1) == 1) {
+            u->state = 2;
+            lbl_8030A10C.x6c |= 0x800000;
+        } else {
+            u->state = 3;
+            u->xf0 &= ~0x20;
+        }
+        return;
+    case 2:
+        if (VoicePoll(t) == 1) {
+            u->state = 3;
+        }
+        return;
+    case 0:
+        fn_8001C410(t);
+        u->x298 = fn_80008800(list);
+        if (fn_80008AB4(list, 0x1e, 0, 0x57, 3, 2, u->x298)) {
+            u->draw.a = -1.0f;
+        }
+        if (fn_80008AB4(list, 0x1e, 0, 0x3b, 3, 2, u->x298)) {
+            lbl_8030A10C.x6c |= 0x400000;
+            u->state = 1;
+            return;
+        }
+        if (fn_80008AB4(list, 0x1e, 0, 0x58, 3, 2, u->x298)) {
+            lbl_8030A10C.x6c |= 0x40000;
+            u->state = 7;
+            return;
+        }
+        u->state = 3;
+    case 3:
+        if (u->x1dc != NULL) {
+            Tk* k = u->x1dc;
+            slot = k->work->id;
+            w->pos.x = lbl_803097F0.ent[slot].x4;
+            w->pos.z = lbl_803097F0.ent[slot].x8;
+        }
+        fn_80071CF0(&w->pos, &u->pos);
+        for (i = 0; i < 10; i++) {
+            u->x28[i] = -1;
+        }
+        if (u->x1dc != NULL) {
+            w->ry = lbl_803097F0.ent[u->id].xc;
+        }
+        fn_80075F2C(t);
+        if (fn_80020E10(ChrW(t)->x10->xc) < 0) {
+            fn_800085EC(t, 1, -1, list, u->x298);
+            r = fn_800085EC(t, 0x1e, 0, list, u->x298);
+        } else {
+            r = 0;
+            if (u->x298 != NULL) {
+                fn_800085EC(t, 1, -1, list, u->x298);
+            } else {
+                fn_800086BC(t, 1, -1, list, NULL, 1);
+            }
+        }
+        ChrSetSpeed(t);
+        if (!fn_80029678(u->id)) {
+            fn_8002969C(u->id);
+        }
+        fn_800295E0(u->id);
+        u->xf0 |= 0x10000000;
+        if (lbl_80347394 != NULL) {
+            u->state = 6;
+            break;
+        }
+        if (r == 0) {
+            fn_80075FF0(t, 2, -1);
+            u->state = 5;
+            u->xf0 |= 0x80000000;
+            u->draw.a = -1.0f;
+        } else {
+            u->xf0 |= 0x10000000;
+            u->state = 6;
+            u->xf0 |= 0x80000000;
+            u->draw.a = 0.0f;
+            if (fn_80008AB4(list, 0x1e, 0, 0x57, 3, 2, u->x298)) {
+                u->draw.a = -1.0f;
+            }
+            lbl_8030A10C.x6c |= 0x800000;
+            u->xec |= 0x10;
+        }
+        u->x1f0 = fn_8000FA30(u->id);
+        u->x1f1 = fn_8000F86C(u->id);
+    case 5:
+        u->draw.a += 0.05f;
+        if (u->draw.a >= 0.0f) {
+            u->draw.a = 0.0f;
+            u->xf0 &= ~0x80000000;
+            switch (fn_8001ECB4(t, 1, &tmp, -1)) {
+            case 2:
+                fn_8001EBA4(t, tmp);
+                u->state = 4;
+                break;
+            default:
+                fn_80075F2C(t);
+            case 0:
+                u->state = 6;
+                break;
+            }
+        }
+        break;
+    case 4:
+        if (fn_80075D64(t)) {
+            fn_80075F2C(t);
+            u->state = 6;
+        }
+        break;
+    case 6:
+        if (u->x70 != 0) {
+            if (u->xec & 0x10) {
+                lbl_8030A10C.x6c &= ~0x800000;
+                u->xec &= ~0x10;
+            }
+            u->x134 = 1;
+            u->x50 |= 0x08000000;
+        }
+        break;
+    case 8:
+        break;
+    }
+    fn_8001FD7C(t);
+    switch (u->state) {
+    case 5:
+        fn_80018CBC(t, u->xe6, 0, 0, u->x2);
+        break;
+    default:
+        fn_80018CBC(t, u->xe4, 0, 0, u->x2);
+        break;
+    }
+}
+
+s32 fn_8001DDE0(Task* t, Ent_80008800* list);
+extern s8 VoicePoll(Task* t);
+extern void VoiceStopChar(Task* t);
+extern s32 fn_800593AC(Task*);
+extern void fn_80217830(s32);
+extern s32 fn_80218570(s32, s32, s32);
+extern s32 fn_8002F674(void);
+extern s32 fn_80061114(f32* v, f32 target, f32 step);
+extern s8 fn_80012160(void);
+extern void fn_80021784(Task*);
+extern void fn_8001CAA8(Task*);
+extern s32 fn_8001EB6C(void*);
+extern void fn_8001FD7C(Task*);
+extern u32 lbl_80347364;
+static inline s32 VoiceBusy(ChrInfo* w)
+{
+    if (lbl_80347394 != 0) {
+        return 0;
+    }
+    switch (w->x6) {
+    case 2:
+    case 7:
+        return 0;
+    }
+    return 1;
+}
+
+static inline s8 GuardKind(ChrInfo* w)
+{
+    if (w->xf0 & 0x800) {
+        return 1;
+    }
+    if (fn_80014C90(w->id, 0x400) && (w->xec & 8)) {
+        return 2;
+    }
+    return 0;
+}
+
+void fn_8001B1B0(Task* t)
+{
+    ChrWork* wk = t->work;
+    ChrInfo* w = wk->st;
+    s8 r;
+    s16 buf;
+    s32 ret = fn_8001BCC8(w->id, t);
+
+    switch (w->state) {
+    case 0x10:
+        if (fn_8006DB94()) {
+            if (VoiceRequest(t, w->x20c, w->x20e, w->x210, w->x212) != -1) {
+                w->state = 2;
+            } else {
+                w->x214++;
+                if (w->x214 > 90) {
+                    w->state = 2;
+                }
+            }
+        }
+        break;
+    case 0:
+        w->xec &= ~0x10;
+        w->xf0 &= ~0x10000040;
+        w->xf0 &= ~0x10;
+        w->state = 1;
+    case 1:
+        if (ret != 0 && lbl_8030A10C.x68 == 0) {
+            if (fn_8006DB94()) {
+                if (fn_800593AC(t)) {
+                    w->state = 0x10;
+                } else if (VoiceRequest(t, w->x20c, w->x20e, w->x210, w->x212) != -1) {
+                    w->state = 2;
+                } else {
+                    w->x214++;
+                    if (w->x214 > 90) {
+                        w->state = 2;
+                    }
+                }
+                if (fn_80014CC0(t) && w->state == 2) {
+                    fn_80217830(1);
+                    lbl_80347364 = fn_80218570(0, 1, 0x12);
+                }
+            }
+        } else {
+            if (!fn_8002F674()) {
+                break;
+            }
+            w->state = 2;
+        }
+        if (VoiceBusy(w)) {
+            break;
+        }
+    case 2:
+        w->x214 = 0;
+        if (!VoicePoll(t)) {
+            break;
+        }
+        w->state = 3;
+    case 3:
+        if (w->xf0 & 0x02000000) {
+            break;
+        }
+        ChrSetSpeed(t);
+        if (GuardKind(w)) {
+            w->state = 8;
+        } else if (fn_8001FABC(t)) {
+            fn_80014D1C(t, 0);
+            switch (fn_8001ECB4(t, 3, &buf, -1)) {
+            case 2:
+                fn_8001EBA4(t, buf);
+                w->state = 5;
+                break;
+            case 1:
+                fn_80075FF0(t, 3, -1);
+            default:
+                w->state = 4;
+                break;
+            }
+            w->xf0 |= 0x400;
+            w->xf0 &= ~0x200;
+        } else {
+            w->xf0 &= ~0x400;
+            switch (fn_8001ECB4(t, w->x6, &buf, w->x8)) {
+            case 2:
+                fn_8001EBA4(t, buf);
+                w->state = 6;
+                break;
+            default:
+            case 1:
+                fn_80075F2C(t);
+            case 0:
+                w->state = 8;
+                break;
+            }
+        }
+        if (w->state != 3) {
+            w->xf0 |= 0x40;
+        }
+        break;
+    case 5:
+        if (fn_80075D64(t)) {
+            fn_80075FF0(t, 3, -1);
+            w->state = 4;
+        }
+        break;
+    case 4:
+        if (fn_80061114(&w->x11c, w->x120, w->x124)) {
+            wk->ry = 182.04445f * w->x120;
+            switch (fn_8001ECB4(t, w->x6, &buf, w->x8)) {
+            case 2:
+                fn_8001EBA4(t, buf);
+                w->state = 6;
+                break;
+            case 1:
+                fn_80075F2C(t);
+            default:
+                w->state = 8;
+                break;
+            }
+        } else {
+            wk->ry = 182.04445f * w->x11c;
+        }
+        break;
+    case 6:
+        if (fn_80075D64(t)) {
+            fn_80075F2C(t);
+            w->state = 8;
+        }
+        break;
+    case 8:
+        w->x138 = fn_8001DDE0(t, ChrW(t)->x10->x30);
+        w->state = 9;
+    case 9:
+        if (w->x138 != 0) {
+            w->x138--;
+            break;
+        }
+        w->state = 10;
+    case 10:
+        w->xf0 |= 0x10000000;
+        w->state = 11;
+        fn_8001CAA8(t);
+        fn_80014D1C(t, -1);
+        if (fn_8001C1F0(t)) {
+            break;
+        }
+    case 11:
+        r = fn_8001E910(t);
+        if (GuardKind(w) && r == 2) {
+            r = 1;
+        }
+        switch (r) {
+        case 2:
+            if (w->xf0 & 0x40000) {
+                w->state = 0x11;
+                break;
+            }
+            if (fn_80012160() != 5) {
+                switch (fn_8001ECB4(t, 2, &buf, -1)) {
+                case 1:
+                case 2:
+                    fn_80075FF0(t, 2, -1);
+                    w->state = 0xc;
+                    break;
+                default:
+                    w->state = 0x11;
+                    break;
+                }
+            } else {
+                w->state = 0x11;
+            }
+            break;
+        case 1:
+            w->state = 0x11;
+            break;
+        }
+        break;
+    case 12:
+    case 17:
+        if (!(w->xec & 0x80000)) {
+            fn_80021784(t);
+        } else {
+            w->xec &= ~0x80000;
+        }
+        if (!(w->xec & 0x40000)) {
+            if (!(w->xec & 0x40000000)) {
+                fn_8001DCA0(w);
+                w->xf0 |= 0x10;
+            } else {
+                w->xf0 |= 0x10;
+            }
+            if (fn_80012160() != 5) {
+                w->x134 = 1;
+                if (fn_8001EB6C(w)) {
+                    if (w->state == 0xc) {
+                        w->state = 0xe;
+                    } else {
+                        w->state = 0xf;
+                    }
+                } else {
+                    w->state = 0xd;
+                }
+            } else {
+                w->state = 0xd;
+            }
+        } else {
+            w->xec |= 0x10;
+            w->state = 0xf;
+        }
+        VoiceStopChar(t);
+        if (w->state != 0xf) {
+            break;
+        }
+    case 15:
+        if (fn_8001ECB4(t, 2, &buf, -1)) {
+            fn_8001EBA4(t, buf);
+            w->state = 7;
+        } else {
+            w->state = 0xe;
+        }
+        break;
+    case 7:
+        if (fn_80075D64(t)) {
+            fn_80075FF0(t, 2, -1);
+            w->state = 0xe;
+        }
+        break;
+    case 13:
+    case 14:
+        w->xec |= 0x20000;
+        if (w->x50 & 0x100000) {
+            w->x50 &= ~0x100000;
+            w->state = 0xb;
+        }
+        break;
+    }
+
+    switch (w->state) {
+    case 0xb:
+        fn_8001FD7C(t);
+        break;
+    }
+
+    switch (w->state) {
+    case 1:
+        fn_80018CBC(t, w->xe8, 0, 0, w->x2);
+        break;
+    default:
+        if (w->xec & 1) {
+            fn_80018CBC(t, w->xe6, 0, 0, w->x2);
+        } else {
+            fn_80018CBC(t, w->xe4, 0, 0, w->x2);
+        }
+        break;
+    case 4:
+    case 12:
+    case 14:
+        fn_80018CBC(t, w->xe6, 0, 0, w->x2);
+        break;
+    }
+}
+
 s32 fn_8001BBF8(void* obj) {
     u8* p = PTR(PTR(obj, 0x24), 0x4c);
     s16 id = *(s16*)(p + 0x10);
@@ -4559,6 +5021,102 @@ s32 fn_8001FDD8(Obj8001FDD8 *obj, s16 a, s16 b)
         }
     }
     return -1;
+}
+
+extern s32 fn_8001F3F0(Task* t, NJS_POINT3* out);
+static inline void ChrGetPos(Task* t, NJS_POINT3* out, f32 dy)
+{
+    fn_80071CF0(&ChrW(t)->pos, out);
+    out->y += dy;
+}
+
+static inline int IsTargetKind(ChrWork* w)
+{
+    int k = fn_80078478(w->st->id);
+    switch (k) {
+    case 1:
+    case 3:
+        return 1;
+    }
+    if (k >= 0x20 && k < 0x40) {
+        return 1;
+    }
+    if (k >= 0x60 && k < 0xc8) {
+        return 1;
+    }
+    return 0;
+}
+
+int fn_8001EE24(Task* t, NJS_POINT3* v)
+{
+    ChrWork* w = t->work;
+    ChrInfo* st = ChrW(t)->st;
+    Task* o;
+    NJS_POINT3* pos;
+    NJS_POINT3 e;
+    NJS_POINT3 d;
+    NJS_POINT3 a;
+    NJS_POINT3 c;
+    NJS_POINT3 b;
+
+    if (st->x1dc == NULL) {
+        return fn_8001F3F0(t, v);
+    }
+    if (lbl_8034733C == 8) {
+        o = FindChrIdOr0(st->target);
+        pos = &w->pos;
+        ChrGetPos(o, &a, 0.0f);
+        fn_80071CF0(pos, &b);
+        fn_80071F84(&d, pos, &a);
+        fn_80071D0C(&e, &a, &d, 8.0f);
+        fn_80071CF0(&e, &c);
+        fn_80071CF0(&e, v);
+        return 1;
+    }
+    switch (st->x6) {
+    default:
+        return 0;
+    case 6:
+    case 19:
+        v->x = lbl_803097F0.ent[st->id].x4;
+        v->z = lbl_803097F0.ent[st->id].x8;
+        v->y = 0.0f;
+        return 1;
+    case 2:
+        if (st->anims[st->xe4].flags & 0x10000) {
+            v->x = v->y = v->z = 0.0f;
+            return 1;
+        }
+        if (st->x20 == 2 || st->x20 == 3) {
+            o = FindChrIdOr0(lbl_80309730[st->id].xd);
+            fn_80071CF0(&ChrW(o)->pos, v);
+            return 1;
+        }
+        return 0;
+    case 16:
+    case 21:
+    case 22:
+    case 23:
+    case 24:
+    case 29:
+        if (!IsTargetKind(w)) {
+            return 0;
+        }
+    case 4:
+    case 5:
+    case 8:
+        o = FindChrIdOr0(ChrW(t)->st->target);
+        fn_80071CF0(&ChrW(o)->pos, v);
+        return 1;
+    case 9:
+    case 10:
+    case 11:
+    case 13:
+    case 32:
+        o = FindChrIdOr0(w->st->x48);
+        fn_80071CF0(&ChrW(o)->pos, v);
+        return 1;
+    }
 }
 
 s32 fn_8001F3F0(Task* t, NJS_POINT3* out)

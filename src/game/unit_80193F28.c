@@ -1,8 +1,11 @@
 #include "types.h"
+#include "game/uiobj.h"
 #include "game/gamedata.h"
 #include "game/save_8030B7F4.h"
 #include "game/camp.h"
 #include "game/battle.h"
+#include "game/sprite.h"
+#include "game/stat_8030B4D4.h"
 extern void fn_801DBE1C(const char *fmt, ...);
 extern void fn_801F2860(s16 v);
 /* One entry of a camp menu request (fn_80195EA4 fills six). */
@@ -46,7 +49,6 @@ extern s8 lbl_80347148[4];
 extern u32 OSGetSoundMode(void);
 extern s32 fn_801EE344(s16 a, s32 b);
 extern u8 lbl_80310A1C[];
-extern u8 lbl_8030B4D4[];
 extern int sprintf(char*, const char*, ...);
 extern char lbl_802B4870[];
 extern char lbl_802B4880[];
@@ -60,6 +62,10 @@ static inline s32 FlagGet(u32 b) {
     return lbl_80310B3C[b >> 5] & (1 << (b & 31));
 }
 
+static inline s32 FlagBool(u32 b) {
+    return (lbl_80310B3C[b >> 5] & (1 << (b & 31))) != 0;
+}
+
 static inline s32 FlagTest(u32 b) {
     s32 f = (lbl_80310B3C[b >> 5] & (1 << (b & 31))) != 0;
     f = f != 0;
@@ -70,11 +76,6 @@ typedef struct Dst {
     u8 *ptr;
 } Dst;
 typedef struct {
-    u8 pad0[0x14];
-    f32 x; /* 0x14 */
-    f32 y; /* 0x18 */
-} Spr;
-typedef struct {
     u8 pad0[0x2C];
     f32 x; /* 0x2C */
     f32 y; /* 0x30 */
@@ -82,7 +83,6 @@ typedef struct {
 extern void* lbl_803470F0;
 extern s16 lbl_8034711C;
 extern s16 lbl_8034711E;
-extern Spr* fn_801D68C4(void* bank, u32 n);
 extern void fn_800FF348(void* src, s32 id, f32 a, f32 b, f32 c);
 typedef struct { u8 pad[0xbc]; u8* p; } In;
 typedef struct { u8 pad[0x24]; In* in; } Ob;
@@ -92,7 +92,7 @@ extern void fn_801F1280(CampReq* r);
 extern void fn_801F2518(CampReq* r);
 typedef struct Sub1c {
     s32 x0, x4, x8, xc;
-    u8 x10[4];
+    s32 x10;
     u8 x14;
     u8 x15[3];
     s32 x18;
@@ -100,12 +100,8 @@ typedef struct Sub1c {
 typedef struct Body {
     s32 x0;
     s32 x4;
-    u8 pad08[4];
-    f32 xc, x10, x14, x18, x1c, x20, x24, x28, x2c, x30, x34, x38, x3c, x40;
-    s32 x44;
-    u8 x48, x49;
-    s16 x4a, x4c, x4e;
-    u8 pad50[0x74 - 0x50];
+    UiObj obj;
+    u8 pad54[0x74 - 0x54];
     u8 x74[0xbc - 0x74];
     void* xbc;
 } Body;
@@ -117,14 +113,21 @@ typedef struct { s32 a, b; } Pair;
 typedef struct CampWork {
     s8 *p0;
     void *p4;
-    u8 *p8;
+    ShipStat *p8;
     u8 b0c;
     u8 pad0d[3];
-    Node *objs[0xd0]; /* indexed by object kind id */
-    u8 pad350[0x10];
+    Node *objs[0xcf]; /* indexed by object kind id */
+    f32 f34c;
+    f32 f350;
+    f32 f354;
+    f32 f358;
+    u8 pad35c[4];
 } CampWork;
 extern CampWork camp_work;
 extern void fn_8016E220(void);
+extern void fn_8016F138();
+extern void fn_8016F128(void *buf, s8 a, s8 b, f32 f);
+extern void fn_8016F21C(void *p, s8 a, f32 f);
 extern Node* fn_802268E8(void*, void*);
 extern void fn_80186E4C(void);
 extern void fn_80187D78(void *p, f32 f);
@@ -145,7 +148,7 @@ extern void fn_80186A60(void);
 extern void fn_801869B8(void*, Pair*);
 extern void fn_80186D2C(void*);
 extern void fn_8018E82C();
-extern void fn_8018E81C(void *buf, s32 a, s8 b);
+extern void fn_8018E81C(void *buf, s8 a, s8 b);
 extern void fn_80191D78(void*);
 extern void fn_80191A04(void *p, s32 a);
 extern s32 lbl_803467CC;
@@ -187,6 +190,19 @@ extern Struct80307628 lbl_80307628;
 extern s32 fn_801D6E38(s32 a);
 CampCtrl *fn_80195540(CampReq *r);
 extern void fn_80195F9C(void);
+extern void fn_80199024(void);
+extern void fn_8019844C(void);
+extern void fn_801986BC(void);
+extern void *lbl_803470E8;
+extern void *lbl_803470EC;
+extern void *lbl_803470F4;
+extern f32 lbl_80347118;
+extern s8 lbl_803467C8;
+extern s8 lbl_803467C9;
+extern void fn_801D4F0C(void* spr, s32 a, s32 b, s32 c, f32 f1, f32 f2, f32 f3, f32 f4);
+extern void fn_801D52A8(Sprite* s, s32 a, s32 b, f32 f1, f32 f2, f32 f3, f32 f4);
+extern void fn_8019A374(s32 v, f32 x, f32 y, f32 z, u32 col, s32 n);
+extern s32 fn_80228928(void);
 extern void fn_801D6CBC(void *h, void *p);
 extern void fn_801D6C3C(void *h);
 extern s32 camp_screen;
@@ -293,6 +309,34 @@ void fn_80194334(void) {
 
 u32 fn_801944C4(void) {
     return lbl_80307638[15].cur[0].sel;
+}
+
+typedef struct {
+    const char *name; /* 0x00 */
+    u8 pad4[0x20];
+    s32 id;           /* 0x24 */
+} NameEnt;
+extern NameEnt lbl_802ED258[0x58];
+
+typedef struct {
+    s32 f0;
+    u32 flag;
+    s32 f8;
+} FlagEnt;
+extern FlagEnt lbl_802EBA00[];
+
+static inline u32 NameFind(s32 key) {
+    u32 r;
+    s32 i;
+    for (i = 0; i < 0x58; i++) {
+        if (key == lbl_802ED258[i].id) {
+            r = i;
+            goto done;
+        }
+    }
+    if (i == 0x58) r = 0;
+done:
+    return r;
 }
 
 extern void fn_8021A11C(Msg*, s16);
@@ -431,6 +475,30 @@ void fn_801959D4(s32 idx) {
     lbl_8034710C->holder->ctrl = &lbl_80307638[idx];
 }
 
+
+void CampMenuFinishAllPanels(void) {
+    s32 i;
+
+    for (i = 0; i < 0x9D; i++) {
+        if (camp_work.objs[i] != NULL) {
+            UiObjFinish(&camp_work.objs[i]->body->obj);
+        }
+    }
+}
+
+s32 CampMenuAnyPanelBusy(void) {
+    s32 i;
+    Node *p;
+
+    for (i = 0; i < 0x9D; i++) {
+        p = camp_work.objs[i];
+        if (p != NULL && UiObjIsBusy(&p->body->obj) == 1) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 void fn_80195B34(void) {
 }
 
@@ -462,38 +530,38 @@ void fn_80197654(s8 a) {
         }
         fn_80195B38(3, v, i + 1);
         fn_80186E20(t, i, 3, i + 1, 0.8f);
-        b->x14 = 0.0f;
+        b->obj.tx = 0.0f;
         y = 128.0f + i * 0x58;
-        b->x18 = y;
-        b->xc = 0.0f;
-        b->x10 = y;
-        b->x2c = 0.0f;
-        b->x30 = 0.0f;
-        b->x34 = 0.0f;
-        b->x38 = 0.0f;
-        b->x1c = 0.0f;
-        b->x20 = 0.0f;
-        b->x24 = 0.0f;
-        b->x28 = 0.0f;
-        b->x4a = 0;
-        b->x4e = 0;
-        b->x4c = 0;
-        b->x48 = 1;
-        b->x3c = 1.0f;
-        b->x40 = 1.0f;
-        b->x44 = 0;
-        b->x49 = 0;
+        b->obj.ty = y;
+        b->obj.x = 0.0f;
+        b->obj.y = y;
+        b->obj.rect[0] = 0.0f;
+        b->obj.rect[1] = 0.0f;
+        b->obj.rect[2] = 0.0f;
+        b->obj.rect[3] = 0.0f;
+        b->obj.vx = 0.0f;
+        b->obj.vy = 0.0f;
+        b->obj.rdx = 0.0f;
+        b->obj.rdy = 0.0f;
+        b->obj.frames = 0;
+        b->obj.cmd = 0;
+        b->obj.delay = 0;
+        b->obj.alpha_en = 1;
+        b->obj.alpha = 1.0f;
+        b->obj.f38 = 1.0f;
+        b->obj.f3c = 0;
+        b->obj.raised = 0;
         camp_work.objs[0x5a + i] = n;
         n->body->x4 = 0x5a + i;
     }
 }
 
+extern void fn_8018C00C(void*, s8, s8, f32);
 void fn_80199B60(void) {
-    u8 v = lbl_8030B4D4[0x2d4];
-    camp_work.b0c = v;
+    camp_work.b0c = lbl_8030B4D4.x2d4;
     camp_work.p0 = lbl_8030B7F4.party;
     camp_work.p4 = &lbl_8030B7F4.x1568;
-    camp_work.p8 = lbl_8030B4D4 + 0x2dc;
+    camp_work.p8 = &lbl_8030B4D4.ship;
 }
 
 s32 fn_801944D4(char* buf, s32 id)
@@ -694,7 +762,7 @@ void fn_80195A68(u32 *p, s8 a, s8 b, s8 c, s8 d, s8 e) {
 }
 
 void fn_80194F88(Self* self) {
-    Spr* s;
+    Sprite* s;
     s = fn_801D68C4(lbl_803470F0, 0x5e);
     s->x = 83.0f + self->x;
     s->y = self->y - 11.0f;
@@ -772,26 +840,26 @@ void fn_80196B08(void) {
     s->x14 = 0;
     s->x18 = 3;
     fn_8016E818(b->x74, 3);
-    b->x14 = 0.0f;
-    b->x18 = 0.0f;
-    b->xc = 0.0f;
-    b->x10 = 0.0f;
-    b->x2c = 0.0f;
-    b->x30 = 0.0f;
-    b->x34 = 0.0f;
-    b->x38 = 0.0f;
-    b->x1c = 0.0f;
-    b->x20 = 0.0f;
-    b->x24 = 0.0f;
-    b->x28 = 0.0f;
-    b->x4a = 0;
-    b->x4e = 0;
-    b->x4c = 0;
-    b->x48 = 0;
-    b->x3c = 1.0f;
-    b->x40 = 1.0f;
-    b->x44 = 0;
-    b->x49 = 0;
+    b->obj.tx = 0.0f;
+    b->obj.ty = 0.0f;
+    b->obj.x = 0.0f;
+    b->obj.y = 0.0f;
+    b->obj.rect[0] = 0.0f;
+    b->obj.rect[1] = 0.0f;
+    b->obj.rect[2] = 0.0f;
+    b->obj.rect[3] = 0.0f;
+    b->obj.vx = 0.0f;
+    b->obj.vy = 0.0f;
+    b->obj.rdx = 0.0f;
+    b->obj.rdy = 0.0f;
+    b->obj.frames = 0;
+    b->obj.cmd = 0;
+    b->obj.delay = 0;
+    b->obj.alpha_en = 0;
+    b->obj.alpha = 1.0f;
+    b->obj.f38 = 1.0f;
+    b->obj.f3c = 0;
+    b->obj.raised = 0;
     camp_work.objs[50] = n;
     n->body->x4 = 0x32;
 }
@@ -815,26 +883,26 @@ void fn_80196E20(void) {
         s->x14 = i;
         s->x18 = 0;
         fn_8016E818(b->x74, 0);
-        b->x14 = 0.0f;
-        b->x18 = 0.0f;
-        b->xc = 0.0f;
-        b->x10 = 0.0f;
-        b->x2c = 0.0f;
-        b->x30 = 0.0f;
-        b->x34 = 0.0f;
-        b->x38 = 0.0f;
-        b->x1c = 0.0f;
-        b->x20 = 0.0f;
-        b->x24 = 0.0f;
-        b->x28 = 0.0f;
-        b->x4a = 0;
-        b->x4e = 0;
-        b->x4c = 0;
-        b->x48 = 1;
-        b->x3c = 1.0f;
-        b->x40 = 1.0f;
-        b->x44 = 0;
-        b->x49 = 0;
+        b->obj.tx = 0.0f;
+        b->obj.ty = 0.0f;
+        b->obj.x = 0.0f;
+        b->obj.y = 0.0f;
+        b->obj.rect[0] = 0.0f;
+        b->obj.rect[1] = 0.0f;
+        b->obj.rect[2] = 0.0f;
+        b->obj.rect[3] = 0.0f;
+        b->obj.vx = 0.0f;
+        b->obj.vy = 0.0f;
+        b->obj.rdx = 0.0f;
+        b->obj.rdy = 0.0f;
+        b->obj.frames = 0;
+        b->obj.cmd = 0;
+        b->obj.delay = 0;
+        b->obj.alpha_en = 1;
+        b->obj.alpha = 1.0f;
+        b->obj.f38 = 1.0f;
+        b->obj.f3c = 0;
+        b->obj.raised = 0;
         camp_work.objs[106 + i] = n;
         n->body->x4 = 0x6a + i;
     }
@@ -854,26 +922,26 @@ void fn_80196F58(s32 a) {
         b->xbc = t;
         fn_8018DABC(t, a, 0, 0, i + 2);
         fn_8018C6A8(b, 0.0f);
-        b->x14 = 0.0f;
-        b->x18 = 0.0f;
-        b->xc = 0.0f;
-        b->x10 = 0.0f;
-        b->x2c = 0.0f;
-        b->x30 = 0.0f;
-        b->x34 = 0.0f;
-        b->x38 = 0.0f;
-        b->x1c = 0.0f;
-        b->x20 = 0.0f;
-        b->x24 = 0.0f;
-        b->x28 = 0.0f;
-        b->x4a = 0;
-        b->x4e = 0;
-        b->x4c = 0;
-        b->x48 = 0;
-        b->x3c = 1.0f;
-        b->x40 = 1.0f;
-        b->x44 = 0;
-        b->x49 = 0;
+        b->obj.tx = 0.0f;
+        b->obj.ty = 0.0f;
+        b->obj.x = 0.0f;
+        b->obj.y = 0.0f;
+        b->obj.rect[0] = 0.0f;
+        b->obj.rect[1] = 0.0f;
+        b->obj.rect[2] = 0.0f;
+        b->obj.rect[3] = 0.0f;
+        b->obj.vx = 0.0f;
+        b->obj.vy = 0.0f;
+        b->obj.rdx = 0.0f;
+        b->obj.rdy = 0.0f;
+        b->obj.frames = 0;
+        b->obj.cmd = 0;
+        b->obj.delay = 0;
+        b->obj.alpha_en = 0;
+        b->obj.alpha = 1.0f;
+        b->obj.f38 = 1.0f;
+        b->obj.f3c = 0;
+        b->obj.raised = 0;
         camp_work.objs[104 + i] = n;
         n->body->x4 = 0x68 + i;
     }
@@ -891,26 +959,26 @@ void fn_80197088(void) {
     b->xbc = t;
     fn_80187F30(t, lbl_8034710C->holder->ctrl);
     fn_801884C4(b->x74);
-    b->x14 = 0.0f;
-    b->x18 = 400.0f;
-    b->xc = 0.0f;
-    b->x10 = 400.0f;
-    b->x2c = 0.0f;
-    b->x30 = 0.0f;
-    b->x34 = 0.0f;
-    b->x38 = 0.0f;
-    b->x1c = 0.0f;
-    b->x20 = 0.0f;
-    b->x24 = 0.0f;
-    b->x28 = 0.0f;
-    b->x4a = 0;
-    b->x4e = 0;
-    b->x4c = 0;
-    b->x48 = 0;
-    b->x3c = 1.0f;
-    b->x40 = 1.0f;
-    b->x44 = 0;
-    b->x49 = 0;
+    b->obj.tx = 0.0f;
+    b->obj.ty = 400.0f;
+    b->obj.x = 0.0f;
+    b->obj.y = 400.0f;
+    b->obj.rect[0] = 0.0f;
+    b->obj.rect[1] = 0.0f;
+    b->obj.rect[2] = 0.0f;
+    b->obj.rect[3] = 0.0f;
+    b->obj.vx = 0.0f;
+    b->obj.vy = 0.0f;
+    b->obj.rdx = 0.0f;
+    b->obj.rdy = 0.0f;
+    b->obj.frames = 0;
+    b->obj.cmd = 0;
+    b->obj.delay = 0;
+    b->obj.alpha_en = 0;
+    b->obj.alpha = 1.0f;
+    b->obj.f38 = 1.0f;
+    b->obj.f3c = 0;
+    b->obj.raised = 0;
     camp_work.objs[95] = n;
     n->body->x4 = 0x5f;
 }
@@ -926,31 +994,36 @@ void fn_8019717C(void) {
     t = fn_801E1C7C(8);
     b->xbc = t;
     fn_80189CF0(b->x74);
-    b->x14 = 0.0f;
-    b->x18 = 256.0f;
-    b->xc = 0.0f;
-    b->x10 = 256.0f;
-    b->x2c = 0.0f;
-    b->x30 = 0.0f;
-    b->x34 = 0.0f;
-    b->x38 = 0.0f;
-    b->x1c = 0.0f;
-    b->x20 = 0.0f;
-    b->x24 = 0.0f;
-    b->x28 = 0.0f;
-    b->x4a = 0;
-    b->x4e = 0;
-    b->x4c = 0;
-    b->x48 = 0;
-    b->x3c = 1.0f;
-    b->x40 = 1.0f;
-    b->x44 = 0;
-    b->x49 = 0;
+    b->obj.tx = 0.0f;
+    b->obj.ty = 256.0f;
+    b->obj.x = 0.0f;
+    b->obj.y = 256.0f;
+    b->obj.rect[0] = 0.0f;
+    b->obj.rect[1] = 0.0f;
+    b->obj.rect[2] = 0.0f;
+    b->obj.rect[3] = 0.0f;
+    b->obj.vx = 0.0f;
+    b->obj.vy = 0.0f;
+    b->obj.rdx = 0.0f;
+    b->obj.rdy = 0.0f;
+    b->obj.frames = 0;
+    b->obj.cmd = 0;
+    b->obj.delay = 0;
+    b->obj.alpha_en = 0;
+    b->obj.alpha = 1.0f;
+    b->obj.f38 = 1.0f;
+    b->obj.f3c = 0;
+    b->obj.raised = 0;
     camp_work.objs[96] = n;
     n->body->x4 = 0x60;
     ((Sub1c*)camp_work.objs[96]->body->xbc)->x4 = 0;
 }
 
+extern void fn_8018DFC4(void);
+extern void fn_8018DFBC(void*, s32);
+extern void fn_8018DFB4(void*, s32);
+extern void fn_8018DFAC(void*, s32);
+extern void fn_8018E7F0(void*);
 void fn_801988F8(void) {
     CampWork* w = &camp_work;
     Node* n;
@@ -971,26 +1044,26 @@ void fn_801988F8(void) {
     }
     fn_801869B8(t, arr);
     fn_80186D2C(n->body->x74);
-    b->x14 = 0.0f;
-    b->x18 = 0.0f;
-    b->xc = 0.0f;
-    b->x10 = 0.0f;
-    b->x2c = 0.0f;
-    b->x30 = 0.0f;
-    b->x34 = 0.0f;
-    b->x38 = 0.0f;
-    b->x1c = 0.0f;
-    b->x20 = 0.0f;
-    b->x24 = 0.0f;
-    b->x28 = 0.0f;
-    b->x4a = 0;
-    b->x4e = 0;
-    b->x4c = 0;
-    b->x48 = 0;
-    b->x3c = 1.0f;
-    b->x40 = 1.0f;
-    b->x44 = 0;
-    b->x49 = 0;
+    b->obj.tx = 0.0f;
+    b->obj.ty = 0.0f;
+    b->obj.x = 0.0f;
+    b->obj.y = 0.0f;
+    b->obj.rect[0] = 0.0f;
+    b->obj.rect[1] = 0.0f;
+    b->obj.rect[2] = 0.0f;
+    b->obj.rect[3] = 0.0f;
+    b->obj.vx = 0.0f;
+    b->obj.vy = 0.0f;
+    b->obj.rdx = 0.0f;
+    b->obj.rdy = 0.0f;
+    b->obj.frames = 0;
+    b->obj.cmd = 0;
+    b->obj.delay = 0;
+    b->obj.alpha_en = 0;
+    b->obj.alpha = 1.0f;
+    b->obj.f38 = 1.0f;
+    b->obj.f3c = 0;
+    b->obj.raised = 0;
     w->objs[130] = n;
     n->body->x4 = 0x82;
 }
@@ -1007,26 +1080,26 @@ void fn_801998B8(void) {
     fn_8018E81C(t, 0, -1);
     fn_80191D78(n->body->x74);
     b = n->body;
-    b->x14 = 0.0f;
-    b->x18 = 256.0f;
-    b->xc = 0.0f;
-    b->x10 = 256.0f;
-    b->x2c = 0.0f;
-    b->x30 = 0.0f;
-    b->x34 = 0.0f;
-    b->x38 = 0.0f;
-    b->x1c = 0.0f;
-    b->x20 = 0.0f;
-    b->x24 = 0.0f;
-    b->x28 = 0.0f;
-    b->x4a = 0;
-    b->x4e = 0;
-    b->x4c = 0;
-    b->x48 = 1;
-    b->x3c = 0.7f;
-    b->x40 = 1.0f;
-    b->x44 = 0;
-    b->x49 = 0;
+    b->obj.tx = 0.0f;
+    b->obj.ty = 256.0f;
+    b->obj.x = 0.0f;
+    b->obj.y = 256.0f;
+    b->obj.rect[0] = 0.0f;
+    b->obj.rect[1] = 0.0f;
+    b->obj.rect[2] = 0.0f;
+    b->obj.rect[3] = 0.0f;
+    b->obj.vx = 0.0f;
+    b->obj.vy = 0.0f;
+    b->obj.rdx = 0.0f;
+    b->obj.rdy = 0.0f;
+    b->obj.frames = 0;
+    b->obj.cmd = 0;
+    b->obj.delay = 0;
+    b->obj.alpha_en = 1;
+    b->obj.alpha = 0.7f;
+    b->obj.f38 = 1.0f;
+    b->obj.f3c = 0;
+    b->obj.raised = 0;
     camp_work.objs[4] = n;
     n->body->x4 = 4;
 }
@@ -1093,26 +1166,26 @@ void fn_80197838(s8 kind)
     } else {
         fn_8018873C(p);
     }
-    s->x14 = 0.0f;
-    s->x18 = 0.0f;
-    s->xc = 0.0f;
-    s->x10 = 0.0f;
-    s->x2c = 0.0f;
-    s->x30 = 0.0f;
-    s->x34 = 0.0f;
-    s->x38 = 0.0f;
-    s->x1c = 0.0f;
-    s->x20 = 0.0f;
-    s->x24 = 0.0f;
-    s->x28 = 0.0f;
-    s->x4a = 0;
-    s->x4e = 0;
-    s->x4c = 0;
-    s->x48 = 0;
-    s->x3c = 1.0f;
-    s->x40 = 1.0f;
-    s->x44 = 0;
-    s->x49 = 0;
+    s->obj.tx = 0.0f;
+    s->obj.ty = 0.0f;
+    s->obj.x = 0.0f;
+    s->obj.y = 0.0f;
+    s->obj.rect[0] = 0.0f;
+    s->obj.rect[1] = 0.0f;
+    s->obj.rect[2] = 0.0f;
+    s->obj.rect[3] = 0.0f;
+    s->obj.vx = 0.0f;
+    s->obj.vy = 0.0f;
+    s->obj.rdx = 0.0f;
+    s->obj.rdy = 0.0f;
+    s->obj.frames = 0;
+    s->obj.cmd = 0;
+    s->obj.delay = 0;
+    s->obj.alpha_en = 0;
+    s->obj.alpha = 1.0f;
+    s->obj.f38 = 1.0f;
+    s->obj.f3c = 0;
+    s->obj.raised = 0;
     cw[kind + 4] = obj;
     obj->body->x4 = kind;
 }
@@ -1141,26 +1214,26 @@ void fn_80197998(s8 arg)
         } else {
             fn_80189788(buf, w, -0.5f, i - 1);
         }
-        s->x14 = 320.0f;
-        s->x18 = 200.0f;
-        s->xc = 320.0f;
-        s->x10 = 200.0f;
-        s->x2c = 0.0f;
-        s->x30 = 0.0f;
-        s->x34 = 0.0f;
-        s->x38 = 0.0f;
-        s->x1c = 0.0f;
-        s->x20 = 0.0f;
-        s->x24 = 0.0f;
-        s->x28 = 0.0f;
-        s->x4a = 0;
-        s->x4e = 0;
-        s->x4c = 0;
-        s->x48 = 0;
-        s->x3c = 1.0f;
-        s->x40 = 1.0f;
-        s->x44 = 0;
-        s->x49 = 0;
+        s->obj.tx = 320.0f;
+        s->obj.ty = 200.0f;
+        s->obj.x = 320.0f;
+        s->obj.y = 200.0f;
+        s->obj.rect[0] = 0.0f;
+        s->obj.rect[1] = 0.0f;
+        s->obj.rect[2] = 0.0f;
+        s->obj.rect[3] = 0.0f;
+        s->obj.vx = 0.0f;
+        s->obj.vy = 0.0f;
+        s->obj.rdx = 0.0f;
+        s->obj.rdy = 0.0f;
+        s->obj.frames = 0;
+        s->obj.cmd = 0;
+        s->obj.delay = 0;
+        s->obj.alpha_en = 0;
+        s->obj.alpha = 1.0f;
+        s->obj.f38 = 1.0f;
+        s->obj.f3c = 0;
+        s->obj.raised = 0;
         camp_work.objs[i + 0x41] = obj;
         obj->body->x4 = i + 0x41;
     }
@@ -1189,26 +1262,26 @@ void fn_80197CC4(s8 arg)
         } else {
             fn_80189214(buf, w, -0.5f, i - 1);
         }
-        s->x14 = 320.0f;
-        s->x18 = 200.0f;
-        s->xc = 320.0f;
-        s->x10 = 200.0f;
-        s->x2c = 0.0f;
-        s->x30 = 0.0f;
-        s->x34 = 0.0f;
-        s->x38 = 0.0f;
-        s->x1c = 0.0f;
-        s->x20 = 0.0f;
-        s->x24 = 0.0f;
-        s->x28 = 0.0f;
-        s->x4a = 0;
-        s->x4e = 0;
-        s->x4c = 0;
-        s->x48 = 0;
-        s->x3c = 1.0f;
-        s->x40 = 1.0f;
-        s->x44 = 0;
-        s->x49 = 0;
+        s->obj.tx = 320.0f;
+        s->obj.ty = 200.0f;
+        s->obj.x = 320.0f;
+        s->obj.y = 200.0f;
+        s->obj.rect[0] = 0.0f;
+        s->obj.rect[1] = 0.0f;
+        s->obj.rect[2] = 0.0f;
+        s->obj.rect[3] = 0.0f;
+        s->obj.vx = 0.0f;
+        s->obj.vy = 0.0f;
+        s->obj.rdx = 0.0f;
+        s->obj.rdy = 0.0f;
+        s->obj.frames = 0;
+        s->obj.cmd = 0;
+        s->obj.delay = 0;
+        s->obj.alpha_en = 0;
+        s->obj.alpha = 1.0f;
+        s->obj.f38 = 1.0f;
+        s->obj.f3c = 0;
+        s->obj.raised = 0;
         camp_work.objs[i + 58] = obj;
         obj->body->x4 = i + 58;
     }
@@ -1234,26 +1307,26 @@ void fn_80197E48(s8 arg)
         } else {
             fn_80189214(buf, w, -0.5f, i - 1);
         }
-        s->x14 = 320.0f;
-        s->x18 = 200.0f;
-        s->xc = 320.0f;
-        s->x10 = 200.0f;
-        s->x2c = 0.0f;
-        s->x30 = 0.0f;
-        s->x34 = 0.0f;
-        s->x38 = 0.0f;
-        s->x1c = 0.0f;
-        s->x20 = 0.0f;
-        s->x24 = 0.0f;
-        s->x28 = 0.0f;
-        s->x4a = 0;
-        s->x4e = 0;
-        s->x4c = 0;
-        s->x48 = 0;
-        s->x3c = 1.0f;
-        s->x40 = 1.0f;
-        s->x44 = 0;
-        s->x49 = 0;
+        s->obj.tx = 320.0f;
+        s->obj.ty = 200.0f;
+        s->obj.x = 320.0f;
+        s->obj.y = 200.0f;
+        s->obj.rect[0] = 0.0f;
+        s->obj.rect[1] = 0.0f;
+        s->obj.rect[2] = 0.0f;
+        s->obj.rect[3] = 0.0f;
+        s->obj.vx = 0.0f;
+        s->obj.vy = 0.0f;
+        s->obj.rdx = 0.0f;
+        s->obj.rdy = 0.0f;
+        s->obj.frames = 0;
+        s->obj.cmd = 0;
+        s->obj.delay = 0;
+        s->obj.alpha_en = 0;
+        s->obj.alpha = 1.0f;
+        s->obj.f38 = 1.0f;
+        s->obj.f3c = 0;
+        s->obj.raised = 0;
         camp_work.objs[i + 51] = obj;
         obj->body->x4 = i + 51;
     }
@@ -1276,34 +1349,31 @@ void fn_80197FCC(void)
         s->xbc = buf;
         fn_80189DB0(buf, i);
         fn_8018A07C(obj->body->x74, i);
-        s->x14 = 0.0f;
-        s->x18 = 264.0f;
-        s->xc = 0.0f;
-        s->x10 = 264.0f;
-        s->x2c = 0.0f;
-        s->x30 = 0.0f;
-        s->x34 = 0.0f;
-        s->x38 = 0.0f;
-        s->x1c = 0.0f;
-        s->x20 = 0.0f;
-        s->x24 = 0.0f;
-        s->x28 = 0.0f;
-        s->x4a = 0;
-        s->x4e = 0;
-        s->x4c = 0;
-        s->x48 = 1;
-        s->x3c = 0.7f;
-        s->x40 = 1.0f;
-        s->x44 = 0;
-        s->x49 = 0;
+        s->obj.tx = 0.0f;
+        s->obj.ty = 264.0f;
+        s->obj.x = 0.0f;
+        s->obj.y = 264.0f;
+        s->obj.rect[0] = 0.0f;
+        s->obj.rect[1] = 0.0f;
+        s->obj.rect[2] = 0.0f;
+        s->obj.rect[3] = 0.0f;
+        s->obj.vx = 0.0f;
+        s->obj.vy = 0.0f;
+        s->obj.rdx = 0.0f;
+        s->obj.rdy = 0.0f;
+        s->obj.frames = 0;
+        s->obj.cmd = 0;
+        s->obj.delay = 0;
+        s->obj.alpha_en = 1;
+        s->obj.alpha = 0.7f;
+        s->obj.f38 = 1.0f;
+        s->obj.f3c = 0;
+        s->obj.raised = 0;
         camp_work.objs[i + 0x91] = obj;
         obj->body->x4 = i + 0x91;
         i++;
     } while (i < 4);
 }
-extern void fn_8016F138();
-extern void fn_8016F128(void *buf, s8 a, s8 b, f32 f);
-extern void fn_8016F21C(void *p, s8 a, f32 f);
 
 void fn_80198CF4(void)
 {
@@ -1321,27 +1391,27 @@ void fn_80198CF4(void)
         s->xbc = buf;
         fn_8016F128(buf, i + 1, i + 6, 1.0f);
         fn_8016F21C(obj->body->x74, i + 6, 1.0f);
-        s->x14 = 0.0f;
+        s->obj.tx = 0.0f;
         y = 200.0f + (f32)(i * 64);
-        s->x18 = y;
-        s->xc = 0.0f;
-        s->x10 = y;
-        s->x2c = 0.0f;
-        s->x30 = 0.0f;
-        s->x34 = 0.0f;
-        s->x38 = 0.0f;
-        s->x1c = 0.0f;
-        s->x20 = 0.0f;
-        s->x24 = 0.0f;
-        s->x28 = 0.0f;
-        s->x4a = 0;
-        s->x4e = 0;
-        s->x4c = 0;
-        s->x48 = 1;
-        s->x3c = 0.7f;
-        s->x40 = 1.0f;
-        s->x44 = 0;
-        s->x49 = 0;
+        s->obj.ty = y;
+        s->obj.x = 0.0f;
+        s->obj.y = y;
+        s->obj.rect[0] = 0.0f;
+        s->obj.rect[1] = 0.0f;
+        s->obj.rect[2] = 0.0f;
+        s->obj.rect[3] = 0.0f;
+        s->obj.vx = 0.0f;
+        s->obj.vy = 0.0f;
+        s->obj.rdx = 0.0f;
+        s->obj.rdy = 0.0f;
+        s->obj.frames = 0;
+        s->obj.cmd = 0;
+        s->obj.delay = 0;
+        s->obj.alpha_en = 1;
+        s->obj.alpha = 0.7f;
+        s->obj.f38 = 1.0f;
+        s->obj.f3c = 0;
+        s->obj.raised = 0;
         camp_work.objs[i + 26] = obj;
         obj->body->x4 = i + 26;
     }
@@ -1363,27 +1433,27 @@ void fn_80198E90(void)
         s->xbc = buf;
         fn_8016F128(buf, i + 1, i, 1.0f);
         fn_8016F21C(obj->body->x74, i, 1.0f);
-        s->x14 = 0.0f;
+        s->obj.tx = 0.0f;
         y = 200.0f + (f32)(i * 64);
-        s->x18 = y;
-        s->xc = 0.0f;
-        s->x10 = y;
-        s->x2c = 0.0f;
-        s->x30 = 0.0f;
-        s->x34 = 0.0f;
-        s->x38 = 0.0f;
-        s->x1c = 0.0f;
-        s->x20 = 0.0f;
-        s->x24 = 0.0f;
-        s->x28 = 0.0f;
-        s->x4a = 0;
-        s->x4e = 0;
-        s->x4c = 0;
-        s->x48 = 1;
-        s->x3c = 0.7f;
-        s->x40 = 1.0f;
-        s->x44 = 0;
-        s->x49 = 0;
+        s->obj.ty = y;
+        s->obj.x = 0.0f;
+        s->obj.y = y;
+        s->obj.rect[0] = 0.0f;
+        s->obj.rect[1] = 0.0f;
+        s->obj.rect[2] = 0.0f;
+        s->obj.rect[3] = 0.0f;
+        s->obj.vx = 0.0f;
+        s->obj.vy = 0.0f;
+        s->obj.rdx = 0.0f;
+        s->obj.rdy = 0.0f;
+        s->obj.frames = 0;
+        s->obj.cmd = 0;
+        s->obj.delay = 0;
+        s->obj.alpha_en = 1;
+        s->obj.alpha = 0.7f;
+        s->obj.f38 = 1.0f;
+        s->obj.f3c = 0;
+        s->obj.raised = 0;
         camp_work.objs[i + 31] = obj;
         obj->body->x4 = i + 31;
     }
@@ -1405,27 +1475,27 @@ void fn_8019936C(void)
         s->xbc = buf;
         fn_8016F128(buf, i + 1, i + 4, 1.0f);
         fn_8016F21C(obj->body->x74, i + 4, 1.0f);
-        s->x14 = 0.0f;
+        s->obj.tx = 0.0f;
         y = 200.0f + (f32)(i * 64);
-        s->x18 = y;
-        s->xc = 0.0f;
-        s->x10 = y;
-        s->x2c = 0.0f;
-        s->x30 = 0.0f;
-        s->x34 = 0.0f;
-        s->x38 = 0.0f;
-        s->x1c = 0.0f;
-        s->x20 = 0.0f;
-        s->x24 = 0.0f;
-        s->x28 = 0.0f;
-        s->x4a = 0;
-        s->x4e = 0;
-        s->x4c = 0;
-        s->x48 = 1;
-        s->x3c = 0.7f;
-        s->x40 = 1.0f;
-        s->x44 = 0;
-        s->x49 = 0;
+        s->obj.ty = y;
+        s->obj.x = 0.0f;
+        s->obj.y = y;
+        s->obj.rect[0] = 0.0f;
+        s->obj.rect[1] = 0.0f;
+        s->obj.rect[2] = 0.0f;
+        s->obj.rect[3] = 0.0f;
+        s->obj.vx = 0.0f;
+        s->obj.vy = 0.0f;
+        s->obj.rdx = 0.0f;
+        s->obj.rdy = 0.0f;
+        s->obj.frames = 0;
+        s->obj.cmd = 0;
+        s->obj.delay = 0;
+        s->obj.alpha_en = 1;
+        s->obj.alpha = 0.7f;
+        s->obj.f38 = 1.0f;
+        s->obj.f3c = 0;
+        s->obj.raised = 0;
         camp_work.objs[i + 120] = obj;
         obj->body->x4 = i + 120;
     }
@@ -1450,26 +1520,26 @@ void fn_801999B4(void)
         fn_8016F0D4(buf, t, 1.0f);
         fn_8016EC3C(obj->body->x74, t, 1.0f, i);
         s = obj->body;
-        s->x14 = 0.0f;
-        s->x18 = (f32)(i * 64);
-        s->xc = 0.0f;
-        s->x10 = (f32)(i * 64);
-        s->x2c = 0.0f;
-        s->x30 = 0.0f;
-        s->x34 = 0.0f;
-        s->x38 = 0.0f;
-        s->x1c = 0.0f;
-        s->x20 = 0.0f;
-        s->x24 = 0.0f;
-        s->x28 = 0.0f;
-        s->x4a = 0;
-        s->x4e = 0;
-        s->x4c = 0;
-        s->x48 = 1;
-        s->x3c = 0.7f;
-        s->x40 = 1.0f;
-        s->x44 = 0;
-        s->x49 = 0;
+        s->obj.tx = 0.0f;
+        s->obj.ty = (f32)(i * 64);
+        s->obj.x = 0.0f;
+        s->obj.y = (f32)(i * 64);
+        s->obj.rect[0] = 0.0f;
+        s->obj.rect[1] = 0.0f;
+        s->obj.rect[2] = 0.0f;
+        s->obj.rect[3] = 0.0f;
+        s->obj.vx = 0.0f;
+        s->obj.vy = 0.0f;
+        s->obj.rdx = 0.0f;
+        s->obj.rdy = 0.0f;
+        s->obj.frames = 0;
+        s->obj.cmd = 0;
+        s->obj.delay = 0;
+        s->obj.alpha_en = 1;
+        s->obj.alpha = 0.7f;
+        s->obj.f38 = 1.0f;
+        s->obj.f3c = 0;
+        s->obj.raised = 0;
         cw->objs[i] = obj;
         obj->body->x4 = i;
     }
@@ -1500,26 +1570,26 @@ void fn_80198A0C(void)
         s->xbc = buf;
         fn_8016F128(buf, 1, a, 1.0f);
         fn_8016F21C(obj->body->x74, a, 1.0f);
-        s->x14 = 0.0f;
-        s->x18 = 264.0f;
-        s->xc = 0.0f;
-        s->x10 = 264.0f;
-        s->x2c = 0.0f;
-        s->x30 = 0.0f;
-        s->x34 = 0.0f;
-        s->x38 = 0.0f;
-        s->x1c = 0.0f;
-        s->x20 = 0.0f;
-        s->x24 = 0.0f;
-        s->x28 = 0.0f;
-        s->x4a = 0;
-        s->x4e = 0;
-        s->x4c = 0;
-        s->x48 = 1;
-        s->x3c = 0.7f;
-        s->x40 = 1.0f;
-        s->x44 = 0;
-        s->x49 = 0;
+        s->obj.tx = 0.0f;
+        s->obj.ty = 264.0f;
+        s->obj.x = 0.0f;
+        s->obj.y = 264.0f;
+        s->obj.rect[0] = 0.0f;
+        s->obj.rect[1] = 0.0f;
+        s->obj.rect[2] = 0.0f;
+        s->obj.rect[3] = 0.0f;
+        s->obj.vx = 0.0f;
+        s->obj.vy = 0.0f;
+        s->obj.rdx = 0.0f;
+        s->obj.rdy = 0.0f;
+        s->obj.frames = 0;
+        s->obj.cmd = 0;
+        s->obj.delay = 0;
+        s->obj.alpha_en = 1;
+        s->obj.alpha = 0.7f;
+        s->obj.f38 = 1.0f;
+        s->obj.f3c = 0;
+        s->obj.raised = 0;
         *(Node **)(cw + id * 4 + 0x10) = obj;
         obj->body->x4 = id;
     }
@@ -1550,32 +1620,32 @@ void fn_80198B80(void)
         s->xbc = buf;
         fn_8016F128(buf, 1, a, 1.0f);
         fn_8016F21C(obj->body->x74, a, 1.0f);
-        s->x14 = 0.0f;
-        s->x18 = 264.0f;
-        s->xc = 0.0f;
-        s->x10 = 264.0f;
-        s->x2c = 0.0f;
-        s->x30 = 0.0f;
-        s->x34 = 0.0f;
-        s->x38 = 0.0f;
-        s->x1c = 0.0f;
-        s->x20 = 0.0f;
-        s->x24 = 0.0f;
-        s->x28 = 0.0f;
-        s->x4a = 0;
-        s->x4e = 0;
-        s->x4c = 0;
-        s->x48 = 1;
-        s->x3c = 0.7f;
-        s->x40 = 1.0f;
-        s->x44 = 0;
-        s->x49 = 0;
+        s->obj.tx = 0.0f;
+        s->obj.ty = 264.0f;
+        s->obj.x = 0.0f;
+        s->obj.y = 264.0f;
+        s->obj.rect[0] = 0.0f;
+        s->obj.rect[1] = 0.0f;
+        s->obj.rect[2] = 0.0f;
+        s->obj.rect[3] = 0.0f;
+        s->obj.vx = 0.0f;
+        s->obj.vy = 0.0f;
+        s->obj.rdx = 0.0f;
+        s->obj.rdy = 0.0f;
+        s->obj.frames = 0;
+        s->obj.cmd = 0;
+        s->obj.delay = 0;
+        s->obj.alpha_en = 1;
+        s->obj.alpha = 0.7f;
+        s->obj.f38 = 1.0f;
+        s->obj.f3c = 0;
+        s->obj.raised = 0;
         *(Node **)(cw + id * 4 + 0x10) = obj;
         obj->body->x4 = id;
     }
 }
 
-void fn_801991EC(void)
+void fn_801991EC(s32 arg)
 {
     s32 i;
     for (i = 0; i < 7; i++) {
@@ -1595,26 +1665,26 @@ void fn_801991EC(void)
         } else {
             fn_80189788(buf, w, -0.5f, i - 1);
         }
-        s->x14 = 320.0f;
-        s->x18 = 200.0f;
-        s->xc = 320.0f;
-        s->x10 = 200.0f;
-        s->x2c = 0.0f;
-        s->x30 = 0.0f;
-        s->x34 = 0.0f;
-        s->x38 = 0.0f;
-        s->x1c = 0.0f;
-        s->x20 = 0.0f;
-        s->x24 = 0.0f;
-        s->x28 = 0.0f;
-        s->x4a = 0;
-        s->x4e = 0;
-        s->x4c = 0;
-        s->x48 = 0;
-        s->x3c = 1.0f;
-        s->x40 = 1.0f;
-        s->x44 = 0;
-        s->x49 = 0;
+        s->obj.tx = 320.0f;
+        s->obj.ty = 200.0f;
+        s->obj.x = 320.0f;
+        s->obj.y = 200.0f;
+        s->obj.rect[0] = 0.0f;
+        s->obj.rect[1] = 0.0f;
+        s->obj.rect[2] = 0.0f;
+        s->obj.rect[3] = 0.0f;
+        s->obj.vx = 0.0f;
+        s->obj.vy = 0.0f;
+        s->obj.rdx = 0.0f;
+        s->obj.rdy = 0.0f;
+        s->obj.frames = 0;
+        s->obj.cmd = 0;
+        s->obj.delay = 0;
+        s->obj.alpha_en = 0;
+        s->obj.alpha = 1.0f;
+        s->obj.f38 = 1.0f;
+        s->obj.f3c = 0;
+        s->obj.raised = 0;
         camp_work.objs[i + 0x4f] = obj;
         obj->body->x4 = i + 0x4f;
     }
@@ -1642,26 +1712,26 @@ void fn_80197B1C(s32 arg)
         } else {
             fn_801895C0(buf, w, -0.5f, i - 1);
         }
-        s->x14 = 320.0f;
-        s->x18 = 200.0f;
-        s->xc = 320.0f;
-        s->x10 = 200.0f;
-        s->x2c = 0.0f;
-        s->x30 = 0.0f;
-        s->x34 = 0.0f;
-        s->x38 = 0.0f;
-        s->x1c = 0.0f;
-        s->x20 = 0.0f;
-        s->x24 = 0.0f;
-        s->x28 = 0.0f;
-        s->x4a = 0;
-        s->x4e = 0;
-        s->x4c = 0;
-        s->x48 = 0;
-        s->x3c = 1.0f;
-        s->x40 = 1.0f;
-        s->x44 = 0;
-        s->x49 = 0;
+        s->obj.tx = 320.0f;
+        s->obj.ty = 200.0f;
+        s->obj.x = 320.0f;
+        s->obj.y = 200.0f;
+        s->obj.rect[0] = 0.0f;
+        s->obj.rect[1] = 0.0f;
+        s->obj.rect[2] = 0.0f;
+        s->obj.rect[3] = 0.0f;
+        s->obj.vx = 0.0f;
+        s->obj.vy = 0.0f;
+        s->obj.rdx = 0.0f;
+        s->obj.rdy = 0.0f;
+        s->obj.frames = 0;
+        s->obj.cmd = 0;
+        s->obj.delay = 0;
+        s->obj.alpha_en = 0;
+        s->obj.alpha = 1.0f;
+        s->obj.f38 = 1.0f;
+        s->obj.f3c = 0;
+        s->obj.raised = 0;
         camp_work.objs[i + 72] = obj;
         obj->body->x4 = i + 72;
     }
@@ -1681,26 +1751,26 @@ void fn_80199508(void)
         fn_8018E81C(buf, 5, i);
         fn_80191A04(obj->body->x74, 5);
         s = obj->body;
-        s->x14 = 0.0f;
-        s->x18 = 256.0f;
-        s->xc = 0.0f;
-        s->x10 = 256.0f;
-        s->x2c = 0.0f;
-        s->x30 = 0.0f;
-        s->x34 = 0.0f;
-        s->x38 = 0.0f;
-        s->x1c = 0.0f;
-        s->x20 = 0.0f;
-        s->x24 = 0.0f;
-        s->x28 = 0.0f;
-        s->x4a = 0;
-        s->x4e = 0;
-        s->x4c = 0;
-        s->x48 = 1;
-        s->x3c = 0.7f;
-        s->x40 = 1.0f;
-        s->x44 = 0;
-        s->x49 = 0;
+        s->obj.tx = 0.0f;
+        s->obj.ty = 256.0f;
+        s->obj.x = 0.0f;
+        s->obj.y = 256.0f;
+        s->obj.rect[0] = 0.0f;
+        s->obj.rect[1] = 0.0f;
+        s->obj.rect[2] = 0.0f;
+        s->obj.rect[3] = 0.0f;
+        s->obj.vx = 0.0f;
+        s->obj.vy = 0.0f;
+        s->obj.rdx = 0.0f;
+        s->obj.rdy = 0.0f;
+        s->obj.frames = 0;
+        s->obj.cmd = 0;
+        s->obj.delay = 0;
+        s->obj.alpha_en = 1;
+        s->obj.alpha = 0.7f;
+        s->obj.f38 = 1.0f;
+        s->obj.f3c = 0;
+        s->obj.raised = 0;
         camp_work.objs[i + 0x7a] = obj;
         obj->body->x4 = i + 0x7a;
     }
@@ -1758,26 +1828,26 @@ void fn_80199678(void) {
             break;
         }
         b = n->body;
-        b->x14 = 0.0f;
-        b->x18 = 256.0f;
-        b->xc = 0.0f;
-        b->x10 = 256.0f;
-        b->x2c = 0.0f;
-        b->x30 = 0.0f;
-        b->x34 = 0.0f;
-        b->x38 = 0.0f;
-        b->x1c = 0.0f;
-        b->x20 = 0.0f;
-        b->x24 = 0.0f;
-        b->x28 = 0.0f;
-        b->x4a = 0;
-        b->x4e = 0;
-        b->x4c = 0;
-        b->x48 = 0;
-        b->x3c = 1.0f;
-        b->x40 = 1.0f;
-        b->x44 = 0;
-        b->x49 = 0;
+        b->obj.tx = 0.0f;
+        b->obj.ty = 256.0f;
+        b->obj.x = 0.0f;
+        b->obj.y = 256.0f;
+        b->obj.rect[0] = 0.0f;
+        b->obj.rect[1] = 0.0f;
+        b->obj.rect[2] = 0.0f;
+        b->obj.rect[3] = 0.0f;
+        b->obj.vx = 0.0f;
+        b->obj.vy = 0.0f;
+        b->obj.rdx = 0.0f;
+        b->obj.rdy = 0.0f;
+        b->obj.frames = 0;
+        b->obj.cmd = 0;
+        b->obj.delay = 0;
+        b->obj.alpha_en = 0;
+        b->obj.alpha = 1.0f;
+        b->obj.f38 = 1.0f;
+        b->obj.f3c = 0;
+        b->obj.raised = 0;
         camp_work.objs[0x6c + i] = n;
         n->body->x4 = 0x6c + i;
     }
@@ -1813,45 +1883,45 @@ void fn_80197270(s8 a) {
             b->xbc = t;
             fn_8018DABC(t, a, i, j, 1);
             fn_8018B278(b, j, i, 1.0f);
-            b->x14 = 320.0f;
-            b->x18 = 120.0f + (f32)(i * 0x40);
-            b->xc = 320.0f;
-            b->x10 = 120.0f + (f32)(i * 0x40);
-            b->x2c = 0.0f;
-            b->x30 = 0.0f;
-            b->x34 = 0.0f;
-            b->x38 = 0.0f;
-            b->x1c = 0.0f;
-            b->x20 = 0.0f;
-            b->x24 = 0.0f;
-            b->x28 = 0.0f;
-            b->x4a = 0;
-            b->x4e = 0;
-            b->x4c = 0;
-            b->x48 = 0;
-            b->x3c = 1.0f;
-            b->x40 = 1.0f;
-            b->x44 = 0;
-            b->x49 = 0;
+            b->obj.tx = 320.0f;
+            b->obj.ty = 120.0f + (f32)(i * 0x40);
+            b->obj.x = 320.0f;
+            b->obj.y = 120.0f + (f32)(i * 0x40);
+            b->obj.rect[0] = 0.0f;
+            b->obj.rect[1] = 0.0f;
+            b->obj.rect[2] = 0.0f;
+            b->obj.rect[3] = 0.0f;
+            b->obj.vx = 0.0f;
+            b->obj.vy = 0.0f;
+            b->obj.rdx = 0.0f;
+            b->obj.rdy = 0.0f;
+            b->obj.frames = 0;
+            b->obj.cmd = 0;
+            b->obj.delay = 0;
+            b->obj.alpha_en = 0;
+            b->obj.alpha = 1.0f;
+            b->obj.f38 = 1.0f;
+            b->obj.f3c = 0;
+            b->obj.raised = 0;
             switch (j) {
             case 0:
                 if (i == 3) {
-                    b->x14 = 320.0f;
+                    b->obj.tx = 320.0f;
                     y = 120.0f + (f32)((i + 2) << 6);
-                    b->x18 = y;
-                    b->xc = 320.0f;
-                    b->x10 = y;
+                    b->obj.ty = y;
+                    b->obj.x = 320.0f;
+                    b->obj.y = y;
                 }
                 objs[0x27 + i] = n;
                 n->body->x4 = i + 0x23;
                 break;
             case 1:
                 if (i == 4) {
-                    b->x14 = 320.0f;
+                    b->obj.tx = 320.0f;
                     y = 120.0f + (f32)((i + 1) << 6);
-                    b->x18 = y;
-                    b->xc = 320.0f;
-                    b->x10 = y;
+                    b->obj.ty = y;
+                    b->obj.x = 320.0f;
+                    b->obj.y = y;
                 }
                 objs[0x2b + i] = n;
                 n->body->x4 = i + 0x27;
@@ -1896,26 +1966,26 @@ void fn_801974B4(s32 arg)
             fn_80195B38(4, r.e[0].x6, 1);
             fn_80186E20(buf, 0, 4, 1, 1.0f);
         }
-        b->x14 = 0.0f;
-        b->x18 = 0.0f;
-        b->xc = 0.0f;
-        b->x10 = 0.0f;
-        b->x2c = 0.0f;
-        b->x30 = 0.0f;
-        b->x34 = 0.0f;
-        b->x38 = 0.0f;
-        b->x1c = 0.0f;
-        b->x20 = 0.0f;
-        b->x24 = 0.0f;
-        b->x28 = 0.0f;
-        b->x4a = 0;
-        b->x4e = 0;
-        b->x4c = 0;
-        b->x48 = 0;
-        b->x3c = 1.0f;
-        b->x40 = 1.0f;
-        b->x44 = 0;
-        b->x49 = 0;
+        b->obj.tx = 0.0f;
+        b->obj.ty = 0.0f;
+        b->obj.x = 0.0f;
+        b->obj.y = 0.0f;
+        b->obj.rect[0] = 0.0f;
+        b->obj.rect[1] = 0.0f;
+        b->obj.rect[2] = 0.0f;
+        b->obj.rect[3] = 0.0f;
+        b->obj.vx = 0.0f;
+        b->obj.vy = 0.0f;
+        b->obj.rdx = 0.0f;
+        b->obj.rdy = 0.0f;
+        b->obj.frames = 0;
+        b->obj.cmd = 0;
+        b->obj.delay = 0;
+        b->obj.alpha_en = 0;
+        b->obj.alpha = 1.0f;
+        b->obj.f38 = 1.0f;
+        b->obj.f3c = 0;
+        b->obj.raised = 0;
         camp_work.objs[0x5d + i] = n;
         n->body->x4 = i + 0x5d;
     }
@@ -1930,26 +2000,26 @@ extern void fn_8019BD2C(void *o, s32 mode);
 
 /* The common placement of a camp panel at y 264. */
 static inline void BodyInit264(Body *b, u8 en, f32 sx) {
-    b->x14 = 0.0f;
-    b->x18 = 264.0f;
-    b->xc = 0.0f;
-    b->x10 = 264.0f;
-    b->x2c = 0.0f;
-    b->x30 = 0.0f;
-    b->x34 = 0.0f;
-    b->x38 = 0.0f;
-    b->x1c = 0.0f;
-    b->x20 = 0.0f;
-    b->x24 = 0.0f;
-    b->x28 = 0.0f;
-    b->x4a = 0;
-    b->x4e = 0;
-    b->x4c = 0;
-    b->x48 = en;
-    b->x3c = sx;
-    b->x40 = 1.0f;
-    b->x44 = 0;
-    b->x49 = 0;
+    b->obj.tx = 0.0f;
+    b->obj.ty = 264.0f;
+    b->obj.x = 0.0f;
+    b->obj.y = 264.0f;
+    b->obj.rect[0] = 0.0f;
+    b->obj.rect[1] = 0.0f;
+    b->obj.rect[2] = 0.0f;
+    b->obj.rect[3] = 0.0f;
+    b->obj.vx = 0.0f;
+    b->obj.vy = 0.0f;
+    b->obj.rdx = 0.0f;
+    b->obj.rdy = 0.0f;
+    b->obj.frames = 0;
+    b->obj.cmd = 0;
+    b->obj.delay = 0;
+    b->obj.alpha_en = en;
+    b->obj.alpha = sx;
+    b->obj.f38 = 1.0f;
+    b->obj.f3c = 0;
+    b->obj.raised = 0;
 }
 
 void fn_80198118(void) {
@@ -2301,6 +2371,66 @@ s32 fn_80195CD0(s8 a0, s8 a1, s8 a2, u8 a3) {
         res = r.count;
     }
     return res;
+}
+
+static inline s32 CampCanChange(void) {
+    s32 v = (s8)lbl_80310A1C[6];
+    switch (v) {
+    case 0: case 1: case 2: case 3: case 4: case 12:
+        return 0;
+    }
+    if (lbl_8030B7F4.party[0] != 0) {
+        return 0;
+    }
+    return 1;
+}
+
+void CampMenuCreatePanels(void) {
+    int i;
+
+    for (i = 0; i < 0x9D; i++) {
+        camp_work.objs[i] = NULL;
+    }
+    fn_801999B4();
+    fn_80199024();
+    fn_80198CF4();
+    fn_80198B80();
+    fn_80198E90();
+    fn_80198A0C();
+    fn_80196F58(0);
+    fn_80196E20();
+    fn_80196C10();
+    fn_80197270(0);
+    fn_80196B08();
+    fn_80197654(0);
+    fn_801974B4(0);
+    fn_80197088();
+    if (CampCanChange()) {
+        fn_801998B8();
+        fn_8019936C();
+        fn_80199678();
+        fn_80199508();
+    }
+    fn_80197E48(0);
+    fn_80197CC4(0);
+    fn_80197B1C(0);
+    fn_80197998(0);
+    if (CampCanChange()) {
+        fn_801991EC(0);
+    }
+    fn_80197838(0x61);
+    fn_80197838(0x62);
+    fn_80197838(0x64);
+    fn_80197838(0x63);
+    fn_80197838(0x65);
+    fn_80197838(0x66);
+    fn_80197838(0x67);
+    fn_801986BC();
+    fn_801988F8();
+    fn_8019844C();
+    fn_80198118();
+    fn_80197FCC();
+    fn_8019717C();
 }
 
 void CampMenuRunScreen(void) {

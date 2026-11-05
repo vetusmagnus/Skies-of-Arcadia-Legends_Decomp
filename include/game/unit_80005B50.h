@@ -43,7 +43,9 @@ typedef struct Entry16 {
     u8 pad5[3];
     s8 mode;
     u8 b9;
-    u8 pad2[6];
+    u8 pad2[3];
+    s8 xd;              /* 0x0d partner/target id */
+    u8 pade[2];
 } Entry16;
 /* The 0x70-byte objects lbl_80309EC8 keeps at 0x40/0x44 (fn_80014AB8); 0x20000000 in flags
  * releases one. */
@@ -97,7 +99,7 @@ typedef struct Sys_80309EC8 {
 } Sys_80309EC8;
 /* lbl_803097F0 (.bss, 0xD8 bytes): s16 header (x0 read as a state id in battle.c),
    then 12 per-character 16-byte entries from 0x18. */
-typedef struct { f32 x0; f32 x4; f32 x8; f32 xc; } Ent;
+typedef struct { f32 x0; f32 x4; f32 x8; Angle xc; } Ent;
 typedef struct { s16 x0; u8 pad[0x16]; Ent ent[12]; } Tbl;
 typedef struct {
     s8 id;

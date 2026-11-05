@@ -562,7 +562,7 @@ s32 fn_801157E4(f32 *out, f32 *from, f32 *to, void *a);
 extern u32 fn_80222E00(s32 a, void *p);
 extern u8 lbl_8030A35C[];
 extern void njRotateY(NJS_MATRIX m, Angle y);
-extern int fn_80116B84(int n, Xf *blk, void *tbl, void *p);
+extern int fn_80116B84(int n, NJS_POINT3 *pos, void *tbl, void *p);
 typedef struct Chr_80116F2C {
     u8 pad0[0x38];
     Xf cur;
@@ -581,27 +581,6 @@ typedef struct Tbl {
     u32 x1c;
     u8 pad20[4];
 } Tbl;
-typedef struct Tpl {
-    s16 x0;
-    s16 x2;
-    f32 x4;
-    f32 x8;
-    f32 xc;
-    s32 x10;
-    f32 x14[3];
-    f32 x20;
-    f32 x24;
-    s32 x28;
-    f32 x2c;
-    s32 x30;
-    s32 x34;
-    s32 x38;
-    s32 x3c;
-} Tpl;
-typedef struct Chr_801173DC {
-    u8 pad0[0x74];
-    Tpl tpl;
-} Chr_801173DC;
 extern Tpl lbl_8031191C;
 typedef struct Chr_80119E50 {
     u8 pad0[0x44];
@@ -754,6 +733,7 @@ typedef struct Obj_801117C4 {
 extern u32 lbl_80310B3C[0x356];
 extern EvObj *lbl_80347450; /* the player */
 extern EvColl *lbl_8034741C; /* the player's current event target */
+extern EvColl *lbl_80347418; /* the player's collision record */
 extern s32 fn_8011768C(void);
 extern s32 fn_8010E41C(f32 *pos, Angle *ang, f32 *at);
 typedef struct Sub_80118368 {
@@ -782,7 +762,7 @@ typedef struct Obj_80118368 {
     Sub_80118368 *x1b8;
     void *x1bc;
 } Obj_80118368;
-extern void fn_80225930(u16 a, u16 b, Sub_80118368 *c);
+extern void fn_80225930(u16 a, u16 b, void *c);
 typedef struct Res_8011BAE8 {
     u8 pad0[0x24];
     s32 x24;
@@ -1658,17 +1638,6 @@ typedef struct M_80127BC0 {
 } M_80127BC0;
 extern s32 lbl_80347508;
 extern s8 fn_8009763C(void);
-typedef struct Obj_80117B9C {
-    u8 pad0[0xb4];
-    f32 xb4;
-    f32 xb8;
-    f32 xbc;
-    s32 xc0;
-    s32 xc4;
-    s32 xc8;
-    u8 padcc[0x16c - 0xcc];
-    s16 x16c;
-} Obj_80117B9C;
 typedef struct { u8 pad[0x20]; s32 x20; } Sub_8012A900;
 typedef struct { u8 pad[4]; Sub_8012A900 *x4; } Obj_8012A900;
 typedef struct {
@@ -2480,6 +2449,127 @@ void fn_80111FC4(EvObj *o) {
         o->ang[2] = o->tgt[2] + d.ang[2];
         o->motionId = 0x10;
         o->x172 = 0;
+        break;
+    }
+}
+
+s32 fn_8011226C(EvObj *o, NJS_MOTION *a) {
+    Xf save1;
+    Xf save2;
+    Xf d;
+    NJS_MATRIX m;
+    NJS_POINT3 v;
+    f32 i;
+    s32 r;
+    EvInfoMap *inf;
+    EvObj *owner;
+    s32 n;
+    MemCopy(&save1, &o->pos, 0x24);
+    if (o->pivot == 1) {
+        njUnitMatrix(m);
+        njTranslate(m, o->pos.x, o->pos.y, o->pos.z);
+        njRotateXYZ(m, o->ang[0], o->ang[1], o->ang[2]);
+        njTranslate(m, o->pivotPos.x, o->pivotPos.y, o->pivotPos.z);
+        njRotateXYZ(m, o->pivotAng[0], o->pivotAng[1], o->pivotAng[2]);
+        v.x = 0.0f;
+        v.y = 0.0f;
+        v.z = 0.0f;
+        njCalcPoint(m, &v, &o->pos);
+    }
+    MemCopy(&save2, &o->pos, 0x24);
+    for (i = 0.0f; i < (f32)a->nbFrame; i += 1.0f) {
+        fn_80119744(&d, o, a, i);
+        o->pos.x = save2.pos.x + d.pos.x;
+        o->pos.y = save2.pos.y + d.pos.y;
+        o->pos.z = save2.pos.z + d.pos.z;
+        o->ang[0] = save2.ang[0] + d.ang[0];
+        o->ang[1] = save2.ang[1] + d.ang[1];
+        o->ang[2] = save2.ang[2] + d.ang[2];
+    }
+    owner = lbl_80347418->p4;
+    n = (inf = owner->ext->info)->count > 8 ? inf->nearDist : 0;
+    fn_802256A0(&o->pos.x, o->hit, 0xFFFF, n & 0xFFFF);
+    r = fn_80116B84(3, &o->pos, lbl_8030A35C, o->hit) == 0;
+    MemCopy(&o->pos, &save1, 0x24);
+    return r;
+}
+
+void fn_80113630(EvObj *o) {
+    EvObj *owner;
+    Xf d;
+    u8 save[0x24];
+    EvInfoMap *inf;
+    s32 n;
+    s32 k;
+    ItemList *l;
+    o->speed = 1.0f;
+    MemCopy(save, &o->pos, 0x24);
+    MemCopy(&o->pos, &o->home, 0x24);
+    fn_80118AA4(o);
+    fn_80119744(&d, o, o->motion, o->x18c);
+    fn_80118948(o);
+    lbl_80347404 = 1;
+    MemCopy(&o->pos, save, 0x24);
+    switch (o->x172) {
+    case 0:
+        if (o->x198 == 1) {
+            o->pos.x = o->home.x + d.pos.x;
+            o->pos.y = o->home.y + d.pos.y;
+            o->pos.z = o->home.z + d.pos.z;
+            o->ang[0] = o->tgt[0] + d.ang[0];
+            o->ang[1] = o->tgt[1] + d.ang[1];
+            o->ang[2] = o->tgt[2] + d.ang[2];
+            o->home.x = o->pos.x;
+            o->home.y = o->pos.y;
+            o->home.z = o->pos.z;
+            o->tgt[0] = o->ang[0];
+            o->tgt[1] = o->ang[1];
+            o->tgt[2] = o->ang[2];
+            o->x1a0 = o->x18c;
+            o->x18c = 0.0f;
+            o->x1a4 = 0.0f;
+            o->x198 = 0;
+            o->x19c = 1;
+            o->motion2 = o->motion;
+            l = o->ext->items;
+            k = lbl_80347418->id12;
+            o->motion = l->count > k + 10 ? l->items[k + 10] : 0;
+            o->x172 = 0x10;
+        }
+        break;
+    case 1:
+        if (o->x19c == 1) o->x172 = 0x10;
+        break;
+    case 0x10:
+        o->pos.x = o->home.x + d.pos.x;
+        o->pos.y = o->home.y + d.pos.y;
+        o->pos.z = o->home.z + d.pos.z;
+        o->ang[0] = o->tgt[0] + d.ang[0];
+        o->ang[1] = o->tgt[1] + d.ang[1];
+        o->ang[2] = o->tgt[2] + d.ang[2];
+        if (o->x198 == 1) {
+            fn_801E7414(1, o);
+            o->x19c = 1;
+            o->home.x = o->pos.x;
+            o->home.y = o->pos.y;
+            o->home.z = o->pos.z;
+            o->tgt[0] = o->ang[0];
+            o->tgt[1] = o->ang[1];
+            o->tgt[2] = o->ang[2];
+            o->ang[0] = 0;
+            o->ang[2] = 0;
+            o->x172 = 0x20;
+        } else {
+            break;
+        }
+    case 0x20:
+        owner = o->slots->x10->p4;
+        n = (inf = owner->ext->info)->count > 8 ? inf->nearDist : 0;
+        if (fn_802256A0(&o->pos.x, o->hit, 0xFFFF, n & 0xFFFF) == 1) {
+            o->motionId = 1;
+            o->x172 = 0;
+        }
+        fn_80097350(1);
         break;
     }
 }
@@ -5252,7 +5342,7 @@ int fn_801169D4(int sel, Xf *pos, void *p, f32 maxd, f32 step) {
         buf.pos.x = pos->pos.x + out.x;
         buf.pos.y = pos->pos.y + out.y;
         buf.pos.z = pos->pos.z + out.z;
-        if (fn_80116B84(3, &buf, lbl_8030A35C, p) == 0) {
+        if (fn_80116B84(3, &buf.pos, lbl_8030A35C, p) == 0) {
             pos->pos.x = buf.pos.x;
             pos->pos.y = buf.pos.y;
             pos->pos.z = buf.pos.z;
@@ -5267,7 +5357,7 @@ int fn_80116F2C(Chr_80116F2C *chr) {
     int r;
 
     MemCopy(&tmp, &chr->cur, 0x24);
-    r = fn_80116B84(3, &chr->cur, lbl_8030A35C, chr->x1b8);
+    r = fn_80116B84(3, &chr->cur.pos, lbl_8030A35C, chr->x1b8);
     if (r == 0) {
         return 1;
     }
@@ -5331,7 +5421,7 @@ void fn_80117290(EvObj *c) {
     }
 }
 
-void fn_801173DC(int sel, Chr_801173DC *c) {
+void fn_801173DC(int sel, EvObj *c) {
     c->tpl = lbl_8031191C;
     c->tpl.x0 = 4;
     if (sel == 0) {
@@ -8053,11 +8143,58 @@ void fn_8011A960(NJS_POINT3 *out, NJS_POINT3 *a, NJS_POINT3 *b) {
     out->x = ax - bx;
 }
 
-void fn_80117B9C(Obj_80117B9C *obj)
+void fn_80117B9C(EvObj *obj)
 {
     s32 z = 0;
-    obj->x16c = z;
-    obj->xb4 = obj->xb8 = obj->xbc = (f32)(obj->xc0 = obj->xc4 = obj->xc8 = z);
+    obj->pivot = z;
+    obj->pivotPos.x = obj->pivotPos.y = obj->pivotPos.z = (f32)(obj->pivotAng[0] = obj->pivotAng[1] = obj->pivotAng[2] = z);
+}
+
+extern f32 lbl_80347410;
+extern u16 lbl_80347478;
+extern s32 lbl_8034747C;
+extern f32 lbl_80347480;
+extern f32 lbl_80347484;
+extern f32 lbl_80347488;
+extern s32 lbl_80347448;
+void fn_80119850(EvObj *obj) {
+    CharCfg *row;
+    obj->slots = fn_801E1C7C(0x18);
+    lbl_80347438 = lbl_802E54B0[fn_801161B4()].fa0;
+    lbl_80347434 = lbl_802E54B0[fn_801161B4()].f94;
+    lbl_80347428 = lbl_802E54B0[fn_801161B4()].f94;
+    lbl_8034742C = lbl_802E54B0[fn_801161B4()].f98;
+    row = &lbl_802E54B0[fn_801161B4()];
+    lbl_80347430 = row->f9c;
+    lbl_80347420 = 4.0f;
+    lbl_80347424 = 1.0f;
+    obj->motionId = 1;
+    obj->x172 = 0;
+    lbl_80347444 = 0;
+    fn_801E7414(1, obj);
+    obj->x1a8 = 0.2f;
+    fn_801173DC(1, obj);
+    obj->kind = 0;
+    lbl_8034743C = 0;
+    obj->ang[2] = 0;
+    obj->ang[0] = 0;
+    if (3.4028235e38f != lbl_80347488) {
+        obj->pos.x = lbl_80347488;
+        obj->pos.y = lbl_80347484;
+        obj->pos.z = lbl_80347480;
+        obj->ang[1] = 0.005493164f * (f32)lbl_8034747C;
+    }
+    fn_8011605C(fn_801161B4());
+    obj->hit = fn_802258BC(0xffff, 0xffff, 0);
+    if (lbl_80347478 != 0x7fffffff) {
+        if (3.4028235e38f != lbl_80347488) {
+            fn_80225930(0xffff, lbl_80347478, obj->hit);
+        }
+    }
+    lbl_80347400 = 0;
+    lbl_80347448 = 0;
+    lbl_80347410 = 0.0f;
+    lbl_80347440 = 0;
 }
 
 void fn_8012A900(Arg_8012A900 *p)
@@ -9669,7 +9806,7 @@ int fn_80117088(Xf *a, Xf *b, f32 x, f32 y, f32 z, void *p) {
         tmp.pos.x = tmp.pos.x + a->pos.x;
         tmp.pos.y = tmp.pos.y + a->pos.y;
         tmp.pos.z = tmp.pos.z + a->pos.z;
-        if (fn_80116B84(3, &tmp, lbl_8030A35C, p) == 0) {
+        if (fn_80116B84(3, &tmp.pos, lbl_8030A35C, p) == 0) {
             b->pos.x = tmp.pos.x;
             b->pos.y = tmp.pos.y;
             b->pos.z = tmp.pos.z;

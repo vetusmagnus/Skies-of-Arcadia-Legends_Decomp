@@ -83,7 +83,7 @@ typedef struct {
     u32 x2c;       /* 0x2C */
     u32 speed;     /* 0x30 */
     s32 x34;       /* 0x34 */
-    s32 mode;      /* 0x38 */
+    u32 mode;      /* 0x38 */
     u32 flag;      /* 0x3C story flag */
 } EvInfoMap;
 
@@ -312,12 +312,13 @@ typedef struct {
     s16 x2c;      /* 0x2C */
     s16 x2e;      /* 0x2E */
     u16 x30;      /* 0x30: saved around fn_80225930 (fn_8016058C) */
+    u16 x32;      /* 0x32 */
 } EvHit;
 
 /* The object's collision record (0x1BC), refreshed by fn_80222838. */
 typedef struct EvColl {
     s32 (*cb)(struct EvColl *, struct EvColl *); /* 0x00 */
-    struct EvColl *p4;       /* 0x04 */
+    void *p4;               /* 0x04 owner object or peer collision record, per use */
     u32 w8;                  /* 0x08 */
     u8 padC[4];
     u16 mask10;              /* 0x10 */
@@ -340,6 +341,25 @@ typedef struct EvNear {
     EvColl* x10;             /* 0x10 current event target */
 } EvNear;
 
+/* The player's collision template (0x40 bytes at EvObj+0x74, copied from the character config). */
+typedef struct Tpl {
+    s16 x0;
+    s16 x2;
+    f32 x4;
+    f32 x8;
+    f32 xc;
+    s32 x10;
+    f32 x14[3];
+    f32 x20;
+    f32 x24;
+    s32 x28;
+    f32 x2c;
+    s32 x30;
+    s32 x34;
+    s32 x38;
+    s32 x3c;
+} Tpl;
+
 typedef struct EvObj {
     u8 pad0[4];
     s32 kind;                /* 0x04 */
@@ -356,8 +376,7 @@ typedef struct EvObj {
     NJS_POINT3 scl;          /* 0x50 */
     NJS_POINT3 vel;          /* 0x5C */
     Angle rotv[3];           /* 0x68 */
-    s16 x74;                 /* 0x74 */
-    u8 pad76[0xB4 - 0x76];
+    Tpl tpl;                 /* 0x74 */
     NJS_POINT3 pivotPos;     /* 0xB4 */
     Angle pivotAng[3];       /* 0xC0 */
     NJS_VECTOR dir;          /* 0xCC */
@@ -372,7 +391,8 @@ typedef struct EvObj {
     NJS_POINT3 home;         /* 0x104 */
     Angle tgt[3];            /* 0x110 */
     NJS_POINT3 x11c;         /* 0x11C saved scale */
-    u8 pad128[0x158 - 0x128];
+    NJS_POINT3 x128;         /* 0x128 */
+    u8 pad134[0x158 - 0x134];
     NJS_POINT3 x158;         /* 0x158 */
     f32 x164;                /* 0x164 */
     s16 state;               /* 0x168 */
@@ -430,7 +450,7 @@ typedef struct EvObj {
     Angle x20c;              /* 0x20C */
     s32 x210;                /* 0x210 */
     s32 x214;                /* 0x214, with x20c/x210 the saved angles */
-    u8 pad218[0x21C - 0x218];
+    s32 x218;                 /* 0x218 */
     u8 x21c;                 /* 0x21C */
     u8 x21d;                 /* 0x21D */
     u8 x21e;                 /* 0x21E */

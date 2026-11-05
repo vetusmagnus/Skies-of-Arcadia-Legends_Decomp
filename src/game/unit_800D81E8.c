@@ -2359,7 +2359,7 @@ typedef struct Obj_800F1E5C {
 } Obj_800F1E5C;
 extern void njRotateY(NJS_MATRIX m, Angle a);
 extern void fn_801C5A60(NJS_MATRIX m, NJS_POINT3 *p, NJS_POINT3 *out);
-extern u32 fn_80222E00(u32 flags, Ent_800F1E5C *e);
+extern u32 fn_80222E00(u32 flags, EvColl *e);
 extern s32 fn_802254A0(NJS_POINT3 *p, void *h);
 extern NJS_POINT3 lbl_802B2228;
 extern SaveData lbl_8030B7F4;
@@ -3888,7 +3888,7 @@ void fn_800E0C58(Task* t) {
             fn_80227810(e->texlist);
         }
         fn_801173DC(0, e);
-        e->x74 = 5;
+        e->tpl.x0 = 5;
         t->state = 1;
     case 1:
         if (fn_801C5E94(e) == 0) {
@@ -9592,7 +9592,7 @@ void fn_801022FC(EvObj* e) {
     s32 ang;
     if (e != 0) {
         fn_801173DC(0, e);
-        e->x74 = 5;
+        e->tpl.x0 = 5;
         if (fn_801C60A4(e) != 0) {
             e->pos.x = e->ext->target.x;
             e->pos.y = e->ext->target.y;
@@ -9622,6 +9622,79 @@ void fn_801022FC(EvObj* e) {
         e->x180 = 0;
         InitVec_801022FC(&e->home, e);
         fn_80222838(e->coll);
+    }
+}
+
+typedef struct {
+    u8 pad0[0x24];
+    s32 w24;
+    s32 w28;
+    s32 w2c;
+    s32 w30;
+    u32 w34;
+} Tbl_80103FF8;
+
+static inline Tbl_80103FF8* Info_80103FF8(EvObj* e) {
+    return e->ext->info;
+}
+
+void fn_80103FF8(Task* o) {
+    EvObj* e = o->work;
+    switch (o->state) {
+    case 0: {
+        f32 sp;
+        f32 dy;
+        if (fn_801C5FFC(e) != 0) {
+            fn_80227810(e->texlist);
+        }
+        fn_801173DC(0, e);
+        e->tpl.x0 = 5;
+        e->vel.x = 0.0f;
+        e->vel.y = 0.0f;
+        e->vel.z = 0.0f;
+        if (fn_801C6068(e, 13) != 0) {
+            e->home.x = (f32)Info_80103FF8(e)->w24;
+            e->home.y = (f32)Info_80103FF8(e)->w28;
+            e->home.z = (f32)Info_80103FF8(e)->w2c;
+            sp = (f32)Info_80103FF8(e)->w34 / 100.0f;
+            dy = (f32)Info_80103FF8(e)->w30;
+            e->x128.y = e->home.y + dy;
+            if (dy < 0.0f) {
+                sp = -sp;
+            }
+            e->vel.y = sp;
+        } else {
+            e->home.x = e->pos.x;
+            e->home.y = e->pos.y;
+            e->home.z = e->pos.z;
+            e->x128.y = e->pos.y;
+            e->vel.y = 0.0f;
+        }
+        o->state = 1;
+        break;
+    }
+    case 1:
+        e->pos.x += e->vel.x;
+        e->pos.y += e->vel.y;
+        e->pos.z += e->vel.z;
+        if ((e->vel.y < 0.0f && e->pos.y < e->x128.y) || (e->vel.y > 0.0f && e->pos.y > e->x128.y)) {
+            e->pos.x = e->home.x;
+            e->pos.y = e->home.y;
+            e->pos.z = e->home.z;
+        }
+        if (fn_800D2924(e) != 0) {
+            fn_801E66E0(e);
+        }
+        break;
+    case 0xfe:
+        break;
+    case 2:
+    case 0xff:
+        if (fn_801C5FFC(e) != 0) {
+            fn_802275A4(e->texlist, 0);
+        }
+        fn_80100B74(o);
+        break;
     }
 }
 
@@ -9734,7 +9807,7 @@ static inline void Init_8010493C(EvObj* e) {
         s32 b;
         s32 a;
         fn_801173DC(0, e);
-        e->x74 = 5;
+        e->tpl.x0 = 5;
         if (fn_801C6068(e, 10) != 0) {
             t = e->ext->info;
             a = t->f24;
@@ -9837,7 +9910,7 @@ static inline void Init_801046D4(EvObj* e) {
         s32 b;
         s32 a;
         fn_801173DC(0, e);
-        e->x74 = 5;
+        e->tpl.x0 = 5;
         if (fn_801C6068(e, 10) != 0) {
             t = e->ext->info;
             a = t->f24;
@@ -9947,7 +10020,7 @@ static inline void Init_80104450(EvObj* e) {
         s32 b;
         s32 a;
         fn_801173DC(0, e);
-        e->x74 = 5;
+        e->tpl.x0 = 5;
         if (fn_801C6068(e, 11) != 0) {
             t = e->ext->info;
             a = t->f24;
@@ -11938,7 +12011,7 @@ s32 fn_800ED8C4(u8 (*grid)[24][28]) {
 }
 
 extern NJS_POINT3 lbl_802E4578;
-s32 fn_800F1E5C(Obj_800F1E5C *o, Angle *rot, NJS_POINT3 *dir);
+s32 fn_800F1E5C(EvObj *o, Angle *rot, NJS_POINT3 *dir);
 
 extern s32 fn_801C6068(void *p, s32 n);
 extern void fn_801C58FC(NJS_VECTOR *v, NJS_VECTOR *out, Angle x, Angle y, Angle z);
@@ -12372,7 +12445,7 @@ void fn_800EDB70(void) {
     }
 }
 
-static inline s32 Ok(NJS_POINT3 *p, Hit *h) {
+static inline s32 Ok(NJS_POINT3 *p, EvHit *h) {
     s32 r = 0;
     if (p != NULL && h != NULL && fn_802254A0(p, h) == 1 && (h->h24 & 0x2800) != 0x2800) {
         r = 1;
@@ -12380,9 +12453,9 @@ static inline s32 Ok(NJS_POINT3 *p, Hit *h) {
     return r;
 }
 
-s32 fn_800F1E5C(Obj_800F1E5C *o, Angle *rot, NJS_POINT3 *dir) {
+s32 fn_800F1E5C(EvObj *o, Angle *rot, NJS_POINT3 *dir) {
     NJS_MATRIX m;
-    Hit saved;
+    EvHit saved;
     NJS_POINT3 c;
     NJS_POINT3 c2;
     NJS_POINT3 t;
@@ -12390,27 +12463,27 @@ s32 fn_800F1E5C(Obj_800F1E5C *o, Angle *rot, NJS_POINT3 *dir) {
     Angle ax, ay, az;
     f32 px, py, pz;
     s32 result = 0;
-    if (o != NULL && o->ent != NULL && o->hit != NULL && rot != NULL && dir != NULL) {
-        Ent_800F1E5C *e = o->ent;
-        NJS_POINT3 *pos = e->pos;
+    if (o != NULL && o->coll != NULL && o->hit != NULL && rot != NULL && dir != NULL) {
+        EvColl *e = o->coll;
+        f32 *pos = e->pos;
         Angle *ang = e->ang;
-        px = pos->x; py = pos->y; pz = pos->z;
+        px = pos[0]; py = pos[1]; pz = pos[2];
         ax = ang[0]; ay = ang[1]; az = ang[2];
         saved = *o->hit;
         njUnitMatrix(m);
         njRotateXYZ(m, rot[0], rot[1], rot[2]);
         fn_801C5A60(m, dir, &t);
-        c.x = o->p.x + t.x;
-        c.y = o->p.y + t.y;
-        c.z = o->p.z + t.z;
-        o->ent->pos->x = c.x;
-        o->ent->pos->y = c.y;
-        o->ent->pos->z = c.z;
-        o->ent->ang[0] = rot[0];
-        o->ent->ang[1] = rot[1];
-        o->ent->ang[2] = rot[2];
-        fn_80222838((void *)(o->ent));
-        if (fn_80222E00(0x2800, o->ent) == 0) {
+        c.x = o->pos.x + t.x;
+        c.y = o->pos.y + t.y;
+        c.z = o->pos.z + t.z;
+        o->coll->pos[0] = c.x;
+        o->coll->pos[1] = c.y;
+        o->coll->pos[2] = c.z;
+        o->coll->ang[0] = rot[0];
+        o->coll->ang[1] = rot[1];
+        o->coll->ang[2] = rot[2];
+        fn_80222838(o->coll);
+        if (fn_80222E00(0x2800, o->coll) == 0) {
             if (Ok(&c, o->hit)) {
                 f32 len = njScalor(dir);
                 s32 n;
@@ -12438,13 +12511,13 @@ s32 fn_800F1E5C(Obj_800F1E5C *o, Angle *rot, NJS_POINT3 *dir) {
             }
         }
         *o->hit = saved;
-        o->ent->pos->x = px;
-        o->ent->pos->y = py;
-        o->ent->pos->z = pz;
-        o->ent->ang[0] = ax;
-        o->ent->ang[1] = ay;
-        o->ent->ang[2] = az;
-        fn_80222838((void *)(o->ent));
+        o->coll->pos[0] = px;
+        o->coll->pos[1] = py;
+        o->coll->pos[2] = pz;
+        o->coll->ang[0] = ax;
+        o->coll->ang[1] = ay;
+        o->coll->ang[2] = az;
+        fn_80222838(o->coll);
     }
     return result;
 }

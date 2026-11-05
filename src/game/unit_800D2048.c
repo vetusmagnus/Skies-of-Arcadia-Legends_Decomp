@@ -1018,6 +1018,7 @@ void fn_800D6618(MapTask *t)
 {
     EvObj *e = t->work;
     EvColl *s = e->coll;
+    EvColl *peer;
     s32 ok;
     EvInfoMap *q;
     void *r;
@@ -1096,7 +1097,8 @@ void fn_800D6618(MapTask *t)
             s = e->coll;
             s->h16 = 0;
             s->h14 = 0;
-            s->p4->h16 = 0;
+            peer = s->p4;
+            peer->h16 = 0;
             s->p4 = NULL;
             fn_800CD0B8(8, EvMapInfo(e)->nearDist, 0x50000, 0);
             t->state = 1;

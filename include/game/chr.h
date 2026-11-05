@@ -21,7 +21,8 @@ typedef struct ChrRec {
     s16 stat[4];        /* 0x40 */
     u8 pad48[0x86 - 0x48];
     s16 x86;            /* 0x86 */
-    u8 pad88[0x94 - 0x88];
+    s16 x88;
+    u8 pad8a[0x94 - 0x8a];
     s16 x94;            /* 0x94 */
     s16 x96;            /* 0x96 */
     u8 pad98[0x9a - 0x98];
@@ -123,7 +124,8 @@ typedef struct ChrInfo {
     u8 pad5;
     s16 x6;             /* 0x06 */
     s16 x8;             /* 0x08 */
-    u8 padA[6];
+    s16 xa;             /* 0x0a */
+    u8 padC[4];
     s16 x10;            /* 0x10 */
     s16 state;          /* 0x12 */
     s16 x14;            /* 0x14 */
@@ -184,9 +186,13 @@ typedef struct ChrInfo {
     ChrDraw draw;       /* 0x164 */
     u8 pad198[0x1dc - 0x198];
     void* x1dc;         /* 0x1dc */
-    u8 pad1e0[0x1ec - 0x1e0];
+    struct Task* x1e0;  /* 0x1e0 attached objects */
+    struct Task* x1e4;
+    struct Task* x1e8;
     u32 x1ec;           /* 0x1ec */
-    u8 pad1f0[4];
+    u8 x1f0;
+    u8 x1f1;
+    u8 pad1f2[2];
     NJS_TEXLIST* x1f4;  /* 0x1f4 */
     s16 x1f8;           /* 0x1f8 timer */
     u8 pad1fa[2];
@@ -198,7 +204,8 @@ typedef struct ChrInfo {
     s16 x20e;           /* 0x20e */
     s16 x210;           /* 0x210 */
     s16 x212;           /* 0x212 */
-    u8 pad214[0x264 - 0x214];
+    u32 x214;           /* 0x214 */
+    u8 pad218[0x264 - 0x218];
     f32 x264;           /* 0x264 overlay alpha (fn_80018868) */
     f32 x268;           /* 0x268 overlay scale */
     f32 x26c;

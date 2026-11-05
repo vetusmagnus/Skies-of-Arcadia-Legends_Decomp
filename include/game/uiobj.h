@@ -16,7 +16,7 @@ typedef struct UiObj {
     f32 rect[4];  /* 0x24 draw position from UiObjCalcRect */
     f32 alpha;    /* 0x34 0.7 lowered, 1.0 raised (when alpha_en) */
     f32 f38;      /* 0x38 */
-    f32 f3c;      /* 0x3C */
+    s32 f3c;      /* 0x3C */
     u8 alpha_en; /* 0x40 */
     u8 raised;   /* 0x41 */
     u16 frames;  /* 0x42 move frames left */

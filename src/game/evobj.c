@@ -202,7 +202,7 @@ void fn_801E8CA4(Task* task) {
         obj->x24c.z = obj->pos.z;
         obj->shape = ItemGet(obj->ext->items, 1);
         fn_801173DC(0, obj);
-        obj->x74 = 0;
+        obj->tpl.x0 = 0;
         obj->kind = 0;
         task->state = 5;
         obj->state = 0;

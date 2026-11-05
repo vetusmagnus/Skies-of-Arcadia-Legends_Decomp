@@ -40,7 +40,8 @@ typedef struct PosEnt {
 } PosEnt;
 typedef struct PosTbl {
     s16 x0;
-    u8 pad2[0x16];
+    s16 x2;
+    u8 pad4[0x14];
     PosEnt ent[12];
 } PosTbl;
 typedef struct Motion {
@@ -178,16 +179,23 @@ typedef struct Chr_UNIT0000 {
     u8 padb0[4];
     s16 xb4;
     s16 xb6;    /* equipped weapon */
-    u8 padb8[2];
+    s8 xb8;
+    u8 xb9;
     s16 xba;
-    u8 padbc[0xfe - 0xbc];
+    s16 xbc[6];
+    s16 xc8[16];
+    s16 xe8[5];
+    s16 xf2[6];
     s8 xfe;
     s8 xff;
     u8 x100;
     u8 pad101;
     s16 x102;   /* first equipped item slot */
     s16 x104;   /* second equipped item slot */
-    u8 pad106[0x110 - 0x106];
+    u8 x106;
+    u8 pad107;
+    s16 x108;
+    u8 pad10a[0x110 - 0x10a];
     Stat* p110;
 } Chr_UNIT0000;
 typedef struct Obj_8007DE54_8007D42C {

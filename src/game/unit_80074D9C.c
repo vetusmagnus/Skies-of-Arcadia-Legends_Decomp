@@ -335,6 +335,67 @@ s32 fn_800783A8(s32 i)
     return k;
 }
 
+void fn_8007814C(int idx)
+{
+    s32 slot = lbl_8030B7F4.party[idx];
+    Chr_UNIT0000* p;
+    SaveChar* b;
+    StatRec* a;
+    if (slot < 0) return;
+    p = lbl_80309DE4[idx];
+    b = &lbl_8030B7F4.chr[slot];
+    a = &lbl_8030B4D4.chr[slot];
+    b->slot0 = p->xb6;
+    b->slot1 = p->x102;
+    b->slot2 = p->x104;
+    b->mp = p->xfe;
+    if (p->score == 0) p->score = 1;
+    b->hp = p->score;
+    b->x20 = p->xb4;
+    b->xc = p->x106;
+    b->x22 = p->x108;
+    b->xf = p->x100;
+    b->mp = p->xfe;
+    b->mpMax = p->xff;
+    if (b->mp > b->mpMax) b->mp = b->mpMax;
+    a->x0 = p->xb8;
+    a->x2 = p->xb9;
+    a->xe = p->xba;
+    a->x1c[0] = p->xbc[0];
+    a->x1c[1] = p->xbc[1];
+    a->x1c[2] = p->xbc[2];
+    a->x1c[3] = p->xbc[3];
+    a->x1c[4] = p->xbc[4];
+    a->x1c[5] = p->xbc[5];
+    a->x28[0] = p->xc8[0];
+    a->x28[1] = p->xc8[1];
+    a->x28[2] = p->xc8[2];
+    a->x28[3] = p->xc8[3];
+    a->x28[4] = p->xc8[4];
+    a->x28[5] = p->xc8[5];
+    a->x28[6] = p->xc8[6];
+    a->x28[7] = p->xc8[7];
+    a->x28[8] = p->xc8[8];
+    a->x28[9] = p->xc8[9];
+    a->x28[10] = p->xc8[10];
+    a->x28[11] = p->xc8[11];
+    a->x28[12] = p->xc8[12];
+    a->x28[13] = p->xc8[13];
+    a->x28[14] = p->xc8[14];
+    a->x28[15] = p->xc8[15];
+    a->x48[0] = p->xe8[0];
+    a->x48[1] = p->xe8[1];
+    a->x48[2] = p->xe8[2];
+    a->x48[3] = p->xe8[3];
+    a->x48[4] = p->xe8[4];
+    a->x52[0] = p->xf2[0];
+    a->x52[1] = p->xf2[1];
+    a->x52[2] = p->xf2[2];
+    a->x52[3] = p->xf2[3];
+    a->x52[4] = p->xf2[4];
+    a->x52[5] = p->xf2[5];
+}
+
 s32 fn_8007833C(void) {
     return lbl_80309174[lbl_80347330].x0;
 }
