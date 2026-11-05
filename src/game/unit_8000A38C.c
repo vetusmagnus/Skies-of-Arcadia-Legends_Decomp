@@ -32,7 +32,9 @@ typedef struct {
     u16 x0;
     u8 pad2[6];
     u32 x8;
-    u8 padc[0x18 - 0xc];
+    u8 padc[4];
+    f32 x10;
+    f32 x14;
     s32 x18;
     f32 x1c;
     int cur;
@@ -139,7 +141,7 @@ typedef struct {
     u8 pad1a[0x24 - 0x1a];
     W* work;
 } Tk_8000E664;
-extern int fn_8000CCBC(Tk_8000E664*, int);
+extern int fn_8000CCBC(Tk_8000E664*, s16);
 extern void fn_8000B77C(void*, void*);
 extern void fn_80060950(void*);
 extern int fn_80035908(void);
@@ -214,7 +216,6 @@ extern int fn_80061F58(void*, int, int);
 extern void fn_8006CF28(void*, void*, s16);
 extern void fn_8006CEEC(void*, void*, int, s16);
 extern void fn_8022F00C(void*);
-extern int fn_8000CF94(void*);
 extern void fn_8000B8E4(void*, void*);
 #define FLD(p, off, T) (*(T*)((u8*)(p) + (off)))
 s8 fn_80020E10(void* p);
@@ -338,23 +339,33 @@ extern void* fn_801DB124(void* data);
 extern void fn_8006CF54(ModelCache* c);
 typedef struct CE8Pos {
     u8 pad0[0x1C];
-    NJS_POINT3 p1c;
+    f32 p1c[3];
 } CE8Pos;
 typedef struct CE8Ext {
     u8 pad0[0x10];
     f32 x10;
+    u8 pad14[0x50 - 0x14];
+    u32 x50;
 } CE8Ext;
+/* The move parameters (at the state's 0x08). */
+typedef struct CE8Prm {
+    s16 x0;
+    s16 xa;
+    f32 to[3];   /* 0x04 */
+    f32 from[3]; /* 0x10 */
+    s16 x1c;     /* 0x1C speed */
+    s16 x1e;     /* 0x1E fade frames */
+    s16 x20;     /* 0x20 wait frames */
+} CE8Prm;
 typedef struct CE8State {
     CE8Pos* x0;
     CE8Ext* x4;
-    u8 pad8[2];
-    s16 xa;
-    u8 padc[0x18 - 0xC];
-    NJS_POINT3 p18;
-    u8 pad24[0x44 - 0x24];
+    CE8Prm prm;     /* 0x08 */
+    f32 v[3];       /* 0x2C */
+    f32 s[3];       /* 0x38 */
     f32 x44;
     s16 x48;
-    u8 pad4a[2];
+    s16 x4a;
     s16 x4c;
     s16 x4e;
 } CE8State;
@@ -392,6 +403,14 @@ extern void fn_802A9338(s32 a, s32 b, s32 c, void (*f)(void));
 
 void fn_8000AA58(void);
 s32 fn_8000ACE8(void);
+
+
+
+typedef struct Hd_8000CF94 { s16 x0; } Hd_8000CF94;
+typedef struct Bd_8000CF94 { Hd_8000CF94* x0; } Bd_8000CF94;
+typedef struct Ob_8000CF94 { u8 pad0[4]; Bd_8000CF94* x4; } Ob_8000CF94;
+extern s32 fn_80047F9C(void* p);
+int fn_8000CF94(Ob_8000CF94* o);
 
 void fn_8000A3A4(void* obj) {
     lbl_80346AA4 = fn_802268E8(lbl_803475A8, fn_8000A3FC);
@@ -908,7 +927,7 @@ s32 fn_80010B5C(void) {
 }
 
 /* What lbl_80347390 points at: its first byte is the level fn_80010CF4 compares with. */
-typedef struct Lim_80347390 { u8 v; } Lim_80347390;
+typedef struct Lim_80347390 { u8 v; u8 x1; s8 x2; s8 x3; } Lim_80347390;
 extern Lim_80347390* lbl_80347390;
 extern s32 lbl_80347344;
 extern s32 fn_8025ECC4(void);
@@ -1049,6 +1068,22 @@ void fn_8000E0D8(E0D8Obj *obj) {
 extern s32 fn_8022E734(u8 kind, void* p, void* a, void* b, s32 f1, s32 f2, s32 f3);
 extern void fn_8022E4CC(HNode* o, s32 a, s32 b, s32 c, s32 d, s32 e);
 void fn_8000F2A0(HNode* n, u8 kind, s32 a, s32 b, s32 c);
+
+int fn_8000F208(Task** out) {
+    Task* e;
+    u8 i;
+    for (i = 0; i < 0xe; i++) {
+        e = lbl_80309E24[i];
+        if (e != 0) {
+            ChrWork* w = e->work;
+            if (fn_80015828(w->x10->xc) != 0) {
+                *out = e;
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
 
 static inline void visit(HNode* n, u8 kind, s32 a, s32 b, s32 c) {
     s32 s0 = 0, s1;
@@ -1748,6 +1783,16 @@ void fn_8000C8AC(ModelSrc* src) {
     }
 }
 
+int fn_8000CF94(Ob_8000CF94* o) {
+    if (o->x4 != 0 && (s16)fn_80047F9C(o) != 0) {
+        switch (o->x4->x0->x0 & 0xff) {
+        case 0x2a:
+            return 1;
+        }
+    }
+    return 0;
+}
+
 void fn_8000CEE8(Task* task)
 {
     CE8State* st = ((CE8Work*)task->work)->st;
@@ -1755,7 +1800,7 @@ void fn_8000CEE8(Task* task)
     CE8Ext* ext = st->x4;
 
     st->x4c++;
-    if (st->xa != -1 && st->x4c > st->xa) {
+    if (st->prm.xa != -1 && st->x4c > st->prm.xa) {
         task->state = 3;
     } else {
         st->x4e = 0;
@@ -1765,8 +1810,120 @@ void fn_8000CEE8(Task* task)
         } else {
             st->x48 = 1;
         }
-        fn_80071CF0(&st->p18, &pos->p1c);
+        fn_80071CF0(&st->prm.from, &pos->p1c);
         task->state = 2;
+    }
+}
+
+
+extern void njUnitVector(NJS_VECTOR *v);
+static inline s32 Passed(f32 c, f32 a, f32 b) {
+    if (a > b) {
+        if (c >= a) {
+            return 1;
+        }
+    } else if (c <= a) {
+        return 1;
+    }
+    return 0;
+}
+
+void fn_8000CFFC(Task* t) {
+    NJS_VECTOR d;
+    s32 i;
+    CE8Work* w;
+    CE8Pos* pos;
+    CE8State* st;
+    CE8Prm* prm;
+    CE8Ext* ext;
+    w = t->work;
+    st = w->st;
+    ext = st->x4;
+    prm = &st->prm;
+    pos = st->x0;
+    ext->x50 |= 0x80000000;
+    switch (t->state) {
+    case 0:
+        if (prm->x1c == 0) {
+            t->state = 3;
+        }
+        d.x = prm->to[0] - prm->from[0];
+        d.y = prm->to[1] - prm->from[1];
+        d.z = prm->to[2] - prm->from[2];
+        njUnitVector(&d);
+        st->v[0] = d.x * prm->x1c;
+        st->v[1] = d.y * prm->x1c;
+        st->v[2] = d.z * prm->x1c;
+        for (i = 0; i < 3; i++) {
+            st->s[i] = prm->to[i] - st->v[i] * prm->x1e;
+            if (prm->to[i] != prm->from[i]) {
+                st->x4a = i;
+            }
+        }
+        if (prm->x0 == 0 && prm->x1e != 0) {
+            st->x44 = 1.0f / prm->x1e;
+        }
+        if (0.0f != st->x44) {
+            ext->x10 = -1.0f;
+            st->x48 = 0;
+        } else {
+            st->x48 = 1;
+        }
+        t->state = 2;
+        break;
+    case 2:
+        switch (st->x48) {
+        case 0:
+            ext->x10 = ext->x10 + st->x44;
+            if (ext->x10 >= 0.0f) {
+                ext->x10 = 0.0f;
+                st->x48 = 1;
+            }
+            break;
+        case 1:
+            ext->x50 &= 0x7fffffff;
+            if (0.0f != st->x44) {
+                if (Passed(pos->p1c[st->x4a], prm->to[st->x4a], prm->from[st->x4a]) == 1) {
+                    st->x48 = 2;
+                }
+            } else if (Passed(pos->p1c[st->x4a], prm->to[st->x4a], prm->from[st->x4a]) == 1) {
+                if (prm->x20 != 0) {
+                    st->x4e = 0;
+                    t->state = 1;
+                } else {
+                    fn_8000CEE8(t);
+                }
+            }
+            break;
+        case 2:
+            ext->x10 = ext->x10 - st->x44;
+            if (ext->x10 <= -1.0f) {
+                ext->x10 = -1.0f;
+                if (prm->x20 != 0) {
+                    st->x4e = 0;
+                    t->state = 1;
+                } else {
+                    fn_8000CEE8(t);
+                }
+            }
+            break;
+        }
+        pos->p1c[0] = pos->p1c[0] + st->v[0];
+        pos->p1c[1] = pos->p1c[1] + st->v[1];
+        pos->p1c[2] = pos->p1c[2] + st->v[2];
+        break;
+    case 1:
+        st->x4e = st->x4e + 1;
+        if (st->x4e >= prm->x20) {
+            fn_8000CEE8(t);
+        }
+        break;
+    case 3:
+        ext->x10 = -1.0f;
+        break;
+    case 4:
+        t->flags |= 0x40;
+        break;
     }
 }
 
@@ -2010,4 +2167,3 @@ void fn_800110C8(u8* list, s8 mode, s8 count) {
         }
     }
 }
-

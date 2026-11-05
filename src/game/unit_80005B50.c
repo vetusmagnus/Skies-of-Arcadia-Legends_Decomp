@@ -201,7 +201,9 @@ typedef struct Key {
     s16 x0;
     s16 x2;
     s16 x4;
-    u8 pad6[0x10 - 6];
+    u8 pad6[2];
+    s32 x8;
+    u8 padc[4];
     s16 x10;
 } Key;
 /* 0x10-byte id record; lists end at a negative x0. */
@@ -268,21 +270,6 @@ typedef struct CalendarStamp {
 } CalendarStamp;
 extern s32 fn_80007BFC(void* a, s32 b);
 #define FLD(p, off, T) (*(T*)((u8*)(p) + (off)))
-/* The original temporarily writes two halfwords in a shape record, calls fn_80008DF4, and restores them. */
-typedef struct Rec {
-    u8 pad[6];
-    s16 x;
-    s16 y;
-} Rec;
-typedef struct Mid {
-    u8 pad[0x4c];
-    Rec* rec;
-} Mid;
-typedef struct Ent8C00 {
-    u8 pad[0x24];
-    Mid* mid;
-} Ent8C00;
-extern void fn_80008DF4(Ent8C00* obj, s32 a, s32 b, s32 c);
 typedef s32 Angle;
 extern s32 lbl_803478B8;
 extern s32 lbl_803478B4;
@@ -395,6 +382,70 @@ void fn_80006CE0(void) {
     }
 }
 
+extern MotionInterpFn lbl_80346728[2];
+s32 fn_80006DA0(f32* out, s32 type) {
+    NJS_MKEY_F* keys;
+    u32 count;
+    u32 lo;
+    u32 hi;
+    u32 f;
+    NJS_MDATA1* m1;
+    NJS_MDATA2* m2;
+    NJS_MDATA3* m3;
+    NJS_MDATA4* m4;
+    s32 idx = 0;
+    u16 fl = lbl_8034789A;
+    if (fl & 1) idx = 1;
+    if (fl & 2) idx++;
+    switch (lbl_8034789C) {
+    case 1: {
+        m1 = lbl_80316940.mdata;
+        lbl_80316940.keys = m1->p;
+        lbl_80316940.counts = m1->nb;
+        break;
+    }
+    case 2: {
+        m2 = lbl_80316940.mdata;
+        lbl_80316940.keys = m2->p;
+        lbl_80316940.counts = m2->nb;
+        break;
+    }
+    case 3: {
+        m3 = lbl_80316940.mdata;
+        lbl_80316940.keys = m3->p;
+        lbl_80316940.counts = m3->nb;
+        break;
+    }
+    case 4: {
+        m4 = lbl_80316940.mdata;
+        lbl_80316940.keys = m4->p;
+        lbl_80316940.counts = m4->nb;
+        break;
+    }
+    }
+    lo = 0;
+    keys = lbl_80316940.keys[idx];
+    count = lbl_80316940.counts[idx];
+    hi = count;
+    f = lbl_80316940.frame;
+    while (hi - lo > 1) {
+        u32 mid = (lo + hi) >> 1;
+        if (f >= keys[mid].keyframe) {
+            lo = mid;
+        } else {
+            hi = mid;
+        }
+    }
+    if (keys != NULL) {
+        lbl_80346728[type](keys, lo, count, out);
+        return 1;
+    }
+    out[0] = 1.0f;
+    out[1] = 1.0f;
+    out[2] = 1.0f;
+    return 0;
+}
+
 s32 fn_80006F1C(s32* out, s32 type) {
     NJS_MKEY_F* keys;
     u32 count;
@@ -448,6 +499,61 @@ s32 fn_80006F1C(s32* out, s32 type) {
     out[0] = 0;
     out[1] = 0;
     out[2] = 0;
+    return 0;
+}
+
+s32 fn_80007080(f32* out, s32 type) {
+    NJS_MKEY_F* keys;
+    u32 count;
+    u32 lo;
+    u32 hi;
+    u32 f;
+    switch (lbl_8034789C) {
+    case 1: {
+        NJS_MDATA1* m = lbl_80316940.mdata;
+        lbl_80316940.keys = m->p;
+        lbl_80316940.counts = m->nb;
+        break;
+    }
+    case 2: {
+        NJS_MDATA2* m = lbl_80316940.mdata;
+        lbl_80316940.keys = m->p;
+        lbl_80316940.counts = m->nb;
+        break;
+    }
+    case 3: {
+        NJS_MDATA3* m = lbl_80316940.mdata;
+        lbl_80316940.keys = m->p;
+        lbl_80316940.counts = m->nb;
+        break;
+    }
+    case 4: {
+        NJS_MDATA4* m = lbl_80316940.mdata;
+        lbl_80316940.keys = m->p;
+        lbl_80316940.counts = m->nb;
+        break;
+    }
+    }
+    lo = 0;
+    keys = lbl_80316940.keys[0];
+    count = lbl_80316940.counts[0];
+    hi = count;
+    f = lbl_80316940.frame;
+    while (hi - lo > 1) {
+        u32 mid = (lo + hi) >> 1;
+        if (f >= keys[mid].keyframe) {
+            lo = mid;
+        } else {
+            hi = mid;
+        }
+    }
+    if (keys != NULL) {
+        lbl_80346728[type](keys, lo, count, out);
+        return 1;
+    }
+    out[0] = 0.0f;
+    out[1] = 0.0f;
+    out[2] = 0.0f;
     return 0;
 }
 
@@ -559,6 +665,44 @@ extern s32 fn_80008194(char* name);
 s32 fn_80008258(s32* out);
 void fn_80007514(s32** buf, s32* size);
 s32 fn_8000810C(void* a, s32 b);
+s16 fn_80008274(s16 id) {
+    s16 tbl[23][2] = {
+        {0x009E, 0x00A2},
+        {0x00A3, 0x00A7},
+        {0x00A8, 0x00AC},
+        {0x00AD, 0x00B1},
+        {0x00B2, 0x00B6},
+        {0x00B7, 0x00BB},
+        {0x00BC, 0x00C0},
+        {0x00C1, 0x00C5},
+        {0x00C6, 0x00CA},
+        {0x00CB, 0x00CF},
+        {0x00D0, 0x00D4},
+        {0x00D5, 0x00D9},
+        {0x00DA, 0x00DE},
+        {0x00DF, 0x00E3},
+        {0x00E4, 0x00E8},
+        {0x00E9, 0x00ED},
+        {0x00EE, 0x00F2},
+        {0x00F3, 0x00F6},
+        {0x00F7, 0x00F8},
+        {0x00F9, 0x00FA},
+        {0x00FB, 0x00FC},
+        {0x00FD, 0x00FE},
+        {-1, -1}
+    };
+    s32 i;
+    if (id < 0x9E) {
+        return id;
+    }
+    for (i = 0; tbl[i][0] != -1; i++) {
+        if (id >= tbl[i][0] && id <= tbl[i][1]) {
+            return tbl[i][0];
+        }
+    }
+    return id;
+}
+
 s32 fn_800079AC(ArcSet* set, s32 idx) {
     char name[256];
     char path[256];
@@ -622,6 +766,7 @@ void fn_80008170(void) {
 }
 
 s32 fn_80008C68(s32 key, Task* obj);
+s32 fn_80008DF4(Task* a, Ent_80008800* r, s16 id, s16 sub);
 extern s32 fn_800367E8(s32 key, Ent_80008800* e, Task* obj);
 extern s32 fn_8003732C(s32 key, Ent_80008800* e, Task* obj);
 static inline s32 CmdAllowed(Task* obj, s16 id, s16 g) {
@@ -890,16 +1035,16 @@ s32 fn_8000810C(void* a, s32 b) {
     return 1;
 }
 
-void fn_80008C00(Ent8C00* obj, s16 x, s16 y, s32 a6, s32 a7, s32 a8) {
-    Rec* r = obj->mid->rec;
-    s16 sx = r->x;
-    s16 sy = r->y;
+void fn_80008C00(Task* obj, s16 x, s16 y, s16 id, s16 sub, Ent_80008800* tbl) {
+    ChrInfo* r = ChrW(obj)->st;
+    s16 sx = r->x6;
+    s16 sy = r->x8;
 
-    r->x = x;
-    r->y = y;
-    fn_80008DF4(obj, a8, a6, a7);
-    r->x = sx;
-    r->y = sy;
+    r->x6 = x;
+    r->x8 = y;
+    fn_80008DF4(obj, tbl, id, sub);
+    r->x6 = sx;
+    r->x8 = sy;
 }
 
 void fn_80007EC0(void) {
@@ -1478,12 +1623,14 @@ s32 fn_80007528(ArcPack* pk) {
     return 1;
 }
 
-#ifdef NONMATCHING
 typedef struct HitEnt {
     s32 x0;
     void* x4;
-    u8 pad8[0x14];
+    u8 pad8[0x10];
+    s32 x18;
 } HitEnt;
+
+#ifdef NONMATCHING
 typedef struct HitWork {
     u8 pad0[0x50];
     u32 flags;
@@ -1551,3 +1698,4 @@ s32 fn_800091E0(HitObj* obj, HitEnt* out, s16 a, s16 b) {
     return 1;
 }
 #endif
+

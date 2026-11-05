@@ -104,14 +104,22 @@ typedef struct {
     f32 x;
     f32 y;
 } Item_8016CAB4;
+/* Linear move to (destX, destY) over 6 steps. */
+typedef struct Mover {
+    f32 x;      /* 0x00 */
+    f32 y;      /* 0x04 */
+    f32 destX;  /* 0x08 */
+    f32 destY;  /* 0x0C */
+    f32 stepX;  /* 0x10 */
+    f32 stepY;  /* 0x14 */
+    s32 steps;  /* 0x18 */
+} Mover;
 typedef struct Sub_8016C4C8 {
     s8 kind;
-    s8 b1;
-    s8 b2;
-    s8 b3;
-    f32 f4;
-    f32 f8;
-    u8 padc[0x14];
+    s8 idle;
+    s8 state;
+    u8 next;
+    Mover mv;
     s32 w20;
     s32 w24;
     s32 w28;
@@ -167,7 +175,7 @@ typedef struct Obj_8016645C { u8 pad[0x1d8]; Sub_8016645C *x1d8; } Obj_8016645C;
 typedef struct Arg { u8 pad[0x1c]; u32 x1c; u32 x20; } Arg;
 /* lbl_80310B3C: the event flag bits, 32 per word. */
 extern u32 lbl_80310B3C[];
-void fn_8016DBAC(void *out, void *p);
+void fn_8016DBAC(s32 *c, f32 *pos);
 typedef struct Out {
     f32 f0;
     u8 pad4;
@@ -284,16 +292,6 @@ typedef struct {
     s32 state;
 } Slot_80306F58;
 extern Slot_80306F58 lbl_80306F58[3];
-/* Linear move to (destX, destY) over 6 steps. */
-typedef struct Mover {
-    f32 x;      /* 0x00 */
-    f32 y;      /* 0x04 */
-    f32 destX;  /* 0x08 */
-    f32 destY;  /* 0x0C */
-    f32 stepX;  /* 0x10 */
-    f32 stepY;  /* 0x14 */
-    s32 steps;  /* 0x18 */
-} Mover;
 extern Sys_80310A1C lbl_80310A1C;
 extern void fn_8016B638(s8 k);
 extern void fn_8016C4C8(s8 k);
@@ -424,20 +422,15 @@ typedef struct {
     f32 wy;   /* 0x14 */
 } Wrap;
 extern void fn_80199F58(void* p);
-extern void fn_8016EF10(void);
+
 extern void CampPanelDrawFrame();
 extern s32 lbl_803475D8;
-typedef struct {
-    s32 kind;   /* 0x00 */
-    u32 pad04;
-    UiObj obj;  /* 0x08 */
-} Inner_8016EE2C;
 typedef struct {
     u8 pad00[0x18];
     u8 flags;    /* 0x18 */
     u8 state;    /* 0x19 */
     u8 pad1A[0x24 - 0x1A];
-    Inner_8016EE2C* inner; /* 0x24 */
+    CampWin* inner; /* 0x24 */
 } Self_8016EE2C;
 typedef struct {
     s32 kind;   /* 0x00 */
@@ -1277,7 +1270,7 @@ typedef struct IconObj {
 #define CW_801732C8(off, T) (*(T *)((u8 *)&camp_work + (off)))
 typedef struct Elem_80176D70 {
     u8 pad0[0x24];
-    Inner_8016EE2C *in;
+    CampWin *in;
 } Elem_80176D70;
 #define CW_80176D70(off, T) (*(T *)((u8 *)w + (off)))
 #define CG(off, T) (*(T *)((u8 *)&camp_work + (off)))
@@ -2672,8 +2665,8 @@ void fn_8016BF54(void)
         item.item = lbl_803470B0->items[i];
         ox = item.item->x;
         oy = item.item->y;
-        item.item->x = lbl_803470B0->sub->f4 + ox;
-        item.item->y = lbl_803470B0->sub->f8 + lbl_803470B0->items[i]->y;
+        item.item->x = lbl_803470B0->sub->mv.x + ox;
+        item.item->y = lbl_803470B0->sub->mv.y + lbl_803470B0->items[i]->y;
         item.a = 0.001f * i + -1.3f;
         item.b = 1.0f;
         item.c = 0;
@@ -2904,7 +2897,7 @@ void fn_8016D904(u32 n) {
 }
 
 s32 fn_8016E1D8(void *p) {
-    u32 tmp[2];
+    s32 tmp[2];
     if (!(lbl_80310B3C[0x22] & 4)) return 0;
     fn_8016DBAC(tmp, p);
     return 1;
@@ -3516,6 +3509,61 @@ void fn_8016DAC4(s32* out, Wrap* p, f32 x, f32 y) {
     out[1] = (s32)fn_80291888(dy / p->sy);
 }
 
+extern Wrap lbl_802E8F00[];
+extern u16 lbl_802E8F48[12];
+
+static inline void Mark(s32 *c)
+{
+    u32 x = c[0];
+    u32 y = c[1];
+    if (x < 14 && y < 12) {
+        u32 b = y * 14 + x + 0x520;
+        lbl_80310B3C[b >> 5] |= 1 << (b & 31);
+    }
+}
+
+#define NEIGH(DX, DY)     fn_8016DAC4(q, wrap, pos[0] DX hx, pos[2] DY hy);     if (c[0] != q[0] || c[1] != q[1]) {         Mark(q);     }
+#define NEIGHM(DX, DY)     fn_8016DAC4(q, wrap, pos[0] DX hx, pos[2] DY hy);     if ((u32)q[0] < 14 && (u32)q[1] < 12 && (c[0] != q[0] || c[1] != q[1]) && (lbl_802E8F48[q[1]] & (1 << q[0])) != 0) {         Mark(q);     }
+
+void fn_8016DBAC(s32 *c, f32 *pos)
+{
+    u32 sel = lbl_80310A1C.x30;
+    Wrap *wrap;
+    f32 hx, hy;
+    f32 k = 0.125f;
+    s32 q[2];
+
+    if (sel >= 3) {
+        sel = 2;
+    }
+    wrap = &lbl_802E8F00[sel];
+    hx = wrap->sx * k;
+    hy = wrap->sy * k;
+    fn_8016DAC4(c, wrap, pos[0], pos[2]);
+    if (sel != 1 || (lbl_80310B3C[49] & 0x200000) != 0) {
+        u32 cx = c[0];
+        u32 cy = c[1];
+        if (cx < 14 && cy < 12) {
+            u32 b = cy * 14 + cx + 0x520;
+            lbl_80310B3C[b >> 5] |= 1 << (b & 31);
+        }
+        NEIGH(+, +)
+        NEIGH(-, +)
+        NEIGH(+, -)
+        NEIGH(-, -)
+    } else {
+        if ((u32)c[0] < 14 && (u32)c[1] < 12 && (lbl_802E8F48[c[1]] & (1 << c[0])) != 0) {
+            Mark(c);
+        }
+        NEIGHM(+, +)
+        NEIGHM(-, +)
+        NEIGHM(+, -)
+        NEIGHM(-, -)
+    }
+}
+
+extern void fn_8016EF10(CampWin* self);
+
 void fn_8016EE2C(Self_8016EE2C* self) {
     UiObj* obj = &self->inner->obj;
 
@@ -3529,8 +3577,8 @@ void fn_8016EE2C(Self_8016EE2C* self) {
         } else {
             fn_80199F38(obj);
             UiObjCalcRect(obj);
-            if (self->inner->kind == 1) {
-                fn_8016EF10();
+            if (self->inner->x0 == 1) {
+                fn_8016EF10(self->inner);
                 CampPanelDrawFrame(self->inner);
             }
         }
@@ -4348,8 +4396,8 @@ void fn_80170450(void) {
 
 void fn_8016C61C(void) {
     if (lbl_803470B0 != 0) {
-        lbl_803470B0->sub->f4 = 0.0f;
-        lbl_803470B0->sub->f8 = 0.0f;
+        lbl_803470B0->sub->mv.x = 0.0f;
+        lbl_803470B0->sub->mv.y = 0.0f;
     }
     if (lbl_803470B0 != 0) {
         lbl_803470B0->sub->w24 = 0;
@@ -4387,8 +4435,8 @@ void fn_8016C61C(void) {
     if (lbl_803470B0 != 0) {
         lbl_803470B0->sub->w38 = 0;
     }
-    lbl_803470B0->sub->b3 = 10;
-    lbl_803470B0->sub->b2 = 10;
+    lbl_803470B0->sub->next = 10;
+    lbl_803470B0->sub->state = 10;
 }
 
 void fn_8016022C(Obj_8016022C *obj, Arg_8016022C *arg)
@@ -4802,7 +4850,7 @@ void fn_8016C4C8(s8 mode) {
     lbl_803470B0->sub = fn_801E1C7C(0x50);
     fn_8016C61C();
     if (lbl_803470B0 != 0) {
-        lbl_803470B0->sub->b1 = 1;
+        lbl_803470B0->sub->idle = 1;
     }
     if (lbl_803470B0 != 0) {
         lbl_803470B0->sub->kind = mode;
@@ -4935,6 +4983,140 @@ s8 fn_80167EF0(Sub_80168A04 *a)
         }
     }
     return k;
+}
+
+extern s32 camp_screen;
+extern void fn_801959D4(s32 n);
+extern void fn_80189900(struct Dst_80189958* p, s8 a4, s8 a5, s8 a6, s8 a7);
+extern void fn_801719D0(void);
+extern void fn_80195804(s32 who);
+extern s32 CampStatusInput(void);
+void fn_8017172C(void);
+void fn_8016FB2C(void);
+void fn_80170DCC(void);
+void fn_80171124(void);
+void fn_80171484(void);
+
+/* Leaves the status screen for the equipment/magic/... screen picked in cur[0]: refreshes that
+ * screen's seven panels for the shown member and switches to it. */
+#define STATUS_LEAVE() \
+        switch (c->cur[0].sel) {                                                                \
+        case 0:                                                                                 \
+            n = 7;                                                                              \
+            k = 0;                                                                              \
+            m = 0;                                                                              \
+            break;                                                                              \
+        case 1:                                                                                 \
+            n = 5;                                                                              \
+            k = 1;                                                                              \
+            m = 1;                                                                              \
+            break;                                                                              \
+        case 2:                                                                                 \
+            n = 10;                                                                             \
+            k = 2;                                                                              \
+            m = 3;                                                                              \
+            break;                                                                              \
+        case 3:                                                                                 \
+            n = 8;                                                                              \
+            k = 3;                                                                              \
+            m = 2;                                                                              \
+            break;                                                                              \
+        }                                                                                       \
+        who = lbl_8030B7F4.party[g[1].cur[0].sel];                                              \
+        for (i = 0; i < 7; i++) {                                                               \
+            p = camp_work.pnl[0x33 + m * 7 + i]->win->xbc;                                      \
+            switch (k) {                                                                        \
+            case 0:                                                                             \
+            case 1:                                                                             \
+                fn_80189900(p, who, i - 1, k, 0);                                               \
+                break;                                                                          \
+            case 2:                                                                             \
+            case 3:                                                                             \
+                fn_80189900(p, who, i - 1, k, 0);                                               \
+                break;                                                                          \
+            }                                                                                   \
+        }                                                                                       \
+        camp_work.state[n] = 0;                                                                 \
+        camp_screen = n;                                                                        \
+        fn_801959D4(n);
+
+/* The camp menu's status screen (camp_work.state[3]). */
+s32 CampScreenStatus(void) 
+{
+    CampCtrl* g;
+    CampCtrl* c;
+    s32 r;
+    s32 i;
+    s32 n;
+    s32 k;
+    s32 m;
+    s32 who;
+    void* p;
+
+    g = lbl_80307638;
+    c = lbl_8034710C->holder->ctrl;
+    switch (camp_work.state[3]) {
+    case 0:
+        fn_80170C64();
+        fn_801719D0();
+        fn_8017172C();
+        fn_80171484();
+        fn_80195804(lbl_8030B7F4.party[g[1].cur[0].sel]);
+        fn_80171B64(lbl_8030B7F4.party[g[1].cur[0].sel], g[1].cur[0].sel);
+        camp_work.state[3] = 2;
+        break;
+    case 2:
+        if (!CampMenuAnyPanelBusy()) {
+            camp_work.state[3] = 3;
+        } else if (fn_801C09F8(lbl_80347154, 2) || fn_801C09F8(lbl_80347154, 1)) {
+            CampMenuFinishAllPanels();
+            camp_work.state[3] = 3;
+        }
+        break;
+    case 3:
+        r = CampStatusInput();
+        fn_8016FB2C();
+        switch (r) {
+        case -1:
+            camp_work.state[3] = 0x18;
+            break;
+        case 0:
+            break;
+        case 1:
+            camp_work.state[3] = 0xc;
+            break;
+        }
+        break;
+    case 12:
+        fn_80170DCC();
+        camp_work.state[3] = 0x12;
+        break;
+    case 18:
+        if (!CampMenuAnyPanelBusy()) {
+            STATUS_LEAVE();
+        } else if (fn_801C09F8(lbl_80347154, 2) || fn_801C09F8(lbl_80347154, 1)) {
+            CampMenuFinishAllPanels();
+            STATUS_LEAVE();
+        }
+        break;
+    case 24:
+        fn_80171124();
+        camp_work.state[3] = 0x13;
+        break;
+    case 19:
+        if (!CampMenuAnyPanelBusy()) {
+            camp_work.state[1] = 0;
+            camp_screen = 1;
+            fn_801959D4(1);
+        } else if (fn_801C09F8(lbl_80347154, 2) || fn_801C09F8(lbl_80347154, 1)) {
+            CampMenuFinishAllPanels();
+            camp_work.state[1] = 0;
+            camp_screen = 1;
+            fn_801959D4(1);
+        }
+        break;
+    }
+    return 0;
 }
 
 void fn_8016FB2C(void) {
@@ -5125,7 +5307,7 @@ void fn_80169360(Obj_80169360* o) {
     }
 }
 
-extern s32 fn_8016B9C8(void* self);
+extern s32 fn_8016B9C8(void);
 void fn_8016C204(Self_8016B434* self) {
     switch (self->state) {
     case 0:
@@ -5135,7 +5317,7 @@ void fn_8016C204(Self_8016B434* self) {
         self->timer = -1.3f;
         break;
     case 1:
-        if (fn_8016B9C8(self) == 0) {
+        if (fn_8016B9C8() == 0) {
             self->state = 2;
         }
         break;
@@ -6004,6 +6186,65 @@ void fn_80170DCC(void)
         break;
     }
 }
+
+void fn_80171124(void)
+{
+    UiObj *obj;
+    s32 i;
+    CampCtrl *ctl;
+    s32 j;
+
+    ctl = lbl_8034710C->holder->ctrl;
+    obj = &camp_work.pnl[lbl_80307638[1].cur[0].sel]->win->obj;
+    UiObjMoveTo(obj, 6, 4, -348.0f, 61.0f);
+    UiObjSetCommand(obj, 0xf, 0);
+    for (i = 0; i < 4; i++) {
+        if (ctl->cur[0].mask & (1 << i)) {
+            obj = &camp_work.pnl[0x1f + i]->win->obj;
+            UiObjMoveTo(obj, 6, -1, -348.0f, (i + 1) * 64 + 61);
+            UiObjSetCommand(obj, 0xf, i + 2);
+        }
+    }
+    switch (ctl->cur[4].sel) {
+    case 0:
+        for (j = 0; j < 4; j++) {
+            obj = &camp_work.pnl[0x23 + j]->win->obj;
+            if (j == 3) {
+                UiObjMoveTo(obj, 6, 5, 668.0f, 381.0f);
+                UiObjSetCommand(obj, 0xf, 6);
+            } else {
+                UiObjMoveTo(obj, 6, 5, 668.0f, j * 64 + 61);
+                UiObjSetCommand(obj, 0xf, j + 1);
+            }
+        }
+        if (lbl_8030B7F4.party[ctl->cur[2].sel] == 0 && fn_80193F78() != 0) {
+            obj = &camp_work.pnl[0x32]->win->obj;
+            UiObjMoveTo(obj, 6, 5, 668.0f, 317.0f);
+            UiObjSetCommand(obj, 0xf, 5);
+        }
+        break;
+    case 1:
+        for (i = 0; i < 5; i++) {
+            obj = &camp_work.pnl[0x27 + i]->win->obj;
+            if (i == 4) {
+                UiObjMoveTo(obj, 6, 5, 668.0f, 381.0f);
+                UiObjSetCommand(obj, 0xf, 6);
+            } else {
+                UiObjMoveTo(obj, 6, 5, 668.0f, i * 64 + 61);
+                UiObjSetCommand(obj, 0xf, i + 1);
+            }
+        }
+        break;
+    case 2:
+        for (i = 0; i < 6; i++) {
+            obj = &camp_work.pnl[0x2c + i]->win->obj;
+            UiObjMoveTo(obj, 6, 5, 668.0f, i * 64 + 61);
+            UiObjSetCommand(obj, 0xf, i + 1);
+        }
+        break;
+    }
+}
+
 
 void fn_80171484(void)
 {
