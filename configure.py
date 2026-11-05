@@ -476,11 +476,19 @@ config.libs = [
             Object(NonMatching, "game/unit_801D24D0.c"),
             Object(NonMatching, "game/unit_801E1A74.c"),
             Object(NonMatching, "game/unit_801F224C.c"),
-            Object(NonMatching, "game/unit_801F5334.c"),
+            # The script interpreter, cut at its .rodata and .sdata2 edges (each file repeats FLT_MAX in
+            # .sdata2, and each .rodata starts 8-aligned). rdt_scriptact.c and scpteve.c are named by
+            # their own strings. Base-pooled strings need the whole file in address order.
+            Object(NonMatching, "game/unit_801F5334.c", extra_cflags=["-str reuse,readonly"]),
+            Object(NonMatching, "game/rdt_scriptact.c", extra_cflags=["-str reuse,readonly"]),
+            Object(NonMatching, "game/unit_801F570C.c", extra_cflags=["-str reuse,readonly"]),
+            Object(NonMatching, "game/unit_801F7B14.c", extra_cflags=["-str reuse,readonly"]),
+            Object(NonMatching, "game/unit_801FCFF0.c", extra_cflags=["-str reuse,readonly"]),
+            Object(NonMatching, "game/scpteve.c", extra_cflags=["-str reuse,readonly"]),
             # Sound and stream control split off at its own .sdata2 (0x8034C398, the "_L.dsp" strings)
             # and .bss (0x803148C0 up); fn_8021730C takes an s16 time where fn_801FA290 passes an s32.
             # Script commands from 0x8020EEE8: a new .sdata2 block at 0x8034C2B8 (second 182.04445f, 100.0f,
-            # 0.0f) and .rodata after unit_801F5334's 0x802D64B8; they pass fn_80210860 a u16 id.
+            # 0.0f) and .rodata after scpteve.c's 0x802D6658; they pass fn_80210860 a u16 id.
             Object(NonMatching, "game/unit_8020EEE8.c"),
             Object(NonMatching, "game/unit_802159E0.c"),
             Object(NonMatching, "game/unit_80219378.c"),
