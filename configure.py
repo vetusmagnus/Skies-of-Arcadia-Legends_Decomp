@@ -411,6 +411,7 @@ config.libs = [
             # Every string this range uses sits in .rodata or .sdata2, so it was built with
             # -str reuse,readonly (fn_80073024 needs it; all matched functions are unchanged by it).
             Object(NonMatching, "game/unit_80055E94.c", extra_cflags=["-str reuse,readonly"]),
+            Object(NonMatching, "game/unit_80072DD4.c", extra_cflags=["-str reuse,readonly", "-inline noauto,deferred"]),
             Object(NonMatching, "game/unit_80073D18.c"),
             Object(NonMatching, "game/unit_80074D9C.c"),
             # Starts at the 8-aligned 0x80348A80 .sdata2 block; fn_8007B958 reads fn_80078478 (a u8 in

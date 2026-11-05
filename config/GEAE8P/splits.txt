@@ -78,7 +78,10 @@ game/unit_800553B4.c:
 	.text       start:0x800553B4 end:0x80055E94
 
 game/unit_80055E94.c:
-	.text       start:0x80055E94 end:0x80073D18
+	.text       start:0x80055E94 end:0x80072DD4
+
+game/unit_80072DD4.c:
+	.text       start:0x80072DD4 end:0x80073D18
 
 game/unit_80073D18.c:
 	.text       start:0x80073D18 end:0x80074D78
