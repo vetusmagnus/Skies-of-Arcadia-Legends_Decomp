@@ -986,13 +986,13 @@ void fn_801D52A8(Layout *a, u32 b, u32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
 }
 
 extern Outer *lbl_80347610;
-void fn_801D5DD8(s32 a, s32 b, s32 c, NJS_TEXLIST *d, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
-void fn_801D52F4(s32 a, s32 b, s32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
+void fn_801D5DD8(Layout *a, u32 b, u32 c, NJS_TEXLIST *d, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
+void fn_801D52F4(Layout *a, u32 b, u32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
     fn_801D5DD8(a, b, c, lbl_80347610->sub->texlist, 1.0f, 1.0f, p1, p2, p3, p4);
 }
 
 extern Outer *lbl_8034760C;
-void fn_801D5340(s32 a, s32 b, s32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
+void fn_801D5340(Layout *a, u32 b, u32 c, f32 p1, f32 p2, f32 p3, f32 p4) {
     fn_801D5DD8(a, b, c, lbl_8034760C->sub->texlist, 1.0f, 1.0f, p1, p2, p3, p4);
 }
 
@@ -1128,6 +1128,19 @@ void fn_801D6944(Thing *t) {
 extern s32 lbl_80347634;
 void fn_801D71BC(s32 v) {
     lbl_80347634 = v;
+}
+
+static inline s32 Abs(s32 v) { s32 r = v; if (r < 0) { r = -r; } return r; }
+f32 fn_801D72A0(s32 port, s32 dead)
+{
+    Pad* p = lbl_80311A60[port];
+    s16 v;
+
+    if (dead > 0 && Abs(p->sx) < dead && Abs(p->sy) < dead) {
+        return 0.0f;
+    }
+    v = p->sx * p->sx + p->sy * p->sy;
+    return fn_80291A5C(__OSs16tof32(&v));
 }
 
 extern Pad lbl_80311C4C[4];
@@ -1949,6 +1962,7 @@ void fn_801DD7CC(void);
 
 void fn_801DBE88(void) {
     u32 t;
+    s32 go;
     u32 ms;
     lbl_803475D8 = 0;
     lbl_80347470 = 0;
@@ -2475,6 +2489,34 @@ static inline void ScaleArgb(u32 c, NJS_ARGB* out, f32 f1, f32 f2) {
     out->b = f1 * (out->b / d);
 }
 
+void fn_801D538C(Layout* lay, u32 flags, u32 mode, NJS_TEXLIST* tex, f32 sx, f32 sy, f32 z, f32 ang, f32 a, f32 b) {
+    NJS_ARGB argb;
+    Obj20* obj;
+    s32 i;
+    Rect14* offs;
+    if (fn_801E7554() != 0) return;
+    if (LayoutValid(lay) == 0) return;
+    if (z > -1.0f) z = -1.0f;
+    if (a < 0.0f) a = 0.0f;
+    if (b < 0.0f) b = 0.0f;
+    if (1.0f < b) b = 1.0f;
+    offs = fn_801D61F4(lay);
+    for (i = 0; i < lay->count; i++) {
+        obj = ObjAlloc();
+        obj->texlist = tex;
+        obj->colour = 182.04445f * ang;
+        obj->sx = sx;
+        obj->sy = sy;
+        obj->data = offs;
+        obj->x = lay->x + lay->elems[i].x + offs[i].hw;
+        obj->y = lay->y + lay->elems[i].y + offs[i].hh;
+        ScaleArgb(lay->elems[i].colour, &argb, a, b);
+        njSetConstantMaterial(&argb);
+        fn_80005D98(obj, i, 0x23, fn_801DBD9C(z + 0.05f * i));
+    }
+    OffsFree(offs);
+}
+
 void fn_801D56C8(Layout* lay, u32 flags, u32 mode, NJS_TEXLIST* tex, f32 sx, f32 sy, f32 z, f32 ang, f32 a, f32 b) {
     DrawState st;
     NJS_ARGB argb;
@@ -2545,6 +2587,48 @@ void fn_801D5A50(Layout* lay, u32 flags, u32 mode, NJS_TEXLIST* tex, f32 sx, f32
         ScaleArgb(lay->elems[i].colour, &argb, a, b);
         njSetConstantMaterial(&argb);
         fn_80005D98(obj, i, 0x23, fn_801DBD9C(z + 0.05f * i));
+    }
+    DrawStatePop(NULL);
+    DrawStateRestore();
+    OffsFree(offs);
+}
+
+extern s32 lbl_80347620;
+void fn_801D5DD8(Layout* lay, u32 flags, u32 mode, NJS_TEXLIST* tex, f32 sx, f32 sy, f32 z, f32 ang, f32 a, f32 b) {
+    DrawState st;
+    NJS_ARGB argb;
+    Obj20* obj;
+    s32 i;
+    s32 pri;
+    Rect14* offs;
+    if (fn_801E7554() != 0) return;
+    if (LayoutValid(lay) == 0) return;
+    offs = fn_801D61F4(lay);
+    DrawStateDefault2D(&st);
+    st.attr_or |= flags;
+    if (mode == 1) {
+        st.blend_src = 8;
+        st.blend_dst = 10;
+    }
+    DrawStatePush(&st);
+    if (z > -1.0f) z = -1.0f;
+    if (a < 0.0f) a = 0.0f;
+    if (b < 0.0f) b = 0.0f;
+    if (1.0f < b) b = 1.0f;
+    for (i = 0; i < lay->count; i++) {
+        obj = ObjAlloc();
+        obj->texlist = tex;
+        obj->colour = ang;
+        obj->sx = sx;
+        obj->sy = sy;
+        obj->data = offs;
+        obj->x = lay->x + lay->elems[i].x + offs[i].hw;
+        obj->y = lay->y + lay->elems[i].y + offs[i].hh;
+        ScaleArgb(lay->elems[i].colour, &argb, a, b);
+        njSetConstantMaterial(&argb);
+        pri = 0x23;
+        if (lbl_80347620 == 1) pri = 3;
+        fn_80005D98(obj, i, pri, fn_801DBD9C(z + 0.0001f * i));
     }
     DrawStatePop(NULL);
     DrawStateRestore();
@@ -2628,6 +2712,7 @@ void fn_801DD984(void)
 void fn_801E0D50(u32 *dst, u32 *src, s32 size)
 {
     u32 t;
+    s32 go;
     s32 n = size / 4;
     do {
         t = *dst;
@@ -2663,6 +2748,14 @@ s32 fn_801D6DE8(s32 a, s32 n)
     }
     n = (n + 1) * 250;
     o->x14 = OSMillisecondsToTicks(n);
+    return 0;
+}
+
+s32 fn_801D6E38(s32 x)
+{
+    if (x == 0) {
+        return lbl_80311C30.active;
+    }
     return 0;
 }
 
@@ -5262,7 +5355,6 @@ s32 fn_801D44B0(NJS_POINT3* out, NJS_POINT3* a, NJS_POINT3* b, NJS_POINT3* tri) 
 #endif
 
 #ifdef NONMATCHING
-static inline s32 Abs(s16 v) { s32 r = v; if (r < 0) { r = -v; } return r; }
 static inline s32 ToAngle(f32 rad) { return 10430.381f * rad; }
 #endif
 #ifdef NONMATCHING
@@ -5288,8 +5380,8 @@ s32 fn_801D732C(s32 port, s32 dead)
 }
 #endif
 
-/* Is p inside triangle abc, projected onto the y/z plane (edge cross products >= -0.001)? */
 #ifdef NONMATCHING
+/* Is p inside triangle abc, projected onto the y/z plane (edge cross products >= -0.001)? */
 s32 fn_801D289C(NJS_POINT3* a, NJS_POINT3* b, NJS_POINT3* c, NJS_POINT3* p) {
     f32 cy;
     f32 cz;
@@ -5323,10 +5415,9 @@ s32 fn_801D289C(NJS_POINT3* a, NJS_POINT3* b, NJS_POINT3* c, NJS_POINT3* p) {
 }
 #endif
 
-
+#ifdef NONMATCHING
 /* Is p inside triangle abc (x/y plane)? */
 /* NEAR (8 lines): p.x - a.x lands in f9 instead of reusing f1 in the second test; rest matches. */
-#ifdef NONMATCHING
 s32 fn_801D2934(NJS_POINT3 *a, NJS_POINT3 *b, NJS_POINT3 *c, NJS_POINT3 *p)
 {
     f32 cx, cy, bx, by, ax, ay, py, m1, px, m0;
@@ -5350,8 +5441,8 @@ s32 fn_801D2934(NJS_POINT3 *a, NJS_POINT3 *b, NJS_POINT3 *c, NJS_POINT3 *p)
 }
 #endif
 
-/* Is p inside triangle abc, projected onto the x/z plane (edge cross products >= -0.001)? */
 #ifdef NONMATCHING
+/* Is p inside triangle abc, projected onto the x/z plane (edge cross products >= -0.001)? */
 s32 fn_801D29CC(NJS_POINT3* a, NJS_POINT3* b, NJS_POINT3* c, NJS_POINT3* p) {
     f32 cx;
     f32 cz;

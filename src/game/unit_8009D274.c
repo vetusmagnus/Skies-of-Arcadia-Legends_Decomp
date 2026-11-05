@@ -74,18 +74,14 @@ typedef struct CamState {
 } CamState;
 extern CamState lbl_80311970;
 typedef struct State_UNIT0000 {
-    s32 w00;
-    s32 w04;
-    s32 w08;
-    s32 w0c;
-    f32 f10;
-    f32 f14;
-    f32 f18;
-    s32 w1c;
-    s32 w20;
-    s32 w24;
-    f32 f28;
-    s32 w2c;
+    Task* item;       /* 0x00 the task whose pivot this caches */
+    EvObj* obj;       /* 0x04 */
+    u32 id;           /* 0x08 */
+    u32 flags;        /* 0x0c */
+    NJS_POINT3 pos;   /* 0x10 */
+    Ang3 ang;         /* 0x1c */
+    f32 f28;          /* 0x28 */
+    NJS_MOTION* motion; /* 0x2c */
 } State_UNIT0000;
 extern State_UNIT0000 lbl_80303468;
 extern s32 lbl_80346CF0;
@@ -95,10 +91,17 @@ void fn_800A39E0(Task* o);
 void* fn_801E1A2C(s32 a, u32 size);
 void fn_801DD76C(void *m);
 extern void njScale(NJS_MATRIX m, f32 x, f32 y, f32 z);
+/* A mesh header: the vertex-stream context, the packed info word (vertex count in the top half)
+ * and the vertex positions. A node's `model` points at a pointer to one. */
+typedef struct Shape {
+    u32 ctx;
+    u32 info;
+    f32 v[1];
+} Shape;
 /* A model hierarchy node (NJS_OBJECT layout). */
 typedef struct ModelNode {
     u32 pad0;
-    void* model;              /* 0x04 */
+    Shape** model;            /* 0x04 */
     NJS_POINT3 pos;           /* 0x08 */
     Angle ang[3];             /* 0x14 */
     NJS_POINT3 scl;           /* 0x20 */
@@ -244,6 +247,7 @@ typedef struct Node_8009E9D8 {
 typedef struct {
     NJS_POINT3* point;
     void* rot;
+    void* scl;
 } Out;
 extern NJS_MATRIX lbl_803034D8;
 extern NJS_MATRIX lbl_80303498;
@@ -258,7 +262,7 @@ extern s32 fn_80006DA0(void* dst, s32 flag);
 extern void fn_80006CE0(void);
 extern void fn_80291C44(NJS_MATRIX m);
 extern void fn_800A1690(f32* m, Ang3* out);
-extern s32 fn_8015F1F0(void);
+extern s32 fn_8015F1F0(void* o);
 extern void njUnitTransPortion(NJS_MATRIX m);
 typedef struct {
     NJS_POINT3 v[2];
@@ -319,10 +323,13 @@ typedef struct Sprite {
     s16 oy;        /* 0x26 */
     NJS_TEXLIST* tex; /* 0x28 */
 } Sprite;
+typedef struct UVPair {
+    s16 u, v;
+} UVPair;
 typedef struct Quad {
     NJS_POINT3* pos;
-    u8* col;
-    s16* uv;
+    u8 (*col)[4];
+    UVPair* uv;
     s32 n;
 } Quad;
 extern void fn_80035518(void* tex, s32 id, Quad* src, s32 textured, s32 flags);
@@ -394,7 +401,7 @@ void fn_8009DC58(Obj8009DC58 *o) {
 }
 
 extern void njTranslate(NJS_MATRIX m, f32 x, f32 y, f32 z);
-f32 fn_8009DDA8(u32 flags, NJS_MATRIX m, void* model, f32* s);
+f32 fn_8009DDA8(u32 flags, NJS_MATRIX m, Shape** pp, f32* scl);
 static inline f32 walk2(u32 flags, NJS_MATRIX m, ModelNode* n, f32* s, f32 best) {
     f32 r;
     njUnitMatrix(m);
@@ -698,17 +705,17 @@ s32 fn_800A1B50(Obj_UNIT0000 *obj) {
 }
 
 void fn_800A363C(void) {
-    lbl_80303468.w00 = 0;
-    lbl_80303468.w04 = 0;
-    lbl_80303468.w0c = 0;
-    lbl_80303468.w08 = 0;
-    lbl_80303468.f18 = 0.0f;
-    lbl_80303468.f14 = 0.0f;
-    lbl_80303468.f10 = 0.0f;
-    lbl_80303468.w24 = 0;
-    lbl_80303468.w20 = 0;
-    lbl_80303468.w1c = 0;
-    lbl_80303468.w2c = 0;
+    lbl_80303468.item = NULL;
+    lbl_80303468.obj = NULL;
+    lbl_80303468.flags = 0;
+    lbl_80303468.id = 0;
+    lbl_80303468.pos.z = 0.0f;
+    lbl_80303468.pos.y = 0.0f;
+    lbl_80303468.pos.x = 0.0f;
+    lbl_80303468.ang.z = 0;
+    lbl_80303468.ang.y = 0;
+    lbl_80303468.ang.x = 0;
+    lbl_80303468.motion = NULL;
     lbl_80303468.f28 = 0.0f;
     lbl_80346CF0 = 0;
 }
@@ -1436,7 +1443,7 @@ void fn_800A0BA0(Obj_800A0BA0* o, f32* m) {
     NJS_POINT3* p;
 
     if (aux != NULL && aux->x4 != NULL) {
-        if (fn_8015F1F0() != 0) {
+        if (fn_8015F1F0(o) != 0) {
             src = aux->x8;
         } else {
             src = o;
@@ -1507,7 +1514,7 @@ void fn_800A0E1C(Obj_800A0E1C* o) {
 
     aux = o->aux;
     if (aux != NULL && (tgt = aux->x4) != NULL) {
-        if (fn_8015F1F0() != 0) {
+        if (fn_8015F1F0(o) != 0) {
             src = aux->x8;
         } else {
             src = o;
@@ -1788,8 +1795,8 @@ u8 fn_8009E4D4(f32 x) {
 
 void fn_800A2264(Sprite* o, NJS_POINT3* pos, s32 flags, s32 mode) {
     Quad q;
-    u8 col[16];
-    s16 uv[8];
+    u8 col[4][4];
+    UVPair uv[4];
     s32 i;
     Quad* qp = &q;
     s16 idx;
@@ -1808,27 +1815,27 @@ void fn_800A2264(Sprite* o, NJS_POINT3* pos, s32 flags, s32 mode) {
         if (o->mode == 1 && (i == 0 || i == 1)) {
             a = 0;
         }
-        q.col[i * 4] = a;
+        q.col[i][0] = a;
         if (o->hasCol == 1) {
             if (i == 0 || i == 3) {
-                q.col[i * 4 + 1] = o->colA[1];
-                q.col[i * 4 + 2] = o->colA[2];
-                q.col[i * 4 + 3] = o->colA[3];
+                q.col[i][1] = o->colA[1];
+                q.col[i][2] = o->colA[2];
+                q.col[i][3] = o->colA[3];
             } else {
-                q.col[i * 4 + 1] = o->colB[1];
-                q.col[i * 4 + 2] = o->colB[2];
-                q.col[i * 4 + 3] = o->colB[3];
+                q.col[i][1] = o->colB[1];
+                q.col[i][2] = o->colB[2];
+                q.col[i][3] = o->colB[3];
             }
         } else {
-            q.col[i * 4 + 3] = 255;
-            q.col[i * 4 + 2] = 255;
-            q.col[i * 4 + 1] = 255;
+            q.col[i][3] = 255;
+            q.col[i][2] = 255;
+            q.col[i][1] = 255;
         }
         if (o->shade == 1) {
             f32 k = 0.003921569f * a;
-            q.col[i * 4 + 1] = k * q.col[i * 4 + 1];
-            q.col[i * 4 + 2] = k * q.col[i * 4 + 2];
-            q.col[i * 4 + 3] = k * q.col[i * 4 + 3];
+            q.col[i][1] = k * q.col[i][1];
+            q.col[i][2] = k * q.col[i][2];
+            q.col[i][3] = k * q.col[i][3];
         }
     }
     if (o->tex != 0) {
@@ -1842,14 +1849,14 @@ void fn_800A2264(Sprite* o, NJS_POINT3* pos, s32 flags, s32 mode) {
         if (o->ox > 255) o->ox = -0x100;
         if (o->oy < -0x100) o->oy = 255;
         if (o->oy > 255) o->oy = -0x100;
-        q.uv[0] = o->x0 + o->ox;
-        q.uv[1] = o->y0 - o->oy;
-        q.uv[2] = o->x1 + o->ox;
-        q.uv[3] = o->y0 - o->oy;
-        q.uv[4] = o->x1 + o->ox;
-        q.uv[5] = o->y1 - o->oy;
-        q.uv[6] = o->x0 + o->ox;
-        q.uv[7] = o->y1 - o->oy;
+        q.uv[0].u = o->x0 + o->ox;
+        q.uv[0].v = o->y0 - o->oy;
+        q.uv[1].u = o->x1 + o->ox;
+        q.uv[1].v = o->y0 - o->oy;
+        q.uv[2].u = o->x1 + o->ox;
+        q.uv[2].v = o->y1 - o->oy;
+        q.uv[3].u = o->x0 + o->ox;
+        q.uv[3].v = o->y1 - o->oy;
     }
     {
         s32 f = 0x84000;
@@ -1885,8 +1892,8 @@ void fn_800A322C(Sprite3D* o, NJS_POINT3* pos, Angle ang, s32 unused, s32 flags,
     s16 idx;
     NJS_POINT3 pbuf[4];
     Quad q;
-    u8 col[16];
-    s16 uv[8];
+    u8 col[4][4];
+    UVPair uv[4];
     s32 i;
     f32 w;
     f32 h;
@@ -1907,38 +1914,38 @@ void fn_800A322C(Sprite3D* o, NJS_POINT3* pos, Angle ang, s32 unused, s32 flags,
     q.pos[0].x = -w;
     q.pos[0].y = h;
     q.pos[0].z = 0.0f;
-    q.uv[0] = o->ox;
-    q.uv[1] = -o->oy;
+    q.uv[0].u = o->ox;
+    q.uv[0].v = -o->oy;
     q.pos[1].x = w;
     q.pos[1].y = h;
     q.pos[1].z = 0.0f;
-    q.uv[2] = o->ox + 255;
-    q.uv[3] = -o->oy;
+    q.uv[1].u = o->ox + 255;
+    q.uv[1].v = -o->oy;
     q.pos[2].x = w;
     q.pos[2].y = -h;
     q.pos[2].z = 0.0f;
-    q.uv[4] = o->ox + 255;
-    q.uv[5] = 255 - o->oy;
+    q.uv[2].u = o->ox + 255;
+    q.uv[2].v = 255 - o->oy;
     q.pos[3].x = -w;
     q.pos[3].y = -h;
     q.pos[3].z = 0.0f;
-    q.uv[6] = o->ox;
-    q.uv[7] = 255 - o->oy;
+    q.uv[3].u = o->ox;
+    q.uv[3].v = 255 - o->oy;
     for (i = 0; i < 4; i++) {
-        q.col[i * 4] = o->col[0];
+        q.col[i][0] = o->col[0];
         if (o->hasCol == 1) {
-            q.col[i * 4 + 1] = o->col[1];
-            q.col[i * 4 + 2] = o->col[2];
-            q.col[i * 4 + 3] = o->col[3];
+            q.col[i][1] = o->col[1];
+            q.col[i][2] = o->col[2];
+            q.col[i][3] = o->col[3];
         } else {
-            q.col[i * 4 + 3] = 255;
-            q.col[i * 4 + 2] = 255;
-            q.col[i * 4 + 1] = 255;
+            q.col[i][3] = 255;
+            q.col[i][2] = 255;
+            q.col[i][1] = 255;
         }
         if (o->shade == 1) {
-            q.col[i * 4 + 1] = 0.003921569f * (o->col[0] * q.col[i * 4 + 1]);
-            q.col[i * 4 + 2] = 0.003921569f * (o->col[0] * q.col[i * 4 + 2]);
-            q.col[i * 4 + 3] = 0.003921569f * (o->col[0] * q.col[i * 4 + 3]);
+            q.col[i][1] = 0.003921569f * (o->col[0] * q.col[i][1]);
+            q.col[i][2] = 0.003921569f * (o->col[0] * q.col[i][2]);
+            q.col[i][3] = 0.003921569f * (o->col[0] * q.col[i][3]);
         }
     }
     if (o->tex != 0) {
@@ -2167,6 +2174,74 @@ void bss_order_stub(void);
  * the file. In the unit, fn_8009C518 (earlier) sets that order; this stub stands in for it here. */
 void bss_order_stub(void) { lbl_803033B0[0] = 0; lbl_803033C8[0] = 0; lbl_803033E0[0] = 0; lbl_803033F8[0] = 0; }
 
+extern void fn_801CE6D0(NJS_TEXLIST* tex, s32 id, VertexTex* v, s32 n, s32 a, s32 flags);
+void fn_800A25E0(Emit_800BA444* e, NJS_POINT3* pos, Angle* ang, s32 flags) {
+    Colour4 col;
+    VertexTex vt[4];
+    f32 x;
+    f32 y;
+    s16 idx;
+    u8 a;
+
+    x = 0.5f * e->x;
+    y = 0.5f * e->y;
+    a = e->x14;
+    col.c[0] = a;
+    if (e->x10 != 0) {
+        col.c[1] = e->x15;
+        col.c[2] = e->x16;
+        col.c[3] = e->x17;
+    } else {
+        col.c[3] = 0xff;
+        col.c[2] = 0xff;
+        col.c[1] = 0xff;
+    }
+    if (e->xc != 0) {
+        f32 k = 0.003921569f * a;
+        col.c[1] = col.c[1] * k;
+        col.c[2] = col.c[2] * k;
+        col.c[3] = col.c[3] * k;
+    }
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    njTranslateEx(pos);
+    njRotateEx(ang, 1);
+    if (e->x1c != 0) {
+        idx = e->x8;
+        if (e->x1c->nbTexture <= idx) {
+            idx = e->x1c->nbTexture - 1;
+        }
+        fn_80299040(e->x1c);
+        fn_80298FE4(idx);
+        vt[3].x = x;
+        vt[2].x = x;
+        vt[2].y = y;
+        vt[0].y = y;
+        vt[2].v = 0.0f;
+        vt[0].v = 0.0f;
+        vt[1].u = 0.0f;
+        vt[0].u = 0.0f;
+        vt[3].v = 1.0f;
+        vt[1].v = 1.0f;
+        vt[3].u = 1.0f;
+        vt[2].u = 1.0f;
+        vt[1].z = 0.0f;
+        vt[3].z = 0.0f;
+        vt[2].z = 0.0f;
+        vt[0].z = 0.0f;
+        x *= -1.0f;
+        y *= -1.0f;
+        vt[1].x = x;
+        vt[0].x = x;
+        vt[1].y = y;
+        vt[3].y = y;
+        vt[0].colour = vt[1].colour = vt[2].colour = vt[3].colour = col;
+        fn_801CE6D0(e->x1c, idx, vt, 4, 1, flags);
+    }
+    njPopMatrixEx();
+}
+
 void fn_800A2830(Emit_800BA444* e, NJS_POINT3* pos, Angle* ang) {
     VertexCol vc[4];
     VertexTex vt[4];
@@ -2291,4 +2366,159 @@ void fn_800A2830(Emit_800BA444* e, NJS_POINT3* pos, Angle* ang) {
         fn_80296EEC(1, 3, 1);
     }
     njPopMatrixEx();
+}
+
+extern void njPushMatrix(void* m);
+extern void fn_80291E18(s32 n);
+void fn_800A2D2C(Emit_800BA444* q, NJS_POINT3* pos, Angle* rot, Angle rz, s32 unused, s32 flags, s32 mode) {
+    NJS_POINT3 p[4];
+    Quad buf;
+    u8 col[4][4];
+    UVPair uv[4];
+    Quad* pb;
+    UVPair t;
+    f32 hw, hh;
+    s16 idx;
+    s32 i;
+
+    buf.pos = p;
+    buf.col = col;
+    buf.uv = uv;
+    buf.n = 4;
+    pb = &buf;
+    if (q->x18 < -0x100) {
+        q->x18 = 0xFF;
+    }
+    if (q->x18 > 0xFF) {
+        q->x18 = -0x100;
+    }
+    if (q->x1a < -0x100) {
+        q->x1a = 0xFF;
+    }
+    if (q->x1a > 0xFF) {
+        q->x1a = -0x100;
+    }
+    hw = 0.5f * q->x;
+    hh = 0.5f * q->y;
+    buf.pos[0].x = -hw;
+    buf.pos[0].y = hh;
+    buf.pos[0].z = 0.0f;
+    buf.uv[0].u = q->x18;
+    buf.uv[0].v = -q->x1a;
+    buf.pos[1].x = hw;
+    buf.pos[1].y = hh;
+    buf.pos[1].z = 0.0f;
+    buf.uv[1].u = q->x18 + 0xFF;
+    buf.uv[1].v = -q->x1a;
+    buf.pos[2].x = hw;
+    buf.pos[2].y = -hh;
+    buf.pos[2].z = 0.0f;
+    buf.uv[2].u = q->x18 + 0xFF;
+    buf.uv[2].v = 0xFF - q->x1a;
+    buf.pos[3].x = -hw;
+    buf.pos[3].y = -hh;
+    buf.pos[3].z = 0.0f;
+    buf.uv[3].u = q->x18;
+    buf.uv[3].v = 0xFF - q->x1a;
+    if (q->xa != 0) {
+        switch (q->xa) {
+        case 1:
+            t = buf.uv[0]; buf.uv[0] = buf.uv[1]; buf.uv[1] = t;
+            t = buf.uv[3]; buf.uv[3] = buf.uv[2]; buf.uv[2] = t;
+            break;
+        case 2:
+            t = buf.uv[0]; buf.uv[0] = buf.uv[3]; buf.uv[3] = t;
+            t = buf.uv[1]; buf.uv[1] = buf.uv[2]; buf.uv[2] = t;
+            break;
+        case 3:
+            t = buf.uv[0]; buf.uv[0] = buf.uv[3]; buf.uv[3] = buf.uv[2]; buf.uv[2] = buf.uv[1]; buf.uv[1] = t;
+            break;
+        case 4:
+            t = buf.uv[0]; buf.uv[0] = buf.uv[2]; buf.uv[2] = t;
+            t = buf.uv[1]; buf.uv[1] = buf.uv[3]; buf.uv[3] = t;
+            break;
+        case 5:
+            t = buf.uv[0]; buf.uv[0] = buf.uv[1]; buf.uv[1] = buf.uv[2]; buf.uv[2] = buf.uv[3]; buf.uv[3] = t;
+            break;
+        }
+    }
+    for (i = 0; i < 4; i++) {
+        buf.col[i][0] = q->x14;
+        if (q->x10 == 1) {
+            buf.col[i][1] = q->x15;
+            buf.col[i][2] = q->x16;
+            buf.col[i][3] = q->x17;
+        } else {
+            buf.col[i][3] = 0xFF;
+            buf.col[i][2] = 0xFF;
+            buf.col[i][1] = 0xFF;
+        }
+        if (q->xc == 1) {
+            buf.col[i][1] = 0.003921569f * (f32)(q->x14 * buf.col[i][1]);
+            buf.col[i][2] = 0.003921569f * (f32)(q->x14 * buf.col[i][2]);
+            buf.col[i][3] = 0.003921569f * (f32)(q->x14 * buf.col[i][3]);
+        }
+    }
+    if (q->x1c != NULL) {
+        idx = q->x8;
+        if (q->x1c->nbTexture <= idx) {
+            idx = q->x1c->nbTexture - 1;
+        }
+        fn_80299040(q->x1c);
+        fn_80298FE4(idx);
+    }
+    njPushMatrix(0);
+    njTranslate(0, pos->x, pos->y, pos->z);
+    njRotateZXY(0, rot[0], rot[1], rz);
+    flags = (mode == 1) ? (flags | 0x80000) : 0x85000;
+    if (q->x1c != NULL) {
+        fn_80035518(q->x1c, idx, pb, 1, flags);
+    } else {
+        fn_80035518(q->x1c, idx, pb, 0, flags);
+    }
+    fn_80291E18(1);
+}
+
+extern s32 fn_800A38E4(EvObj*, s32);
+void fn_800A3C68(Task* o) {
+    EvObj* w = o->work;
+    Rec* r;
+    switch (o->state) {
+    case 0:
+        InitMax(o->work);
+        fn_8015ED90(o);
+        w->x26c = 1;
+        o->state = 1;
+    case 1:
+        r = fn_800CCA6C(9, w->ext->x04 & 0xffff);
+        if (r != 0) {
+            s32 k;
+            RecSub* sb = r->pc;
+            sb->x0 = 2;
+            k = r->id >> 16;
+            if (k < 3) fn_80210B44(sb->p4);
+            switch (k) {
+            case 1: o->state = 2; break;
+            case 2: fn_800A3744(w); break;
+            }
+        }
+        if (!EventActive()) fn_8015E600(w);
+        break;
+    case 2:
+        if (!EventActive()) fn_8015E600(w);
+        if (fn_800A38E4(w, 0) == 0) o->state = 1;
+        if (fn_8015F218(w) == 2) {
+            fn_800A3744(w);
+            o->state = 1;
+        }
+        break;
+    case 4:
+    case 0xff:
+        fn_800A3744(w);
+        fn_8015EBF4(w);
+        o->flags |= 0x40;
+        break;
+    case 0xfe:
+        break;
+    }
 }

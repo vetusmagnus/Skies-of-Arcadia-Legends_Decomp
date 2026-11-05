@@ -2539,6 +2539,10 @@ s16 fn_8001D41C(s16* a, s16* b) {
     return 0;
 }
 
+s32 fn_8001DC7C(s8 id, Task* t) {
+    return ChrW(t)->st->target == id;
+}
+
 void fn_8001DD00(ChrInfo* o, s8 v) {
     s8 i;
     s8 j;
@@ -4823,72 +4827,53 @@ done:
     return ret;
 }
 
-#ifdef NONMATCHING
-typedef struct Inner {
-    u8 pad0[6];
-    s16 x6;
-    s16 x8;
-    u8 padA[6];
-    s16 x10;
-    u8 pad12[2];
-    s16 x14;
-    s16 x16;
-    u8 pad18[0xec - 0x18];
-    u32 xec;
-    u8 padf0[0x20c - 0xf0];
-    s16 x20c;
-    s16 x20e;
-} Inner;
-typedef struct Work { u8 pad[0x4c]; Inner* inner; } Work;
-#endif
-
-#ifdef NONMATCHING
-int fn_800207C8(Task* t) {
-    Work* w = t->work;
-    Inner* in = w->inner;
-    s16 a;
-    s16 b;
-    int ok;
-    switch (in->x10) {
+static inline int Kind_800207C8(ChrInfo* u)
+{
+    switch (u->x10) {
     case 0x10:
     case 0x17:
     case 0x1d:
-        ok = 0;
-        break;
-    default:
-        ok = 1;
-        break;
-    }
-    if (!ok) {
         return 0;
     }
-    if (in->xec & 0x8000) {
-        a = in->x14;
-        b = in->x16;
+    return 1;
+}
+
+static inline int Match_800207C8(Task* t, ChrInfo* u)
+{
+    s16 b;
+    s16 a;
+    s16 x;
+    s16 y;
+
+    if (u->xec & 0x8000) {
+        a = u->x14;
+        b = u->x16;
     } else {
-        a = in->x6;
-        b = in->x8;
+        a = u->x6;
+        b = u->x8;
     }
-    switch (in->x20c) {
+    switch (u->x20c) {
     case 0x1d:
-        if (fn_800153E0(0x1d, in->x20e) != 0) {
+        if (fn_800153E0(0x1d, u->x20e) != 0) {
             return 1;
         }
-        break;
     }
     if (a != 0x18) {
         return 0;
     }
-    {
-        s16 x = fn_800760EC(t, 0x15, -1);
-        s16 y = fn_800760EC(t, a, b);
-        ok = 0;
-        if (x == y) {
-            ok = 1;
-        }
+    x = fn_800760EC(t, 0x15, -1);
+    y = fn_800760EC(t, a, b);
+    if (x == y) {
+        return 1;
     }
-    return ok;
+    return 0;
 }
-#endif
+
+int fn_800207C8(Task* t) {
+    if (!Kind_800207C8(ChrW(t)->st)) {
+        return 0;
+    }
+    return Match_800207C8(t, ChrW(t)->st);
+}
 
 /* NEAR (20 lines): params land in other callee-saved registers (orig b r31, d r30, a r29, c r28). */
