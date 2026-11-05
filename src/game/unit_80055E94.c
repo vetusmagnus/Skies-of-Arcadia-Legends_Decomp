@@ -29,7 +29,7 @@ typedef struct Lim {
     InvEnt x38[0x50];
 } Lim;
 /* A loaded model file's materials (fn_8006D080 frees them). */
-typedef struct MdlMat { u32 x0; u32 x4; NJS_TEXLIST tex; } MdlMat;
+typedef struct MdlMat { char *cur; u32 x4; NJS_TEXLIST tex; } MdlMat;
 typedef struct MdlRec {
     u8 pad0[0x14];
     struct { u32 x0; MdlMat* x4; }* x14;
@@ -48,7 +48,8 @@ typedef struct Node {
     struct Arg80067CA4 *x30; /* 0x30 */
     struct Node* prev;   /* 0x34 */
     struct Node* x38;    /* 0x38 next */
-    u8 pad3c[8];
+    u32 flags;           /* 0x3C */
+    u8 pad40[4];
 } Node;
 typedef struct { u32 handle; s8 id; u8 kind; s16 s; u8 pad8[8]; } Slot_8030A10C;
 typedef struct {
@@ -93,7 +94,9 @@ typedef struct WorkRec {
     s16 x0;
     s16 x2;
     u32 x04;
-    u8 pad8[0x38 - 8];
+    u8 pad8[8];
+    void (*x10)(void);
+    u8 pad14[0x38 - 0x14];
     s32 x38;
     s32 x3c;
     s32 x40;
@@ -101,6 +104,8 @@ typedef struct WorkRec {
     s16 x46;
     s16 x48;
     s16 x4a;
+    u8 pad4c[4];
+    u8 x50;
 } WorkRec;
 typedef struct TkRec {
     void (*proc)(struct TkRec *); /* 0x00 */
@@ -111,7 +116,9 @@ typedef struct TkRec {
     WorkRec *work;
 } TkRec;
 typedef struct ChrAux {
-    u8 pad0[0x60];
+    u8 pad0[0x56];
+    s16 x56;                /* 0x56 */
+    u8 pad58[8];
     s16 x60;                /* 0x60 */
 } ChrAux;
 typedef struct ChrRec {
@@ -174,9 +181,9 @@ typedef struct {
     u32 *p14;
     u8 rest[0x68 - 0x18];
 } Elem;
-typedef struct ChrState { s32 x0; s8 x4; u8 pad5; s16 x6; s8 x8; u8 pad9[4]; u8 xd; u8 xe; u8 padf[0x11]; } ChrState;
+typedef struct ChrState { s32 x0; s8 x4; u8 pad5; s16 x6; s8 x8; s8 x9; u8 xa; s8 xb; u8 xc; u8 xd; u8 xe; u8 padf[0x11]; } ChrState;
 extern ChrState lbl_80309174[12];
-typedef struct Row16 { u8 pad[4]; s8 x4; u8 pad5[3]; s8 x8; s8 x9; u8 pada[6]; } Row16;
+typedef struct Row16 { u8 pad[4]; s8 x4; u8 pad5[3]; s8 x8; s8 x9; u8 xa; s8 xb; u8 xc; u8 xd; u8 pade[2]; } Row16;
 extern Row16 lbl_80309730[12];
 typedef NJS_POINT3 Vec3;
 typedef struct Ent { s32 x0; u32 x4; s32 x8; s32 xc; } Ent;
@@ -239,7 +246,7 @@ typedef struct S6BEFC {
     void *p9c;
     s16 sa0;
     u8 pada2[2];
-    u8 fa4[4];
+    Ent *fa4;
 } S6BEFC;
 typedef struct O6BEFC {
     u8 pad0[0x18];
@@ -252,6 +259,7 @@ extern char lbl_802B0678[];
 extern char lbl_802B068C[];
 extern void fn_8001C6CC(void *, s16, s16, char *);
 extern void fn_80061048(char *);
+extern void fn_800692D8(s16 a, s16 b, s32 c, s8 d);
 extern s32 sprintf(char *, const char *, ...);
 extern void *fn_801CC1B4(char *);
 extern s32 fn_801CC1A4(void *);
@@ -268,10 +276,11 @@ typedef struct EntryList {
 } EntryList;
 BOOL fn_8006E5BC(EntryList *list);
 extern s32 fn_8006E4CC(void *, s16 *, s32, void **);
-extern s32 fn_8006E640(void *, u8 *, s16 *, s32);
+extern void *fn_801E150C(void *p, u32 v);
+extern s32 fn_8006E640(Hdr *, Ent **, s16 *, s32);
 extern void fn_801E17E0(void *);
 extern s32 fn_801CC62C(char *);
-void fn_8006E244(Ent* e, s32 n);
+void fn_8006E244(void* req, s8 mode);
 typedef struct S6DDBC {
     u8 pad0[4];
     Ent6EB88 *p4;
@@ -860,15 +869,11 @@ extern s32 fn_8022E258(void *, void *, u8, s32);
 s32 fn_80061F58(void* dst, u32 size, u8 c);
 extern void fn_8022F580(void *, s32, s32);
 extern void fn_8022E4CC(void *, s32, s32, s32, s32, s32);
-typedef struct Out6EB88 {
-    u8 pad0[8];
-    void *f8;
-} Out6EB88;
 extern char lbl_802B06DC[];
 extern void *fn_801DB124(void *);
 extern void *fn_801DB244(char *);
 extern void fn_801DBE1C(char *, ...);
-extern void fn_8006CF54(Out6EB88 *);
+extern void fn_8006CF54(Node *);
 typedef struct Un {
     u8 id;
     u8 pad1[0x153];
@@ -1161,7 +1166,7 @@ extern s16 lbl_80347378;
 extern s16 lbl_80347376;
 extern s16 lbl_80347374;
 extern u8 lbl_80347340;
-extern void* lbl_80347320;
+extern s16* lbl_80347320;
 extern void fn_801CBBBC(void);
 extern void fn_80029070(void);
 extern void* fn_801E1C7C(s32 size);
@@ -1215,9 +1220,18 @@ typedef struct Seg60B98 {
     P60B98 a, b;
     f32 m, c;
 } Seg60B98;
-typedef struct Sub { u32 w[25]; } Sub;
+typedef struct Sub {
+    s8 b0;
+    u8 pad1;
+    s16 x2;
+    u8 pad4[4];
+    s16 x8;
+    u8 pad_a[0x64 - 0xa];
+} Sub;
+typedef struct Sub68 { Sub sub; s32 x64; } Sub68;
 typedef struct Wk_8006BDB4 { u8 pad0[0x28]; Sub sub; void* x8c; } Wk_8006BDB4;
 typedef struct Node_8006BDB4 { u8 pad0[0x19]; u8 x19; u8 pad1a[0xa]; Wk_8006BDB4* work; } Node_8006BDB4;
+s32 fn_8006BDB4(s16 type, Node_8006BDB4** out, Sub* src, s32 c);
 extern void* lbl_803475A8;
 extern void* lbl_802DF6C8[];
 extern void fn_8007E13C(void *a);
@@ -1251,7 +1265,6 @@ typedef struct Src_80064C00 {
     f32 x18;
     f32 x1c;
 } Src_80064C00;
-extern void fn_800692D8(void);
 extern void fn_8008066C(s32);
 typedef void (*Fn683D8)(s16, s16, s32, s8);
 extern Fn683D8 lbl_802DF570[0x4f];
@@ -1537,6 +1550,27 @@ extern void fn_80006DA0(void* a, int bit);
 void fn_80055E94(u8 *p) {
     p[0x18] |= 0x40;
     lbl_8030A10C.count -= 1;
+}
+
+s32 fn_8006E640(Hdr *h, Ent **cur, s16 *idx, s32 n) {
+    Ent *e;
+    if (*idx == 0) {
+        e = h->e;
+    } else {
+        e = *cur;
+    }
+    while ((s16)n != 0) {
+        if (h->count <= *idx) {
+            return 0;
+        }
+        e->x4 += (u32)h;
+        fn_8006E244(e, 0);
+        (*idx)++;
+        n--;
+        e++;
+    }
+    *cur = e;
+    return 1;
 }
 
 typedef struct Ob_80056B6C {
@@ -5184,6 +5218,11 @@ void fn_8006922C(s16 a, s16 i, s32 kind, s8 v) {
     lbl_80309700[i]->work->x44 = v;
 }
 
+extern void *fn_80077B88(u8);
+extern void fn_800770B8(void *, void *);
+extern void fn_80083D3C(s32);
+extern void fn_800842A0(s16);
+
 void fn_800695A0(s16 a, s16 i, s32 b) {
     s32 f = fn_801F52AC();
     if (i <= 3) {
@@ -5822,6 +5861,64 @@ void fn_8006D7CC(void)
     }
 }
 
+extern s16 fn_800290E8(s16 i);
+
+static inline s16 FindCount(Node_8006D888 *p, s32 id) {
+    if (p == 0) {
+        return 0;
+    }
+    do {
+        if (p->x0 == id) {
+            return p->x4;
+        }
+        p = p->x10;
+    } while (p != 0);
+    return 0;
+}
+
+s32 fn_8006D1C4(void) {
+    Node_8006D888 *list;
+    Ent6EB88 *e;
+    s16 i;
+    if ((e = lbl_80347398) == 0) {
+        return 1;
+    }
+    list = lbl_8034739C;
+    while (1) {
+        s32 id = e->f0;
+        if (id <= 0) {
+            break;
+        }
+        if (e->f4 != 0) {
+            if (FindCount(list, id) != 0) {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+        e++;
+    }
+    if (fn_8006D2C4(1) != 0) {
+        return 0;
+    }
+    for (i = 0; i < 12; i++) {
+        if (fn_800290E8(i) == 3) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+s32 fn_8006DB94(void) {
+    Ent6EB88 *e;
+    for (e = lbl_80347398; e->f0 > 0; e++) {
+        if (e->f4 == 0) {
+            return 0;
+        }
+    }
+    return !(lbl_8030A10C.f6c & 0x80000000);
+}
+
 s32 fn_8006DBDC(void)
 
 {
@@ -6123,6 +6220,110 @@ void fn_8006FD6C(void) {
         }
     }
 }
+
+void fn_8007050C(void) {
+    s32 i;
+    s32 mask;
+    u8 c;
+    switch (lbl_80347338) {
+    case 0:
+        if (lbl_80347378 != 0) return;
+        if (lbl_80347376 != 0) return;
+        if (lbl_80347374 != 0) return;
+        if (fn_8006D1C4() != 1) return;
+        for (i = 0; i <= 11; i++) {
+            if (fn_80078610(i)) {
+                ChrRec* ch;
+                s8 id = i;
+                lbl_80309730[i].x4 = i;
+                lbl_80309730[i].xd = i;
+                fn_80010474(id);
+                fn_800811E4(i, 0);
+                lbl_80309730[i].x8 = -1;
+                lbl_80309174[i].x8 = -1;
+                ch = lbl_80309DE4[i];
+                if (ch->xfe > ch->xff) {
+                    ch->xfe = ch->xff;
+                }
+            }
+        }
+        fn_8006D524();
+        lbl_80347338 = 1;
+    default:
+        break;
+    }
+    i = 0;
+    mask = 0;
+    for (; i <= 3; i++) {
+        if (fn_80078610(i)) {
+            mask = 1;
+            break;
+        }
+    }
+    for (i = 4; i <= 11; i++) {
+        if (fn_80078610(i)) {
+            mask += 2;
+            break;
+        }
+    }
+    switch (mask) {
+    case 2: {
+        TkRec* t = lbl_80309700[lbl_80347334];
+        if (t != 0) {
+            if (t->work->x04 & 0x10) {
+                lbl_8034733C = 9;
+                lbl_80347338 = 0;
+            } else {
+                lbl_8034733C = 8;
+                lbl_80347338 = 0;
+            }
+        } else {
+            lbl_8034733C = 8;
+            lbl_80347338 = 0;
+        }
+        return;
+    }
+    case 1:
+        lbl_8034733C = 7;
+        lbl_80347338 = 0;
+        return;
+    default: {
+        ChrRec* ch = lbl_80309DE4[lbl_80347334];
+        if (ch != 0 && !(ch->bits & 0x100) && (lbl_80309700[lbl_80347334]->work->x04 & 0x10)) {
+            if (lbl_80347334 <= 3) {
+                lbl_8034733C = 9;
+                lbl_80347338 = 0;
+                return;
+            }
+            fn_8008066C(lbl_80347334);
+            lbl_80309700[lbl_80347334]->flags |= 0x40;
+            lbl_80309700[lbl_80347334] = 0;
+            for (i = 4; i <= 11; i++) {
+                if (fn_80078610(i)) break;
+            }
+            lbl_8034733C = 7;
+            lbl_80347338 = 0;
+        }
+        c = ++lbl_80347335;
+        if ((s8)c >= 12) {
+            lbl_8034733C = 6;
+            lbl_80347338 = 0;
+        } else if (lbl_803092F4[(s8)c] == -1) {
+            lbl_8034733C = 6;
+            lbl_80347338 = 0;
+        } else {
+            lbl_8034733C = 3;
+            lbl_80347338 = 0;
+        }
+    }
+    }
+}
+
+extern s32 lbl_80347348;
+extern void fn_80086C68(void);
+extern void fn_8008B9E0(void);
+extern void fn_8008E2B0(s32 idx);
+extern void fn_8008E338(void);
 
 void fn_80071A78(Vec3f *a, Vec3f *b, f32 s) {
     Vec3f v1;
@@ -7353,7 +7554,7 @@ void fn_8006BEFC(O6BEFC *o) {
         }
         break;
     case 4:
-        if (fn_8006E640(s->p9c, s->fa4, &s->sa0, 10) == 0) {
+        if (fn_8006E640(s->p9c, &s->fa4, &s->sa0, 10) == 0) {
             fn_801E17E0(s->p9c);
             s->sa0 = 0;
             s->s8c = s->s8c + 1;
@@ -7613,7 +7814,7 @@ static inline s32 iscr_6EB88(s8 *s) {
     return 0;
 }
 
-void fn_8006EB88(char *a, char *b, Out6EB88 *out) {
+void fn_8006EB88(char *a, char *b, Node *out) {
     char buf[0x40];
     char buf2[0x40];
     s32 v;
@@ -7631,14 +7832,14 @@ void fn_8006EB88(char *a, char *b, Out6EB88 *out) {
         sprintf(buf2, "%s.MLD", b);
         found = crew_6EB88(buf2);
         if (found != 0) {
-            out->f8 = fn_801DB124(found);
+            out->blk = fn_801DB124(found);
         } else {
             fn_801DBE1C(lbl_802B06DC);
         }
     } else {
         fn_80046BB0((void *)(b), (void *)(&v));
         if (lbl_8030A10C.pf8 != 0) {
-            out->f8 = fn_801DB124(lbl_8030A10C.pf8);
+            out->blk = fn_801DB124(lbl_8030A10C.pf8);
             lbl_8030A10C.pf8 = 0;
         } else {
             Ent6EB88 *p;
@@ -7649,15 +7850,15 @@ void fn_8006EB88(char *a, char *b, Out6EB88 *out) {
                 if (v == f) {
                     void *q = tbl[i].f4;
                     if (q != 0) {
-                        out->f8 = fn_801DB124(q);
+                        out->blk = fn_801DB124(q);
                     }
                     break;
                 }
             }
         }
     }
-    if (out->f8 == 0) {
-        out->f8 = fn_801DB244(buf);
+    if (out->blk == 0) {
+        out->blk = fn_801DB244(buf);
     }
     fn_8006CF54(out);
 }
@@ -8073,10 +8274,10 @@ s16 fn_8006E924(char* path, char* name, Node** out, void* key) {
     Node* n = lbl_803473A0;
     if (n->blk == 0) {
         if (key == 0) {
-            fn_8006EB88(path, name, (Out6EB88*)n);
+            fn_8006EB88(path, name, n);
         } else {
             n->blk = fn_801DB124(key);
-            fn_8006CF54((Out6EB88*)n);
+            fn_8006CF54(n);
         }
         strcpy((char*)n->name, name);
         n->count = 1;
@@ -8099,10 +8300,10 @@ s16 fn_8006E924(char* path, char* name, Node** out, void* key) {
     memset(m, 0, 0x44);
     m->prev = n;
     if (key == 0) {
-        fn_8006EB88(path, name, (Out6EB88*)m);
+        fn_8006EB88(path, name, m);
     } else {
         m->blk = fn_801DB124(key);
-        fn_8006CF54((Out6EB88*)m);
+        fn_8006CF54(m);
     }
     strcpy((char*)m->name, name);
     m->count = 1;
@@ -9106,19 +9307,14 @@ void fn_80071990(void) {
 
 extern int strncmp(const char *a, const char *b, u32 n);
 extern void fn_80075040(char *p, s32 a, s32 b);
-typedef struct Cursor { char *cur; } Cursor;
-typedef struct Link { u8 pad0[4]; Cursor *c; } Link;
-typedef struct Item { u8 pad0[0x14]; Link *link; u8 pad18[0x68 - 0x18]; } Item;
-typedef struct Items { u32 count; Item *items; } Items;
-
-void fn_8006CF54(Out6EB88 *out) {
+void fn_8006CF54(Node *out) {
     u8 i;
-    Item *items;
-    Items *list;
-    list = out->f8;
-    items = list->items;
-    for (i = 0; i < list->count; i++) {
-        Cursor *c = items[i].link->c;
+    MdlRec *items;
+    MdlBlk *list;
+    list = out->blk;
+    items = list->r;
+    for (i = 0; i < list->n; i++) {
+        MdlMat *c = items[i].x14->x4;
         if (c != 0) {
             if (strncmp(c->cur, "NJCM", 4) == 0) {
                 c->cur += 8;
@@ -9410,7 +9606,7 @@ s32 fn_80060B98(NJS_POINT3 *p0, NJS_POINT3 *p1, NJS_POINT3 *p2, NJS_POINT3 *pt) 
     }
 }
 
-s32 fn_8006BDB4(s16 type, Node_8006BDB4** out, Sub* src) {
+s32 fn_8006BDB4(s16 type, Node_8006BDB4** out, Sub* src, s32 c) {
     s32 t = type;
     u8 idx;
     Node_8006BDB4* n;
@@ -10372,12 +10568,12 @@ f32 fn_8006116C(int x)
     return r;
 }
 
-void fn_80068E20(s16 a, s16 b) {
+void fn_80068E20(s16 a, s16 b, s32 c, s8 d) {
     s32 j;
     s16 id;
     s16 v;
     s16 k;
-    fn_800692D8();
+    fn_800692D8(a, b, c, d);
     if (lbl_80309700[b]->work->x44 != -1) {
         id = a;
         k = lbl_80309174[id].x6 + 0x24;

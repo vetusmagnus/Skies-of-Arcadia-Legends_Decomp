@@ -22,6 +22,7 @@ typedef struct MenuObj {
     u8 bb;
     u8 padc[0x16 - 0xc];
     s16 x16;
+    s16 arr[4];     /* 0x18 */
 } MenuObj;
 /* A menu cell (fn_80131658). */
 typedef struct Cell {
@@ -51,6 +52,7 @@ typedef struct Pair_80148464 {
     s16 b;
 } Pair_80148464;
 extern Pair_80148464* lbl_803472CC;
+extern void fn_8014093C(Pair_80148464 *a, s32 n, s32 *kinds, s32 *vals);
 extern void fn_801E17E0(void* p);
 typedef struct {
     u8 pad0[0x7C];
@@ -97,25 +99,24 @@ extern s32 fn_8013E730(s32 i);
 extern u8 lbl_80346F61;
 extern u8 lbl_80346F60;
 typedef struct {
-    u8 b0;
-    u8 b1;
-    u8 b2;
-    u8 b3;
-    u8 b4;
-    u8 b5;
-    u8 b6;
-    u8 b7;
-    s16 s8;
-    s16 sa;
-    u32 wc;
-} Rec;
+    s8 x0;
+    s8 x1;
+    u8 x2;
+    s8 x3;
+    s8 x4;
+    s8 x5;
+    u8 x6, x7;
+    s16 x8;
+    s16 xa;
+    u32 xc;
+} Slot_8014359C;
 typedef struct {
     s16 s0;
     s16 s2;
     u8 pad4[4];
     u32 w8;
     u32 wc;
-    Rec e[8];
+    Slot_8014359C e[8];
 } Blk;
 /* A ship's crew member in battle (0x22). */
 typedef struct Member {
@@ -162,7 +163,9 @@ typedef struct Party {
     u8 pad10a[2];
 } Party;
 typedef struct MenuItem {
-    u8 pad0[0xd];
+    u8 pad0[0xb];
+    s8 id;          /* 0x0B */
+    u8 b0c;
     s8 b0d;         /* max */
     s8 b0e;
     u8 pad0f[0x1c - 0x0f];
@@ -237,8 +240,12 @@ typedef struct BtlWork {
     Blk out;            /* 0xA24 */
 } BtlWork;
 extern void fn_8014549C(s32 a, s32 b);
-typedef struct Obj24 { u8 pad[0x24]; s16 x24; } Obj24;
-typedef struct Obj7 { u8 pad[7]; u8 x7; } Obj7;
+s32 fn_8013A538(s32 a, s32 b, s32 cur, s32 step, s32 d);
+void fn_80131630(s8 a, s8 b, s8 v);
+extern void fn_8014359C(BtlCmd *in, s32 a, s32 b);
+extern void fn_80143FA4(BtlCmd *s, s32 idx, s32 slot);
+extern s32 fn_80145D84(Slot_8014359C *dst, Party *a, Party *b);
+extern void fn_80146000(Slot_8014359C *o, s32 idx);
 typedef struct Sub_80146FD4 { u8 pad[0x14]; s32 x14; s32 x18; } Sub_80146FD4;
 typedef struct Req_UNIT0000 { s8 x0; s8 x1; } Req_UNIT0000;
 typedef struct MapInfo { s32 map; s32 unk4; char room; } MapInfo;
@@ -361,18 +368,6 @@ typedef struct {
     s16 id;
 } Req_801462D0;
 extern void fn_801E735C(s32, void*, f32);
-typedef struct {
-    s8 x0;
-    s8 x1;
-    u8 x2;
-    s8 x3;
-    s8 x4;
-    s8 x5;
-    u8 x6, x7;
-    s16 x8;
-    s16 xa;
-    u8 pad_c[4];
-} Slot_8014359C;
 typedef struct {
     u8 pad[0x2C];
     s16 mode;
@@ -672,9 +667,10 @@ typedef union {
 typedef struct {
     u8 pad0[0x18];
     u8 flags;
-    u8 pad19[0x24 - 0x19];
-    s32 x24;
-    s32 x28;
+    u8 b19;
+    u8 pad1a[0x24 - 0x1a];
+    Pair_80148464* x24;
+    Pair_80148464* x28;
 } Task;
 /* lbl_80306738: cleared by fn_80142F18; the task at 0xc is stopped when a menu closes. */
 typedef struct {
@@ -2101,7 +2097,7 @@ void fn_801457C4(s32 a, s32 b)
     }
 }
 
-s32 fn_80145D84(Obj7* dst, Obj24* a, Obj24* b)
+s32 fn_80145D84(Slot_8014359C* dst, Party* a, Party* b)
 {
     s32 v = 0x50 - b->x24 + a->x24;
     s32 r = rand() % 100;
@@ -2410,6 +2406,70 @@ void fn_8014ED5C(Owner *o, f32 v) {
         if (o->x8 >= 0) {
             fn_8014EE4C(o, o->x8, 1, 1, 10);
         }
+    }
+}
+
+
+void fn_8014337C(s32 i)
+{
+    s32 j;
+    BtlCmd *e;
+    Blk *w;
+    Slot_8014359C *rec;
+
+    e = &lbl_8034727C->slot[i].body;
+    fn_8013558C();
+    w = &lbl_8034727C->a[i];
+    switch (e->x0) {
+    case 3:
+        e->xe |= 2;
+        break;
+    case 4:
+        switch (e->x5) {
+        case 1:
+            for (j = i; j <= e->x8; j++) {
+                fn_8014359C(e, j, i);
+            }
+            break;
+        case 2:
+            fn_8014359C(e, e->x8, i);
+            break;
+        case 0:
+        case 3:
+            fn_8014359C(e, i, i);
+            break;
+        }
+        break;
+    case 5:
+        rec = &lbl_8034727C->a[i].e[i];
+        rec->x0 = e->x0;
+        rec->x1 = e->x1;
+        rec->x2 = e->x2;
+        rec->x3 = e->x3;
+        rec->x4 = e->x5;
+        rec->x5 = e->x6;
+        rec->x6 = e->x9;
+        rec->x8 = e->xc;
+        rec->xa = e->x14;
+        rec->x7 = 1;
+        if (lbl_8034727C->b29 & 4) {
+            if (lbl_802C4BF0[e->xc].ship_use == 0) {
+                rec->x7 = 0;
+            }
+        } else if (lbl_8034727C->flag[1] & 8) {
+            rec->x7 = 0;
+        } else if (lbl_8034727C->slot[i].x6 == 0xff) {
+            rec->x7 = 0;
+        }
+        break;
+    case 7:
+        break;
+    case 6:
+        break;
+    }
+    for (j = 0; j < 8; j++) {
+        fn_80146000(&w->e[j], i);
+        w->wc += w->e[j].xc;
     }
 }
 
@@ -2862,56 +2922,54 @@ void fn_80147EAC(s32 id)
     lbl_8030CEA0.x1608 = e->x24;
 }
 
-void fn_80143FA4(u8* s, s32 idx, s32 slot) {
-    u8* rec;
+void fn_80143FA4(BtlCmd* s, s32 idx, s32 slot) {
+    Slot_8014359C* rec;
     s32 v;
     s32 neg;
-    s8 t;
 
-    rec = (u8*)&(*(G_80143FA4**)&lbl_8034727C)->r5.rows[idx].slots[slot];
-    rec[0] = s[0];
-    rec[1] = s[1];
-    rec[2] = s[2];
-    rec[3] = s[3];
-    rec[4] = s[5];
-    *(s16*)(rec + 8) = *(s16*)(s + 0xc);
-    rec[6] = s[9];
-    rec[5] = *(s16*)(s + 6);
-    *(s16*)(rec + 0xa) = *(s16*)(s + 0x14);
-    t = (*(G_80143FA4**)&lbl_8034727C)->h.x20[*(s16*)(s + 6)].pad[0x7f];
-    neg = -t;
-    if ((s8)s[5] == 2) {
-        (*(G_80143FA4**)&lbl_8034727C)->b.rows[slot].f2 += neg;
+    rec = &lbl_8034727C->b[idx].e[slot];
+    rec->x0 = s->x0;
+    rec->x1 = s->x1;
+    rec->x2 = s->x2;
+    rec->x3 = s->x3;
+    rec->x4 = s->x5;
+    rec->x8 = s->xc;
+    rec->x6 = s->x9;
+    rec->x5 = s->x6;
+    rec->xa = s->x14;
+    neg = -lbl_8034727C->x20->mem[s->x6].b1f;
+    if (s->x5 == 2) {
+        lbl_8034727C->a[slot].s2 += neg;
     } else {
-        (*(G_80143FA4**)&lbl_8034727C)->b.rows[idx].f2 += neg;
+        lbl_8034727C->a[idx].s2 += neg;
     }
-    if ((*(G_80143FA4**)&lbl_8034727C)->ents[slot].f2c == 1) {
+    if (lbl_8034727C->slot[slot].mode == 1) {
         v = lbl_803472A4->f34;
     } else {
         v = lbl_803472A4->f38;
     }
-    switch ((s8)s[5]) {
+    switch (s->x5) {
     case 1:
         if (v & 1) {
-            rec[7] = 4;
-        } else if (fn_80145E0C((void *)(rec), idx) != 0) {
-            fn_80145F50((void *)(rec), idx);
+            rec->x7 = 4;
+        } else if (fn_80145E0C(rec, idx) != 0) {
+            fn_80145F50(rec, idx);
         }
         break;
     case 0:
         if (v & 2) {
-            rec[7] = 4;
-        } else if (fn_80145E0C((void *)(rec), idx) != 0) {
-            fn_80145F50((void *)(rec), idx);
+            rec->x7 = 4;
+        } else if (fn_80145E0C(rec, idx) != 0) {
+            fn_80145F50(rec, idx);
         }
         break;
     case 2:
-        if (fn_80145E0C((void *)(rec), idx) != 0) {
-            fn_80145F50((void *)(rec), idx);
+        if (fn_80145E0C(rec, idx) != 0) {
+            fn_80145F50(rec, idx);
         }
         break;
     case 3:
-        rec[7] = 1;
+        rec->x7 = 1;
         break;
     }
 }
@@ -2984,97 +3042,95 @@ void fn_80149070(void) {
     lbl_80346F88 = NULL;
 }
 
-static inline void copyrec(Rec *d, Rec *s)
+static inline void copyrec(Slot_8014359C *d, Slot_8014359C *s)
 {
-    d->b0 = s->b0;
-    d->b1 = s->b1;
-    d->b2 = s->b2;
-    d->b3 = s->b3;
-    d->b4 = s->b4;
-    d->b5 = s->b5;
-    d->b6 = s->b6;
-    d->s8 = s->s8;
-    d->b7 = s->b7;
-    d->sa = s->sa;
-    d->wc = s->wc;
+    d->x0 = s->x0;
+    d->x1 = s->x1;
+    d->x2 = s->x2;
+    d->x3 = s->x3;
+    d->x4 = s->x4;
+    d->x5 = s->x5;
+    d->x6 = s->x6;
+    d->x8 = s->x8;
+    d->x7 = s->x7;
+    d->xa = s->xa;
+    d->xc = s->xc;
 }
 
 void fn_8014549C(s32 idx, s32 flag)
 {
-    u8 *sys;
     Blk *out;
     Blk *b1;
     Blk *b2;
-    Src *q;
-    Rec *e;
+    BtlCmd *q;
+    Slot_8014359C *e;
     s32 cnt;
     s32 k;
     Big *c;
 
     cnt = 0;
-    sys = (*(u8 **)&lbl_8034727C);
-    out = (Blk *)(sys + 0xa24);
+    out = &lbl_8034727C->out;
     if (flag == 0) {
-        q = (Src *)(sys + idx * 0x3e + 0x3a);
-        b1 = (Blk *)(sys + idx * 0x90 + 0x124);
-        b2 = (Blk *)(sys + idx * 0x90 + 0x5a4);
+        q = &lbl_8034727C->slot[idx].head;
+        b1 = &lbl_8034727C->a[idx];
+        b2 = &lbl_8034727C->b[idx];
     } else {
-        q = (Src *)(sys + idx * 0x3e + 0x52);
-        b1 = (Blk *)(sys + idx * 0x90 + 0x5a4);
-        b2 = (Blk *)(sys + idx * 0x90 + 0x124);
+        q = &lbl_8034727C->slot[idx].body;
+        b1 = &lbl_8034727C->b[idx];
+        b2 = &lbl_8034727C->a[idx];
     }
-    switch ((s8)q->b0) {
+    switch (q->x0) {
     case 0:
-        out->e[0].b0 = q->b0;
+        out->e[0].x0 = q->x0;
         cnt = 1;
-        out->e[0].b1 = q->b1;
-        out->e[0].b2 = q->b2;
-        out->e[0].b3 = q->b3;
-        out->e[0].b4 = q->b5;
-        out->e[0].b5 = q->s6;
-        out->e[0].b6 = q->b9;
-        out->e[0].s8 = q->sc;
-        out->e[0].sa = q->s14;
-        out->e[0].wc = 0;
-        out->e[0].b7 = b1->e[0].b7;
+        out->e[0].x1 = q->x1;
+        out->e[0].x2 = q->x2;
+        out->e[0].x3 = q->x3;
+        out->e[0].x4 = q->x5;
+        out->e[0].x5 = q->x6;
+        out->e[0].x6 = q->x9;
+        out->e[0].x8 = q->xc;
+        out->e[0].xa = q->x14;
+        out->e[0].xc = 0;
+        out->e[0].x7 = b1->e[0].x7;
         break;
     case -1:
     case 3:
     case 6:
-        out->e[0].b0 = q->b0;
+        out->e[0].x0 = q->x0;
         cnt = 1;
-        out->e[0].b1 = q->b1;
-        out->e[0].b2 = q->b2;
-        out->e[0].b3 = q->b3;
-        out->e[0].b4 = q->b5;
-        out->e[0].b5 = q->s6;
-        out->e[0].b6 = q->b9;
-        out->e[0].s8 = q->sc;
-        out->e[0].sa = q->s14;
-        out->e[0].wc = 0;
+        out->e[0].x1 = q->x1;
+        out->e[0].x2 = q->x2;
+        out->e[0].x3 = q->x3;
+        out->e[0].x4 = q->x5;
+        out->e[0].x5 = q->x6;
+        out->e[0].x6 = q->x9;
+        out->e[0].x8 = q->xc;
+        out->e[0].xa = q->x14;
+        out->e[0].xc = 0;
         break;
     case 4:
-        if ((s32)q->b5 == 2) {
-            out->e[0].b0 = q->b0;
+        if (q->x5 == 2) {
+            out->e[0].x0 = q->x0;
             cnt = 1;
-            out->e[0].b1 = q->b1;
-            out->e[0].b2 = q->b2;
-            out->e[0].b3 = q->b3;
-            out->e[0].b4 = q->b5;
-            out->e[0].b5 = q->s6;
-            out->e[0].b6 = q->b9;
-            out->e[0].s8 = q->sc;
-            out->e[0].sa = q->s14;
-            out->e[0].wc = 0;
-            out->e[0].b7 = 3;
+            out->e[0].x1 = q->x1;
+            out->e[0].x2 = q->x2;
+            out->e[0].x3 = q->x3;
+            out->e[0].x4 = q->x5;
+            out->e[0].x5 = q->x6;
+            out->e[0].x6 = q->x9;
+            out->e[0].x8 = q->xc;
+            out->e[0].xa = q->x14;
+            out->e[0].xc = 0;
+            out->e[0].x7 = 3;
         }
         break;
     }
     for (k = 0; k < 8; k++) {
         e = &b2->e[k];
-        if ((s8)e->b0 != 0) {
+        if (e->x0 != 0) {
             if (k == idx) {
-                switch ((s8)q->b0) {
+                switch (q->x0) {
                 case 3:
                 case -1:
                 case 6:
@@ -3295,6 +3351,108 @@ static inline void Close(s32 *p)
         lbl_80346F70 = -1;
         lbl_80346F6C = -1;
         fn_80142F18();
+    }
+}
+
+extern void fn_8012FF48(s8 mode);
+extern void fn_80130304(s32 a);
+extern s32 fn_80130318(void);
+extern s32 fn_8012FF08(void);
+extern void fn_801300E0(s32 *p);
+extern void fn_80130264(s32 *p);
+extern void fn_80130040(void);
+extern void fn_80130338(s32 a);
+extern void fn_801355A4(void);
+extern void *lbl_80347590;
+extern Task *fn_80226848(void *a, void (*f)(void), s32 n);
+
+static inline s32 CountOrder2_80142CD8(void)
+{
+    s32 n = 0;
+    Big *p = fn_80135598();
+
+    if (p != NULL) {
+        for (n = 0; n < 4; n++) {
+            if (p->order[n] < 0) {
+                break;
+            }
+        }
+    }
+    return n * 2;
+}
+
+void fn_80142CD8(void)
+{
+    s32 b;
+    s32 a;
+    s32 ok;
+    s32 bufB[8];
+    s32 bufA[8];
+    Pair_80148464 *o;
+    Pair_80148464 *o1;
+    Pair_80148464 *o2;
+    Struct80306738 *w;
+    Big *p;
+    Task *t;
+
+    a = 0;
+    p = fn_80135598();
+    if (p != NULL) {
+        for (a = 0; a < 4; a++) {
+            if (p->order[a] < 0) {
+                break;
+            }
+        }
+    }
+    b = CountOrder2_80142CD8();
+    fn_8012FF48(a);
+    fn_80130350(0);
+    fn_80130304(-1);
+    ok = 0;
+    if (fn_80130318() == 0 && fn_8012FF08() == 0) {
+        ok = 1;
+    }
+    if (ok != 0) {
+        o = NULL;
+        if (lbl_80346F68 >= 0) {
+            o = &lbl_803472CC[lbl_80346F68];
+        }
+        if (o != NULL) {
+            fn_8014093C(o, b, bufA, bufB);
+            if (bufA != NULL && bufB != NULL) {
+                fn_801300E0(bufA);
+                fn_80130264(bufB);
+            }
+        }
+        fn_80130040();
+        fn_80130338(0);
+    }
+    w = &lbl_80306738;
+    if (w != NULL) {
+        o1 = NULL;
+        if (lbl_80346F68 >= 0) {
+            o1 = &lbl_803472CC[lbl_80346F68];
+        }
+        o2 = NULL;
+        if (lbl_80346F64 >= 0) {
+            o2 = &lbl_803472CC[lbl_80346F64];
+        }
+        w = &lbl_80306738;
+        if (w != NULL && o1 != NULL && o2 != NULL) {
+            if (w->task == NULL) {
+                w->task = fn_80226848(lbl_80347590, fn_801355A4, 8);
+                if (w->task != NULL) {
+                    w->task->b19 = 0;
+                }
+            }
+            t = w->task;
+            if (t != NULL) {
+                if (t != NULL) {
+                    t->x24 = o1;
+                    t->x28 = o2;
+                }
+            }
+        }
     }
 }
 
@@ -3936,6 +4094,25 @@ void fn_80140800(s32 mode)
     fn_801316B4(0);
 }
 
+extern void fn_8012AE68(s16 a);
+extern void fn_8012F478(s32 a);
+extern void fn_8012ADE8(s32 a);
+extern void fn_8013F8F8(s32 a, s32 b);
+extern void fn_8012AE28(s32 a);
+extern void fn_8012C4E8(void);
+extern void fn_8012C464(s8 a);
+extern void fn_8012C454(s8 a);
+extern void fn_8012C3F0(s8 a);
+extern void fn_801330FC(u8 a);
+extern void fn_801330E4(u8 a);
+extern void fn_801330CC(s32 a);
+extern void fn_801330B4(s32 a);
+extern void fn_8013309C(s32 a);
+extern void fn_80133084(s32 a);
+extern void fn_8013306C(Party *a);
+extern void fn_80133030(s32 *a);
+extern void fn_80133114(u8 a);
+
 void fn_8014F770(Obj_8014F770 *p)
 {
     s32 i;
@@ -4165,17 +4342,16 @@ void fn_8013FB48(s32 y, s32 n)
     }
 }
 
-typedef struct Pair { s16 kind; s16 val; } Pair;
 
-void fn_8014093C(Pair *a, s32 n, s32 *kinds, s32 *vals) {
+void fn_8014093C(Pair_80148464 *a, s32 n, s32 *kinds, s32 *vals) {
     s32 flag;
     if (a != 0 && kinds != 0 && vals != 0 && n > 0 && n <= 8) {
-        Pair *p = a;
+        Pair_80148464 *p = a;
         s32 *k = kinds;
         s32 *v = vals;
         s32 i;
         for (i = 0; i < n; p++, k++, i++, v++) {
-            if (p->kind == 2) {
+            if (p->a == 2) {
                 Party *c;
                 flag = 0;
                 c = &fn_80135598()->party;
@@ -4188,9 +4364,9 @@ void fn_8014093C(Pair *a, s32 n, s32 *kinds, s32 *vals) {
                     *k = 2;
                 }
             } else {
-                *k = p->kind;
+                *k = p->a;
             }
-            *v = p->val;
+            *v = p->b;
         }
     }
 }
@@ -4305,9 +4481,6 @@ void fn_8013F8F8(s32 a, s32 b) {
 }
 
 extern s32 fn_801365D8(s32 a, s32 b, s32 c, s32 d, s32 e);
-extern void fn_8012F478(s32 a);
-extern void fn_8012ADE8(s32 a);
-extern void fn_80130304(s32 a);
 
 static inline s32 MenuFind(MenuObj *o)
 {
@@ -4796,8 +4969,6 @@ inline void fn_80148EDC(Node* n)
 #ifdef NONMATCHING
 #include "game/drawstate.h"
 #include <math.h>
-s32 fn_8013A538(s32 a, s32 b, s32 cur, s32 step, s32 d);
-void fn_80131630(s8 a, s8 b, u8 v);
 /* Config record of an effect emitter (Link.cfg). */
 typedef struct Cfg_8014A1FC {
     u8 pad0[0x50];
@@ -5027,15 +5198,15 @@ inline s32 Range(s32 lo, s32 k, s32 n, s32 hi) {
     }
     return r;
 }
-#endif
 
-#ifdef NONMATCHING
 void fn_8013FF50(s32 who, s32 lo, s32 mem, s32 pts)
 {
-    s32 hi;
-    s32 n;
-    s32 k;
     s32 end;
+    s32 hi;
+    s32 k;
+    s32 m;
+    s32 r;
+    s32 n;
 
     hi = PartyCount() * 2 - 1;
     switch (Status(who)) {
@@ -5045,7 +5216,16 @@ void fn_8013FF50(s32 who, s32 lo, s32 mem, s32 pts)
     case 2:
         k = Span(who);
         n = PartyCount() * 2;
-        hi = Range(lo, k, n, hi);
+        if (lo + 1 < 0 || k - 1 < 0 || n <= 0) {
+            r = hi;
+        } else {
+            r = n - 1;
+            if (k + lo < r) r = k + lo;
+            m = hi > 0 ? hi : 0;
+            if (m < r) r = m;
+            if (r < lo + 1 || r >= n) r = hi;
+        }
+        hi = r;
         break;
     }
     end = PartyCount() - 1;
