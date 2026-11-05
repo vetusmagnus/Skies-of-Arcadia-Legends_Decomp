@@ -6865,6 +6865,421 @@ static inline s32 ShipFar(Ship* s, s32 kind) {
 }
 
 
+static inline s32 ShipFlag(u32 b) {
+    s32 f = (lbl_80310B3C[b >> 5] & (1 << (b & 31))) != 0;
+    f = f != 0;
+    return f;
+}
+
+void fn_800F9D58(Task* t) {
+    Ship* s = t->work;
+    ShipRoute* r;
+    u32* p;
+    s32 i;
+    f32 dist;
+    f32 len;
+    f32 step;
+    f32 f;
+    NJS_POINT3 v1;
+    NJS_POINT3 v2;
+    NJS_POINT3 v3;
+
+    if (s->mapMode->mode != 0) {
+        t->state = 0xFF;
+    }
+    ClipZPush();
+    lbl_80346788 = lbl_80347560;
+    lbl_8034678C = -1200.0f;
+    njClipZ(lbl_80346788, lbl_8034678C);
+    switch (t->state) {
+    case 0:
+        r = s->ext->route;
+        if (ShipFlag(r->pts[r->size - 15])) {
+            fn_80100B74(t);
+            ClipZPop();
+            return;
+        }
+        s->blk.b0 = 1;
+        fn_80227810(s->texlist);
+        s->clipNear = -1100.0f;
+        s->clipFar = -1200.0f;
+        s->x08 = 1;
+        s->x2c = 1;
+        fn_8015ED90(t);
+        s->xec = s->ext->items->count > 1 ? s->ext->items->items[1] : 0;
+        s->save = fn_8008FC50(s, 0x70);
+        if (fn_8008FC48() != 0) {
+            r = s->ext->route;
+            switch (r->mode) {
+            case 0:
+                s->blk.state = t->state = 4;
+                if (s->coll != NULL) {
+                    fn_80222838(s->coll);
+                }
+                fn_801E5DF0(s);
+                ClipZPop();
+                return;
+            case 1:
+            case 2:
+                s->pos.x = (s32)r->pts[0];
+                s->pos.y = (s32)r->pts[1];
+                s->pos.z = (s32)r->pts[2];
+                s->blk.cur = 1;
+                s->blk.idx = s->ext->route->count * 3 + 14;
+                r = s->ext->route;
+                if (r->size < s->blk.idx + r->pts[s->blk.idx - 14] + 2) {
+                    fn_801DBE1C(lbl_802B2270);
+                }
+                s->blk.vel.x = 0.01 * njCos(s->ang[1] - 0x4000);
+                s->blk.vel.z = 0.01 * -njSin(s->ang[1] - 0x4000);
+                fn_800FE354(s);
+                s->blk.state = t->state = 1;
+                break;
+            }
+        } else {
+            memcpy(&s->blk, s->save, 0x70);
+            memcpy(&s->pos, &s->blk.pos, 12);
+            memcpy(s->ang, s->blk.ang, 12);
+            t->state = s->blk.state;
+            break;
+        }
+    case 1:
+        if (ShipFar(s, s->ext->route->kind)) {
+            fn_8015E600(s);
+            break;
+        }
+        if (fn_8015E600(s) != 0) {
+            break;
+        }
+        r = s->ext->route;
+        p = r->pts;
+        i = s->blk.cur * 3;
+        step = 0.01f * r->speed;
+        len = 0.0f;
+        dist = fn_80291A5C((s->pos.z - (s32)p[i + 2]) * (s->pos.z - (s32)p[i + 2]) +
+                           ((s->pos.x - (s32)p[i]) * (s->pos.x - (s32)p[i]) + (s->pos.y - (s32)p[i + 1]) * (s->pos.y - (s32)p[i + 1])));
+        memcpy(&v1, &s->blk.vel, 12);
+        if (v1.x != 0.0f || v1.y != 0.0f || v1.z != 0.0f) {
+            len = njUnitVector(&v1);
+            if (len >= step) {
+                s->blk.state = t->state = 2;
+            } else {
+                s->blk.vel.x = 0.01f * v1.x + s->blk.vel.x;
+                s->blk.vel.y = 0.01f * v1.y + s->blk.vel.y;
+                s->blk.vel.z = 0.01f * v1.z + s->blk.vel.z;
+            }
+            fn_800FEAF4(s);
+        } else {
+            s->blk.vel.x = 0.01 * njCos(s->ang[1] - 0x4000);
+            s->blk.vel.z = 0.01 * -njSin(s->ang[1] - 0x4000);
+            fn_800FE354(s);
+        }
+        if (len >= dist) {
+            if (fn_800FE254(s) != 0) {
+                s->blk.state = t->state = 3;
+            } else {
+                s->blk.state = t->state = 2;
+            }
+        }
+        if (s->coll != NULL) {
+            fn_80222838(s->coll);
+        }
+        fn_801E5DF0(s);
+        break;
+    case 2:
+        if (ShipFar(s, s->ext->route->kind)) {
+            fn_8015E600(s);
+            break;
+        }
+        if (fn_8015E600(s) != 0) {
+            break;
+        }
+        r = s->ext->route;
+        p = r->pts;
+        i = s->blk.cur * 3;
+        dist = fn_80291A5C((s->pos.z - (s32)p[i + 2]) * (s->pos.z - (s32)p[i + 2]) +
+                           ((s->pos.x - (s32)p[i]) * (s->pos.x - (s32)p[i]) + (s->pos.y - (s32)p[i + 1]) * (s->pos.y - (s32)p[i + 1])));
+        memcpy(&v2, &s->blk.vel, 12);
+        len = njUnitVector(&v2);
+        fn_800FEAF4(s);
+        if (len >= dist && fn_800FE254(s) != 0) {
+            s->blk.state = t->state = 3;
+        }
+        if (s->coll != NULL) {
+            fn_80222838(s->coll);
+        }
+        fn_801E5DF0(s);
+        break;
+    case 3:
+        if (ShipFar(s, s->ext->route->kind)) {
+            fn_8015E600(s);
+            break;
+        }
+        if (fn_8015E600(s) != 0) {
+            break;
+        }
+        r = s->ext->route;
+        p = r->pts;
+        i = s->blk.cur * 3;
+        dist = fn_80291A5C((s->pos.z - (s32)p[i + 2]) * (s->pos.z - (s32)p[i + 2]) +
+                           ((s->pos.x - (s32)p[i]) * (s->pos.x - (s32)p[i]) + (s->pos.y - (s32)p[i + 1]) * (s->pos.y - (s32)p[i + 1])));
+        memcpy(&v3, &s->blk.vel, 12);
+        if (dist > 0.1f) {
+            len = 30.0f * njUnitVector(&v3);
+            if (len > dist) {
+                f = dist / len;
+                s->blk.vel.x *= f;
+                s->blk.vel.y *= f;
+                s->blk.vel.z *= f;
+            }
+        } else {
+            fn_800FE254(s);
+            s->blk.state = t->state = 1;
+        }
+        fn_800FEAF4(s);
+        if (s->coll != NULL) {
+            fn_80222838(s->coll);
+        }
+        fn_801E5DF0(s);
+        break;
+    case 4:
+        if (ShipFar(s, s->ext->route->kind)) {
+            fn_8015E600(s);
+            break;
+        }
+        if (fn_8015E600(s) != 0) {
+            break;
+        }
+        if (s->coll != NULL) {
+            fn_80222838(s->coll);
+        }
+        fn_801E5DF0(s);
+        break;
+    case 0xFF:
+        if (s->blk.b0 != 0) {
+            memcpy(s->blk.ang, s->ang, 12);
+            memcpy(&s->blk.pos, &s->pos, 12);
+            memcpy(s->save, &s->blk, 0x70);
+            fn_8008F9B8(s->x17a, s->save);
+            fn_8015EBF4(s);
+            fn_802275A4(s->texlist, 0);
+        }
+        fn_80100B74(t);
+        break;
+    }
+    if (t->state != 0xFF && fn_8015F218(s) == 2) {
+        t->state = 0xFF;
+    }
+    ClipZPop();
+}
+
+void fn_800FA9EC(Task* t) {
+    Ship* s = t->work;
+    ShipRoute* r;
+    u32* p;
+    s32 i;
+    f32 dist;
+    f32 len;
+    f32 step;
+    f32 f;
+    f32 rad;
+    EvObj* pl;
+    NJS_POINT3 v1;
+    NJS_POINT3 v2;
+    NJS_POINT3 v3;
+
+    ClipZPush();
+    lbl_80346788 = lbl_80347560;
+    lbl_8034678C = -1200.0f;
+    njClipZ(lbl_80346788, lbl_8034678C);
+    switch (t->state) {
+    case 0:
+        fn_80227810(s->texlist);
+        s->clipNear = -1100.0f;
+        s->clipFar = -1200.0f;
+        s->x08 = 1;
+        s->x2c = 1;
+        s->x176 |= 0x1000;
+        t->f20 = -60000.0f;
+        fn_8015ED90(t);
+        s->xec = s->ext->items->count > 1 ? s->ext->items->items[1] : 0;
+        s->save = fn_8008FC50(s, 0x70);
+        if (fn_8008FC48() != 0) {
+            r = s->ext->route;
+            switch (r->mode) {
+            case 0:
+                s->blk.state = t->state = 4;
+                if (s->coll != NULL) {
+                    fn_80222838(s->coll);
+                }
+                fn_801E5DF0(s);
+                ClipZPop();
+                return;
+            case 1:
+            case 2:
+                s->pos.x = (s32)r->pts[0];
+                s->pos.y = (s32)r->pts[1];
+                s->pos.z = (s32)r->pts[2];
+                s->blk.cur = 1;
+                s->blk.idx = s->ext->route->count * 3 + 14;
+                r = s->ext->route;
+                s->blk.x1fe = s->blk.idx + r->pts[s->blk.idx - 14] + 3;
+                s->blk.x1fc = s->blk.x1fe - 15;
+                s->blk.vel.x = 0.01 * njCos(s->ang[1] - 0x4000);
+                s->blk.vel.z = 0.01 * -njSin(s->ang[1] - 0x4000);
+                fn_800FE354(s);
+                s->blk.state = t->state = 1;
+                break;
+            }
+        } else {
+            memcpy(&s->blk, s->save, 0x70);
+            memcpy(&s->pos, &s->blk.pos, 12);
+            memcpy(s->ang, s->blk.ang, 12);
+            t->state = s->blk.state;
+            break;
+        }
+    case 1:
+        if (ShipFar(s, s->ext->route->kind)) {
+            fn_8015E600(s);
+            break;
+        }
+        if (fn_8015E600(s) != 0) {
+            break;
+        }
+        r = s->ext->route;
+        p = r->pts;
+        i = s->blk.cur * 3;
+        step = 0.01f * r->speed;
+        len = 0.0f;
+        dist = fn_80291A5C((s->pos.z - (s32)p[i + 2]) * (s->pos.z - (s32)p[i + 2]) +
+                           ((s->pos.x - (s32)p[i]) * (s->pos.x - (s32)p[i]) + (s->pos.y - (s32)p[i + 1]) * (s->pos.y - (s32)p[i + 1])));
+        memcpy(&v1, &s->blk.vel, 12);
+        if (v1.x != 0.0f || v1.y != 0.0f || v1.z != 0.0f) {
+            len = njUnitVector(&v1);
+            if (len >= step) {
+                s->blk.state = t->state = 2;
+            } else {
+                s->blk.vel.x = 0.01f * v1.x + s->blk.vel.x;
+                s->blk.vel.y = 0.01f * v1.y + s->blk.vel.y;
+                s->blk.vel.z = 0.01f * v1.z + s->blk.vel.z;
+            }
+            fn_800FEAF4(s);
+        } else {
+            s->blk.vel.x = 0.01 * njCos(s->ang[1] - 0x4000);
+            s->blk.vel.z = 0.01 * -njSin(s->ang[1] - 0x4000);
+            fn_800FE354(s);
+        }
+        if (len >= dist) {
+            if (fn_800FE254(s) != 0) {
+                s->blk.state = t->state = 3;
+            } else {
+                s->blk.state = t->state = 2;
+            }
+        }
+        if (s->coll != NULL) {
+            fn_80222838(s->coll);
+        }
+        fn_801E5DF0(s);
+        break;
+    case 2:
+        if (ShipFar(s, s->ext->route->kind)) {
+            fn_8015E600(s);
+            break;
+        }
+        if (fn_8015E600(s) != 0) {
+            break;
+        }
+        r = s->ext->route;
+        p = r->pts;
+        i = s->blk.cur * 3;
+        dist = fn_80291A5C((s->pos.z - (s32)p[i + 2]) * (s->pos.z - (s32)p[i + 2]) +
+                           ((s->pos.x - (s32)p[i]) * (s->pos.x - (s32)p[i]) + (s->pos.y - (s32)p[i + 1]) * (s->pos.y - (s32)p[i + 1])));
+        memcpy(&v2, &s->blk.vel, 12);
+        len = njUnitVector(&v2);
+        fn_800FEAF4(s);
+        if (len >= dist && fn_800FE254(s) != 0) {
+            s->blk.state = t->state = 3;
+        }
+        if (s->coll != NULL) {
+            fn_80222838(s->coll);
+        }
+        fn_801E5DF0(s);
+        break;
+    case 3:
+        if (ShipFar(s, s->ext->route->kind)) {
+            fn_8015E600(s);
+            break;
+        }
+        if (fn_8015E600(s) != 0) {
+            break;
+        }
+        r = s->ext->route;
+        p = r->pts;
+        i = s->blk.cur * 3;
+        dist = fn_80291A5C((s->pos.z - (s32)p[i + 2]) * (s->pos.z - (s32)p[i + 2]) +
+                           ((s->pos.x - (s32)p[i]) * (s->pos.x - (s32)p[i]) + (s->pos.y - (s32)p[i + 1]) * (s->pos.y - (s32)p[i + 1])));
+        memcpy(&v3, &s->blk.vel, 12);
+        if (dist > 0.1f) {
+            len = 30.0f * njUnitVector(&v3);
+            if (len > dist) {
+                f = dist / len;
+                s->blk.vel.x *= f;
+                s->blk.vel.y *= f;
+                s->blk.vel.z *= f;
+            }
+        } else {
+            fn_800FE254(s);
+            s->blk.state = t->state = 1;
+        }
+        fn_800FEAF4(s);
+        if (s->coll != NULL) {
+            fn_80222838(s->coll);
+        }
+        fn_801E5DF0(s);
+        break;
+    case 4:
+        if (ShipFar(s, s->ext->route->kind)) {
+            fn_8015E600(s);
+            break;
+        }
+        if (fn_8015E600(s) != 0) {
+            break;
+        }
+        if (s->coll != NULL) {
+            fn_80222838(s->coll);
+        }
+        fn_801E5DF0(s);
+        break;
+    case 0xFF:
+        memcpy(s->blk.ang, s->ang, 12);
+        memcpy(&s->blk.pos, &s->pos, 12);
+        memcpy(s->save, &s->blk, 0x70);
+        fn_8008F9B8(s->x17a, s->save);
+        fn_8015EBF4(s);
+        fn_802275A4(s->texlist, 0);
+        fn_80100B74(t);
+        break;
+    }
+    ClipZPop();
+    r = s->ext->route;
+    if (!ShipFlag(r->pts[s->blk.x1fe - 15] + 0xB54)) {
+        rad = r->pts[s->blk.x1fe - 16];
+        pl = lbl_80347450;
+        if (pl == NULL) {
+            return;
+        }
+        if (s->pos.x + rad > pl->pos.x && s->pos.x - rad < pl->pos.x &&
+            s->pos.z + rad > pl->pos.z && s->pos.z - rad < pl->pos.z &&
+            s->pos.y + rad > pl->pos.y && s->pos.y - rad < pl->pos.y) {
+            lbl_80346CE4 |= 1;
+        }
+    }
+    if (t->state != 0xFF && fn_8015F218(s) == 2) {
+        t->state = 0xFF;
+        t->f20 = 0.0f;
+    }
+}
+
 void fn_800FC8EC(Task* t) {
     Ship* s = t->work;
     ShipRoute* r;

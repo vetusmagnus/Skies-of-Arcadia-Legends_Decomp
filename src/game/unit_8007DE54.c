@@ -25,7 +25,7 @@ typedef struct R16 {
     u8 pad_5[0x1];
     s16 h6;
     u8 b8;
-    u8 b9;
+    s8 b9;
     s8 xa;
     u8 pad_b[0x2];
     s8 xd;
@@ -155,7 +155,7 @@ typedef struct Pos_8007E690 { u8 pad0[8]; f32 x8; f32 xc; f32 x10; } Pos_8007E69
 extern void sndAuxCallbackShutdownReverbSTD(void* a, Pos_8007E690** out);
 extern int fn_80011E50(NJS_POINT3* v, f32* out, int flag);
 extern s16 lbl_80309DCC[12];
-extern s32 fn_8007FFE8(s32 i, s32 k);
+extern s32 fn_8007FFE8(s32 i, u32 k);
 void fn_800811E4(s16 id, int mode);
 extern s32 fn_80010340(s32 i);
 extern void fn_80087054(Slot*);
@@ -680,6 +680,74 @@ s32 fn_8007FD20(s32 idx)
     return 0;
 }
 
+
+s32 fn_8007FFE8(s32 i, u32 k)
+{
+    Mdl *w = fn_80021658(i)->work;
+    s32 f = lbl_80309730[i].b9;
+    s32 kind = w->u->x6;
+    if (f != 0) {
+        switch (k) {
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+            if (kind != 2 && kind != 7 && kind != 0xb && kind != 0x20 && kind != 0xd) {
+                f = -1;
+            }
+            break;
+        case 4:
+            if (kind != 3 && kind != 6) {
+                f = -1;
+            }
+            break;
+        case 5:
+        case 6:
+        case 17:
+            if (kind != 4 && kind != 8) {
+                f = -1;
+            }
+            break;
+        case 7:
+            if (kind != 5) {
+                f = -1;
+            }
+            break;
+        case 8:
+            if (kind != 0xc) {
+                f = -1;
+            }
+            break;
+        case 9:
+            if (kind != 0x11) {
+                f = -1;
+            }
+            break;
+        case 10:
+            if (kind != 0x14) {
+                f = -1;
+            }
+            break;
+        case 18:
+            if (kind != 0xb && kind != 0x20 && kind != 0xd && kind != 0xc) {
+                f = -1;
+            }
+            break;
+        case 22:
+            break;
+        }
+    }
+    if (f == 0 && fn_8006D1C4() == 1 && lbl_8034733C != 4) {
+        s32 old = lbl_80302BF0[i];
+        lbl_80302BF0[i] = old + 1;
+        if (old > 0x1e && lbl_80302BF0[i] > 0xf0) {
+            lbl_80302BF0[i] = 0;
+            lbl_80309730[i].b9 = 1;
+            return 1;
+        }
+    }
+    return f;
+}
 
 void fn_800810FC(s16 idx) {
   lbl_80309730[idx].w0 = 4;
