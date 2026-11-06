@@ -1108,6 +1108,43 @@ void fn_802AB608(void) {
     GXSetZMode(GX_TRUE, GX_LEQUAL, GX_FALSE);
 }
 
+extern GXTexObj lbl_803466D8;
+extern GXTexObj lbl_803466F8;
+extern void* lbl_80347FE4;
+void GXGetTexObjLODAll(const GXTexObj* to, GXTexFilter* min_filt, GXTexFilter* mag_filt, f32* min_lod, f32* max_lod,
+                       f32* lod_bias, u8* bias_clamp, u8* do_edge_lod, GXAnisotropy* max_aniso);
+
+/* the parameter copies are what level 2 keeps: mode stays live past the argument registers (mr r11, r5) */
+#pragma optimization_level 2
+void fn_802AC160(void* copy, void* mask, s32 format) {
+    GXTexFilter minf, magf;
+    f32 minlod, maxlod, bias;
+    GXBool clamp, edge;
+    GXAnisotropy aniso;
+    void* a;
+    void* b;
+    s32 fmt;
+
+    a = copy;
+    b = mask;
+    fmt = format;
+    lbl_80347FE8 = a;
+    lbl_80347FE4 = b;
+    lbl_80347FE0 = fmt;
+    GXInitTexObj(&lbl_803466D8, b, lbl_80345878[10], lbl_80345878[11], GX_TF_I8, GX_CLAMP, GX_CLAMP, GX_FALSE);
+    GXGetTexObjLODAll(&lbl_803466D8, &minf, &magf, &minlod, &maxlod, &bias, &clamp, &edge, &aniso);
+    minf = GX_NEAR;
+    magf = GX_NEAR;
+    GXInitTexObjLOD(&lbl_803466D8, minf, magf, minlod, maxlod, bias, clamp, edge, aniso);
+    GXInitTexObj(&lbl_803466F8, lbl_80347FE8, lbl_80345878[10], lbl_80345878[11], lbl_80347FE0, GX_CLAMP, GX_CLAMP,
+                 GX_FALSE);
+    GXGetTexObjLODAll(&lbl_803466F8, &minf, &magf, &minlod, &maxlod, &bias, &clamp, &edge, &aniso);
+    minf = GX_NEAR;
+    magf = GX_NEAR;
+    GXInitTexObjLOD(&lbl_803466F8, minf, magf, minlod, maxlod, bias, clamp, edge, aniso);
+}
+#pragma optimization_level reset
+
 void fn_802AC2EC(s32 v) { lbl_80346A5C = v; }
 
 void fn_802AC2F4(NjObj* obj) {

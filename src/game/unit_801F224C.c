@@ -625,7 +625,6 @@ s32 fn_801F4F54(s16* pa, s16* pb) {
 
 s32 fn_801F5100(s16 *a, s16 *b);
 s32 fn_801F4F54(s16 *a, s16 *b);
-
 #ifdef NONMATCHING
 /* Exact only with the comparator held in a void *: the real qsort prototype wants const void * parameters, and comparators written that way do not match. */
 void fn_801F4EA0(s32 kind, s32 byId)
@@ -885,12 +884,12 @@ s32 fn_801F3FD0(s32 chr, s16 id)
 }
 #endif
 
-#ifdef NONMATCHING
 s32 fn_801F3B90(s32 id) {
-    s32 i;
     s32 k;
     s32 j;
-    s8 *p = lbl_8030B7F4.party;
+    s8 *p;
+    s32 i;
+    p = lbl_8030B7F4.party;
     for (i = 0; i < 4; i++) {
         if (lbl_8030B7F4.party[i] == id) {
             return 0;
@@ -900,11 +899,17 @@ s32 fn_801F3B90(s32 id) {
             lbl_8030B4D4.x2d4 = lbl_8030B4D4.x2d4 + 1;
             for (k = 0; k < 4; k++) {
                 for (j = 0; j < 3; j++) {
-                    s8 a = p[j];
-                    s8 b = p[j + 1];
+                    s8 *x;
+                    s8 b;
+                    s8 *y;
+                    s8 a;
+                    x = &p[j];
+                    y = x + 1;
+                    a = *x;
+                    b = *y;
                     if (b != -1 && a > b) {
-                        p[j] = b;
-                        p[j + 1] = a;
+                        *x = b;
+                        *y = a;
                     }
                 }
             }
@@ -914,4 +919,3 @@ s32 fn_801F3B90(s32 id) {
     }
     return 0;
 }
-#endif

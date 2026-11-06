@@ -670,6 +670,11 @@ static inline void strm_drop(u32 i)
     lbl_803477C8[i] = -1;
     lbl_80314940.src[i][0].path = NULL;
 }
+/* Fills one stream slot for a source file; returns the size of its first read. */
+static inline u32 strm_setup(Strm *s, StrmSrc *src, u8 a, u8 b) {
+    return fn_80216A9C(s, src, a, b);
+}
+
 void fn_80219324(s32 i) {
     if (lbl_80315120.s[i].field_10 >= 0) {
         s32 r;
@@ -1076,6 +1081,47 @@ u32 fn_80216A9C(Strm* s, StrmSrc* src, u8 a, u8 b)
     s->state = 2;
     sndStreamMixParameterEx(s->handle, s->a, s->b, 0, 0, 0);
     return ret;
+}
+
+s32 fn_802168CC(StrmSrc *a, StrmSrc *b, u8 c)
+{
+    Strm *s2;
+    Strm *s1;
+    u32 id;
+    s32 st;
+
+    st = DVDGetDriveStatus();
+    if (st != 0 && st != 1) {
+        return -1;
+    }
+    if (lbl_80314B80.lock++ == 0) {
+        lbl_80314B80.intr = OSDisableInterrupts();
+    }
+    id = fn_80216B88(&s1);
+    if (id != -1) {
+        if (fn_80216B88(&s2) != -1) {
+            u32 la;
+            u32 lb;
+            s1->left = s2;
+            s2->right = s1;
+            la = strm_setup(s1, a, c, 0);
+            lb = strm_setup(s2, b, c, 0x7f);
+            if (lbl_80314B80.lock != 0 && --lbl_80314B80.lock == 0) {
+                OSRestoreInterrupts(lbl_80314B80.intr);
+            }
+            DVDOpen(s1->src->path, s1->info);
+            DVDOpen(s2->src->path, s2->info);
+            DVDReadAsyncPrio(s1->info, s1->buf, la, s1->src->off, fn_80216030, 2);
+            DVDReadAsyncPrio(s2->info, s2->buf, lb, s2->src->off, fn_80216030, 2);
+            return id;
+        }
+        s1->state = 0;
+        id = -1;
+    }
+    if (lbl_80314B80.lock != 0 && --lbl_80314B80.lock == 0) {
+        OSRestoreInterrupts(lbl_80314B80.intr);
+    }
+    return id;
 }
 
 void fn_80216744(Strm *s)

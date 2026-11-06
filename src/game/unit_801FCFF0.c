@@ -362,6 +362,13 @@ static inline s32 rdi(float **pp) {
     }
     return (s32)fn_801F6120(pp);
 }
+/* One word of the script stream at a byte position. */
+static inline u32 StrWord(char* p)
+{
+    ScptCur c;
+    c.s = p;
+    return *c.u;
+}
 static inline void ReleaseAll(void)
 {
     s32 i;
@@ -1657,6 +1664,130 @@ s16 fn_802001F8(u32 flags, Scpt *st) {
     }
     return (f >> 3) & 1;
 }
+s32 fn_80200460(u16 flags, Scpt *st) {
+    if (flags & 1) {
+        ScptCur p;
+        s32 cnt;
+        s32 i;
+        s32 sum;
+        p.f = st->cur.f + 1;
+        lbl_8030CEA0.xc9c = 0;
+        lbl_8030CEA0.xc88 = *p.i++ + 1;
+        cnt = lbl_8030CEA0.xc88;
+        lbl_8030CEA0.path2[0].b[0] = lbl_8030E830[8].b[0];
+        lbl_8030CEA0.path2[0].b[1] = lbl_8030E830[8].b[1];
+        lbl_8030CEA0.path2[0].b[2] = lbl_8030E830[8].b[2];
+        lbl_8030CEA0.path2[0].a[0] = lbl_8030E830[8].a[0];
+        lbl_8030CEA0.path2[0].a[1] = lbl_8030E830[8].a[1];
+        lbl_8030CEA0.path2[0].a[2] = lbl_8030E830[8].a[2];
+        sum = 0;
+        for (i = 0; i < cnt - 1; i++) {
+            lbl_8030CEA0.path2[i + 1].a[0] = fn_801F6120(&p.f);
+            lbl_8030CEA0.path2[i + 1].a[1] = fn_801F6120(&p.f);
+            lbl_8030CEA0.path2[i + 1].a[2] = fn_801F6120(&p.f);
+            lbl_8030CEA0.path2[i + 1].b[0] = fn_801F6120(&p.f);
+            lbl_8030CEA0.path2[i + 1].b[1] = fn_801F6120(&p.f);
+            lbl_8030CEA0.path2[i + 1].b[2] = fn_801F6120(&p.f);
+            lbl_8030CEA0.path2[i].w = ReadInt(&p.f);
+            sum += lbl_8030CEA0.path2[i].w;
+        }
+        lbl_8030CEA0.path2[cnt - 1].w = lbl_8030CEA0.path2[0].w;
+        sum += lbl_8030CEA0.path2[0].w;
+        lbl_8030CEA0.xcb8 = sum;
+        st->cur.f = p.f;
+        if (lbl_8030CEA0.path2[0].w == 0) {
+            lbl_8030CEA0.xc70 = 0;
+            lbl_8030CEA0.xc88 = 0;
+            fn_801D9864(1, lbl_8030CEA0.path2[1].a[0], lbl_8030CEA0.path2[1].a[1], lbl_8030CEA0.path2[1].a[2], lbl_8030CEA0.path2[1].b[0], lbl_8030CEA0.path2[1].b[1], lbl_8030CEA0.path2[1].b[2]);
+        } else {
+            lbl_8030CEA0.xc70 = 1;
+        }
+    }
+    return 0;
+}
+s32 fn_80200634(u16 flags, Scpt *st) {
+    if (flags & 1) {
+        ScptCur p;
+        s32 cnt;
+        s32 i;
+        s32 sum;
+        p.f = st->cur.f + 1;
+        lbl_8030CEA0.xc98 = 0;
+        lbl_8030CEA0.xc86 = *p.i++ + 1;
+        cnt = lbl_8030CEA0.xc86;
+        lbl_8030CEA0.path1[0].b[0] = lbl_8030E830[7].b[0];
+        lbl_8030CEA0.path1[0].b[1] = lbl_8030E830[7].b[1];
+        lbl_8030CEA0.path1[0].b[2] = lbl_8030E830[7].b[2];
+        sum = 0;
+        for (i = 0; i < cnt - 1; i++) {
+            lbl_8030CEA0.path1[i + 1].b[0] = fn_801F6120(&p.f);
+            lbl_8030CEA0.path1[i + 1].b[1] = fn_801F6120(&p.f);
+            lbl_8030CEA0.path1[i + 1].b[2] = fn_801F6120(&p.f);
+            lbl_8030CEA0.path1[i].w = ReadInt(&p.f);
+            sum += lbl_8030CEA0.path1[i].w;
+        }
+        lbl_8030CEA0.path1[cnt - 1].w = lbl_8030CEA0.path1[0].w;
+        sum += lbl_8030CEA0.path1[0].w;
+        lbl_8030CEA0.xcb4 = sum;
+        st->cur.f = p.f;
+        if (lbl_8030CEA0.path1[0].w == 0) {
+            lbl_8030CEA0.xc6c = 0;
+            lbl_8030CEA0.xc86 = 0;
+            fn_801D995C(1, lbl_8030CEA0.path1[1].b[0], lbl_8030CEA0.path1[1].b[1], lbl_8030CEA0.path1[1].b[2]);
+        } else {
+            lbl_8030CEA0.xc6c = 1;
+        }
+    }
+    return 0;
+}
+s32 fn_802007C0(u16 flags, Scpt *st) {
+    if (flags & 1) {
+        ScptCur p;
+        s32 cnt;
+        s32 i;
+        s32 sum;
+        p.f = st->cur.f + 1;
+        lbl_8030CEA0.xc94 = 0;
+        lbl_8030CEA0.xc84 = *p.i++ + 1;
+        cnt = lbl_8030CEA0.xc84;
+        lbl_8030CEA0.path0[0].b[0] = lbl_8030E830[0].b[0];
+        lbl_8030CEA0.path0[0].b[1] = lbl_8030E830[0].b[1];
+        lbl_8030CEA0.path0[0].b[2] = lbl_8030E830[0].b[2];
+        lbl_8030CEA0.path0[0].a[0] = lbl_8030E830[0].a[0];
+        lbl_8030CEA0.path0[0].a[1] = lbl_8030E830[0].a[1];
+        lbl_8030CEA0.path0[0].a[2] = lbl_8030E830[0].a[2];
+        lbl_8030CEA0.path0[0].c[0] = lbl_8030E830[0].c[0];
+        lbl_8030CEA0.path0[0].c[1] = lbl_8030E830[0].c[1];
+        sum = 0;
+        for (i = 0; i < cnt - 1; i++) {
+            lbl_8030CEA0.path0[i + 1].a[0] = fn_801F6120(&p.f);
+            lbl_8030CEA0.path0[i + 1].a[1] = fn_801F6120(&p.f);
+            lbl_8030CEA0.path0[i + 1].a[2] = fn_801F6120(&p.f);
+            lbl_8030CEA0.path0[i + 1].c[0] = fn_801F6120(&p.f);
+            lbl_8030CEA0.path0[i + 1].c[1] = fn_801F6120(&p.f);
+            lbl_8030CEA0.path0[i + 1].b[0] = fn_801F6120(&p.f);
+            lbl_8030CEA0.path0[i + 1].b[1] = fn_801F6120(&p.f);
+            lbl_8030CEA0.path0[i + 1].b[2] = fn_801F6120(&p.f);
+            lbl_8030CEA0.path0[i].w = ReadInt(&p.f);
+            sum += lbl_8030CEA0.path0[i].w;
+        }
+        lbl_8030CEA0.path0[cnt - 1].w = lbl_8030CEA0.path0[0].w;
+        sum += lbl_8030CEA0.path0[0].w;
+        lbl_8030CEA0.xcb0 = sum;
+        st->cur.f = p.f;
+        if (lbl_8030CEA0.path0[0].w == 0) {
+            lbl_8030CEA0.xc68 = 0;
+            lbl_8030CEA0.xc84 = 0;
+            fn_801D9A0C(1, lbl_8030CEA0.path0[1].a[0], lbl_8030CEA0.path0[1].a[1], lbl_8030CEA0.path0[1].a[2], lbl_8030CEA0.path0[1].c[0], lbl_8030CEA0.path0[1].c[1], lbl_8030CEA0.path0[1].b[0], lbl_8030CEA0.path0[1].b[1], lbl_8030CEA0.path0[1].b[2]);
+        } else {
+            lbl_8030CEA0.xc68 = 1;
+        }
+    }
+    return 0;
+}
+
+
+
 
 s32 fn_802009C4(u32 flags, Scpt *st) {
     if (flags & 1) {
@@ -3552,25 +3683,22 @@ s32 fn_80207428(u32 flags, Scpt *st) {
 }
 
 /* Script command: reads three floats and passes them to fn_800C8E44. */
-#ifdef NONMATCHING
-s32 fn_802074B0(u32 flags, Scpt_802074B0* s)
-{
-    f32 a;
-    f32 b;
-    f32 c;
-    f32* cur;
+void fn_800C8E44(f32 a, f32 b, f32 c);
+s32 fn_802074B0(u32 flags, Scpt *s) {
+    ScptCur cur;
+    f32 v[3];
     u16 f = flags;
     if (f & 1) {
-        cur = s->cur + 1;
-        a = fn_801F6120(&cur);
-        b = fn_801F6120(&cur);
-        c = fn_801F6120(&cur);
-        s->cur = cur;
-        fn_800C8E44(a, b, c);
+        cur.f = s->cur.f + 1;
+        v[0] = fn_801F6120(&cur.f);
+        v[1] = fn_801F6120(&cur.f);
+        v[2] = fn_801F6120(&cur.f);
+        s->cur.f = cur.f;
+        fn_800C8E44(v[0], v[1], v[2]);
     }
-    if (f & 8) return 1; return 0;
+    if (f & 8) return 1;
+    return 0;
 }
-#endif
 
 s32 fn_80207554(u32 flags, Scpt *c) {
     ScptCur cur;
@@ -4471,7 +4599,7 @@ s32 fn_80209B94(u16 flags, Scpt* c)
             c->handle = fn_800CD0B8(c->a20, c->a24, c->a28, c->a2c);
             c->cnt++;
             if (c->cnt == 5) {
-                fn_801DBE1C("PartsScale: message post timed out");
+                fn_801DBE1C("Scale: message post timed out");
             }
         } else if (w->ev.hd.kind == 2) {
             return 0;
@@ -4620,6 +4748,65 @@ s16 fn_8020A2C8(u32 flags, Scpt *st) {
     }
     return (f >> 3) & 1;
 }
+s32 fn_8020A338(u16 flags, Scpt* c)
+{
+    ScptCur p;
+    Work_8020A584* r;
+    char* q;
+    s32 n1;
+    s32 n2;
+    if (flags & 1) {
+        p.f = c->cur.f + 1;
+        n1 = RDI(p.f);
+        q = p.s;
+        p.f++;
+        n2 = RDI(p.f);
+        c->cur.f = p.f;
+        q += StrWord(q) & ~3;
+        if (StrWord(q) == 9) {
+            q += 4;
+            while (StrWord(q) != 0x1d) q += 4;
+            q += 4;
+        } else {
+            fn_801DBE1C("scptSELECT CHOSE: NO LABEL!");
+        }
+        lbl_8030CEA0.x15c8 = 1;
+        r = fn_801E1A2C(1, 0x10);
+        if (r == 0) {
+            fn_801DBE1C("scptSELECT1: malloc failed");
+        }
+        c->work.work_8020A584 = r;
+        r->hd.kind = 0;
+        r->x08 = n1;
+        r->hd.x04 = n2;
+        if (n2 != 0x7FFFFFFF) {
+            u32 len = strlen(q);
+            q[len - 2] = 0x5c;
+            q[len - 1] = 0x63;
+        }
+        r->x0c = q;
+        fn_802110E8(c, 5, 0, 1, lbl_8030CEA0.x08, &r->hd);
+    }
+    if (flags & 2) {
+        Work_8020A584* w = c->work.work_8020A584;
+        if (c->handle == 0) {
+            c->handle = fn_800CD0B8(c->a20, c->a24, c->a28, c->a2c);
+            c->cnt++;
+            if (c->cnt == 5) {
+                fn_801DBE1C("scptPRINT: message post timed out");
+            }
+        } else if (w->hd.kind == 2) {
+            lbl_8030CEA0.x15c8 = 0;
+            lbl_8030CEA0.x1568 = w->x08;
+            return 0;
+        }
+    }
+    if (flags & 8) {
+        lbl_8030CEA0.x15c8 = 0;
+        return 0;
+    }
+    return 1;
+}
 s32 fn_8020A584(u16 flags, Scpt* c)
 {
     Work_8020A584* r;
@@ -4668,6 +4855,64 @@ s32 fn_8020A72C(void) {
     return 0;
 }
 
+s32 fn_8020A734(u16 flags, Scpt* s)
+{
+    ScptCur base;
+    f32* p;
+    s32 v;
+    Work_8020A938* w;
+    char* str;
+    if (flags & 1) {
+        base.f = s->cur.f + 1;
+        p = base.f;
+        p++;
+        if (*p == 3.4028235e38f) {
+            p++;
+            v = 0x7FFFFFFF;
+        } else {
+            v = (s32)fn_801F6120(&p);
+        }
+        s->cur.f = p;
+        str = base.s;
+        str += StrWord(str) & ~3;
+        if (StrWord(str) == 9) {
+            str += 4;
+            while (StrWord(str) != 0x1d) str += 4;
+            str += 4;
+        } else {
+            fn_801DBE1C("scptPRINT MES: NO LABEL!");
+        }
+        lbl_8030CEA0.x15c8 = 1;
+        w = fn_801E1A2C(1, 0xc);
+        if (w == NULL) fn_801DBE1C("scptPRINT MES: malloc failed 1");
+        s->work.work_8020A938 = w;
+        w->hd.kind = 0;
+        w->hd.x04 = v;
+        if (v != 0x7FFFFFFF) {
+            int len = strlen(str);
+            str[len - 2] = 0x5c;
+            str[len - 1] = 0x63;
+        }
+        w->x08 = str;
+        fn_802110E8(s, 5, 0, 0, lbl_8030CEA0.x08, &w->hd);
+    }
+    if (flags & 2) {
+        w = s->work.work_8020A938;
+        if (s->handle == 0) {
+            s->handle = fn_800CD0B8(s->a20, s->a24, s->a28, s->a2c);
+            s->cnt += 1;
+            if (s->cnt == 5) fn_801DBE1C("scptPRINT(MES): message post timed out");
+        } else if (w->hd.kind == 2) {
+            lbl_8030CEA0.x15c8 = 0;
+            return 0;
+        }
+    }
+    if (flags & 8) {
+        lbl_8030CEA0.x15c8 = 0;
+        return 0;
+    }
+    return 1;
+}
 s32 fn_8020A938(u32 flags, Scpt* s)
 {
     Work_8020A938* w;

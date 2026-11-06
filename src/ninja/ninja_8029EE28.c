@@ -245,6 +245,55 @@ void fn_8029F528(s16* p, u32* data, s32 hdr, s32 side) {
     lbl_80347EF0 += total;
 }
 
+void fn_8029F86C(s16* p, u32* data, s32 hdr, s32 side) {
+    s32 st;
+    s32 total;
+    u32 cull = -1;
+    s32 nuv;
+    s32 len;
+    u32 mode;
+    s16 idx;
+
+    fn_8029AFF0(3, 3, 3);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_NRM, GX_NRM_XYZ, GX_F32, 0);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
+    nuv = (hdr >> 14) & 3;
+    hdr &= 0x3fff;
+    total = 0;
+    GXSetArray(GX_VA_POS, data, 0x1c);
+    GXSetArray(GX_VA_NRM, data + 3, 0x1c);
+    GXSetArray(GX_VA_CLR0, data + 6, 0x1c);
+    st = nuv * 2;
+    do {
+        len = *p++;
+        if (len < 0) {
+            len = -len;
+            mode = lbl_80300898[side][lbl_80347E20];
+            if (cull != mode) {
+                cull = mode;
+                GXSetCullMode(mode);
+            }
+        } else {
+            mode = lbl_803008C0[side][lbl_80347E20];
+            if (cull != mode) {
+                cull = mode;
+                GXSetCullMode(mode);
+            }
+        }
+        total += len;
+        GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, len);
+        do {
+            idx = *p++;
+            p = (s16*)((u8*)p + st); /* the strip stream steps st bytes of uv data */
+            GXPosition1x16(idx);
+            GXNormal1x16(idx);
+            GXColor1x16(idx);
+        } while (--len);
+    } while (--hdr);
+    lbl_80347EF0 += total;
+}
+
 void fn_8029F9F8(s16* p, u32* data, s32 hdr, s32 side) {
     s32 total;
     u32 cull = -1;
@@ -559,6 +608,53 @@ void fn_802A0668(s16* p, u32* data, s32 hdr, s32 side) {
     lbl_80347EF0 += total;
 }
 
+void fn_802A09AC(s16* p, u32* data, s32 hdr, s32 side) {
+    s32 total;
+    u32 cull = -1;
+    s32 nuv;
+    s32 len;
+    u32 mode;
+    s32 idx;
+
+    fn_8029AFF0(3, 3, 3);
+    nuv = (hdr >> 14) & 3;
+    hdr &= 0x3fff;
+    total = 0;
+    GXSetArray(GX_VA_POS, data, 0x10);
+    GXSetArray(GX_VA_NRM, data, 0x10);
+    GXSetArray(GX_VA_CLR0, data + 3, 0x10);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_NRM, GX_NRM_XYZ, GX_F32, 0);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
+    do {
+        len = *p++;
+        if (len < 0) {
+            len = -len;
+            mode = lbl_80300898[side][lbl_80347E20];
+            if (cull != mode) {
+                cull = mode;
+                GXSetCullMode(mode);
+            }
+        } else {
+            mode = lbl_803008C0[side][lbl_80347E20];
+            if (cull != mode) {
+                cull = mode;
+                GXSetCullMode(mode);
+            }
+        }
+        total += len;
+        GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, len);
+        do {
+            idx = *p++;
+            p += nuv;
+            GXPosition1x16(idx);
+            GXNormal1x16(idx);
+            GXColor1x16(idx);
+        } while (--len);
+    } while (--hdr);
+    lbl_80347EF0 += total;
+}
+
 void fn_802A0B38(s16* p, u32* data, s32 hdr, s32 side) {
     s32 total;
     u32 cull = -1;
@@ -642,6 +738,53 @@ void fn_802A0C90(s16* p, u32* data, s32 hdr, s32 side) {
             p += nuv;
             GXPosition1x16(idx);
             GXNormal1x16(idx);
+        } while (--len);
+    } while (--hdr);
+    lbl_80347EF0 += total;
+}
+
+void fn_802A0FD4(s16* p, u32* data, s32 hdr, s32 side) {
+    s32 total;
+    u32 cull = -1;
+    s32 nuv;
+    s32 len;
+    u32 mode;
+    s32 idx;
+
+    fn_8029AFF0(3, 3, 3);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_NRM, GX_NRM_XYZ, GX_F32, 0);
+    GXSetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
+    nuv = (hdr >> 14) & 3;
+    hdr &= 0x3fff;
+    total = 0;
+    GXSetArray(GX_VA_POS, data, 0x1c);
+    GXSetArray(GX_VA_NRM, data + 3, 0x1c);
+    GXSetArray(GX_VA_CLR0, data + 6, 0x1c);
+    do {
+        len = *p++;
+        if (len < 0) {
+            len = -len;
+            mode = lbl_80300898[side][lbl_80347E20];
+            if (cull != mode) {
+                cull = mode;
+                GXSetCullMode(mode);
+            }
+        } else {
+            mode = lbl_803008C0[side][lbl_80347E20];
+            if (cull != mode) {
+                cull = mode;
+                GXSetCullMode(mode);
+            }
+        }
+        total += len;
+        GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT0, len);
+        do {
+            idx = *p++;
+            p += nuv;
+            GXPosition1x16(idx);
+            GXNormal1x16(idx);
+            GXColor1x16(idx);
         } while (--len);
     } while (--hdr);
     lbl_80347EF0 += total;

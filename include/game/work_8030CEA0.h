@@ -80,15 +80,22 @@ typedef struct {
     s32 xc6c;
     s32 xc70;
     s32 xc74[4];                /* camera path n: running */
-    s16 xc84;
-    s16 xc86;
-    s16 xc88;
+    u16 xc84;
+    u16 xc86;
+    u16 xc88;
     u16 xc8a[4];                /* camera path n: node count */
-    u8 padc92[0xca0 - 0xc92];
+    u8 padc92[0xc94 - 0xc92];
+    s32 xc94;
+    s32 xc98;
+    s32 xc9c;
     s32 xca0[4];
-    u8 padcb0[0xcbc - 0xcb0];
+    s32 xcb0;
+    s32 xcb4;
+    s32 xcb8;
     s32 xcbc[4];                /* camera path n: total frames */
-    u8 padccc[0x102c - 0xccc];
+    PathNode path0[8];          /* 0xccc */
+    PathNode path1[8];          /* 0xdec */
+    PathNode path2[8];          /* 0xf0c */
     PathNode path[4][8];        /* 0x102c: camera paths (fn_802001F8) */
     u8 pad14ac[0x14b0 - 0x14ac];
     s32 x14b0;

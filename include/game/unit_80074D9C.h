@@ -15,10 +15,11 @@ typedef struct ChrState {
     s8 x8;
     s8 x9;
     s8 xa;
-    u8 pad_b[0x1];
+    s8 xb;
     u8 xc;
     s8 bd;
-    u8 pad_e[0x2];
+    u8 xe;
+    u8 pad_f[0x1];
     s32 x10;
     u8 x14;
     u8 pad_15[0x1];

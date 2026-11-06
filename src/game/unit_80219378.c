@@ -183,14 +183,24 @@ extern void fn_80005AD8(void *heap, void *p);
 extern s32 sndPopGroup(void);
 extern void sndQuit(void);
 typedef struct IVec { s32 x; s32 y; s32 z; } IVec;
+/* The three vectors at the end of these objects: position, scale, rotation. Each pointer in
+ * the object points at the rest of the block from there on. */
+typedef struct ObjScaleRot {
+    Vec scale;
+    IVec rot;
+} ObjScaleRot;
+typedef struct ObjXform {
+    Vec pos;
+    ObjScaleRot sr;
+} ObjXform;
 typedef struct Obj128 {
     s32 f0;
     u8 pad4[0x8];
     s16 sc;
     u16 sd;
     u8 pad10[8];
-    Vec *p18;
-    Vec *p1c;
+    ObjXform *p18;
+    ObjScaleRot *p1c;
     IVec *p20;
     s32 f24;
     s32 f28;
@@ -200,7 +210,7 @@ typedef struct Obj128 {
     Vec f38;
     f32 f44;
     u8 pad48[0x10];
-    Vec vecs[3];
+    ObjXform xf;
 } Obj128;
 extern void* fn_801E1A74(s32 a, s32 b);
 typedef struct Obj11c {
@@ -209,8 +219,8 @@ typedef struct Obj11c {
     s16 sc;
     u16 sd;
     u8 pad10[8];
-    Vec *p18;
-    Vec *p1c;
+    ObjXform *p18;
+    ObjScaleRot *p1c;
     IVec *p20;
     s32 f24;
     s32 f28;
@@ -219,7 +229,7 @@ typedef struct Obj11c {
     s32 f34;
     NJS_POINT3 pts[8];
     u8 pad98[0xf8 - 0x98];
-    Vec vecs[3];
+    ObjXform xf;
 } Obj11c;
 extern void njPushMatrixEx(void);
 extern void njPopMatrixEx(void);
@@ -339,32 +349,35 @@ typedef struct {
     Task task;
     BlockFx *fx;        /* 0x28 */
 } BlockTask;
+typedef struct ShapeBox { /* kind 0: eight points */
+    s32 kind;
+    NJS_POINT3 src[8];
+    NJS_POINT3 dst[8];
+    u8 end[4];
+} ShapeBox;
+typedef struct ShapeSph { /* kind 1: sphere */
+    s32 kind;
+    NJS_POINT3 c;
+    f32 r;
+    NJS_POINT3 wc;
+    f32 wr;
+    u8 end[4];
+} ShapeSph;
+typedef struct ShapeSeg { /* kind 2: segment */
+    s32 kind;
+    NJS_POINT3 a;
+    NJS_POINT3 b;
+    f32 r;
+    NJS_POINT3 wa;
+    NJS_POINT3 wb;
+    f32 wr;
+    u8 end[4];
+} ShapeSeg;
 typedef union Shape_802226A8 {
     s32 kind;
-    struct { /* kind 0: eight points */
-        s32 kind;
-        NJS_POINT3 src[8];
-        NJS_POINT3 dst[8];
-        u8 end[4];
-    } box;
-    struct { /* kind 1: sphere */
-        s32 kind;
-        NJS_POINT3 c;
-        f32 r;
-        NJS_POINT3 wc;
-        f32 wr;
-        u8 end[4];
-    } sph;
-    struct { /* kind 2: segment */
-        s32 kind;
-        NJS_POINT3 a;
-        NJS_POINT3 b;
-        f32 r;
-        NJS_POINT3 wa;
-        NJS_POINT3 wb;
-        f32 wr;
-        u8 end[4];
-    } seg;
+    ShapeBox box;
+    ShapeSph sph;
+    ShapeSeg seg;
 } Shape_802226A8;
 typedef struct { Angle x, y, z; } Ang3;
 extern void njInvertMatrix(NJS_MATRIX m);
@@ -545,6 +558,7 @@ typedef struct Tab_80224040 {
 } Tab_80224040;
 extern s16 fn_80223B88(u16, Tab_80224040 *);
 typedef struct Link_80223A34 { u16 key; s16 n; u16 vals[0x10]; } Link_80223A34;
+extern char lbl_802D95C0[];
 extern Xf_80224F28 *fn_80223A34(u16, Link_80223A34 *);
 extern void fn_801DBE1C(const char *, ...);
 extern char lbl_802D9608[];
@@ -2229,8 +2243,6 @@ void fn_8021BF80(Owner_8021BF80 *o, NJS_TEXLIST *arg, s32 val, s16 count, s16 ex
     }
 }
 
-/* NEAR (about 39 lines): scheduling of the int to float conversions and the s16 x update. */
-#ifdef NONMATCHING
 void fn_8021C0BC(f32 z, s16 x, s16 y, NJS_TEXLIST* tex, s16 n, s32 blend, u32 alpha)
 {
     DrawState st;
@@ -2239,6 +2251,7 @@ void fn_8021C0BC(f32 z, s16 x, s16 y, NJS_TEXLIST* tex, s16 n, s32 blend, u32 al
     s32 i;
     Vertex2D* p;
     s32 j;
+    f32 t0;
 
     DrawStateDefault2D(&st);
     if (blend != 0) {
@@ -2266,7 +2279,7 @@ void fn_8021C0BC(f32 z, s16 x, s16 y, NJS_TEXLIST* tex, s16 n, s32 blend, u32 al
         v[0].x = x;
         v[0].y = y;
         v[0].u = 0.0f;
-        v[0].v = 0.003921569f * ((i + 2) * 64);
+        v[0].v = t0 = 0.003921569f * ((i + 2) * 64);
         v[1].x = x;
         v[1].y = 16.0f + y;
         v[1].u = 0.0f;
@@ -2274,7 +2287,7 @@ void fn_8021C0BC(f32 z, s16 x, s16 y, NJS_TEXLIST* tex, s16 n, s32 blend, u32 al
         v[2].x = x + (f32)(64 / (i + 1));
         v[2].y = v[0].y;
         v[2].u = 0.003921569f * (256 / (i + 1) - 1);
-        v[2].v = v[0].v;
+        v[2].v = t0;
         v[3].x = v[2].x;
         v[3].y = v[1].y;
         v[3].u = v[2].u;
@@ -2283,7 +2296,6 @@ void fn_8021C0BC(f32 z, s16 x, s16 y, NJS_TEXLIST* tex, s16 n, s32 blend, u32 al
     }
     DrawStatePop(0);
 }
-#endif
 
 void fn_8021C36C(s16 x0, s16 y0, s16 x1, s16 y1, u32* colors, f32 z)
 {
@@ -3397,20 +3409,20 @@ void fn_80222010(In_80222010 *in) {
 void fn_80222128(Vec *src) {
     Obj128 *o = fn_801E1A74(1, 0x7c);
     if (o != 0) {
-        o->p18 = o->vecs;
-        o->p1c = o->p18 + 1;
-        o->p20 = (IVec*)(o->p1c + 1);
+        o->p18 = &o->xf;
+        o->p1c = &o->p18->sr;
+        o->p20 = &o->p1c->rot;
         o->f24 = 0;
         o->f28 = 0;
-        o->p18->z = 0.0f;
-        o->p18->y = 0.0f;
-        o->p18->x = 0.0f;
+        o->p18->pos.z = 0.0f;
+        o->p18->pos.y = 0.0f;
+        o->p18->pos.x = 0.0f;
         o->p20->z = 0;
         o->p20->y = 0;
         o->p20->x = 0;
-        o->p1c->z = 1.0f;
-        o->p1c->y = 1.0f;
-        o->p1c->x = 1.0f;
+        o->p1c->scale.z = 1.0f;
+        o->p1c->scale.y = 1.0f;
+        o->p1c->scale.x = 1.0f;
         o->sc = 1;
         o->sd = 0xFFFF;
         o->f0 = 0;
@@ -3422,30 +3434,25 @@ void fn_80222128(Vec *src) {
     }
 }
 
-#ifdef NONMATCHING
-/* Exact only by passing the third vector through a void * local to avoid a pointer cast. */
 Obj11c* fn_80222224(NJS_POINT3 *src)
 {
     Obj11c *o = fn_801E1A74(1, 0x11c);
     if (o != 0) {
         memset(o, 0, 0x11c);
-        o->p18 = o->vecs;
-        o->p1c = o->p18 + 1;
-        {
-            void *t = o->p1c + 1;
-            o->p20 = t;
-        }
+        o->p18 = &o->xf;
+        o->p1c = &o->p18->sr;
+        o->p20 = &o->p1c->rot;
         o->f24 = 0;
         o->f28 = 0;
-        o->p18->z = 0.0f;
-        o->p18->y = 0.0f;
-        o->p18->x = 0.0f;
+        o->p18->pos.z = 0.0f;
+        o->p18->pos.y = 0.0f;
+        o->p18->pos.x = 0.0f;
         o->p20->z = 0;
         o->p20->y = 0;
         o->p20->x = 0;
-        o->p1c->z = 1.0f;
-        o->p1c->y = 1.0f;
-        o->p1c->x = 1.0f;
+        o->p1c->scale.z = 1.0f;
+        o->p1c->scale.y = 1.0f;
+        o->p1c->scale.x = 1.0f;
         o->sc = 1;
         o->sd = 0xFFFF;
         o->f0 = 0;
@@ -3464,7 +3471,6 @@ Obj11c* fn_80222224(NJS_POINT3 *src)
     }
     return o;
 }
-#endif
 
 typedef struct {
     u8 pad[0x18];
@@ -3478,117 +3484,127 @@ extern s32 fn_8028ED64(void *a, void *b);
 extern s32 fn_8028F95C(void *a, void *b);
 extern s32 fn_8028DAE4(void *a, void *b);
 #ifdef NONMATCHING
-/* Exact only with the shape held as void * and a typed copy per case; a typed parameter moves the register copy. */
-void* fn_802223E4(void* a, void* r)
+/* Exact, held for a call on the rules: the record stream steps through a void * helper. */
+/* The address just past a record: the next shape in the stream. */
+static inline void* BoxEnd(ShapeBox* q)
 {
-    switch (KindOf(r)) {
+    return q->end;
+}
+
+static inline void* SphEnd(ShapeSph* q)
+{
+    return q->end;
+}
+
+static inline void* SegEnd(ShapeSeg* q)
+{
+    return q->end;
+}
+
+Shape_802226A8* fn_802223E4(void* a, Shape_802226A8* r)
+{
+    switch (r->kind) {
     case 0: {
-        Shape_802226A8* q = r;
+        ShapeBox* const q = &r->box;
         lbl_8030E7F0.x18 = 0;
-        if (fn_8028DD5C(q->box.dst, a) != 0) {
+        if (fn_8028DD5C(q->dst, a) != 0) {
             r = 0;
         } else {
-            r = q->box.end;
+            r = BoxEnd(q);
         }
         break;
     }
     case 1: {
-        Shape_802226A8* q = r;
+        ShapeSph* const q = &r->sph;
         lbl_8030E7F0.x18 = 1;
-        if (fn_8028F884(&q->sph.wc, a) != 0) {
+        if (fn_8028F884(&q->wc, a) != 0) {
             r = 0;
         } else {
-            r = q->sph.end;
+            r = SphEnd(q);
         }
         break;
     }
     case 2: {
-        Shape_802226A8* q = r;
+        ShapeSeg* const q = &r->seg;
         lbl_8030E7F0.x18 = 2;
-        if (fn_8028F408(a, &q->seg.wa) != 0) {
+        if (fn_8028F408(a, &q->wa) != 0) {
             r = 0;
         } else {
-            r = q->seg.end;
+            r = SegEnd(q);
         }
         break;
     }
     }
     return r;
 }
-#endif
 
-#ifdef NONMATCHING
-/* Exact only with the shape held as void * and a typed copy per case; a typed parameter moves the register copy. */
-void* fn_802224D4(void* a, void* r)
+Shape_802226A8* fn_802224D4(void* a, Shape_802226A8* r)
 {
-    switch (KindOf(r)) {
+    switch (r->kind) {
     case 0: {
-        Shape_802226A8* q = r;
+        ShapeBox* const q = &r->box;
         lbl_8030E7F0.x18 = 0;
-        if (fn_8028ED64(q->box.dst, a) != 0) {
+        if (fn_8028ED64(q->dst, a) != 0) {
             r = 0;
         } else {
-            r = q->box.end;
+            r = BoxEnd(q);
         }
         break;
     }
     case 1: {
-        Shape_802226A8* q = r;
+        ShapeSph* const q = &r->sph;
         lbl_8030E7F0.x18 = 1;
-        if (fn_8028F95C(a, &q->sph.wc) != 0) {
+        if (fn_8028F95C(a, &q->wc) != 0) {
             r = 0;
         } else {
-            r = q->sph.end;
+            r = SphEnd(q);
         }
         break;
     }
     case 2: {
-        Shape_802226A8* q = r;
+        ShapeSeg* const q = &r->seg;
         lbl_8030E7F0.x18 = 2;
-        if (fn_8028F884(a, &q->seg.wa) != 0) {
+        if (fn_8028F884(a, &q->wa) != 0) {
             r = 0;
         } else {
-            r = q->seg.end;
+            r = SegEnd(q);
         }
         break;
     }
     }
     return r;
 }
-#endif
 
-#ifdef NONMATCHING
-/* Exact only with the shape held as void * and a typed copy per case; a typed parameter moves the register copy. */
-void* fn_802225C0(void* a, void* r)
+Shape_802226A8* fn_802225C0(void* a, Shape_802226A8* r)
 {
-    switch (KindOf(r)) {
+    switch (r->kind) {
     case 0: {
-        Shape_802226A8* q = r;
+        ShapeBox* const q = &r->box;
         lbl_8030E7F0.x18 = 0;
-        if (fn_8028DAE4(a, q->box.dst) != 0) {
+        if (fn_8028DAE4(a, q->dst) != 0) {
             r = 0;
         } else {
-            r = q->box.end;
+            r = BoxEnd(q);
         }
         break;
     }
     case 1: {
-        Shape_802226A8* q = r;
+        ShapeSph* const q = &r->sph;
         lbl_8030E7F0.x18 = 1;
-        if (fn_8028ED64(a, &q->sph.wc) != 0) {
+        if (fn_8028ED64(a, &q->wc) != 0) {
             r = 0;
         } else {
-            r = q->sph.end;
+            r = SphEnd(q);
         }
         break;
     }
     case 2: {
-        Shape_802226A8* q = r;
+        ShapeSeg* const q = &r->seg;
         lbl_8030E7F0.x18 = 2;
-        if (fn_8028DD5C(a, &q->seg.wa) != 0) {
+        if (fn_8028DD5C(a, &q->wa) != 0) {
             r = 0;
         } else {
-            r = q->seg.end;
+            r = SegEnd(q);
         }
         break;
     }
@@ -4081,6 +4097,51 @@ void fn_802239A4(Obj_802239A4 *o)
     o->w60[1] = w[1];
     o->w60[2] = w[2];
 }
+/* The link's own key: the first search of fn_80223A34. */
+static inline s16 XfFindLink(Xf_80224F28 *r, Link_80223A34 *req, s16 n) {
+    int i;
+    u16 key = req->key;
+    for (i = 0; i < n; r++, i++) {
+        if (r->key == key) return i;
+    }
+    return -1;
+}
+
+static inline s16 XfFindK(u16 key, Xf_80224F28 *r, s16 n) {
+    int i;
+    for (i = 0; i < n; r++, i++) {
+        if (r->key == key) return i;
+    }
+    return -1;
+}
+
+Xf_80224F28 *fn_80223A34(u16 id, Link_80223A34 *req) {
+    Slot *g;
+    Xf_80224F28 *recs;
+    int i;
+    Xf_80224F28 *rec;
+    s16 j;
+    int idx;
+
+    idx = fn_80225E58(lbl_8034752C, lbl_8034752A, id);
+    if (idx < 0) return 0;
+    g = &lbl_8034752C[idx];
+    recs = g->p0;
+    idx = XfFindLink(recs, req, g->count);
+    if (idx < 0) {
+        fn_801DBE1C(lbl_802D95C0);
+        return 0;
+    }
+    rec = &recs[idx];
+    for (i = 0; i < req->n; i++) {
+        j = XfFindK(req->vals[i], g->p0, g->count);
+        rec->near[i] = j;
+        if (j < 0) fn_801DBE1C(lbl_802D95D4, req->key, req->vals[i]);
+    }
+    rec->nnear = req->n;
+    return rec;
+}
+
 
 
 s32 fn_80223FB4(Ent68 *t, u32 key, s32 n, s32 m)

@@ -1735,6 +1735,62 @@ void fn_8028B870(s32 x) {
     lbl_80345350.f04 = x;
 }
 
+void fn_8029CEC0(f32* m, const f32* n);
+
+#pragma optimization_level 1
+void fn_8028B880(NJ_KEY* c, NJS_POINT3* target, NJS_POINT3* up) {
+    f32 m[12];
+    f32* mp = m; /* the original holds this in r31 from entry */
+    f32 ex, ey, ez;
+    f32 fx, fy, fz;
+    f32 inv;
+    f32 d;
+    f32 ux, uy, uz;
+    f32 sx, sy, sz;
+    ey = c->p0[1];
+    ex = c->p0[0];
+    ez = c->p0[2];
+    fy = ey - target->y;
+    fx = ex - target->x;
+    fz = ez - target->z;
+    inv = fn_802974E4(fx * fx + fy * fy + fz * fz);
+    fx *= inv;
+    fy *= inv;
+    fz *= inv;
+
+    ux = up->x;
+    uy = up->y;
+    uz = up->z;
+    d = ux * fx + uy * fy + uz * fz;
+    ux = ux - d * fx;
+    uy = uy - d * fy;
+    uz = uz - d * fz;
+
+    inv = fn_802974E4(ux * ux + uy * uy + uz * uz);
+    ux *= inv;
+    uz *= inv;
+    uy *= inv;
+
+    sx = uy * fz - uz * fy;
+    sy = uz * fx - ux * fz;
+    sz = ux * fy - uy * fx;
+
+    m[0] = sx;
+    m[1] = sy;
+    m[2] = sz;
+    m[3] = -sx * ex - sy * ey - sz * ez;
+    m[4] = ux;
+    m[5] = uy;
+    m[6] = uz;
+    m[7] = -ux * ex - uy * ey - uz * ez;
+    m[8] = fx;
+    m[9] = fy;
+    m[10] = fz;
+    m[11] = -fx * ex - fy * ey - fz * ez;
+    fn_8029CEC0(0, mp);
+}
+#pragma optimization_level reset
+
 void fn_8028BA48(Angle a) {
     f32 m[12];
     f32 t[12];
@@ -1906,6 +1962,30 @@ f32 fn_8028FD98(f32* l, f32* pl, f32* out) {
 }
 #pragma opt_common_subs reset
 #pragma optimization_level reset
+
+/* Distance from point p to the line l (origin, direction); the nearest point goes to out if asked. */
+f32 fn_8028FEA4(f32* p, f32* l, f32* out) {
+    f32 px, lz, pz, t, d2;
+    px = p[0];
+    pz = p[2];
+    lz = l[2];
+    t = (l[3] * (px - l[0]) + l[4] * (p[1] - l[1]) + l[5] * (pz - lz)) / (l[3] * l[3] + l[4] * l[4] + l[5] * l[5]);
+    if (out) {
+        out[0] = l[0] + l[3] * t;
+        out[1] = l[1] + l[4] * t;
+        out[2] = l[2] + l[5] * t;
+        d2 = (p[0] - out[0]) * (p[0] - out[0]) + (p[1] - out[1]) * (p[1] - out[1]) + (p[2] - out[2]) * (p[2] - out[2]);
+    } else {
+        f32 x = l[0] + l[3] * t;
+        f32 y = l[1] + l[4] * t;
+        f32 z = lz + l[5] * t;
+        d2 = (px - x) * (px - x) + (p[1] - y) * (p[1] - y) + (pz - z) * (pz - z);
+    }
+    if (d2 < 0.025f) {
+        return 0.0f;
+    }
+    return sqrtf(d2);
+}
 
 f32 fn_80290008(f32* a, f32* b) {
     f32 x, y, z, d;
@@ -2224,6 +2304,26 @@ f32 fn_802917A0(f32 x) {
     f64 ip;
     return modf(x, &ip);
 }
+
+/* Catmull-Rom spline through p[1]..p[2]. */
+#pragma optimization_level 1
+#pragma opt_common_subs on
+void fn_802917C8(NJS_POINT3* p, NJS_POINT3* out, f32 t) {
+    f32 h, w, u2, u3, b0, b1, b2, b3;
+    h = 0.5f;
+    u2 = t * t;
+    u3 = u2 * t;
+    w = 2.0f * u2;
+    b0 = h * (-u3 + w - t);
+    b1 = 1.0f + (1.5f * u3 - 2.5f * u2);
+    b2 = -1.5f * u3 + w + h * t;
+    b3 = h * (u3 - u2);
+    out->x = b0 * p[0].x + b1 * p[1].x + b2 * p[2].x + b3 * p[3].x;
+    out->y = b0 * p[0].y + b1 * p[1].y + b2 * p[2].y + b3 * p[3].y;
+    out->z = b0 * p[0].z + b1 * p[1].z + b2 * p[2].z + b3 * p[3].z;
+}
+#pragma opt_common_subs reset
+#pragma optimization_level reset
 
 f32 fn_80291888(f32 x) {
     f32 a;
@@ -3755,6 +3855,17 @@ void fn_80296BE4(s16 a, s16 b, s16 c, f32 f) {
     lbl_803457A8.f06 = a;
     lbl_803457A8.f08 = b;
     lbl_803457A8.f0A = c;
+}
+
+/* The colour goes through a copy because argb is rewritten with the red channel. */
+void fn_80296C00(u32 argb) {
+    u32 c = argb;
+    lbl_80347F00.a = argb >> 24;
+    argb = (argb >> 16) & 0xFF;
+    lbl_80347F00.r = argb;
+    lbl_80347F00.g = c >> 8;
+    lbl_80347F00.b = c;
+    GXSetCopyClear(lbl_80347F00, 0xFFFFFF);
 }
 
 void fn_80296C58(u16 type, u16 src, u16 dst, u16 op) {

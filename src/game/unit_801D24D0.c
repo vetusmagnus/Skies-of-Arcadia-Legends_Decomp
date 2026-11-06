@@ -634,17 +634,18 @@ typedef struct TexHdr {
     u32 off;        /* 0x10 */
 } TexHdr;
 void fn_801DAEB8(TexHdr *d);
+typedef struct Slot801E Slot801E;
 typedef struct SpinObj {
     u8 pad00[0x2];
     s16 k02;
     u8 pad04[0x18];
     f32 angle;     /* 0x1c */
     f32 speed;     /* 0x20 */
-    f32 rate;      /* 0x24 */
-    u8 pad28[0x24];
-    void *model;   /* 0x4c */
+    f32 wave[2];   /* 0x24 frequency, amplitude */
+    u8 pad2c[0x20];
+    Slot801E *model;   /* 0x4c */
 } SpinObj;
-void fn_801DFC5C(void *a, void *b, s16 c, f32 d);
+void fn_801DFC5C(f32 *sc, Slot801E *seq, s32 count, f32 t);
 typedef struct {
     s16 w, h, hw, hh, x, y, x1, y1, z0, z1;
 } Rect14;
@@ -704,11 +705,11 @@ typedef struct KeySet_801DEBE4 {
     s32 count;
 } KeySet_801DEBE4;
 /* One collision result slot of a model walk (fn_801E04E8/fn_801E0AC0). */
-typedef struct Slot801E {
+struct Slot801E {
     void* key;       /* 0x00 */
     HitOut* hit;     /* 0x04 */
     s32 n;           /* 0x08 */
-} Slot801E;
+};
 struct Mo {
     u8 pad0[4];
     Ellipsoid m4;    /* 0x04 */
@@ -4630,11 +4631,11 @@ void fn_801DCE18(NJS_VECTOR *out, NJS_VECTOR *in, Angle ang)
 void fn_801DFDB0(SpinObj *o) {
     s32 t;
     o->angle += o->speed;
-    t = (s32)((o->angle * o->rate) / 360.0f);
+    t = (s32)((o->angle * o->wave[0]) / 360.0f);
     if (t != 0) {
-        o->angle -= (360.0f * (f32)t) / o->rate;
+        o->angle -= (360.0f * (f32)t) / o->wave[0];
     }
-    fn_801DFC5C((u8 *)o + 0x24, o->model, o->k02, o->angle);
+    fn_801DFC5C(o->wave, o->model, o->k02, o->angle);
 }
 
 void fn_801D7A90(NJS_TEXLIST* tex, Desc* d)
@@ -5497,6 +5498,33 @@ s32 MemEqual(const void *a, const void *b, u32 size)
         }
     }
     return 1;
+}
+
+static inline s32 IsUpper(s8 c)
+{
+    return c >= 'A' && c <= 'Z';
+}
+
+/* Case-insensitive strcmp. */
+s32 fn_801E1098(const char *a, const char *b)
+{
+    char d;
+    s32 x;
+    char y;
+    s32 t;
+    while (*a != 0 || *b != 0) {
+        x = *b++;
+        y = *a++;
+        if (IsUpper(x)) {
+            x += 0x20;
+        }
+        t = IsUpper(y) ? y + 0x20 : y;
+        d = t - x;
+        if (d != 0) {
+            return d;
+        }
+    }
+    return 0;
 }
 
 static inline void Zero16(void* q)

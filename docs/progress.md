@@ -2685,3 +2685,16 @@ Waiting on shared header or flag changes, each tested with a header copy in the 
 (fn_8002F80C, fn_80030280, fn_8002FA00), `ChrState.xb`/`xe` (fn_80081B94, fn_80084A08), `work_8030CEA0.h` fields (fn_80200460, fn_80200634,
 fn_802007C0), `gamedata.h` signedness and const tables (fn_80144400, fn_80147054), a SaveParty/SaveBlock type (fn_80134754, fn_801F0020),
 `shop.h` u16 ids (fn_801B995C), ChrRec fields (fn_80010A40), and the wave 9 list in `build/agents/w9/results.json`.
+
+Second merge, after the last groups finished. Applied: `work_8030CEA0.h` fields (fn_80200460, fn_80200634, fn_802007C0) and `ChrState.xb`/`xe`
+(fn_80081B94; fn_80084A08 is 3 lines off in the merged unit, kept NONMATCHING).
+
+Exact in an agent's copy but held for a call on the rules:
+
+- fn_802223E4, fn_802224D4, fn_802225C0: typed parameter now, but the record stream steps through a `void *`-returning inline and a
+  `T *const q` local steers the allocation.
+- fn_801F4EA0: only with a `qsort` prototype taking `s32 (*)(s16 *, s16 *)`. `unit_80078A20.c` already has that prototype.
+- fn_8002F80C, fn_80030280, fn_8002FA00: need `-str reuse,readonly` on `battle.c`, plus a `TitleTk` view of Task (build/agents/w11/g001/battle_ro.c).
+- fn_801E85BC: keeps a `(u8*)p - (u8*)base` difference.
+
+`unit_8014F970.c`: fn_8015983C and fn_8015AB68 still need the g046 retypes folded in by hand.

@@ -808,6 +808,75 @@ void fn_80081134(s16 i, u32 v) {
     lbl_80302BF0[i] = 0;
 }
 
+extern s32 fn_80010B64(s16 atk, s16 tgt);
+extern s16 fn_80010A40(s16 atk, s16 tgt, s32 kind, s32 hit);
+extern s8 fn_80010584(s16 atk, s16 tgt);
+extern void fn_80082134(s16 v);
+int fn_800819D0(s16 a, s16 b);
+
+s32 fn_80081B94(s16 a, s16 b)
+{
+    Wk* wk = lbl_80309700[a]->work;
+    s32 v;
+    s32 r6;
+    s32 w3c;
+
+    wk->x44 = 0;
+    wk->x46 = -1;
+    wk->x48 = -1;
+    wk->x4a = -1;
+    v = fn_80010B64(b, a);
+    r6 = v;
+    if (v != 0) {
+        if (lbl_80309DE4[a]->w1c & 4) {
+            v = 4;
+        } else if (lbl_80309DE4[a]->w1c & 1) {
+            v = 3;
+        }
+    }
+    lbl_80309730[a].b8 = v;
+    lbl_80309174[a].x8 = r6;
+    w3c = (s16)fn_80010A40(b, a, v, r6);
+    wk->x3c = w3c;
+    lbl_80309174[a].xa = 0;
+    lbl_80309174[a].xa = 0;
+    lbl_80309174[a].xb = a;
+    lbl_80309730[a].xa = 0;
+    lbl_80309730[a].xb = a;
+    lbl_80309730[a].xc = lbl_80309174[a].xc;
+    lbl_80309730[a].b4 = lbl_80309174[a].xb;
+    if (v != 0) {
+        if (v == 4 && (lbl_80309DE4[a]->w1c & 0x800000) == 0) return;
+        if (lbl_80309DE4[a]->score > w3c) {
+            fn_80010584(b, a);
+            if (a != lbl_80309174[b].b4) return;
+            switch (lbl_80309174[a].x9) {
+            case 5:
+            case 6:
+            case 0x44:
+                break;
+            default:
+                if (fn_800819D0(b, a) == 0) return;
+                fn_80082134(b);
+                lbl_80309174[a].xa = 1;
+                lbl_80309174[a].xb = b;
+                lbl_80309730[a].xa = 1;
+                lbl_80309730[a].xb = b;
+                lbl_80309730[a].xc = lbl_80309174[a].xc;
+                lbl_80309730[a].b4 = lbl_80309174[a].xb;
+                break;
+            }
+        } else {
+            lbl_80309730[a].b8 = 5;
+            lbl_80309174[a].xa = 0;
+            lbl_80309730[a].xa = 0;
+            lbl_80309174[a].xb = a;
+            lbl_80309730[a].xb = a;
+        }
+    }
+}
+
+
 s32 fn_8008210C(void) {
     return fn_80081FEC(lbl_80347334);
 }
@@ -830,6 +899,77 @@ s32 fn_800855AC(s32 i);
 
 void fn_80081168(s16 idx, s32 val);
 int fn_8007FAB0(int a, int b);
+#ifdef NONMATCHING
+void fn_80084A08(Slot* t) {
+    s16 a;
+    s32 c;
+    Wk* w;
+    UseItemData* it;
+    s32 v;
+    s8 chance;
+    s32 r;
+    w = t->work;
+    a = w->idx;
+    c = lbl_80309174[a].b4;
+    v = lbl_80309174[a].x6 - 0xF0;
+    switch (t->state) {
+    case 0:
+        if (fn_8007FFE8(a, 0x16) != 0) {
+            fn_800811E4(a, 0);
+            t->state = 1;
+            if (v != -1) {
+                it = &lbl_802C7C34[v];
+                lbl_80309174[a].xe = 0;
+                r = rand() % 100;
+                chance = it->use_up;
+                if (chance > r) {
+                    fn_80077D40(v + 0xF0);
+                    lbl_80309174[a].xe = 1;
+                    chance = it->use_up;
+                    if (chance == 100) {
+                        lbl_80309174[a].xe = 0;
+                    }
+                }
+            }
+        }
+        break;
+    case 1:
+        if (fn_8007FFE8(a, 0) != 0 && fn_8007FAB0(a, c) != 0) {
+            fn_80081168(a, 0xD);
+            lbl_80309730[a].b4 = c;
+            lbl_80309730[a].h6 = v;
+            t->state = 0xB;
+        }
+        break;
+    case 11:
+        if (fn_8007FFE8(a, 0xD) != 0) {
+            fn_800811E4(a, 0);
+            t->state = 0xD;
+        }
+        break;
+    case 13:
+        if (fn_8007FFE8(a, 0) != 0) {
+            it = &lbl_802C7C34[v];
+            if (a == c || it->target == 2) {
+                if (fn_8006D1C4() != 1) break;
+            }
+            fn_80010474(a);
+            fn_800811E4(a, 0);
+            t->state = 0xC;
+        }
+        break;
+    case 12:
+        if (fn_8007FFE8(a, 0) != 0) {
+            w->flags |= 1;
+            lbl_80309700[a]->update = fn_80086C48;
+            lbl_80309700[a]->state = 0;
+        }
+        break;
+    }
+}
+#endif
+
+
 
 void fn_80085064(Slot* t) {
     s32 i;

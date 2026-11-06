@@ -1416,3 +1416,129 @@ u32 fn_8023109C(u32 *cmd, Ent28 *base) {
     }
     return lo;
 }
+
+s32 fn_80230D10(u8 id, Src *src, s16 **out)
+{
+    Tab *tab = src->tab;
+    u8 kind = 1;
+    u32 mode;
+    s16 *p;
+    s16 hdr;
+    u8 k;
+    u32 lo;
+    u16 cnt;
+    s32 two;
+    if (tab == NULL) {
+        *out = NULL;
+        return 0;
+    }
+    if (id >= 0x20 && id < 0x38) {
+        p = tab->x0;
+        kind = 2;
+        two = 1;
+    } else {
+        p = tab->x4;
+        two = 0;
+    }
+    if (p == NULL) {
+        return 0;
+    }
+    if (two != 0) {
+        hdr = p[1];
+    } else {
+        hdr = p[0];
+    }
+    mode = kind;
+    while ((hdr & 0xFF) != 0xFF) {
+        if (two != 0) {
+            cnt = p[0];
+            hdr = p[1];
+            p += 2;
+        } else {
+            cnt = p[1];
+            hdr = p[0];
+            p += 2;
+        }
+        lo = hdr & 0xFF;
+        if (lo == id) {
+            *out = p - 2;
+            return 1;
+        }
+        if (mode > 1) {
+            return 0;
+        }
+        k = lo;
+        if (lo < 1) {
+            p -= 1;
+        } else if (k < 8) {
+            p -= 1;
+        } else if (k >= 0x10) {
+            cnt *= mode;
+            while (cnt != 0) {
+                p += 1;
+                cnt -= 1;
+            }
+        }
+    }
+    *out = NULL;
+    return 0;
+}
+
+extern s32 lbl_80347EF0;
+
+void fn_80231360(s16 *strip, Vtx *verts, u32 flags, NJS_POINT3 *nrm) {
+    Vtx *v;
+    f32 *f;
+    s32 cull;
+    s32 skip;
+    s16 n;
+    s32 total;
+    u16 i;
+    f32 x, y, z;
+    u32 c;
+    GXClearVtxDesc();
+    GXSetVtxDesc(GX_VA_POS, GX_DIRECT);
+    GXSetVtxDesc(GX_VA_NRM, GX_DIRECT);
+    GXSetVtxDesc(GX_VA_CLR0, GX_DIRECT);
+    GXSetVtxDesc(GX_VA_TEX0, GX_INDEX16);
+    skip = (flags >> 14) & 3;
+    flags &= 0x3fff;
+    GXSetVtxAttrFmt(GX_VTXFMT7, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+    GXSetVtxAttrFmt(GX_VTXFMT7, GX_VA_NRM, GX_NRM_XYZ, GX_F32, 0);
+    GXSetVtxAttrFmt(GX_VTXFMT7, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
+    GXSetVtxAttrFmt(GX_VTXFMT7, GX_VA_TEX0, GX_TEX_ST, GX_S16, 8);
+    total = 0;
+    do {
+        n = *strip++;
+        if (n < 0) {
+            n = -n;
+            cull = lbl_80347884;
+        } else {
+            cull = !lbl_80347884;
+        }
+        if (cull) {
+            GXSetCullMode(GX_CULL_FRONT);
+        } else {
+            GXSetCullMode(GX_CULL_BACK);
+        }
+        total += n;
+        GXSetArray(GX_VA_TEX0, strip + 1, 6);
+        GXBegin(GX_TRIANGLESTRIP, GX_VTXFMT7, n);
+        i = 0;
+        do {
+            v = &verts[*strip++];
+            strip += skip + 2;
+            n--;
+            f = &v->x;
+            x = *f++;
+            y = *f++;
+            z = *f;
+            c = v->color;
+            GXPosition3f32(x, y, z);
+            GXNormal3f32(nrm->x, nrm->y, nrm->z);
+            GXColor1u32(c);
+            GXTexCoord1x16(i++);
+        } while ((s16)n != 0);
+    } while (--flags != 0);
+    lbl_80347EF0 += total;
+}
