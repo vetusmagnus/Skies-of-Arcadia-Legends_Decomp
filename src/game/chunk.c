@@ -119,7 +119,8 @@ s32 fn_801E78C8(NJS_MOTION* a, void* d1, void* d2, void* d4, f32 frame) {
     void** tbl3;
     void** tbl;
     if (kind == 1) {
-        if (a->mdata[0] == 0) return 0;
+        tbl = a->mdata;
+        if (tbl[0] == 0) return 0;
         flag = (a->inp_fn >> 6) & 1;
         fn_800071D8(a, frame);
         if (d1 != NULL && (m & 1)) {
@@ -200,7 +201,8 @@ s32 fn_801E7B2C(NJS_MOTION* o, void* a, void* b, f32 frame) {
     void** t;
     s32 m = (u16)(o->type & 3);
     if (kind == 1) {
-        if (o->mdata[0] == 0) return 0;
+        t = o->mdata;
+        if (t[0] == 0) return 0;
         flag = (o->inp_fn >> 6) & 1;
         fn_800071D8(o, frame);
         if (a != 0 && (m & 1)) {

@@ -24,14 +24,6 @@
  * distance. fn_801EA974 draws a debug line. Several of these are not matched yet. */
 
 typedef struct {
-    NJS_POINT3 a; /* 0x00 */
-    NJS_POINT3 b; /* 0x0C */
-    NJS_POINT3 c; /* 0x18 */
-    NJS_POINT3 d; /* 0x24 */
-    NJS_POINT3 e; /* 0x30 */
-} EvCam;
-
-typedef struct {
     u32 w[4];
     s16 flag; /* 0x10 */
     u16 pad;
@@ -50,7 +42,11 @@ typedef struct { u8 pad[0x8]; u32 x8; } PadState;
 typedef struct { PadState* pad; u8 pad4[0x14]; } PadInfo;
 
 extern u32 lbl_80310B3C[];
-extern EvCam lbl_803136A8;
+extern NJS_POINT3 lbl_803136A8;
+extern NJS_POINT3 lbl_803136B4;
+extern NJS_POINT3 lbl_803136C0;
+extern NJS_POINT3 lbl_803136CC;
+extern NJS_POINT3 lbl_803136D8;
 extern NJS_POINT3 lbl_803139B4[30];
 extern NJS_POINT3 lbl_8031384C[];
 extern Angle lbl_803136E4[30][3];
@@ -175,19 +171,6 @@ typedef struct Ent_801EE324 {
     s16 val;                /* 0x02 */
 } Ent_801EE324;
 extern s32 fn_801F4C24(s16 id);
-typedef struct {
-    u8 pad0[0x48];
-    s16 x48;
-    u8 pad4a[2];
-    s16 x4c;
-    s16 x4e;
-    u8 pad50[2];
-    s16 x52;
-    s16 x54;
-    s16 x56;
-    s16 x58;
-    s16 x5a;
-} Chr_801EF054;
 typedef InvEnt Slot;
 extern s16 fn_801EE344(s16 item, s32 stat);
 extern void fn_801EFB74(s16 id, u32 kind);
@@ -200,8 +183,14 @@ extern void fn_801EF7E0(void);
 extern void fn_8021BED0(void);
 extern void fn_8021B2B4(void);
 extern const char lbl_802C4848[];
-extern u8 lbl_80313B20[];
-extern void* lbl_803474D8;
+/* The block lbl_803474D8 points at: experience per level, per character, then per element. */
+typedef struct EvTbl {
+    s32 exp[6][99];         /* 0x000 */
+    s16 magic[6][6][6];     /* 0x948 */
+    u8 pad[0xB74 - 0xAF8];
+} EvTbl;
+extern EvTbl lbl_80313B20;
+extern EvTbl* lbl_803474D8;
 extern void fn_801EFC88(s16 idx);
 extern void fn_801EFFD8(s16 id);
 extern void fn_801EFFFC(s16 id);
@@ -241,7 +230,8 @@ extern void *fn_801F48AC(s16);
 extern void fn_801F1F80(Menu *, Slot *, s32, s32);
 
 extern void fn_801EE5A4(s32);
-extern void fn_801EF300(void);
+extern u8 fn_801EF300(void);
+extern void fn_801EF054(StatRec *p, s32 idx);
 
 inline void VecSet(NJS_POINT3* p, f32 v) {
     p->x = p->y = p->z = v;
@@ -291,7 +281,7 @@ inline void EvDrawOverlay(EvObj* obj, s16 flag) {
     o.y = 240.0f;
     o.data = &data;
     o.data->flag = (flag == 0 || lbl_803477A0 != 0) == 0;
-    fn_80005D98(&o, 0, 0x21, fn_801DBD9C(-1.08f + z));
+    fn_80005D98(&o, 0, 0x21, fn_801DBD9C(-1.0799999f + z));
 }
 
 inline f32 CamDist(EvObj* obj) {
@@ -1388,8 +1378,8 @@ int fn_801F0284(int a, int who, int kind, int idx, int all)
 
 void fn_801F01E4(void) {
     void* buf = fn_801CC3C4(lbl_802C4848);
-    MemCopy(lbl_80313B20, buf, 0xB74);
-    lbl_803474D8 = lbl_80313B20;
+    MemCopy(&lbl_80313B20, buf, 0xB74);
+    lbl_803474D8 = &lbl_80313B20;
     fn_801E17E0(buf);
     {
         s32 i;
@@ -1541,11 +1531,11 @@ void fn_801EFB74(s16 id, u32 kind)
     } while (i < n);
 }
 
-void fn_801EF054(Chr_801EF054 *p, s32 idx)
+void fn_801EF054(StatRec *p, s32 idx)
 {
     s16 sum = 0;
 
-    p->x52 = p->x48;
+    p->x52[0] = p->x48[0];
     if (lbl_8030B7F4.chr[idx].slot0 != -1) {
         sum = (s16)(fn_801EE344(lbl_8030B7F4.chr[idx].slot0, 0x10));
     }
@@ -1555,12 +1545,12 @@ void fn_801EF054(Chr_801EF054 *p, s32 idx)
     if (lbl_8030B7F4.chr[idx].slot2 != -1) {
         sum = sum + fn_801EE344(lbl_8030B7F4.chr[idx].slot2, 0x10);
     }
-    p->x52 += sum;
-    if (p->x52 > 999) {
-        p->x52 = 999;
+    p->x52[0] += sum;
+    if (p->x52[0] > 999) {
+        p->x52[0] = 999;
     }
 
-    p->x54 = p->x4c;
+    p->x52[1] = p->x48[2];
     sum = 0;
     if (lbl_8030B7F4.chr[idx].slot0 != -1) {
         sum = (s16)(fn_801EE344(lbl_8030B7F4.chr[idx].slot0, 0x11));
@@ -1571,12 +1561,12 @@ void fn_801EF054(Chr_801EF054 *p, s32 idx)
     if (lbl_8030B7F4.chr[idx].slot2 != -1) {
         sum = sum + fn_801EE344(lbl_8030B7F4.chr[idx].slot2, 0x11);
     }
-    p->x54 += sum;
-    if (p->x54 > 999) {
-        p->x54 = 999;
+    p->x52[1] += sum;
+    if (p->x52[1] > 999) {
+        p->x52[1] = 999;
     }
 
-    p->x56 = p->x4c;
+    p->x52[2] = p->x48[2];
     sum = 0;
     if (lbl_8030B7F4.chr[idx].slot0 != -1) {
         sum = (s16)(fn_801EE344(lbl_8030B7F4.chr[idx].slot0, 0x12));
@@ -1587,9 +1577,9 @@ void fn_801EF054(Chr_801EF054 *p, s32 idx)
     if (lbl_8030B7F4.chr[idx].slot2 != -1) {
         sum = sum + fn_801EE344(lbl_8030B7F4.chr[idx].slot2, 0x12);
     }
-    p->x56 += sum;
-    if (p->x56 > 999) {
-        p->x56 = 999;
+    p->x52[2] += sum;
+    if (p->x52[2] > 999) {
+        p->x52[2] = 999;
     }
 
     sum = 0;
@@ -1602,12 +1592,12 @@ void fn_801EF054(Chr_801EF054 *p, s32 idx)
     if (lbl_8030B7F4.chr[idx].slot2 != -1) {
         sum = sum + fn_801EE344(lbl_8030B7F4.chr[idx].slot2, 0x13);
     }
-    p->x58 = sum;
-    if (p->x58 > 999) {
-        p->x58 = 999;
+    p->x52[3] = sum;
+    if (p->x52[3] > 999) {
+        p->x52[3] = 999;
     }
 
-    p->x5a = p->x4e;
+    p->x52[4] = p->x48[3];
     sum = 0;
     if (lbl_8030B7F4.chr[idx].slot0 != -1) {
         sum = (s16)(fn_801EE344(lbl_8030B7F4.chr[idx].slot0, 0x14));
@@ -1618,9 +1608,9 @@ void fn_801EF054(Chr_801EF054 *p, s32 idx)
     if (lbl_8030B7F4.chr[idx].slot2 != -1) {
         sum = sum + fn_801EE344(lbl_8030B7F4.chr[idx].slot2, 0x14);
     }
-    p->x5a += sum;
-    if (p->x5a > 999) {
-        p->x5a = 999;
+    p->x52[4] += sum;
+    if (p->x52[4] > 999) {
+        p->x52[4] = 999;
     }
 }
 
@@ -1943,8 +1933,8 @@ void fn_801EBC5C(EvObj* obj) {
             case 2:
                 ObjFace(obj, obj->x20c);
                 ObjSetMotion(obj, obj->x172);
-            case 3:
                 obj->state = 3;
+            case 3:
                 obj->x1fc = Dec(obj->x1fc);
                 obj->x1fe = Dec(obj->x1fe);
                 obj->state = fn_801ECA2C(obj, ObjMove(obj) == 0);
@@ -1958,8 +1948,8 @@ void fn_801EBC5C(EvObj* obj) {
                 break;
             case 4:
                 ObjStopIdle(obj);
-            case 5:
                 obj->state = 5;
+            case 5:
                 obj->x1fe = Dec(obj->x1fe);
                 obj->x1fc = Dec(obj->x1fc);
                 ObjTick(obj);
@@ -1981,8 +1971,8 @@ void fn_801EBC5C(EvObj* obj) {
                 break;
             case 7:
                 ObjTurnTo(obj, obj->x20c);
-            case 8:
                 obj->state = 8;
+            case 8:
                 if (ObjTurnUpdate(obj)) {
                     obj->state = obj->x21d;
                 }
@@ -1990,8 +1980,8 @@ void fn_801EBC5C(EvObj* obj) {
             case 9:
                 ObjFace(obj, obj->x20c);
                 ObjSetMotion(obj, obj->x172);
-            case 10:
                 obj->state = 10;
+            case 10:
                 obj->x1fc = Dec(obj->x1fc);
                 moved = ObjMove(obj);
                 obj->state = fn_801EDAC0(obj, moved == 0);
@@ -2007,8 +1997,8 @@ void fn_801EBC5C(EvObj* obj) {
                 break;
             case 11:
                 ObjStopIdle(obj);
-            case 12:
                 obj->state = 12;
+            case 12:
                 obj->x1fc = Dec(obj->x1fc);
                 ObjTick(obj);
                 obj->state = 13;
@@ -2026,8 +2016,8 @@ void fn_801EBC5C(EvObj* obj) {
             case 14:
                 ObjFace(obj, obj->x20c);
                 ObjSetMotion(obj, obj->x172);
-            case 15:
                 obj->state = 15;
+            case 15:
                 obj->x1fc = Dec(obj->x1fc);
                 moved = ObjMove(obj);
                 obj->state = fn_801ED69C(obj, moved == 0);
@@ -2043,8 +2033,8 @@ void fn_801EBC5C(EvObj* obj) {
                 break;
             case 16:
                 ObjStopIdle(obj);
-            case 17:
                 obj->state = 17;
+            case 17:
                 obj->x1fc = Dec(obj->x1fc);
                 ObjTick(obj);
                 obj->state = 18;
@@ -2061,8 +2051,8 @@ void fn_801EBC5C(EvObj* obj) {
                 break;
             case 19:
                 ObjSetMotion(obj, (s32)obj->x21c);
-            case 20:
                 obj->state = 20;
+            case 20:
                 fn_801E5DF0(obj);
                 if (obj->x198 != 0) {
                     obj->state = fn_801ED074(obj, 1);
@@ -2277,10 +2267,10 @@ void fn_801EB01C(Task* task) {
     dist = CamDist(obj);
     if (lbl_8034779C == 1) {
         if (dist < (f32)EvMapInfo(obj)->nearDist || lbl_80347778 == 2) {
-            VecFade(&lbl_803136A8.a);
+            VecFade(&lbl_803136A8);
         }
     }
-    VecCopy(&obj->scl, &lbl_803136A8.a);
+    VecCopy(&obj->scl, &lbl_803136A8);
     obj->hidden = lbl_80347440 == 0;
     if (lbl_80347790 == 0) {
         obj->hidden = 1;
@@ -2442,13 +2432,10 @@ void fn_801EA974(NJS_POINT3* a, NJS_POINT3* b) {
 }
 
 void fn_801EA2DC(Task* task) {
-    EvCam* cam = &lbl_803136A8;
     EvObj* obj;
     f32 dist;
     Angle ang[3];
     s32 i;
-    f32* p;
-    double r;
 
     if (task->parent->flags & 0x40) {
         task->flags |= 0x40;
@@ -2489,18 +2476,16 @@ void fn_801EA2DC(Task* task) {
         break;
     case 1:
         fn_801DD5E8(ang, &lbl_803119E0.dir);
-        r = -1.6 * sin(9.587378e-05f * ang[0]);
-        cam->e.x = 3.75f * lbl_803119E0.dir.x + (lbl_803119E0.pos.x + sin(9.587378e-05f * ang[1]) * r);
-        cam->e.y = 3.75f * lbl_803119E0.dir.y + (lbl_803119E0.pos.y + -1.6 * cos(9.587378e-05f * ang[0]));
-        r = -1.6 * sin(9.587378e-05f * ang[0]);
-        cam->e.z = 3.75f * lbl_803119E0.dir.z + (lbl_803119E0.pos.z + cos(9.587378e-05f * ang[1]) * r);
-        VecCopy(&obj->pos, &cam->e);
+        lbl_803136D8.x = 3.75f * lbl_803119E0.dir.x + (lbl_803119E0.pos.x + sin(9.587378e-05f * ang[1]) * (-1.6f * sin(9.587378e-05f * ang[0])));
+        lbl_803136D8.y = 3.75f * lbl_803119E0.dir.y + (lbl_803119E0.pos.y + -1.6f * cos(9.587378e-05f * ang[0]));
+        lbl_803136D8.z = 3.75f * lbl_803119E0.dir.z + (lbl_803119E0.pos.z + cos(9.587378e-05f * ang[1]) * (-1.6f * sin(9.587378e-05f * ang[0])));
+        VecCopy(&obj->pos, &lbl_803136D8);
         obj->ang[0] = -ang[0];
         obj->ang[1] = ang[1] - 0x8000;
         obj->ang[2] = ang[2];
-        cam->d.x = (lbl_803139B4[obj->point].x - lbl_803119E0.pos.x) / 10.0f;
-        cam->d.z = (lbl_803139B4[obj->point].z - lbl_803119E0.pos.z) / 10.0f;
-        cam->d.y = (2.5f + lbl_803139B4[obj->point].y - lbl_803119E0.pos.y) / 10.0f;
+        lbl_803136CC.x = (lbl_803139B4[obj->point].x - lbl_803119E0.pos.x) / 10.0f;
+        lbl_803136CC.y = (2.5f + lbl_803139B4[obj->point].y - lbl_803119E0.pos.y) / 10.0f;
+        lbl_803136CC.z = (lbl_803139B4[obj->point].z - lbl_803119E0.pos.z) / 10.0f;
         obj->x206 = 0;
         obj->motionId = 0;
         obj->x202 = 2;
@@ -2509,8 +2494,8 @@ void fn_801EA2DC(Task* task) {
         obj->scl.y = 1.0f;
         obj->scl.z = 1.0f;
     case 2:
-        VecAdd(&obj->pos, &cam->d);
-        fn_801EA974(&cam->e, &obj->pos);
+        VecAdd(&obj->pos, &lbl_803136CC);
+        fn_801EA974(&lbl_803136D8, &obj->pos);
         if (obj->x206++ > 9) {
             obj->x202 = 3;
             obj->x206 = 0;
@@ -2526,29 +2511,29 @@ void fn_801EA2DC(Task* task) {
             SePlay(0, 1, 0x25);
             obj->x18c = 0.0f;
         }
-        for (i = 0, p = &obj->scl.x; i < 3; i++, p++) {
+        for (i = 0; i < 3; i++) {
             if (obj->x204 == 0) {
-                *p += 0.5f;
-                if (*p > 3.5f) {
-                    *p = 3.5f;
+                (&obj->scl.x)[i] += 0.5f;
+                if ((&obj->scl.x)[i] > 3.5f) {
+                    (&obj->scl.x)[i] = 3.5f;
                     obj->x204 = 1;
                     lbl_8034779C = 1;
                 }
             } else {
-                *p -= 0.5f;
-                if (*p < 1.0f) {
-                    *p = 1.0f;
+                (&obj->scl.x)[i] -= 0.5f;
+                if ((&obj->scl.x)[i] < 1.0f) {
+                    (&obj->scl.x)[i] = 1.0f;
                     obj->x204 = 2;
                     obj->x202 = 4;
                 }
             }
         }
-        fn_801EA974(&cam->e, &obj->pos);
+        fn_801EA974(&lbl_803136D8, &obj->pos);
         fn_801E5DF0(obj);
         break;
     case 4:
-        VecSub2(&obj->pos, &cam->d);
-        fn_801EA974(&cam->e, &obj->pos);
+        VecSub2(&obj->pos, &lbl_803136CC);
+        fn_801EA974(&lbl_803136D8, &obj->pos);
         if (obj->x206++ >= 4) {
             obj->x202 = 0;
             obj->x206 = 0;
@@ -2713,7 +2698,6 @@ void fn_801E9AE0(Task* self) {
 }
 
 void fn_801E8CA4(Task* task) {
-    EvCam* cam = &lbl_803136A8;
     s32 busy = fn_801161B4();
     EvObj* obj = task->work;
     EvObj* w;
@@ -2730,8 +2714,8 @@ void fn_801E8CA4(Task* task) {
         fn_8015ED90(task);
         lbl_80347794 = 0;
         lbl_803477A0 = 0;
-        VecSet(&cam->b, 0.0f);
-        VecSet(&cam->a, 1.0f);
+        VecSet(&lbl_803136B4, 0.0f);
+        VecSet(&lbl_803136A8, 1.0f);
         lbl_8034779C = 0;
         obj->x1ed = 0;
         obj->x1ec = 0;
@@ -2786,15 +2770,7 @@ void fn_801E8CA4(Task* task) {
         ((EvObj*)lbl_80347780->work)->x1ec = 0;
         ((EvObj*)lbl_80347780->work)->speed = fn_801C5D04(obj, 12);
         w = lbl_80347780->work;
-        if (w != NULL) {
-            f32 s = 0.0f;
-            if (fn_801C6068(w, 15)) {
-                s = (f32)EvMapInfo(w)->speed;
-                s *= 0.03f;
-            }
-            w->x164 = s;
-            w->x172 = 11;
-        }
+        ObjSetIdleMotion(w, 11, 0.03f);
         w = lbl_80347780->work;
         w->x24c.x = obj->pos.x;
         w->x24c.y = obj->pos.y;
@@ -2874,10 +2850,10 @@ void fn_801E8CA4(Task* task) {
         b.z = obj->x24c.z;
         dist = fn_80290008(&a, &b);
         if (lbl_80347778 != 2) {
-            VecCopy(&cam->b, &cam->c);
-            VecCopy(&cam->c, &lbl_803119E0.pos);
-            if (busy == 0 && lbl_80347440 == 1 && cam->b.x == cam->c.x && cam->b.y == cam->c.y &&
-                cam->b.z == cam->c.z && (lbl_80310B3C[18] & 0x10)) {
+            VecCopy(&lbl_803136B4, &lbl_803136C0);
+            VecCopy(&lbl_803136C0, &lbl_803119E0.pos);
+            if (busy == 0 && lbl_80347440 == 1 && lbl_803136B4.x == lbl_803136C0.x && lbl_803136B4.y == lbl_803136C0.y &&
+                lbl_803136B4.z == lbl_803136C0.z && (lbl_80310B3C[18] & 0x10)) {
                 lbl_80347790 = 1;
                 if (obj->x1fc++ >= 15) {
                     fn_801EAA08(task);
@@ -2960,7 +2936,7 @@ void fn_801E8CA4(Task* task) {
         fn_80095630(v, 0);
         fn_80116020(0);
         lbl_803477A0 = 0;
-        VecSet(&cam->a, 1.0f);
+        VecSet(&lbl_803136A8, 1.0f);
         if (obj->texlist != NULL && obj->texlist->nbTexture != 0) {
             fn_802275A4(obj->texlist, 0);
         }
@@ -2984,4 +2960,8 @@ void fn_801E8CA4(Task* task) {
 NJS_POINT3 lbl_803139B4[30];
 NJS_POINT3 lbl_8031384C[30];
 Angle lbl_803136E4[30][3];
-EvCam lbl_803136A8;
+NJS_POINT3 lbl_803136D8;
+NJS_POINT3 lbl_803136CC;
+NJS_POINT3 lbl_803136C0;
+NJS_POINT3 lbl_803136B4;
+NJS_POINT3 lbl_803136A8;

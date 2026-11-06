@@ -167,6 +167,144 @@ void* fn_801E1A74(s32 count, s32 size);
 extern s32 fn_801F4C24(s16 id);
 extern s8 fn_801F452C(s16 id);
 
+typedef struct TabEnt {
+    s32 id;  /* 0x00 */
+    s8 b4;   /* 0x04 */
+    u8 pad5;
+    s16 s6;  /* 0x06 */
+    s8 b8;   /* 0x08 */
+    u8 pad9[7];
+} TabEnt;
+typedef struct Hud {
+    s16 state; /* 0x00 */
+    u8 pad2[2];
+    s16 id;    /* 0x04 */
+    s16 s6;    /* 0x06 */
+    s16 timer; /* 0x08 */
+    u8 flag;   /* 0x0a */
+    char text[17];
+} Hud;
+extern s32 lbl_8034733C;
+extern s16 lbl_80347376;
+extern s8 lbl_80347334;
+extern Hud* lbl_80347320;
+extern TabEnt lbl_80309730[];
+void fn_80078AD4(const char* src);
+extern void fn_80078A20(s32 a, s32 b, s32 kind);
+extern s32 fn_8006DB94(void);
+extern s32 fn_8007FCF0(s32);
+extern s32 fn_8006D1C4(void);
+
+Hud* fn_800786C0(void) {
+    s32 idx;
+    if (lbl_8034733C != 4) {
+        return 0;
+    }
+    idx = lbl_80347334;
+    if (lbl_80347376 & 0x2000) {
+        lbl_80347320->id = lbl_80309730[idx].id;
+        lbl_80347320->s6 = lbl_80309730[idx].s6;
+        lbl_80347320->flag = 0;
+        fn_80078AD4("Do nothing");
+        return lbl_80347320;
+    }
+    switch (lbl_80347320->state) {
+    case 0:
+        lbl_80347320->state = 10;
+        return 0;
+    case 10: {
+        s32 v;
+        if (fn_8006DB94() == 0) {
+            return 0;
+        }
+        v = lbl_80309730[idx].id;
+        lbl_80347320->id = v;
+        lbl_80347320->s6 = lbl_80309730[idx].s6;
+        lbl_80347320->flag = 0;
+        switch (v) {
+        case 5:
+            lbl_80347320->state = 1;
+            fn_80078AD4("    Attack    ");
+            break;
+        case 6:
+            lbl_80347320->state = 1;
+            fn_80078AD4("Critical Hit");
+            break;
+        case 7:
+            lbl_80347320->state = 1;
+            fn_80078AD4("    Attack    ");
+            break;
+        case 9:
+            lbl_80347320->state = 2;
+            lbl_80347320->flag = 1;
+            fn_80078AD4("Focus");
+            break;
+        case 10:
+            lbl_80347320->state = 2;
+            fn_80078AD4("      Run      ");
+            break;
+        case 12:
+            lbl_80347320->state = 2;
+            lbl_80347320->flag = 0;
+            switch (lbl_80309730[idx].b8) {
+            case 0:
+            case 6:
+                lbl_80347320->state = 3;
+                lbl_80347320->timer = 0x3c;
+                break;
+            }
+            fn_80078A20(idx, lbl_80347320->s6, v);
+            break;
+        case 11:
+        case 13:
+            lbl_80347320->state = 2;
+            lbl_80347320->flag = 0;
+            fn_80078A20(idx, lbl_80347320->s6, v);
+            break;
+        default:
+            return 0;
+        }
+        break;
+    }
+    case 1: {
+        switch (fn_8007FCF0(lbl_80309730[idx].b4)) {
+        case 4:
+            fn_80078AD4("Counter Attack");
+            break;
+        case 5:
+            fn_80078AD4("Counter Attack");
+            break;
+        default:
+            if (lbl_80347320->id != lbl_80309730[idx].id) {
+                return 0;
+            }
+            break;
+        }
+        break;
+    }
+    case 2:
+        if (lbl_80347320->id != lbl_80309730[idx].id) {
+            if (fn_8006D1C4() != 0) {
+                return 0;
+            }
+        }
+        break;
+    case 3:
+        if (lbl_80347320->timer-- <= 0) {
+            if (lbl_80347320->s6 < 0x24) {
+                fn_80078AD4("Magic failure");
+            } else {
+                fn_80078AD4("S.Move failure");
+            }
+            lbl_80347320->state = 2;
+        }
+        break;
+    default:
+        return 0;
+    }
+    return lbl_80347320;
+}
+
 void fn_80075040(TNode* n, u32 mask, u8 op) {
     fn_80075060(n, mask, op);
 }

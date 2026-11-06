@@ -3170,6 +3170,70 @@ static inline Task* FindChrIdOr0(s8 idx)
     return FindChrId(0);
 }
 
+static inline void Flush(ChrInfo* u)
+{
+    if (u->x1dc != NULL) {
+        fn_8001DD00(u, u->x20);
+        lbl_80309730[u->id].b9 = 1;
+    }
+}
+
+static inline s8 LastCmd(ChrInfo* u)
+{
+    s8 i;
+    for (i = 0; i < 10; i++) {
+        if (u->x28[i] < 0) {
+            if (i != 0) {
+                return u->x28[i - 1];
+            }
+            return -1;
+        }
+    }
+    return u->x28[i - 1];
+}
+
+void fn_8001BE2C(Task* t)
+{
+    ChrInfo* u = ChrW(t)->st;
+    s16 r = fn_80020094(ChrW(t), u->xa, 0, 0);
+    ChrInfo* v;
+    s8 target;
+
+    if (r >= 0) {
+        switch (u->x6) {
+        case 4:
+            if (LastCmd(u) != 0x11) {
+                Flush(u);
+                u->x20 = 0x32;
+            } else {
+                u->x20 = 0x38;
+            }
+            target = ChrW(t)->st->target;
+            v = ChrW(FindChrOr0(target))->st;
+            if (!(v->x20 < 0x36 && v->x20 >= 0x34)) {
+                v->x20 = 0x36;
+                Flush(v);
+                v->x20 = 0x37;
+                v->x50 |= 0x100000;
+            }
+            break;
+        default:
+            Flush(u);
+            u->x20 = 0x33;
+            break;
+        }
+        u->x1c = u->x6;
+        u->x6 = u->xa;
+        u->x50 |= 0x200000;
+        u->state = 0;
+        u->xe8 = u->xe4;
+        u->xe4 = r;
+        u->x134 = 0;
+        u->xec &= 0x7fffffff;
+        fn_80075F2C(t);
+    }
+}
+
 void fn_8001E7F8(f32* out, s8 idx)
 {
     Task* t = FindChrIdOr0(idx);

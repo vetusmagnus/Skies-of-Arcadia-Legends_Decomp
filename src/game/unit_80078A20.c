@@ -18,7 +18,6 @@ void fn_8007D42C(Obj_8007DE54_8007D42C* p);
 extern void *lbl_803475A8;
 extern void *lbl_8034736C;
 extern void *fn_802268E8(void *, void *);
-extern void fn_8007CAB0(void);
 extern void* fn_801E1C7C(int size);
 extern void fn_80217830(s32 arg);
 extern s32 lbl_8034733C;
@@ -29,7 +28,7 @@ extern struct Task_8007BEB4 *lbl_80347308;
 extern struct Task_8007BEB4 *lbl_8034730C;
 extern struct Task_8007BEB4 *lbl_80347310;
 extern struct Task_8007BEB4 *lbl_80347314;
-extern struct Task_8007BEB4 *lbl_80347318;
+extern struct Task_8007CAB0 *lbl_80347318;
 typedef struct Ent {
     s8 on;      /* 0x0 */
     s8 id;      /* 0x1 */
@@ -55,25 +54,25 @@ extern Lim* lbl_80347390;
 extern u32 lbl_802F6918[];
 extern char* lbl_80347320;
 extern s16 lbl_80309DCC[12];
-extern u8* lbl_80346C14;
+extern s8* lbl_80346C14;
 extern s32 lbl_80347338;
 extern void fn_8007C344(struct Task_8007BEB4 *);
 extern void fn_800794D8(void);
 extern void fn_8007A890(struct Task_8007BEB4 *);
-typedef struct Slot_8007BEB4 { u8 pad0[8]; u32 x8; u32 flags; u8 pad10[0x24 - 0x10]; } Slot_8007BEB4;
+typedef struct Slot_8007BEB4 { u32 x0; u8 pad4[4]; u32 x8; u32 flags; u8 pad10[8]; u32 x18; u8 pad1c[8]; } Slot_8007BEB4;
 /* Party status block (0x3A bytes) filled by fn_8007C7F8. */
 typedef struct HudEnt {
-    s16 x0;
-    s16 x2;
-    s16 x4;
+    s16 lv;
+    s16 hp;
+    s16 mp;
     s16 x6;
     s16 x8;
-    s16 xa;
+    s16 st;
     u8 xc;      /* copy of Chr x100 */
     u8 pad;
 } HudEnt;
 typedef struct Hud {
-    u8 count;
+    u8 n;
     u8 pad;
     HudEnt e[4];
 } Hud;
@@ -85,6 +84,38 @@ typedef struct Task_8007BEB4 {
     List* work;     /* 0x24 */
     Hud* hud;       /* 0x28 */
 } Task_8007BEB4;
+/* The battle command menu (task lbl_80347318). */
+typedef struct Menu_8007CAB0 {
+    s8* x0;     /* per-command enabled flags, lbl_80346C14 */
+    s8 x4;      /* command count */
+    s8 x5;      /* selected command */
+    s8 x6;
+    s8 x7;
+    s8 x8;      /* acting party slot */
+    s8 x9;
+} Menu_8007CAB0;
+typedef struct Task_8007CAB0 {
+    u8 pad0[0x18];
+    u8 flags;
+    u8 state;
+    u8 pad1a[0x24 - 0x1a];
+    Menu_8007CAB0* work;    /* 0x24 */
+    Hud* hud;               /* 0x28 */
+} Task_8007CAB0;
+extern s8 lbl_80346C0D;
+extern s32 lbl_80347324;
+extern s32 lbl_80347328;
+extern s32 lbl_80346BF8;
+extern s32 lbl_80346BFC;
+extern s8 fn_801F4CA0(void);
+extern void fn_800255CC(Menu_8007CAB0* w);
+extern void fn_800255BC(Menu_8007CAB0* w);
+extern void fn_80022F0C(Hud* h);
+extern void fn_801E17E0(void* p);
+extern s32 fn_8007C9CC(void);
+void fn_8007C600(u32 arg);
+
+void fn_8007CAB0(Task_8007CAB0* t);
 typedef struct ChrState_8007BEB4 { s32 x0; u8 pad4[0x1c]; } ChrState_8007BEB4;
 extern Slot_8007BEB4 lbl_8030A6D4[];
 extern s32 lbl_80346C10;
@@ -356,8 +387,6 @@ void fn_8007B5B0(Task_8007BEB4* t) {
 
 extern void fn_80022F1C(void *p);
 
-typedef struct Ent_8007C7F8 { s16 lv; s16 hp; s16 mp; s16 x6; s16 x8; s16 st; u8 xc; u8 pad; } Ent_8007C7F8;
-typedef struct Out_8007C7F8 { u8 n; u8 pad1; Ent_8007C7F8 e[4]; } Out_8007C7F8;
 
 extern void fn_80078EFC(void);
 extern void fn_8007B328(s32 idx, s8 val, s32 kind);
@@ -469,14 +498,14 @@ void fn_8007B958(Task_8007BEB4* t, s32 sel, s16 item, s32 kind) {
     }
 }
 
-void fn_8007C7F8(Out_8007C7F8* out)
+void fn_8007C7F8(Hud* out)
 {
     int i;
     Chr_UNIT0000* p;
     s16 f;
     u32 bits;
     s16 v;
-    Ent_8007C7F8* e;
+    HudEnt* e;
 
     out->n = 0;
     for (i = 0; i < 4; i++) {
@@ -688,7 +717,7 @@ void fn_80078AD4(const char* src)
 void fn_8007C600(u32 arg)
 {
     s32 slot;
-    if ((s8)lbl_80346C14[arg] == 0) return;
+    if (lbl_80346C14[arg] == 0) return;
     slot = lbl_80347330;
     switch (arg) {
     case 0:
@@ -698,7 +727,7 @@ void fn_8007C600(u32 arg)
         lbl_80309174[slot].x6 = -1;
         break;
     case 6:
-        if ((int)lbl_80346C14[6] == 2) {
+        if (lbl_80346C14[6] == 2) {
             if (lbl_80347300 == 0) {
                 lbl_80347318->state = 4;
                 lbl_80347300 = fn_802268E8(lbl_80347318, fn_8007C344);
@@ -1284,9 +1313,6 @@ void fn_80078A20(s32 a, s32 b, s32 kind) {
     fn_80078AD4(s);
 }
 
-#ifdef NONMATCHING
-
-
 typedef struct EnemyData {
     u8 pad[0x24];
     s32 x24;    /* max HP */
@@ -1297,12 +1323,10 @@ extern s32 fn_801F4D14(void);
 extern EnemyData* fn_80077B88(u8 id);
 extern s32 fn_802182F4(s32 unused, s32 n, s8 a, s8 b, ...);
 extern s8 lbl_80346C00[4];
-#endif
 
 /* fn_8007D42C (unit_80074D9C): the battle music task (fn_80078658 mode 1). It snapshots the enemy
  * slots, then keeps comparing the party's and the enemies' remaining HP and switches between the
  * calm (state 2), pinch (3) and winning (4) phrase sets of the battle track (fn_802182F4). */
-#ifdef NONMATCHING
 void fn_8007D42C(Obj_8007DE54_8007D42C* p)
 {
     s32 i;
@@ -1317,11 +1341,8 @@ void fn_8007D42C(Obj_8007DE54_8007D42C* p)
     case 0:
         p->state = 1;
         p->buf = fn_801E1C7C(4);
-        {
-            int k;
-            for (k = 0; k < 12; k++) {
-                lbl_80302BD8[k] = lbl_80309DCC[k];
-            }
+        for (i = 0; i < sizeof(lbl_80302BD8) / sizeof(lbl_80302BD8[0]); i++) {
+            lbl_80302BD8[i] = lbl_80309DCC[i];
         }
     case 1:
         if (fn_801F4D14()) {
@@ -1374,8 +1395,8 @@ void fn_8007D42C(Obj_8007DE54_8007D42C* p)
         }
         break;
     case 4:
-        hp = 0;
         max = 0;
+        hp = 0;
         for (i = 0; i < 4; i++) {
             if (lbl_80309DE4[i] != NULL) {
                 m = lbl_80309DE4[i]->x18;
@@ -1421,8 +1442,8 @@ void fn_8007D42C(Obj_8007DE54_8007D42C* p)
         }
         break;
     default:
-        hp = 0;
         max = 0;
+        hp = 0;
         for (i = 0; i < 4; i++) {
             if (lbl_80309DE4[i] != NULL) {
                 m = lbl_80309DE4[i]->x18;
@@ -1472,7 +1493,6 @@ void fn_8007D42C(Obj_8007DE54_8007D42C* p)
         break;
     }
 }
-#endif
 
 extern s8 lbl_80346C00[4];
 int fn_80078D24(int arg)

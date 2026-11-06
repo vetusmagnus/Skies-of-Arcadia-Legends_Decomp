@@ -1988,9 +1988,7 @@ typedef struct Ent_8012048C {
     u8 pad28[0x54 - 0x28];
     u32 x54;
 } Ent_8012048C;
-typedef struct Elem {
-    u8 pad[0x40];
-} Elem;
+typedef Item_8011FC10 Elem;
 typedef struct Eff_8012048C {
     u32 flags;
     u8 pad4[0x18 - 4];
@@ -1999,7 +1997,7 @@ typedef struct Eff_8012048C {
     Ent_8012048C *ents;
     s32 count;
 } Eff_8012048C;
-extern void fn_8011FFF0(f32 *pos, f32 *v, Elem *el, f32 t, void *w);
+extern void fn_8011FFF0(f32 *pos, f32 *v, Elem *el, f32 t, u32 *w);
 extern f32 fn_8011A994(int i, int n, int k, s32 k2, f32 t);
 extern f32 njScalor(NJS_VECTOR *v);
 typedef struct Out_8011B624 {
@@ -10277,6 +10275,82 @@ void fn_8011AEE4(Pt2* p, int n, int k, Pt2* out, f32 t)
     out->y = y;
 }
 
+/* the four corner colours of a streak quad */
+typedef struct Col4 {
+    u32 v[4];
+} Col4;
+extern const Col4 lbl_802B325C;
+
+void fn_8011FFF0(f32 *pos, f32 *v, Elem *el, f32 t, u32 *w) {
+    Col4 cc;
+    u32 *c; /* the last corner's colour */
+    f32 dx, dy, dz;
+    f32 inv;
+    f32 d2;
+    f32 px, vx, py, vy, pz, vz;
+    u32 a;
+    u32 k;
+    if (w != 0) {
+        u32 x = *w;
+        c = cc.v;
+        *c++ = x;
+        *c++ = x;
+        *c++ = x;
+        *c = x;
+    } else {
+        cc = lbl_802B325C;
+        c = &cc.v[3];
+    }
+    if (t < 0.0f) {
+        t = 0.0f;
+    }
+    px = pos[0]; py = pos[1]; pz = pos[2];
+    vx = v[0]; vy = v[1]; vz = v[2];
+    dx = px - vx;
+    dy = py - vy;
+    dz = pz - vz;
+    d2 = dx * dx + dy * dy + dz * dz;
+    inv = 0.0f;
+    if (d2 != inv) {
+        inv = 1.0f / fn_80291A5C(d2);
+    }
+    inv = 0.04f * inv;
+    dx *= inv;
+    dy *= inv;
+    dz *= inv;
+    k = c[-3];
+    a = t * (f32)(k >> 24);
+    k = (a << 24) | (k & 0xFFFFFF);
+    el->p[0].x = px + dx;
+    el->p[0].y = py - dy;
+    el->p[0].z = pz + dz;
+    el->p[0].col = k;
+    k = c[-2];
+    a = t * (f32)(k >> 24);
+    k = (a << 24) | (k & 0xFFFFFF);
+    el->p[1].x = px - dx;
+    el->p[1].y = py + dy;
+    el->p[1].z = pz - dz;
+    el->p[1].col = k;
+    dx *= 15.0f;
+    dy *= 15.0f;
+    dz *= 15.0f;
+    k = c[-1];
+    a = t * (f32)(k >> 24);
+    k = (a << 24) | (k & 0xFFFFFF);
+    el->p[2].x = vx + dx;
+    el->p[2].y = vy - dy;
+    el->p[2].z = vz + dz;
+    el->p[2].col = k;
+    k = c[0];
+    a = t * (f32)(k >> 24);
+    k = (a << 24) | (k & 0xFFFFFF);
+    el->p[3].x = vx - dx;
+    el->p[3].y = vy + dy;
+    el->p[3].z = vz - dz;
+    el->p[3].col = k;
+}
+
 void fn_8012048C(void *o) {
     Eff_8012048C *e = o;
     s32 n = e->count;
@@ -10285,7 +10359,7 @@ void fn_8012048C(void *o) {
     do {
         u32 flags = e->flags;
         f32 t;
-        void *w;
+        u32 *w;
         f32 v[3];
         s32 i;
         f32 *p;

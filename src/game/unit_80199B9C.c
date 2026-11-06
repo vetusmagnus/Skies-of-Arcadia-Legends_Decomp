@@ -830,6 +830,81 @@ void fn_8019D678(Task* t) {
     }
 }
 
+extern void fn_800D2924(EvObj* o);
+extern void fn_801E735C(u32 index, f32 speed, EvObj* o);
+extern s32 fn_800C3518(EvObj* o);
+extern void fn_8015ED90(struct Task* t);
+extern s32 fn_8015E600(EvObj* o);
+extern void fn_801E5DF0(EvObj* o);
+extern void fn_801E66E0(EvObj* o);
+extern void fn_8015EBF4(EvObj* o);
+extern void fn_800C3428(struct Task* t);
+
+static inline s32 Chk_8019DF70(EvObj* o) {
+    s32 r = 0;
+    EvExt* e = o->ext;
+    EvInfoDraw* rec;
+    if (e != NULL) {
+        rec = e->info;
+        if (rec != NULL && rec->count >= 9 && rec->v24 < 0x180 && Flag_8019C190(rec->v24 + 0x800) != 0) r = 1;
+    }
+    return r;
+}
+
+/* Picks the first state: 1 or 3 by the flag, 5 when the object has no motion. */
+static inline s32 Init_8019DF70(EvObj* o) {
+    s32 s = 1;
+    if (Chk_8019DF70(o)) {
+        fn_801E735C(0, -1.0f, o);
+        s = 3;
+    } else {
+        fn_801E735C(0, 1.0f, o);
+    }
+    o->speed = 0.0f;
+    fn_800C3518(o);
+    if (o->motion == NULL) s = 5;
+    return s;
+}
+
+void fn_8019DF70(struct Task* t) {
+    EvObj* o = t->work;
+    fn_800D2924(o);
+    switch (t->state) {
+    case 0:
+    case 0xfe:
+        t->state = Init_8019DF70(o);
+        fn_8015ED90(t);
+        break;
+    case 1:
+        if (fn_8015E600(o) != 0) break;
+        if (Chk_8019DF70(o)) {
+            fn_801E735C(0, -1.0f, o);
+            o->speed = 0.0f;
+            t->state = 3;
+        }
+        fn_801E5DF0(o);
+        break;
+    case 3:
+        if (fn_8015E600(o) != 0) break;
+        if (!Chk_8019DF70(o)) {
+            o->x18c = 0.0f;
+            o->speed = 0.0f;
+            t->state = 1;
+        }
+        fn_801E5DF0(o);
+        break;
+    case 5:
+        fn_801E66E0(o);
+        o->ang[2] += 0x100;
+        break;
+    default:
+        fn_8015EBF4(o);
+        fn_800C3428(t);
+        break;
+    }
+}
+
+
 void SaveLoadTask(Task *task) {
     if (lbl_803475D8 != 0) {
         task->state = 0x1F;

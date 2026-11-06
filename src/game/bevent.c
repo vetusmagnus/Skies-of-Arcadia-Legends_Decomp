@@ -21,21 +21,59 @@ typedef struct {
     u8 pad23;
     u8 pad24[0x24 - 0x24];
 } Slot;
+/* A unit's HUD panel, kept in lbl_80302AB0[n]: the work of its BattleHudDraw task. */
 typedef struct {
-    u8 pad0[8];
-    s32 i8;
-    u8 padc[4];
-    s16 s10;      /* 0x10 */
-    s16 s12;      /* 0x12 */
-    u8 pad14[0x3c - 0x14];
+    u32 flags;    /* 0x00 */
+    s32 w4;       /* 0x04 */
+    s32 i8;       /* 0x08 */
+    f32 fc;       /* 0x0C */
+    s16 s10;      /* 0x10 slot */
+    s16 s12;      /* 0x12 state */
+    s32 x14;      /* 0x14 value shown as text */
+    s32 x18;      /* 0x18 bar direction */
+    s32 x1c;      /* 0x1C */
+    f32 f20;      /* 0x20 HP shown */
+    f32 f24;      /* 0x24 step */
+    s32 x28;      /* 0x28 HP it heads for */
+    s32 x2c;      /* 0x2C max */
+    u8 pad30[0x38 - 0x30];
+    s32 x38;      /* 0x38 */
     u16 h3c;
     u16 h3e;
     u16 h40;
-    u8 pad42[0x6c - 0x42];
+    u8 pad42[2];
+    s16 h44;      /* 0x44 fade mode */
+    s16 h46;      /* 0x46 fade length */
+    s16 h48;      /* 0x48 fade delay */
+    u8 pad4a[2];
+    NJS_POINT3 pos;  /* 0x4C */
+    u8 pad58[0x68 - 0x58];
+    f32 f68;      /* 0x68 height */
     s16 s6c;
-    u8 pad6e[0x9c - 0x6e];
-    Slot slots[8];
+    s16 h6e;      /* 0x6E alpha */
+    u8 pad70[2];
+    s16 tex_id;           /* 0x72 */
+    NJS_TEXLIST* tex;     /* 0x74 */
+    char text[0x10];      /* 0x78 */
+    f32 f88;      /* 0x88 */
+    f32 f8c;      /* 0x8C */
+    u8 pad90[0x98 - 0x90];
+    NJS_TEXLIST* tex98;   /* 0x98 */
+    Slot slots[8];        /* 0x9C */
+    u8 pad1bc[0x1e4 - 0x1bc];
+    f32 f1e4;     /* 0x1E4 bar fraction */
+    f32 f1e8;     /* 0x1E8 */
+    s16 h1ec;     /* 0x1EC */
+    s16 h1ee;     /* 0x1EE */
+    u8 b1f0;      /* 0x1F0 */
+    u8 pad1f1[0x1f8 - 0x1f1];
+    s16 x1f8;     /* 0x1F8 */
+    u8 pad1fa[2];
+    s16 h1fc;     /* 0x1FC */
+    s16 h1fe;     /* 0x1FE */
+    s16 h200;     /* 0x200 */
 } Obj;
+extern Obj* lbl_80302AB0[12];
 typedef struct {
     f32 x, y, z, u, v;
     u32 col;
@@ -286,15 +324,6 @@ u8 fn_8002A034(Obj* o, s32 flag) {
 
 typedef struct { u8 pad[0x40c]; void* cur; u8 pad2[0xf4]; } T98;
 extern T98 lbl_803098C8;
-/* Battle actor lbl_80302AB0[n] (unit_80020B50's Ent): portrait texture and index. */
-typedef struct BActor {
-    u8 pad0[0x72];
-    s16 tex_id;           /* 0x72 */
-    NJS_TEXLIST* tex;     /* 0x74 */
-    u8 pad78[0x1f8 - 0x78];
-    s16 x1f8;             /* 0x1F8 */
-} BActor;
-extern BActor* lbl_80302AB0[12];
 typedef struct EvC { u8 pad[0x20]; void* v; } EvC;
 typedef struct EvB { u8 pad[4]; EvC* c; } EvB;
 typedef struct EvA { u8 pad[8]; EvB* b; } EvA;

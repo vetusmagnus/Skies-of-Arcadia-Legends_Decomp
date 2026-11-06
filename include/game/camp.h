@@ -2,6 +2,7 @@
 #define GAME_CAMP_H
 
 #include "types.h"
+#include "game/pad.h"
 #include "game/task.h"
 #include "game/uiobj.h"
 
@@ -275,11 +276,6 @@ typedef struct Elem801732C8 {
 } Elem801732C8;
 /* The camp menu's controlling task: state 0/0xFE init, 1 wait for the open button, 3 wait for the
  * menu data and start the menu task, 4/5 open, 6 close, 7 tear down, 0xFF delete. */
-/* The controller state lbl_80311A60 points to per port. */
-typedef struct PadState {
-    u8 pad0[8];
-    u32 held; /* 0x08 */
-} PadState;
 typedef struct Self_8016F594 {
     u8 pad[0x2c];
     f32 x, y;

@@ -1,5 +1,6 @@
 #include "types.h"
 #include "game/battle.h"
+#include "game/task.h"
 /* Battle character state (0x8002C010 - 0x80031254): the per-character stat block lbl_80309DE4
  * (Chr: stat recompute fn_8002D72C, damage fn_8002DC14, limit gauge Lim), the event command
  * handlers that take (Msg*, slot index) and set or clear its status bits, the battle unit
@@ -14,7 +15,7 @@
 typedef struct Unit {
     s8 id;                  /* 0x00 */
     u8 pad1[3];
-    u8 x4;                  /* 0x04 */
+    s8 x4;                  /* 0x04 */
     u8 pad5;
     s16 x6;                 /* 0x06 */
     s16 x8;                 /* 0x08 */
@@ -31,7 +32,7 @@ typedef struct Unit {
     u8 pad43[0x50 - 0x43];
     u32 x50;                /* 0x50 */
     u8 pad54[0x5A - 0x54];
-    u8 x5a;                 /* 0x5A */
+    s8 x5a;                 /* 0x5A */
     u8 pad5b[0xEC - 0x5B];
     u32 xec;                /* 0xEC */
     u32 xf0;                /* 0xF0 */
@@ -86,22 +87,22 @@ typedef struct Chr {
     s32 x18;                /* 0x18 */
     u32 bits;               /* 0x1C */
     s16 x20[4];
-    s16 x28[2][3];
-    s16 x34[2][3];
-    s16 x40[4][4];
-    s16 x60[4][4];
+    s16 x28[6];
+    s16 x34[6];
+    s16 x40[16];
+    s16 x60[16];
     s16 x80[5];
     s16 x8a[5];
-    s16 x94[2][3];
-    s16 xa0[2][3];
+    s16 x94[6];
+    s16 xa0[6];
     u8 padac[12];
     s8 xb8;
     s8 xb9;
     s16 xba;
-    s16 xbc[2][3];
-    s16 xc8[4][4];
+    s16 xbc[6];
+    s16 xc8[16];
     s16 xe8[5];
-    s16 xf2[2][3];
+    s16 xf2[6];
     s8 xfe;
     s8 xff;
 } Chr;
@@ -180,16 +181,16 @@ extern void fn_8002D684(Chr*);
 extern void fn_8002D72C(Chr*);
 extern void fn_8002DC14(Msg*, s16);
 extern void fn_8006E75C(void*, const char*, s32);
-extern Tk* fn_80021658(int);
+extern Tk* fn_80021658(s8);
 extern Tk* fn_8001E05C(void*);
 extern int fn_8001BBF8(void*);
 extern int fn_8001D944(u8, void*);
 extern void fn_800085EC(void*, s32, s32, s32, s32);
-extern int fn_8002111C(u8, s8, int);
-extern int fn_800214FC(int, s16, int);
-extern void fn_8001F814();
-extern void fn_8002EB4C(int, int);
-extern void fn_8002ECA4(Unit*, int);
+extern int fn_8002111C(s8, s8, int);
+extern int fn_800214FC(s8, s16, s8);
+extern void fn_8001F814(s8, s8);
+extern void fn_8002EB4C(s8, s8);
+extern void fn_8002ECA4(Unit*, s8);
 extern void fn_80032BBC(s8, s32);
 extern void fn_80032B6C(s8, s32);
 extern void fn_80029168(s32, s32);
@@ -230,11 +231,11 @@ extern void fn_80032AF8(s8 a, u16 b);
 extern void fn_8002923C(s32 id, s32 a, s32 b);
 extern void fn_80020B28(Unit*);
 extern int fn_80031524(int);
-extern u32 fn_800215EC(u8);
-extern void fn_800324B8(u8, int);
-extern void fn_8003FA30(Unit*, u8);
+extern u32 fn_800215EC(s8);
+extern void fn_800324B8(s8, int);
+extern void fn_8003FA30(Unit*, s8);
 extern s16 fn_80020094(Wk*, s16, int, int);
-extern void fn_8003FB70(Tk*, int);
+extern void fn_8003FB70(Tk*, s8);
 extern int rand(void);
 extern Ent2 lbl_80309730[12];
 extern void fn_80081EF4(s8, int);
@@ -261,7 +262,7 @@ extern void fn_80061048(char*);
 extern void fn_80046BB0(const char*, s32*);
 extern s32 fn_80009500(void*, s32, s32);
 extern s8 fn_8000F8F8(void*, char*, s32, s32, s32);
-extern s32 fn_8006801C(Tk*, s16);
+extern s32 fn_8006801C(Task*, s16);
 extern void fn_8006DC6C(void);
 extern s16 fn_80068348(s16);
 extern char lbl_802AD1D0[];
@@ -330,10 +331,10 @@ static inline void ChrBoostX94(s16 i) {
     Chr* e = lbl_80309DE4[i];
     e->flags |= 8;
     e->bits |= 0x100000;
-    e->xa0[0][0] = e->xf2[0][0] / 4;
-    e->x94[0][0] += e->xa0[0][0];
-    e->xa0[0][1] = e->xf2[0][1] / 4;
-    e->x94[0][1] += e->xa0[0][1];
+    e->xa0[0] = e->xf2[0] / 4;
+    e->x94[0] += e->xa0[0];
+    e->xa0[1] = e->xf2[1] / 4;
+    e->x94[1] += e->xa0[1];
 }
 
 static inline void ChrBoostX80(s16 i) {
@@ -518,10 +519,10 @@ void fn_8002C6B8(Msg* a, s16 i) {
         e->x80[4] += e->x8a[4];
     }
     if (e->flags & 8) {
-        e->xa0[0][0] += e->xf2[0][0] / 4;
-        e->x94[0][0] += e->xa0[0][0];
-        e->xa0[0][1] += e->xf2[0][1] / 4;
-        e->x94[0][1] += e->xa0[0][1];
+        e->xa0[0] += e->xf2[0] / 4;
+        e->x94[0] += e->xa0[0];
+        e->xa0[1] += e->xf2[1] / 4;
+        e->x94[1] += e->xa0[1];
     }
     Acc2(a, i);
     fn_80010474(i);
@@ -549,7 +550,7 @@ void fn_8002C894(Msg* a, s16 i) {
     int k;
     e->bits |= 0x40;
     for (k = 0; k < 16; k++) {
-        e->x40[0][k] = 0;
+        e->x40[k] = 0;
     }
 }
 
@@ -627,10 +628,10 @@ void fn_8002CAD8(Msg* a, s16 i) {
     }
     if (old & 8) {
         e->flags |= 8;
-        e->xa0[0][0] += e->xf2[0][0] / 4;
-        e->x94[0][0] += e->xa0[0][0];
-        e->xa0[0][1] += e->xf2[0][1] / 4;
-        e->x94[0][1] += e->xa0[0][1];
+        e->xa0[0] += e->xf2[0] / 4;
+        e->x94[0] += e->xa0[0];
+        e->xa0[1] += e->xf2[1] / 4;
+        e->x94[1] += e->xa0[1];
     }
 }
 
@@ -660,12 +661,12 @@ void fn_8002CC74(Msg* a, s16 i) {
     e->flags &= ~0x4;
     e->flags &= ~0x8;
     e->bits |= 0x80000;
-    e->xa0[0][0] -= e->xf2[0][0] / 4;
-    e->xa0[0][1] -= e->xf2[0][1] / 4;
-    e->xa0[0][2] -= e->xf2[0][2] / 4;
-    e->xa0[1][0] -= e->xf2[1][0] / 4;
-    e->xa0[1][1] -= e->xf2[1][1] / 4;
-    e->xa0[1][2] -= e->xf2[1][2] / 4;
+    e->xa0[0] -= e->xf2[0] / 4;
+    e->xa0[1] -= e->xf2[1] / 4;
+    e->xa0[2] -= e->xf2[2] / 4;
+    e->xa0[3] -= e->xf2[3] / 4;
+    e->xa0[4] -= e->xf2[4] / 4;
+    e->xa0[5] -= e->xf2[5] / 4;
     fn_8002D72C(e);
 }
 
@@ -679,26 +680,26 @@ void fn_8002CDF0(Msg* a, s16 i) {
 void fn_8002CE40(Msg* a, s16 i) {
     Chr* e = lbl_80309DE4[i];
     e->flags |= 0x40;
-    e->xa0[0][1] -= e->xf2[0][1] / 4;
-    e->x94[0][1] += e->xa0[0][1];
+    e->xa0[1] -= e->xf2[1] / 4;
+    e->x94[1] += e->xa0[1];
 }
 
 void fn_8002CE8C(Msg* a, s16 i) {
     Chr* e = lbl_80309DE4[i];
     e->flags |= 0x20;
-    e->xa0[0][0] -= e->xf2[0][0] / 4;
-    e->x94[0][0] += e->xa0[0][0];
+    e->xa0[0] -= e->xf2[0] / 4;
+    e->x94[0] += e->xa0[0];
 }
 
 void fn_8002CED8(Msg* a, s16 i) {
     Chr* e = lbl_80309DE4[i];
     e->flags |= 0x10;
-    e->xa0[0][0] += e->xf2[0][0] / 4;
-    e->xa0[0][1] += e->xf2[0][1] / 4;
-    e->xa0[0][2] += e->xf2[0][2] / 4;
-    e->xa0[1][0] += e->xf2[1][0] / 4;
-    e->xa0[1][1] += e->xf2[1][1] / 4;
-    e->xa0[1][2] += e->xf2[1][2] / 4;
+    e->xa0[0] += e->xf2[0] / 4;
+    e->xa0[1] += e->xf2[1] / 4;
+    e->xa0[2] += e->xf2[2] / 4;
+    e->xa0[3] += e->xf2[3] / 4;
+    e->xa0[4] += e->xf2[4] / 4;
+    e->xa0[5] += e->xf2[5] / 4;
     fn_8002D72C(e);
 }
 
@@ -706,10 +707,10 @@ void fn_8002CFA8(Msg* a, s16 i) {
     Chr* e = lbl_80309DE4[i];
     e->flags |= 8;
     e->bits |= 0x100000;
-    e->xa0[0][0] = e->xf2[0][0] / 4;
-    e->x94[0][0] += e->xa0[0][0];
-    e->xa0[0][1] = e->xf2[0][1] / 4;
-    e->x94[0][1] += e->xa0[0][1];
+    e->xa0[0] = e->xf2[0] / 4;
+    e->x94[0] += e->xa0[0];
+    e->xa0[1] = e->xf2[1] / 4;
+    e->x94[1] += e->xa0[1];
 }
 
 void fn_8002D018(Msg* a, s16 i) {
@@ -723,15 +724,15 @@ void fn_8002D018(Msg* a, s16 i) {
 void fn_8002D06C(Msg* a, s16 i) {
     Chr* e = lbl_80309DE4[i];
     e->flags |= 2;
-    e->xa0[0][1] += e->xf2[0][1] / 4;
-    e->x94[0][1] += e->xa0[0][1];
+    e->xa0[1] += e->xf2[1] / 4;
+    e->x94[1] += e->xa0[1];
 }
 
 void fn_8002D0B8(Msg* a, s16 i) {
     Chr* e = lbl_80309DE4[i];
     e->flags |= 8;
-    e->xa0[0][0] += e->xf2[0][0] / 4;
-    e->x94[0][0] += e->xa0[0][0];
+    e->xa0[0] += e->xf2[0] / 4;
+    e->x94[0] += e->xa0[0];
 }
 
 void fn_8002D104(Msg* a, s16 i) {
@@ -741,12 +742,12 @@ void fn_8002D104(Msg* a, s16 i) {
     }
     if (e->bits & 0x80000) {
         fn_8002D684(e);
-        e->xa0[0][0] -= e->xf2[0][0] / 4;
-        e->xa0[0][1] -= e->xf2[0][1] / 4;
-        e->xa0[0][2] -= e->xf2[0][2] / 4;
-        e->xa0[1][0] -= e->xf2[1][0] / 4;
-        e->xa0[1][1] -= e->xf2[1][1] / 4;
-        e->xa0[1][2] -= e->xf2[1][2] / 4;
+        e->xa0[0] -= e->xf2[0] / 4;
+        e->xa0[1] -= e->xf2[1] / 4;
+        e->xa0[2] -= e->xf2[2] / 4;
+        e->xa0[3] -= e->xf2[3] / 4;
+        e->xa0[4] -= e->xf2[4] / 4;
+        e->xa0[5] -= e->xf2[5] / 4;
         fn_8002D72C(e);
     }
     e->flags &= ~0x8;
@@ -767,12 +768,12 @@ void fn_8002D27C(Msg* a, s16 i) {
     }
     if (e->bits & 0x80000) {
         fn_8002D684(e);
-        e->xa0[0][0] -= e->xf2[0][0] / 4;
-        e->xa0[0][1] -= e->xf2[0][1] / 4;
-        e->xa0[0][2] -= e->xf2[0][2] / 4;
-        e->xa0[1][0] -= e->xf2[1][0] / 4;
-        e->xa0[1][1] -= e->xf2[1][1] / 4;
-        e->xa0[1][2] -= e->xf2[1][2] / 4;
+        e->xa0[0] -= e->xf2[0] / 4;
+        e->xa0[1] -= e->xf2[1] / 4;
+        e->xa0[2] -= e->xf2[2] / 4;
+        e->xa0[3] -= e->xf2[3] / 4;
+        e->xa0[4] -= e->xf2[4] / 4;
+        e->xa0[5] -= e->xf2[5] / 4;
         fn_8002D72C(e);
     }
     e->flags &= ~0x8;
@@ -868,10 +869,10 @@ void fn_8002D60C(Msg* a, s16 i) {
 
 void fn_8002D684(Chr* c) {
     int i;
-    for (i = 0; i < 6; i++) c->x34[0][i] = 0;
-    for (i = 0; i < 16; i++) c->x60[0][i] = 0;
+    for (i = 0; i < 6; i++) c->x34[i] = 0;
+    for (i = 0; i < 16; i++) c->x60[i] = 0;
     for (i = 0; i < 5; i++) c->x8a[i] = 0;
-    for (i = 0; i < 6; i++) c->xa0[0][i] = 0;
+    for (i = 0; i < 6; i++) c->xa0[i] = 0;
     fn_8002D72C(c);
 }
 
@@ -881,7 +882,6 @@ void fn_8002D72C(Chr* c) {
     s8 w;
     s16 e;
     int i;
-    int k;
 
     v = c->x2 + c->xb8;
     if (v < 0) v = 0;
@@ -899,41 +899,17 @@ void fn_8002D72C(Chr* c) {
     else if (v > e * 2) v = e * 2;
     c->x8 = v;
 
-    k = 0;
-    for (i = 0; i < 4; i += 2) {
-        v = c->x34[k][0] + c->xbc[k][0];
+    for (i = 0; i < 6; i++) {
+        v = c->x34[i] + c->xbc[i];
         if (v < 0) v = 0;
         else if (v > 255) v = 255;
-        c->x28[k][0] = v;
-        v = c->x34[k][1] + c->xbc[k][1];
-        if (v < 0) v = 0;
-        else if (v > 255) v = 255;
-        c->x28[k][1] = v;
-        v = c->x34[k][2] + c->xbc[k][2];
-        if (v < 0) v = 0;
-        else if (v > 255) v = 255;
-        c->x28[k][2] = v;
-        k++;
+        c->x28[i] = v;
     }
-    k = 0;
-    for (i = 0; i < 12; i += 3) {
-        v = c->x60[k][0] + c->xc8[k][0];
+    for (i = 0; i < 16; i++) {
+        v = c->x60[i] + c->xc8[i];
         if (v < 0) v = 0;
         else if (v > 255) v = 255;
-        c->x40[k][0] = v;
-        v = c->x60[k][1] + c->xc8[k][1];
-        if (v < 0) v = 0;
-        else if (v > 255) v = 255;
-        c->x40[k][1] = v;
-        v = c->x60[k][2] + c->xc8[k][2];
-        if (v < 0) v = 0;
-        else if (v > 255) v = 255;
-        c->x40[k][2] = v;
-        v = c->x60[k][3] + c->xc8[k][3];
-        if (v < 0) v = 0;
-        else if (v > 255) v = 255;
-        c->x40[k][3] = v;
-        k++;
+        c->x40[i] = v;
     }
     for (i = 0; i < 5; i++) {
         e = c->xe8[i];
@@ -942,24 +918,12 @@ void fn_8002D72C(Chr* c) {
         else if (v > e * 2) v = e * 2;
         c->x80[i] = v;
     }
-    k = 0;
-    for (i = 0; i < 4; i += 2) {
-        e = c->xf2[k][0];
-        v = c->xa0[k][0] + e;
+    for (i = 0; i < 6; i++) {
+        e = c->xf2[i];
+        v = c->xa0[i] + e;
         if (v < 1) v = 1;
         else if (v > e * 2) v = e * 2;
-        c->x94[k][0] = v;
-        e = c->xf2[k][1];
-        v = c->xa0[k][1] + e;
-        if (v < 1) v = 1;
-        else if (v > e * 2) v = e * 2;
-        c->x94[k][1] = v;
-        e = c->xf2[k][2];
-        v = c->xa0[k][2] + e;
-        if (v < 1) v = 1;
-        else if (v > e * 2) v = e * 2;
-        c->x94[k][2] = v;
-        k++;
+        c->x94[i] = v;
     }
 }
 
@@ -1355,9 +1319,9 @@ int fn_8002E5D0(Tk* o) {
     int c;
     Unit* w = o->work->w;
     int a = 0;
-    u8 x4;
+    s8 x4;
     int b = 0;
-    u8 save;
+    s8 save;
     Unit* w3;
     int r;
 
@@ -1411,7 +1375,7 @@ int fn_8002E5D0(Tk* o) {
                     w2->xf0 |= 0x04000000;
                 }
                 w2->xf4 = flags;
-                if ((s8)w->x4 == (s8)w->id && w2->x38 <= 0 && w2->x3c[0] < 0 && w2->x3c[1] < 0 &&
+                if (w->x4 == w->id && w2->x38 <= 0 && w2->x3c[0] < 0 && w2->x3c[1] < 0 &&
                     w2->x3c[2] < 0) {
                     a = 1;
                     c = 0;
@@ -1434,7 +1398,7 @@ int fn_8002E5D0(Tk* o) {
             if (a == 0 && fn_8003146C(w2->x34)) {
                 a = fn_8002111C(w->x4, w->id, w->x6);
             }
-            if (a == 0 && (s8)w->x4 == (s8)w->id) {
+            if (a == 0 && w->x4 == w->id) {
                 fn_8002E48C(o2);
             }
         }
@@ -1515,7 +1479,7 @@ int fn_8002E5D0(Tk* o) {
     return 1;
 }
 
-void fn_8002EB4C(int o, int arg) {
+void fn_8002EB4C(s8 o, s8 arg) {
     s16 k;
     Tk* p;
     s16 pick = -1;
@@ -1548,9 +1512,9 @@ void fn_8002EB4C(int o, int arg) {
     fn_8001F814(o, arg);
 }
 
-void fn_8002ECA4(Unit* a, int b) {
+void fn_8002ECA4(Unit* a, s8 b) {
     Tk* p;
-    s8 idx;
+    int idx;
     Unit* w;
     s32 v;
     int ok;
@@ -1576,7 +1540,7 @@ void fn_8002ECA4(Unit* a, int b) {
             break;
         }
         w->x50 &= 0x0FFFFFFF;
-        if ((s8)b != a->id) {
+        if (b != a->id) {
             switch (lbl_80309730[idx].x8) {
             case 0:
                 w->x50 |= 0x80000000;
@@ -1812,9 +1776,10 @@ s32 fn_8002F674(void) {
     }
 }
 
-static inline s32 NeedsAdd(Tk* t, s32 hash) {
+static inline s32 NeedsAdd(Task* t, s32 hash) {
     s16 k;
-    s32* p = ((s32*)t->work) + 1;
+    Work_800304DC* w = t->work;
+    s32* p = w->ids;
     for (k = 0; k < 128; p++, k++) {
         if (hash == *p) return 0;
         if (*p == 0) return 1;
@@ -1822,7 +1787,7 @@ static inline s32 NeedsAdd(Tk* t, s32 hash) {
     return 1;
 }
 
-s32 fn_8002F80C(s8 mode, Tk* tab) {
+s32 fn_8002F80C(s8 mode, Task* tab) {
     char* st = lbl_802AD0F8;
     s8 first;
     s8 end;
@@ -1885,9 +1850,13 @@ s32 fn_8002F80C(s8 mode, Tk* tab) {
     return count;
 }
 
-s32 fn_8002FA00(s8 mode, s32 flag, Tk* tab) {
+static inline void SetId(Task* t, s16 i, s32 v) {
+    Work_800304DC* w = t->work;
+    w->ids[i] = v;
+}
+
+s32 fn_8002FA00(s8 mode, s32 flag, Task* tab) {
     char* st = lbl_802AD0F8;
-    Tk** pp;
     s32 count = 0;
     s16 i;
     s32 n = 0;
@@ -1924,12 +1893,10 @@ s32 fn_8002FA00(s8 mode, s32 flag, Tk* tab) {
         end = 12;
         break;
     }
-    i = first;
-    pp = &lbl_80309700[i];
-    for (; i < end; pp++, i++) {
-        if (*pp != NULL) {
+    for (i = first; i < end; i++) {
+        if (lbl_80309700[i] != NULL) {
             s16 type, id;
-            info = (*pp)->work;
+            info = lbl_80309700[i]->work;
             type = info->type;
             id = info->id;
             if (type < 4) {
@@ -1953,17 +1920,16 @@ s32 fn_8002FA00(s8 mode, s32 flag, Tk* tab) {
             fn_80046BB0(buf, &hash);
             if (NeedsAdd(tab, hash)) {
                 if (mode < 5) {
-                    s16 cnt;
                     fn_80009500(lbl_80347398, hash, hash);
-                    ((s32*)tab->work)[(s16)n + 1] = hash;
+                    SetId(tab, n, hash);
                     sprintf(buf, "%s.STD", name1);
                     fn_8006E75C(lbl_80347398, buf, hash);
-                    ((s32*)tab->work)[(s16)(n + 1) + 1] = hash;
+                    SetId(tab, n + 1, hash);
                     n += 2;
                     if (mode < 3) {
                         sprintf(buf, "%s0.STD", name1);
                         fn_8006E75C(lbl_80347398, buf, hash);
-                        ((s32*)tab->work)[(s16)n + 1] = hash;
+                        SetId(tab, n, hash);
                         n++;
                     }
                 }
@@ -1971,7 +1937,7 @@ s32 fn_8002FA00(s8 mode, s32 flag, Tk* tab) {
                     s16 c = fn_8000F8F8(lbl_80347398, name2, info->id, info->type, hash);
                     s16 j = n;
                     while (c != 0) {
-                        ((s32*)tab->work)[j + 1] = hash;
+                        SetId(tab, j, hash);
                         j++;
                         n++;
                         c--;
@@ -2206,8 +2172,8 @@ s16 fn_800303EC(s32* ids, s32 flag) {
     return count;
 }
 
-void fn_800304DC(Tk* task) {
-    Work_800304DC* w = (Work_800304DC*)task->work;
+void fn_800304DC(Task* task) {
+    Work_800304DC* w = task->work;
     switch (task->state) {
     default:
         break;
@@ -2447,7 +2413,7 @@ void fn_80030C94(Tk* task) {
     case 1:
         switch (((Work_80030C94*)task->work)->timer) {
         case 0x5a:
-            fn_8001F814((u8)a->id, (u8)b->id);
+            fn_8001F814(a->id, b->id);
             fn_800085EC(((Work_80030C94*)task->work)->a, 0x1e, 0x2b, lbl_8030A10C.x10, lbl_8030A10C.x184);
             r = fn_80014C90(b->id, 0x200) ? 2 : 0;
             if (r == 2) {
@@ -2492,7 +2458,7 @@ void fn_80030E5C(Tk* task) {
     Unit* o;
     int r;
     u32 fl;
-    u8 x4;
+    s8 x4;
 
     c = ((Wk*)task->work)->w;
     r = KindA(c->x32);

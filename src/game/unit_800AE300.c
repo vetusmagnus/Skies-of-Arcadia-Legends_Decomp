@@ -18,7 +18,7 @@ typedef struct WaveQuad {
 } WaveQuad;
 /* The wave effect block (a strip of WaveQuads drawn by fn_800B0278). */
 typedef struct {
-    void *x0;       /* 0x00 WaveQuad strip */
+    WaveQuad *x0;   /* 0x00 strip */
     s16 x4;         /* 0x04 vertex count */
     s16 mode;       /* 0x06 */
     f32 amp;        /* 0x08 */
@@ -73,7 +73,7 @@ extern s32* fn_80298E6C(void);
 extern void fn_80297B5C(s32 p);
 extern void fn_801E1784(void* p);
 typedef struct {
-    u8 pad[4];
+    s32 x0;
     s32 mode;
 } Work_800B0FD0;
 typedef struct {
@@ -311,6 +311,138 @@ void fn_800B0900(void)
     lbl_80303650.flags &= ~1;
     lbl_80303650.flags &= ~4;
 }
+
+typedef struct {
+    Obj_800B0FD0 t;
+    Work_800B0FD0 w;
+} Task_800B0FD0;
+extern void* lbl_80347588;
+void fn_800B0FD0(Obj_800B0FD0* o);
+
+
+s32 fn_800B09C0(s8 id, s8 flag, f32 z, f32 amp, f32 k, f32 spd, f32 seg)
+{
+    Blk_80303618 *b;
+    if (lbl_80303634.x0 != NULL) {
+        Free_800B0900(lbl_80303634.x0);
+    }
+    b = &lbl_80303618;
+    if (b->pts != NULL) {
+        Free_800B0900(b->pts);
+    }
+    switch (id) {
+    case 0:
+    case 2: {
+        s32 i;
+        s32 j;
+        WaveQuad *vp;
+        lbl_80303634.x0 = fn_801E1A2C(1, sizeof(WaveVtx) * (2.0f + 1280.0f / seg));
+        lbl_80303634.x4 = 2.0f + 1280.0f / seg;
+        vp = lbl_80303634.x0;
+        vp->a.x = 0.0f;
+        vp->a.y = 0.0f;
+        vp->a.z = z;
+        vp->a.u = 0.0f;
+        vp->a.v = 0.0f;
+        if (id == 2) {
+            vp->a.w = 0xff7f7f7f;
+        } else {
+            vp->a.w = -1;
+        }
+        vp->b.x = 0.0f;
+        vp->b.y = 480.0f;
+        vp->b.z = z;
+        vp->b.u = 0.0f;
+        vp->b.v = 0.9375f;
+        if (id == 2) {
+            vp->b.w = 0xff7f7f7f;
+        } else {
+            vp->b.w = -1;
+        }
+        vp++;
+        for (j = 2, i = 1; j < lbl_80303634.x4; i++, j += 2) {
+            f32 f = i * seg;
+            f32 g = 0.0009765625f * f;
+            vp->a = lbl_80303634.x0->a;
+            vp->a.x += f;
+            vp->a.u += g;
+            vp->b = lbl_80303634.x0->b;
+            vp->b.x += f;
+            vp->b.u += g;
+            vp++;
+        }
+        break;
+    }
+    case 1:
+    case 3: {
+        s32 i;
+        WaveQuad *vp;
+        s32 j;
+        lbl_80303634.x0 = fn_801E1A2C(1, sizeof(WaveVtx) * (2.0f + 960.0f / seg));
+        lbl_80303634.x4 = 2.0f + 960.0f / seg;
+        vp = lbl_80303634.x0;
+        vp->a.x = 0.0f;
+        vp->a.y = 0.0f;
+        vp->a.z = z;
+        vp->a.u = 0.0f;
+        vp->a.v = 0.0f;
+        if (id == 3) {
+            vp->a.w = 0xff7f7f7f;
+        } else {
+            vp->a.w = -1;
+        }
+        vp->b.x = 640.0f;
+        vp->b.y = 0.0f;
+        vp->b.z = z;
+        vp->b.u = 0.625f;
+        vp->b.v = 0.0f;
+        if (id == 3) {
+            vp->b.w = 0xff7f7f7f;
+        } else {
+            vp->b.w = -1;
+        }
+        vp++;
+        for (j = 2, i = 1; j < lbl_80303634.x4; i++, j += 2) {
+            f32 f = i * seg;
+            f32 g = 0.001953125f * f;
+            vp->a = lbl_80303634.x0->a;
+            vp->a.y += f;
+            vp->a.v += g;
+            vp->b = lbl_80303634.x0->b;
+            vp->b.y += f;
+            vp->b.v += g;
+            vp++;
+        }
+        break;
+    }
+    default:
+        return 0;
+    }
+    lbl_80303634.mode = id;
+    lbl_80303634.amp = amp;
+    lbl_80303634.k = k;
+    lbl_80303634.ph2 = 0.0f;
+    lbl_80303634.ph1 = 0.0f;
+    if (flag != 0) {
+        lbl_80303650.flags |= 8;
+    }
+    if (!spd) {
+        lbl_80303634.spd = 0.05235988f;
+    } else {
+        lbl_80303634.spd = 6.2831855f / spd;
+    }
+    lbl_80303650.flags |= 1;
+    if ((lbl_80303650.flags & 1) && !(lbl_80303650.flags & 4)) {
+        Task_800B0FD0* t = fn_80226704(lbl_80347588, fn_800B0FD0, 0x28);
+        if (t != NULL) {
+            t->t.work = &t->w;
+            t->t.work->x0 = 0;
+            t->t.work->mode = 0;
+            lbl_80303650.flags |= 4;
+        }
+    }
+}
+
 
 extern f32 njSin(Angle a);
 extern f32 njCos(Angle a);

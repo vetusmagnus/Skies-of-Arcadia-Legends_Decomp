@@ -3956,12 +3956,25 @@ typedef struct {
 } Parts;
 extern s32 fn_8022E734(u8 kind, void* p, void* a, void* b, s32 f1, s32 f2, s32 f3);
 typedef struct {
+    NJS_POINT3* pts;    /* 0x00 */
+    u32* cols;          /* 0x04 */
+    UV* idx;            /* 0x08 */
+    u32 count;          /* 0x0C */
+    u32 w10, w14;
+    NJS_POINT3 v18;     /* 0x18 */
+    NJS_POINT3 v24;     /* 0x24 */
+    u8 pad30[0x3C - 0x30];
+} Entry_800472DC;
+typedef struct {
+    u8 pad0[4];
+    void* x4;
+} N80048B08;
+typedef struct {
     u32 count;
-    u8* parts;
+    Entry_800472DC* parts;
 } ModelParts_80048040;
-typedef struct ModelNode_80048040 ModelNode_80048040;
-void fn_80230BD4(s32 a, ModelNode_80048040* node, s16** out, u16 idx);
-void fn_80048654(u32 v, u8* part, u32* index, s32 flags, ModelNode_80048040* node);
+void fn_80230BD4(s32 a, N80048B08* node, s16** out, u16 idx);
+void fn_80048654(s16* p, Entry_800472DC* out, u32* cnt, s16 id, N80048B08* node);
 typedef struct ModelNode_800481F4 {
     u8 pad0[4];
     void* mesh;            /* 0x04 */
@@ -3986,10 +3999,6 @@ typedef struct T800483EC {
     struct T800483EC* x30;
 } T800483EC;
 extern s32 fn_80048570(s16*);
-typedef struct {
-    u8 pad0[4];
-    void* x4;
-} N80048B08;
 extern u8 lbl_802DF030[];
 extern int fn_80230D10(u8, N80048B08*, s16**);
 typedef struct { u8 b[0x4c]; } Blk4C;
@@ -4381,8 +4390,12 @@ typedef struct { Hdr hdr; Vec_8004A40C org; f32 f0; s16 s0; s16 pad0; f32 f1; s1
 typedef struct {
     u8 pad0[0xF0];
     u32 flagsF0;
-    u8 padF4[0x1EC - 0xF4];
+    u8 padF4[0x154 - 0xF4];
+    void* x154;         /* 0x154 */
+    u8 pad158[0x1EC - 0x158];
     u32 flags1EC;
+    u8 x1f0;
+    u8 x1f1;            /* 0x1F1 */
 } TBody;
 typedef struct { u8 pad[0x4C]; TBody* body; } TaskData_8004A40C;
 typedef struct { u8 pad[0x24]; TaskData_8004A40C* data; } TaskRef_8004A40C;
@@ -4809,7 +4822,7 @@ void fn_8004754C(Line* l, f32 a1, f32 a2);
 void fn_80047CF0(Parts* parts, NJS_POINT3* pos, f32* dir, NJS_MATRIX m);
 void fn_80047EDC(MeshSet* pool);
 s32 fn_80047F9C(void* p);
-s16 fn_80048040(ModelParts_80048040* parts, ModelNode_80048040* node, u32* index);
+s16 fn_80048040(ModelParts_80048040* parts, N80048B08* node, u32* index);
 void fn_800481F4(ModelParts_800481F4* parts, ModelNode_800481F4* node, s32* index);
 s32 fn_800482E0(MeshSet* parts, ModelNode_800482E0* node, NJS_POINT3* pos, Angle* rot, NJS_POINT3* scl, NJS_MATRIX mtx);
 void fn_800483EC(T800483EC* a, s32* out);
@@ -4862,17 +4875,7 @@ void fn_80047214(u32 flags) {
 typedef struct {
     NJS_POINT3* pts;    /* 0x00 */
     u32* cols;          /* 0x04 */
-    u32* idx;           /* 0x08 */
-    u32 count;          /* 0x0C */
-    u32 w10, w14;
-    NJS_POINT3 v18;     /* 0x18 */
-    NJS_POINT3 v24;     /* 0x24 */
-    u8 pad30[0x3C - 0x30];
-} Entry_800472DC;
-typedef struct {
-    NJS_POINT3* pts;    /* 0x00 */
-    u32* cols;          /* 0x04 */
-    u32* idx;           /* 0x08 */
+    UV* idx;            /* 0x08 */
     u32 count;          /* 0x0C */
     u32 w10, w14;
     NJS_POINT3 v18;     /* 0x18 */
@@ -4903,7 +4906,7 @@ typedef struct {
     u8 pad84[0x90 - 0x84];
     NJS_POINT3 pts[3];  /* 0x90 */
     u32 cols[3];        /* 0xB4 */
-    u32 idx[3];         /* 0xC0 */
+    UV idx[3];          /* 0xC0 */
     u8 padcc[4];
     s32 wd0;            /* 0xD0 */
     s32 wd4;            /* 0xD4 */
@@ -5254,14 +5257,23 @@ s32 fn_80047F9C(void* p) {
     return count;
 }
 
-s16 fn_80048040(ModelParts_80048040* parts, ModelNode_80048040* node, u32* index) {
-    u32 next2;
-    u32 cur2;
+/* Steps over a strip header word and returns its flag bits, 0 without a header. */
+static inline s16 StripFlags(s16** p) {
+    if (*p == 0) {
+        return 0;
+    }
+    (*p)++;
+    return **p & 0x1fff;
+}
+
+s16 fn_80048040(ModelParts_80048040* parts, N80048B08* node, u32* index) {
+    s16* next2;
+    s16* cur2;
     u32 cur;
     u32 next;
     s16* p;
-    s32 flags;
-    u8* part;
+    s16 flags;
+    Entry_800472DC* part;
     s16 n;
     s16 j;
     u16 i;
@@ -5289,13 +5301,8 @@ s16 fn_80048040(ModelParts_80048040* parts, ModelNode_80048040* node, u32* index
     for (j = 0; j < n; j++) {
         p = 0;
         fn_80230BD4(8, node, &p, j + 1);
-        if (p == 0) {
-            flags = 0;
-        } else {
-            p++;
-            flags = *p & 0x1fff;
-        }
-        part = parts->parts + *index * 0x3c;
+        flags = StripFlags(&p);
+        part = parts->parts + *index;
         if (fn_8022E734(key, node, &cur2, &next2, 0, 0, 0)) {
             fn_80048654(cur2, part, index, flags, node);
             cur2 = next2;
@@ -5312,7 +5319,7 @@ void fn_800481F4(ModelParts_800481F4* parts, ModelNode_800481F4* node, s32* inde
     njRotateXYZ(0, node->rot[0], node->rot[1], node->rot[2]);
     njScale(0, node->scl.x, node->scl.y, node->scl.z);
     if (node->mesh != 0) {
-        fn_80048040((ModelParts_80048040*)parts, (ModelNode_80048040*)node, (u32*)index);
+        fn_80048040((ModelParts_80048040*)parts, (N80048B08*)node, (u32*)index);
     }
     if (node->child != 0) {
         fn_800481F4(parts, node->child, index);
@@ -5460,6 +5467,132 @@ s32 fn_80048570(s16* p) {
         count--;
     }
     return total;
+}
+
+extern void fn_801DBE1C(const char*, ...);
+extern const char lbl_802AD378[];
+
+void fn_80048654(s16* p, Entry_800472DC* out, u32* cnt, s16 id, N80048B08* node) {
+    s16 m;
+    s16 count;
+    s32 flag = 0;
+    s16 type;
+    NJS_POINT3 v;
+    s16* a;
+    UV* b;
+    u8 mode;
+    s32 h;
+    s16 t;
+    s16 k;
+    s16 j;
+    s32 i;
+
+    h = p[2];
+    type = p[0] & 0xff;
+    mode = h >> 14;
+    count = h & 0x3fff;
+    p += 3;
+
+    while (count != 0) {
+        t = *p++;
+        if (t < 0) {
+            t *= -1;
+        }
+        fn_80061F58(&a, t * 2, 0);
+        fn_80061F58(&b, t * 4, 0);
+        for (k = 0; k < t; k++) {
+            a[k] = *p++;
+            switch (type) {
+            case 0x41:
+            case 0x42:
+            case 0x44:
+            case 0x45:
+            case 0x47:
+            case 0x48:
+                flag = 1;
+                b[k].u = p[0];
+                b[k].v = p[1];
+                p += 2;
+                break;
+            default:
+                flag = 0;
+                break;
+            }
+            switch (type) {
+            case 0x43:
+            case 0x44:
+            case 0x45:
+                p += 3;
+                break;
+            case 0x46:
+            case 0x47:
+            case 0x48:
+                p += 2;
+                break;
+            }
+            if (k >= 2) {
+                p += mode;
+            }
+        }
+        for (m = 0; m < t - 2; m++, out++) {
+            out->w10 = id;
+            out->count = 3;
+            out->pts = fn_801E1C7C(0x24);
+            if (out->pts == 0) {
+                fn_801DBE1C(lbl_802AD378);
+            }
+            for (i = 0, j = m; j < m + 3; j++, i++) {
+                fn_80048B08(node, &v.x, a[j]);
+                njCalcPoint(0, &v, &out->pts[i]);
+            }
+            out->v18.x = 0.0f;
+            out->v18.y = 0.0f;
+            out->v18.z = 0.0f;
+            out->v18.x += out->pts[0].x;
+            out->v18.y += out->pts[0].y;
+            out->v18.z += out->pts[0].z;
+            out->v18.x += out->pts[1].x;
+            out->v18.y += out->pts[1].y;
+            out->v18.z += out->pts[1].z;
+            out->v18.x += out->pts[2].x;
+            out->v18.y += out->pts[2].y;
+            out->v18.z += out->pts[2].z;
+            out->v18.x /= 3.0f;
+            out->v18.y /= 3.0f;
+            out->v18.z /= 3.0f;
+            out->pts[0].x -= out->v18.x;
+            out->pts[0].y -= out->v18.y;
+            out->pts[0].z -= out->v18.z;
+            out->pts[1].x -= out->v18.x;
+            out->pts[1].y -= out->v18.y;
+            out->pts[1].z -= out->v18.z;
+            out->pts[2].x -= out->v18.x;
+            out->pts[2].y -= out->v18.y;
+            out->pts[2].z -= out->v18.z;
+            out->cols = fn_801E1C7C(0xc);
+            if (out->cols == 0) {
+                fn_801DBE1C(lbl_802AD378);
+            }
+            out->cols[0] = -1;
+            out->cols[1] = -1;
+            out->cols[2] = -1;
+            if (flag == 0) {
+                out->idx = 0;
+            } else {
+                out->idx = fn_801E1C7C(0xc);
+                if (out->idx == 0) {
+                    fn_801DBE1C(lbl_802AD378);
+                }
+                for (i = 0, j = m; j < m + 3; i++, j++) {
+                    out->idx[i] = b[j];
+                }
+            }
+            (*cnt)++;
+        }
+        fn_801E17E0(a);
+        fn_801E17E0(b);
+        count--;
+    }
 }
 
 int fn_80048B08(N80048B08* node, f32* out, s16 idx) {
@@ -6816,6 +6949,309 @@ void fn_8004C070(Node_8004C070* node) {
     node->work->timer++;
     fn_80037FD8(node->work->cmd, &node->state);
 }
+
+typedef struct {
+    s16 timer;          /* 0x00 */
+    u8 pad2[2];
+    TaskRef_8004A40C* arg; /* 0x04 */
+    void* mtx;          /* 0x08 */
+    u8 pad0c[4];
+    u32 flags;          /* 0x10 */
+    u8 alphaStep;       /* 0x14 */
+    u8 pad15;
+    s16 frame;          /* 0x16 */
+    Vec* pa;            /* 0x18 */
+    Vec* pb;            /* 0x1C */
+    CmdHead c;          /* 0x20 */
+    u32 type;           /* 0x30 */
+    s16 start;          /* 0x34 */
+    s16 end;            /* 0x36 */
+    s16 div;            /* 0x38 */
+    s16 count;          /* 0x3A */
+    s16 interval;       /* 0x3C */
+    s16 id;             /* 0x3E */
+    Vec v40;
+    Vec v4c;
+    Vec v58;
+    u8 col[4];          /* 0x64 */
+    u8 pad68[4];
+    s16 level;          /* 0x6C */
+} Sub_8004C1E4;
+typedef struct {
+    u8 pad0[0x8];
+    NJS_TEXLIST* tex;   /* 0x08 */
+    u8 pad0c[0x4C - 0xC];
+    Sub_8004C1E4* sub;  /* 0x4C */
+    s32 x50;
+    s32 x54;
+} Work_8004C1E4;
+typedef struct {
+    u8 pad[0x18];
+    u8 flags;
+    u8 state;
+    u8 pad1a[0x20 - 0x1A];
+    f32 x20;
+    Work_8004C1E4* work;
+} Node_8004C1E4;
+typedef struct { s32 a; s32* n; s32 c; } Spline_8004C1E4;
+extern void fn_8000F718(u8, s8, u8*);
+extern void fn_80291458(Vec*, Vec*, Spline_8004C1E4*, f32);
+extern void fn_80071A78(Vec*, Vec*, f32);
+extern void fn_8003316C(Quad3D_800470F0*, s16);
+
+#ifdef NONMATCHING
+/* Only register colouring in the trail fill is left. The original zero-extends the s16 index into
+   the loop bound, so a u16 sits between them; a same-width cast matches, a clean form does not. */
+/* Sets the first n - 1 trail points to the head. */
+static inline void TrailFill(Sub_8004C1E4* s, u16 n) {
+    s16 k;
+    for (k = 1; k < n - 1; k++) {
+        s->pa[k] = s->pa[0];
+        s->pb[k] = s->pb[0];
+    }
+}
+
+void fn_8004C1E4(Node_8004C1E4* node) {
+    Work_8004C1E4* w = node->work;
+    Sub_8004C1E4* s = w->sub;
+    TBody* body = s->arg->data->body;
+    Quad3D_800470F0 q;
+    DrawState st;
+    Vec a;
+    Vec b;
+    Vec c;
+    Vec d;
+    Spline_8004C1E4 spl;
+    Vec* pA;
+    Vec* pB;
+    Vec* pC;
+    Vec* pD;
+    s32 n;
+    s16 i;
+    s16 k;
+    s32 e;
+    Quad3D_800470F0* qp;
+
+    switch (node->state) {
+    case 0:
+        if (w->tex != 0) {
+            fn_8006D954(s->c.src);
+            node->work->x50 = s->c.src;
+            node->work->x54 = -1;
+        }
+        node->state = 1;
+        /* fallthrough */
+    case 1:
+        s->mtx = fn_801E1C7C(0x40);
+        fn_80076478(s->mtx, body->x154, s->id, 0);
+        if (s->count > 10) {
+            s->count = 10;
+        }
+        s->pa = fn_801E1C7C(s->count * 12);
+        s->pb = fn_801E1C7C(s->count * 12);
+        node->x20 = -1000.0f;
+        node->state = 2;
+        break;
+    case 2:
+        if (s->timer < s->start) {
+            break;
+        }
+        fn_80061518(&s->v40, &a, s->mtx);
+        fn_80061518(&s->v4c, &b, s->mtx);
+        for (i = 0; i < s->count; i++) {
+            s->pa[i].x = a.x;
+            s->pa[i].y = a.y;
+            s->pa[i].z = a.z;
+            s->pb[i].x = b.x;
+            s->pb[i].y = b.y;
+            s->pb[i].z = b.z;
+        }
+        if (s->div != 0) {
+            s->alphaStep = s->col[0] / s->div;
+        } else {
+            s->alphaStep = s->col[0];
+        }
+        node->state = 4;
+        break;
+    case 3:
+        break;
+    case 4:
+        if (s->timer >= s->end) {
+            s->flags |= 0x80000000;
+            if (s->col[0] > s->alphaStep) {
+                s->col[0] -= s->alphaStep;
+            } else {
+                s->col[0] = 0;
+                node->state = 0xFA;
+            }
+        }
+        if (!(s->flags & 0x80000000)) {
+            fn_80061518(&s->v40, &a, s->mtx);
+            fn_80061518(&s->v4c, &b, s->mtx);
+            s->pa[0].x = a.x;
+            s->pa[0].y = a.y;
+            s->pa[0].z = a.z;
+            s->pb[0].x = b.x;
+            s->pb[0].y = b.y;
+            s->pb[0].z = b.z;
+        }
+        if (s->v58.x || s->v58.y || s->v58.z) {
+            fn_80061518(&s->v58, &c, s->mtx);
+            d.x = c.x;
+            d.y = c.y;
+            d.z = c.z;
+        }
+        if (s->timer % s->interval == 0) {
+            for (i = 1; i < s->count; i++) {
+                if (s->pa[i].x != s->pa[i - 1].x
+                    || s->pa[i].y != s->pa[i - 1].y
+                    || s->pa[i].z != s->pa[i - 1].z) {
+                    break;
+                }
+            }
+            if (i != 1 && !(s->flags & 0x80000000)) {
+                TrailFill(s, i);
+            } else if (!(s->flags & 0x80000000)) {
+                for (k = s->count - 1; k > 0; k--) {
+                    s->pa[k] = s->pa[k - 1];
+                    s->pb[k] = s->pb[k - 1];
+                }
+            }
+        }
+        qp = &q;
+        memset(qp, 0, 0x60);
+        qp->id = s->frame;
+        qp->data = w->tex;
+        qp->x38 = 0;
+        for (k = 0; k < 4; k++) {
+            qp->col[k].c[0] = s->col[0];
+            if (!(s->type & 0x8000)) {
+                qp->col[k].c[1] = s->col[1];
+                qp->col[k].c[2] = s->col[2];
+                qp->col[k].c[3] = s->col[3];
+            } else {
+                fn_8000F718(body->x1f1, 0, qp->col[k].c);
+            }
+        }
+        DrawStateDefault2D(&st);
+        if (s->type & 0x20000000) {
+            st.blend_src = 8;
+            st.blend_dst = 10;
+        }
+        if (DrawStatePush(&st) == 0) {
+            break;
+        }
+        fn_80061F58(&pA, s->count * 12, 0);
+        fn_80061F58(&pB, s->count * 12, 0);
+        for (i = 0, e = 0; i < s->count; i++, e++) {
+            pA[e].x = s->pa[i].x;
+            pA[e].y = s->pa[i].y;
+            pA[e].z = s->pa[i].z;
+            pB[e].x = s->pb[i].x;
+            pB[e].y = s->pb[i].y;
+            pB[e].z = s->pb[i].z;
+        }
+        n = s->count;
+        spl.n = &n;
+        fn_80061F58(&pC, 0xF0, 0);
+        fn_80061F58(&pD, 0xF0, 0);
+        for (k = 0; k < 20; k++) {
+            f32 t = 0.05f * k;
+            if (t <= 0.0f) {
+                t = 0.01f;
+            }
+            if (t >= 1.0f) {
+                t = 0.09f;
+            }
+            fn_80291458(pA, &pC[k], &spl, t);
+            fn_80291458(pB, &pD[k], &spl, t);
+            if (!(s->type & 0x800000)) {
+                fn_80071A78(&pC[k], &pD[k], k / 19.0f);
+            }
+        }
+        for (k = 0; k < 19; k++) {
+            u8 step = s->col[0] / 20;
+            s32 nx;
+            for (e = 0; e < 4; e++) {
+                switch (e) {
+                case 0:
+                case 1:
+                    q.col[e].c[0] = q.col[2].c[0];
+                    break;
+                case 2:
+                    if (q.col[e].c[0] >= step) {
+                        q.col[e].c[0] -= step;
+                    } else {
+                        q.col[e].c[0] = 0;
+                    }
+                    break;
+                case 3:
+                    q.col[e].c[0] = q.col[2].c[0];
+                    break;
+                }
+            }
+            nx = k + 1;
+            q.pos[0].x = pD[k].x;
+            q.pos[0].y = pD[k].y;
+            q.pos[0].z = pD[k].z;
+            q.pos[1].x = pC[k].x;
+            q.pos[1].y = pC[k].y;
+            q.pos[1].z = pC[k].z;
+            q.pos[2].x = pC[nx].x;
+            q.pos[2].y = pC[nx].y;
+            q.pos[2].z = pC[nx].z;
+            q.pos[3].x = pD[nx].x;
+            q.pos[3].y = pD[nx].y;
+            q.pos[3].z = pD[nx].z;
+            fn_8003316C(&q, s->level);
+            if (k == 0) {
+                q.pos[0] = s->pb[0];
+                q.pos[1].x = pD[k].x;
+                q.pos[1].y = pD[k].y;
+                q.pos[1].z = pD[k].z;
+                q.pos[2].x = pC[k].x;
+                q.pos[2].y = pC[k].y;
+                q.pos[2].z = pC[k].z;
+                q.pos[3] = s->pa[0];
+                fn_8003316C(&q, s->level);
+                if (s->v58.x || s->v58.y || s->v58.z) {
+                    q.pos[0] = d;
+                    q.pos[1].x = pC[k].x;
+                    q.pos[1].y = pC[k].y;
+                    q.pos[1].z = pC[k].z;
+                    q.pos[2].x = pD[k].x;
+                    q.pos[2].y = pD[k].y;
+                    q.pos[2].z = pD[k].z;
+                    q.pos[3].x = q.pos[2].x;
+                    q.pos[3].y = q.pos[2].y;
+                    q.pos[3].z = q.pos[2].z;
+                    fn_8003316C(&q, s->level);
+                }
+            }
+        }
+        fn_801E17E0(pC);
+        fn_801E17E0(pD);
+        fn_801E17E0(pB);
+        fn_801E17E0(pA);
+        DrawStatePop(0);
+        break;
+    case 0xF9:
+    case 0xFA:
+        if (w->tex != 0) {
+            fn_8006D8DC(s->c.src);
+        }
+        fn_8007638C(s->mtx, body->x154, s->id);
+        fn_801E17E0(s->pa);
+        fn_801E17E0(s->pb);
+        fn_801E17E0(s);
+        node->flags |= 0x40;
+        lbl_8030A10C.count--;
+        return;
+    }
+    s->timer++;
+    fn_80037FD8(&s->c, &node->state);
+}
+#endif
 
 void fn_8004CF14(Node_8004CF14* node)
 {

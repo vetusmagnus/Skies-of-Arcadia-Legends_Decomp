@@ -86,7 +86,7 @@ typedef struct Pawn {
     f32 fd4;            /* 0x0D4 */
     f32 fd8;            /* 0x0D8 */
     f32 fdc;            /* 0x0DC */
-    u8 padE0[4];
+    f32 fe0;            /* 0x0E0 */
     f32 fe4;            /* 0x0E4 */
     NJS_POINT3 vE8;     /* 0x0E8 */
     NJS_POINT3 vF4;     /* 0x0F4 */
@@ -236,7 +236,8 @@ extern s32 fn_800611C0(NJS_POINT3 *a, NJS_POINT3 *b, NJS_POINT3 *c);
 extern f32 fn_8006116C(Angle ang);
 extern void fn_8001D288(NJS_POINT3 *p, s32 id, f32 a, f32 b);
 extern void fn_8001D200(ActTask *t, NJS_POINT3 *p);
-extern f32 fn_80011694(NJS_POINT3 *pos, s32 id, NJS_POINT3 *p, f32 *out);
+extern f32 fn_80011694(NJS_POINT3 *pos, s16 id, NJS_POINT3 *p, s8 *out);
+extern void fn_8001E7F8(NJS_POINT3 *out, s8 id);
 extern f32 fn_8001359C(NJS_POINT3 *at, f32 *out);
 extern f32 fn_8001363C(NJS_POINT3 *at, f32 *out);
 extern void fn_80013504(NJS_POINT3 *pos, NJS_POINT3 *at, Angle *rot, f32 a, f32 b);
@@ -244,7 +245,7 @@ extern void fn_800608C8(f32 *p);
 extern void fn_800171F0(u8 id, u8 part, NJS_POINT3 *a, NJS_POINT3 *b);
 f32 fn_80051EC8(ActTask *t, s8 *list, NJS_POINT3 *p);
 extern void fn_8001604C(ActTask *t, s8 *list, s32 a, s32 b);
-extern void fn_80011370(u8 a, s8 b);
+extern void fn_80011370(s8 a, s8 b);
 extern void fn_80011394(s8 sel);
 extern void fn_80011400(s32 a, s32 b);
 extern void fn_80032B4C(void);
@@ -712,9 +713,9 @@ void fn_8005174C(Pawn *o) {
     ActTask *c0;
     ActTask *c1;
     s16 i;
-    s32 id0;
-    s32 id1;
-    f32 tmp[2];
+    s16 id0;
+    s16 id1;
+    s8 tmp[2];
     f32 a, sum;
     best = 0.0f;
     ang = o->fd8;
@@ -1181,6 +1182,106 @@ void fn_8005259C(Pawn *p)
         fn_800614FC(lbl_80309EC8.o.rot, p->rot);
     } else {
         lbl_80309EC8.o = *p;
+    }
+}
+
+void fn_80052B24(Pawn *p)
+{
+    BtlUnit *u = p->child->work->unit;
+    NJS_POINT3 a;
+    NJS_POINT3 b;
+    NJS_POINT3 c;
+    f32 d;
+    f32 ha;
+    f32 hb;
+    NJS_POINT3 v1;
+    NJS_POINT3 v2;
+    s8 h1;
+    s8 h2;
+    s8 ib;
+    s8 ia;
+    ActTask *t;
+    BtlUnit *w;
+
+    fn_8001E05C(p->child);
+    if (p->step != 0) {
+        if (fn_800179E4(p->idA) == 0 || fn_800179E4(p->idB) == 0) {
+            p->step = 3;
+        }
+    }
+    switch (p->step) {
+    case 0:
+        if (p->frame >= p->mv->start) {
+            p->idA = u->id;
+            p->idB = u->target;
+            fn_80014AB8(1, p);
+            p->fd8 = 90.0f * (f32)(rand() % 4) + 45.0f;
+            fn_80011370(u->id, u->target);
+            if (!(p->mv->flags & 0x10000000)) {
+                fn_80032B6C(p->idA, 1);
+                fn_80032BBC(p->idA, 1);
+                fn_80032BBC(p->idB, 1);
+            }
+            p->step = 1;
+        } else {
+            fn_80032BBC(p->idA, 0);
+            fn_80032BBC(p->idB, 0);
+            break;
+        }
+    case 1:
+    case 2:
+        fn_8001E7F8(&a, p->idA);
+        fn_800171F0(p->idA, p->idB, &a, &b);
+        d = fn_80071E9C(&a, &b);
+        fn_800618FC(&p->pos, &a, &b, 0.0f, p->fd8, 0.4f * d + 15.0f);
+        switch (p->step) {
+        case 1:
+            ia = p->idA;
+            ib = p->idB;
+            fn_8001E7F8(&v1, ia);
+            fn_80011694(&v1, ia, &p->pos, &h1);
+            if (h1 >= 0 && h1 != ib) {
+                t = fn_80021658(h1);
+                w = t->work->unit;
+                fn_80071CF0(&t->work->pos, &v1);
+                ha = w->height;
+                v1.y = ha;
+            } else {
+                ha = 0.0f;
+            }
+            ib = p->idB;
+            ia = p->idA;
+            fn_8001E7F8(&v2, ib);
+            fn_80011694(&v2, ib, &p->pos, &h2);
+            if (h2 >= 0 && h2 != ia) {
+                t = fn_80021658(h2);
+                w = t->work->unit;
+                fn_80071CF0(&t->work->pos, &v2);
+                hb = w->height;
+                v2.y = hb;
+            } else {
+                hb = 0.0f;
+            }
+            if (ha >= hb) {
+                p->fe0 = ha;
+            } else {
+                p->fe0 = hb;
+            }
+            p->step = 2;
+        }
+        p->pos.y += p->fe0;
+        p->pos.y += 15.0f * (d / 72.0f) + 7.5f;
+        fn_80061450(&a, &b, &c);
+        fn_8001D200(fn_80021658(p->idA), &a);
+        fn_8001D200(fn_80021658(p->idB), &b);
+        fn_80061450(&a, &b, &p->at);
+        p->at.x = c.x;
+        p->at.z = c.z;
+        fn_80071F84(p->rot, &p->at, &p->pos);
+    case 3:
+        fn_80011394(0);
+        fn_80011370(u->id, u->target);
+        break;
     }
 }
 

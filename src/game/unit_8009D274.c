@@ -941,7 +941,7 @@ void fn_8009E910(s32 *o, s32 mode, u8 *out) {
     }
 }
 
-f32 fn_800A0ADC(s32 a, s32 b, u32 flags, f32 t) {
+f32 fn_800A0ADC(f32 t, s32 a, s32 b, u32 flags) {
     s32 m0 = flags & 0xff;
     s32 m1 = (flags >> 8) & 0xff;
     s32 m2 = (flags >> 16) & 0xff;
@@ -1791,6 +1791,115 @@ f32 fn_8009E4B8(u8 b) {
  * extern sdata2 labels the stwu is scheduled first. */
 u8 fn_8009E4D4(f32 x) {
     return __OSf32tou8((1.0f + x) * 255.0f);
+}
+
+/* The 2D twin of Quad: screen points, as NJS_POINT2COL is to NJS_POINT3COL. */
+typedef struct Quad2D {
+    NJS_POINT2* pos;
+    u8 (*col)[4];
+    UVPair* uv;
+    s32 n;
+} Quad2D;
+extern void fn_801DCDC0(NJS_POINT3* out, f32 x, f32 y, f32 z);
+extern void fn_801CC6BC(Quad* q, s32 n, u32 attr, u32 mode, NJS_TEXLIST* tex, s32 id);
+
+void fn_800A1EB0(Sprite* o, NJS_POINT2* src, f32 scale, u32 mode, s32 unused) {
+    NJS_POINT3 pos[4];
+    Quad2D q;
+    u8 col[4][4];
+    UVPair uv[4];
+    Quad q2;
+    Quad2D* qp = &q;
+    NJS_POINT3* d;
+    NJS_POINT2* p;
+    s32 i;
+    s32 j;
+    u32 flags;
+    s16 idx = 0;
+    UVPair* tex;
+
+    qp->pos = src;
+    qp->col = col;
+    qp->uv = uv;
+    qp->n = 4;
+    for (i = 0; i < 4; i++) {
+        u8 a;
+        if (i == 0 || i == 3) {
+            a = o->colA[0];
+        } else {
+            a = o->colB[0];
+        }
+        if (o->mode == 1 && (i == 0 || i == 1)) {
+            a = 0;
+        }
+        qp->col[i][0] = a;
+        if (o->hasCol != 0) {
+            if (i == 0 || i == 3) {
+                qp->col[i][1] = o->colA[1];
+                qp->col[i][2] = o->colA[2];
+                qp->col[i][3] = o->colA[3];
+            } else {
+                qp->col[i][1] = o->colB[1];
+                qp->col[i][2] = o->colB[2];
+                qp->col[i][3] = o->colB[3];
+            }
+        } else {
+            qp->col[i][3] = 255;
+            qp->col[i][2] = 255;
+            qp->col[i][1] = 255;
+        }
+        if (o->shade != 0) {
+            f32 k = 0.003921569f * a;
+            qp->col[i][1] = k * qp->col[i][1];
+            qp->col[i][2] = k * qp->col[i][2];
+            qp->col[i][3] = k * qp->col[i][3];
+        }
+    }
+    if (o->tex != 0) {
+        if (o->ox < -0x100) o->ox = 255;
+        if (o->ox > 255) o->ox = -0x100;
+        if (o->oy < -0x100) o->oy = 255;
+        if (o->oy > 255) o->oy = -0x100;
+        qp->uv[0].u = o->x0 + o->ox;
+        qp->uv[0].v = o->y0 - o->oy;
+        qp->uv[1].u = o->x1 + o->ox;
+        qp->uv[1].v = o->y0 - o->oy;
+        qp->uv[2].u = o->x1 + o->ox;
+        qp->uv[2].v = o->y1 - o->oy;
+        qp->uv[3].u = o->x0 + o->ox;
+        qp->uv[3].v = o->y1 - o->oy;
+        idx = o->idx;
+        if (o->tex->nbTexture <= idx) {
+            idx = 0;
+        }
+        fn_80299040(o->tex);
+        fn_80298FE4(idx);
+        flags = 0x80000060;
+    } else {
+        flags = 0x60;
+    }
+    q2.pos = pos;
+    q2.col = col;
+    if (flags & 0x80000000) {
+        tex = uv;
+    } else {
+        tex = 0;
+    }
+    q2.uv = tex;
+    q2.n = 4;
+    p = src;
+    d = pos;
+    for (j = 0; j < 4; j++) {
+        fn_801DCDC0(d, p->x, p->y, scale);
+        d++;
+        p++;
+    }
+    njPushMatrixEx();
+    fn_80286EE8();
+    fn_8028B498();
+    njUnitMatrix(0);
+    fn_801CC6BC(&q2, 4, flags, mode, o->tex, idx);
+    njPopMatrixEx();
 }
 
 void fn_800A2264(Sprite* o, NJS_POINT3* pos, s32 flags, s32 mode) {

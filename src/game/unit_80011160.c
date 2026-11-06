@@ -5,6 +5,7 @@
 #include <dolphin/os.h>
 #include <dolphin/dvd.h>
 #include "game/task.h"
+#include "game/pad.h"
 #include "game/save_8030B7F4.h"
 #include "game/stat_8030B4D4.h"
 #include "game/gamedata.h"
@@ -601,6 +602,242 @@ void fn_800121D8(Task* t)
     w->x20[1] = c;
     fn_80071F84(w->x2c, w->x38, w->x20);
     u->x8 += 1.0f;
+}
+
+extern Slot24 lbl_8030A6D4[];
+extern PadState* lbl_80311A60[];
+extern s32 lbl_80346AB4;
+extern f32 lbl_80346AB0;
+extern s32 lbl_80347324;
+extern s32 lbl_8034757C;
+extern s32 fn_80029678(s16 i);
+extern void fn_800295E0(s16 idx);
+extern void fn_8001D5C0(s16* a, s16* b);
+extern s32 fn_80014C90(s8 id, s32 flags);
+extern s32 fn_80015880(s8 a, f32 f, f32* b, f32* c);
+extern void fn_80061014(f32* a, f32* b, f32* out);
+extern void fn_80071CBC(f32* src, f32* dst);
+extern void fn_8005CAF4(s8 idx);
+
+static inline int CanControl(s8 id)
+{
+    if (id >= 12) return 0;
+    if (!fn_80078610(id)) return 0;
+    if (fn_80014C90(id, 0x800) != 0) return 0;
+    if (fn_80014C90(id, 0x4000) != 0) return 0;
+    if (fn_80014C90(id, 0x400) != 0) return 0;
+    return 1;
+}
+
+void fn_800125A8(Task* t)
+{
+    CamWork* w = t->work;
+    CamState* u = w->u;
+    PadState* pad = lbl_80311A60[0];
+    f32 turn = 0.0f;
+    s16 cur;
+    s16 sub;
+    f32 ang[3];
+    f32 v[3];
+    f32 b, a;
+    f32 r;
+    f32 r2;
+    f32 d;
+    int moved;
+
+    if (fn_80029678(u->x4) == 1) {
+        fn_800295E0(u->x4);
+    }
+    fn_8001D5C0(&cur, &sub);
+    switch (u->state) {
+    case 0:
+        lbl_80346AB4 = 0;
+        fn_80032B4C();
+        if (!CanControl(cur)) {
+            return;
+        }
+        fn_80014AB8(2, 0);
+    case 1:
+        if (!CanControl(cur)) {
+            u->state = 6;
+            break;
+        }
+        if (lbl_80347324 != 0) {
+            fn_800608C8(&u->x8);
+            u->x10 = 0.0f;
+            lbl_80346AB0 = u->x8;
+            fn_800114AC(v, &a, &b, 0);
+            if (a > b) {
+                u->xc = a;
+            } else {
+                u->xc = b;
+            }
+            u->xc = 2.0f * u->xc;
+            v[1] = 0.0f;
+            fn_80071CF0(v, w->x50);
+            r = u->xc;
+            fn_80061C80(w->x44, 0.0f, u->x8, r, 0);
+            w->x44[0] = w->x44[0] + w->x50[0];
+            w->x44[2] = w->x44[2] + w->x50[2];
+            w->x44[1] = r;
+            fn_80071F84(ang, w->x50, w->x44);
+            w->x44[1] = w->x44[1] + u->x10;
+            u->state = 3;
+        } else {
+            u->x8 = 0.0f;
+            fn_80015880(cur, u->x8, w->x44, w->x50);
+            u->state = 2;
+        }
+        fn_80061014(w->x20, w->x44, u->x14);
+        fn_80061014(w->x38, w->x50, u->x20);
+        u->x14[0] /= 10.0f;
+        u->x14[1] /= 10.0f;
+        u->x14[2] /= 10.0f;
+        u->x20[0] /= 10.0f;
+        u->x20[1] /= 10.0f;
+        u->x20[2] /= 10.0f;
+        u->x2c = 10;
+    case 2:
+    case 3:
+        ResetChrs(1);
+        if (u->x2c != 0) {
+            fn_80071CBC(u->x14, w->x20);
+            fn_80071CBC(u->x20, w->x38);
+            fn_80071F84(w->x2c, w->x38, w->x20);
+            u->x2c--;
+            if (lbl_8030A6D4[lbl_8034757C].x8 & 0x100) {
+                fn_80071CF0(w->x50, w->x38);
+                fn_80071CF0(w->x44, w->x20);
+                fn_80071F84(w->x2c, w->x38, w->x20);
+                u->x2c = 0;
+            }
+            break;
+        }
+        switch (u->state) {
+        case 3:
+            u->state = 5;
+            break;
+        case 2:
+            u->state = 4;
+            break;
+        }
+    case 4:
+    case 5:
+        if (u->state == 5) {
+            r2 = u->xc;
+            fn_80061C80(w->x20, 0.0f, u->x8, r2, 0);
+            w->x20[0] = w->x20[0] + w->x38[0];
+            w->x20[2] = w->x20[2] + w->x38[2];
+            w->x20[1] = r2;
+            fn_80071F84(w->x2c, w->x38, w->x20);
+            if (lbl_80347324 == 0) {
+                u->x8 = 0.0f;
+                u->state = 4;
+            }
+            fn_80032B6C(sub, 2);
+            fn_80032BBC(sub, 1);
+            if (lbl_80346AB4 != 0) {
+                if (pad->trigR == 0 && pad->trigL == 0) {
+                    lbl_80346AB4 = 0;
+                }
+            } else if ((pad->buttons & 0x40) && (pad->buttons & 0x20)) {
+                u->x8 = lbl_80346AB0;
+                u->x10 = 0.0f;
+                lbl_80346AB4 = 1;
+            } else {
+                moved = 0;
+                if (pad->stickX != 0) {
+                    d = __OSs16tof32(&pad->stickX);
+                    d /= 44.0f;
+                    u->x8 += -5.0f * d;
+                    moved = 1;
+                }
+                if (pad->stickY != 0) {
+                    d = 5.0f * (__OSs16tof32(&pad->stickY) / 44.0f);
+                    if (pad->stickY < 0.0f) {
+                        u->x10 += d;
+                        if (u->x10 + w->x20[1] < 20.0f) {
+                            u->x10 -= d;
+                        }
+                    } else if (u->x10 < 20.0f) {
+                        u->x10 += d;
+                    }
+                    moved = 1;
+                }
+                if (!moved) {
+                    if (pad->buttons & 0x400) {
+                        if (pad->trigR != 0) {
+                            d = 5.0f * (__OSu16tof32(&pad->trigR) / 150.0f);
+                            if (u->x10 < 20.0f) {
+                                u->x10 += d;
+                            }
+                        } else if (pad->trigL != 0) {
+                            d = -5.0f * (__OSu16tof32(&pad->trigL) / 150.0f);
+                            u->x10 += d;
+                            if (u->x10 + w->x20[1] < 20.0f) {
+                                u->x10 -= d;
+                            }
+                        }
+                    } else {
+                        d = 0.0f;
+                        if (pad->trigR != 0) {
+                            d = 5.0f * (__OSu16tof32(&pad->trigR) / 150.0f);
+                        } else if (pad->trigL != 0) {
+                            d = -5.0f * (__OSu16tof32(&pad->trigL) / 150.0f);
+                        }
+                        if (d) {
+                            u->x8 += d;
+                        }
+                    }
+                }
+            }
+            w->x20[1] += u->x10;
+            fn_80071F84(w->x2c, w->x38, w->x20);
+        } else {
+            fn_80015880(cur, u->x8, w->x20, w->x38);
+            fn_80071F84(w->x2c, w->x38, w->x20);
+            if (u->x2 != cur) {
+                u->x8 = 0.0f;
+                ResetChrs(1);
+            }
+            fn_80011208(cur, -1, 0);
+            if (lbl_80347324 != 0) {
+                u->state = 1;
+            }
+            if (lbl_80346AB4 != 0) {
+                if (pad->trigR == 0 && pad->trigL == 0) {
+                    lbl_80346AB4 = 0;
+                }
+            } else if ((pad->buttons & 0x40) && (pad->buttons & 0x20)) {
+                u->x8 = 0.0f;
+                lbl_80346AB4 = 1;
+            } else {
+                if (pad->stickX != 0) {
+                    turn = -1.0f * (__OSs16tof32(&pad->stickX) / 44.0f);
+                } else if (pad->trigR != 0) {
+                    turn = __OSu16tof32(&pad->trigR) / 150.0f;
+                } else if (pad->trigL != 0) {
+                    turn = -1.0f * (__OSu16tof32(&pad->trigL) / 150.0f);
+                }
+                u->x8 += 3.0f * turn;
+            }
+            if (u->x8 < 0.0f) {
+                u->x8 = 360.0f + u->x8;
+            }
+            if (u->x8 >= 360.0f) {
+                u->x8 = u->x8 - 360.0f;
+            }
+            fn_8005CAF4(cur);
+        }
+        break;
+    case 6:
+        if (u->x2 != cur) {
+            u->state = 1;
+        }
+        break;
+    }
+    u->x2 = cur;
+    u->x4 = sub;
 }
 
 void fn_80013504(NJS_POINT3* obj, NJS_POINT3* src, void* p5, f32 a, f32 b) {
@@ -1457,6 +1694,71 @@ s32 fn_80011984(AnimPlay* a) {
         }
         ret = 2;
         a->idx++;
+    }
+    return ret;
+}
+
+s32 fn_80011B40(AnimPlay* a) {
+    Key16* k2;
+    f32 d[3];
+    Key16* k;
+    f32 t;
+    Track* trk2;
+    s32 ret;
+    u32 fr2;
+    u32 fr;
+    Track* trk;
+    Key16* keys2;
+    Key16* keys;
+    ret = 0;
+    a->end = a->anim->length;
+    a->time = a->time + a->speed;
+    if (a->time >= (f32)a->end) {
+        return 1;
+    }
+    trk = a->anim->track;
+    trk2 = a->anim2->track;
+    keys = trk->keys;
+    while (trk->count > a->idx) {
+        k = &keys[a->idx];
+        fr = k->frame;
+        t = a->time;
+        if (t == (f32)fr) {
+            fn_80071CF0(k->v, a->out);
+            break;
+        }
+        if ((f32)fr > t) {
+            d[0] = k->v[0] - k[-1].v[0];
+            d[1] = k->v[1] - k[-1].v[1];
+            d[2] = k->v[2] - k[-1].v[2];
+            a->out[0] = k[-1].v[0] + d[0] * t / (f32)fr;
+            a->out[1] = keys[a->idx - 1].v[1] + d[1] * a->time / (f32)keys[a->idx].frame;
+            a->out[2] = keys[a->idx - 1].v[2] + d[2] * a->time / (f32)keys[a->idx].frame;
+            break;
+        }
+        ret = 2;
+        a->idx++;
+    }
+    keys2 = trk2->keys;
+    while (trk2->count > a->idx2) {
+        k2 = &keys2[a->idx2];
+        fr2 = k2->frame;
+        t = a->time;
+        if (t == (f32)fr2) {
+            fn_80071CF0(k2->v, a->out2);
+            break;
+        }
+        if ((f32)fr2 > t) {
+            d[0] = k2->v[0] - k2[-1].v[0];
+            d[1] = k2->v[1] - k2[-1].v[1];
+            d[2] = k2->v[2] - k2[-1].v[2];
+            a->out2[0] = k2[-1].v[0] + d[0] * t / (f32)fr2;
+            a->out2[1] = keys2[a->idx2 - 1].v[1] + d[1] * a->time / (f32)keys2[a->idx2].frame;
+            a->out2[2] = keys2[a->idx2 - 1].v[2] + d[2] * a->time / (f32)keys2[a->idx2].frame;
+            break;
+        }
+        ret = 2;
+        a->idx2++;
     }
     return ret;
 }
