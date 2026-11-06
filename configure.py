@@ -405,7 +405,7 @@ config.libs = [
             Object(NonMatching, "game/chunk.c"),
             # Story-flag event object and event NPC state pickers (a new 0.0f at 0x8034C020).
             # The end is a guess; 26 of 39 match.
-            Object(NonMatching, "game/evobj.c"),
+            Object(NonMatching, "game/evobj.c", extra_cflags=["-inline noauto,deferred"]),
             # Small functions from 0x80055E94 to 0x801BEAE4 (accessors, setters, wrappers), one
             # unit per matching batch. The ranges are guesses; the units are named after the start.
             # Every string this range uses sits in .rodata or .sdata2, so it was built with
@@ -495,7 +495,7 @@ config.libs = [
             # Script commands from 0x8020EEE8: a new .sdata2 block at 0x8034C2B8 (second 182.04445f, 100.0f,
             # 0.0f) and .rodata after scpteve.c's 0x802D6658; they pass fn_80210860 a u16 id.
             Object(NonMatching, "game/unit_8020EEE8.c"),
-            Object(NonMatching, "game/unit_802159E0.c"),
+            Object(NonMatching, "game/unit_802159E0.c", extra_cflags=["-inline noauto,deferred"]),
             # .rodata and .data edges cut the title screen off (0x802D9688, 0x802F8A78). It was built with
             # deferred codegen: its local array comes first in .rodata, so its source runs top address down.
             Object(NonMatching, "game/unit_80219378.c", extra_cflags=["-str reuse,readonly"]),
