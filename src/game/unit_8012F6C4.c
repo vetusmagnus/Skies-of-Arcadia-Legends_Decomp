@@ -1242,6 +1242,101 @@ void* fn_8013558C(void) {
 extern void fn_80140460(void);
 
 /* Declared int (fn_801380E4 returns its value) though nothing is returned, as in the original. */
+static inline s32 Count_801365D8(void) {
+    s32 n = 0;
+    Big *p = fn_80135598();
+    if (p != 0) {
+        n = 0;
+        if (p->order[0] >= 0) {
+            n = 1;
+            if (p->order[1] >= 0) {
+                n = 2;
+                if (p->order[2] >= 0) {
+                    n = 3;
+                    if (p->order[3] >= 0) {
+                        n = 4;
+                    }
+                }
+            }
+        }
+    }
+    return n;
+}
+
+static inline s32 PadDir(void) {
+    u32 flags = lbl_80311A60.pad->x8;
+    s32 d = 0;
+    if (flags & 1) {
+        d = -1;
+    }
+    if (flags & 2) {
+        d++;
+    }
+    return d;
+}
+
+static inline s32 Clamp(s32 v, s32 lo, s32 hi) {
+    s32 t = v > lo ? v : lo;
+    return t < hi ? t : hi;
+}
+
+static inline void Mark(s32 x, s32 y, s32 a) {
+    Cell c;
+    c.x = x;
+    c.y = y;
+    c.a = a;
+    c.c = -1;
+    c.b = -1;
+    fn_80131658(&c);
+}
+
+static inline void Begin(s32 a, s32 b) {
+    s32 m = Count_801365D8();
+    Mark(a, b, 1);
+    Mark(a, b, 3);
+    fn_8013FB48(b, m);
+}
+
+s32 fn_801365D8(s32 a, s32 b, s32 c, s32 d, s32 e) {
+    Cell c2;
+    s32 n;
+    s32 idx;
+    s32 dir;
+    s32 t;
+
+    Begin(a, b);
+    dir = PadDir();
+    n = Count_801365D8();
+    if (n <= 0) {
+        c = a;
+    } else {
+        idx = a + dir;
+        idx = Clamp(idx, 0, n - 1);
+        dir = Clamp(dir, -1, 1);
+        if (dir != 0) {
+            for (; idx >= 0 && idx < n && fn_801358A0(idx, b, c, d, n) == 0; idx += dir) {
+            }
+        }
+        t = idx > -1 ? idx : -1;
+        c = n;
+        if (t < n) c = t;
+    }
+    if (c < 0 || c >= n) {
+        c = a;
+    }
+    if (c != a) {
+        SePlay(0xf, 1, 0);
+    }
+    fn_80130304(c);
+    c2.x = c;
+    c2.y = b;
+    c2.a = 1;
+    c2.c = 0;
+    c2.b = e;
+    fn_80131658(&c2);
+    return c;
+}
+
 s32 fn_80136A28(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f) {
     s32 n = 0;
     Big *p = fn_80135598();

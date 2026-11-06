@@ -6101,6 +6101,62 @@ void fn_8006D080(Node* o, s32 f) {
     fn_801E17E0(o);
 }
 
+void fn_8006D308(void) {
+    char buf[0x20];
+    Node_8006D888 *p = lbl_8034739C;
+    Node *r;
+    s32 n;
+    s32 k;
+    s32 ok;
+    if (p != 0 && AllIdle(p)) {
+        for (;;) {
+            if (p->x4 == 0 && p->x0 > 0) {
+                fn_8003DBAC(p->x0, buf);
+                r = FindRec(buf);
+                if (r != 0) {
+n = p->x0;
+k = n / 100;
+switch (k) {
+case 0: case 1: case 5: case 0x3ea:
+    ok = 1;
+    break;
+default:
+    switch (n / 100000) {
+    case 2: case 3: case 4: case 5: case 6: case 7: case 8: case 9: case 10:
+    case 0xd: case 0xe:
+    case 0x11: case 0x12:
+    case 0x15: case 0x16:
+    case 0x32: case 0x33:
+    case 0x63:
+        ok = 1;
+        break;
+    default:
+        switch (k) {
+        case 0x59fa:
+            ok = 1;
+            break;
+        default:
+            ok = 0;
+            break;
+        }
+        break;
+    }
+    break;
+}
+                    if (ok == 0) {
+                        fn_8006D080(r, 1);
+                    }
+                }
+            }
+            if (p->x10 == 0) {
+                break;
+            }
+            p = p->x10;
+        }
+        fn_8006D7CC();
+    }
+}
+
 s32 fn_8006D524(void) {
     char buf28[0x20];
     char buf8[0x20];

@@ -339,6 +339,36 @@ done:
     return r;
 }
 
+#ifdef NONMATCHING
+/* Exact, but only with a goto out of the search loop. */
+static inline void NameIndex(s32 key, s32 *out) {
+    s32 i;
+    for (i = 0; i < 0x58; i++) {
+        if (key == lbl_802ED258[i].id) {
+            *out = i;
+            goto done;
+        }
+    }
+    if (i == 0x58) *out = 0;
+done:;
+}
+
+s32 fn_80194548(char *buf, s32 unused, s32 idx) {
+    CampCtrl *o = lbl_8034710C->holder->ctrl;
+
+    switch (lbl_80307638[15].cur[0].sel) {
+    case 0:
+        idx = (s8)sprintf(buf, lbl_802B4870, o->cur[0].sel + o->cur[4].sel * 6);
+        break;
+    case 1:
+        NameIndex(o->cur[0].sel + o->cur[4].sel * 8, &idx);
+        idx = (s8)sprintf(buf, lbl_802B4880, idx);
+        break;
+    }
+    return idx;
+}
+#endif
+
 extern void fn_8021A11C(Msg*, s16);
 void fn_801949F8(Msg* a, s16 i) {
     fn_8021A11C(a, i);
@@ -2082,6 +2112,49 @@ void fn_80198118(void) {
     }
 }
 
+void fn_8019844C(void) {
+    s32 i;
+    s32 a;
+    s32 k;
+    CampWork *cw = &camp_work;
+    Node *n;
+    Body *b;
+    for (i = 0; i < 2; i++) {
+        if (i == 0) {
+            a = 0xc;
+            k = 0x87;
+        } else {
+            a = 0xd;
+            k = 0x88;
+        }
+        n = fn_802268E8(lbl_8034710C, fn_8016F138);
+        n->body = fn_801E1C7C(0xc0);
+        b = n->body;
+        b->x0 = 0;
+        fn_8016F128(b->xbc = fn_801E1C7C(8), 1, a, 1.0f);
+        fn_8016F21C(n->body->x74, a, 1.0f);
+        BodyInit264(b, 1, 0.7f);
+        cw->objs[k] = n;
+        n->body->x4 = k;
+    }
+    for (a = 0; a < 4; a++) {
+        void *t;
+        n = fn_802268E8(lbl_8034710C, fn_8018DFC4);
+        n->body = fn_801E1C7C(0xc0);
+        b = n->body;
+        b->x0 = 0;
+        t = fn_801E1C7C(0xc);
+        b->xbc = t;
+        fn_8018DFBC(t, 0);
+        fn_8018DFB4(t, a);
+        fn_8018DFAC(t, 0);
+        fn_8018E7F0(n->body->x74);
+        BodyInit264(b, 1, 0.7f);
+        cw->objs[0x8d + a] = n;
+        n->body->x4 = 0x8d + a;
+    }
+}
+
 void fn_80193FF8(s32 n) {
     lbl_803467CC = (lbl_803467CC == 0);
     fn_801F4EA0(n, lbl_803467CC);
@@ -2468,4 +2541,21 @@ s8 fn_801952D0(u32 mask)
         }
     }
     return count;
+}
+static inline void FinishAll(void) {
+    s32 i;
+    for (i = 0; i < 0x9D; i++) {
+        if (camp_work.objs[i] != NULL) {
+            UiObjFinish(&camp_work.objs[i]->body->obj);
+        }
+    }
+}
+void CampMenuHideAllPanels(void) {
+    s32 i;
+    FinishAll();
+    for (i = 0; i < 0x9D; i++) {
+        if (camp_work.objs[i] != NULL) {
+            camp_work.objs[i]->body->x0 = 0;
+        }
+    }
 }

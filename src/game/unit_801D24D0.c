@@ -3662,6 +3662,51 @@ s32 fn_801D6C3C(s32 chan) {
     return 0;
 }
 
+typedef struct RumbleCmd { u8 pad0; u8 flag; s8 power; } RumbleCmd;
+s32 fn_801D6CBC(s32 chan, RumbleCmd *in) {
+    Obj_80311C30 *o = &lbl_80311C30;
+    Obj_80311C30 *p;
+    Obj_80311C30 *q;
+    s32 n;
+    u32 t;
+    s32 go;
+    if (o->active == 0) {
+        return -2;
+    }
+    n = __abs(in->power);
+    if (n == o->x18) {
+        return;
+    }
+    go = in->power == 0 ? (o->x4 != 0) : 1;
+    if (go == 0) {
+        return;
+    }
+    p = &lbl_80311C30;
+    p->xc = in->flag & 1;
+    t = OSGetTick();
+    o->x18 = n;
+    q = &lbl_80311C30;
+    q->x10 = t;
+    if (n >= 8) {
+        o->x18 = 7;
+    }
+    if (o->x18 == 0) {
+        PADControlMotor(chan, 0);
+        p->xc = 0;
+        lbl_80311C30.x4 = 0;
+        lbl_80311C30.x14 = 0;
+        lbl_80311C30.x8 = 0;
+        q->x10 = 0;
+        lbl_80311C30.x14 = 0;
+        o->x18 = 0;
+        lbl_80311C30.x4 = 0;
+    } else {
+        PADControlMotor(chan, 1);
+        lbl_80311C30.x4 = 1;
+    }
+    return 0;
+}
+
 void fn_801D9BFC(void) {
     if (lbl_80347668 == 8) fn_801DBE1C(lbl_802C44A8);
     MemCopy(lbl_80311E00[lbl_80347668], lbl_8030E830, 0x1e0);

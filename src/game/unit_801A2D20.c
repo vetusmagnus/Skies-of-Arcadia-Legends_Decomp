@@ -133,6 +133,69 @@ void* fn_801A456C(void) {
     return s;
 }
 
+extern void fn_80228920(u32 x);
+extern void fn_801CAE98(void);
+extern void fn_801EF7E0(void);
+extern void fn_8021B2B4(void);
+extern void fn_801F7B04(s32 v);
+extern f32 lbl_8030A77C[6];
+extern s32 lbl_8030A764[6];
+extern s32 lbl_803474B0[2];
+extern s16 lbl_803474AC[1];
+extern s32 lbl_803475D4;
+
+void fn_801A4354(CardSaveData* p) {
+    s32 i;
+    fn_80228920(p->x31ec);
+    MemCopy(&lbl_8030B7F4, &p->data, 0x16a0);
+    lbl_80311AC0.x4 = p->x16b0;
+    lbl_80311AC0.x0 = p->x16b0;
+    lbl_80311AC0.x8 = p->x16b4;
+    for (i = 0; i < 6; i++) {
+        strcpy(lbl_8030B7F4.chr[i].name, lbl_802C4860[i].name);
+    }
+    if (lbl_8030B7F4.x1568.b1568 >= 0) {
+        strcpy(lbl_8030B7F4.x1568.name, lbl_802D6740[lbl_8030B7F4.x1568.b1568].name);
+    }
+    strcpy(lbl_8030B7F4.x331, "Cupil");
+    lbl_8030A794.pos[0].f[0] = p->pos[0].f[0];
+    lbl_8030A794.pos[0].f[1] = p->pos[0].f[1];
+    lbl_8030A794.pos[0].f[2] = p->pos[0].f[2];
+    lbl_8030A794.pos[0].w[0] = p->pos[0].w[0];
+    lbl_8030A794.pos[0].w[1] = p->pos[0].w[1];
+    lbl_8030A794.pos[0].w[2] = p->pos[0].w[2];
+    lbl_8030A794.pos[1].f[0] = p->pos[1].f[0];
+    lbl_8030A794.pos[1].f[1] = p->pos[1].f[1];
+    lbl_8030A794.pos[1].f[2] = p->pos[1].f[2];
+    lbl_8030A794.pos[1].w[0] = p->pos[1].w[0];
+    lbl_8030A794.pos[1].w[1] = p->pos[1].w[1];
+    lbl_8030A794.pos[1].w[2] = p->pos[1].w[2];
+    lbl_803474B0[0] = 1;
+    lbl_8030A77C[0] = p->pos[0].f[0];
+    lbl_8030A77C[1] = p->pos[0].f[1];
+    lbl_8030A77C[2] = p->pos[0].f[2];
+    lbl_8030A764[0] = p->pos[0].w[0];
+    lbl_8030A764[1] = p->pos[0].w[1];
+    lbl_8030A764[2] = p->pos[0].w[2];
+    lbl_803474AC[0] = p->pos[0].h;
+    lbl_803474B0[1] = 1;
+    lbl_8030A77C[3] = p->pos[1].f[0];
+    lbl_8030A77C[4] = p->pos[1].f[1];
+    lbl_8030A77C[5] = p->pos[1].f[2];
+    lbl_8030A764[3] = p->pos[1].w[0];
+    lbl_8030A764[4] = p->pos[1].w[1];
+    lbl_8030A764[5] = p->pos[1].w[2];
+    lbl_803474AC[1] = p->pos[1].h;
+    MemCopy(lbl_80310B3C, p->blk2370, 0xd58);
+    MemCopy(lbl_80310A1C, p->blk30c8, 0x120);
+    fn_801CAE98();
+    fn_801EF7E0();
+    fn_8021B2B4();
+    lbl_803475D4 = 1;
+    fn_801F7B04(0x4e20);
+}
+
+
 CardRec *fn_801A41EC(CardSaveData *p, s32 chan, const char *name) {
     CardRec *rec = &lbl_803081A4;
     u32 sum;

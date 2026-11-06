@@ -555,8 +555,10 @@ void fn_8002C894(Msg* a, s16 i) {
 
 static inline void Lm(Msg* a) {
     Lim* l = lbl_80347390;
-    s32 v = l->x8 + a->x8;
-    if (l->x6 < (s16)v) v = l->x6;
+    s16 v = l->x8;
+    s16 m = l->x6;
+    v += a->x8;
+    if (m < v) v = m;
     l->x8 = v;
     lbl_80347390->xa = v;
 }

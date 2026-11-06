@@ -6342,6 +6342,85 @@ s32 fn_800EE450(void) {
 s32 fn_800F1010(Obj1010* o, Src1010* s, s16 mode);
 s32 fn_800F13F0(Obj1010 *o, s16 sel, s16 n, void *data);
 
+#ifdef NONMATCHING
+/* Exact, but the shape is a void * with a typed copy per case. */
+static inline s32 fn_800F13F0_c4(Obj1010 *o, s16 n, void *data) {
+    s16 *hw = data;
+    s32 v = ((*hw - 1) * 0x14 + 0x18) / 4;
+    s32 r;
+    if (v != n) {
+        r = 0;
+    } else {
+        if (o->h25c != 0) {
+            fn_801E17E0(o->h25c);
+            o->h25c = 0;
+        }
+        o->h25c = fn_801DF450(data, 1);
+        r = 1;
+    }
+    return r;
+}
+
+s32 fn_800F13F0(Obj1010 *o, s16 sel, s16 n, void *data) {
+    s32 ret;
+    switch (sel) {
+    case 1:
+        break;
+    case 4:
+        ret = fn_800F13F0_c4(o, n, data);
+        break;
+    case 5: {
+        s32 *w = data;
+        f32 *fp = data;
+        s32 cnt = *w;
+        s32 ok = 0;
+        void *buf;
+        u32 size = cnt * 8 + 4;
+        if ((u32)n == (size >> 2) && o->h25c != 0) {
+            fn_801DEDC0(o->h25c, fp + 1, cnt);
+            ok = 1;
+            buf = fn_801E1C7C(size);
+            if (buf != 0) {
+                if (o->p260 != 0) {
+                    fn_801E17E0(o->p260);
+                }
+                o->p260 = buf;
+                MemCopy(buf, data, size);
+            }
+        }
+        return ok;
+    }
+    case 6: {
+        s32 *w = data;
+        f32 *fp = data;
+        s32 cnt = *w;
+        s32 v = (cnt * 8 + 4) / 4;
+        if (v == n && o->h25c != 0) {
+            fn_801DEBE4(o->h25c, fp + 1, cnt);
+        }
+        return 0;
+    }
+    case 7:
+        if (n >= 1) {
+            f32 *fp = data;
+            o->f250 = *fp;
+            o->flags |= 4;
+            return 1;
+        }
+        return 0;
+    case 8:
+        return fn_800F1010(o, data, n);
+    case 0:
+    case 2:
+    case 3:
+    default:
+        return 0;
+    }
+    return ret;
+}
+#endif
+
+
 s32 fn_800F1598(Obj1010 *p) {
     K06Sub_800F1598 *s;
     K06Blk *blk;

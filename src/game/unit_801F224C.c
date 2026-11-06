@@ -3,6 +3,173 @@
 #include "game/save_8030B7F4.h"
 #include "game/gamedata.h"
 #include "game/stat_8030B4D4.h"
+/* .data 0x802F6918-0x802F7208: the text tables fn_801F48AC picks from. The unit defines them, so
+ * MWCC reaches all of them from one base register (lbl_802F6918). lbl_802F6F10 and lbl_802F70F0
+ * have no symbol in symbols.txt yet (they are the second halves of lbl_802F6DD0 and lbl_802F7050). */
+extern const char lbl_802C9668[], lbl_802C96C4[], lbl_802C9724[], lbl_802C9780[], lbl_802C97DC[], lbl_802C983C[], lbl_802C9898[], lbl_802C98F8[], lbl_802C9958[], lbl_802C99B8[], lbl_802C9A1C[], lbl_802C9A7C[], lbl_802C9ADC[], lbl_802C9B3C[], lbl_802C9B9C[], lbl_802C9BFC[], lbl_802C9C60[], lbl_802C9CC0[], lbl_802C9D20[], lbl_802C9D80[], lbl_802C9DE4[], lbl_802C9E44[], lbl_802C9EA4[], lbl_802C9F04[], lbl_802C9F64[], lbl_802C9FC0[], lbl_802CA01C[], lbl_802CA078[], lbl_802CA0D8[], lbl_802CA13C[], lbl_802CA19C[], lbl_802CA1FC[], lbl_802CA25C[], lbl_802CA2BC[], lbl_802CA320[], lbl_802CA380[], lbl_802CA3E0[], lbl_802CA43C[], lbl_802CA4A0[], lbl_802CA500[], lbl_802CA55C[], lbl_802CA5BC[], lbl_802CA618[], lbl_802CA67C[], lbl_802CA6DC[], lbl_802CA740[], lbl_802CA7A0[], lbl_802CA800[], lbl_802CA860[], lbl_802CA8C0[], lbl_802CA920[], lbl_802CA980[], lbl_802CA9E4[], lbl_802CAA44[], lbl_802CAAA4[], lbl_802CAB08[], lbl_802CAB64[], lbl_802CABC0[], lbl_802CAC1C[], lbl_802CAC7C[], lbl_802CACDC[], lbl_802CAD3C[], lbl_802CAD9C[], lbl_802CADFC[], lbl_802CAE5C[], lbl_802CAEB4[], lbl_802CAF0C[], lbl_802CAF6C[], lbl_802CAFCC[], lbl_802CB02C[], lbl_802CB08C[], lbl_802CB0E4[], lbl_802CB140[], lbl_802CB19C[], lbl_802CB1F8[], lbl_802CB248[], lbl_802CB294[], lbl_802CB2F0[], lbl_802CB350[], lbl_802CB3A0[], lbl_802CB3FC[], lbl_802CB450[], lbl_802CB4AC[], lbl_802CB504[], lbl_802CB564[], lbl_802CB5C4[], lbl_802CB620[], lbl_802CB678[], lbl_802CB6D8[], lbl_802CB734[], lbl_802CB790[], lbl_802CB7F0[], lbl_802CB848[], lbl_802CB8A0[], lbl_802CB900[], lbl_802CB958[], lbl_802CB9A8[], lbl_802CB9E0[], lbl_802CBA1C[], lbl_802CBA68[], lbl_802CBAAC[], lbl_802CBAF0[], lbl_802CBB3C[], lbl_802CBB9C[], lbl_802CBBF0[], lbl_802CBC50[], lbl_802CBCB0[], lbl_802CBD10[], lbl_802CBD68[], lbl_802CBDBC[], lbl_802CBE10[], lbl_802CBE68[], lbl_802CBEB8[], lbl_802CBF08[], lbl_802CBF68[], lbl_802CBFB4[], lbl_802CC014[], lbl_802CC074[], lbl_802CC0D0[], lbl_802CC12C[], lbl_802CC188[], lbl_802CC1E0[], lbl_802CC238[], lbl_802CC288[], lbl_802CC2E4[], lbl_802CC33C[], lbl_802CC398[], lbl_802CC3EC[], lbl_802CC44C[], lbl_802CC4A4[], lbl_802CC504[], lbl_802CC558[], lbl_802CC5B4[], lbl_802CC608[], lbl_802CC658[], lbl_802CC6B0[], lbl_802CC704[], lbl_802CC714[], lbl_802CC74C[], lbl_802CC78C[], lbl_802CC7D4[], lbl_802CC820[], lbl_802CC870[], lbl_802CC8CC[], lbl_802CC90C[], lbl_802CC944[], lbl_802CC994[], lbl_802CC9F0[], lbl_802CCA34[], lbl_802CCA78[], lbl_802CCAC0[], lbl_802CCB1C[], lbl_802CCB70[], lbl_802CCBA8[], lbl_802CCC00[], lbl_802CCC4C[], lbl_802CCC80[], lbl_802CCCD4[], lbl_802CCD14[], lbl_802CCD70[], lbl_802CCDA8[], lbl_802CCDF8[], lbl_802CCE50[], lbl_802CCEAC[], lbl_802CCF08[], lbl_802CCF60[], lbl_802CCFBC[], lbl_802CD008[], lbl_802CD058[], lbl_802CD0AC[], lbl_802CD104[], lbl_802CD148[], lbl_802CD180[], lbl_802CD1DC[], lbl_802CD228[], lbl_802CD274[], lbl_802CD2B4[], lbl_802CD304[], lbl_802CD35C[], lbl_802CD3AC[], lbl_802CD3FC[], lbl_802CD444[], lbl_802CD480[], lbl_802CD4D8[], lbl_802CD514[], lbl_802CD56C[], lbl_802CD5A8[], lbl_802CD5E8[], lbl_802CD640[], lbl_802CD688[], lbl_802CD6D8[], lbl_802CD70C[], lbl_802CD754[], lbl_802CD7AC[], lbl_802CD7E4[], lbl_802CD834[], lbl_802CD880[], lbl_802CD8D4[], lbl_802CD934[], lbl_802CD988[], lbl_802CD9CC[], lbl_802CDA28[], lbl_802CDA7C[], lbl_802CDADC[], lbl_802CDB30[], lbl_802CDB74[], lbl_802CDBCC[], lbl_802CDC0C[], lbl_802CDC5C[], lbl_802CDCAC[], lbl_802CDD00[], lbl_802CDD4C[], lbl_802CDDA4[], lbl_802CDDEC[], lbl_802CDE34[], lbl_802CDE88[], lbl_802CDEE0[], lbl_802CDF3C[], lbl_802CDF90[], lbl_802CDFE8[], lbl_802CE040[], lbl_802CE07C[], lbl_802CE0D0[], lbl_802CE12C[], lbl_802CE184[], lbl_802CE1C4[], lbl_802CE21C[], lbl_802CE278[], lbl_802CE2C8[], lbl_802CE328[], lbl_802CE374[], lbl_802CE3C8[], lbl_802CE414[], lbl_802CE46C[], lbl_802CE4B4[], lbl_802CE510[], lbl_802CE548[], lbl_802CE5A4[], lbl_802CE5D4[], lbl_802CE620[], lbl_802CE67C[], lbl_802CE6C4[], lbl_802CE708[], lbl_802CE750[], lbl_802CE7AC[], lbl_802CE80C[], lbl_802CE868[], lbl_802CE8C0[], lbl_802CE918[], lbl_802CE974[], lbl_802CE9C4[], lbl_802CEA20[], lbl_802CEA78[], lbl_802CEACC[], lbl_802CEB20[], lbl_802CEB6C[], lbl_802CEBAC[], lbl_802CEBEC[], lbl_802CEC30[], lbl_802CEC88[], lbl_802CECE0[], lbl_802CED3C[], lbl_802CED98[], lbl_802CEDF0[], lbl_802CEE40[], lbl_802CEE8C[], lbl_802CEED8[], lbl_802CEF18[], lbl_802CEF5C[], lbl_802CEFB8[], lbl_802CF01C[], lbl_802CF058[], lbl_802CF0A0[], lbl_802CF0F0[], lbl_802CF13C[], lbl_802CF17C[], lbl_802CF1B8[], lbl_802CF1F0[], lbl_802CF24C[], lbl_802CF2AC[], lbl_802CF304[], lbl_802CF35C[], lbl_802CF3B4[], lbl_802CF414[], lbl_802CF46C[], lbl_802CF4C4[], lbl_802CF51C[], lbl_802CF57C[], lbl_802CF5D0[], lbl_802CF628[], lbl_802CF680[], lbl_802CF6D4[], lbl_802CF728[], lbl_802CF788[], lbl_802CF7E0[], lbl_802CF83C[], lbl_802CF890[], lbl_802CF8EC[], lbl_802CF944[], lbl_802CF99C[], lbl_802CF9F0[], lbl_802CFA44[], lbl_802CFAA0[], lbl_802CFAD8[], lbl_802CFB10[], lbl_802CFB6C[], lbl_802CFBC4[], lbl_802CFC04[], lbl_802CFC60[], lbl_802CFCA4[], lbl_802CFCEC[], lbl_802CFD40[], lbl_802CFDA0[], lbl_802CFDD8[], lbl_802CFE2C[], lbl_802CFE88[], lbl_802CFEDC[], lbl_802CFF30[], lbl_802CFF84[], lbl_802CFFC8[], lbl_802D000C[], lbl_802D0068[], lbl_802D00A8[], lbl_802D00F4[], lbl_802D0148[], lbl_802D0194[], lbl_802D01F0[], lbl_802D0250[], lbl_802D02A8[], lbl_802D0300[], lbl_802D0354[], lbl_802D03B0[], lbl_802D03F8[], lbl_802D0450[], lbl_802D0498[], lbl_802D04EC[], lbl_802D0548[], lbl_802D05A4[], lbl_802D0600[], lbl_802D065C[], lbl_802D06B8[], lbl_802D06C4[], lbl_802D0718[], lbl_802D0768[], lbl_802D07BC[], lbl_802D0818[], lbl_802D0870[], lbl_802D08CC[], lbl_802D0924[], lbl_802D097C[], lbl_802D09D8[], lbl_802D0A2C[], lbl_802D0A84[], lbl_802D0AE0[], lbl_802D0B2C[], lbl_802D0B70[], lbl_802D0BC4[], lbl_802D0C18[], lbl_802D0C28[], lbl_802D0C7C[], lbl_802D0CD4[], lbl_802D0D2C[], lbl_802D0D88[], lbl_802D0DEC[], lbl_802D0E34[], lbl_802D0E98[], lbl_802D0EF0[], lbl_802D0F44[], lbl_802D0F98[], lbl_802D0FF4[], lbl_802D1054[], lbl_802D10AC[], lbl_802D1104[], lbl_802D1164[], lbl_802D11C4[], lbl_802D1220[], lbl_802D1278[], lbl_802D12CC[], lbl_802D1324[], lbl_802D1380[], lbl_802D13E0[], lbl_802D142C[], lbl_802D1488[], lbl_802D14D4[], lbl_802D1514[], lbl_802D1568[], lbl_802D15A0[], lbl_802D15F4[], lbl_802D1644[], lbl_802D1694[], lbl_802D16CC[], lbl_802D1710[], lbl_802D1760[], lbl_802D179C[], lbl_802D17E8[], lbl_802D1844[], lbl_802D18A4[], lbl_802D1904[], lbl_802D1960[], lbl_802D19B4[], lbl_802D1A00[], lbl_802D1A54[], lbl_802D1AB4[], lbl_802D1B00[], lbl_802D1B58[], lbl_802D1BB8[], lbl_802D1C00[], lbl_802D1C60[], lbl_802D1CA8[], lbl_802D1CF8[], lbl_802D1D40[], lbl_802D1D94[], lbl_802D1DEC[], lbl_802D1E40[], lbl_802D1E9C[], lbl_802D1EF8[], lbl_802D1F58[], lbl_802D1FB8[], lbl_802D2008[], lbl_802D2058[], lbl_802D20B0[], lbl_802D20F0[], lbl_802D2138[], lbl_802D218C[], lbl_802D21C8[], lbl_802D21F4[], lbl_802D2244[], lbl_802D22A0[], lbl_802D22FC[], lbl_802D2338[], lbl_802D2394[], lbl_802D23E4[], lbl_802D2434[], lbl_802D2498[], lbl_802D24EC[], lbl_802D254C[], lbl_802D2590[], lbl_802D25D8[], lbl_802D2638[], lbl_802D2684[], lbl_802D26DC[], lbl_802D272C[], lbl_802D278C[], lbl_802D27E4[], lbl_802D2840[], lbl_802D2898[], lbl_802D28EC[], lbl_802D2938[], lbl_802D2988[], lbl_802D29E0[], lbl_802D2A28[], lbl_802D2A84[], lbl_802D2ADC[], lbl_802D2B38[], lbl_802D2B90[], lbl_802D2BF0[], lbl_802D2C20[], lbl_802D2C74[], lbl_802D2CC4[], lbl_802D2D1C[], lbl_802D2D74[], lbl_802D2DD0[], lbl_802D2E2C[], lbl_802D2E88[], lbl_802D2EE0[], lbl_802D2F3C[], lbl_802D2F80[], lbl_802D2FC8[], lbl_802D3024[], lbl_802D306C[], lbl_802D30B8[], lbl_802D3108[], lbl_802D3168[], lbl_802D31C4[], lbl_802D3220[], lbl_802D3264[], lbl_802D32AC[], lbl_802D3308[], lbl_802D3350[], lbl_802D33B0[], lbl_802D340C[], lbl_802D3460[], lbl_802D34AC[], lbl_802D3508[], lbl_802D3564[];
+const char *lbl_802F6918[62] = {
+    lbl_802C9668, lbl_802C96C4, lbl_802C9724, lbl_802C9780,
+    lbl_802C97DC, lbl_802C983C, lbl_802C9898, lbl_802C98F8,
+    lbl_802C9958, lbl_802C99B8, lbl_802C9A1C, lbl_802C9A7C,
+    lbl_802C9ADC, lbl_802C9B3C, lbl_802C9B9C, lbl_802C9BFC,
+    lbl_802C9C60, lbl_802C9CC0, lbl_802C9D20, lbl_802C9D80,
+    lbl_802C9DE4, lbl_802C9E44, lbl_802C9EA4, lbl_802C9F04,
+    lbl_802C9F64, lbl_802C9FC0, lbl_802CA01C, lbl_802CA078,
+    lbl_802CA0D8, lbl_802CA13C, lbl_802CA19C, lbl_802CA1FC,
+    lbl_802CA25C, lbl_802CA2BC, lbl_802CA320, lbl_802CA380,
+    lbl_802CA3E0, lbl_802CA43C, lbl_802CA4A0, lbl_802CA500,
+    lbl_802CA55C, lbl_802CA5BC, lbl_802CA618, lbl_802CA67C,
+    lbl_802CA6DC, lbl_802CA740, lbl_802CA7A0, lbl_802CA800,
+    lbl_802CA860, lbl_802CA8C0, lbl_802CA920, lbl_802CA980,
+    lbl_802CA9E4, lbl_802CAA44, lbl_802CAAA4, lbl_802CAB08,
+    lbl_802CAB64, lbl_802CABC0, lbl_802CAC1C, lbl_802CAC7C,
+    lbl_802CACDC, lbl_802CAD3C,
+};
+const char *lbl_802F6A10[80] = {
+    lbl_802CAD9C, lbl_802CADFC, lbl_802CAE5C, lbl_802CAEB4,
+    lbl_802CAF0C, lbl_802CAF6C, lbl_802CAFCC, lbl_802CB02C,
+    lbl_802CB08C, lbl_802CB0E4, lbl_802CB140, lbl_802CB19C,
+    lbl_802CB1F8, lbl_802CB248, lbl_802CB294, lbl_802CB2F0,
+    lbl_802CB350, lbl_802CB3A0, lbl_802CB3FC, lbl_802CB450,
+    lbl_802CB4AC, lbl_802CB504, lbl_802CB564, lbl_802CB5C4,
+    lbl_802CB620, lbl_802CB678, lbl_802CB6D8, lbl_802CB734,
+    lbl_802CB790, lbl_802CB7F0, lbl_802CB848, lbl_802CB8A0,
+    lbl_802CB900, lbl_802CB958, lbl_802CB9A8, lbl_802CB9E0,
+    lbl_802CBA1C, lbl_802CBA68, lbl_802CBAAC, lbl_802CBAF0,
+    lbl_802CBB3C, lbl_802CBB9C, lbl_802CBBF0, lbl_802CBC50,
+    lbl_802CBCB0, lbl_802CBD10, lbl_802CBD68, lbl_802CBDBC,
+    lbl_802CBE10, lbl_802CBE68, lbl_802CBEB8, lbl_802CBF08,
+    lbl_802CBF68, lbl_802CBFB4, lbl_802CC014, lbl_802CC074,
+    lbl_802CC0D0, lbl_802CC12C, lbl_802CC188, lbl_802CC1E0,
+    lbl_802CC238, lbl_802CC288, lbl_802CC2E4, lbl_802CC33C,
+    lbl_802CC398, lbl_802CC3EC, lbl_802CC44C, lbl_802CC4A4,
+    lbl_802CC504, lbl_802CC558, lbl_802CC5B4, lbl_802CC608,
+    lbl_802CC658, lbl_802CC6B0, lbl_802CC704, lbl_802CC704,
+    lbl_802CC704, lbl_802CC704, lbl_802CC704, lbl_802CC704,
+};
+const char *lbl_802F6B50[80] = {
+    lbl_802CC714, lbl_802CC74C, lbl_802CC78C, lbl_802CC7D4,
+    lbl_802CC820, lbl_802CC870, lbl_802CC8CC, lbl_802CC90C,
+    lbl_802CC944, lbl_802CC994, lbl_802CC9F0, lbl_802CCA34,
+    lbl_802CCA78, lbl_802CCAC0, lbl_802CCB1C, lbl_802CCB70,
+    lbl_802CCBA8, lbl_802CCC00, lbl_802CCC4C, lbl_802CCC80,
+    lbl_802CCCD4, lbl_802CCD14, lbl_802CCD70, lbl_802CCDA8,
+    lbl_802CCDF8, lbl_802CCE50, lbl_802CCEAC, lbl_802CCF08,
+    lbl_802CCF60, lbl_802CCFBC, lbl_802CD008, lbl_802CD058,
+    lbl_802CD0AC, lbl_802CD104, lbl_802CD148, lbl_802CD180,
+    lbl_802CD1DC, lbl_802CD228, lbl_802CD274, lbl_802CD2B4,
+    lbl_802CD304, lbl_802CD35C, lbl_802CD3AC, lbl_802CD3FC,
+    lbl_802CD444, lbl_802CD480, lbl_802CD4D8, lbl_802CD514,
+    lbl_802CD56C, lbl_802CD5A8, lbl_802CD5E8, lbl_802CD640,
+    lbl_802CD688, lbl_802CD6D8, lbl_802CD70C, lbl_802CD754,
+    lbl_802CD7AC, lbl_802CD7E4, lbl_802CD834, lbl_802CC704,
+    lbl_802CC704, lbl_802CC704, lbl_802CC704, lbl_802CC704,
+    lbl_802CC704, lbl_802CC704, lbl_802CC704, lbl_802CC704,
+    lbl_802CC704, lbl_802CC704, lbl_802CC704, lbl_802CC704,
+    lbl_802CC704, lbl_802CC704, lbl_802CC704, lbl_802CC704,
+    lbl_802CC704, lbl_802CC704, lbl_802CC704, lbl_802CC704,
+};
+const char *lbl_802F6C90[80] = {
+    lbl_802CD880, lbl_802CD8D4, lbl_802CD934, lbl_802CD988,
+    lbl_802CD9CC, lbl_802CDA28, lbl_802CDA7C, lbl_802CDADC,
+    lbl_802CDB30, lbl_802CDB74, lbl_802CDBCC, lbl_802CDC0C,
+    lbl_802CDC5C, lbl_802CDCAC, lbl_802CDD00, lbl_802CDD4C,
+    lbl_802CDDA4, lbl_802CDDEC, lbl_802CDE34, lbl_802CDE88,
+    lbl_802CDEE0, lbl_802CDF3C, lbl_802CDF90, lbl_802CDFE8,
+    lbl_802CE040, lbl_802CE07C, lbl_802CE0D0, lbl_802CE12C,
+    lbl_802CE184, lbl_802CE1C4, lbl_802CE21C, lbl_802CE278,
+    lbl_802CE2C8, lbl_802CE328, lbl_802CE374, lbl_802CE3C8,
+    lbl_802CE414, lbl_802CE46C, lbl_802CE4B4, lbl_802CE510,
+    lbl_802CE548, lbl_802CE5A4, lbl_802CE5D4, lbl_802CE620,
+    lbl_802CE67C, lbl_802CE6C4, lbl_802CE708, lbl_802CE750,
+    lbl_802CE7AC, lbl_802CE80C, lbl_802CE868, lbl_802CE8C0,
+    lbl_802CE918, lbl_802CE974, lbl_802CE9C4, lbl_802CEA20,
+    lbl_802CEA78, lbl_802CEACC, lbl_802CEB20, lbl_802CEB6C,
+    lbl_802CEBAC, lbl_802CEBEC, lbl_802CEC30, lbl_802CC704,
+    lbl_802CC704, lbl_802CC704, lbl_802CC704, lbl_802CC704,
+    lbl_802CC704, lbl_802CC704, lbl_802CC704, lbl_802CC704,
+    lbl_802CC704, lbl_802CC704, lbl_802CC704, lbl_802CC704,
+    lbl_802CC704, lbl_802CC704, lbl_802CC704, lbl_802CC704,
+};
+const char *lbl_802F6DD0[80] = {
+    lbl_802CEC88, lbl_802CECE0, lbl_802CED3C, lbl_802CED98,
+    lbl_802CEDF0, lbl_802CEE40, lbl_802CEE8C, lbl_802CEED8,
+    lbl_802CEF18, lbl_802CEF5C, lbl_802CEFB8, lbl_802CF01C,
+    lbl_802CF058, lbl_802CF0A0, lbl_802CF0F0, lbl_802CF13C,
+    lbl_802CF17C, lbl_802CF1B8, lbl_802CF1F0, lbl_802CF24C,
+    lbl_802CF2AC, lbl_802CF304, lbl_802CF35C, lbl_802CF3B4,
+    lbl_802CF414, lbl_802CF46C, lbl_802CF4C4, lbl_802CF51C,
+    lbl_802CF57C, lbl_802CF5D0, lbl_802CF628, lbl_802CF680,
+    lbl_802CF6D4, lbl_802CF728, lbl_802CF788, lbl_802CF7E0,
+    lbl_802CF83C, lbl_802CF890, lbl_802CF8EC, lbl_802CF944,
+    lbl_802CF99C, lbl_802CF9F0, lbl_802CFA44, lbl_802CFAA0,
+    lbl_802CFAD8, lbl_802CFB10, lbl_802CFB6C, lbl_802CFBC4,
+    lbl_802CFC04, lbl_802CFC60, lbl_802CFCA4, lbl_802CFCEC,
+    lbl_802CFD40, lbl_802CFDA0, lbl_802CFDD8, lbl_802CFE2C,
+    lbl_802CFE88, lbl_802CFEDC, lbl_802CFF30, lbl_802CFF84,
+    lbl_802CFFC8, lbl_802CFFC8, lbl_802CC704, lbl_802CC704,
+    lbl_802CC704, lbl_802D000C, lbl_802D0068, lbl_802D00A8,
+    lbl_802D00F4, lbl_802D0148, lbl_802D0194, lbl_802D01F0,
+    lbl_802D0250, lbl_802D02A8, lbl_802D0300, lbl_802D0354,
+    lbl_802D03B0, lbl_802D03F8, lbl_802D0450, lbl_802D0498,
+};
+const char *lbl_802F6F10[80] = {
+    lbl_802D04EC, lbl_802D0548, lbl_802D05A4, lbl_802D0600,
+    lbl_802D065C, lbl_802D06B8, lbl_802D06C4, lbl_802D0718,
+    lbl_802D0768, lbl_802D07BC, lbl_802D0818, lbl_802D0870,
+    lbl_802D08CC, lbl_802D0924, lbl_802D097C, lbl_802D09D8,
+    lbl_802D0A2C, lbl_802D0A84, lbl_802D06B8, lbl_802D0AE0,
+    lbl_802D0B2C, lbl_802D0B70, lbl_802D0BC4, lbl_802D0C18,
+    lbl_802D0C28, lbl_802D0C7C, lbl_802D0CD4, lbl_802D0C18,
+    lbl_802D0D2C, lbl_802D0D88, lbl_802D0DEC, lbl_802D0E34,
+    lbl_802D0E98, lbl_802D0E98, lbl_802D06B8, lbl_802D0EF0,
+    lbl_802D0F44, lbl_802D0F98, lbl_802D0FF4, lbl_802D1054,
+    lbl_802D10AC, lbl_802D1104, lbl_802D1164, lbl_802D11C4,
+    lbl_802D11C4, lbl_802CC704, lbl_802CC704, lbl_802CC704,
+    lbl_802CC704, lbl_802CC704, lbl_802CC704, lbl_802CC704,
+    lbl_802CC704, lbl_802CC704, lbl_802CC704, lbl_802CC704,
+    lbl_802CC704, lbl_802CC704, lbl_802CC704, lbl_802CC704,
+    lbl_802CC704, lbl_802CC704, lbl_802CC704, lbl_802CC704,
+    lbl_802CC704, lbl_802CC704, lbl_802CC704, lbl_802CC704,
+    lbl_802CC704, lbl_802CC704, lbl_802CC704, lbl_802CC704,
+    lbl_802CC704, lbl_802CC704, lbl_802CC704, lbl_802CC704,
+    lbl_802CC704, lbl_802CC704, lbl_802CC704, lbl_802CC704,
+};
+const char *lbl_802F7050[40] = {
+    lbl_802D1220, lbl_802D1278, lbl_802D12CC, lbl_802D1324,
+    lbl_802D1380, lbl_802D13E0, lbl_802D142C, lbl_802D1488,
+    lbl_802D14D4, lbl_802D1514, lbl_802D1568, lbl_802D15A0,
+    lbl_802D15F4, lbl_802D1644, lbl_802D1694, lbl_802D16CC,
+    lbl_802D1710, lbl_802D1760, lbl_802D179C, lbl_802D17E8,
+    lbl_802D1844, lbl_802D18A4, lbl_802D1904, lbl_802D1960,
+    lbl_802D19B4, lbl_802D1A00, lbl_802D1A54, lbl_802D1AB4,
+    lbl_802D1B00, lbl_802D1B58, lbl_802D1BB8, lbl_802D1C00,
+    lbl_802D1C60, lbl_802D1CA8, lbl_802D1CF8, lbl_802D1D40,
+    lbl_802D1D94, lbl_802D1DEC, lbl_802D1E40, lbl_802D1E9C,
+};
+const char *lbl_802F70F0[40] = {
+    lbl_802D1EF8, lbl_802D1F58, lbl_802D1FB8, lbl_802D2008,
+    lbl_802D2058, lbl_802D20B0, lbl_802D20F0, lbl_802D2138,
+    lbl_802D218C, lbl_802D21C8, lbl_802D21F4, lbl_802D2244,
+    lbl_802D22A0, lbl_802D22FC, lbl_802D2338, lbl_802D2394,
+    lbl_802D23E4, lbl_802D2434, lbl_802D2498, lbl_802D24EC,
+    lbl_802D254C, lbl_802D2590, lbl_802D25D8, lbl_802D2638,
+    lbl_802D2684, lbl_802D26DC, lbl_802D272C, lbl_802D278C,
+    lbl_802D27E4, lbl_802D2840, lbl_802D2898, lbl_802D28EC,
+    lbl_802D2938, lbl_802D2988, lbl_802D29E0, lbl_802D2A28,
+    lbl_802D2A84, lbl_802D2ADC, lbl_802D2B38, lbl_802D2B90,
+};
+const char *lbl_802F7190[30] = {
+    lbl_802D2BF0, lbl_802D2C20, lbl_802D2C74, lbl_802D2CC4,
+    lbl_802D2D1C, lbl_802D2D74, lbl_802D2DD0, lbl_802D2E2C,
+    lbl_802D2E88, lbl_802D2EE0, lbl_802D2F3C, lbl_802D2F80,
+    lbl_802D2FC8, lbl_802D3024, lbl_802D306C, lbl_802D30B8,
+    lbl_802D3108, lbl_802D3168, lbl_802D31C4, lbl_802D3220,
+    lbl_802D3264, lbl_802D32AC, lbl_802D3308, lbl_802D3350,
+    lbl_802D33B0, lbl_802D340C, lbl_802D3460, lbl_802D34AC,
+    lbl_802D3508, lbl_802D3564,
+};
+
 void fn_801EF7E0(void);
 typedef struct {
     u8 pad[0x2c];
@@ -113,6 +280,46 @@ void fn_801F2E44(s32 id)
         }
         i++;
     } while (i < 0x3c);
+}
+
+void fn_801F2A34(s32 n, s32 v);
+void fn_801F2ED4(s32 a, s32 b, s32 val);
+static inline void Reset2(SaveChar *r, SaveChar *r2, s32 n, s32 i)
+{
+    s32 v = r2->x44[i];
+    r->x44[i] = 0;
+    fn_801F2ED4(n, i, 0);
+    fn_801F2ED4(n, i, v);
+}
+static inline void Reset1(SaveChar *c, s32 n)
+{
+    s32 old = c->x24;
+    c->x24 = 0;
+    fn_801F2A34(n, 0);
+    fn_801F2A34(n, old);
+}
+void fn_801F3024(s32 n)
+{
+    s32 i;
+    SaveChar *r2 = &lbl_8030B7F4.chr[n];
+    SaveChar *r = &lbl_8030B7F4.chr[n];
+    LvPair *p;
+    s8 j;
+    Reset1(r, n);
+    for (i = 0; i < 6; i++) {
+        Reset2(r, r2, n, i);
+    }
+    p = lbl_803474D8->pairs;
+    j = 0x24;
+    do {
+        s8 a = p->id;
+        s8 b = p->lv;
+        p++;
+        if (a == n && b <= r->lvMax) {
+            r->stat[j / 8] |= 1 << (j % 8);
+        }
+        j++;
+    } while (j < 0x3c);
 }
 
 void fn_801EFF90(s16 id);
@@ -508,6 +715,30 @@ u16 fn_801F477C(s16 id)
         return lbl_802D83EC[id - 440].price;
     case 7:
         return lbl_802D8A2C[id - 480].price;
+    default:
+        return 0;
+    }
+}
+
+const char *fn_801F48AC(s16 id) {
+    if (id == -1) return 0;
+    switch (fn_801F4C24(id)) {
+    case 0:
+        return lbl_802F6A10[id];
+    case 1:
+        return lbl_802F6B50[id - 80];
+    case 2:
+        return lbl_802F6C90[id - 160];
+    case 3:
+        return lbl_802F6DD0[id - 240];
+    case 4:
+        return lbl_802F6F10[id - 320];
+    case 5:
+        return lbl_802F7050[id - 400];
+    case 6:
+        return lbl_802F70F0[id - 440];
+    case 7:
+        return lbl_802F7190[id - 480];
     default:
         return 0;
     }

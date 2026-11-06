@@ -1807,6 +1807,26 @@ SaveTask* SaveLoadOpenSave(void* parent, u16 id) {
     return t;
 }
 
+SaveTask* SaveLoadOpenLoad(void* parent, u8 mode) {
+    SaveTask* t;
+    int i;
+    lbl_803473C4 = 0;
+    if (lbl_80347568 == 0) {
+        return 0;
+    }
+    t = fn_802267AC(parent, SaveLoadTask);
+    t->w = fn_801E1A74(1, 0x270);
+    t->w->f1 = 1;
+    t->w->f18 = 1.0f;
+    for (i = 0; i < 16; i++) {
+        t->w->p[i] = 0;
+    }
+    t->w->fa = 0;
+    t->w->x0 = mode;
+    return t;
+}
+
+
 void fn_801A2424(s32 n, s32 idx, char* buf, s32 len) {
     char* s = lbl_802B9428[idx];
     char* p;

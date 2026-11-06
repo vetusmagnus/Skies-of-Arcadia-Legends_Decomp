@@ -1068,6 +1068,28 @@ void fn_801C8450(SlotFn obj) {
     SlotAdd(lbl_80308428, obj);
 }
 
+static inline void RunAll(Pair_801C86D8* tab, void* obj) {
+    s32 j;
+    Pair_801C86D8* q = tab;
+    Pair_801C86D8* p = tab;
+    s32 i;
+    for (i = 0; i < 8; i++) {
+        if (p->a[0]) {
+            p->a[0](obj);
+        }
+        p++;
+    }
+    for (j = 0; j < 8; j++) {
+        if (q->b[0]) {
+            q->b[0](obj);
+        }
+        q++;
+    }
+}
+void fn_801C8634(void* obj) {
+    RunAll(lbl_80308428, obj);
+}
+
 /* Clears the 8 callback entries and registers fn_801C8590 as a callback. */
 void fn_801C86D8(void)
 {

@@ -44,13 +44,15 @@ typedef struct {
     s8 xd;
     u8 pade[2];
     void* fn;
-    u8 pad14[0x17 - 0x14];
-    s8 x17;
-    s8 x18;
-    u8 pad19[0x4c - 0x19];
+    s8 x14;
+    u8 pad15;
+    s8 x16;
+    struct { s8 x; s8 y; } path[26];
     s32 x4c;
     s8 x50;
     s8 x51;
+    u8 pad52;
+    u8 grid[0x20];
 } Sub80309700;
 typedef struct Slot {
     void (*fn)(struct Slot*);
@@ -399,6 +401,7 @@ typedef struct CamCtrl {
 typedef struct Glob {
     u8 pad0[0x84];
     u32 x84;
+    u32 x88;
 } Glob;
 extern Glob lbl_80310B3C;
 extern s32 lbl_803473DC;
@@ -500,7 +503,8 @@ typedef struct CamCtl {
     Angle ang70[3];     /* 0x70 */
     f32 f7c[3];         /* 0x7C */
     s32 x88[3];         /* 0x88 */
-    u8 pad94[0xac - 0x94];
+    NJS_POINT3 v94;
+    NJS_POINT3 va0;
     Cam_80091040 trk;   /* 0xAC: eye position following p0c */
     f32 xcc;            /* 0xCC */
     f32 xd0;            /* 0xD0 */
@@ -577,7 +581,8 @@ typedef struct Pad_80090DBC {
     u8 pad4[0x10 - 0x4];
     u16 trig_l;      /* 0x10 */
     u16 trig_r;      /* 0x12 */
-    u8 pad14[0x18 - 0x14];
+    s16 x14;
+    s16 x16;
     s16 stick;       /* 0x18 */
 } Pad_80090DBC;
 extern Pad_80090DBC *lbl_80311A60[];
@@ -772,8 +777,8 @@ static inline void Begin(Slot* o, s32 id) {
     } else {
         fn_80080710(d, 1);
     }
-    if (d->x17 != 0) {
-        fn_8008178C(d, d->x17, d->x18, id);
+    if (d->path[0].x != 0) {
+        fn_8008178C(d, d->path[0].x, d->path[0].y, id);
         fn_80081134(id, 0xf);
         o->state = 1;
     } else {
@@ -1411,6 +1416,46 @@ s32 fn_800912A8(s32 a, s32 b, s32 c, s32 d) {
     return q ? b + q : a;
 }
 
+extern s32 lbl_8034757C;
+extern void njOuterProduct(NJS_POINT3 *out, NJS_POINT3 *a, NJS_POINT3 *b);
+extern void njRotate(NJS_MATRIX m, NJS_POINT3* axis, Angle a);
+extern void njCalcVector(f32* m, NJS_POINT3* v, NJS_POINT3* out);
+void fn_800953E4(CamCtl* o) {
+    NJS_POINT3 v;
+    NJS_MATRIX m;
+    if (lbl_80346C38 == -1) {
+        Vec2_80346C44* adj = &lbl_80346C44;
+        o->ang70[0] = (s32)((f32)o->ang70[0] + adj->x);
+        o->ang70[1] = (s32)((f32)o->ang70[1] + adj->y);
+    } else {
+        Pad_80090DBC* c = lbl_80311A60[lbl_8034757C];
+        f32 a = (5.0f * (f32)c->x14) / 128.0f;
+        f32 b = (5.0f * (f32)c->x16) / 128.0f;
+        if (lbl_80310B3C.x88 & 8) {
+            b = -b;
+        }
+        if (0.001f <= (f32)fabs(a) || 0.001f <= (f32)fabs(b)) {
+            o->ang70[0] = (s32)((f32)o->ang70[0] - (16384.0f * b) / 128.0f);
+            o->ang70[1] = (s32)((f32)o->ang70[1] - (16384.0f * a) / 128.0f);
+            {
+                s32 t = o->ang70[0] + 0x10000;
+                s32 r = (u16)(t - 0x8000) - 0x8000;
+                if (r < -0x3000) {
+                    o->ang70[0] = 0xD000;
+                } else if (r > 0x3000) {
+                    o->ang70[0] = 0x3000;
+                }
+            }
+        }
+    }
+    njOuterProduct(&o->v94, &o->va0, &v);
+    njUnitMatrix(m);
+    njRotate(m, &o->va0, o->ang70[1]);
+    njRotate(m, &v, o->ang70[0]);
+    njCalcVector(m, &o->v94, &v);
+    fn_801DD5E8(o->w40, &v);
+}
+
 void fn_8009539C(f32 *out_f, u32 *out_w) {
     out_f[0] = lbl_80311970.f[0];
     out_f[1] = lbl_80311970.f[1];
@@ -1738,6 +1783,72 @@ void fn_8008C124(Slot* o) {
         }
         break;
     }
+}
+
+extern s32 fn_8008100C(s32 id);
+extern s32 fn_80083728(s32 a, s32 b);
+extern s32 fn_800824F0(u8* pos, s8 val, u8* grid, u8* dir);
+extern s32 fn_80082AC0(s8 x, s8 y, u8* grid, s32 k);
+extern void fn_800810FC(s32 id);
+s32 fn_8008C4C0(s32 idx, Sub80309700* d, Slot* slot) {
+    s16 i = idx;
+    fn_80083728(i, lbl_80309730[i].bd);
+    switch (d->x16) {
+    case 1:
+    case 2: {
+        s8 bd = lbl_80309730[i].bd;
+        if (lbl_80347334 != bd && fn_8008100C(bd) == 0) {
+            lbl_80309700[i]->fn = fn_8008D6B4;
+            lbl_80309700[i]->state = 0;
+            fn_8008D6B4(slot);
+        } else {
+            lbl_80309700[i]->fn = fn_8008C124;
+            lbl_80309700[i]->state = 0;
+        }
+        break;
+    }
+    case 3:
+    case 4: {
+        s8 n = d->x14;
+        u8* grid = d->grid;
+        s8 cnt;
+        u8 pos[2];
+        u8 tmp[2];
+        s32 k;
+        if (n == 0) {
+            fn_80080438(slot);
+            return 0;
+        }
+        pos[0] = d->xc;
+        pos[1] = d->xd;
+        tmp[0] = 0;
+        tmp[1] = 0;
+        cnt = n;
+        k = 0;
+        while (cnt > 0) {
+            if (fn_800824F0(pos, cnt, grid, tmp) == 0) {
+                fn_80080438(slot);
+                return 0;
+            }
+            d->path[k].x = pos[0];
+            d->path[k].y = pos[1];
+            cnt--;
+            k++;
+        }
+        if (fn_80082AC0(d->path[0].x, d->path[0].y, grid, i) == 0) {
+            fn_80080438(slot);
+            return 0;
+        }
+        fn_8008178C(d, d->path[0].x, d->path[0].y, idx);
+        fn_800810FC(idx);
+        slot->state = 2;
+        break;
+    }
+    default:
+        fn_80080438(slot);
+        return 0;
+    }
+    return 1;
 }
 
 void fn_8008C6BC(Slot* o) {
@@ -2475,6 +2586,61 @@ void fn_8008FFA4(f32 *in, f32 *out) {
     out[0] = in[0] - bx;
     out[1] = in[1];
     out[2] = in[2] - bz;
+}
+
+typedef struct Ray9194 {
+    NJS_POINT3 o;
+    NJS_POINT3 d;
+} Ray9194;
+typedef struct Plane9194 {
+    NJS_POINT3 p;
+    NJS_POINT3 n;
+} Plane9194;
+extern f32 fn_8028FD98(Ray9194* r, Plane9194* pl, NJS_POINT3* out);
+
+s32 fn_8009194C(f32* out, f32* a, f32* b, f32* c) {
+    NJS_POINT3 q;
+    Plane9194 pl;
+    Ray9194 seg;
+    s32 hit = 0;
+    if (b != 0) {
+        pl.n.x = a[0] - b[0];
+        pl.n.y = 0.0f;
+        pl.n.z = a[2] - b[2];
+    } else {
+        pl.n.x = a[0] - a[3];
+        pl.n.y = 0.0f;
+        pl.n.z = a[2] - a[5];
+    }
+    pl.p.x = a[0];
+    pl.p.y = a[1];
+    pl.p.z = a[2];
+    fn_801DCE18(&pl.n.x, &pl.n.x, 0x4000);
+    q.x = c[0] - pl.p.x;
+    q.y = 0.0f;
+    q.z = c[2] - pl.p.z;
+    if (0.0f > q.x * pl.n.x + q.z * pl.n.z) {
+        pl.n.x = -pl.n.x;
+        pl.n.z = -pl.n.z;
+    }
+    njUnitVector(&pl.n.x);
+    pl.p.x = 4.0f * pl.n.x + pl.p.x;
+    pl.p.z = 4.0f * pl.n.z + pl.p.z;
+    seg.d.x = c[0] - c[3];
+    seg.d.y = c[1] - c[4];
+    seg.d.z = c[2] - c[5];
+    seg.o.x = c[3];
+    seg.o.y = c[4];
+    seg.o.z = c[5];
+    if (0.0f == fn_8028FD98(&seg, &pl, &q)) {
+        if (0.0f >= (c[0] - q.x) * (seg.o.x - q.x) + (c[2] - q.z) * (seg.o.z - q.z)) {
+            out[0] = q.x;
+            hit = 1;
+            out[1] = q.y;
+            out[2] = q.z;
+        }
+    }
+    return hit;
 }
 
 void fn_80091B4C(s32 n, f32 *pos, f32 *vel, Pt *p)

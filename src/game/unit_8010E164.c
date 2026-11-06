@@ -5134,6 +5134,120 @@ Obj_80122A00* fn_80122A00(void* unused, Src_80122A00* s) {
     return o;
 }
 
+typedef struct Hdr_80122B34 {
+    u8 pad0[0x24];
+    s32 v24;
+    SrcFrame d28[1];
+} Hdr_80122B34;
+typedef struct Cfg_80122B34 {
+    u8 pad0[0x10];
+    Hdr_80122B34* hdr;
+} Cfg_80122B34;
+typedef struct M_80122B34 {
+    u8 _00[0x1c8];
+    Cfg_80122B34* cfg;
+    u8 _1cc[0xc];
+    C1d8* sub;
+    u8 _1dc[0x1e];
+    u8 f1fa;
+    u8 f1fb;
+    u8 _1fc[0x60];
+    Src_80122A00* work;
+    u8 _260[0xc];
+    u8 f26c;
+} M_80122B34;
+typedef struct T_80122B34 {
+    u8 _00[0x18];
+    u8 flags;
+    u8 state;
+    u8 _1a;
+    u8 f1b;
+    u8 _1c[8];
+    M_80122B34* m;
+} T_80122B34;
+extern s32 lbl_8034757C;
+
+void fn_80122B34(T_80122B34* t) {
+    extern void* fn_801E1A2C(s32 a, u32 size);
+    extern void* memset(void* p, int c, u32 n);
+    extern void fn_8015ED90(void* t);
+    extern void fn_8015EB8C(void* m, s32 id, void* cb);
+    extern s32 fn_8015E600(void* m);
+    extern void fn_8015EBF4(void* m);
+    M_80122B34* m = t->m;
+    Src_80122A00* w = m->work;
+
+    if (t->flags & 0x20) {
+        t->state = 0xFF;
+    }
+    switch (t->state) {
+    case 0:
+        t->f1b = 0xFA;
+        m->f26c = 1;
+        w = fn_801E1A2C(1, 0x10);
+        memset(w, 0, 0x10);
+        {
+            SprAnim* b = fn_801E1A2C(1, 0x98);
+            w->anim = b;
+            if (b == 0) {
+                if (w != 0) {
+                    fn_801E1784(w);
+                }
+                break;
+            }
+        }
+        m->work = w;
+        w->owner = t;
+        m->f1fa = 0;
+        fn_8015ED90(t);
+        fn_8015EB8C(m, 0, fn_80122770);
+        fn_8015EB8C(m, 0xD, fn_80122768);
+        m->sub->w1a0 = 0;
+        t->state = 1;
+        break;
+    case 1:
+        fn_8015E600(m);
+        { s32 q = m->f1fb; if (q == 1) {
+            m->f1fb = 0;
+        } }
+        break;
+    case 2:
+        { s32 q = m->f1fa; if (q == 1) {
+            SrcFrame* f = m->cfg->hdr->d28;
+            w->handle = m->cfg->hdr->v24;
+            w->frames = f;
+            if (w->handle >= 100) {
+                w->handle = lbl_8034757C;
+            }
+            fn_80122A00(t, w);
+            m->f1fa = 0;
+        } }
+        if (fn_8015E600(m) == 0) {
+            if (w->anim->count == 0) {
+                t->state = 1;
+                m->f1fb = 1;
+            }
+        }
+        break;
+    case 0xFF:
+        if (w->anim != 0) {
+            fn_801E1784(w->anim);
+            w->anim = 0;
+        }
+        if (m->work != 0) {
+            fn_801E1784(m->work);
+            m->work = 0;
+        }
+        fn_8015EBF4(m);
+        t->flags |= 0x40;
+        break;
+    case 4:
+    case 0xFE:
+    default:
+        break;
+    }
+}
+
 void fn_80126014(void *a, In *in, Obj_80126014 *o)
 {
     fn_8014EF34(in);

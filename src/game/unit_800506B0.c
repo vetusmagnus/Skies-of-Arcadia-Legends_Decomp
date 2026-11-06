@@ -242,7 +242,7 @@ extern f32 fn_8001363C(NJS_POINT3 *at, f32 *out);
 extern void fn_80013504(NJS_POINT3 *pos, NJS_POINT3 *at, Angle *rot, f32 a, f32 b);
 extern void fn_800608C8(f32 *p);
 extern void fn_800171F0(u8 id, u8 part, NJS_POINT3 *a, NJS_POINT3 *b);
-extern void fn_80051EC8(ActTask *t, s8 *list, NJS_POINT3 *p);
+f32 fn_80051EC8(ActTask *t, s8 *list, NJS_POINT3 *p);
 extern void fn_8001604C(ActTask *t, s8 *list, s32 a, s32 b);
 extern void fn_80011370(u8 a, s8 b);
 extern void fn_80011394(s8 sel);
@@ -883,6 +883,34 @@ void fn_800519F4(Pawn *p)
         p->fd4 = 360.0 * (rot[0] & 0xFFFF) / 65536.0;
     }
     }
+}
+
+/* Highest unit height over the unit and the up-to-8 listed parts; moves p to the tallest one's position. */
+f32 fn_80051EC8(ActTask *t, s8 *list, NJS_POINT3 *p) {
+    f32 h;
+    f32 best;
+    s16 i;
+    BtlUnit *u = t->work->unit;
+
+    best = u->height;
+    fn_80071CF0(&t->work->pos, p);
+    p->y = best;
+    for (i = 0; i < 8; i++) {
+        if (list[i] < 0) {
+            break;
+        }
+        t = fn_80021658(list[i]);
+        if (t != NULL) {
+            u = t->work->unit;
+            h = u->height;
+            if (best < h) {
+                best = h;
+                fn_80071CF0(&t->work->pos, p);
+                p->y = h;
+            }
+        }
+    }
+    return best;
 }
 
 /* Over up to 8 parts (list ends at a negative entry), finds the pair of points fn_800171F0

@@ -556,7 +556,7 @@ typedef struct {
     u8 pad0[0x24];
     Win_801784D8* win;
 } Pnl_801784D8;
-extern s32 fn_801952D0(s32 v);
+extern s8 fn_801952D0(s32 v);
 void fn_80217830(u32 a);
 typedef struct { s32 hide; u8 pad4[4]; UiObj obj; u8 pad_[0xbc - 8 - sizeof(UiObj)]; } Win_8017BF14;
 typedef struct { u8 pad[0x24]; Win_8017BF14* in; } Pnl_8017BF14;
@@ -3327,6 +3327,45 @@ void fn_801778AC(void) {
     }
 }
 
+void fn_80177134(void) {
+    Sprite* e;
+    UiObj* o = &camp_work.pnl[51]->win->obj;
+    f32 x;
+    s32 who;
+    CampWork* cw = &camp_work;
+    CampCtrl* tb = lbl_80307638;
+    CampCtrl* c = lbl_8034710C->holder->ctrl;
+    switch (c->cur[6].mask) {
+    case 0:
+        if (fn_801952D0(c->cur[1].mask) > 1) {
+            x = 5.0f + o->rect[0] + (f32)(c->cur[1].sel * 0x30);
+            e = fn_801D68C4(lbl_803470F0, 0x44);
+            e->x = x;
+            e->y = 179.0f;
+            fn_800FF348(e, 0, -3100.0f, 1.0f, cw->f354);
+            x = 47.0f + o->rect[0] + (f32)(c->cur[1].sel * 0x30);
+            e = fn_801D68C4(lbl_803470F0, 0x43);
+            e->x = x;
+            e->y = 179.0f;
+            fn_800FF348(e, 0, -3100.0f, 1.0f, cw->f354);
+        }
+        break;
+    case 1:
+        who = lbl_8030B7F4.party[tb[1].cur[0].sel];
+        if (fn_80195CD0(who, c->cur[1].sel, 0, c->cur[4].sel) > 1) {
+            e = fn_801D68C4(lbl_803470F0, 0x62);
+            e->x = 24.0f + o->rect[0];
+            e->y = 156.0f + o->rect[1];
+            fn_800FF348(e, 0, -3100.0f, 1.0f, cw->f358);
+            e = fn_801D68C4(lbl_803470F0, 0x63);
+            e->x = 272.0f + o->rect[0];
+            e->y = 156.0f + o->rect[1];
+            fn_800FF348(e, 0, -3100.0f, 1.0f, cw->f358);
+        }
+        break;
+    }
+}
+
 void fn_80177C98(void) {
     s32 i;
     UiObj* obj;
@@ -5976,7 +6015,7 @@ void fn_801784D8(void) {
         e->y = -16.0f + w->ry;
         fn_800FF348((void *)(e), 0, -3100.0f, 1.0f, *(f32*)(cw + 0x34C));
     }
-    if ((s8)fn_801952D0(c->cur[1].mask) > 1) {
+    if (fn_801952D0(c->cur[1].mask) > 1) {
         w = (*(Pnl_801784D8**)(CWB + 0xF8))->win;
         x = 5.0f + w->rx + (f32)(c->cur[1].sel * 0x30);
         e = ((Eff_801784D8*)fn_801D68C4((void *)(lbl_803470F0), 0x44));

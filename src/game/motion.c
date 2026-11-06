@@ -211,17 +211,17 @@ void fn_801E3D20(void) {
     }
 }
 
-/* Interpolates the angle channel of the current node. Near miss: the u8 idx is re-masked
- * (clrlslwi) where the original uses a plain slwi. */
+/* Interpolates the angle channel of the current node. Selects the keyframe slot
+ * for the current channel. */
 s32 fn_801E3DE0(void* out, s32 which) {
     void* keys;
     u32 count;
     u32 lo, hi, mid;
     u32 t;
     void** p;
-    u8 idx;
+    s32 idx;
 
-    idx = lbl_80347750 & 1;
+    idx = (lbl_80347750 & 1) != 0;
     switch (lbl_80347754) {
     case 1: p = lbl_80313678.mdata; lbl_80313678.keys = p; lbl_80313678.counts = p + 1; break;
     case 2: p = lbl_80313678.mdata; lbl_80313678.keys = p; lbl_80313678.counts = p + 2; break;

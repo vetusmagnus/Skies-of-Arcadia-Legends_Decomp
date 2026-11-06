@@ -382,6 +382,70 @@ void fn_8007E4F8(E0D8Obj *obj) {
         break;
     }
 }
+extern s32 fn_80078354(s32 i);
+extern s32 fn_80078370(s32 i);
+extern s32 fn_8007838C(s32 i);
+
+void fn_8007F00C(s32 a, s32 b)
+{
+    s32 v;
+    switch (lbl_80309174[a].x0) {
+    case 3:
+    case 8:
+        v = 0;
+        break;
+    case 5:
+        v = fn_80078370(lbl_80309174[a].x6);
+        break;
+    case 12:
+        v = fn_80078354(a);
+        v = fn_80078354(v);
+        break;
+    case 2:
+        v = fn_8007838C(lbl_80309174[a].x6);
+        break;
+    }
+
+    if (fn_80078610(b) != 0) {
+        if (lbl_80309DE4[b]->w1c & 0x40) {
+            switch (v) {
+            case 3: case 4: case 5:
+            case 7: case 8: case 9: case 10: case 11: case 12: case 13: case 14:
+            case 0x1a:
+            case 0x3e:
+            case 0x44: case 0x45: case 0x46: case 0x47: case 0x48: case 0x49:
+                lbl_80309700[b]->work->x50 = 5;
+                return;
+            }
+        }
+        lbl_80309700[b]->work->flags |= 0x20;
+        lbl_80309700[b]->work->x50 = 4;
+        fn_80082134(b);
+        if (a != b) {
+            lbl_80309730[b].b9 = 0;
+        }
+    } else if (lbl_80309DE4[b] != 0 && lbl_80309700[b] != 0) {
+        switch (v) {
+        case 0x27:
+        case 0x1b:
+        case 0x1c:
+        case 0x2f:
+            fn_80082134(b);
+            if (a != b) {
+                lbl_80309730[b].b9 = 0;
+            }
+            break;
+        default:
+            lbl_80309700[b]->work->x3c = 0;
+            lbl_80309700[b]->work->x40 = 0;
+            lbl_80309700[b]->work->x44 = -1;
+            lbl_80309700[b]->work->x46 = -1;
+            lbl_80309700[b]->work->x48 = -1;
+            lbl_80309700[b]->work->x4a = -1;
+            break;
+        }
+    }
+}
 
 void fn_8007E678(s32 a, u32* b) {
     b[0] |= 0x800;
