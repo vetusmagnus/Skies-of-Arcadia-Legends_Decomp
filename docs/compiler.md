@@ -102,3 +102,11 @@ How to convert a file: `build/agents`-style scripts aren't needed. Move the type
 prototypes and `inline` helpers to the top, keep data definitions after them, then list the
 functions in descending address order; add the two flags in `configure.py`. Check `.rodata` with a
 compile (`mwcceppc ... -c`) and compare the object's sections with the original bytes.
+
+## Defined `.bss` and `-inline noauto,deferred`
+
+MWCC lays out `.bss` objects defined in a file in first-use order, and only pools them on one base register if the definition comes before the
+use. In a normal file that can't produce a pool in address order unless the first function happens to use the objects in that order. With
+`-inline noauto,deferred`, code generation runs after parsing, and it goes backwards through the source: write the functions top address
+down, put the definitions after the last function in reverse order, and the layout, the text order and the pooling all come out as in the
+original. See `unit_801A2D20.c`. `inline` functions are never emitted out of line in this mode.

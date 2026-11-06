@@ -2626,3 +2626,48 @@ Header calls these would release, none made: `CrewData.x1e` as bytes, `ShipItemD
 fields (fn_802126C8, fn_80212130, fn_80200460 family); the `CampWin` and `CampTask` fields in `camp.h`.
 fn_801D61F4 and fn_801D6398 use the Dolphin fast cast to s16 (`OSf32tos16` is missing from our `OSFastCast.h`); even
 with it, the stack order of the temporaries still differs.
+
+## Deferred files and the shop split (2026-11-05, from 961d783)
+
+9 functions merged (fn_80097720, fn_80097A1C, fn_801A3A10, fn_801A3B30, fn_801A4070, fn_801A5FD8, fn_801EB01C, fn_80217554,
+fn_8021768C), main.dol byte-identical, all by hand. The main finding: **a file whose `.bss` is pooled from one base in address order is
+a deferred file.** MWCC lays defined `.bss` out in first-use order, which is why these files never came out right. With
+`-inline noauto,deferred`, the source running top address down and the objects defined after the last function in reverse order,
+the layout comes out exactly and every function pools at the right offsets. No stub functions are needed:
+`bss_order_stub` is gone from all four units that carried it. Six files use this now: `unit_801A2D20.c` (memory card),
+`unit_800972AC.c`, `unit_8009C518.c`, `unit_802159E0.c` (sound), `evobj.c`, plus `unit_80228A20.c` from the edges pass.
+
+Under `deferred`, `inline` functions are never emitted out of line. fn_801A3A10 is also inlined into fn_801A3B30, so the card file has it
+twice: a plain function and `CardPoll`.
+
+Splits made:
+
+| Old unit | New files | Evidence |
+|---|---|---|
+| `unit_80199B9C.c` | `unit_80199B9C.c`, `unit_801A2D20.c` (card), `unit_801A4B40.c` (save/load parts), `unit_801A6A88.c` (the shop proper); shared declarations in `shop.h` | `.sdata2`/`.rodata` edges from the file edges pass; `.bss` 0x803080F8 pool |
+| `unit_800972AC.c` | `unit_800972AC.c`, `unit_8009C518.c`; shared declarations in `unit_8009C518.h` | `.bss` pools start at 0x80303248 and 0x803033B0 |
+
+`unit_801A4B40.c` has its `.rodata` (0x802B4A00-0x802B6A18) in C, from `tools/match/rodata_801A4B40.py`. It isn't byte-exact yet: the local
+array in fn_801A66AC should land at 0x802B68DC, ahead of the tables after it, so those tables and the two paths are probably
+locals and `-str readonly` literals of later functions. `tools/match/gen_rodata.py` also does `.data` now (`GEN_SECTION=.data`).
+
+Other things that came up:
+
+- An inline that was called before its definition and inlined after it marks where the source had it: fn_801B94F0/fn_801B952C sit
+  after fn_801B1B3C, fn_801BE608 before fn_801BD748. Sorting a unit by address moved them, so they stay out of order.
+- fn_801A5FD8: a ternary in a call argument gets hoisted ahead of the other arguments. The original evaluates it last, which only comes
+  from a helper (`SlotDrawLabel`) that reads the table into locals first.
+
+Tried and left:
+
+- `unit_80228A20.c` has its `.data` in C now (0x802F8A78-0x802F91F8, typed `Spr`), so fn_80228C50, fn_80228E00, fn_80229124 and
+  fn_802293E0 pool at the right offsets. All four are 16 lines off, only the pool base in r31 and `c` in r30 (the original has them
+  the other way round). Kept under NONMATCHING. A caller-side `c`, a parameter and `register` didn't move it.
+- fn_801A47D8: 24 lines, needs the chained `a[i] = b[i] = 0` through r0, and `lbl_8034718C` is `void *` while `lbl_80347184` is `s32`.
+- fn_800D3464: the four `.bss` blocks would pool under deferred, but the unit doesn't reverse cleanly and the old draft is a register
+  permutation anyway.
+- fn_8029CB1C: `lbl_80347EB4` as `f32 (*)[4]` means changing every flat matrix in Ninja; a cast is the only small fix.
+- fn_800BAC88: exact apart from its `.rodata` base. 0x802B1168 is pooled by three functions and the addresses run backwards, so
+  `unit_800B2DA0.c` probably holds a deferred file too. Same for 0x800E3594-0x800EAE2C in `unit_800D81E8.c` (fn_800EAAAC).
+- Reversing a merged unit fails to compile where a function is used before its prototype; a survey of the units that do compile found no
+  more wins, but about 35 units didn't get tested that way. They define no `.bss` of their own yet.
