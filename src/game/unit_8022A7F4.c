@@ -107,10 +107,11 @@ void TextSetColor(u32 colour);
 f32 TextGetZ(void);
 void TextSetZ(f32 z);
 
-#ifdef NONMATCHING
-#include <math.h>
 extern char* strstr(const char* str, const char* pat);
 extern char* lbl_802F91F8[16];
+
+#ifdef NONMATCHING
+#include <math.h>
 typedef struct AngObj_8022BDD0 {
     u8 pad0[0xc];
     Angle x;    /* 0x0c */
@@ -122,25 +123,28 @@ typedef struct Lim_8022BDD0 {
     f32 step;   /* 0x08 */
 } Lim_8022BDD0;
 f32 fn_802917A0(f32 x);
+#endif
 
+/* The walking pointer is assigned in the test: testing the parameter itself gives a second
+ * address computation (addic. r0 + addi r4) instead of the single addic. r4. */
 static inline void StrLower(char* dst, const char* src) {
-    if (dst != NULL && src != NULL) {
+    char* p;
+    if ((p = dst) != NULL && src != NULL) {
         for (;;) {
             if (*src == '\0') {
                 break;
             }
             if (*src >= 'A' && *src <= 'Z') {
-                *dst = *src + 0x20;
+                *p = *src + 0x20;
             } else {
-                *dst = *src;
+                *p = *src;
             }
             src++;
-            dst++;
+            p++;
         }
-        *dst = '\0';
+        *p = '\0';
     }
 }
-#endif
 
 static inline u16 AngNeg(s32 a) {
     return -a;
@@ -155,7 +159,6 @@ void fn_8022A824(void) {
     memcpy((void *)0x80800000, lbl_803165C8, 0x204);
 }
 
-#ifdef NONMATCHING
 s32 fn_8022ABEC(char* name) {
     char buf[0x40];
     u32 i;
@@ -168,7 +171,6 @@ s32 fn_8022ABEC(char* name) {
     }
     return -1;
 }
-#endif
 void fn_8022AE88(void) {
     lbl_80347860 = 1;
 }

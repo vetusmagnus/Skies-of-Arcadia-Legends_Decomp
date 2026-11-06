@@ -44,11 +44,31 @@ typedef struct {
 extern Sys_80309E5C lbl_80309E5C;
 extern Task* lbl_80347394;
 u32 fn_8000F718(s8 idx, s8 alt, u8* out);
+/* The vertex chunk at the head of a model's vlist: `words` 32-bit words follow the first two
+ * halfwords, in vertices of lbl_802DAEB0[type - 0x20] words each. */
+typedef struct VChunk {
+    s16 type;
+    s16 words;
+    u8 pad4[4];
+    u32 data[1];
+} VChunk;
+typedef struct VModel {
+    VChunk* vlist;
+} VModel;
 typedef struct HNode {
-    u8 pad0[0x2c];
+    u8 pad0[4];
+    VModel* model;         /* 0x4 */
+    u8 pad8[0x24];
     struct HNode* child;   /* 0x2c */
     struct HNode* sibling; /* 0x30 */
 } HNode;
+/* One alpha byte per vertex, in a tree shaped like the model's HNode tree. */
+typedef struct AlphaNode {
+    u8* px;
+    struct AlphaNode* child;
+    struct AlphaNode* sibling;
+} AlphaNode;
+extern u8 lbl_802DAEB0[];
 extern void fn_8000F6F8(HNode* n, u8 kind, s32 a, s32 b, s32 c);
 extern Entry16 lbl_80309730[];
 extern Task* lbl_80309E24[];
@@ -142,7 +162,7 @@ typedef struct {
     W* work;
 } Tk_8000E664;
 extern int fn_8000CCBC(Tk_8000E664*, s16);
-extern void fn_8000B77C(void*, void*);
+extern void fn_8000B77C(AlphaNode* a, HNode* n, f32 t);
 extern void fn_80060950(void*);
 extern int fn_80035908(void);
 extern void fn_80035910(int);
@@ -216,7 +236,7 @@ extern int fn_80061F58(void*, int, int);
 extern void fn_8006CF28(void*, void*, s16);
 extern void fn_8006CEEC(void*, void*, int, s16);
 extern void fn_8022F00C(void*);
-extern void fn_8000B8E4(void*, void*);
+extern void fn_8000B8E4(AlphaNode* a, HNode* n);
 #define FLD(p, off, T) (*(T*)((u8*)(p) + (off)))
 s8 fn_80020E10(void* p);
 s16 fn_80008274(s16 v);
@@ -658,6 +678,91 @@ void fn_8000CC84(s32 flag) {
     } else {
         lbl_80309E5C.x8 &= ~0x01000000;
     }
+}
+
+int fn_8000CCBC(Tk_8000E664* t, s16 mode) {
+    U* o = t->work->u;
+    s32 ret = 1;
+    s32 mask = 0;
+    s16 kind = 0;
+    u32 flags;
+    f32 speed;
+
+    if (mode == 0) {
+        flags = lbl_80309E5C.x8;
+        speed = lbl_80309E5C.x14;
+        if (flags & 0x20000000) {
+            kind = 2;
+            mask = 0x20000000;
+        } else if (flags & 0x10000000) {
+            kind = 1;
+            mask = 0x10000000;
+        }
+    } else {
+        flags = lbl_80309E5C.x8;
+        speed = lbl_80309E5C.x10;
+        if (flags & 0x80000000) {
+            kind = 2;
+            mask = 0x80000000;
+        } else if (flags & 0x40000000) {
+            kind = 1;
+            mask = 0x40000000;
+        }
+    }
+    if (kind == 2) {
+        if (!(lbl_80309E5C.x8 & 0x01000000)) {
+            o->x10 += speed;
+            if (o->x10 <= -1.0f) {
+                o->x10 = -1.0f;
+                ret = 0;
+            }
+        } else {
+            o->x44 = 0xFF;
+            o->x48 -= speed;
+            if (o->x48 >= 1.0f) {
+                o->x40 = 0;
+                ret = 0;
+                o->x48 = 1.0f;
+            } else {
+                o->x40 = 1;
+            }
+        }
+    } else if (kind == 1) {
+        if (!(lbl_80309E5C.x8 & 0x01000000)) {
+            o->x10 += speed;
+            if (o->x10 >= 0.0f) {
+                o->x10 = 0.0f;
+                lbl_80309E5C.x8 &= ~mask;
+            }
+        } else {
+            o->x40 = 1;
+            o->x44 = 0xFF;
+            o->x48 -= speed;
+            if (o->x48 <= 0.0f) {
+                o->x40 = 0;
+                o->x48 = 0.0f;
+                lbl_80309E5C.x8 &= ~mask;
+            } else {
+                o->x40 = 1;
+            }
+        }
+    } else {
+        if (!(o->x50 & 0x80000000)) o->x10 = 0.0f;
+        o->x14 = 0.0f;
+        o->x18 = 0.0f;
+        o->x1c = 0.0f;
+        if (lbl_80309E5C.x8 & 0x01000000) {
+            if (lbl_80309E5C.x8 & 0x08000000) {
+                o->x40 = 1;
+                o->x44 = lbl_80309E5C.x18;
+                o->x48 = lbl_80309E5C.x1c;
+            } else {
+                o->x40 = 0;
+                o->x48 = 0.0f;
+            }
+        }
+    }
+    return ret;
 }
 
 s32 fn_80015828(const char* s);
@@ -1172,11 +1277,11 @@ void fn_8000E664(Tk_8000E664* t)
             if (u->x50 & 0x40000000) {
                 if (0.0f == u->x10) {
                     if (u->x50 & 0x20000000) {
-                        fn_8000B77C(u->x4c, w->x0);
+                        fn_8000B77C(u->x4c, w->x0, u->x10);
                         u->x50 &= ~0x20000000;
                     }
                 } else if (u->x10 < 0.0f && u->x10 > -1.0f) {
-                    fn_8000B77C(u->x4c, w->x0);
+                    fn_8000B77C(u->x4c, w->x0, u->x10);
                     u->x50 |= 0x20000000;
                 }
             }
@@ -2082,6 +2187,31 @@ s32 fn_8000AE08(void* obj, f32* out, u8 dir) {
     return 0;
 }
 
+s32 fn_80010340(s32 who) {
+    s32 roll = rand() % 101;
+    s32 v;
+    if (who < 4) {
+        if (lbl_80347344 == 2) {
+            return 1;
+        }
+        v = lbl_80347390->x2;
+        if (v == -1) {
+            v = (0x50 - lbl_80347390->v) + lbl_8030B7F4.chr[lbl_8030B7F4.party[who]].xb * 4;
+            if (lbl_8030B7F4.party[who] == 0) {
+                v += lbl_802C8E54[fn_801EF300()].flee;
+            }
+        }
+    } else {
+        v = lbl_80347390->x3;
+        if (v == -1) {
+            s32 t = lbl_80309DE4[0]->x88 * 100;
+            t /= lbl_80309DE4[who]->x88;
+            v = 200 - t;
+        }
+    }
+    return v >= roll;
+}
+
 void fn_80010474(s16 i) {
     s16 v = lbl_80309DE4[i]->x18;
 
@@ -2097,40 +2227,42 @@ void fn_80010474(s16 i) {
     }
 }
 
-#ifdef NONMATCHING
 extern void fn_80046BB0(char* name, s32* out);
 extern void fn_80009500(void* a, s32 b, void* c);
-#endif
 
-#ifdef NONMATCHING
+extern char lbl_802ACDA8[];
+extern char lbl_802ACDB8[];
+
 s8 fn_8000F8F8(void* a, void* b, s32 unused, s32 c, void* d)
 {
     s8 tbl[6] = { 2, 2, 0, 1, 1, 1 };
     char buf[32];
     s32 tmp;
-    s32 kind;
+    s8 x;
     s8 i;
     s8 id;
-    s8 x;
+    s8 cnt;
     id = fn_80020E10(b);
     if (id >= 0) {
-        kind = id;
-        if (kind != 2) {
+        switch (id) {
+        case 2:
+            break;
+        default:
             x = fn_8000FA30(c);
-            id = tbl[kind];
-            for (i = 0; i < id; i++) {
+            cnt = tbl[id];
+            for (i = 0; i < cnt; i++) {
                 switch (i) {
                 case 0:
-                    sprintf(buf, "E99%02d%02d%d", kind, x, i);
+                    sprintf(buf, lbl_802ACDA8, id, x, i);
                     break;
                 default:
                     switch (x) {
                     case 16:
                     case 17:
-                        sprintf(buf, "E99%02d%02d%d", kind, x, i);
+                        sprintf(buf, lbl_802ACDA8, id, x, i);
                         break;
                     default:
-                        sprintf(buf, "E99%02d00%d", kind, i);
+                        sprintf(buf, lbl_802ACDB8, id, i);
                         break;
                     }
                     break;
@@ -2143,26 +2275,26 @@ s8 fn_8000F8F8(void* a, void* b, s32 unused, s32 c, void* d)
     }
     return 0;
 }
-#endif
 
-/* NEAR (20 lines): params land in other callee-saved registers (orig b r31, d r30, a r29, c r28). */
-#ifdef NONMATCHING
+static inline s32 HitChance(s16 a, s16 b, s8 c) {
+    s16 r = rand() % 100;
+    if (r >= 90) {
+        return 100;
+    } else if (r < 10) {
+        return 0;
+    }
+    if (b == 0) b = 1;
+    return (s16)((1.0f - (f32)c / 255.0f) * (f32)(a * r) / (f32)b);
+}
+
 s32 fn_80010E68(s16 a, s16 b, s8 c, s8 d)
 {
-    s16 r = fn_8025ECC4() % 100;
-    s32 res;
-    if (r >= 90) {
-        res = 100;
-    } else if (r < 10) {
-        res = 0;
-    } else {
-        if (b == 0) b = 1;
-        res = (s16)((1.0f - (f32)c / 255.0f) * (f32)(a * r) / (f32)b);
+    s16 res = HitChance(a, b, c);
+    if (res >= d) {
+        return 1;
     }
-    if ((s16)res >= d) return 1;
     return 0;
 }
-#endif
 Task* fn_800215EC(s32 id);
 extern s32 fn_800154BC(void);
 

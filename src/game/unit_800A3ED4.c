@@ -75,6 +75,7 @@ typedef struct State_800ADED0 {
     s32 w178;
 } State_800ADED0;
 extern void fn_8015ED90(void *p);
+void* fn_8009D760(void* parent, void* cb, u16 a, void* obj);
 extern void fn_800ABEB0(void);
 /* Four separate .bss arrays of the unit, reached through its section base. */
 extern s32 lbl_803033B0[6];
@@ -86,7 +87,7 @@ extern s32 lbl_803033C8[6];
 extern s32 lbl_803033E0[6];
 extern s32 lbl_803033F8[6];
 extern void* fn_801C8930(void* h);
-extern void fn_80100B74(Task* t);
+extern void fn_80100B74(void* t);
 extern void* fn_80226704(void* list, void* cb, s32 size);
 void fn_8009DCA8(Obj8009DCA8* o, Src8009DCA8* src);
 typedef struct {
@@ -162,7 +163,8 @@ typedef struct Src_800A3ED4 {
     void* p10; /* per-kind info record; Tbl_800A3ED4 for the effect list */
     u8 pad14[0x1c - 0x14];
     Tbl2_800A3ED4* p1c;
-    u8 pad20[0x38 - 0x20];
+    u8 pad20[4];
+    char name[0x38 - 0x24];
     void* p38;
     u8 pad3c[0x44 - 0x3c];
     NJS_POINT3 v44;
@@ -170,9 +172,19 @@ typedef struct Src_800A3ED4 {
     NJS_POINT3 v5c;
 } Src_800A3ED4;
 typedef struct Sub_800A3ED4 Sub_800A3ED4;
+typedef struct Obj_800A3ED4 Obj_800A3ED4;
+/* The list of effect records fn_800A40B0 builds: a header, then the records. */
+typedef struct Grp_800A40B0 {
+    s32 n;
+    Src_800A3ED4* recs;
+    s32 w8, wc, w10;
+    Src_800A3ED4 rec[1];
+} Grp_800A40B0;
 struct Sub_800A3ED4 {
     s16 h0;
-    u8 pad2[0x18 - 2];
+    u8 pad2[2];
+    Obj_800A3ED4* task;
+    u8 pad8[0x18 - 8];
     u32 x18;
     f32 alpha;
     u8 pad20[0x2c - 0x20];
@@ -183,7 +195,10 @@ struct Sub_800A3ED4 {
     Angle ang[3];
     NJS_POINT3 v50;
     NJS_POINT3 vel;
-    u8 pad68[0xe4 - 0x68];
+    u8 pad68[0xb4 - 0x68];
+    NJS_POINT3 pivotPos;
+    Angle pivotAng[3];
+    u8 padcc[0xe4 - 0xcc];
     void* we4;
     NJS_MOTION* motion;
     void* wec;
@@ -191,10 +206,12 @@ struct Sub_800A3ED4 {
     NJS_TEXLIST* w100;
     u8 pad104[0x16e - 0x104];
     s16 h16e;
-    u8 pad170[0x176 - 0x170];
+    u16 motionId;
+    u16 x172;
+    u8 pad174[2];
     u16 id;
-    s16 h178;
-    s16 h17a;
+    u16 h178;
+    u16 h17a;
     u8 pad17c[0x184 - 0x17c];
     s32 hidden;
     u8 pad188[4];
@@ -208,29 +225,42 @@ struct Sub_800A3ED4 {
     f32 f1a8;
     u8 pad1ac[0x1c8 - 0x1ac];
     Src_800A3ED4* p1c8;
-    u8 pad1cc[0x1d8 - 0x1cc];
+    Grp_800A40B0* x1cc;
+    u8 pad1d0[0x1d8 - 0x1d0];
     Sub_800A3ED4* p1d8;
-    u8 pad1dc[0x208 - 0x1dc];
+    s32 x1dc;
+    u8 pad1e0[0x1fa - 0x1e0];
+    s8 x1fa;
+    s8 x1fb;
+    s16 x1fc;
+    u8 pad1fe[0x208 - 0x1fe];
     s16 x208, x20a;
     Ang3 x20c;
-    u8 pad218[0x21d - 0x218];
+    u8 pad218[0x21c - 0x218];
+    u8 x21c;
     u8 x21d;
-    u8 pad21e[0x232 - 0x21e];
+    u8 pad21e[0x22c - 0x21e];
+    u16 x22c;
+    u16 x22e;
+    u8 pad230[2];
     u16 point;
     u8 pad234[0x238 - 0x234];
     u16 x238;
     u8 pad23a[0x24c - 0x23a];
     NJS_POINT3 x24c;
-    u8 pad258[0x25c - 0x258];
+    f32 x258;
     void* x25c;
     void* x260; /* per-kind record: P (fn_800A9708/fn_800A8FE0), Emit (fn_800A6F30...) */
     ItemList* x264;
+    u8 pad268[4];
+    u8 x26c;
 };
-typedef struct Obj_800A3ED4 Obj_800A3ED4;
 struct Obj_800A3ED4 {
-    u8 pad0[8];
+    void* func;
+    u8 pad4[4];
     Obj_800A3ED4* parent;
-    u8 pad0c[0x18 - 0xc];
+    void* x0c;
+    u8 pad10[0x18 - 0x10];
     u8 flags;
     u8 state;
     u8 pad1a;
@@ -259,13 +289,13 @@ typedef struct {
 static inline EvInfoTimer* TimerInfo(EvObj* e) {
     return e->ext->info;
 }
-extern s32 fn_8015E600(EvObj*);
+extern s32 fn_8015E600(void*);
 extern void fn_800972AC(void);
 extern void* fn_8015F180(void*);
 extern void fn_80097294(s32);
 extern void fn_800970D8(u16, s32, f32);
 extern void fn_800970B4(u16, s32, f32);
-extern void fn_8015EBF4(EvObj*);
+extern void fn_8015EBF4(void*);
 /* Byte (0..255) to a 0..1 float: __OSu8tof32(&b) * (1/255).
  * Needs the Dolphin SDK fast-cast inline __OSu8tof32 (psq_l through GQR2), which our
  * extern/sdk OSFastCast.h lacks. The SDK's definition is reproduced here only until it is
@@ -421,8 +451,8 @@ typedef struct {
     u8 pad14[4];
 } RingPart;
 u32 fn_800A10A8(u32 *base, u32 i, s32 n);
-void *fn_800A1ABC(EvObj *b, u32 i);
-u32 fn_800A1AE8(EvObj* o, u32 idx);
+void *fn_800A1ABC(void *b, u32 i);
+u32 fn_800A1AE8(void* o, u32 idx);
 void fn_800A1210(NJS_VECTOR *out, NJS_VECTOR *in, Angle deg, f32 radius);
 
 void fn_800AC728(EvObj *w, P *p)
@@ -591,7 +621,7 @@ extern void fn_80296EEC(s32 a, s32 b, s32 c);
 extern void fn_800A12D8(NJS_POINT3* p, NJS_POINT3* origin, s32 ang);
 extern void fn_8009E804(ItemList* list, s32 idx);
 typedef struct {
-    Task* parent;          /* 0x00 */
+    Obj_800A3ED4* parent;  /* 0x00 */
     s32 loop;              /* 0x04 */
     NJS_TEXLIST* texlist;  /* 0x08 */
     s32 n;                 /* 0x0C */
@@ -603,7 +633,7 @@ typedef struct {
     f32 f24;               /* 0x24 */
 } Emit_800A7860;
 inline Sub_800A3ED4* PWORKS(Emit_800A7860* em) {
-    return em->parent->work;
+    return em->parent->sub;
 }
 typedef struct {
     f32 x, y;        /* 0x00 */
@@ -1323,7 +1353,7 @@ void fn_800AE000(Task* o) {
 extern void fn_800A619C(TNode8009D760* t);
 TNode8009D760 *fn_8009E530(Pool *list, s32 count);
 s32 fn_8009E840(Pool* pool, TNode8009D760* item, s32 n);
-TNode8009D760* fn_8009D760(TNode8009D760* parent, void* cb, u16 a, Obj8009D760* obj);
+
 
 void fn_800AB834(TNode8009D760* t) {
     TNode8009D760* n;
@@ -1347,6 +1377,171 @@ void fn_800AB834(TNode8009D760* t) {
     n->work->s204 = w->obj->params->f58;
     if (n->work->s204 < 0) {
         n->work->s204 = 0;
+    }
+}
+
+extern s32 lbl_80311AD4[];
+extern void fn_8015EB8C(void* p, s32 id, void* cb);
+extern void fn_800A0E1C(void* o);
+extern void fn_8009E578(void* n);
+extern void fn_800A8A80(Obj_800A3ED4* t);
+extern const NJS_POINT3 lbl_802B0FDC;
+extern void fn_8015F7A8(NJS_MATRIX m, void* out);
+
+/* EvExt.info of the looping effect (fn_800AC474). */
+typedef struct {
+    u32 count;     /* 0x00 */
+    u8 pad4[0x38 - 4];
+    s32 x38;       /* 0x38 */
+} EvInfoLoop_800AC474;
+static inline EvInfoLoop_800AC474* LoopInfo(Sub_800A3ED4* e) {
+    return e->p1c8->p10;
+}
+
+void fn_800AC474(Obj_800A3ED4* o)
+{
+    Sub_800A3ED4* w = o->sub;
+    w->x172 = 0;
+    w->motionId = 0;
+    if (o->flags & 0x20) {
+        o->state = 0xff;
+    }
+    if (lbl_80311AD4[6] == 0xf) {
+        o->state = 0xff;
+    }
+    switch (o->state) {
+    case 0:
+        o->prio = 0xfa;
+        w->x26c = 1;
+        w->x1fb = 0;
+        w->x1fa = 1;
+        w->point = 0;
+        w->x21c = 0;
+        w->x1fc = 0;
+        fn_8015ED90(o);
+        fn_8015EB8C(w, 0, fn_800ABEB0);
+        fn_8015EB8C(w, 0xd, fn_800AC44C);
+        if (w->p1d8 != NULL) {
+            w->p1d8->w1a0 = 0;
+        }
+        o->state = 1;
+    case 1:
+        fn_800A0E1C(w);
+        if (fn_8015E600(w) == 0) {
+            w->x1fb = 0;
+        }
+        break;
+    case 2:
+        fn_800A0E1C(w);
+        if (w->x1fa == 1) {
+            Obj_800A3ED4* n = fn_8009D760(o, fn_800A8A80, w->h178, w->p1c8);
+            Sub_800A3ED4* ow;
+            Emit_800A7860* f;
+            n->sub->x260 = fn_801E1A2C(1, 0x2c);
+            n->sub->x25c = o;
+            ow = o->sub;
+            f = n->sub->x260;
+            if (ow != NULL && f != NULL) {
+                f->parent = o;
+                f->loop = LoopInfo(ow)->x38;
+                f->texlist = fn_800A1B50(ow);
+                f->n = fn_800A1AE8(ow, 0x2f);
+                f->item = fn_800A1ABC(ow, 0x2f);
+                f->index = 0;
+                f->frame = 0;
+                f->wait = fn_800A10A8(f->item, f->index, f->n) + 1;
+                f->f20 = ow->v50.x;
+                f->f24 = ow->v50.y;
+            }
+            w->x25c = n;
+            w->x1fa = 0;
+            w->point++;
+        }
+        if (w->point == 0) {
+            w->x1fb = 1;
+            w->x1fa = 1;
+            o->state = 1;
+        } else {
+            fn_8015E600(w);
+            fn_800A0E1C(w);
+        }
+        break;
+    case 3:
+    case 0xff:
+        fn_8015EBF4(w);
+        w->x264 = NULL;
+        w->x260 = NULL;
+        w->x25c = NULL;
+        fn_80100B74(o);
+        break;
+    case 4:
+        if (LoopInfo(w)->count >= 0x30) {
+            o->state = 0;
+        }
+        break;
+    case 5:
+        break;
+    }
+    fn_8009E578(o->x0c);
+}
+
+/* EvExt.info of the emitter effect (fn_800AD330). */
+typedef struct {
+    u8 pad0[0x18];
+    u32 flags;     /* 0x18 */
+} EvInfoEmitter_800AD330;
+static inline EvInfoEmitter_800AD330* EmitterInfo(Sub_800A3ED4* e) {
+    return e->p1c8->p10;
+}
+
+void fn_800AD330(Sub_800A3ED4* o)
+{
+    NJS_POINT3 v;
+    NJS_MATRIX m;
+    RingPart* e;
+    RingPart* ents;
+    Obj_800A3ED4* n;
+    Obj_800A3ED4* t;
+    P* lnk;
+    s32 i = 0;
+
+    if (o->p1d8 != 0) {
+        t = o->p1d8->task;
+    } else {
+        return;
+    }
+    if (t == 0) return;
+    ents = t->sub->x25c;
+    lnk = t->sub->x260;
+    if (t->state == 1) return;
+    for (e = ents; i < t->sub->x22c; e++, i++) {
+        if (e->x10 == 0) {
+            n = fn_8009D760(t, fn_800A9708, o->h178, o->p1c8);
+            n->sub->x260 = fn_801E1A2C(1, 0x7c);
+            fn_800AD588(lnk, n->sub->x260);
+            v = lbl_802B0FDC;
+            njUnitMatrix(m);
+            njTranslate(m, o->v38.x, o->v38.y, o->v38.z);
+            njRotateXYZ(m, o->ang[0], o->ang[1], o->ang[2]);
+            njTranslate(m, o->pivotPos.x, o->pivotPos.y, o->pivotPos.z);
+            njRotateXYZ(m, o->pivotAng[0], o->pivotAng[1], o->pivotAng[2]);
+            njCalcPoint(m, &v, &t->sub->x24c);
+            fn_8015F7A8(m, &t->sub->x20c);
+            n->sub->v38.x = t->sub->x24c.x + e->pos.x;
+            n->sub->v38.y = t->sub->x24c.y + e->pos.y;
+            n->sub->v38.z = t->sub->x24c.z + e->pos.z;
+            lnk->w4 = &t->sub->x24c;
+            lnk->w8 = &t->sub->x20c.x;
+            fn_800A10E8(&n->sub->v38, lnk->w4,
+                        t->sub->x258 * (3.0517578125e-05f * (f32)rand()));
+            n->sub->x25c = t;
+            if (EmitterInfo(o)->flags & 0x80000) {
+                n->sub->id = EmitterInfo(n->sub)->flags;
+            }
+            e->x10 = t->sub->x22e;
+        } else {
+            e->x10--;
+        }
     }
 }
 

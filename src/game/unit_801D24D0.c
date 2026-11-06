@@ -5572,13 +5572,10 @@ static inline f32 Dist2(f32 x, f32 z) { return x * x + z * z; }
     }
 
 extern f32 lbl_80345878[];
-
-#ifdef NONMATCHING
 extern VertexCol lbl_80308DF0[4];
 extern void GXSetColorUpdate(u8 enable);
 extern void GXSetAlphaUpdate(u8 enable);
 extern void fn_80290ED4(VertexCol* v, s32 count, s32 flag);
-#endif
 
 #ifdef NONMATCHING
 s32 fn_801D44B0(NJS_POINT3* out, NJS_POINT3* a, NJS_POINT3* b, NJS_POINT3* tri) {
@@ -5721,7 +5718,6 @@ s32 fn_801D29CC(NJS_POINT3* a, NJS_POINT3* b, NJS_POINT3* c, NJS_POINT3* p) {
 }
 #endif
 
-#ifdef NONMATCHING
 void fn_801DBCD4(void) {
     GXSetColorUpdate(0);
     GXSetAlphaUpdate(0);
@@ -5738,8 +5734,8 @@ void fn_801DBCD4(void) {
     lbl_80308DF0[2].y = 0.0f;
     lbl_80308DF0[2].z = 0.0f;
     lbl_80308DF0[2].colour = -1;
-    lbl_80308DF0[3].x = lbl_80345878[10];
-    lbl_80308DF0[3].y = lbl_80345878[11];
+    lbl_80308DF0[3].x = lbl_80308DF0[2].x;
+    lbl_80308DF0[3].y = lbl_80308DF0[1].y;
     lbl_80308DF0[3].z = 0.0f;
     lbl_80308DF0[3].colour = -1;
     fn_80290ED4(lbl_80308DF0, 4, 0);
@@ -5747,7 +5743,6 @@ void fn_801DBCD4(void) {
     GXSetColorUpdate(1);
     GXSetAlphaUpdate(1);
 }
-#endif
 
 /* Called by draw2d.c as NJS_POINT3 fn_801DCDC0(f32, f32, f32): the struct return is the
    hidden r3 pointer here. */

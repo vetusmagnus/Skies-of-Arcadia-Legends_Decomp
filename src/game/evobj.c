@@ -174,7 +174,7 @@ typedef struct Ent_801EE324 {
     u8 pad1;
     s16 val;                /* 0x02 */
 } Ent_801EE324;
-extern s32 fn_801F4C24(void);
+extern s32 fn_801F4C24(s16 id);
 typedef struct {
     u8 pad0[0x48];
     s16 x48;
@@ -673,7 +673,7 @@ inline u32 DirDiff(u8 a, u8 b) {
     return d;
 }
 
-inline u8 DirFilter(u8* src, u8* dst, u8 dir, u8 range) {
+inline u8 DirFilter(const u8* src, u8* dst, u8 dir, u8 range) {
     s32 i;
     s32 n;
 
@@ -1429,7 +1429,7 @@ void fn_801EFF48(s16 p) {
 }
 
 void fn_801EFF0C(s16 p) {
-    s32 v = fn_801F4C24();
+    s32 v = fn_801F4C24(p);
     fn_801EFDC0(p, v);
 }
 
@@ -1505,7 +1505,7 @@ s8 fn_801EFCC4(s16 id, u32 kind)
 }
 
 void fn_801EFC88(s16 p) {
-    s32 v = fn_801F4C24();
+    s32 v = fn_801F4C24(p);
     fn_801EFB74(p, v);
 }
 
@@ -1642,7 +1642,7 @@ s8 fn_801EF000(s16 id, s32 stat) {
 s16 fn_801EE344(s16 id, s32 stat) {
     s16 total = 0;
     s32 i = 0;
-    s32 r = fn_801F4C24();
+    s32 r = fn_801F4C24(id);
     switch (r) {
     case 0: {
         StatMod* m = &lbl_802C5790[id].mod;

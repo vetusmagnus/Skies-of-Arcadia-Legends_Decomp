@@ -1614,8 +1614,6 @@ int fn_8002EEFC(Tk* o, u32* out) {
     u32 tmp;
     s16 b, a;
     s8 mode;
-    Ent_8002EEFC* ep;
-    Ent_8002EEFC* q;
     Unit* w = o->work->w;
     s16 i;
     s16 n = 0;
@@ -1635,8 +1633,6 @@ int fn_8002EEFC(Tk* o, u32* out) {
         mode = 1;
         break;
     }
-    q = ents;
-    ep = q;
     for (i = 0; i < 12; i++) {
         tmp = 0;
         if (lbl_80309E24[i] != 0) {
@@ -1652,11 +1648,10 @@ int fn_8002EEFC(Tk* o, u32* out) {
             if (ok) {
                 w->x4 = w2->id;
                 fn_8002F188(fn_8001E05C(o), &tmp);
-                n++;
-                ep->flags = tmp;
+                ents[n].flags = tmp;
                 acc |= tmp;
-                ep->val = w2->id;
-                ep++;
+                ents[n].val = w2->id;
+                n++;
             }
         }
     }
@@ -1666,8 +1661,7 @@ int fn_8002EEFC(Tk* o, u32* out) {
     if (*out & 0x20000000) {
         ret = 1;
         for (i = 0; i < n; i++) {
-            if (q->flags & 0x20000000) w->x4 = q->val;
-            q++;
+            if (ents[i].flags & 0x20000000) w->x4 = ents[i].val;
         }
     }
     return ret;
@@ -1775,22 +1769,22 @@ void fn_8002F54C(void) {
     lbl_80302B10.p[2][1] = 5;
 }
 
+static inline s32 RowAllSet(s32* m) {
+    s8 i;
+    for (i = 0; i < 10; i++) {
+        if ((lbl_8030A10C.x194[i] & *m) == 0) break;
+        m++;
+    }
+    return i >= 10;
+}
+
 s32 fn_8002F598(s8 row) {
     s32 tbl[3][10] = {
         {2, 2, 1, 1, 8, 4, 8, 4, 2, 1},
         {8, 1, 8, 2, 4, 4, 8, 4, 1, 2},
         {8, 8, 4, 4, 2, 1, 2, 1, 4, 8},
     };
-    s8 i = 0;
-    s32* m = tbl[row];
-    s32* p = lbl_8030A10C.x194;
-    while (i < 10) {
-        if ((*p & *m) == 0) break;
-        m++;
-        p++;
-        i++;
-    }
-    return i >= 10;
+    return RowAllSet(tbl[row]);
 }
 
 void fn_8002F630(void) {

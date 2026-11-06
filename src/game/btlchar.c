@@ -652,64 +652,65 @@ void fn_80032BBC(s8 a, s32 b) {
 
 void fn_80032C68(void) {}
 
-void fn_80032C6C(s32 restore, ObjInfo* o) {
-    s32 hit;
-    s32 i;
-    s32 id;
-    s32 r;
-    Info* in;
-    if (restore != 0) {
-    lbl_80346BC0 = lbl_80346748;
-    id = o->info->id;
-    if (0x195DC <= id && id <= 0x1963F) {
-        lbl_80346748 = 0;
-    } else if (0x198FC <= id && id <= 0x1995F) {
-        lbl_80346748 = 0;
-    } else {
-        hit = 0;
-        switch (id) {
-        case 0x194B8:
-        case 0x194B9:
-        case 0x194BC:
-        case 0x19BB9:
-        case 0x19BBA:
-        case 0x19BBB:
-        case 0x19BBC:
-        case 0x19BCB:
-        case 0x16EFE0:
-        case 0x175A8F:
-        case 0x75F544:
-        case 0x75F545:
-        case 0x75F546:
-        case 0x75F547:
-        case 0x75F548:
-            hit = 1;
+static inline s32 Lookup(Info* in) {
+    s32 r = -1;
+    s32 i = 0;
+    do {
+        if (in->id == lbl_802DC1F8[i].key) {
+            r = lbl_802DC1F8[i].val;
             break;
         }
-        if (hit != 0) {
+        i++;
+    } while (lbl_802DC1F8[i].key != -1);
+    return r;
+}
+
+void fn_80032C6C(s32 restore, ObjInfo* o) {
+    s32 hit;
+    s32 id;
+    Info* in;
+    if (restore != 0) {
+        lbl_80346BC0 = lbl_80346748;
+        if (0x195DC <= (id = o->info->id) && id <= 0x1963F) {
             lbl_80346748 = 0;
-        } else if (0x4F5880 <= id && id <= 0x4F5C67) {
-            lbl_80346748 = 0x20000000;
+        } else if (0x198FC <= id && id <= 0x1995F) {
+            lbl_80346748 = 0;
         } else {
-            lbl_80346748 = 0x85000;
-        }
-    }
-    in = o->info;
-    if (in->alt == -1) {
-        r = -1;
-        i = 0;
-        do {
-            if (in->id == lbl_802DC1F8[i].key) {
-                r = lbl_802DC1F8[i].val;
+            hit = 0;
+            switch (id) {
+            case 0x194B8:
+            case 0x194B9:
+            case 0x194BC:
+            case 0x19BB9:
+            case 0x19BBA:
+            case 0x19BBB:
+            case 0x19BBC:
+            case 0x19BCB:
+            case 0x16EFE0:
+            case 0x175A8F:
+            case 0x75F544:
+            case 0x75F545:
+            case 0x75F546:
+            case 0x75F547:
+            case 0x75F548:
+                hit = 1;
                 break;
             }
-            i++;
-        } while (lbl_802DC1F8[i].key != -1);
-        in->alt = r;
-    }
-    if (o->info->alt != -1) {
-        lbl_80346748 = o->info->alt;
-    }
+            if (hit != 0) {
+                lbl_80346748 = 0;
+            } else if (0x4F5880 <= id && id <= 0x4F5C67) {
+                lbl_80346748 = 0x20000000;
+            } else {
+                lbl_80346748 = 0x85000;
+            }
+        }
+        in = o->info;
+        if (in->alt == -1) {
+            in->alt = Lookup(in);
+        }
+        if (o->info->alt != -1) {
+            lbl_80346748 = o->info->alt;
+        }
     } else {
         lbl_80346748 = lbl_80346BC0;
     }

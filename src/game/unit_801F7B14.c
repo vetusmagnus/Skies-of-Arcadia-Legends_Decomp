@@ -130,6 +130,39 @@ extern char lbl_8034C1D4[5];
 void fn_80218D80(char *name, u32 tag, s32 v);
 
 
+s32 fn_80216CA4(char *p);
+s32 fn_801F7B14(u16 f, Scpt *c) {
+    char *buf;
+    if (f & 1) {
+        ScptCur p;
+        char *q;
+        char *w;
+        p.b = c->cur.b;
+        q = p.s + 4;
+        w = q + p.i[1];
+        c->cur.s = q + 4;
+        c->flags = 0;
+        c->work.s = w;
+    }
+    if (f & 2) {
+        buf = fn_801E1A2C(1, strlen(lbl_80346848) + strlen(c->work.s) + 5);
+        strcpy(buf, lbl_80346848);
+        strcat(buf, c->work.s);
+        strcat(buf, &lbl_8034C198);
+        if (fn_80216CA4(buf) != 0) {
+            c->work.s = 0;
+            if (buf != 0) {
+                fn_801E1784(buf);
+            }
+            return 0;
+        }
+        if (buf != 0) {
+            fn_801E1784(buf);
+        }
+    }
+    return !(f & 8);
+}
+
 s16 fn_801F7C18(u32 flags, Scpt *s)
 {
     u16 f = (u16)flags;

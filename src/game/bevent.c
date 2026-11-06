@@ -8,6 +8,8 @@
 #include "game/drawstate.h"
 #include <dolphin/os/OSFastCast.h>
 #include "game/draw2d.h"
+#include "game/battle.h"
+#include "game/gamedata.h"
 
 typedef struct {
     u8 pad0[0x1a];
@@ -77,20 +79,47 @@ typedef struct BUnit {
     u8 pad10a[6];
     Blk* p110;
 } BUnit;
+/* Per-enemy drop written by fn_8002BA8C (Lim.drops[slot - 4]). */
 typedef struct {
-    u8 pad0[0xc];
-    s16 c;
-    u8 padE[0x30 - 0xe];
-    s32 sum1;
-    s32 sum2;
-} Glob;
+    s16 a;
+    s16 b;
+} Drop;
+/* What lbl_80347390 points at. */
+typedef struct Lim {
+    u8 pad0[6];
+    s16 x6;
+    s16 x8;
+    s16 xa;
+    s16 c;          /* 0x0C */
+    Drop drops[8];  /* 0x0E */
+    s32 sum1;       /* 0x30 */
+    s32 sum2;       /* 0x34 */
+} Lim;
+/* Per-character state table entry (lbl_80309174[12]). */
+typedef struct ChrState {
+    s32 x0;
+    s8 x4;
+    u8 pad5;
+    s16 x6;
+    s8 x8;
+    u8 pad9[0x17];
+} ChrState;
+typedef struct {
+    u8 pad[8];
+    s8 x8;
+    u8 pad9[7];
+} Ent2;
 extern BUnit* lbl_80309DE4[12];
-extern s16* lbl_80347390;
+extern Lim* lbl_80347390;
 extern s32 (*lbl_802DBC4C[])(void);
 extern s32 rand(void);
 extern s8 lbl_80347334;
 extern void fn_8002D684(void* u);
 extern void fn_8002BA8C(s16 idx);
+extern s32 lbl_8034733C;
+extern ChrState lbl_80309174[12];
+extern Ent2 lbl_80309730[12];
+extern void (*lbl_802DBB10[])(Msg*, s16);
 
 u8 fn_8002A034(Obj* o, s32 flag) {
     Slot* arr = o->slots;
@@ -596,14 +625,14 @@ void fn_8002BA8C(s16 idx) {
         if (c == 0xff) continue;
         if (c <= 100) {
             if (rand() % 100 < c) {
-                lbl_80347390[idx * 2 - 1] = base->e[i].a;
-                lbl_80347390[idx * 2] = base->e[i].b;
+                lbl_80347390->drops[idx - 4].a = base->e[i].a;
+                lbl_80347390->drops[idx - 4].b = base->e[i].b;
                 break;
             }
         } else {
             if (lbl_802DBC4C[c - 101]() != 0) {
-                lbl_80347390[idx * 2 - 1] = base->e[i].a;
-                lbl_80347390[idx * 2] = base->e[i].b;
+                lbl_80347390->drops[idx - 4].a = base->e[i].a;
+                lbl_80347390->drops[idx - 4].b = base->e[i].b;
                 break;
             }
         }
@@ -641,11 +670,11 @@ void fn_8002BC4C(s16 idx) {
         u->xc = 1;
         if (idx >= 4) {
             Blk* st = u->p110;
-            if (((Glob*)lbl_80347390)->c < 0x7fff) {
-                ((Glob*)lbl_80347390)->c++;
+            if (lbl_80347390->c < 0x7fff) {
+                lbl_80347390->c++;
             }
-            ((Glob*)lbl_80347390)->sum1 += st->a;
-            ((Glob*)lbl_80347390)->sum2 += st->b;
+            lbl_80347390->sum1 += st->a;
+            lbl_80347390->sum2 += st->b;
             fn_8002BA8C(idx);
             if (lbl_80347334 <= 3) {
                 BUnit* t = lbl_80309DE4[lbl_80347334];
@@ -658,5 +687,107 @@ void fn_8002BC4C(s16 idx) {
                 u->b106++;
             }
         }
+    }
+}
+
+static inline void Sub(Msg* a) {
+    s16 v = lbl_80347390->x8;
+    v -= a->x8;
+    if (v < 0) v = 0;
+    lbl_80347390->x8 = v;
+    lbl_80347390->xa = v;
+}
+
+static inline void Add(Msg* a) {
+    Lim* l = lbl_80347390;
+    s16 v = l->x8;
+    s16 m = l->x6;
+    v += a->x8;
+    if (m < v) v = m;
+    l->x8 = v;
+    lbl_80347390->xa = v;
+}
+
+void fn_8002BD88(Msg* m) {
+    s16 kind = m->x6;
+    s16 idx = m->x0;
+    s16 k;
+    switch (kind) {
+    case 0x64:
+        Sub(m);
+        return;
+    case 0x65:
+        Add(m);
+        return;
+    }
+    if (lbl_8034733C == 4) {
+        if (lbl_80309DE4[idx]->flags & 0x40) {
+            switch (kind) {
+            case 4:
+            case 6:
+            case 8:
+            case 0xa:
+            case 0xd:
+            case 0x3e:
+            case 0x44:
+            case 0x45:
+            case 0x46:
+            case 0x47:
+            case 0x48:
+            case 0x49:
+                m->x6 = 0;
+                break;
+            case 3:
+            case 5:
+            case 7:
+            case 9:
+            case 0xb:
+            case 0xc:
+            case 0xe:
+            case 0x1a:
+                m->x8 = 0;
+                m->xc = 0;
+                return;
+            }
+        }
+        if (lbl_80309DE4[idx]->flags & 0x10) {
+            m->x8 = 0;
+            m->xc = 0;
+            return;
+        }
+        switch (lbl_80309174[lbl_80347334].x0) {
+        case 0xc:
+            if (lbl_80309DE4[idx]->flags & 8) {
+                const EnemySkill* t = &lbl_802AD440[lbl_80309174[lbl_80347334].x6 + 0x24];
+                if (t->kind == 1) {
+                    m->x8 = 0;
+                    m->xc = 0;
+                    return;
+                }
+            }
+            break;
+        case 1:
+            if (lbl_80309DE4[idx]->flags & 8) {
+                m->x8 = 0;
+                m->xc = 0;
+                return;
+            }
+            break;
+        case 3:
+            switch (lbl_80309730[idx].x8) {
+            case 4:
+                if (m->x6 == 0) {
+                    m->x8 = 0;
+                    m->xc = 0;
+                    return;
+                }
+                break;
+            }
+            break;
+        }
+    }
+    k = m->x6;
+    if (k >= 0 && k <= 0x4e) {
+        lbl_802DBB10[k](m, idx);
     }
 }

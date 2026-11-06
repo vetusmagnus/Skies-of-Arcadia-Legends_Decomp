@@ -131,19 +131,17 @@ void fn_80210EA4(u32 id, s32 v);
 /* Defined in unit_8020EEE8.c; this file passes the id as an s32 (the callers there pass a u16). */
 extern u32 fn_80210860(Scpt *s, s32 id);
 
-/* The camera path defaults: node 0 of path n (position, two values, look-at) is at init[n]. */
+/* lbl_8030E830: the twelve light records; the camera paths start from records 0, 7 and n + 8. */
 typedef struct {
+    s32 on;
+    s32 mode;
     f32 a[3];
     f32 c[2];
     f32 b[3];
-    u8 pad20[8];
 } PathInit;
-typedef struct {
-    u8 pad000[0x148];
-    PathInit init[4];
-} PathInitTbl;
-extern PathInitTbl lbl_8030E830;
+extern PathInit lbl_8030E830[12];
 s32 fn_80212050(void);
+extern s32 fn_80210064(s32 a);
 
 extern void fn_801CBBD8(void);
 
@@ -1316,6 +1314,40 @@ s32 fn_801FF470(u16 flags, Scpt* o) {
     }
     return 0;
 }
+/* Entry i of a counted list (count first, then the entries), or 0 past the end. */
+static inline s32 LstGet(s32* l, s32 i) {
+    if (l[0] > i) {
+        l += i;
+        return l[1];
+    }
+    return 0;
+}
+s32 fn_801FF604(u16 flags, Scpt* o) {
+    if (flags & 1) {
+        f32* p = o->cur.f;
+        Obj10A* t;
+        u16 id;
+        p++;
+        id = ReadInt(&p);
+        o->cur.f = p;
+        t = fn_8010A164(id);
+        if (t != 0) {
+            s32 n;
+            s32 i;
+            Actor* e;
+            e = t->x24;
+            n = e->x1c8->x10[0];
+            for (i = 1; i < n - 1; i += 2) {
+                u16 id2 = LstGet(e->x1c8->x10, i);
+                Actor* q = fn_8015F1A0(id2);
+                if (q != 0 && q->b26c == 1) {
+                    fn_80210064(id2);
+                }
+            }
+        }
+    }
+    return 0;
+}
 s32 fn_801FF714(u16 flags, Scpt* o) {
     if (flags & 1) {
         f32* p = o->cur.f;
@@ -1590,14 +1622,14 @@ s16 fn_802001F8(u32 flags, Scpt *st) {
         n = (*p == 3.4028235e38f) ? (p++, 0x7FFFFFFF) : (s32)fn_801F6120(&p);
         lbl_8030CEA0.xca0[n] = 0;
         lbl_8030CEA0.xc8a[n] = cnt;
-        lbl_8030CEA0.path[n][0].b[0] = lbl_8030E830.init[n].b[0];
-        lbl_8030CEA0.path[n][0].b[1] = lbl_8030E830.init[n].b[1];
-        lbl_8030CEA0.path[n][0].b[2] = lbl_8030E830.init[n].b[2];
-        lbl_8030CEA0.path[n][0].c[0] = lbl_8030E830.init[n].c[0];
-        lbl_8030CEA0.path[n][0].c[1] = lbl_8030E830.init[n].c[1];
-        lbl_8030CEA0.path[n][0].a[0] = lbl_8030E830.init[n].a[0];
-        lbl_8030CEA0.path[n][0].a[1] = lbl_8030E830.init[n].a[1];
-        lbl_8030CEA0.path[n][0].a[2] = lbl_8030E830.init[n].a[2];
+        lbl_8030CEA0.path[n][0].b[0] = lbl_8030E830[n + 8].b[0];
+        lbl_8030CEA0.path[n][0].b[1] = lbl_8030E830[n + 8].b[1];
+        lbl_8030CEA0.path[n][0].b[2] = lbl_8030E830[n + 8].b[2];
+        lbl_8030CEA0.path[n][0].c[0] = lbl_8030E830[n + 8].c[0];
+        lbl_8030CEA0.path[n][0].c[1] = lbl_8030E830[n + 8].c[1];
+        lbl_8030CEA0.path[n][0].a[0] = lbl_8030E830[n + 8].a[0];
+        lbl_8030CEA0.path[n][0].a[1] = lbl_8030E830[n + 8].a[1];
+        lbl_8030CEA0.path[n][0].a[2] = lbl_8030E830[n + 8].a[2];
         sum = 0;
         for (i = 0; i < cnt - 1; i++) {
             lbl_8030CEA0.path[n][i + 1].a[0] = fn_801F6120(&p);

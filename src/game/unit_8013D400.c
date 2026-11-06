@@ -17,12 +17,15 @@ typedef struct MenuObj {
     s8 b2;
     s8 b3;
     s8 b4;
-    u8 pad5[3];
+    s8 b5;
+    s8 b6;
+    s8 b7;
     s8 b8;
     s8 b9;
     u8 ba;
     u8 bb;
-    u8 padc[0x16 - 0xc];
+    u8 padc[4];
+    s8 list[6];
     s16 x16;
     s16 arr[4];     /* 0x18 */
 } MenuObj;
@@ -1088,7 +1091,7 @@ extern void fn_8012E5A0(s16 v);
 extern void fn_8012E590(s8 v);
 extern void fn_8012E414(s8 v);
 extern void fn_8012E404(s8 v);
-extern void fn_8013E0BC(s8 a, s8 b, void *p);
+extern void fn_8013E0BC(s32 a, s32 b, s8 *p);
 typedef struct {
     u32 x0;
     u8 pad4[4];
@@ -2046,13 +2049,13 @@ void fn_8014F72C(void* p, s32 v) {
     *(s16*)((u8*)p + 0x10) = v;
 }
 
-void fn_8013DB0C(s32 a)
+s32 fn_8013DB0C(s32 a)
 {
     s32 d = 0;
     u32 f = lbl_8030A6D4[lbl_8034757C].xc;
     if (f & 1) d = -1;
     if (f & 2) d++;
-    fn_8013DA50(a + d, d);
+    return fn_8013DA50(a + d, d);
 }
 
 s32 fn_80141078(void)
@@ -3935,7 +3938,7 @@ void fn_8014D398(Task_8014D398 *t)
     }
 }
 
-void fn_8013ECF4(s8 a, s8 b, s32 c, void *p) {
+void fn_8013ECF4(s32 a, s32 b, s32 c, s8 *p) {
     fn_8012E5B0(1);
     fn_8012E560(c);
     fn_8012E5A0(fn_8013EA10());
@@ -4460,6 +4463,83 @@ s32 fn_8013DA50(s32 a, s32 b) {
 }
 
 extern void fn_8013160C(s8 a, s8 b, u8 v);
+
+extern s32 fn_8013DEFC(s8 *out, s32 kind, s32 page);
+
+static inline void ClearBa_8013DC34(MenuObj *o) {
+    if (o != 0) {
+        o->ba = 0;
+    }
+}
+
+static inline s32 SkipEmpty_8013DC34(MenuObj *o, s32 cur, s32 s) {
+    s32 i;
+    for (i = 0; i < 7; i++) {
+        if (cur < 0 || o->list[cur] >= 0) {
+            break;
+        }
+        cur = Wrap(cur + s, -1, 5);
+    }
+    return cur;
+}
+
+static inline s32 PadDir_8013DC34(void) {
+    s32 d = 0;
+    u32 f = lbl_8030A6D4[lbl_8034757C].xc;
+    if (f & 8) d = -1;
+    if (f & 4) d++;
+    return d;
+}
+
+static inline s32 Move_8013DC34(MenuObj *o, s32 a) {
+    s32 d = PadDir_8013DC34();
+    s32 cur = Wrap(a + d, -1, 5);
+    s32 s = Clamp(d, -1, 1);
+    if (s != 0) {
+        cur = SkipEmpty_8013DC34(o, cur, s);
+    }
+    return cur;
+}
+
+void fn_8013DC34(MenuObj *o) {
+    s32 cur;
+    s32 r;
+
+    if (o != 0) {
+        cur = Move_8013DC34(o, o->b7);
+        fn_8012E560(cur);
+        if (o->b7 != cur) {
+            ClearBa_8013DC34(o);
+            fn_8012F478(1);
+            fn_8012E414(cur < 0);
+            fn_8012E404(!(cur < 0));
+            SePlay(0xf, 1, 0);
+        } else if (cur >= 0) {
+            r = fn_8013DBDC(o->b5, o->b6);
+            if (o->b6 != r) {
+                o->b6 = r;
+                fn_8013DEFC(o->list, o->b5, o->b6);
+                cur = SkipEmpty_8013DC34(o, Wrap(o->b7, -1, 5), -1);
+                fn_8012E560(cur);
+                fn_8013E0BC(o->b5, o->b6, o->list);
+                ClearBa_8013DC34(o);
+                fn_8012F478(1);
+                SePlay(0xf, 1, 0);
+            }
+        } else {
+            r = fn_8013DB0C(o->b5);
+            if (o->b5 != r) {
+                o->b5 = r;
+                o->b6 = 0;
+                fn_8012E590(o->b5 + 6);
+                fn_8013DEFC(o->list, o->b5, o->b6);
+                fn_8013E0BC(o->b5, o->b6, o->list);
+                SePlay(0xf, 1, 0);
+            }
+        }
+        o->b7 = cur;
+    }
+}
 
 void fn_8013FB48(s32 y, s32 n)
 {

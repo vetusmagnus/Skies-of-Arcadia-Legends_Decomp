@@ -282,6 +282,11 @@ typedef struct Obj_800C40EC {
     u8 padd0[0x8];
     s32 wd8;
 } Obj_800C40EC;
+/* An enum, not plain ints: with int constants one apart, `c ? 6 : 7` is compiled to neg/addi. */
+typedef enum CamMode {
+    CAM_MODE_6 = 6,
+    CAM_MODE_7 = 7
+} CamMode;
 extern void fn_800967F0(void *self, s32 a, s32 b);
 typedef struct Part {
     u8 pad0[0x14];
@@ -290,6 +295,9 @@ typedef struct Part {
 typedef struct Other {
     u8 pad0[0x2];
     s16 h2;
+    u8 pad4[0x4c - 0x4];
+    f32 f4c;
+    f32 f50;
 } Other;
 typedef struct Obj_800C4B90 {
     s16 h0;
@@ -313,7 +321,19 @@ typedef struct Obj_800C4B90 {
     f32 f64;
     f32 f68;
     f32 f6c;
-    u8 pad70[0x108 - 0x70];
+    u8 pad70[0x94 - 0x70];
+    f32 f94;
+    f32 f98;
+    f32 f9c;
+    f32 fa0;
+    f32 fa4;
+    f32 fa8;
+    f32 fac;
+    f32 fb0;
+    f32 fb4;
+    f32 fb8;
+    f32 fbc;
+    u8 padc0[0x108 - 0xc0];
     Part *p108;
 } Obj_800C4B90;
 extern void fn_8022BAA0(void *a, void *b, void *c, void *d);
@@ -1315,19 +1335,24 @@ typedef struct Src_800C41D0 {
     s16 flags;
     u8 pad4[0x4c - 4];
     f32 f4c, f50, f54;
+    u8 pad58[0x60 - 0x58];
+    u16 u60;
 } Src_800C41D0;
 typedef struct Obj_800C41D0 {
     u8 pad0[2];
     s16 flags;
-    u8 pad4[0xc - 4];
+    u8 pad4[0x8 - 4];
+    s16 h8;
+    u8 pada[0xc - 0xa];
     NJS_POINT3 pos;        /* 0x0c */
     u8 pad18[0x24 - 0x18];
     NJS_POINT3 v24;        /* 0x24 */
     NJS_POINT3 v30;        /* 0x30 */
-    u8 pad3c[0x40 - 0x3c];
+    s32 w3c;
     s32 w40, w44, w48;
     NJS_POINT3 v4c;        /* 0x4c */
-    u8 pad58[0x70 - 0x58];
+    u8 pad58[0x64 - 0x58];
+    NJS_POINT3 v64;        /* 0x64 */
     s32 w70, w74, w78;
     u8 pad7c[0xac - 0x7c];
     NJS_POINT3 vac;        /* 0xac */
@@ -1336,7 +1361,9 @@ typedef struct Obj_800C41D0 {
     f32 fcc;
     u8 padd0[0xd8 - 0xd0];
     s32 wd8;
-    u8 padd8[0x108 - 0xdc];
+    u8 paddc[0xe6 - 0xdc];
+    s16 he6;
+    u8 pade8[0x108 - 0xe8];
     Part *sub;      /* 0x108 */
 } Obj_800C41D0;
 typedef struct Mot_800C43A0 {
@@ -3790,6 +3817,39 @@ void fn_800C40EC(Obj_800C40EC *self)
     self->f4c = self->f4c + self->f24;
     self->f50 = self->f50 + self->f28;
     self->f54 = self->f54 + self->f2c;
+}
+
+void fn_800C3F80(Obj_800C4B90 *self, Other *other)
+{
+    if (self->p108 != 0) {
+        self->p108->h14 |= 0x8000;
+    }
+    self->fac = self->fc;
+    self->fb0 = self->f10;
+    self->fb4 = self->f14;
+    if (!(self->h2 & 4)) {
+        if (other->h2 & 0x40) {
+            self->fb8 = other->f4c;
+        } else {
+            self->fb8 = 8.0f;
+        }
+        if (other->h2 & 0x80) {
+            self->fbc = other->f50;
+        } else {
+            self->fbc = 11.0f;
+        }
+    }
+    fn_8009519C(&self->f94, &self->fa0);
+    self->f24 = 14.0f * self->fa0 + self->fac;
+    self->f28 = 14.0f * self->fa4 + self->fb0;
+    self->f2c = 14.0f * self->fa8 + self->fb4;
+    self->f64 = 20.0f * self->fa0 + self->fac - 40.0f * self->f94;
+    self->f68 = 20.0f * self->fa4 + self->fb0 - 40.0f * self->f98;
+    self->f6c = 20.0f * self->fa8 + self->fb4 - 40.0f * self->f9c;
+    self->f4c = self->f64;
+    self->f50 = self->f68;
+    self->f54 = self->f6c;
+    fn_800967F0(self, (self->h2 & 1) ? CAM_MODE_6 : CAM_MODE_7, 6);
 }
 
 void fn_800C4B90(Obj_800C4B90 *self, Other *other)
@@ -9287,6 +9347,64 @@ void fn_800C56AC(Cam_800C3648* w) {
     w->tgt.x = w->pos.x + d.x;
     w->tgt.y = w->pos.y + d.y;
     w->tgt.z = w->pos.z + d.z;
+}
+
+static inline s32 Find_800C5940(s8 id) {
+    s32 i = 0;
+    do {
+        u16 e = lbl_802E0F00[i];
+        if ((u16)(e & 0xFF00) != 0xFF00) {
+            if (id == (s8)(e & 0xFF)) {
+                break;
+            }
+        }
+        i++;
+    } while (i < 9);
+    return i;
+}
+
+void fn_800C5940(Obj_800C41D0 *o, Src_800C41D0 *s)
+{
+    NJS_POINT3 tmp;
+
+    if (o->sub != 0) {
+        o->sub->h14 |= 0x8000;
+    }
+    if (!(o->flags & 4)) {
+        if (!(s->flags & 4)) {
+            o->v30.x = o->v30.z = 0.0f;
+            o->v30.y = 4.0f;
+        }
+        if (s->flags & 0x100) {
+            o->fcc = s->f54;
+        } else {
+            o->fcc = 15.0f;
+        }
+        if (!(s->flags & 0x1000)) {
+            o->he6 = 4;
+        } else {
+            o->he6 = Find_800C5940(s->u60);
+        }
+    }
+    o->v24.x = o->pos.x + o->v30.x;
+    o->v24.y = o->pos.y + o->v30.y;
+    o->v24.z = o->pos.z + o->v30.z;
+    o->h8 = (s8)(lbl_802E0F00[o->he6] & 0xFF);
+    fn_80095360(&o->pos, &o->w40);
+    o->w3c = o->w44;
+    o->w40 = lbl_802E0F14[o->h8].a;
+    o->w44 = o->w44 + lbl_802E0F14[o->h8].b;
+    o->w70 = o->w40;
+    o->w74 = o->w44;
+    o->w78 = o->w48;
+    fn_801DCEB0(&tmp, &o->w70, -o->fcc);
+    o->v4c.x = o->pos.x + tmp.x;
+    o->v4c.y = o->pos.y + tmp.y;
+    o->v4c.z = o->pos.z + tmp.z;
+    o->v64.x = o->v4c.x;
+    o->v64.y = o->v4c.y;
+    o->v64.z = o->v4c.z;
+    fn_800967F0(o, (o->flags & 1) ? CAM_MODE_6 : CAM_MODE_7, 6);
 }
 
 extern u32 strlen(const char* s);

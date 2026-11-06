@@ -453,19 +453,6 @@ void fn_80099078(Particle *n, s32 count)
 }
 
 
-#ifdef NONMATCHING
-typedef struct Spark {
-    s32 on;
-    f32 x;
-    f32 y;
-    f32 z;
-} Spark;
-typedef struct SparkSet {
-    s16 active;
-    u8 pad2[0xa];
-    Spark s[8];
-    u8 pad8C[0xb4 - 0x8c];
-} SparkSet;
 typedef struct SparkDef {
     s32 on;
     f32 xr;
@@ -476,39 +463,38 @@ typedef struct SparkDef {
     f32 yb;
     u8 pad1C[4];
 } SparkDef;
-void fn_80098C58(SparkSet* set, s32 n, SparkDef* def) {
+void fn_80098C58(Particle* set, s32 n, SparkDef* def) {
     s32 i;
     s32 j;
-    Spark* s;
-    SparkDef* d;
+    Axis* s;
+    const SparkDef* b;
+    const SparkDef* d;
 
-    d = def;
+    b = def;
     for (i = 0; i < n; i++, set++) {
-        set->active = 1;
-        def = d;
-        s = set->s;
-        for (j = 0; j < 8; j++, s++, def++) {
-            if (def->on != 0) {
+        set->used = 1;
+        d = b;
+        s = set->axis;
+        for (j = 0; j < 8; j++, s++, d++) {
+            if (d->on != 0) {
                 s->on = 1;
-                s->x += def->xr * (3.0517578125e-05f * fn_8025ECC4()) + def->xb;
-                if (def->wrap) {
-                    if (s->x > 0.0f) {
-                        s->x += def->wrap;
+                s->spd += d->xr * (3.0517578125e-05f * fn_8025ECC4()) + d->xb;
+                if (d->wrap) {
+                    if (s->spd > 0.0f) {
+                        s->spd += d->wrap;
                     }
-                    if (s->x < 0.0f) {
-                        s->x -= def->wrap;
+                    if (s->spd < 0.0f) {
+                        s->spd -= d->wrap;
                     }
                 }
-                s->y += def->yr * (3.0517578125e-05f * fn_8025ECC4()) + def->yb;
-                s->z = def->z;
+                s->val += d->yr * (3.0517578125e-05f * fn_8025ECC4()) + d->yb;
+                s->lim = d->z;
             }
         }
     }
 }
-#endif
 
-#ifdef NONMATCHING
-void fn_80098A68(Ent_80098A68* e, s32 n, f32* v) {
+void fn_80098A68(Particle* e, s32 n, f32* v) {
     f32 c = v[2];
     f32 a = v[0];
     f32 d = v[3];
@@ -527,20 +513,19 @@ void fn_80098A68(Ent_80098A68* e, s32 n, f32* v) {
     }
     for (i = 0; i < n; i++, e++) {
         if (c != zero) {
-            e->h2 += (s32)((one * e->f90 + 256.0f) / c);
+            e->delay += (s16)((one * e->v[1] + 256.0f) / c);
         }
         if (d != zero) {
-            e->h2 += (s32)(d * (0.000030517578f * (f32)fn_8025ECC4()));
+            e->delay += (s16)(d * (0.000030517578f * fn_8025ECC4()));
         }
         if (a != zero) {
-            e->h2 += (s32)((sgn * e->f8c + 256.0f) / a);
+            e->delay += (s16)((sgn * e->v[0] + 256.0f) / a);
         }
         if (b != zero) {
-            e->h2 += (s32)(b * (0.000030517578f * (f32)fn_8025ECC4()));
+            e->delay += (s16)(b * (0.000030517578f * fn_8025ECC4()));
         }
     }
 }
-#endif
 
 void fn_8009884C(Ent_8009884C* e, s32 n, f32* v) {
     NJS_POINT3 vec;

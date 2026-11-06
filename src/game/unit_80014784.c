@@ -785,7 +785,7 @@ NJS_TEXLIST* fn_80015B94(s8 id, s16* out)
 
 extern void fn_80032BBC(s8, s32);
 extern void fn_80032B6C(s8, s32);
-extern void fn_80029168(s32, s32);
+extern void fn_80029168(s32, s16);
 extern void fn_80032AF8(s8, u16);
 extern s32 SePlay(s32 bank, s8 arg1, s8 id);
 /* fn_80016E1C's work: a countdown and the flag word it clears at the end. */
@@ -917,6 +917,71 @@ s32 fn_80016B20(s8 kind)
 }
 s16 fn_800085EC(Task* a, s16 b, s16 c, Ent_80008800* d, CondLink* p);
 
+extern s16 fn_8007EB74(s32 id);
+static inline s32 Flagged80(s8 id) {
+    if (id < 12) return lbl_80309DE4[id]->bits & 0x80;
+    return 0;
+}
+void fn_80016C54(Task* t) {
+    s8 lo;
+    s8 i;
+    Task* c;
+    ChrInfo* u;
+    W16E1C* w;
+    s8 hi;
+    s32 k;
+    w = t->work;
+    if (w->mode != 0) {
+        lo = 4;
+        hi = 12;
+    } else {
+        lo = 0;
+        hi = 4;
+    }
+    switch (t->state) {
+    case 0:
+        t->state = 1;
+        break;
+    case 1:
+        for (i = lo; i < hi; i++) {
+            c = fn_800215EC(i);
+            if (c != 0) {
+                u = ChrW(c)->st;
+                if (Flagged80(u->id)) {
+                    
+                    fn_80032BBC(u->id, 1);
+                    fn_80032B6C(u->id, 8);
+                    k = fn_8007EB74(u->id);
+                    if (k < 0) k = 0;
+                    fn_80029168(u->id, -k);
+                    fn_80032AF8(u->id, 1);
+                    fn_800085EC(c, 0x1e, 0x14, lbl_8030A10C.xc, lbl_8030A10C.x180);
+                }
+            }
+        }
+        w->timer = 90;
+        t->state = 2;
+        break;
+    case 2:
+        if (w->timer != 0) {
+            w->timer--;
+        } else {
+            t->state = 3;
+        }
+        break;
+    case 3:
+        w->p->bits &= 0x7FFFFFFF;
+        fn_80032B4C();
+        t->flags |= 0x40;
+        lbl_8030A10C.x1c4--;
+        break;
+    }
+}
+
+static inline s32 Max0(s16 x) {
+    if (x < 0) x = 0;
+    return x;
+}
 void fn_80016E1C(Task* t) {
     s8 lo;
     s8 i;
@@ -926,7 +991,6 @@ void fn_80016E1C(Task* t) {
     s8 hi;
     s16 v;
     s8 n;
-    s16 k;
     w = t->work;
     if (w->mode != 0) {
         lo = 4;
@@ -950,9 +1014,7 @@ void fn_80016E1C(Task* t) {
                     n = u->id;
                     v = 0;
                     if (fn_80078610(n)) v = lbl_80309DE4[n]->x0;
-                    k = v;
-                    if (k < 0) k = 0;
-                    fn_80029168(u->id, k);
+                    fn_80029168(u->id, Max0(v));
                     fn_80032AF8(u->id, 0x100);
                     fn_800085EC(c, 0x1f, -1, lbl_8030A10C.x10, lbl_8030A10C.x184);
                 }
@@ -3119,6 +3181,85 @@ void fn_8001E7F8(f32* out, s8 idx)
         ChrWork* w = t->work;
         fn_80071CF0(&w->pos, out);
     }
+}
+
+extern int fn_80061340(NJS_POINT3*, NJS_POINT3*, f32, f32);
+/* NEAR (3 extsb pairs): the unit declares s8 fn_8001E910 for its callers (they extsb the result);
+   returning ((fl >> 25) & 1) + 1 through s8 adds an extsb the original lacks. With an int return
+   it matches fully (but fn_80017B18, fn_8001977C and fn_8001A4F0 lose their extsb).
+   Also needs extern int fn_80061340(NJS_POINT3*, NJS_POINT3*, f32, f32). */
+static inline s8 Tick_8001E910(ChrInfo* st) {
+    s8 r;
+    if (st->x1f8 == 0) {
+        st->x1f8 = 100;
+        r = 0;
+    } else {
+        st->x1f8 -= 1;
+        if (st->x1f8 == 0) {
+            r = 1;
+        } else {
+            r = 0;
+        }
+    }
+    return r;
+}
+
+static inline s8 Kind_8001E910(u32 fl) { if (fl & 0x2000000) return 2; return 1; }
+s8 fn_8001E910(Task* t) {
+    ChrWork* w = t->work;
+    ChrInfo* st = w->st;
+    NJS_POINT3 v;
+    s8 done;
+    switch (st->x6) {
+    case 0x15:
+    case 0x16:
+        done = Tick_8001E910(st);
+        if (done != 0) {
+            if ((st->x50 & 0x800000) && !(st->x50 & 0x20000)) {
+                fn_800085EC(t, 0x1e, 0x2b, lbl_8030A10C.x10, lbl_8030A10C.x184);
+            }
+        }
+        return done;
+    case 0x10:
+    case 0x17:
+        if (fn_8006D1C4() != 0 && st->x70 != 0) {
+            return 1;
+        }
+        return 0;
+    case 0x13:
+        v.x = 0.5f * st->x104[0];
+        v.y = 0.5f * st->x104[1];
+        v.z = 0.5f * st->x104[2];
+        break;
+    default:
+        v.x = st->x104[0];
+        v.y = st->x104[1];
+        v.z = st->x104[2];
+        break;
+    }
+    if (st->x50 & 0x10000) {
+        return 1;
+    }
+    if (st->x70 != 0) {
+        u32 fl = st->anims[st->xe4].flags;
+        if (fl & 0x8000000) {
+            return Kind_8001E910(fl);
+        }
+        if ((fl & 0x1000000) || (st->xf0 & 0x20000000)) {
+            if (fn_80061340(&w->pos, &v, st->x110.x, st->x110.z)) {
+                return Kind_8001E910(st->anims[st->xe4].flags);
+            }
+            return 0;
+        }
+        return 1;
+    }
+    if (st->anims[st->xe4].flags & 0x1000000) {
+        if (fn_80061340(&w->pos, &v, st->x110.x, st->x110.z)) {
+            return Kind_8001E910(st->anims[st->xe4].flags);
+        }
+        return 0;
+    }
+    return 0;
 }
 
 s32 fn_8001EB6C(void* obj) {

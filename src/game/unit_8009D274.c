@@ -1975,16 +1975,11 @@ void fn_800A322C(Sprite3D* o, NJS_POINT3* pos, Angle ang, s32 unused, s32 flags,
     njPopMatrixEx();
 }
 
-/* EvExt.info of the linked-objects kind (fn_800A39E0): a count-prefixed word table of
- * (name offset into EvObj.x1dc, order) pairs from word 2 on. */
-typedef struct {
-    u32 off;    /* name offset */
-    u32 order;
-} EvNameRef;
+/* EvExt.info of the linked-objects kind (fn_800A39E0): a count-prefixed word table. w[0] is a flag
+ * word; (name offset into EvObj.x1dc, order) pairs follow from w[1] on. */
 typedef struct {
     s32 count;  /* 0x00 number of words present */
-    u32 x4;     /* 0x04 */
-    EvNameRef refs[1]; /* 0x08 */
+    u32 w[1];   /* 0x04 */
 } EvInfoNames;
 static inline EvInfoNames* NamesInfo(EvObj* e) {
     return e->ext->info;
@@ -1993,7 +1988,7 @@ static inline EvInfoNames* NamesInfo(EvObj* e) {
 void fn_800A3680(EvObj *obj)
 {
     Task *r;
-    EvNameRef *e;
+    u32 *e;
     s32 i;
     EvInfoNames *t;
     s32 n;
@@ -2004,10 +1999,10 @@ void fn_800A3680(EvObj *obj)
     if (t != NULL) {
         n = t->count;
         base = obj->x1dc;
-        e = t->refs;
+        e = t->w;
         obj->x1fc = 0;
-        for (i = 1; i < n - 1; e++, i += 2) {
-            r = fn_8010A164(base + e->off);
+        for (i = 1; i < n - 1; i += 2) {
+            r = fn_8010A164(base + e[i]);
             if (r != NULL) {
                 sub = r->work;
                 if (sub->x26c == 1) {
@@ -2043,15 +2038,14 @@ static inline s32 EventActive(void) {
 static inline void InitMax(EvObj* v)
 {
     EvInfoNames* tb;
-    EvNameRef* q;
+    u32* q;
     s32 i;
     u32 max = 0;
     v->x1fc = max;
     tb = NamesInfo(v);
-    q = tb->refs;
+    q = tb->w;
     for (i = 1; i < tb->count - 1; i += 2) {
-        if (q->order > max) max = q->order;
-        q++;
+        if (q[i + 1] > max) max = q[i + 1];
     }
     v->x1fe = max + 1;
 }
@@ -2140,7 +2134,7 @@ void fn_800A12D8(NJS_POINT3 *p, NJS_POINT3 *c, Angle a)
 void fn_800A3744(EvObj *obj)
 {
     Task *r;
-    EvNameRef *e;
+    u32 *e;
     s32 i;
     EvInfoNames *t;
     s32 n;
@@ -2151,10 +2145,10 @@ void fn_800A3744(EvObj *obj)
     if (t != NULL) {
         n = t->count;
         base = obj->x1dc;
-        e = t->refs;
+        e = t->w;
         obj->x1fc = 0;
-        for (i = 1; i < n - 1; e++, i += 2) {
-            r = fn_8010A164(base + e->off);
+        for (i = 1; i < n - 1; i += 2) {
+            r = fn_8010A164(base + e[i]);
             if (r != NULL) {
                 sub = r->work;
                 if (sub->x26c == 1 && fn_800A35E0(sub) == 1) {
@@ -2165,6 +2159,76 @@ void fn_800A3744(EvObj *obj)
             }
         }
     }
+}
+
+s32 fn_800A37E8(EvObj* obj, s32 unused)
+{
+    u8* base;
+    EvInfoNames* t;
+    u32* e;
+    s32 n;
+    s32 i;
+    t = obj->ext->info;
+    if (t == NULL) {
+        return 0;
+    }
+    base = obj->x1dc;
+    n = t->count;
+    e = t->w;
+    for (i = 1; i < n - 1; i += 2) {
+        if (e[i] != 0 && obj->x1fc == e[i + 1]) {
+            Task* r = fn_8010A164(base + e[i]);
+            if (r != NULL) {
+                EvObj* w = r->work;
+                s32 ok = w->x26c == 1;
+                if (ok != 0 && r->state == 1) {
+                    w->x1fa = 1;
+                    r->state = 2;
+                }
+            }
+        }
+    }
+    if (obj->x1fc == obj->x1fe) {
+        obj->x1fc = 0;
+        return t->w[0] == 0;
+    }
+    obj->x1fc = obj->x1fc + 1;
+    return 1;
+}
+
+s32 fn_800A38E4(EvObj* obj, s32 unused)
+{
+    u8* base;
+    EvInfoNames* t;
+    u32* e;
+    s32 n;
+    s32 i;
+    t = obj->ext->info;
+    if (t == NULL) {
+        return 0;
+    }
+    base = obj->x1dc;
+    n = t->count;
+    e = t->w;
+    for (i = 1; i < n - 1; i += 2) {
+        if (e[i] != 0 && obj->x1fc == e[i + 1]) {
+            Task* r = fn_8010A164(base + e[i]);
+            if (r != NULL) {
+                EvObj* w = r->work;
+                s32 ok = w->x26c == 1;
+                if (ok != 0 && r->state == 1) {
+                    w->x1fa = 1;
+                    r->state = 2;
+                }
+            }
+        }
+    }
+    if (obj->x1fc == obj->x1fe) {
+        obj->x1fc = 0;
+        return t->w[0] == 0;
+    }
+    obj->x1fc = obj->x1fc + 1;
+    return 1;
 }
 
 /* state */

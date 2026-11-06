@@ -172,7 +172,7 @@ extern MapInfo lbl_80311AC0;
 extern void fn_801DBE1C(const char* fmt, ...);
 s32 fn_8020FB10(s32 a, f32 f, s32 b, s32 c, s32 n, s32 e);
 s32 fn_8020FC7C(s32 id, s32 b, s32 c, s32 d);
-s32 fn_8020F934(s32 id);
+s32 fn_8020F934(u16 id);
 
 extern void fn_801DBE1C(const char *fmt, ...);
 
@@ -367,7 +367,7 @@ if (s->times != NULL) { \
 } \
 lbl_8030CEA0.x15cc = 0;
 extern s32 fn_80210F74(Scpt *s);
-extern u32 fn_802107A4(Scpt *s, s32 id);
+Work_8020184C *fn_802107A4(Scpt *s, s32 id);
 extern u32 fn_80210860(Scpt *s, u16 id);
 
 void fn_8020EEE8(s32 bank, s8 arg1, s8 id, s32 unused) {
@@ -1493,11 +1493,11 @@ void fn_8020F078(f32 *a, f32 *b) {
     lbl_8030CEA0.x1910 = (s32)(k * b[2]);
 }
 
-s32 fn_8020F934(s32 id)
+s32 fn_8020F934(u16 id)
 {
     Scpt s;
 
-    if (fn_802107A4(&s, (u16)id) == 0) {
+    if (fn_802107A4(&s, id) == 0) {
         return 0;
     }
     s.owner = 0x29;
@@ -1788,6 +1788,37 @@ void fn_80211EB0(s16 mode, f32 v)
     } else if (mode == 2) {
         lbl_8030CEA0.x834 = (s32)v;
     }
+}
+
+/* fn_80211058 as fn_802107A4 inlines it. */
+static inline void EvPost(Scpt *s, s32 a, s32 b, s32 c, s16 d, Ev *w)
+{
+    s32 k = (c << 16) | (u16)d;
+    w->h8 = 0;
+    w->x0c = 0;
+    w->x10 = 0;
+    s->handle = fn_800CD0B8(a, b, k, (s32)w);
+    s->a20 = a;
+    s->a24 = (u16)b;
+    s->a28 = k;
+    s->a2c = (s32)w;
+    s->ev = w;
+    lbl_8030CEA0.x08++;
+}
+
+Work_8020184C *fn_802107A4(Scpt *s, s32 id)
+{
+    Work_8020184C *w;
+
+    w = fn_801E1A2C(1, 0x44);
+    if (w == 0) {
+        return 0;
+    }
+    s->work.work_8020184C = w;
+    w->n = id;
+    w->ev.hd.kind = 0;
+    EvPost(s, 6, id, 0xd, lbl_8030CEA0.x08, &w->ev);
+    return w;
 }
 
 void fn_80211058(Scpt *s, s32 a, s32 b, s32 c, s16 d, Ev *w)

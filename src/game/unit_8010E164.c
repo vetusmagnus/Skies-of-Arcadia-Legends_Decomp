@@ -7980,6 +7980,41 @@ s32 fn_8010E270(EvObj *o, Angle base) {
     return -1;
 }
 
+extern NJS_POINT3 lbl_80305D98;
+extern NJS_POINT3 lbl_80305DA4;
+extern f32 lbl_80346E6C;
+
+s32 fn_8010E41C(f32 *pos, Angle *ang, f32 *at) {
+    NJS_MATRIX m;
+    NJS_POINT3 p;
+    NJS_POINT3 d;
+    s32 yaw;
+    s32 r;
+
+    njUnitMatrix(m);
+    njRotateXYZ(m, ang[0], ang[1], ang[2]);
+    d.x = 0.0f;
+    d.y = 0.0f;
+    d.z = 4.0f;
+    njCalcPoint(m, &d, &p);
+    d.x = at[0] - (lbl_80305DA4.x = p.x + (lbl_80305D98.x = pos[0]));
+    d.y = at[1] - (lbl_80305DA4.y = p.y + (lbl_80305D98.y = pos[1]));
+    d.z = at[2] - (lbl_80305DA4.z = p.z + (lbl_80305D98.z = pos[2]));
+    r = fn_801DD4C4(d.x, d.z);
+    yaw = (u16)(r - ang[1] + 0x8000);
+    lbl_80346E6C = 0.005493164f * (f32)yaw;
+    if (yaw < 0x2aaa || yaw >= 0x10000 - 0x2aab) {
+        r = 0;
+    } else if (yaw >= 0x2aaa && yaw < 0x4000) {
+        r = 1;
+    } else if (yaw >= 0x471c && yaw < 0x10000 - 0x471d) {
+        r = 2;
+    } else if (yaw >= 0x10000 - 0x471d && yaw < 0x10000 - 0x2aab) {
+        r = 3;
+    }
+    return r;
+}
+
 s32 fn_801157E4(f32 *out, f32 *from, f32 *to, void *a) {
     f32 v[3];
     f32 p[3];
@@ -8196,12 +8231,138 @@ void fn_8011FE2C(Rec_8011FE2C *r) {
 }
 
 static inline void VecCopy_80124634(NJS_POINT3* d, NJS_POINT3* s) {
-    f32 x = s->x;
-    f32 y = s->y;
-    f32 z = s->z;
+    f32 z, y, x;
+    x = s->x;
+    y = s->y;
+    z = s->z;
     d->z = z;
     d->y = y;
     d->x = x;
+}
+
+static inline void VecAdd_801237EC(NJS_POINT3* d, NJS_POINT3* a, NJS_POINT3* b) {
+    NJS_POINT3 t, u;
+    VecCopy_80124634(&t, a);
+    VecCopy_80124634(&u, b);
+    d->z = t.z + u.z;
+    d->y = t.y + u.y;
+    d->x = t.x + u.x;
+}
+
+static inline void VecSub_801237EC(NJS_POINT3* d, NJS_POINT3* a, NJS_POINT3* b) {
+    NJS_POINT3 t, u;
+    VecCopy_80124634(&t, a);
+    VecCopy_80124634(&u, b);
+    d->z = t.z - u.z;
+    d->y = t.y - u.y;
+    d->x = t.x - u.x;
+}
+
+static inline f32 VecLen_801237EC(NJS_POINT3* v) {
+    f32 xx = v->x * v->x;
+    f32 yy = v->y * v->y;
+    f32 zz = v->z * v->z;
+    return sqrtf((f32)fabs(xx + yy + zz));
+}
+
+/* the 0x744 record behind x25c of the object fn_80123A44 runs: three rings of 50 points */
+typedef struct Ring_801237EC {
+    NJS_POINT3 pts[50];
+    NJS_POINT3 ring[50];
+    NJS_POINT3 zero[50];
+    NJS_POINT3 org;
+    u8 _714[0xc];
+    NJS_POINT3 last;
+    NJS_POINT3 org2;
+    f32 len;
+    s32 f73c;
+    s32 f740;
+} Ring_801237EC;
+
+void fn_801237EC(EvObj* m) {
+    f32 ang = 0.0f;
+    f32 zero = ang;
+    NJS_POINT3 d;
+    NJS_POINT3* dp;
+    NJS_POINT3* p;
+    NJS_POINT3* r1;
+    NJS_POINT3* r2;
+    Ring_801237EC* w;
+    s32 i = 0;
+
+    w = m->x25c;
+    p = w->pts;
+    r1 = w->ring;
+    r2 = w->zero;
+
+    w->f740 = 0;
+    w->f73c = 0;
+    m->x20c = -1;
+    m->x210 = -1;
+    w->org2.x = 5.0f;
+    w->org2.y = 15.0f;
+    w->org2.z = 10.0f;
+    VecCopy_80124634(&w->org, &w->org2);
+    for (; i < 50; i++) {
+        ang += 0.3926875f;
+        p->x = 5.0 * cos(ang);
+        p->y = -10.0f;
+        p->z = 5.0 * sin(ang);
+        VecAdd_801237EC(p, p, &w->org);
+        VecCopy_80124634(r1, p);
+        p++;
+        r1++;
+        r2->x = zero;
+        r2->y = zero;
+        r2->z = zero;
+        r2++;
+    }
+    VecCopy_80124634(&w->last, &w->pts[49]);
+    dp = &d;
+    VecSub_801237EC(dp, &w->pts[1], &w->pts[0]);
+    w->len = VecLen_801237EC(dp);
+    m->scl.y = w->len;
+    m->texlist = m->ext->texlist;
+}
+
+void fn_80126F70(Obj_80126BF0* o, In_80126BF0* in) {
+    s32 f;
+    s8 sel;
+    s32 up, down, cap;
+    FormTbl* t;
+    FormRec* r;
+
+    f = in->f5;
+    t = &in->tab;
+    sel = t->e[in->b17].id;
+    r = &t->r[in->b11];
+    up = r->b[1];
+    down = r->b[2];
+    cap = r->b[4];
+
+    if (f == sel && (in->h0e & 1)) {
+        return;
+    }
+    if (f == sel && (in->h0e & 4)) {
+        in->h0c--;
+        if (in->h0c <= 0) {
+            in->h0c = 0;
+            in->h0e = 0;
+        }
+        return;
+    }
+    if ((in->b10 & 0x7f) == 0) {
+        return;
+    }
+    if (f == up) {
+        if (in->h0c < (u8)cap) {
+            in->h0c++;
+        }
+    } else if (f == down) {
+        if (in->h0c > 0) {
+            in->h0c--;
+        }
+    }
 }
 
 extern void* fn_8008F8FC(void* o, s32 i);
@@ -8650,6 +8811,107 @@ void fn_80119850(EvObj *obj) {
     lbl_80347448 = 0;
     lbl_80347410 = 0.0f;
     lbl_80347440 = 0;
+}
+
+typedef struct PlayerSnap {
+    u8 pad0[0x38];
+    NJS_POINT3 pos;
+    Angle ang[3];
+} PlayerSnap;
+extern PlayerSnap lbl_8030A794;
+extern s32 lbl_803475B0;
+extern void fn_80097660(void);
+extern void fn_80090EE8(s32 a);
+extern void fn_801CB738(void);
+
+static inline EvObj *Player_80119FF4(Task *t) {
+    return t->work;
+}
+
+void fn_80119FF4(Task *self) {
+    s32 i;
+    ModelFile *p;
+    NJS_TEXLIST *tl;
+    lbl_80347454 = self;
+    lbl_80347450 = self->work;
+    switch (self->state) {
+    case 0:
+    case 0xfe:
+        fn_8009766C();
+        fn_80227810(Player_80119FF4(self)->texlist);
+        for (i = 1; i < 8; i++) {
+            p = Player_80119FF4(self)->ext->files->items[i];
+            if (p != 0) {
+                tl = &p->texlist;
+                if (tl != 0) {
+                    fn_80227810(tl);
+                }
+            }
+        }
+        fn_80119850(Player_80119FF4(self));
+        fn_8015ED90(self);
+        fn_8015EB8C(Player_80119FF4(self), 0xd, fn_80119E50);
+        self->state = 2;
+        break;
+    case 1:
+    case 2:
+        if (lbl_80311AC0.map == 0x83 && lbl_80311AC0.sub == 0x65 && lbl_803475B0 != 0) {
+            return;
+        }
+        if (lbl_80311AC0.map == 0) {
+            fn_80090EE8(0);
+        }
+        lbl_80347408 = 1;
+        lbl_803473EC = 1;
+        if (fn_8015E600(Player_80119FF4(self)) != 0) {
+            fn_801CB738();
+            fn_8009574C();
+            lbl_80347440 = -1;
+        } else {
+            if (lbl_80347440 != -1) {
+                lbl_80347408 = 0;
+                lbl_803473EC = 0;
+            }
+            fn_8011622C(lbl_80347400);
+            fn_80119AF4(self);
+            lbl_8030A794.pos.x = Player_80119FF4(self)->pos.x;
+            lbl_8030A794.pos.y = Player_80119FF4(self)->pos.y;
+            lbl_8030A794.pos.z = Player_80119FF4(self)->pos.z;
+            lbl_8030A794.ang[0] = Player_80119FF4(self)->ang[0];
+            lbl_8030A794.ang[1] = Player_80119FF4(self)->ang[1];
+            lbl_8030A794.ang[2] = Player_80119FF4(self)->ang[2];
+            if (lbl_80347440 == -1) {
+                lbl_80347440 = 0;
+            }
+        }
+        break;
+    case 0xff:
+        if (lbl_803473FC != 0) {
+            lbl_80347400 = 0x7fffffff;
+            fn_8011622C(lbl_80347400);
+        }
+        fn_8015EBF4(Player_80119FF4(self));
+        fn_802275A4(Player_80119FF4(self)->texlist, 0);
+        for (i = 1; i < 9; i++) {
+            p = Player_80119FF4(self)->ext->files->items[i];
+            tl = &p->texlist;
+                if (tl != 0) {
+                fn_802275A4(tl, 0);
+            }
+        }
+        fn_80222964(Player_80119FF4(self)->res);
+        fn_801E1784(Player_80119FF4(self)->res);
+        Player_80119FF4(self)->res = 0;
+        fn_801E1784(Player_80119FF4(self)->hit);
+        fn_801E17E0(Player_80119FF4(self)->slots);
+        if (Player_80119FF4(self)->texlist != 0) {
+            fn_802275A4(Player_80119FF4(self)->texlist, 0);
+        }
+        fn_80097660();
+        fn_80100B74(self);
+        lbl_80347450 = 0;
+        break;
+    }
 }
 
 void fn_8012A900(Arg_8012A900 *p)

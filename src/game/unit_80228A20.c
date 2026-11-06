@@ -69,7 +69,7 @@ typedef struct C0 {
 extern C0 *lbl_8034784C;
 extern f32 lbl_8034C640;
 extern f32 lbl_8034C65C;
-extern void fn_801D5DD8(void *a, s32 b, s32 c, void *p, f32 f1, f32 f2, f32 f3, f32 f4, f32 f5, f32 f6);
+extern void fn_801D5DD8(void *a, f32 f1, f32 f2, f32 f3, f32 f4, s32 b, s32 c, f32 f5, f32 f6, void *p);
 /* A sprite: its texture coordinates, parts and placement (0x1C bytes). */
 typedef struct Spr {
     void *p0;
@@ -418,7 +418,7 @@ void fn_8022A46C(void) {
     DrawStatePush(&lbl_803165A0);
     fn_80296ED4(0x2000);
     lbl_802F8FE8.f14 = 140.0f;
-    fn_801D5DD8(&lbl_802F8FE8, 0, 0, lbl_80347854->inner->list, 1.1f, 1.0f, -1000.0f, 0.0f, 1.0f, 1.0f);
+    fn_801D5DD8(&lbl_802F8FE8, 1.1f, 1.0f, -1000.0f, 0.0f, 0, 0, 1.0f, 1.0f, lbl_80347854->inner->list);
     DrawStatePop(&lbl_803165A0);
     r = FontUpdate();
     if (fn_8022A728(&lbl_80347820, &lbl_80347824, 0x96) != 0 && r != 0) {
@@ -434,7 +434,7 @@ void fn_8022A38C(void) {
     DrawStatePush(&lbl_803165A0);
     fn_80296ED4(0x2000);
     lbl_802F9038.f14 = 37.0f;
-    fn_801D5DD8(&lbl_802F9038, 0, 0, lbl_80347854->inner->list, 1.1f, 1.0f, -1000.0f, 0.0f, 1.0f, 1.0f);
+    fn_801D5DD8(&lbl_802F9038, 1.1f, 1.0f, -1000.0f, 0.0f, 0, 0, 1.0f, 1.0f, lbl_80347854->inner->list);
     DrawStatePop(&lbl_803165A0);
     r = fn_8022A854(&lbl_80347828);
     if (fn_8022A728(&lbl_80347820, &lbl_80347824, 0x96) != 0 && r != 0) {
@@ -631,7 +631,7 @@ const char lbl_802D96CC[0xC] = "ME201A.sct";
 const char lbl_802D96D8[0x10] = "/sound/m02s.p16";
 
 f32 fn_8022975C(void *a, s32 b, s32 c, f32 x, f32 y, f32 z, f32 w) {
-    fn_801D5DD8(a, b, c, lbl_8034784C->p35c->inner->list, lbl_8034C640, lbl_8034C640, x, y, z, w);
+    fn_801D5DD8(a, lbl_8034C640, lbl_8034C640, x, y, b, c, z, w, lbl_8034784C->p35c->inner->list);
     return lbl_8034C65C + x;
 }
 
@@ -639,7 +639,7 @@ s32 fn_802295D0(void) {
     s32 r = 0;
     s32 n;
     lbl_802F8C50.f14 = 172.0f;
-    fn_801D5DD8(&lbl_802F8C50, 0, 0, lbl_8034784C->p35c->inner->list, 1.0f, 1.0f, 99.99f, 0.0f, 1.0f, lbl_8034784C->items[2].cur[0]);
+    fn_801D5DD8(&lbl_802F8C50, 1.0f, 1.0f, 99.99f, 0.0f, 0, 0, 1.0f, lbl_8034784C->items[2].cur[0], lbl_8034784C->p35c->inner->list);
     if (lbl_80311A60.p->f8 & 0x1000) {
         if (lbl_8034784C->items[0].flags & 1) lbl_8034784C->items[0].flags |= 0x80;
         if (lbl_8034784C->items[1].flags & 1) lbl_8034784C->items[1].flags |= 0x80;
@@ -657,19 +657,25 @@ s32 fn_802295D0(void) {
     return r;
 }
 
-#ifdef NONMATCHING
 extern s32 lbl_80347838;
 
 
+static inline f32 TitleSpr(Spr *s, s32 b, s32 c, f32 x, f32 y, f32 z, f32 w) {
+    fn_801D5DD8(s, 1.0f, 1.0f, x, y, b, c, z, w, lbl_8034784C->p35c->inner->list);
+    return 0.05f + x;
+}
+
 static inline void TitleDraw(void) {
     s32 i;
-    C0 *c = lbl_8034784C;
+    f32 z;
+    Lerp4 *c = lbl_8034784C->items;
     for (i = 0; i < 5; i++) {
         fn_801D8840(&lbl_8034784C->items[i]);
     }
-    fn_801D5DD8(&lbl_802F8BB0, 0, 0, lbl_8034784C->p35c->inner->list, 1.0f, 1.0f, 99.99f, 0.0f, 1.0f, c->items[0].cur[0]);
-    fn_801D5DD8(&lbl_802F8CA0, 0, 0, lbl_8034784C->p35c->inner->list, 1.0f, 1.0f, 100.04f, 0.0f, 1.0f, c->items[4].cur[0]);
-    fn_801D5DD8(&lbl_802F8F70, 0, 0, lbl_8034784C->p35c->inner->list, 1.0f, 1.0f, 100.090004f, 0.0f, 1.0f, c->items[4].cur[0]);
+    z = 99.99f;
+    z = TitleSpr(&lbl_802F8BB0, 0, 0, z, 0.0f, 1.0f, c[0].cur[0]);
+    z = TitleSpr(&lbl_802F8CA0, 0, 0, z, 0.0f, 1.0f, c[4].cur[0]);
+    z = TitleSpr(&lbl_802F8F70, 0, 0, z, 0.0f, 1.0f, c[4].cur[0]);
 }
 
 
@@ -832,8 +838,6 @@ void fn_80228C50(void) {
         }
     }
 }
-
-#endif
 
 void fn_80228BE4(void) {
     fn_801CAF30();

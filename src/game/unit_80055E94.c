@@ -1337,10 +1337,9 @@ extern s32 fn_801F52AC(void);
 /* A particle-cloud effect task (unit_80055E94; the point-sprite sibling of fn_80057038's wobble). */
 typedef NJS_POINT3 V3;
 extern void fn_80061C80(NJS_POINT3 *out, s8 mode, f32 a, f32 b, f32 z);
-typedef struct Obj { void* base; u8 pad4[4]; u16 x8; u16 xa; } Obj;
 extern char lbl_80348A50[4];
 extern int strncmp(const char*, const char*, u32);
-extern void fn_800071D8(Obj* o, f32 f);
+extern void fn_800071D8(NJS_MOTION* o, f32 f);
 extern void fn_80007080(void* a, int bit);
 extern void fn_80006F1C(void* a, int bit);
 extern void fn_80006DA0(void* a, int bit);
@@ -2410,43 +2409,9 @@ extern void fn_80296918(V3 *pts, s16 n, f32 a, f32 s);
 extern void fn_80296B34(void);
 extern void fn_802A8F40(s32 a);
 extern void fn_801D0D70(s32 a, f32 b);
-#ifdef NONMATCHING
-typedef struct Rec16_80072B3C { void* w[4]; } Rec16_80072B3C;
-typedef struct Rec24_80072B3C { void* w[6]; } Rec24_80072B3C;
-#endif
-#define BODY \
-        { int ok; \
-        if (p == 0) return 0; \
-        ok = !!strncmp(p, lbl_80348A50, 4); \
-        if (ok == 0) return 0; \
-        o->base = p; \
-        idx = 0; \
-        bit = (o->xa >> 6) & 1; \
-        fn_800071D8(o, f); \
-        if (o->x8 & 1) { \
-            if (a != 0 && v[0] != 0) { \
-                fn_80007080(a, bit); \
-            } else { \
-                flags &= 0xfffe; \
-            } \
-            idx = 1; \
-        } \
-        if (flags & 2) { \
-            if (b != 0 && v[idx] != 0) { \
-                fn_80006F1C(b, bit); \
-            } else { \
-                flags &= 0xfffd; \
-            } \
-            idx++; \
-        } \
-        if (flags & 4) { \
-            if (c != 0 && v[idx] != 0) { \
-                fn_80006DA0(c, bit); \
-            } else { \
-                flags &= 0xfffb; \
-            } \
-        } \
-        o->base = base; }
+/* One node's keys in a motion's mdata: `stride` words per node (the channel pointers, then as many
+   counts). fn_80072B3C repeats this for two and three channels. */
+#define MOT_KEYS(stride)         { int ok;         p = &base[i * (stride)];         if (p == 0) return 0;         ok = KeyTagged(p);         if (ok == 0) return 0;         o->mdata = p;         idx = 0;         bit = (o->inp_fn >> 6) & 1;         fn_800071D8(o, f);         if (o->type & 1) {             if (a != 0 && p[0] != 0) {                 fn_80007080(a, bit);             } else {                 flags &= 0xfffe;             }             idx = 1;         }         if (flags & 2) {             if (b != 0 && p[idx] != 0) {                 fn_80006F1C(b, bit);             } else {                 flags &= 0xfffd;             }             idx++;         }         if (flags & 4) {             if (c != 0 && p[idx] != 0) {                 fn_80006DA0(c, bit);             } else {                 flags &= 0xfffb;             }         }         o->mdata = base; }
 
 static inline s32 Btn(void)
 {
@@ -9872,6 +9837,33 @@ void fn_80067DFC(Arg80067CA4 *p)
     }
 }
 
+void fn_80068190(char *out)
+{
+    char buf[0x100];
+    const RoPool_80055E94 *base = &lbl_802B04C8;
+    s16 idx = -1;
+    s32 i;
+    s16 r;
+
+    for (i = 0; i < 12; i++) {
+        if (lbl_80309700[i] != 0 && lbl_80309700[i]->work->x2 == 2 && lbl_80309700[i]->work->x0 < 4) {
+            idx = i;
+            break;
+        }
+    }
+    if (idx != -1) {
+        r = lbl_80309DE4[idx]->xb6; r -= 0x16;
+        if (r < 10 || r > 25) {
+            r = 10;
+            sprintf(buf, base->badNum, lbl_80309DE4[idx]->xb6);
+            fn_8008F75C(base->errTitle, buf, base->errMsg, lbl_803489B0);
+        }
+        sprintf(out, base->mldFmt, r);
+    } else {
+        sprintf(out, "");
+    }
+}
+
 /* Character idx's xb6 as a 0-based number (xb6 - 0x16); out of 10..25 it reports the bad
  * number ("...%d") through fn_8008F75C and returns 10. */
 s32 fn_80068348(s16 idx)
@@ -10686,6 +10678,105 @@ f32 fn_8006116C(int x)
         r = 360.0f + r;
     }
     return r;
+}
+
+extern void *fn_80077B88(u8);
+extern void fn_800770B8(void *, void *);
+extern void fn_80083D3C(s32);
+extern void fn_800842A0(s16);
+
+/* Create the battle character record for slot j from enemy id v. */
+static inline void ChrSlotNew(s32 j, s16 v)
+{
+    void *r = fn_80077B88(v);
+    ChrRec *p;
+    lbl_80309DCC[j] = v;
+    p = fn_801E1C7C(0x114);
+    lbl_80309DE4[j] = p;
+    fn_800770B8(p, r);
+}
+void fn_800692D8(s16 a, s16 b, s32 unused, s8 c) {
+    s16 acc;
+    s16 sel;
+    s32 j;
+    s16 v;
+    acc = 0;
+    sel = lbl_80309174[a].x6 + 0x24;
+    {
+        EnemySkill *t = &lbl_802AD440[sel];
+        v = t->param;
+    }
+    for (j = 4; j < 12; j++) {
+        if (acc <= 3000 || c == 0x40) {
+            if (lbl_80309DE4[j] == 0) {
+                ChrSlotNew(j, v);
+                if (lbl_80309700[j] == 0) {
+                    fn_80083D3C(j);
+                    fn_800842A0(j);
+                }
+                lbl_80309174[a].x4 = j;
+                lbl_80309700[b]->work->x44 = c;
+                return;
+            }
+            if (lbl_80309700[j] != 0) {
+                acc = acc + lbl_80309DE4[j]->x110->x56;
+            }
+        } else {
+            break;
+        }
+    }
+    switch (sel) {
+    case 0x67:
+        acc = 0x72;
+        break;
+    case 0x62:
+        acc = 0x6b;
+        break;
+    case 0xec:
+    case 0xed:
+        acc = 0x6c;
+        break;
+    case 0x7c:
+    case 0x7d:
+        acc = 0x73;
+        break;
+    case 0x40:
+        acc = 0x6e;
+        break;
+    case 0x41:
+        acc = 0x62;
+        break;
+    case 0x7b:
+        acc = 0x6b;
+        break;
+    case 0x6e:
+    case 0x85:
+        acc = 0x70;
+        break;
+    case 0x68:
+        acc = 0x6a;
+        break;
+    case 0x55:
+    case 0x56:
+        acc = 0x71;
+        break;
+    case 0x76:
+        acc = 0x62;
+        break;
+    case 0x72:
+        acc = 0x6f;
+        break;
+    case 0x69:
+    case 0x6d:
+        acc = 0x6d;
+        break;
+    default:
+        acc = sel;
+        break;
+    }
+    lbl_80309174[a].x6 = acc;
+    lbl_80309174[a].x4 = a;
+    lbl_80309700[b]->work->x44 = -1;
 }
 
 void fn_80068E20(s16 a, s16 b, s32 c, s8 d) {
@@ -12156,35 +12247,32 @@ void fn_80055F0C(PtTask *t) {
 }
 
 
-#ifdef NONMATCHING
-int fn_80072B3C(f32 f, void* unused, Obj* o, void** a, void** b, void** c, s16 i) {
+static inline u16 MotChannels(NJS_MOTION* o) {
+    return o->type & 7;
+}
+
+static inline int KeyTagged(void* p) {
+    return !!strncmp(p, lbl_80348A50, 4);
+}
+
+int fn_80072B3C(f32 f, void* unused, NJS_MOTION* o, void* a, void* b, void* c, s16 i) {
     int idx;
-    int bit;
-    int type = o->xa & 0xf;
-    int flags = o->x8 & 7;
-    void** v;
-    void* p;
-    void* base;
+    u8 bit;
+    int type = o->inp_fn & 0xf;
+    int flags = MotChannels(o);
+    void** p;
+    void** base;
     if (type == 1) {
         return 0;
     }
     if (type == 2) {
-        Rec16_80072B3C* r;
-        base = o->base;
-        r = base;
-        p = &r[i];
-        v = p;
-        BODY
+        base = o->mdata;
+        MOT_KEYS(4)
     } else if (type == 3) {
-        Rec24_80072B3C* r;
-        base = o->base;
-        r = base;
-        p = &r[i];
-        v = p;
-        BODY
+        base = o->mdata;
+        MOT_KEYS(6)
     } else {
         return 0;
     }
     return flags;
 }
-#endif

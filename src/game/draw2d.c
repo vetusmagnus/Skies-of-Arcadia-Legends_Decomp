@@ -429,28 +429,23 @@ void fn_800334B8(Rect2D* o) {
 
 void fn_80033888(s16 a, s16 b, s16 c, s16 d, u32 colour, f32 scale, f32 z) {
     VertexCol v[4];
+    s32 i;
+    s32 flags;
     f32 zz = fn_801DBD9C(z);
-    f32 fa = a * scale;
-    f32 fb = b * scale;
-    f32 fc = c * scale;
-    f32 fd = d * scale;
-    v[0].x = fa;
-    v[0].y = fb;
-    v[0].z = zz;
-    v[0].colour = colour;
-    v[1].x = fa;
-    v[1].y = fd;
-    v[1].z = zz;
-    v[1].colour = colour;
-    v[2].x = fc;
-    v[2].y = fb;
-    v[2].z = zz;
-    v[2].colour = colour;
-    v[3].x = fb;
-    v[3].y = fd;
-    v[3].z = zz;
-    v[3].colour = colour;
-    fn_801CD73C(v, 4, 1, lbl_8034674C & ~0x4000);
+    v[0].x = a * scale;
+    v[0].y = b * scale;
+    v[1].x = v[0].x;
+    v[1].y = d * scale;
+    v[2].x = c * scale;
+    v[2].y = v[0].y;
+    v[3].x = v[2].y;
+    v[3].y = v[1].y;
+    flags = lbl_8034674C & ~0x4000;
+    for (i = 0; i < 4; i++) {
+        v[i].z = zz;
+        v[i].colour = colour;
+    }
+    fn_801CD73C(v, 4, 1, flags);
 }
 
 void fn_800339B0(Rect8* out, s16 idx) {
@@ -1061,29 +1056,35 @@ void fn_800354DC(NJS_TEXLIST* t, s16 i) {
     fn_80298FE4(i);
 }
 
+/* One textured corner of a QuadBuf. */
+static inline void QuadVertexTex(VertexTex* p, QuadBuf* src, u32 k) {
+    p->x = src->pos[k].x;
+    p->y = src->pos[k].y;
+    p->z = src->pos[k].z;
+    p->u = 0.003921569f * src->uv[k * 2];
+    p->v = 0.003921569f * src->uv[k * 2 + 1];
+    p->colour = src->col[k];
+}
+
 void fn_80035518(void* tex, s32 id, QuadBuf* src, s32 textured, s32 flags) {
     u32 idx[4] = {0, 3, 1, 2};
     s32 i;
     if (textured) {
         VertexTex v[4];
-        for (i = 0; i < 4; i++) {
-            u32 k = idx[i];
-            v[i].x = src->pos[k].x;
-            v[i].y = src->pos[k].y;
-            v[i].z = src->pos[k].z;
-            v[i].u = 0.003921569f * src->uv[k * 2];
-            v[i].v = 0.003921569f * src->uv[k * 2 + 1];
-            v[i].colour = src->col[k];
+        VertexTex* p = v;
+        for (i = 0; i < 4; i++, p++) {
+            QuadVertexTex(p, src, idx[i]);
         }
         fn_801CE6D0(tex, id, v, 4, 1, flags);
     } else {
         VertexCol v[4];
         for (i = 0; i < 4; i++) {
             u32 k = idx[i];
-            v[i].x = src->pos[k].x;
-            v[i].y = src->pos[k].y;
-            v[i].z = src->pos[k].z;
-            v[i].colour = src->col[k];
+            VertexCol* p = &v[i];
+            p->x = src->pos[k].x;
+            p->y = src->pos[k].y;
+            p->z = src->pos[k].z;
+            p->colour = src->col[k];
         }
         fn_801CE1A4(v, 4, 1, flags);
     }
@@ -1096,13 +1097,7 @@ void fn_80035708(void* tex, s32 id, QuadBuf* src, s32 textured) {
         VertexTex v[4];
         VertexTex* p = v;
         for (i = 0; i < 4; i++, p++) {
-            u32 k = idx[i];
-            p->x = src->pos[k].x;
-            p->y = src->pos[k].y;
-            p->z = src->pos[k].z;
-            p->u = 0.003921569f * src->uv[k * 2];
-            p->v = 0.003921569f * src->uv[k * 2 + 1];
-            p->colour = src->col[k];
+            QuadVertexTex(p, src, idx[i]);
         }
         fn_801CE6D0(tex, id, v, 4, 1, lbl_8034674C);
     } else {

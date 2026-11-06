@@ -1068,26 +1068,35 @@ void fn_801C8450(SlotFn obj) {
     SlotAdd(lbl_80308428, obj);
 }
 
-static inline void RunAll(Pair_801C86D8* tab, void* obj) {
+/* Runs slot k of every entry's a[] side, then of every entry's b[] side. */
+static inline void RunAll(Pair_801C86D8* tab, s32 k, void* obj) {
     s32 j;
     Pair_801C86D8* q = tab;
     Pair_801C86D8* p = tab;
     s32 i;
     for (i = 0; i < 8; i++) {
-        if (p->a[0]) {
-            p->a[0](obj);
+        if (p->a[k]) {
+            p->a[k](obj);
         }
         p++;
     }
     for (j = 0; j < 8; j++) {
-        if (q->b[0]) {
-            q->b[0](obj);
+        if (q->b[k]) {
+            q->b[k](obj);
         }
         q++;
     }
 }
+void fn_801C84EC(void* obj) {
+    RunAll(lbl_80308428, 2, obj);
+}
+
+void fn_801C8590(void* obj) {
+    RunAll(lbl_80308428, 1, obj);
+}
+
 void fn_801C8634(void* obj) {
-    RunAll(lbl_80308428, obj);
+    RunAll(lbl_80308428, 0, obj);
 }
 
 /* Clears the 8 callback entries and registers fn_801C8590 as a callback. */
@@ -1410,6 +1419,23 @@ s32 fn_801C6C7C(AkRd* f) {
     fn_801C74D0(f);
     f->state = 4;
     return f->size;
+}
+
+extern void fn_802905C8(NJS_POINT3* p, NJS_POINT3* n);
+
+/* The height of the triangle's plane at (x, z) into *y; 0 when the plane is vertical. */
+s32 fn_801C812C(NJS_POINT3* tri, f32 x, f32 z, f32* y) {
+    NJS_POINT3 n;
+    f32 d;
+    fn_802905C8(tri, &n);
+    if (0.0f != n.y) {
+        d = x - tri->x;
+        d = n.x * d;
+        d = n.z * (z - tri->z) + d;
+        *y = tri->y - d / n.y;
+        return 1;
+    }
+    return 0;
 }
 
 /* Is (px, pz) inside the quad? (2D cross product of each edge, using the vertices' y and z.) */

@@ -131,6 +131,31 @@ s32 fn_8019A21C(u32 mask, s32 d, s32 n, s32 unused, s32 max)
     }
 }
 
+/* The first parameter comes in from the caller and is only ever overwritten. */
+void fn_8019AA18(f32 x, f32 y, f32 z, Sprite *o, s32 id, s8 col, u32 val, s8 mode) {
+    extern void fn_801D5210(Sprite *a, u32 b, u32 c, f32 p1, f32 p2, f32 p3, f32 p4);
+    u32 saved;
+    switch (mode) {
+    case 0:
+        o = fn_8019AC94(id);
+        o->x = x + (f32)(col * -12);
+        break;
+    case 1:
+        o = fn_8019AB94(id);
+        o->x = x + (f32)(col * -14);
+        break;
+    default:
+        o = fn_8019AC94(id);
+        o->x = x + (f32)(col * -12);
+        break;
+    }
+    o->y = y;
+    saved = o->pieces->colour;
+    o->pieces->colour = val;
+    fn_801D5210(o, 0, 0, z, 0.0f, 1.0f, 1.0f);
+    o->pieces->colour = saved;
+}
+
 Sprite* fn_8019AB94(s16 a) {
     switch (a) {
     case 0:
@@ -622,6 +647,86 @@ void fn_8019D168(Obj_8019D168 *self) {
     case 0xff:
         self->flags |= 0x40;
         break;
+    }
+}
+
+/* The info record of a ripple map object. */
+typedef struct {
+    u32 count;     /* 0x00 */
+    f32 rate;      /* 0x04: spawn threshold (0..1) */
+    f32 minDist;   /* 0x08 */
+} EvInfoRipple;
+
+static inline EvInfoRipple* RippleInfo(EvObj* e) {
+    return e->ext->info;
+}
+
+static inline void RippleNodeInit(Self* n, EvObj* e) {
+    Data* d = &n->buf;
+    e->x210 = 1;
+    n->data = d;
+    fn_8009090C(d);
+    memcpy(&d->pos, &lbl_80347450->pos, 12);
+    d->w74 = 0x4000;
+    d->x7c = d->x80 = d->x84 = 0.0f;
+    d->texlist = e->ext->texlist;
+    d->x88 = 0x3c;
+}
+
+void fn_8019D330(Task* self) {
+    EvObj* e = self->work;
+    EvInfoRipple* s = RippleInfo(e);
+    if (lbl_80347450 == 0) {
+        return;
+    }
+    switch (self->state) {
+    case 0:
+        if (e->ext->texlist != 0) {
+            fn_80227810(e->ext->texlist);
+        }
+        if (RippleInfo(e)->count < 4) {
+            fn_801DBE1C("fldRipple Option Num Error");
+        }
+        self->state = self->state + 1;
+    case 1: {
+        f32 dist;
+        NJS_POINT3 buf;
+        EvObj* p = lbl_80347450;
+        f32 dx = p->pos.x - p->home.x;
+        f32 dz = p->pos.z - p->home.z;
+        dist = fn_80291A5C(dx * dx + dz * dz);
+        memcpy(&buf, &lbl_80347450->pos, 12);
+        fn_802254A0(&buf, lbl_80347450->hit);
+        if (dist > s->minDist) {
+            if (RND() > s->rate) {
+                Self* n = fn_80226704(self, fn_8019D598, 0x8c);
+                if (n != 0) {
+                    RippleNodeInit(n, e);
+                }
+            }
+        }
+        break;
+    }
+    case 0xff:
+        if (e->ext->texlist != 0) {
+            fn_802275A4(e->ext->texlist, 0);
+        }
+        if (e->x20c != 0) {
+            e->x20c = 0;
+            fn_80217830(e->x23c);
+        }
+        fn_80100B74(self);
+        return;
+    }
+    if (e->x210 != 0) {
+        e->x210 = 0;
+        if (e->x20c == 0) {
+            e->x20c = 1;
+            e->x23c = SePlay(8, 5, 0x10);
+        }
+    } else if (e->x20c != 0) {
+        e->x20c = 0;
+        fn_80217830(e->x23c);
     }
 }
 

@@ -137,7 +137,7 @@ void fn_80195B38(s8 idx, s32 id, s8 flag);
 extern void* fn_801E1C7C(s32);
 extern void fn_8016E818(void*, s32);
 extern void fn_8018A16C(void);
-extern void fn_8018DABC(void*, s8, s32, s32, s8);
+extern void fn_8018DABC(void*, s8, s8, s8, s8);
 extern void fn_8018C6A8(void*, f32);
 extern void fn_80187FB4(void);
 extern void fn_80187F30(void*, CampCtrl*);
@@ -325,18 +325,17 @@ typedef struct {
 } FlagEnt;
 extern FlagEnt lbl_802EBA00[];
 
+/* The bit of a story flag; a macro, the original evaluates x twice. */
+#define FLAG_BIT(x) ((1 << ((x) & 31)) & lbl_80310B3C[(x) >> 5])
+
 static inline u32 NameFind(s32 key) {
-    u32 r;
     s32 i;
     for (i = 0; i < 0x58; i++) {
         if (key == lbl_802ED258[i].id) {
-            r = i;
-            goto done;
+            return i;
         }
     }
-    if (i == 0x58) r = 0;
-done:
-    return r;
+    if (i == 0x58) return 0;
 }
 
 #ifdef NONMATCHING
@@ -368,6 +367,17 @@ s32 fn_80194548(char *buf, s32 unused, s32 idx) {
     return idx;
 }
 #endif
+
+s32 fn_801946E8(s32 a, s32 b, s32 c) {
+    switch (lbl_80307638[15].cur[0].sel) {
+    case 0:
+        if (FlagTest(lbl_802EBA00[b + a * c].flag) ? 1 : 0) return 1;
+        return 0;
+    case 1:
+        if (FLAG_BIT(NameFind(a * c + b) + 0xb54) ? 1 : 0) return 1;
+        return 0;
+    }
+}
 
 extern void fn_8021A11C(Msg*, s16);
 void fn_801949F8(Msg* a, s16 i) {
@@ -547,6 +557,66 @@ void fn_80195B34(void) {
 
 void fn_80195F90(void) {
     lbl_803473EC = 1;
+}
+
+static inline void BodyInitAt(Body *b, f32 y, u8 en, f32 al) {
+    b->obj.tx = 0.0f;
+    b->obj.ty = y;
+    b->obj.x = 0.0f;
+    b->obj.y = y;
+    b->obj.rect[0] = 0.0f;
+    b->obj.rect[1] = 0.0f;
+    b->obj.rect[2] = 0.0f;
+    b->obj.rect[3] = 0.0f;
+    b->obj.vx = 0.0f;
+    b->obj.vy = 0.0f;
+    b->obj.rdx = 0.0f;
+    b->obj.rdy = 0.0f;
+    b->obj.frames = 0;
+    b->obj.cmd = 0;
+    b->obj.delay = 0;
+    b->obj.alpha_en = en;
+    b->obj.alpha = al;
+    b->obj.f38 = 1.0f;
+    b->obj.f3c = 0;
+    b->obj.raised = 0;
+}
+
+void fn_80196C10(void) {
+    Node **objs = camp_work.objs;
+    Node* n;
+    Body* b;
+    Sub1c* s;
+    void* t;
+    n = fn_802268E8(lbl_8034710C, fn_8016E220);
+    n->body = fn_801E1C7C(0xc0);
+    b = n->body;
+    b->x0 = 0;
+    s = fn_801E1C7C(0x1c);
+    b->xbc = s;
+    s->x0 = 0;
+    s->x8 = 0;
+    s->x4 = 0;
+    s->xc = -1;
+    s->x14 = 0;
+    s->x18 = 2;
+    fn_8016E818(b->x74, 2);
+    BodyInitAt(b, 0.0f, 1, 1.0f);
+    camp_work.objs[0x95] = n;
+    n->body->x4 = 0x95;
+
+    n = fn_802268E8(lbl_8034710C, fn_80186E4C);
+    n->body = fn_801E1C7C(0xc0);
+    b = n->body;
+    b->x0 = 0;
+    t = fn_801E1C7C(0xc);
+    b->xbc = t;
+    fn_80187D78(b->x74, 1.0f);
+    fn_80195B38(5, lbl_8030B7F4.chr[0].slot0, 1);
+    fn_80186E20(t, 0, 5, 1, 0.8f);
+    BodyInitAt(b, 128.0f, 1, 1.0f);
+    objs[0x96] = n;
+    objs[0x96]->body->x4 = 0x96;
 }
 
 void fn_80197654(s8 a) {
@@ -2152,6 +2222,95 @@ void fn_8019844C(void) {
         BodyInit264(b, 1, 0.7f);
         cw->objs[0x8d + a] = n;
         n->body->x4 = 0x8d + a;
+    }
+}
+
+void fn_801986BC(void) {
+    s32 i;
+    s32 a;
+    CampWork *cw = &camp_work;
+    Node *n;
+    Body *b;
+    for (i = 0; i < 2; i++) {
+        void *t;
+        n = fn_802268E8(lbl_8034710C, fn_8018E82C);
+        n->body = fn_801E1C7C(0xc0);
+        b = n->body;
+        b->x0 = 0;
+        t = fn_801E1C7C(0xc);
+        b->xbc = t;
+        a = i + 0xf;
+        fn_8018E81C(t, a, -1);
+        fn_80191A04(n->body->x74, i + 0xf);
+        BodyInitAt(b, 0.0f, 1, 0.7f);
+        cw->objs[0x83 + i] = n;
+        a = 0x83 + i;
+        n->body->x4 = a;
+    }
+    for (a = 0; a < 2; a++) {
+        Sub1c *s;
+        n = fn_802268E8(lbl_8034710C, fn_8016E220);
+        n->body = fn_801E1C7C(0xc0);
+        b = n->body;
+        b->x0 = 0;
+        s = fn_801E1C7C(0x1c);
+        b->xbc = s;
+        s->x0 = 0;
+        s->x8 = 0;
+        s->x4 = 0;
+        s->xc = -1;
+        s->x14 = a;
+        s->x18 = 1;
+        s->x10 = a;
+        fn_8016E818(b->x74, 1);
+        BodyInitAt(b, 0.0f, 1, 0.7f);
+        cw->objs[0x85 + a] = n;
+        n->body->x4 = 0x85 + a;
+    }
+}
+
+void fn_80199024(void) {
+    CampWork *cw = &camp_work;
+    s32 i;
+    s32 j;
+    for (i = 0; i < (s8)cw->b0c; i++) {
+        s8 sel = lbl_8030B7F4.party[i];
+
+        for (j = 0; j < 5; j++) {
+            Node* n;
+            Body* b;
+            void* t;
+            n = fn_802268E8(lbl_8034710C, fn_8018A16C);
+            n->body = fn_801E1C7C(0xc0);
+            b = n->body;
+            b->x0 = 0;
+            t = fn_801E1C7C(0xb4);
+            b->xbc = t;
+            fn_8018DABC(t, sel, i, j, 0);
+            fn_8018C00C(b, i, j, 1.0f);
+            b->obj.tx = 320.0f;
+            b->obj.ty = (f32)(i * 64);
+            b->obj.x = 320.0f;
+            b->obj.y = (f32)(i * 64);
+            b->obj.rect[0] = 0.0f;
+            b->obj.rect[1] = 0.0f;
+            b->obj.rect[2] = 0.0f;
+            b->obj.rect[3] = 0.0f;
+            b->obj.vx = 0.0f;
+            b->obj.vy = 0.0f;
+            b->obj.rdx = 0.0f;
+            b->obj.rdy = 0.0f;
+            b->obj.frames = 0;
+            b->obj.cmd = 0;
+            b->obj.delay = 0;
+            b->obj.alpha_en = 0;
+            b->obj.alpha = 1.0f;
+            b->obj.f38 = 1.0f;
+            b->obj.f3c = 0;
+            b->obj.raised = 0;
+            cw->objs[6 + i * 5 + j] = n;
+            n->body->x4 = 6 + i * 5 + j;
+        }
     }
 }
 

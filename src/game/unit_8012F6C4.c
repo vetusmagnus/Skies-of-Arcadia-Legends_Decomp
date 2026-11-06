@@ -253,7 +253,13 @@ extern Party lbl_80305FC0[];
 /* lbl_803063F0: the battle menu's system record (fn_80135598). */
 typedef struct {
     s8 order[4];
-    u8 pad4[0x1c6 - 0x4];
+    s16 x4;
+    s16 x6;
+    s16 x8;
+    s16 xa;
+    s16 xc;
+    InvEnt inv[0x50];   /* 0x0E: SaveData.s714 */
+    InvEnt arm[0x1e];   /* 0x14E: SaveData.s994 */
     Item items[4];
     u8 pad236[2];
     Party party; /* 0x238 */
@@ -262,6 +268,7 @@ extern Big lbl_803063F0;
 extern void fn_80134754(Big *b);
 void fn_8013506C(Big *b);
 void fn_80134E7C(Party *party);
+void fn_80134A3C(Party *dst, s32 id);
 void fn_80135290(Item *v, s32 slot, s32 add);
 s32 fn_8021A1C4(s8 *out);
 s32 fn_8021A83C(Save1568 *ship, void *crew);
@@ -1015,6 +1022,53 @@ void fn_80131820(void) {
         fn_8012A9A8(&r);
     next:
         y += 0x19;
+    }
+}
+
+static inline void SetSlots(s8 *src) {
+    lbl_80346F48->inner->slot[0] = src[0];
+    lbl_80346F48->inner->slot[1] = src[1];
+    lbl_80346F48->inner->slot[2] = src[2];
+    lbl_80346F48->inner->slot[3] = src[3];
+}
+
+void fn_801321DC(void) {
+    s8 i, j, k;
+    s8 loc[4];
+    s8 *p = loc;
+    s8 v;
+    for (i = 0; i < 8; i++) {
+        for (j = 0; j < 4; j++) {
+            for (k = 0; k < 4; ) {
+                lbl_80346F48->inner->grid[i][j][k++] = -1;
+                lbl_80346F48->inner->sel[i][j] = -1;
+            }
+        }
+    }
+    p[2] = 0;
+    p[1] = 0;
+    p[0] = 0;
+    p[3] = -1;
+    lbl_80346F48->inner->x2 = 0;
+    lbl_80346F48->inner->x3 = 0;
+    lbl_80346F48->inner->f4 = 0.7f;
+    lbl_80346F48->inner->x8 = -1;
+    lbl_80346F48->inner->grid[2][0][0] = 0;
+    lbl_80346F48->inner->sel[2][0] = 0;
+    lbl_80346F48->inner->grid[0][1][0] = 4;
+    lbl_80346F48->inner->sel[0][1] = 1;
+    lbl_80346F48->inner->grid[1][2][0] = 10;
+    lbl_80346F48->inner->sel[1][2] = 2;
+    SetSlots(p);
+    lbl_80346F48->inner->psel = 0;
+    v = lbl_8030B4D4.x2d4;
+    lbl_80346F48->inner->xae = v;
+    if (v == 3) {
+        lbl_80346F48->x28[0] = fn_801D68C4(lbl_80346F04, 0x52);
+        lbl_80346F48->x28[1] = fn_801D68C4(lbl_80346F04, 0x53);
+    } else {
+        lbl_80346F48->x28[0] = fn_801D68C4(lbl_80346F08, 0x52);
+        lbl_80346F48->x28[1] = fn_801D68C4(lbl_80346F08, 0x53);
     }
 }
 
@@ -2260,6 +2314,46 @@ s32 fn_80138920(s16* a, s16* b) {
     return a[1] - bv;
 }
 
+typedef struct {
+    u8 id;
+    s16 key;
+} SkillPair;
+
+extern void qsort(void* base, s32 n, s32 size, s32 (*cmp)(s16*, s16*));
+s32 fn_80138930(u8* out, s8* mask, s32 kind) {
+    const SkillData* tbl = lbl_802C4BF0;
+    s32 ret = 0;
+    SkillPair list[6];
+    SkillPair* p;
+    s32 i;
+    s32 cnt;
+    s32 k;
+    if (out != 0 && mask != 0) {
+        p = list;
+        for (i = 0, cnt = 0; i < 0x24 && cnt < 6; i++) {
+            if ((mask[0xF + i / 8] & (1 << (i % 8))) != 0 && kind == tbl[i].element) {
+                p->id = i;
+                cnt++;
+                p->key = tbl[i].sort;
+                p++;
+            }
+        }
+        ret = cnt;
+        for (k = cnt; k < 6; k++) {
+            list[k].id = 0x24;
+            list[k].key = 10000;
+        }
+        qsort(list, 6, 4, fn_80138920);
+        out[0] = list[0].id;
+        out[1] = list[1].id;
+        out[2] = list[2].id;
+        out[3] = list[3].id;
+        out[4] = list[4].id;
+        out[5] = list[5].id;
+    }
+    return ret;
+}
+
 s32 fn_80139A94(u8* p) {
     p[0x1] = 0;
     return 2;
@@ -2469,6 +2563,35 @@ void fn_801353A8(void)
     fn_80134E7C(&b->party);
 }
 
+static inline void RefreshBig(void)
+{
+    Big *b = &lbl_803063F0;
+
+    fn_8013506C(b);
+    RefreshParty(b->items);
+    fn_80134E7C(&b->party);
+}
+
+static inline void LoadSlots(Party *s, s32 *list, s32 n)
+{
+    s32 i;
+
+    if (s != NULL && list != NULL && n > 0 && n <= 4) {
+        for (i = 0; i < n; i++) {
+            fn_80134A3C(&s[i], list[i]);
+        }
+    }
+}
+
+void fn_80135474(s32 n, s32 *list)
+{
+    if (list == NULL || n > 4) {
+        return;
+    }
+    RefreshBig();
+    LoadSlots(lbl_80305FC0, list, n);
+}
+
 Big* fn_80135598(void) {
     return &lbl_803063F0;
 }
@@ -2516,6 +2639,71 @@ static inline s32 chk(u8 t) {
     if (s == 13 || (u8)(t - 14) <= 1 || s == 16) return 1;
     return 0;
 }
+void fn_80130FB4(void) {
+    Args s;
+    Sys_8012FF48 *q;
+    Obj *h;
+    s32 i;
+    s16 y;
+    s16 bx;
+    s32 t;
+    f32 g;
+    f32 e;
+
+    bx = lbl_80346F40->x24->x8c;
+    y = lbl_80346F40->x24->x90;
+    for (i = 0; i < lbl_80346F40->x24->x94 * 2; i++) {
+        if (i >= lbl_80346F40->x24->x94) {
+            u8 kind = lbl_80346F40->x24->x1;
+            if (chk(kind) == 1) continue;
+        }
+        if (!(lbl_80346F40->x24->x8 & (1 << i))) continue;
+        h = lbl_80346F40->x28[2];
+        s.obj = h;
+        h->f14 = (f32)(bx + i * 0x19);
+        s.obj->f18 = (f32)y;
+        q = lbl_80346F40->x24;
+        e = q->a4c[i];
+        g = q->a6c[i];
+        s.obj->x4->x14 = q->a2c[i];
+        s.f4 = -1.1980001f;
+        s.f8 = 1.0f;
+        s.c = 0;
+        s.d = 0;
+        s.e = e;
+        s.g = g;
+        fn_8012A9A8(&s);
+        t = lbl_80346F40->x24->dst[i];
+        if (t == 0) continue;
+        switch (t) {
+        case 1:
+            s.obj = fn_801D68C4(lbl_80346F04, 0x7c);
+            break;
+        case 2:
+            s.obj = fn_801D68C4(lbl_80346F04, 0x7d);
+            break;
+        case 3:
+            s.obj = fn_801D68C4(lbl_80346F04, 0x7e);
+            break;
+        default:
+            s.obj = fn_801D68C4(lbl_80346F04, 0x7c);
+            break;
+        }
+        s.obj->f14 = (f32)(bx + i * 0x19);
+        s.obj->f18 = (f32)y;
+        q = lbl_80346F40->x24;
+        e = q->a4c[i];
+        g = q->a6c[i];
+        s.f4 = -1.1960001f;
+        s.f8 = 1.0f;
+        s.c = 0;
+        s.d = 0;
+        s.e = e;
+        s.g = g;
+        fn_8012A9A8(&s);
+    }
+}
+
 void fn_80130D30(void) {
     S s;
     s32 i;
@@ -3308,7 +3496,15 @@ static inline s32 GetW(s32 a) {
 
 
 
-#ifdef NONMATCHING
+/* Entries from first to last inclusive, never negative. */
+static inline s32 RowCount(s32 first, s32 last) {
+    s32 q = last - first + 1;
+    if (q < 0) {
+        q = 0;
+    }
+    return q;
+}
+
 s32 fn_8013A538(s32 a, s32 b, s32 c, s32 d, s32 e) {
     s32 x;
     s32 w;
@@ -3344,24 +3540,20 @@ s32 fn_8013A538(s32 a, s32 b, s32 c, s32 d, s32 e) {
     if (res > n - 1) {
         t = n - 1;
     }
-    q = t - b + 1;
-    if (q < 0) {
-        q = 0;
-    }
+    q = RowCount(b, t);
     ee = e < 0 ? 0 : e;
     ff = w < 0 ? 0 : w;
-    if (q * ff > ee) {
+    if (ff * q > ee) {
         res = b + ee / ff - 1;
     }
     return res;
 }
-#endif
 
-#ifdef NONMATCHING
-static inline void Shift(s32 i)
+static inline void Shift(void)
 {
-    s32 m = i;
-    for (; i < 8; i++)
+    s32 i;
+    s32 m = lbl_80346F40->x24->x94;
+    for (i = m; i < 8; i++)
         lbl_80346F40->x24->dst[i] = lbl_80346F40->x24->src[i - m];
 }
 
@@ -3370,6 +3562,5 @@ void fn_801300E0(s32* in)
     s32 i;
     for (i = 0; i < 8; i++)
         lbl_80346F40->x24->src[i] = in[i];
-    Shift(lbl_80346F40->x24->x94);
+    Shift();
 }
-#endif

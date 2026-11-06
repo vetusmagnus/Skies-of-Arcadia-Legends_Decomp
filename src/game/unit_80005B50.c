@@ -213,8 +213,9 @@ typedef struct Ent_80008800 {
     u8 pad4[8];
     Key* xc;
 } Ent_80008800;
-s32 fn_8000832C(Task* obj, Ent_80008800* tbl, CondLink* range);
+s16 fn_8000832C(Task* obj, Ent_80008800* tbl, CondLink* range);
 s16 fn_800086BC(Task* t, s16 a, s16 b, Ent_80008800* tbl, CondLink* e, u8 f);
+CondLink* fn_80008938(Ent_80008800* t, s16 a, s16 b);
 typedef struct Obj_80017B18 {
     u8 pad0[0xc];
     char xc[0x24];      /* 0x0c name */
@@ -766,7 +767,7 @@ void fn_80008170(void) {
 }
 
 s32 fn_80008C68(s32 key, Task* obj);
-s32 fn_80008DF4(Task* a, Ent_80008800* r, s16 id, s16 sub);
+s16 fn_80008DF4(Task* a, Ent_80008800* r, s16 id, s16 sub);
 extern s32 fn_800367E8(s32 key, Ent_80008800* e, Task* obj);
 extern s32 fn_8003732C(s32 key, Ent_80008800* e, Task* obj);
 static inline s32 CmdAllowed(Task* obj, s16 id, s16 g) {
@@ -794,9 +795,9 @@ static inline s32 CmdAllowed(Task* obj, s16 id, s16 g) {
     }
     return 1;
 }
-s32 fn_8000832C(Task* obj, Ent_80008800* tbl, CondLink* range) {
+s16 fn_8000832C(Task* obj, Ent_80008800* tbl, CondLink* range) {
     Ent_80008800* e;
-    s32 count = 0;
+    s16 count = 0;
     s16 i = 0;
     s32 v;
     s32 key;
@@ -836,7 +837,8 @@ s32 fn_8000832C(Task* obj, Ent_80008800* tbl, CondLink* range) {
 
 static inline s16 EntScore(Task* a, Ent_80008800* d, CondLink* e)
 {
-    return fn_8000832C(a, d, e);
+    s32 v = fn_8000832C(a, d, e);
+    return v;
 }
 s16 fn_80008530(Task* a, s16 b, s16 c, Ent_80008800* d, CondLink* p) {
     CondLink* cur = p;
@@ -846,7 +848,7 @@ s16 fn_80008530(Task* a, s16 b, s16 c, Ent_80008800* d, CondLink* p) {
     }
     while (cur != NULL) {
         if (fn_8003DE8C(cur->x0, cur->x2, b, c) != 0) {
-            sum += (cur != NULL) ? EntScore(a, d, cur) : fn_8000832C(a, d, 0);
+            sum = sum + ((cur != NULL) ? EntScore(a, d, cur) : fn_8000832C(a, d, 0));
         }
         cur = cur->next;
     }
@@ -867,6 +869,52 @@ s16 fn_800085EC(Task* a, s16 b, s16 c, Ent_80008800* d, CondLink* p) {
     }
     return sum;
 }
+
+s16 fn_800086BC(Task* t, s16 a, s16 b, Ent_80008800* tbl, CondLink* e, u8 f) {
+    ChrInfo* w;
+    s16 s6;
+    s16 s8;
+    CondLink* q;
+    CondLink* n;
+    s16 r;
+    if (tbl == 0) return 0;
+    w = ChrW(t)->st;
+    s6 = w->x6;
+    s8 = w->x8;
+    w->x6 = a;
+    w->x8 = b;
+    if (e != 0) {
+        r = (e != 0) ? EntScore(t, tbl, e) : fn_8000832C(t, tbl, 0);
+    } else {
+        switch (f) {
+        case 1:
+            q = fn_80008938(tbl, a, b);
+            if (q != 0) {
+                r = (q != 0) ? EntScore(t, tbl, q) : fn_8000832C(t, tbl, 0);
+                n = q;
+                while (n != 0) {
+                    if (n->next == 0) break;
+                    n = n->next;
+                }
+                while (n != 0) {
+                    q = n->prev;
+                    fn_801E17E0(n);
+                    n = q;
+                }
+            } else {
+                r = fn_8000832C(t, tbl, 0);
+            }
+            break;
+        default:
+            r = fn_8000832C(t, tbl, 0);
+            break;
+        }
+    }
+    w->x6 = s6;
+    w->x8 = s8;
+    return r;
+}
+
 
 CondLink* fn_80008938(Ent_80008800* t, s16 a, s16 b) {
     CondLink* out = 0;
@@ -1635,6 +1683,48 @@ s32 fn_80008F08(Ent_80008800* list, s16 p1, s16 p2, s16 c, s16 d, s8 mode, Ent_8
         }
     }
     return 0;
+}
+
+static inline s16 ScanId(Task* a, Ent_80008800* r, s16 id, s16 sub) {
+    s16 count;
+    s32 key;
+    Ent_80008800* p;
+    s32 ok;
+    count = 0;
+    if (r != 0) {
+        p = r;
+        while (1) {
+            s16 rsub = p->x2;
+            s16 rid = p->x0;
+            if (rid < 0) break;
+            if (rid == id && rsub == sub) {
+                key = (rsub << 16) | rid;
+                ok = 0;
+                if (fn_80008C68(key, a) == 0) {
+                    ok = 0;
+                } else {
+                    switch (key) {
+                    case 0x30007:
+                    case 0x30032:
+                    case 0x30041:
+                    case 0x3004E:
+                        break;
+                    default:
+                        ok = fn_800367E8(key, p, a);
+                        break;
+                    }
+                }
+                if (ok == 0) ok = fn_8003732C(key, p, a);
+                if (ok != 0) count++;
+            }
+            p++;
+        }
+    }
+    return count;
+}
+
+s16 fn_80008DF4(Task* a, Ent_80008800* r, s16 id, s16 sub) {
+    return ScanId(a, r, id, sub);
 }
 
 s16 fn_80009030(Ent_80008800* list, s16 p1, s16 p2, s16 c, s16 d) {

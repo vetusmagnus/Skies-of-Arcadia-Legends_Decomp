@@ -239,8 +239,11 @@ typedef struct {
     s16 cur;
     s16 count;
     s32 sel;
-    u8 pad8[4];
+    f32 alpha;
     s16 vis[3];
+    u8 pad12[2];
+    f32 pos[3][2];
+    f32 d[3][2];
 } Menu;
 extern s32 lbl_8034757C;
 extern Stick lbl_80311A14[];
@@ -315,7 +318,7 @@ typedef struct {
     u8 pad18c[0x1C8 - 0x18C];
     Lim_800D6390* p1c8;
     u8 pad1cc[0x268 - 0x1CC];
-    void* p268;
+    NJS_POINT2COL* p268;
 } Work_800D6390;
 typedef struct {
     u8 pad0[0x19];
@@ -1988,6 +1991,40 @@ void fn_800D5584(EvObj* w) {
     }
 }
 
+extern void* fn_801E1C34(s32 size);
+
+/* A four-point polygon in one block: the header, then the points, colours and texture coordinates. */
+void fn_800D6088(Work_800D6390* w) {
+    NJS_POINT2COL* q;
+    NJS_POINT2* pt;
+    u32* c;
+    NJS_TEX* t;
+    void* n;
+    w->p268 = q = fn_801E1C34(0x50);
+    if (q != NULL) {
+        pt = n = q + 1;
+        c = n = pt + 4;
+        t = n = c + 4;
+        q->p = pt;
+        q->col = c;
+        q->tex = n;
+        q->num = 4;
+        pt[0].x = pt[0].y = 0.0f;
+        t[0].u = t[0].v = 0;
+        pt[1].x = 0.0f;
+        pt[1].y = 480.0f;
+        t[1].u = 0;
+        t[1].v = 0xff;
+        pt[2].x = 640.0f;
+        pt[2].y = 480.0f;
+        t[2].u = t[2].v = 0xff;
+        pt[3].x = 640.0f;
+        pt[3].y = 0.0f;
+        t[3].u = 0xff;
+        t[3].v = 0;
+    }
+}
+
 void fn_800D6390(Obj_800D6390* o) {
     extern u8 lbl_802E1450[];
     extern s32 fn_800C3518(void* w);
@@ -1998,7 +2035,6 @@ void fn_800D6390(Obj_800D6390* o) {
     extern s32 fn_800D5E78(void* w);
     extern s32 fn_800D5CF4(void* w);
     extern void fn_800C3428(void* o);
-    extern void fn_800D6088(void* w);
     s32 ok;
     Work_800D6390* w = o->work;
     switch (o->state) {

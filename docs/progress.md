@@ -2671,3 +2671,17 @@ Tried and left:
   `unit_800B2DA0.c` probably holds a deferred file too. Same for 0x800E3594-0x800EAE2C in `unit_800D81E8.c` (fn_800EAAAC).
 - Reversing a merged unit fails to compile where a function is used before its prototype; a survey of the units that do compile found no
   more wins, but about 35 units didn't get tested that way. They define no `.bss` of their own yet.
+
+## Opus pass over the functions under 724 bytes (2026-11-06, from 8604dec)
+
+Sonnet, one agent per function: 262 finished, 21 matched. Opus, a few related functions of one unit per agent: far better, about four
+functions in ten so far. Near drafts are in `build/agents/w9`, `w10` and `w11` on the machine that ran the pass, each with a results.json.
+This entry covers what was merged while the last groups were still running.
+
+Exact but kept under NONMATCHING for the rules: fn_80194548 (only with a `goto` out of the search loop), fn_800F13F0 (a `void *` with a
+typed copy per case). `unit_8014F970.c`: fn_8015983C and fn_8015AB68 matched in a group but conflict with another group's merge, not in yet.
+
+Waiting on shared header or flag changes, each tested with a header copy in the agent's folder: `-str reuse,readonly` on `battle.c`
+(fn_8002F80C, fn_80030280, fn_8002FA00), `ChrState.xb`/`xe` (fn_80081B94, fn_80084A08), `work_8030CEA0.h` fields (fn_80200460, fn_80200634,
+fn_802007C0), `gamedata.h` signedness and const tables (fn_80144400, fn_80147054), a SaveParty/SaveBlock type (fn_80134754, fn_801F0020),
+`shop.h` u16 ids (fn_801B995C), ChrRec fields (fn_80010A40), and the wave 9 list in `build/agents/w9/results.json`.

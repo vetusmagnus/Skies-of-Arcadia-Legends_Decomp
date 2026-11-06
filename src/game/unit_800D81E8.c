@@ -837,7 +837,7 @@ typedef struct {
     f32 v4c, v50, v54, v58, v5c;
     f32 v60, v64, v68, v6c, v70;
     u8 tile[12][14][4];  /* 0x74 */
-    u8 active[29];       /* 0x314 */
+    s8 active[29];       /* 0x314 */
     u8 pad331[3];
     Pt8 pts[29];         /* 0x334 */
     u8 pad41c[0x47c - 0x41c];
@@ -12923,6 +12923,48 @@ void* fn_8010062C(Tbl68* t, u16 key) {
     return NULL;
 }
 
+static inline s32 AngReached(s16 cur, s32 tgt, f32 step) {
+    s32 r = 0;
+    if (step == 0.0f || (step < 0.0f && cur <= (s16)tgt) || (step > 0.0f && cur >= (s16)tgt)) {
+        r = 1;
+    }
+    return r;
+}
+
+static inline void SetAngleRaw(EvObj* o, s32 v) {
+    if (o != 0) {
+        o->tgt[1] = v;
+        o->ang[1] = o->tgt[1];
+        if (fn_801C60A4(o) != 0) {
+            o->ang[1] += (s32)(182.04445f * o->ext->rot.y);
+        }
+    }
+}
+
+static inline s32 AngStep(EvObj* o, s32 end, f32 step) {
+    s32 ret = 0;
+    s16 tgt = (s32)(182.04445f * o->x24c.z);
+    s32 cur;
+    if (o == 0) {
+        ret = 1;
+    } else {
+        if (AngReached(o->tgt[1], tgt, step)) {
+            ret = 1;
+        } else {
+            if (AngReached(cur = o->tgt[1] + (s16)(s32)(182.04445f * step), tgt, step)) {
+                cur = end;
+                ret = 1;
+            }
+            SetAngleRaw(o, cur);
+        }
+    }
+    return ret;
+}
+
+s32 fn_800E0634(EvObj* o) {
+    return AngStep(o, (s32)(182.04445f * o->x24c.z), o->x164);
+}
+
 static inline void SetAngle(Obj_800E07AC *p, f32 deg) {
     if (p == 0) {
         return;
@@ -14209,6 +14251,145 @@ s32 fn_800F1E5C(EvObj *o, Angle *rot, NJS_POINT3 *dir) {
     }
     return result;
 }
+
+typedef struct {
+    f32 cx, cz;
+    NJS_POINT3 v[3];
+} Samp_800F0A18;
+typedef struct {
+    s32 n;
+    Samp_800F0A18 s[7];
+} Info_800F0A18;
+extern void fn_80090518(void* p, u32 n);
+extern f32 fn_80090598(f32 x, s32 cx, f32 z, s32 cz);
+extern void fn_801D995C(s32 a, f32 f1, f32 f2, f32 f3);
+extern void fn_801D9864(s32 mode, f32 a, f32 b, f32 c, f32 d, f32 e, f32 f);
+
+void fn_800F0A18(Task* t)
+{
+    EvObj* e = t->work;
+    Info_800F0A18* info = e->ext->info;
+    Samp_800F0A18* p = info->s;
+    if (lbl_80347450 != 0 && (t->state == 0xFF || lbl_803473A8 != 0)) {
+        switch (t->state) {
+        case 0: {
+            f32 sum = 0.0f;
+            f32 cx = lbl_80347450->pos.x;
+            f32 cz = lbl_80347450->pos.z;
+            Samp_800F0A18 acc;
+            s32 i, j;
+            fn_80090518(&acc, sizeof(acc));
+            for (i = 0; i < 7; i++, p++) {
+                f32 wt = fn_80090598(cx, p->cx, cz, p->cz);
+                sum = sum + wt;
+                for (j = 0; j < 3; j++) {
+                    acc.v[j].x = wt * p->v[j].x + acc.v[j].x;
+                    acc.v[j].y = wt * p->v[j].y + acc.v[j].y;
+                    acc.v[j].z = wt * p->v[j].z + acc.v[j].z;
+                }
+            }
+            { NJS_POINT3* q = acc.v; for (j = 0; j < 3; j++, q++) { q->x = q->x / sum; q->y = q->y / sum; q->z = q->z / sum; } }
+            fn_801D995C(0x7FFFFFFF, acc.v[0].x, acc.v[0].y, acc.v[0].z);
+            fn_801D9864(0x7FFFFFFF, acc.v[2].x, acc.v[2].y, acc.v[2].z, acc.v[1].x, acc.v[1].y, acc.v[1].z);
+            break;
+        }
+        case 1:
+            break;
+        case 0xFF:
+            fn_80100B74(t);
+            break;
+        }
+    }
+}
+
+static inline u32 DirDiff(u8 a, u8 b) {
+    u32 d = fabsf(a - b);
+    d %= 8;
+    if (d > 4) {
+        return 8 - d;
+    }
+    return d;
+}
+
+static inline u8 DirFilter(u8* src, u8* dst, u8 dir, u8 range) {
+    s32 i;
+    s32 n;
+
+    if (src != NULL && dst != NULL) {
+        n = 0;
+        for (i = 0; i < 8; i++) {
+            if (DirDiff(*src, dir) <= range) {
+                dst[n++] = *src;
+            }
+            src++;
+        }
+    }
+    return n;
+}
+
+static inline u8 DirPick(u8* list, u8 n) {
+    u8 r = 8;
+    if (list != NULL) {
+        u32 i = (f32)(n + 1) * (3.0517578125e-05f * rand());
+        if (i < n) {
+            r = list[i];
+        } else {
+            r = 8;
+        }
+    }
+    return r;
+}
+
+static inline s32 DirTest(EvObj* o, Angle* v, f32 f) {
+    s32 hit = 0;
+    if (o != NULL) {
+        lbl_802E4578.z = f;
+        if (fn_800F1E5C(o, v, &lbl_802E4578) != 0) {
+            hit = 1;
+        }
+    }
+    return hit;
+}
+
+static inline s32 DirCheck(EvObj* o, u8 dir) {
+    Angle ang[3];
+    s32 ok = 0;
+    if (o != NULL && o->ext != NULL) {
+        fn_801C5AB4(o, ang);
+        ang[1] += dir << 13;
+        if (DirTest(o, ang, o->x164)) {
+            ok = 1;
+        }
+    }
+    return ok;
+}
+
+u8 fn_800F4BE8(EvObj* obj, u8 dir, u8 range) {
+    u8 order[8];
+    u8 cand[8];
+    u8 n;
+    u8 r;
+    u8 result = 8;
+
+    if (obj != NULL && obj->ext != NULL && dir < 8) {
+        order[0] = 0;
+        order[1] = 1;
+        order[2] = 2;
+        order[3] = 3;
+        order[4] = 4;
+        order[5] = 5;
+        order[6] = 6;
+        order[7] = 7;
+        n = DirFilter(order, cand, dir, range);
+        r = DirPick(cand, n);
+        result = r;
+        if (r != 8 && !DirCheck(obj, r)) {
+            result = 8;
+        }
+    }
+    return result;
+}
+
 
 extern EvHit *fn_802258BC(s32 a, u16 b, s32 c);
 extern f32 fn_801C59F8(NJS_POINT3 *a, NJS_POINT3 *b);

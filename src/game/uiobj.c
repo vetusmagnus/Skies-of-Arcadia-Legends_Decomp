@@ -94,8 +94,7 @@ extern Obj14 lbl_802C39D0;
 extern NJS_TEXLIST lbl_80346818;
 
 void SpriteQuadSetUV(Vertex2D* v, SpriteFrame* f, u8 flip);
-void SpriteQuadBuild(Vertex2D* v, SpriteFrame* frame, SpritePiece* piece, u32 colour, f32 x, f32 y,
-                 f32 z);
+void SpriteQuadBuild(Vertex2D* v, SpriteFrame* frame, SpritePiece* piece, f32 x, f32 y, f32 z, u32 colour);
 void TextPrint(s16 x, s16 y, const char* s);
 void TextPrintNumber(s16 x, s16 y, s32 value, s32 digits);
 void SpriteObjDrawAt(SpriteObj* obj, f32* pos);
@@ -117,8 +116,7 @@ s32 SpriteObjDrawScaled(SpriteObjScaled* obj);
 void SpriteQuadBuildScaled(SpriteQuad* q, u8 flip, f32 sx, f32 sy);
 void SpriteObjDrawAt(SpriteObj* obj, f32* pos);
 void SpriteObjDrawAtEx(SpriteObj* obj, f32* pos);
-void SpriteQuadBuild(Vertex2D* v, SpriteFrame* frame, SpritePiece* piece, u32 colour, f32 x, f32 y,
-                 f32 z);
+void SpriteQuadBuild(Vertex2D* v, SpriteFrame* frame, SpritePiece* piece, f32 x, f32 y, f32 z, u32 colour);
 void SpriteQuadSetUV(Vertex2D* v, SpriteFrame* f, u8 flip);
 void UiSpritesFree(void);
 void UiSpritesLoad(void);
@@ -682,7 +680,7 @@ void SpriteObjDraw(SpriteObj* obj) {
             saved = piece->colour;
             frame = &obj->sprite->frames[piece->frame];
             fn_801D65B4(saved, &c, obj->a, obj->b);
-            SpriteQuadBuild(verts, frame, piece, piece->colour, obj->sprite->x, obj->sprite->y, z);
+            SpriteQuadBuild(verts, frame, piece, obj->sprite->x, obj->sprite->y, z, piece->colour);
             fn_80297DC8(*((TexAddr*)obj->texlist->textures[frame->tex].texaddr)->obj);
             fn_80291064(verts, 4, obj->flags & 1);
             piece->colour = saved;
@@ -721,22 +719,23 @@ s32 UiLayoutDraw(NJS_TEXLIST** texlists, const LayoutPart* parts, u32 count, f32
 
 s32 UiSpriteDraw(Sprite* sprite, f32 x, f32 y, f32 z, NJS_TEXLIST* texlist, u16 flags, f32 a, f32 b) {
     Colour4 c;
-    s32 i;
     u32 saved;
+    s32 i;
+    Vertex2D* verts;
     SpriteFrame* frame;
     SpritePiece* piece;
 
     if (sprite != NULL) {
         fn_80299040(texlist);
+        verts = sprite_verts;
         for (i = 0; i < sprite->count; i++) {
             piece = &sprite->pieces[i];
             saved = piece->colour;
             frame = &sprite->frames[piece->frame];
             fn_801D65B4(saved, &c, a, b);
-            SpriteQuadBuild(sprite_verts, frame, piece, (c.c[0] << 24) + (c.c[1] << 16) + (c.c[2] << 8) + c.c[3], x, y,
-                        0.05f * i + z);
+            SpriteQuadBuild(verts, frame, piece, x, y, 0.05f * i + z, (c.c[0] << 24) + (c.c[1] << 16) + (c.c[2] << 8) + c.c[3]);
             fn_80297DC8(*((TexAddr*)texlist->textures[frame->tex].texaddr)->obj);
-            fn_80291064(sprite_verts, 4, flags & 1);
+            fn_80291064(verts, 4, flags & 1);
             piece->colour = saved;
         }
         return sprite->count;
@@ -771,8 +770,7 @@ s32 UiSpriteDrawEx(Sprite* sprite, f32 x, f32 y, f32 z, NJS_TEXLIST* texlist, u1
             saved = piece->colour;
             frame = &sprite->frames[piece->frame];
             fn_801D65B4(saved, &c, a, b);
-            SpriteQuadBuild(verts, frame, piece, (c.c[0] << 24) + (c.c[1] << 16) + (c.c[2] << 8) + c.c[3], x, y,
-                        0.05f * i + z);
+            SpriteQuadBuild(verts, frame, piece, x, y, 0.05f * i + z, (c.c[0] << 24) + (c.c[1] << 16) + (c.c[2] << 8) + c.c[3]);
             fn_80297DC8(*((TexAddr*)texlist->textures[frame->tex].texaddr)->obj);
             fn_80291064(verts, 4, flags & 1);
             piece->colour = saved;
@@ -868,7 +866,7 @@ void SpriteObjDrawAt(SpriteObj* obj, f32* pos) {
         saved = piece->colour;
         frame = &obj->sprite->frames[piece->frame];
         fn_801D65B4(saved, &c, obj->a, obj->b);
-        SpriteQuadBuild(verts, frame, piece, PACK(c), pos[0], pos[1], z);
+        SpriteQuadBuild(verts, frame, piece, pos[0], pos[1], z, PACK(c));
         fn_80297DC8(*((TexAddr*)obj->texlist->textures[frame->tex].texaddr)->obj);
         fn_80291064(verts, 4, obj->flags & 1);
         piece->colour = saved;
@@ -911,7 +909,7 @@ void SpriteObjDrawAtEx(SpriteObj* obj, f32* pos) {
             fn_801D65B4(saved, &c, obj->a, obj->b);
             colour = PACK(c);
         }
-        SpriteQuadBuild(verts, frame, piece, colour, pos[0], pos[1], z);
+        SpriteQuadBuild(verts, frame, piece, pos[0], pos[1], z, colour);
         fn_80297DC8(*((TexAddr*)obj->texlist->textures[frame->tex].texaddr)->obj);
         fn_80291064(verts, 4, obj->flags & 1);
         piece->colour = saved;
@@ -922,8 +920,7 @@ void SpriteObjDrawAtEx(SpriteObj* obj, f32* pos) {
     }
 }
 
-void SpriteQuadBuild(Vertex2D* v, SpriteFrame* frame, SpritePiece* piece, u32 colour, f32 x, f32 y,
-                 f32 z) {
+void SpriteQuadBuild(Vertex2D* v, SpriteFrame* frame, SpritePiece* piece, f32 x, f32 y, f32 z, u32 colour) {
     z = fn_801DBD9C(z);
     v[0].x = x + piece->x0;
     v[0].y = y + piece->y0;

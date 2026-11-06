@@ -89,7 +89,7 @@ typedef struct ChrState_8007BEB4 { s32 x0; u8 pad4[0x1c]; } ChrState_8007BEB4;
 extern Slot_8007BEB4 lbl_8030A6D4[];
 extern s32 lbl_80346C10;
 extern s32 lbl_8034757C;
-extern void fn_8007BC6C(s32 sel, SaveChar* pl, List* w);
+extern s32 fn_8007BC6C(s32 sel, SaveChar* pl, List* w);
 extern void fn_80023D14(List* w);
 extern void fn_80023D04(List* w);
 extern void fn_8007B958(Task_8007BEB4* t, s32 sel, s16 item, s32 kind);
@@ -575,6 +575,50 @@ void fn_8007D32C(void)
     if (lbl_803472FC != 0) {
         lbl_803472FC->state = 7;
     }
+}
+
+/* Implicit int: declared s32, no return statement. */
+s32 fn_8007BC6C(s32 sel, SaveChar* pl, List* w) {
+    s32 k;
+    s32 n = 0;
+    s32 have;
+    s32 i;
+    w->x1 = 0;
+    have = lbl_80347390->xa;
+    for (k = 0x24; k < 0x3c; k++) {
+        if (fn_801F3F88(pl, k) != 0) {
+            const SkillData* t = &lbl_802C4BF0[k];
+            if (t->speed == 1 || t->speed == 2) {
+                s32 b = t->cost;
+                w->e[n].type = k;
+                w->e[n].sort = t->sort;
+                w->e[n].p = t;
+                w->e[n].id = b;
+                w->e[n].w = lbl_802F6918[k];
+                if (have >= b) {
+                    w->e[n].on = 1;
+                } else {
+                    w->e[n].on = 0;
+                }
+                if (k == 0x39 && (lbl_80309DE4[lbl_80347330]->w1c & 0x1000) != 0) {
+                    w->e[n].on = 0;
+                }
+                n++;
+            }
+        }
+    }
+    w->count = n;
+    for (i = n; i < 8; i++) {
+        w->e[i].type = -1;
+        w->e[i].sort = 10000;
+        w->e[i].p = 0;
+        w->e[i].id = -1;
+        w->e[i].on = 0;
+    }
+    qsort(w->e, w->count, 0x10, fn_800786B0);
+    w->x2 = 1;
+    w->x6 = 0;
+    w->x7 = 0;
 }
 
 void fn_8007C194(List* l) {

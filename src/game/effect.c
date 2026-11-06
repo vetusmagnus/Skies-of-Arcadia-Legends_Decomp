@@ -3985,7 +3985,7 @@ typedef struct T800483EC {
     struct T800483EC* x2c;
     struct T800483EC* x30;
 } T800483EC;
-extern s32 fn_80048570(s32*);
+extern s32 fn_80048570(s16*);
 typedef struct {
     u8 pad0[4];
     void* x4;
@@ -5361,8 +5361,8 @@ s32 fn_800482E0(MeshSet* parts, ModelNode_800482E0* node, NJS_POINT3* pos, Angle
 }
 
 void fn_800483EC(T800483EC* a, s32* out) {
-    s32 v14;
-    s32 v10;
+    s16* v14;
+    s16* v10;
     s32 vc;
     s32 v8;
     s16 cnt;
@@ -5390,7 +5390,7 @@ void fn_800483EC(T800483EC* a, s32* out) {
         }
         for (j = 0; j < cnt; j++) {
             if (fn_8022E734(found, a, &v10, &v14, 0, 0, 0)) {
-                *out += fn_80048570((s32*)v10);
+                *out += fn_80048570(v10);
                 v10 = v14;
             }
         }
@@ -5401,6 +5401,65 @@ void fn_800483EC(T800483EC* a, s32* out) {
     if (a->x30 != 0) {
         fn_800483EC(a->x30, out);
     }
+}
+
+/* Counts the triangles of a chunk strip block: head (type in the low byte), size, then the user
+ * flag count and strip count, then the strips; a negative length marks a reversed strip. */
+s32 fn_80048570(s16* p) {
+    s16 n;
+    s16 k;
+    s16 h;
+    u8 type;
+    s32 total;
+    s16 count;
+    u8 mode;
+    s16* w;
+
+    w = p;
+    type = *w++ & 0xff;
+    w++;
+    h = *w++;
+    total = 0;
+    count = h & 0x3fff;
+    mode = h >> 14;
+
+    while (count != 0) {
+        n = *w++;
+        if (n < 0) {
+            n *= -1;
+        }
+        total += n - 2;
+        for (k = 0; k < n; k++) {
+            w++;
+            switch (type) {
+            case 0x41:
+            case 0x42:
+            case 0x44:
+            case 0x45:
+            case 0x47:
+            case 0x48:
+                w += 2;
+                break;
+            }
+            switch (type) {
+            case 0x43:
+            case 0x44:
+            case 0x45:
+                w += 3;
+                break;
+            case 0x46:
+            case 0x47:
+            case 0x48:
+                w += 2;
+                break;
+            }
+            if (k >= 2) {
+                w += mode;
+            }
+        }
+        count--;
+    }
+    return total;
 }
 
 int fn_80048B08(N80048B08* node, f32* out, s16 idx) {

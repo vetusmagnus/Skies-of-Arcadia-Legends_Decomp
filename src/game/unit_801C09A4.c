@@ -573,7 +573,6 @@ void fn_801C1148(s16 id, s8 amount) {
     } while (i < n);
 }
 
-#ifdef NONMATCHING
 typedef struct Pad {
     u32 held;     /* 0x00 */
     u32 x4;       /* 0x04 */
@@ -581,14 +580,14 @@ typedef struct Pad {
 } Pad;
 extern Pad* lbl_80311A60[];
 extern const u32 lbl_802C3A68[18];
-#endif
 
-#ifdef NONMATCHING
 s32 fn_801C09F8(s32 port, s32 btn) {
     Pad* p;
     u32 m;
 
-    if (btn < 18 && btn >= 0) {
+    switch (btn) {
+    case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8:
+    case 9: case 10: case 11: case 12: case 13: case 14: case 15: case 16: case 17:
         p = lbl_80311A60[port];
         m = lbl_802C3A68[btn];
         if (p->held & m) {
@@ -607,7 +606,6 @@ s32 fn_801C09F8(s32 port, s32 btn) {
     }
     return 0;
 }
-#endif
 
 s32 fn_801C2CF4(Info* o, s16 id) {
     s32 cat;

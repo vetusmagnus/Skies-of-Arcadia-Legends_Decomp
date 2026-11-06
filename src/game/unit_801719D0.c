@@ -8391,6 +8391,30 @@ void fn_80174E18(void)
 #endif
 
 
+s32 fn_8017AFA0(void) {
+    CampCtrl *c = lbl_8034710C->holder->ctrl;
+
+    if (fn_801C09F8(lbl_80347154, 5)) {
+        c->cur[0].x8 = c->cur[0].sel;
+        c->cur[0].sel = fn_8019A21C(c->cur[0].mask, 1, c->cur[0].sel, 0, 7);
+    } else if (fn_801C09F8(lbl_80347154, 4)) {
+        c->cur[0].x8 = c->cur[0].sel;
+        c->cur[0].sel = fn_8019A21C(c->cur[0].mask, -1, c->cur[0].sel, 0, 7);
+    } else if (fn_801C09F8(lbl_80347154, 2)) {
+        fn_801929B8(2);
+        return 1;
+    } else if (fn_801C09F8(lbl_80347154, 1)) {
+        fn_801929B8(5);
+        return -1;
+    } else {
+        return 0;
+    }
+    UiObjSetCommand(PnlObj(c->cur[0].sel + 0x87), 0x15, 0);
+    fn_801929B8(4);
+    UiObjSetCommand(PnlObj(c->cur[0].x8 + 0x87), 0x14, 0);
+    return 0;
+}
+
 void fn_8017BBC8(void) {
     UiObj *w;
     CampWork *cw;
@@ -8796,6 +8820,149 @@ s32 fn_80185C00(void)
         if (lbl_803470D4 <= 0) {
             lbl_803470D4 = 0;
             cw->state[19] = 3;
+        }
+        break;
+    }
+    return 0;
+}
+
+void fn_8017F840(void) {
+    CampWork* cw = &camp_work;
+    Sprite* s;
+    f32 v;
+    CampCtrl* lw = lbl_80307638;
+    CampCtrl* c = lbl_8034710C->holder->ctrl;
+    UiObj* o;
+
+    if (cw->count > 1) {
+        o = &cw->pnl[lw[1].cur[0].sel]->win->obj;
+        s = fn_801D68C4(lbl_803470F0, 0x45);
+        s->x = 24.0f + o->rect[0];
+        s->y = -16.0f + o->rect[1];
+        fn_800FF348(s, 0, -5850.0f, 1.0f, cw->f34c);
+        s = fn_801D68C4(lbl_803470F0, 0x46);
+        s->x = 272.0f + o->rect[0];
+        s->y = -16.0f + o->rect[1];
+        fn_800FF348(s, 0, -5850.0f, 1.0f, cw->f34c);
+    }
+    if (fn_801952D0(c->cur[1].mask) > 1) {
+        o = &camp_work.pnl[0x48]->win->obj;
+        v = 5.0f + o->rect[0];
+        s = fn_801D68C4(lbl_803470F0, 0x44);
+        s->x = v;
+        s->y = 179.0f;
+        fn_800FF348(s, 0, -4000.0f, 1.0f, cw->f354);
+        v = 47.0f + o->rect[0];
+        s = fn_801D68C4(lbl_803470F0, 0x43);
+        s->x = v;
+        s->y = 179.0f;
+        fn_800FF348(s, 0, -4000.0f, 1.0f, cw->f354);
+    }
+}
+
+void fn_80184330(void) {
+    CampCtrl* c = lbl_8034710C->holder->ctrl;
+    s32 i;
+    UiObj* o;
+
+    for (i = 0; i < camp_work.count; i++) {
+        o = &camp_work.pnl[i]->win->obj;
+        UiObjMoveTo(o, 6, 5, -348.0f, (f32)(i * 64 + 61));
+        UiObjSetCommand(o, 15, i);
+    }
+    if (fn_801953B8() != 0) {
+        o = &camp_work.pnl[4]->win->obj;
+        UiObjMoveTo(o, 6, 5, -348.0f, 317.0f);
+        UiObjSetCommand(o, 15, 4);
+        o = &camp_work.pnl[c->cur[1].sel + 0x6c]->win->obj;
+        UiObjMoveTo(o, 6, 4, 668.0f, 317.0f);
+        UiObjSetCommand(o, 15, 4);
+    }
+    for (i = 0; i < camp_work.count; i++) {
+        o = &camp_work.pnl[i * 5 + 6 + c->cur[4].sel]->win->obj;
+        UiObjMoveTo(o, 6, -1, 668.0f, (f32)(i * 64 + 61));
+        UiObjSetCommand(o, 15, i);
+    }
+    if (fn_80194CB8() == 1) {
+        o = &camp_work.pnl[5]->win->obj;
+        UiObjMoveTo(o, 6, 5, -348.0f, 381.0f);
+        UiObjSetCommand(o, 15, 6);
+    }
+}
+
+/* Hide the panel of each entry whose check passes. */
+static inline void HideUsableEntries(void) {
+    s32 i;
+
+    for (i = 0; i < 4; i++) {
+        if (lbl_802E97C0[i]() != 0) {
+            camp_work.pnl[0x1a + i]->win->x0 = 1;
+        }
+    }
+}
+
+s32 fn_80184F68(void) {
+    s32 r;
+
+    switch (camp_work.state[2]) {
+    case 0:
+        CampMenuHideAllPanels();
+        HideUsableEntries();
+        camp_work.pnl[0x1b]->win->f74 = -6040.0f;
+        camp_work.pnl[0x1e]->win->x0 = 1;
+        lbl_80347124 = fn_80194CC8();
+        fn_8018564C();
+        fn_80185AFC();
+        fn_801859BC();
+        camp_work.state[2] = 2;
+        break;
+    case 2:
+        if (CampMenuAnyPanelBusy() == 0) {
+            camp_work.state[2] = 3;
+        } else if (fn_801C09F8(lbl_80347154, 2) != 0 || fn_801C09F8(lbl_80347154, 1) != 0) {
+            CampMenuFinishAllPanels();
+            camp_work.state[2] = 3;
+        }
+        break;
+    case 3:
+        r = fn_801852F8();
+        switch (r) {
+        case -1:
+            camp_work.state[2] = 0x18;
+            break;
+        case 0:
+            break;
+        case 1:
+            camp_work.state[2] = 0xc;
+            break;
+        }
+        break;
+    case 0xc:
+        fn_80185864();
+        camp_work.state[2] = 0x12;
+        break;
+    case 0x12:
+        if (CampMenuAnyPanelBusy() == 0) {
+            fn_801851C8();
+        } else if (fn_801C09F8(lbl_80347154, 2) != 0 || fn_801C09F8(lbl_80347154, 1) != 0) {
+            CampMenuFinishAllPanels();
+            fn_801851C8();
+        }
+        break;
+    case 0x18:
+        fn_80185724();
+        camp_work.state[2] = 0x13;
+        break;
+    case 0x13:
+        if (CampMenuAnyPanelBusy() == 0) {
+            camp_work.state[1] = 0;
+            camp_screen = 1;
+            fn_801959D4(1);
+        } else if (fn_801C09F8(lbl_80347154, 2) != 0 || fn_801C09F8(lbl_80347154, 1) != 0) {
+            CampMenuFinishAllPanels();
+            camp_work.state[1] = 0;
+            camp_screen = 1;
+            fn_801959D4(1);
         }
         break;
     }

@@ -924,7 +924,7 @@ inline void SavePartyPos(void)
         }
     }
 }
-inline int TargetMatch(s16 type, int wtype, s16 id, int wid)
+inline int TargetMatch(s16 type, s16 wtype, s16 id, s16 wid)
 {
     if (type == wtype) {
         switch (type) {
@@ -954,7 +954,8 @@ int fn_8003DCF4(void* objp, void* cp)
         if (c->xec & 0x1000) result = TargetMatch(obj->type, 0x20, obj->id, c->x4c);
     }
     if (!(c->xec & 0x800)) {
-        if (TargetMatch(c->x6, obj->type, c->x8, obj->id)) result = 1;
+        s16 wid = c->x8;
+        if (TargetMatch(obj->type, c->x6, obj->id, wid)) result = 1;
     }
     if (c->xec & 0x4000) result = TargetMatch(obj->type, c->x56, obj->id, c->x58);
     return result;

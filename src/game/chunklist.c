@@ -84,36 +84,49 @@ ChunkHdr* fn_8003598C(ChunkHdr* a, ChunkHdr* b)
     }
     return buf;
 }
-ChunkHdr* fn_80035C38(ChunkHdr* p)
+/* Copy a raw chunk file (a header, then the list) into a fresh list with an unused first entry, and free the file. */
+ChunkHdr* fn_80035C38(ChunkHdr* chunks)
 {
-    u8 hdr[0x10];
-    ChunkHdr* cur;
-    ChunkHdr* out;
-    s16 i;
+    ChunkHdr hdr;
+    s16 j;
+    ChunkHdr* list;
+    s16 n;
     ChunkHdr* dst;
     ChunkHdr* src;
-    ChunkHdr* head;
-    s16 n;
-    int r;
+    ChunkHdr* raw;
+    ChunkHdr* p;
+    int k;
+    ChunkHdr* q;
+    int ok;
 
-    head = p;
-    memcpy(hdr, p, 0x10);
-    p = (ChunkHdr*)((u8*)p + 0x10);
-    src = p;
-    n = CountChunks(p);
-    out = fn_801E1C7C((n + 1) << 4);
-    dst = out;
-    for (i = 0; i < n; i++) {
+    raw = chunks;
+    memcpy(&hdr, chunks, sizeof(hdr));
+    src = ++chunks;
+    q = chunks;
+    for (k = 0;; k++) {
+        if (q->id < 0) {
+            n = k + 1;
+            break;
+        }
+        q++;
+    }
+    list = fn_801E1C7C((n + 1) << 4);
+    dst = list;
+    for (j = 0; j < n; j++) {
         dst[1] = *src;
-        cur = &out[i + 1];
-        r = fn_8003617C(cur);
-        if (r == 0) r = fn_800377FC(cur);
-        if (r != 0) memcpy(dst[1].data, (u8*)p + (s32)src->data, dst[1].size);
+        p = &list[j + 1];
+        ok = fn_8003617C(p);
+        if (ok == 0) {
+            ok = fn_800377FC(p);
+        }
+        if (ok) {
+            memcpy(dst[1].data, (u8*)chunks + (u32)src->data, dst[1].size);
+        }
         src++;
         dst++;
     }
-    fn_801E17E0(head);
-    return out;
+    fn_801E17E0(raw);
+    return list;
 }
 inline ChunkHdr* MergeChunks(ChunkHdr* old, ChunkHdr* chunks)
 {
