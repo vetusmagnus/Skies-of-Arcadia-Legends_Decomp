@@ -2698,3 +2698,19 @@ Exact in an agent's copy but held for a call on the rules:
 - fn_801E85BC: keeps a `(u8*)p - (u8*)base` difference.
 
 `unit_8014F970.c`: fn_8015983C and fn_8015AB68 still need the g046 retypes folded in by hand.
+
+## Largest-half pass (2026-11-06, from 8604dec)
+
+Every unmatched function of 724 bytes and up (366, 7 left out as header-blocked) went to agents, in groups of neighbours in one unit once grouping proved
+better than one per function. The pass stopped at the usage limit with 236 functions finished: 94 matched, 23 match only with a header change, 119 near.
+Grouping paid off: a from-scratch big function often matched once its neighbour had settled the unit's structs, which is a much better rate than earlier passes.
+
+Checked for shortcuts before merging. Back under `#ifdef NONMATCHING` because the only matching form used a private view or a cast: fn_800BC960 (wants
+`EvObj.x260` as `void*`, which breaks fn_800F113C and fn_800F1264), fn_800662BC and fn_8006782C (fields of `U5C188`, which won't fold into `ChrInfo`),
+fn_8004C1E4 (`(u16)i`), fn_80072770 (reads fn_80072B3C's result as `u16`).
+
+Header changes: `include/game/pad.h` (one `PadState`, `held` at 0x08), `include/game/chrinfo.h` split out of `chr.h`, `NJS_MOTION.mdata` is `void*`.
+
+Not merged yet, on the machine that ran the pass (`build/hi/build/agents/hi`): the finished groups that conflict with newer unit edits (g056, g067, g068, g072, g074, g083, g084,
+g086, g088, g091, g093, g097, g098), their matches need the three-way merge done by hand; the header-status functions, whose exact changes are in `results.json`;
+groups g100 and up, stopped or never run. fn_800D1B5C and fn_80153DC8 are exact but borderline: `(u32)` casts in `.data` initialisers, and a `void *` parameter on fn_801540D0.

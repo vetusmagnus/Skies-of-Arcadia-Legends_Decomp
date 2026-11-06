@@ -439,10 +439,6 @@ typedef struct {
     Sys_80130B64* x24;
 } Holder_80130B64;
 void MemCopy(void* dst, const void* src, s32 size);
-typedef struct {
-    u8 pad0[4];
-    s8 idx;
-} Req;
 extern char *lbl_802F7050[];
 void fn_8012F458(s8 flag);
 void fn_8012F468(char *str);
@@ -737,9 +733,8 @@ void fn_8013160C(s8 a, s8 b, u8 v) {
     q[0x89] = v;
 }
 
-void fn_80131630(s8 a, s8 b, u8 v) {
-    u8* arr = *(u8**)((u8*)lbl_80346F48 + 0x24);
-    arr[(s32)a * 16 + (s32)b * 4 + 0x9] = v;
+void fn_80131630(s8 a, s8 b, s8 v) {
+    lbl_80346F48->inner->grid[a][b][0] = v;
 }
 
 void fn_801316B4(u8 v) {
@@ -1826,6 +1821,123 @@ static inline void BuildPage(MenuStep *o)
     fn_8012E590(0);
     fn_801375A0(money, page, o->x10);
     fn_8012E5C0(0);
+}
+
+/* lbl_8030A6D4 entries (0x24 bytes): the pads. */
+typedef struct {
+    u32 x0;
+    u32 x4;
+    u32 x8;
+    u32 xc;         /* buttons pressed or repeating */
+    u8 pad10[0x24 - 0x10];
+} PadSlot;
+extern PadSlot lbl_8030A6D4[];
+extern s32 lbl_8034757C;
+
+inline s32 Wrap_801370B0(s32 v, s32 d) {
+    v += d;
+    if (v < 0) {
+        v = 5;
+    }
+    if (v > 5) {
+        v = 0;
+    }
+    return v;
+}
+
+inline s32 Pages_801370B0(void) {
+    s32 r = 1;
+    s32 n = JoinedCount();
+    if (n != 0) {
+        r = (n + 5) / 6;
+    }
+    return r;
+}
+
+inline s32 Settle_801370B0(MenuStep *o) {
+    s32 j;
+    s32 cur = Wrap_801370B0(o->b7, 0);
+    for (j = 0; j < 6; j++) {
+        if (o->x10[cur] >= 0) {
+            break;
+        }
+        cur = Wrap_801370B0(cur, -1);
+    }
+    return cur;
+}
+
+inline s32 NextCol_801370B0(MenuStep *o) {
+    u32 fl;
+    s32 d;
+    s32 c;
+    c = o->b6;
+    fl = lbl_8030A6D4[lbl_8034757C].xc;
+    d = 0;
+    if (fl & 1) {
+        d = -1;
+    }
+    if (fl & 2) {
+        d += 1;
+    }
+    return c + d;
+}
+
+inline s32 WrapTo_801370B0(s32 v, s32 pages) {
+    s32 last = pages - 1;
+    if (v < 0) {
+        v = last;
+    }
+    if (v > last) {
+        v = 0;
+    }
+    return v;
+}
+
+void fn_801370B0(MenuStep *o)
+{
+    if (o != NULL) {
+        s32 idx = o->b7;
+        u32 fl = lbl_8030A6D4[lbl_8034757C].xc;
+        s32 d = 0;
+        s32 step;
+        s32 mid;
+        s32 k;
+        s32 col;
+
+        if (fl & 8) {
+            d = -1;
+        }
+        if (fl & 4) {
+            d += 1;
+        }
+        idx = Wrap_801370B0(idx, d);
+        mid = d > -1 ? d : -1;
+        step = mid < 1 ? mid : 1;
+        if (step != 0) {
+            for (k = 0; k < 6; k++) {
+                if (o->x10[idx] >= 0) {
+                    break;
+                }
+                idx = Wrap_801370B0(idx, step);
+            }
+        }
+        fn_8012E560(idx);
+        if (o->b7 != idx) {
+            Close(o);
+            o->b7 = idx;
+            SePlay(0xf, 1, 0);
+            return;
+        }
+        col = WrapTo_801370B0(NextCol_801370B0(o), Pages_801370B0());
+        if (o->b6 != col) {
+            o->b6 = col;
+            fn_80137414(o->x10, o->b6);
+            o->b7 = Settle_801370B0(o);
+            fn_801375A0(o->x16, o->b6, o->x10);
+            Close(o);
+            SePlay(0xf, 1, 0);
+        }
+    }
 }
 
 s32 fn_801377C0(MenuStep *o)
@@ -2980,7 +3092,7 @@ static inline int MemberValid(int idx)
     return ok;
 }
 
-void fn_8013A818(Req *r)
+void fn_8013A818(MenuStep *r)
 {
     int idx;
     char *str = NULL;
@@ -2989,10 +3101,10 @@ void fn_8013A818(Req *r)
 
     if (r == NULL) return;
     if (m == NULL) return;
-    idx = r->idx;
+    idx = r->b4;
     flag = idx >= 3;
     if (MemberValid(idx)) {
-        str = ItemName(m[r->idx].id);
+        str = ItemName(m[r->b4].id);
     }
     if (str == NULL) {
         str = "\n";
@@ -3001,42 +3113,92 @@ void fn_8013A818(Req *r)
     fn_8012F468(str);
 }
 
-void fn_80134668(s8 n) {
+Obj *fn_80134668(s8 n) {
     switch (n) {
     case 0:
-        fn_801D68C4(lbl_80346EFC, 0x15);
-        break;
+        return fn_801D68C4(lbl_80346EFC, 0x15);
     case 1:
-        fn_801D68C4(lbl_80346EFC, 0x16);
-        break;
+        return fn_801D68C4(lbl_80346EFC, 0x16);
     case 2:
-        fn_801D68C4(lbl_80346EFC, 0x17);
-        break;
+        return fn_801D68C4(lbl_80346EFC, 0x17);
     case 3:
-        fn_801D68C4(lbl_80346EFC, 0x18);
-        break;
+        return fn_801D68C4(lbl_80346EFC, 0x18);
     case 4:
-        fn_801D68C4(lbl_80346EFC, 0x19);
-        break;
+        return fn_801D68C4(lbl_80346EFC, 0x19);
     case 5:
-        fn_801D68C4(lbl_80346EFC, 0x1a);
-        break;
+        return fn_801D68C4(lbl_80346EFC, 0x1a);
     case 6:
-        fn_801D68C4(lbl_80346EFC, 0x1b);
-        break;
+        return fn_801D68C4(lbl_80346EFC, 0x1b);
     case 7:
-        fn_801D68C4(lbl_80346EFC, 0x1c);
-        break;
+        return fn_801D68C4(lbl_80346EFC, 0x1c);
     case 8:
-        fn_801D68C4(lbl_80346EFC, 0x1d);
-        break;
+        return fn_801D68C4(lbl_80346EFC, 0x1d);
     case 9:
-        fn_801D68C4(lbl_80346EFC, 0x1e);
-        break;
+        return fn_801D68C4(lbl_80346EFC, 0x1e);
     default:
-        fn_801D68C4(lbl_80346EFC, 0x15);
-        break;
+        return fn_801D68C4(lbl_80346EFC, 0x15);
     }
+}
+
+/* One digit of fn_80133BE0: the digit's sprite at x - spacing * K, recoloured for the draw. */
+#define NUM_DIGIT(D, K, SV)                 \
+    {                                       \
+        Args a;                             \
+        Obj *o = fn_80134668(D);            \
+        a.obj = o;                          \
+        SV = o->x4->x14;                    \
+        o->f14 = x - spacing * (K);         \
+        a.obj->f18 = y;                     \
+        a.obj->x4->x14 = col;               \
+        a.f4 = z;                           \
+        a.f8 = 0.0f;                        \
+        a.c = 0;                            \
+        a.d = 0;                            \
+        a.e = 1.0f;                         \
+        a.g = scale;                        \
+        fn_8012A954(&a);                    \
+        a.obj->x4->x14 = SV;                \
+    }
+
+#define NUM_NEXT(D, K, SV)                  \
+    if (D > 0) {                            \
+        lead = 0;                           \
+        NUM_DIGIT(D, K, SV)                 \
+    } else if (lead != 1) {                 \
+        NUM_DIGIT(D, K, SV)                 \
+    }
+
+void fn_80133BE0(NumDraw *n, s32 spacing)
+{
+    s16 x = n->x;
+    s16 y = n->y;
+    s32 v = n->v;
+    f32 z = n->z;
+    f32 scale = n->scale;
+    u32 col = n->col;
+    u32 s7, s6, s5, s4, s3, s2, s1, s0;
+    s16 d7, d6, d5, d4, d3, d2, d1, d0;
+    s32 lead = 1;
+
+    d7 = v / 10000000;
+    d6 = (v - d7 * 10000000) / 1000000;
+    d5 = (v - d7 * 10000000 - d6 * 1000000) / 100000;
+    d4 = (v - d7 * 10000000 - d6 * 1000000 - d5 * 100000) / 10000;
+    d3 = (v - d7 * 10000000 - d6 * 1000000 - d5 * 100000 - d4 * 10000) / 1000;
+    d2 = (v - d7 * 10000000 - d6 * 1000000 - d5 * 100000 - d4 * 10000 - d3 * 1000) / 100;
+    d1 = (v - d7 * 10000000 - d6 * 1000000 - d5 * 100000 - d4 * 10000 - d3 * 1000 - d2 * 100) / 10;
+    d0 = v - d7 * 10000000 - d6 * 1000000 - d5 * 100000 - d4 * 10000 - d3 * 1000 - d2 * 100 - d1 * 10;
+    if (d7 > 0) {
+        lead = 0;
+        NUM_DIGIT(d7, 7, s7)
+    }
+    NUM_NEXT(d6, 6, s6)
+    NUM_NEXT(d5, 5, s5)
+    NUM_NEXT(d4, 4, s4)
+    NUM_NEXT(d3, 3, s3)
+    NUM_NEXT(d2, 2, s2)
+    NUM_NEXT(d1, 1, s1)
+    NUM_DIGIT(d0, 0, s0)
 }
 
 static inline void Clear(void **p, s8 *a, s8 *b, s8 *c) {
@@ -3185,6 +3347,202 @@ inline s32 Ready_8013A8FC(void) {
         }
     }
     return r;
+}
+
+extern u32 fn_8013FCF0(s32 a, s32 y, s32 n);
+
+inline s32 FindBack_801358A0(s32 m, s32 n) {
+    s32 first;
+    s32 r = 0;
+    if (n > 0 && n <= 4) {
+        first = -n;
+        r = -1;
+        if (first >= -4) {
+            for (r = first; r <= -1; r++) {
+                if (lbl_80308E90[r + 4].a[0] == 4 && m == lbl_80308E90[r + 4].a[2]) {
+                    break;
+                }
+            }
+        }
+    }
+    return r;
+}
+
+inline s32 Avail_801358A0(s32 m) {
+    s32 avail = 1;
+    s32 cnt = PartyCount_8013A8FC();
+    s32 idx = Find_8013A8FC(m, cnt);
+    if (idx >= 0 && idx == cnt) {
+        avail = 0;
+    }
+    return avail;
+}
+
+inline s32 Kind_801358A0(s32 m) {
+    s32 st;
+    Party *p;
+    p = &fn_80135598()->party;
+    st = 4;
+    if (Valid_8013A8FC(p, m)) {
+        st = p->mem[m].b14;
+    }
+    return st;
+}
+
+s32 fn_801358A0(s32 pos, s32 y, s32 k, s32 m, s32 n)
+{
+    s32 ok = 0;
+    if (pos >= 0 && pos < n && lbl_80308E90[pos + 4].a[0] < 0) {
+        if ((fn_8013FCF0(pos, y, n) & 4) == 0) {
+            if (k != 4) {
+                ok = 1;
+            } else if (Valid_8013A8FC(&fn_80135598()->party, m)) {
+                if (!Avail_801358A0(m)) {
+                    switch (Kind_801358A0(m)) {
+                    case 1:
+                        {s32 idx = FindBack_801358A0(m, n);
+                        if (idx >= 0 || pos > lbl_80308E90[idx + 4].a[4]) {
+                            ok = 1;
+                        }}
+                        break;
+                    case 3:
+                        if (IsReady_8013A8FC(pos)) {
+                            ok = 1;
+                        }
+                        break;
+                    default:
+                        ok = 1;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    return ok;
+}
+
+inline s32 CrewId(s8 *src, s32 i) {
+    s32 id = 0x16;
+    if (InRange(i, 6)) {
+        id = src[i];
+    }
+    return id;
+}
+
+inline s32 Joined_80136C14(s8 *src, s32 i) {
+    s32 ok = 0;
+    s32 id = CrewId(src, i);
+    if (InRange(id, 0x16)) {
+        if (HasFlag(id)) {
+            ok = 1;
+        }
+    }
+    return ok;
+}
+
+inline s32 Effect_80136C14(CrewData *e) {
+    s32 r = 0;
+    if (e != NULL && e->effect >= 0) {
+        r = 1;
+    }
+    return r;
+}
+
+inline s32 Usable_80136C14(s8 *src, s32 i) {
+    s32 ok = 0;
+    CrewData *tbl = lbl_802D8E64;
+    s32 id = CrewId(src, i);
+    if (InRange(id, 0x16)) {
+        if (Effect_80136C14(&tbl[id])) {
+            ok = 1;
+        }
+    }
+    return ok;
+}
+
+inline s32 Find_80136C14(s32 m, s32 n) {
+    s32 r = -1;
+    if (n > 0 && n <= 4) {
+        s32 last = n - 1;
+        if (last < 4) {
+            for (r = 0; r <= last; r++) {
+                if (lbl_80308E90[r + 4].a[0] == 7 && m == lbl_80308E90[r + 4].a[2]) {
+                    break;
+                }
+            }
+        }
+    }
+    return r;
+}
+
+inline s32 Free_80136C14(s32 id) {
+    s32 avail = 1;
+    s32 cnt = PartyCount();
+    s32 idx = Find_80136C14(id, cnt);
+    if (idx >= 0 && idx == cnt) {
+        avail = 0;
+    }
+    return avail;
+}
+
+inline s32 Idle_80136C14(s32 id) {
+    s32 d = 1;
+    Party *q = &fn_80135598()->party;
+    if (q != NULL && InRange(id, 0x16)) {
+        if (HasFlag(id)) {
+            s32 one = 1;
+            if ((q->x5c & (one << id)) == 0) {
+                if (!Free_80136C14(id)) {
+                    d = 0;
+                }
+            }
+        }
+    }
+    return d;
+}
+
+inline s32 Busy_80136C14(s8 *src, s32 i) {
+    s32 ok = 1;
+    s32 id = CrewId(src, i);
+    if (InRange(id, 0x16)) {
+        if (!Idle_80136C14(id)) {
+            ok = 0;
+        }
+    }
+    return ok;
+}
+
+inline s32 Cost_80136C14(s8 *src, s32 i) {
+    CrewData *tbl = lbl_802D8E64;
+    s32 v = 100;
+    s32 id = 0x16;
+    if (InRange(i, 6)) {
+        id = src[i];
+    }
+    if (InRange(id, 0x16)) {
+        CrewData *e = &tbl[id];
+        v = 100;
+        if (e != NULL) {
+            v = e->cost;
+        }
+    }
+    return v;
+}
+
+s32 fn_80136C14(s8 *src, s32 i, s32 lvl) {
+    s32 res = 0;
+    if (src != NULL) {
+        if (Joined_80136C14(src, i)) {
+            if (Usable_80136C14(src, i)) {
+                if (!Busy_80136C14(src, i)) {
+                    if (lvl >= Cost_80136C14(src, i)) {
+                        res = 1;
+                    }
+                }
+            }
+        }
+    }
+    return res;
 }
 
 static inline s32 Bits4(s8 *c) {

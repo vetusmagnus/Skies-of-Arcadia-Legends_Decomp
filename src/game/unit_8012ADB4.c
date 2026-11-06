@@ -24,20 +24,9 @@ typedef struct {
     s8 x44;
 } SysA;
 typedef struct {
-    u8 pad0[0x14];
-    f32 f14;
-    f32 f18;
-} Pos;
-typedef struct {
-    Pos *pos;
-} PosHolder;
-typedef struct {
     u8 pad[0x24];
     SysA *x24;
-    union {
-        PosHolder *x28;
-        void **x28v;
-    };
+    struct Spr **x28;
 } HolderA;
 extern HolderA *lbl_80346F10;
 typedef struct {
@@ -64,10 +53,10 @@ typedef struct {
 typedef struct {
     u8 pad[0x24];
     SysB *x24;
-    void **x28;
+    struct Spr **x28;
 } HolderB;
 extern HolderB *lbl_80346F20;
-typedef struct SysC { u8 pad0[2]; s8 x2; u8 pad3; s16 x4; s8 x6; char x7; u8 x8; s8 x9; u8 pad1[0x30 - 0xa]; u8 x30; char x31; s8 x32; s8 x33; f32 x34; } SysC;
+typedef struct SysC { u8 pad0[2]; s8 x2; u8 pad3; s16 x4; s8 x6; char x7; u8 x8; s8 x9; u8 padA[2]; char *name[6]; s8 value[6]; s8 kind[6]; s8 x30; char x31; s8 x32; s8 x33; f32 x34; } SysC;
 typedef struct HolderC { u8 pad[0x24]; SysC* x24; struct Spr** x28; } HolderC;
 extern HolderC* lbl_80346F28;
 typedef struct {
@@ -135,7 +124,11 @@ extern void fn_8012BD34(void);
 extern void fn_8012B47C(void);
 extern void fn_8012F61C(void);
 typedef struct SprColor {
-    u8 pad0[0x14];
+    u8 pad0[4];
+    f32 f4;
+    u8 pad8[4];
+    f32 fc;
+    u8 pad10[4];
     u32 color;
 } SprColor;
 typedef struct Spr {
@@ -436,7 +429,7 @@ void fn_8012C660(void) {
 }
 
 extern void fn_8012D508(u8 a);
-extern void fn_8012D760(u8 a);
+extern void fn_8012D760(s8 a);
 extern void fn_8012D0F4(void);
 extern void fn_8012CFC8(void);
 extern void fn_8012CE60(void);
@@ -1098,8 +1091,8 @@ s32 fn_8012B1D8(void)
         lbl_80346F10->x24->xc = 0;
         break;
     case 1:
-        lbl_80346F10->x28->pos->f14 = 84.0f;
-        lbl_80346F10->x28->pos->f18 = 37.0f;
+        lbl_80346F10->x28[0]->f14 = 84.0f;
+        lbl_80346F10->x28[0]->f18 = 37.0f;
         lbl_80346F10->x24->f4 = 0.0f;
         lbl_80346F10->x24->f8 = 0.0f;
         if (lbl_80346F10 != NULL) {
@@ -1307,7 +1300,7 @@ void fn_8012B308(s8 n)
     NJS_VECTOR in;
     NJS_VECTOR out;
     NJS_VECTOR axis;
-    Pos* pos;
+    Spr* pos;
     f32 d;
 
     d = (-43.5f * (f32)n) / 3.0f;
@@ -1315,7 +1308,7 @@ void fn_8012B308(s8 n)
     axis.x = 0.0f;
     axis.y = 0.0f;
     axis.z = 1.0f;
-    pos = lbl_80346F10->x28->pos;
+    pos = lbl_80346F10->x28[0];
     in.x = (19.0f + pos->f14) - 51.0f;
     in.y = (19.0f + pos->f18) - 57.0f;
     in.z = 0.0f;
@@ -1332,16 +1325,16 @@ void fn_8012B054(Obj* o)
     switch (o->state) {
     case 0xFE:
     case 0:
-        lbl_80346F10->x28v = fn_801E1C7C(0x24);
-        lbl_80346F10->x28v[0] = fn_801D68C4(lbl_80346F04, 8);
-        lbl_80346F10->x28v[1] = fn_801D68C4(lbl_80346F04, 0);
-        lbl_80346F10->x28v[2] = fn_801D68C4(lbl_80346F04, 1);
-        lbl_80346F10->x28v[3] = fn_801D68C4(lbl_80346F04, 2);
-        lbl_80346F10->x28v[4] = fn_801D68C4(lbl_80346F04, 3);
-        lbl_80346F10->x28v[5] = fn_801D68C4(lbl_80346F04, 4);
-        lbl_80346F10->x28v[6] = fn_801D68C4(lbl_80346F04, 5);
-        lbl_80346F10->x28v[7] = fn_801D68C4(lbl_80346F04, 6);
-        lbl_80346F10->x28v[8] = fn_801D68C4(lbl_80346F04, 7);
+        lbl_80346F10->x28 = fn_801E1C7C(0x24);
+        lbl_80346F10->x28[0] = fn_801D68C4(lbl_80346F04, 8);
+        lbl_80346F10->x28[1] = fn_801D68C4(lbl_80346F04, 0);
+        lbl_80346F10->x28[2] = fn_801D68C4(lbl_80346F04, 1);
+        lbl_80346F10->x28[3] = fn_801D68C4(lbl_80346F04, 2);
+        lbl_80346F10->x28[4] = fn_801D68C4(lbl_80346F04, 3);
+        lbl_80346F10->x28[5] = fn_801D68C4(lbl_80346F04, 4);
+        lbl_80346F10->x28[6] = fn_801D68C4(lbl_80346F04, 5);
+        lbl_80346F10->x28[7] = fn_801D68C4(lbl_80346F04, 6);
+        lbl_80346F10->x28[8] = fn_801D68C4(lbl_80346F04, 7);
         o->state = 1;
         break;
     case 1:
@@ -1609,4 +1602,355 @@ void fn_8012F61C(void)
     r.one = 1.0f;
     r.w = 1.0f;
     fn_8012A9A8(&r);
+}
+static inline s32 Bit(s32 v, s32 m)
+{
+    return (v & m) != 0;
+}
+
+void fn_8012E970(void)
+{
+    f32 savedz;
+    SysC *rows;
+    char *name;
+    s16 off;
+    s32 y;
+    s8 val;
+    s8 i;
+    Req r;
+
+    savedz = TextGetZ();
+    TextSetZ(-1.199f);
+    for (i = 0; i < 6; i++) {
+        TextPushColor();
+        rows = lbl_80346F28->x24;
+        name = rows->name[i];
+        if (name != 0) {
+            off = i * 0x18;
+            val = rows->value[i];
+            switch (rows->kind[i]) {
+            case 0:
+                lbl_80346F28->x28[11] = fn_801D68C4(lbl_80346F04, 0x40);
+                break;
+            case 1:
+                lbl_80346F28->x28[11] = fn_801D68C4(lbl_80346F04, 0x41);
+                break;
+            case 2:
+                lbl_80346F28->x28[11] = fn_801D68C4(lbl_80346F04, 0x42);
+                break;
+            case 3:
+                lbl_80346F28->x28[11] = fn_801D68C4(lbl_80346F04, 0x43);
+                break;
+            case 4:
+                lbl_80346F28->x28[11] = fn_801D68C4(lbl_80346F04, 0x44);
+                break;
+            case 5:
+                lbl_80346F28->x28[11] = fn_801D68C4(lbl_80346F04, 0x45);
+                break;
+            case 6:
+                lbl_80346F28->x28[11] = fn_801D68C4(lbl_80346F04, 0x46);
+                break;
+            case 7:
+                lbl_80346F28->x28[11] = fn_801D68C4(lbl_80346F04, 0x47);
+                break;
+            case 8:
+                lbl_80346F28->x28[11] = fn_801D68C4(lbl_80346F04, 0x54);
+                break;
+            case 9:
+                lbl_80346F28->x28[11] = fn_801D68C4(lbl_80346F04, 0x55);
+                break;
+            case 10:
+                lbl_80346F28->x28[11] = fn_801D68C4(lbl_80346F04, 0x61);
+                break;
+            case 11:
+                lbl_80346F28->x28[11] = fn_801D68C4(lbl_80346F04, 0x71);
+                break;
+            case 12:
+                lbl_80346F28->x28[11] = fn_801D68C4(lbl_80346F04, 0x62);
+                break;
+            case 13:
+                lbl_80346F28->x28[11] = fn_801D68C4(lbl_80346F04, 0x88);
+                break;
+            default:
+                lbl_80346F28->x28[11] = fn_801D68C4(lbl_80346F04, 0x47);
+                break;
+            }
+            y = off + 0x12d;
+            r.obj = lbl_80346F28->x28[11];
+            r.obj->f14 = 284.0f;
+            r.obj->f18 = (f32)y;
+            r.x = -1.199f;
+            r.y = 1.0f;
+            r.z0 = 0;
+            r.z1 = 0;
+            if (Bit(lbl_80346F28->x24->x30, 1 << i) == 1) {
+                r.one = 1.0f;
+                TextSetColor(0xFFC8C8C8);
+            } else {
+                r.one = 0.5f;
+                TextSetColor(0xFF606060);
+            }
+            r.w = 1.0f;
+            fn_8012A9A8(&r);
+            TextPrint(0x144, y, name);
+            if (val != -1) {
+                if (val == -2) {
+                    TextPrint(0x21c, y, "\x82\x64");
+                } else {
+                    TextPrintf(0x21c, y, "%2d", val);
+                }
+            }
+        }
+        TextPopColor(1);
+    }
+    TextSetZ(savedz);
+}
+static inline f32 Deg(f32 deg)
+{
+    f32 t;
+    t = 182.04445f * deg;
+    return (s32)t;
+}
+
+static inline s32 Ang(f32 deg)
+{
+    f32 t;
+    t = 182.04445f * deg;
+    return t;
+}
+
+void fn_8012D760(s8 step)
+{
+    NJS_MATRIX m;
+    NJS_POINT3 pos;
+    NJS_POINT3 out;
+    NJS_VECTOR axis;
+    f32 d;
+    s32 ang;
+    s32 i;
+    Spr *it;
+
+    d = 30.0f * (f32)step / 3.0f;
+    lbl_80346F20->x24->fc += d;
+    axis.x = 0.0f;
+    axis.y = 0.0f;
+    axis.z = 1.0f;
+    ang = (s32)(182.04445f * d);
+    for (i = 0; i < 8; i++) {
+        it = lbl_80346F20->x28[i];
+        pos.x = 19.0f + it->f14 - 102.0f;
+        pos.y = 19.0f + it->f18 - 381.0f;
+        pos.z = 0.0f;
+        njUnitMatrix(m);
+        njRotate(m, &axis, ang);
+        njCalcPoint(m, &pos, &out);
+        it->f14 = 102.0f + (out.x - 19.0f);
+        it->f18 = 381.0f + (out.y - 19.0f);
+    }
+    lbl_80346F20->x24->y[0] = Deg(-6.0f * lbl_80346F20->x24->fc + 180.0f);
+    lbl_80346F20->x24->y[1] = Deg(-6.0f * lbl_80346F20->x24->fc + 360.0f);
+    lbl_80346F20->x24->y[2] = Deg(-6.0f * lbl_80346F20->x24->fc + 540.0f);
+    lbl_80346F20->x24->y[3] = Deg(-6.0f * lbl_80346F20->x24->fc + 720.0f);
+    lbl_80346F20->x24->y[4] = Deg(-6.0f * lbl_80346F20->x24->fc + 900.0f);
+    lbl_80346F20->x24->y[5] = Deg(-6.0f * lbl_80346F20->x24->fc + 1080.0f);
+    lbl_80346F20->x24->y[6] = Deg(-6.0f * lbl_80346F20->x24->fc + 1260.0f);
+    lbl_80346F20->x24->y[7] = Deg(-6.0f * lbl_80346F20->x24->fc + 1440.0f);
+    lbl_80346F20->x24->f8 = Deg(-1.0f * (lbl_80346F20->x24->fc / 3.0f));
+}
+void fn_8012DB18(void)
+{
+    NJS_MATRIX m;
+    NJS_POINT3 pos;
+    NJS_POINT3 out;
+    NJS_VECTOR axis;
+    s32 i;
+    Spr *it;
+    s32 ang;
+    s32 j;
+
+    axis.x = 0.0f;
+    axis.y = 0.0f;
+    axis.z = 1.0f;
+    for (i = 0; i < 8; i++) {
+        it = lbl_80346F20->x28[i];
+        pos.x = 69.0f;
+        pos.y = -45.0f;
+        pos.z = 0.0f;
+        njUnitMatrix(m);
+        njRotate(m, &axis, Ang(30.0f * (f32)i));
+        njCalcPoint(m, &pos, &out);
+        it->f14 = 151.0f + (out.x - pos.x);
+        it->f18 = 316.0f + (out.y - pos.y);
+    }
+    for (i = 0; i < 8; i++) {
+        lbl_80346F20->x24->y[i] = Deg(i * -180);
+    }
+    for (j = 0; j < 3; j++) {
+        ang = -Ang(30.0f);
+        axis.x = 0.0f;
+        axis.y = 0.0f;
+        axis.z = 1.0f;
+        for (i = 0; i < 8; i++) {
+            it = lbl_80346F20->x28[i];
+            pos.x = 19.0f + it->f14 - 102.0f;
+            pos.y = 19.0f + it->f18 - 381.0f;
+            pos.z = 0.0f;
+            njUnitMatrix(m);
+            njRotate(m, &axis, ang);
+            njCalcPoint(m, &pos, &out);
+            it->f14 = 102.0f + (out.x - 19.0f);
+            it->f18 = 381.0f + (out.y - 19.0f);
+        }
+        for (i = 0; i < 8; i++) {
+            lbl_80346F20->x24->y[i] = Deg((i + 1) * -180);
+        }
+    }
+}
+static inline u32 Color(u8 a, u8 r, u8 g, u8 b)
+{
+    return (a << 24) + (r << 16) + (g << 8) + b;
+}
+
+void fn_8012B47C(void)
+{
+    Req r;
+    Num n;
+    f32 sx;
+    f32 sy;
+    f32 v;
+    f32 t;
+    f32 z;
+    f32 savedz;
+    s32 i;
+    u8 ca;
+    u8 cr;
+    u8 cg;
+    u8 cb;
+
+    for (i = 0; i < 9; i++) {
+        if (i == 0) {
+            switch (lbl_80346F10->x24->x10) {
+            case 0:
+                r.obj = fn_801D68C4(lbl_80346F04, 0x10);
+                break;
+            case 1:
+                r.obj = fn_801D68C4(lbl_80346F04, 0xe);
+                break;
+            case 2:
+                r.obj = fn_801D68C4(lbl_80346F04, 0xc);
+                break;
+            case 3:
+                r.obj = fn_801D68C4(lbl_80346F04, 0xb);
+                break;
+            case 4:
+                r.obj = fn_801D68C4(lbl_80346F04, 0xf);
+                break;
+            case 5:
+                r.obj = fn_801D68C4(lbl_80346F04, 0xd);
+                break;
+            case 6:
+                if (fn_8012C3DC() == 0) {
+                    r.obj = fn_801D68C4(lbl_80346F04, 0x8c);
+                } else {
+                    r.obj = fn_801D68C4(lbl_80346F04, 0x8d);
+                }
+                break;
+            case 7:
+                r.obj = fn_801D68C4(lbl_80346F04, 0x11);
+                break;
+            default:
+                r.obj = fn_801D68C4(lbl_80346F04, 0x8d);
+                break;
+            }
+            sx = r.obj->f14;
+            sy = r.obj->f18;
+            r.obj->f14 = lbl_80346F10->x28[i]->f14;
+            r.obj->f18 = lbl_80346F10->x28[i]->f18;
+            r.x = 0.0001f * (f32)i + -1.3f;
+            r.y = lbl_80346F10->x24->f8;
+            r.z0 = 0;
+            r.z1 = 0;
+            r.one = 1.0f;
+            r.w = 1.0f;
+        } else if (i == 4) {
+            r.obj = lbl_80346F10->x28[i];
+            sx = r.obj->f14;
+            sy = r.obj->f18;
+            r.x = 0.0001f * (f32)i + -1.3f;
+            r.y = 0.0f;
+            r.z0 = 0;
+            r.z1 = 1;
+            r.one = 1.0f;
+            r.w = 1.0f;
+            r.obj->x4->fc = r.obj->x4->f4 + lbl_80346F10->x24->f34;
+            r.obj->x4->color = lbl_80346F10->x24->x30;
+        } else if (i == 5) {
+            r.obj = lbl_80346F10->x28[i];
+            sx = r.obj->f14;
+            sy = r.obj->f18;
+            r.obj->f14 = lbl_80346F10->x28[4]->f14 + lbl_80346F10->x28[4]->x4->fc;
+            r.x = 0.0001f * (f32)i + -1.3f;
+            r.y = 0.0f;
+            r.z0 = 0;
+            r.z1 = 1;
+            r.one = 1.0f;
+            r.w = 1.0f;
+            r.obj->x4->fc = r.obj->x4->f4 + lbl_80346F10->x24->f3c;
+            r.obj->x4->color = lbl_80346F10->x24->x38;
+        } else {
+            r.obj = lbl_80346F10->x28[i];
+            sx = r.obj->f14;
+            sy = r.obj->f18;
+            r.x = 0.0001f * (f32)i + -1.3f;
+            r.y = 1.0f;
+            r.z0 = 0;
+            r.z1 = 0;
+            r.one = 1.0f;
+            r.w = 1.0f;
+        }
+        fn_8012A9A8(&r);
+        r.obj->f14 = sx;
+        r.obj->f18 = sy;
+    }
+    if (lbl_80346F10->x24->x14 == 1) {
+        v = lbl_80346F10->x24->f28;
+        lbl_80346F10->x24->f40 = 1.0f;
+    } else {
+        v = lbl_80346F10->x24->f2c;
+        if (lbl_80346F10->x24->f28 != v) {
+            lbl_80346F10->x24->f40 += lbl_80346F10->x24->x44 / 15.0f;
+            if (lbl_80346F10->x24->f40 <= 0.0f || 1.0f < lbl_80346F10->x24->f40) {
+                lbl_80346F10->x24->x44 *= -1;
+            }
+        } else {
+            lbl_80346F10->x24->f40 = 1.0f;
+            lbl_80346F10->x24->x44 = -1;
+        }
+    }
+    t = v / lbl_80346F10->x24->f24;
+    if (t > 0.5f) {
+        ca = 0xfa;
+        cb = 0x20;
+        cr = (s32)(376.0f * (1.0f - t)) + 0x20;
+        cg = 0xfa - (s32)(100.0f * (1.0f - t));
+    } else {
+        ca = 0xfa;
+        cb = 0x20;
+        cr = (s32)(30.0f * (1.0f - 2.0f * t)) + 0xdc;
+        cg = 0xc8 - (s32)(168.0f * (1.0f - 2.0f * t));
+    }
+    n.x0 = 0x23;
+    n.x2 = 0x28;
+    n.cnt = (s32)v;
+    z = 0.0001f * (f32)i + -1.3f;
+    n.f8 = z;
+    n.fc = lbl_80346F10->x24->f40;
+    n.x10 = Color(ca, cr, cg, cb);
+    fn_8012BAA8(&n);
+    savedz = TextGetZ();
+    TextSetZ(z);
+    TextSetScale(1.0f, 1.0f);
+    TextPrint(0x45, 0x28, "/");
+    TextPrintf(0x51, 0x28, "%2d", (s32)lbl_80346F10->x24->f24);
+    TextSetZ(savedz);
 }

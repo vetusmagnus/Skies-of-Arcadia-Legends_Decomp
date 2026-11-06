@@ -859,6 +859,8 @@ typedef struct {
     MotList *motions;   /* 0x1c */
     void *x20;
     char name[8];   /* 0x24 */
+    u8 pad2c[0x38 - 0x2c];
+    struct Task_8014D398 *x38;
 } Sub;
 /* The leader ship's task and its work (the task's 0x23c) */
 typedef struct {
@@ -963,7 +965,7 @@ typedef struct Geff {
     s32 x1a0;
     u8 x1a4[0xbc];
     void *handlers[47];
-    s32 x31c;
+    void *x31c;
 } Geff;
 typedef struct Sub1b8 {
     u8 pad0[0x2a];
@@ -978,19 +980,23 @@ typedef struct Ang3 {
     Angle z;
 } Ang3;
 typedef struct Slot18 {
-    u8 pad0[0x14];
+    NJS_POINT3 pos;     /* 0x00 */
+    s32 xc;             /* 0x0c */
+    s32 x10;            /* 0x10 */
     f32 x14;
-    u8 pad18[4];
 } Slot18;
 typedef struct FxList {
-    u8 pad0[4];
+    struct Task_8014D398 **slots;
     u32 x4;
 } FxList;
 typedef struct Ctx_8014D398 {
-    u8 pad0[0x1c];
+    u8 pad0[0x14];
+    s32 x14;
+    s32 x18;
     NJS_ARGB colour;    /* 0x1c */
     s32 x2c;            /* 0x2c */
-    u8 pad30[0x38 - 0x30];
+    s32 x30;
+    s32 x34;
     NJS_POINT3 pos;     /* 0x38 */
     Ang3 ang;           /* 0x44 */
     NJS_POINT3 scl;     /* 0x50 */
@@ -1003,7 +1009,7 @@ typedef struct Ctx_8014D398 {
     NJS_TEXLIST *x100;
     u8 pad104[0x176 - 0x104];
     u16 id;             /* 0x176 */
-    u8 pad178[0x17a - 0x178];
+    u16 x178;
     u16 h17a;
     u8 pad17c[0x184 - 0x17c];
     s32 hidden;         /* 0x184 */
@@ -1015,7 +1021,8 @@ typedef struct Ctx_8014D398 {
     s32 x19c;
     u8 pad1a0[0x1b8 - 0x1a0];
     Sub1b8 *x1b8;
-    u8 pad1bc[0x1c8 - 0x1bc];
+    s32 x1bc;
+    u8 pad1c0[0x1c8 - 0x1c0];
     Sub *x1c8;
     u8 pad1cc[0x1d8 - 0x1cc];
     Geff *x1d8;
@@ -1023,8 +1030,9 @@ typedef struct Ctx_8014D398 {
     u8 pad1e0[0x1e4 - 0x1e0];
     Ctl_80148228 *x1e4;
     struct Task_8014D398 *x1e8;
-    u8 pad1ec[0x1fa - 0x1ec];
-    u8 f1fa;
+    u8 x1ec;
+    u8 pad1ed[0x1fa - 0x1ed];
+    s8 f1fa;
     u8 f1fb;
     s16 f1fc;
     s16 f1fe;
@@ -1045,8 +1053,9 @@ typedef struct Ctx_8014D398 {
     Slot18 *x25c;
     void *x260;     /* the per-type record of an effect object */
     FxList *x264;
-    u8 pad268[0x26c - 0x268];
+    s32 x268;
     u8 f26c;
+    u8 pad26d[0x270 - 0x26d];
 } Ctx_8014D398;
 static inline Info *CamInfo(Ctx_8014D398 *c) {
     return c->x1c8->x10;
@@ -1061,6 +1070,8 @@ typedef struct Task_8014D398 {
     u8 x1b;
     u8 pad1c[0x24 - 0x1c];
     Ctx_8014D398 *x24;
+    u8 pad28[0x40 - 0x28];
+    Ctx_8014D398 work;  /* 0x40 */
 } Task_8014D398;
 typedef struct {
     Task_8014D398* ship;
@@ -1074,7 +1085,7 @@ typedef struct {
 extern Outer_80148228 *lbl_803472A0;
 extern Task_8014D398* fn_801094C8(u32 id);
 extern s32 fn_8025EF88(const char* a, const char* b);
-extern void fn_80227810(void *p);
+extern s32 fn_80227810(void *p);
 extern void fn_8015ED90(Task_8014D398 *t);
 extern void *fn_8010A164(void *p);
 extern void fn_80156B04(void *a, Ctx_8014D398 *c, s32 d, void *e, void *f);
@@ -2541,7 +2552,7 @@ void fn_8014359C(BtlCmd* in, s32 a, s32 b)
 void fn_8014D1F4(Task_8014D1F4* t)
 {
     extern char lbl_802B39DC[];
-    extern void fn_80227810(void*);
+    extern s32 fn_80227810(void*);
     extern void fn_8015ED90(Task_8014D1F4*);
     extern Obj1E8* fn_8010A164(void*);
     extern void fn_801DBE1C(const char*, ...);
@@ -5224,27 +5235,41 @@ inline void fn_80148EDC(Node* n)
 }
 
 /* Config record of an effect emitter (Link.cfg). */
+typedef struct CfgMot_8014A1FC {
+    u32 x0;
+    s32 x4;
+    f32 x8, xc, x10;
+    s32 x14, x18, x1c;
+} CfgMot_8014A1FC;
 typedef struct Cfg_8014A1FC {
-    u8 pad0[0x50];
+    u32 x0;
+    u8 pad4[0x24 - 4];
+    CfgMot_8014A1FC mot; /* 0x24 */
+    s32 x44;
+    u32 x48;
+    u8 pad4c[4];
     u32 mode;      /* 0x50 */
     s32 r, g, b;   /* 0x54 */
     u32 x60;       /* 0x60 */
-    s32 x64;       /* 0x64 */
-    u8 pad68[4];
+    u32 x64;       /* 0x64 */
+    f32 x68;
     f32 x6c;       /* 0x6c */
-    u8 pad70[0x7c - 0x70];
+    u32 x70;
+    f32 x74;
+    f32 x78;
     s32 count;     /* 0x7c */
-    u8 pad80[4];
+    s32 x80;
     f32 x84, x88, x8c, x90, x94, x98, x9c;
     s32 xa0;
-    u8 pada4[4];
+    s32 xa4;
     s32 xa8, xac, xb0;
-    u8 padb4[4];
+    s32 xb4;
     u32 xb8;
     s32 xbc;
-    u8 padc0[4];
+    f32 xc0;
     f32 xc4;
-    u8 padc8[0xd0 - 0xc8];
+    u32 xc8;
+    f32 xcc;
     f32 xd0;
     u32 xd4;
     u32 xd8;
@@ -5276,7 +5301,7 @@ typedef struct Emit {
     s32 xb4;
     s16 xb8, xba;
     s32 xbc;
-    u8 padc0[0x100 - 0xc0];
+    NJS_MATRIX mtx; /* 0xc0 */
     f32 x100;
 } Emit;
 extern void fn_801E1784(void* p);
@@ -5690,15 +5715,20 @@ typedef struct EffA_8014B09C {
     Obj_8014B510 quad;      /* 0x40 */
 } EffA_8014B09C;
 typedef struct EffB_8014B09C {
-    u8 pad0[0x10];
+    NJS_POINT3 pos;     /* 0x00 */
+    u8 padc[4];
     Angle x10;
     u8 pad14[4];
-    AnglePair x18;
-    Angle x20;
-    u8 pad24[0x30 - 0x24];
+    Ang3 ang;           /* 0x18 */
+    f32 x24;
+    f32 x28;
+    s32 x2c;
     s16 x30;
-    u8 pad32[2];
+    s16 x32;
     s32 x34;
+    NJS_MATRIX mtx;     /* 0x38 */
+    f32 x78;
+    f32 x7c;
 } EffB_8014B09C;
 extern s32 njPushMatrixEx(void);
 extern s32 njPopMatrixEx(void);
@@ -5711,6 +5741,524 @@ extern void fn_800A1998(NJS_POINT3 *from, NJS_POINT3 *to, Angle *out, s8 mode, u
 extern void fn_80286EE8(void);
 extern void fn_8028B498(void);
 extern void fn_8009D994(Ctx_8014D398 *o, s32 idx, s32 count);
+
+extern void *memcpy(void *dst, const void *src, u32 n);
+extern s32 fn_800BE54C(NJS_POINT3 *e, const NJS_POINT3 *p, f32 v, s32 mode);
+extern void fn_800BE464(NJS_POINT3 *e, NJS_POINT3 *p, Angle a);
+extern void fn_8009E804(FxList *l, u16 id);
+extern void fn_8014B09C(Ctx_8014D398 *o, Ctx_8014D398 *src);
+
+void fn_8014A7EC(Task_8014D398 *t)
+{
+    Cfg_8014A1FC *info;
+    Task_8014D398 *ptask;
+    Ctx_8014D398 *o;
+    Ctx_8014D398 *parent;
+    EffB_8014B09C *eff;
+    Emit *def;
+    f32 r;
+    f32 zero;
+    f32 d;
+    s32 v;
+    s32 res;
+    s16 n;
+    Angle k;
+    NJS_POINT3 p;
+
+    o = t->x24;
+    def = NULL;
+    eff = o->x260;
+    info = o->x1c8->x10;
+    ptask = t->parent;
+    if (t->f18 & 0x20) {
+        t->b19 = 0xff;
+    } else if (ptask->f18 & 0x40) {
+        if (t->b19 == 3) {
+            t->b19 = 5;
+        } else {
+            t->b19 = 0xff;
+        }
+    } else {
+        parent = ptask->x24;
+        def = parent->x260;
+    }
+    switch (t->b19) {
+    case 0:
+        t->x1b = 0xfb;
+        o->x100 = parent->x100;
+        o->id = parent->id;
+        t->b19 = 6;
+    case 6:
+        memcpy(eff->mtx, def->mtx, 0x40);
+        eff->pos = o->pos;
+        o->vec = parent->vec;
+        o->rot = parent->rot;
+        if (def->x1a == 3) {
+            eff->ang = parent->ang;
+        }
+        o->scl = parent->scl;
+        o->colour = parent->colour;
+        eff->x7c = (def->x24 - 1.0f) * eff->x78;
+        r = info->xc0;
+        if (r >= 0.001f) {
+            r = (r - 1.0f) * (3.0517578e-5f * rand()) + 1.0f;
+            o->scl.x *= r;
+            o->scl.y *= r;
+            o->scl.z *= r;
+            eff->x78 *= r;
+        }
+        if (def->x14 > 0) {
+            o->colour.a = -1.0f;
+        } else {
+            o->colour.a = 0.0f;
+        }
+        o->f1fc = info->xa4;
+        if (info->xc8 != 0) {
+            o->ang.z = 65536.0f * (3.0517578e-5f * rand());
+        } else {
+            o->ang.z = 182.04445f * info->xcc;
+        }
+        if (parent->xe8 != NULL) {
+            o->xe8 = parent->xe8;
+            o->f18c = 0.0f;
+            o->f190 = parent->f190;
+            o->x19c = 1;
+        }
+        if (parent->xec != NULL) {
+            o->xec = parent->xec;
+        }
+        t->b19 = 1;
+    case 1:
+        if (info->x44 <= -1) {
+            memcpy(eff->mtx, def->mtx, 0x40);
+            o->vec = parent->vec;
+            o->rot = parent->rot;
+            if (def->x1a == 3) {
+                eff->ang = parent->ang;
+            }
+        }
+        if (eff->x30 < def->x14) {
+            o->colour.a = def->x1c * eff->x30 + -1.0f;
+        } else if (eff->x30 == def->x14) {
+            o->colour.a = 0.0f;
+        } else {
+            if (eff->x30 > def->x16 - def->x18) {
+                o->colour.a = def->x20 * (def->x16 - eff->x30) + -1.0f;
+            } else if (eff->x30 == def->x16) {
+                o->colour.a = -1.0f;
+            }
+        }
+        v = parent->x1d8 != NULL ? parent->x1d8->x1a0 : 1;
+        if (v == 0) {
+            if (o->hidden == 0) {
+                p = eff->pos;
+                if (info->x70 != 0) {
+                    p.x *= info->x74;
+                    p.z *= info->x78;
+                }
+                njCalcPoint(eff->mtx, &p, &o->pos);
+                o->pos.x += o->vec.x;
+                o->pos.y += o->vec.y;
+                o->pos.z += o->vec.z;
+            }
+            if (o->f1fc == 0) {
+                fn_8014B09C(o, parent);
+            }
+        }
+        {
+            NJS_POINT3 q = {0.0f, 0.0f, 0.0f};
+
+            res = 0;
+            eff->pos.y = eff->x24 * def->x30 + eff->pos.y;
+            d = eff->x24 * def->x34;
+            if (fabs(d) >= 0.001f) {
+                if (info->x64 == 0 || info->x64 == 4) {
+                    res = fn_800BE54C(&eff->pos, &q, d, 0);
+                } else {
+                    q.y = eff->pos.y;
+                    res = fn_800BE54C(&eff->pos, &q, d, 1);
+                }
+            }
+            eff->x24 += eff->x28;
+            k = eff->x2c;
+            if ((k != 0 || def->xc != 0) && res != 0) {
+                fn_800BE464(&eff->pos, &q, k);
+                eff->x10 -= eff->x2c;
+                eff->x2c += def->xc;
+            }
+        }
+        o->scl.x += parent->vel.x;
+        o->scl.y += parent->vel.y;
+        o->scl.z += parent->vel.z;
+        eff->x78 += eff->x7c;
+        if (o->scl.x < 0.0f) {
+            o->scl.x = 0.0f;
+        }
+        if (o->scl.y < 0.0f) {
+            o->scl.y = 0.0f;
+        }
+        if (o->scl.z < 0.0f) {
+            o->scl.z = 0.0f;
+        }
+        zero = 0.0f;
+        if (o->scl.x == zero && o->scl.y == zero && o->scl.z == zero) {
+            t->b19 = 4;
+            break;
+        }
+        if ((def->flags & 4) && o->f1fc == 0) {
+            if (eff->x32 == 0 && eff->x34 < def->x28) {
+                eff->x34++;
+                if (eff->x34 == def->x28 && (def->flags & 1)) {
+                    eff->x34 = 0;
+                }
+                if (eff->x34 < def->x28) {
+                    n = fn_800A10A8(def->x2c, eff->x34, def->x28);
+                    eff->x32 = n - 1;
+                }
+            } else if (eff->x34 != def->x28) {
+                eff->x32--;
+            }
+            if (eff->x34 == def->x28 && eff->x34 > 0) {
+                eff->x34 = def->x28 - 1;
+            }
+        }
+        if (eff->x30 == def->x16) {
+            if (ptask->b19 != 1) {
+                t->b19 = 4;
+            } else {
+                t->b19 = 2;
+            }
+        } else if (o->f1fc == 0) {
+            eff->x30++;
+        } else {
+            o->f1fc--;
+        }
+        break;
+    case 4:
+        if (eff != NULL) {
+            fn_801E1784(eff);
+        }
+        o->x264 = NULL;
+        o->x260 = NULL;
+        o->x25c = NULL;
+        t->b19 = 3;
+        break;
+    case 2:
+        fn_8009E804(parent->x264, o->x238);
+    case 0xff:
+        if (eff != NULL) {
+            fn_801E1784(eff);
+        }
+        o->x264 = NULL;
+        o->x260 = NULL;
+        o->x25c = NULL;
+        t->b19 = 5;
+    case 5:
+        fn_80100B74(t);
+        break;
+    case 0xfe:
+        break;
+    default:
+        if (ptask->b19 == 1) {
+            fn_8009E804(parent->x264, o->x238);
+            t->b19 = 5;
+        }
+        break;
+    }
+    if (def != NULL && t->b19 != 5) {
+        parent->f1fe++;
+    }
+    if (def != NULL && parent->f1fe == parent->x264->x4 && (def->flags & 2)) {
+        DrawStatePop(0);
+    }
+}
+
+typedef struct Pool_8014996C {
+    NJS_POINT3 z0;          /* 0x00 */
+    NJS_POINT3 z1;          /* 0x0c */
+    NJS_POINT3 zero;        /* 0x18 */
+    char geffTwice[0x30];   /* "ERROR:sb_geff_scptTskInit twice call!! #%d (%s)" */
+    char noTexture[0x24];   /* "eff_smoke3: Texture Load failed." */
+    char noTask[0x24];      /* "Effect: Particle task make failed." */
+} Pool_8014996C;
+extern const Pool_8014996C lbl_802B3918;
+extern void fn_800ABE9C(void);
+extern void fn_800ABEB0(void);
+extern void fn_800ADF98(Ctx_8014D398 *o);
+extern void fn_8009D6C0(Ctx_8014D398 *o, s32 idx, f32 v);
+extern void fn_8009D67C(Ctx_8014D398 *o, s32 idx);
+extern NJS_TEXLIST *fn_800A1B50(Ctx_8014D398 *o);
+extern void fn_800A0BA0(Ctx_8014D398 *o, NJS_MATRIX m);
+extern s32 fn_8015F218(Ctx_8014D398 *o);
+extern void fn_8009DCA8(Ctx_8014D398 *o, CfgMot_8014A1FC *m);
+extern void fn_8009E63C(FxList *l, s32 n);
+extern void fn_8009E71C(FxList *l, s32 n);
+extern void fn_800BF800(Ctx_8014D398 *o);
+extern void fn_800BF7AC(Ctx_8014D398 *o);
+extern Task_8014D398 *fn_8009E530(FxList *l, s32 n);
+extern Task_8014D398 *fn_80226704(Task_8014D398 *parent, void *cb, s32 size);
+extern void fn_800BF0CC(Emit *e, EffB_8014B09C *b);
+extern void fn_800A1210(NJS_POINT3 *out, const NJS_POINT3 *in, Angle deg, f32 radius);
+
+static inline Cfg_8014A1FC *CfgOf(Ctx_8014D398 *c) {
+    return c->x1c8->x10;
+}
+
+static inline s32 MapIsEvent(void) {
+    s32 f = 0;
+    s32 m = lbl_80311AC0.unk4;
+    if (m >= 500 && m < 600) {
+        f = 1;
+    }
+    f = f != 0;
+    return f;
+}
+
+static inline Task_8014D398 *FxSpawn(Task_8014D398 *parent, void *cb, u16 a, Sub *obj, const Pool_8014996C *msg) {
+    Task_8014D398 *n = fn_80226704(parent, cb, 0x270);
+    Ctx_8014D398 *c;
+
+    if (n == NULL) {
+        fn_801DBE1C(msg->noTask);
+    }
+    n->f18 |= 1;
+    n->x24 = &n->work;
+    if (n != NULL) {
+        c = n->x24;
+        c->x1c8 = obj;
+        if (obj->x38 == NULL) {
+            obj->x38 = n;
+        }
+        c->x1d8 = NULL;
+        c->x268 = 0;
+        c->x264 = NULL;
+        c->x260 = NULL;
+        c->x25c = NULL;
+        c->x14 = -1;
+        c->x18 = 0;
+        c->x30 = 8;
+        c->x34 = 6;
+        c->x178 = a;
+        c->h17a = obj->x4;
+        c->x1bc = 0;
+        n->x24->xe4 = parent->x24->xe4;
+        n->x24->x2c = parent->x24->x2c;
+    }
+    return n;
+}
+
+void fn_8014996C(Task_8014D398 *t)
+{
+    Cfg_8014A1FC *info;
+    Ctx_8014D398 *w;
+    Slot18 *base;
+    Slot18 *p;
+    Emit *e;
+    s32 range;
+    s32 i;
+    s32 mode;
+    const Pool_8014996C *msg;
+    EffB_8014B09C *inst;
+    Task_8014D398 *child;
+    Geff *g;
+    Emit *emit;
+    s32 res;
+    s32 c;
+    s16 lo;
+    f32 r;
+    f32 ang;
+    f32 zero;
+
+    msg = &lbl_802B3918;
+    w = t->x24;
+    info = w->x1c8->x10;
+    if ((t->f18 & 0x20) || (t->f18 & 0x40)) {
+        t->b19 = 0xff;
+    }
+    switch (t->b19) {
+    case 0:
+        t->x1b = 0xfa;
+        w->f26c = 1;
+        if (CfgOf(w)->x0 < 0x37) {
+            t->b19 = 4;
+            break;
+        }
+        fn_8015ED90(t);
+        g = w->x1d8;
+        if (g != NULL) {
+            g->x1a0 = 0;
+            g->handlers[0] = fn_800ABEB0;
+            g->x31c = fn_800ABE9C;
+        }
+        fn_800ADF98(w);
+        fn_8009D6C0(w, 0, 1.0f);
+        fn_8009D67C(w, 1);
+        w->x100 = fn_800A1B50(w);
+        if (w->x100 != NULL && fn_80227810(w->x100) == -1) {
+            fn_801DBE1C(msg->noTexture);
+        }
+        emit = fn_801E1A2C(1, 0x108);
+        fn_8014A1FC(w, emit);
+        w->x260 = emit;
+        if (info->x48 != 0) {
+            t->x24->f1fa = 1;
+            t->b19 = 2;
+        } else {
+            t->x24->f1fb = 1;
+            t->b19 = 1;
+        }
+    case 1:
+        if (w->x264 != NULL) {
+            if (w->x264->x4 != 0) {
+                Emit *em = w->x260;
+
+                t->b19 = 2;
+                res = fn_8015E600(w);
+                fn_800A0BA0(w, em->mtx);
+                t->b19 = 1;
+                if (em->flags & 2) {
+                    w->f1fe = 0;
+                    fn_80299040(w->x100);
+                    DrawStatePush(&em->ds);
+                }
+            } else if (!MapIsEvent()) {
+                res = fn_8015E600(w);
+            }
+        } else if (!MapIsEvent()) {
+            res = fn_8015E600(w);
+        }
+        if (!MapIsEvent() && res != 0 && info->x48 != 0 && fn_8015F218(w) == 1) {
+            t->x24->f1fa = 1;
+            t->b19 = 2;
+        }
+        break;
+    case 2:
+        e = w->x260;
+        g = w->x1d8;
+        if (w->f1fa != 0) {
+            s32 v = fabsf(info->x44);
+
+            if (v == 1) {
+                fn_8009DCA8(w, &info->mot);
+            } else if (v == 0) {
+                g->x178 = 0;
+            }
+            if (w->x264 != NULL && w->x264->x4 != 0) {
+                fn_8009E63C(w->x264, w->x236);
+            }
+            w->x1ec = 0;
+            fn_800BF800(w);
+            w->f1fa = 0;
+            base = w->x25c;
+        } else {
+            base = w->x25c;
+        }
+        fn_8015E600(w);
+        fn_800A0BA0(w, e->mtx);
+        w->vel.x = w->scl.x * (e->x24 - 1.0f);
+        w->vel.y = w->scl.y * (e->x24 - 1.0f);
+        w->vel.z = w->scl.z * (e->x24 - 1.0f);
+        if (w->f1fc > 0) {
+            w->f1fc--;
+        } else if (w->f1fc == 0) {
+            t->b19 = 1;
+            if (e->flags & 2) {
+                w->f1fe = 0;
+                fn_80299040(w->x100);
+                DrawStatePush(&e->ds);
+            }
+            break;
+        }
+        p = base;
+        i = 0;
+        mode = info->x80;
+        range = info->xb4 - info->xb8;
+        if (range < 0) {
+            range = 0;
+        }
+        r = info->x68;
+        for (; i < w->x22c; i++, p++) {
+            c = p->x10;
+            if (c == 0) {
+                child = NULL;
+                if (w->x264->x4 >= w->x236 - 1) {
+                    child = fn_8009E530(w->x264, w->x236);
+                }
+                if (child != NULL) {
+                    child->b19 = 6;
+                } else {
+                    Task_8014D398 **slots;
+                    s32 k;
+
+                    child = FxSpawn(t, fn_8014A7EC, w->x178, w->x1c8, msg);
+                    slots = w->x264->slots;
+                    for (k = 0; k < w->x236; slots++, k++) {
+                        if (*slots == NULL) {
+                            child->x24->x238 = k;
+                            *slots = child;
+                            w->x264->x4++;
+                            break;
+                        }
+                    }
+                    if (k == w->x236) {
+                        child->b19 = 0xff;
+                    }
+                }
+                child->x24->x260 = fn_801E1A2C(1, 0x80);
+                fn_800BF0CC(e, child->x24->x260);
+                inst = child->x24->x260;
+                zero = 0.0f;
+                if (r != zero) {
+                    if (mode != 0) {
+                        ang = base->x14 * (3.0517578e-5f * rand());
+                        fn_800A1210(&p->pos, &msg->zero, ang, r);
+                        inst->x10 = 182.04445f * (-ang - 90.0f);
+                    } else {
+                        inst->x10 = -0x4000 - p->xc;
+                    }
+                    fn_800BE54C(&child->x24->pos, &msg->zero, w->x258 * (3.0517578e-5f * rand()), 1);
+                } else if (mode == 0) {
+                    inst->x10 = -0x4000 - p->xc;
+                }
+                child->x24->pos = p->pos;
+                c = range * (3.0517578e-5f * rand());
+                lo = info->xb8;
+                p->x10 = lo + c;
+                if (p->x10 == 0) {
+                    p->x10 = 1;
+                }
+            } else {
+                p->x10 = c - 1;
+            }
+        }
+        if (e->flags & 2) {
+            w->f1fe = 0;
+            fn_80299040(w->x100);
+            DrawStatePush(&e->ds);
+        }
+        break;
+    case 3:
+    case 0xff:
+        fn_8015EBF4(w);
+        fn_8009E71C(w->x264, w->x236);
+        if (w->x100 != NULL && w->x100->textures->texaddr != NULL) {
+            fn_802275A4(w->x100, 0);
+        }
+        fn_800BF7AC(w);
+        w->x264 = NULL;
+        w->x260 = NULL;
+        w->x25c = NULL;
+        fn_80100B74(t);
+        break;
+    case 4:
+        if (CfgOf(w)->x0 >= 0x37) {
+            t->b19 = 0;
+        }
+        break;
+    case 5:
+        break;
+    }
+}
 
 void fn_8014B09C(Ctx_8014D398 *o, Ctx_8014D398 *src) {
     Angle saved;
@@ -5771,8 +6319,8 @@ void fn_8014B09C(Ctx_8014D398 *o, Ctx_8014D398 *src) {
                 njPopMatrixEx();
                 break;
             case 3:
-                o->ang.xy = b->x18;
-                o->ang.z = b->x20;
+                o->ang.xy = b->ang.xy;
+                o->ang.z = b->ang.z;
                 o->ang.z = o->ang.z + step;
                 break;
             case 4:
@@ -5833,9 +6381,9 @@ void fn_8014B09C(Ctx_8014D398 *o, Ctx_8014D398 *src) {
             njPopMatrixEx();
             break;
         case 3:
-            o->ang.xy.x = b->x18.x;
-            o->ang.xy.y = b->x18.y;
-            o->ang.z = b->x20 + step;
+            o->ang.xy.x = b->ang.xy.x;
+            o->ang.xy.y = b->ang.xy.y;
+            o->ang.z = b->ang.z + step;
             break;
         case 4:
             njPushMatrixEx();

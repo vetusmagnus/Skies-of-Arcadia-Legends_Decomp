@@ -461,7 +461,6 @@ extern void MemCopy(void* dst, const void* src, s32 size);
 extern void fn_8019A15C(void* p, s32 a, s32 b, s32 c);
 extern void fn_80199F38(void* r);
 extern void fn_80199F58(void* r);
-typedef struct { u32 a; s32 b, c; } V3;
 typedef s32 (*Callback)(void *, void *);
 typedef struct CbDef {
     Callback fn;
@@ -492,14 +491,15 @@ typedef struct Hold_8015EB8C {
     u16 h1c;             /* 0x1C path key */
     s16 h1e;             /* 0x1E */
     f32 x20;             /* 0x20 */
-    u8 pad24[0x48 - 0x24];
+    u8 pad24[0x3c - 0x24];
+    Angle x3c[3];        /* 0x3C */
     s32 x48, x4c, x50;   /* 0x48 */
     s32 x54[3];          /* 0x54 */
     s32 x60[3];          /* 0x60 */
     s32 x6c;             /* 0x6C */
     s32 x70;             /* 0x70 */
-    u32 x74;             /* 0x74 */
-    V3 x78;              /* 0x78 */
+    NJS_TEXNAME *x74;    /* 0x74 the parent's texture this object replaces */
+    NJS_TEXNAME x78;     /* 0x78 */
     Node_80167244 *x84;  /* 0x84 */
     Node_80167244 *x88;  /* 0x88 */
     Node_80167244 *x8c;  /* 0x8C */
@@ -528,7 +528,7 @@ typedef struct Hold_8015EB8C {
 } Hold_8015EB8C;
 typedef struct {
     u8 pad0[0x20];
-    void *x20;
+    NJS_TEXLIST *x20;
     char name[1];        /* 0x24 */
 } Ref;
 typedef struct Ent_8015EBF4 {
@@ -538,17 +538,26 @@ typedef struct Ent_8015EBF4 {
     s32 x2c;             /* 0x2C */
     u8 pad30[0x38 - 0x30];
     NJS_POINT3 pos;      /* 0x38 */
-    u8 pad44[0xe4 - 0x44];
+    Angle ang[3];        /* 0x44 */
+    NJS_POINT3 scl;      /* 0x50 */
+    u8 pad5c[0xe4 - 0x5c];
     void *model;         /* 0xE4 */
-    u8 pade8[0x104 - 0xe8];
+    u8 pade8[0xf0 - 0xe8];
+    NJS_MOTION *motion2; /* 0xF0 */
+    u8 padf4[0x100 - 0xf4];
+    NJS_TEXLIST *texlist; /* 0x100 */
     NJS_POINT3 home;     /* 0x104 */
     u8 pad110[0x17a - 0x110];
     u16 h17a;
-    u8 pad17c[0x1b8 - 0x17c];
+    u8 pad17c[0x1a0 - 0x17c];
+    f32 x1a0;            /* 0x1A0 */
+    u8 pad1a4[0x1b8 - 0x1a4];
     EvHit *hit;          /* 0x1B8 */
-    u8 pad1bc[0x1c8 - 0x1bc];
+    EvColl *coll;        /* 0x1BC */
+    u8 pad1c0[0x1c8 - 0x1c0];
     Ref *x1c8;
-    u8 pad1cc[0x1d4 - 0x1cc];
+    u8 pad1cc[0x1d0 - 0x1cc];
+    struct Ent_8015EBF4 *parent; /* 0x1D0 */
     s32 x1d4;
     Hold_8015EB8C *x1d8;
     u8 pad1dc[0x26c - 0x1dc];
@@ -998,14 +1007,6 @@ typedef struct {
 #define LA(n) (((Pnl_801729D0*)camp_work.pnl[n])->in->la)
 extern s32 fn_801664A4(Ent_8015EBF4 *o, Arg_8016679C *a);
 extern void fn_801E735C(u32 index, f32 speed, EvObj *obj);
-typedef struct NameEnt { char *name; u32 b; u32 c; } NameEnt;
-typedef struct NameTab { NameEnt *ents; u32 count; } NameTab;
-typedef struct Node {
-    u8 pad[0x100];
-    NameTab *tab;
-    u8 pad104[0x1d0 - 0x104];
-    struct Node *parent;
-} Node;
 typedef struct Hit {
     NJS_POINT3 pos; /* 0x00 */
     f32 y0;         /* 0x0c */
@@ -1141,7 +1142,7 @@ s32 fn_8015ED90(Task *t)
     h->x6c = 0;
     h->x70 = 1;
     h->x74 = 0;
-    memset(&h->x78, 0, sizeof(V3));
+    memset(&h->x78, 0, sizeof(NJS_TEXNAME));
     if (o->x1c8->x20 != NULL) {
         fn_80227810(o->x1c8->x20);
     }
@@ -4160,14 +4161,14 @@ void fn_8015E314(Ent_8015EBF4 *self) {
 
 void fn_8015EBF4(Ent_8015EBF4 *self) {
     extern void fn_801601AC(Ent_8015EBF4 *e);
-    extern V3 *fn_8016748C(Ent_8015EBF4 *e, s32 a);
+    extern NJS_TEXNAME *fn_8016748C(Ent_8015EBF4 *e, NJS_TEXNAME *key);
     extern void fn_801E1784(void *p);
     extern void fn_802275A4(void *p, s32 a);
     extern void fn_80210D7C(s32 a);
     extern s32 fn_801F6EC8(s32 a);
     Hold_8015EB8C *h = self->x1d8;
     void *o;
-    V3 *p;
+    NJS_TEXNAME *p;
     s32 r;
     if (h != 0) {
         o = h->x8;
@@ -4183,7 +4184,7 @@ void fn_8015EBF4(Ent_8015EBF4 *self) {
         h->x12c = 0;
         h->xe0 = 0;
         h->x94 = 0;
-        if (h->x78.a != 0 && h->x74 != 0) {
+        if (h->x78.filename != 0 && h->x74 != 0) {
             p = fn_8016748C(self, h->x74);
             *p = h->x78;
         }
@@ -6274,18 +6275,18 @@ s32 fn_80166138(Ent_8015EBF4 *o, Arg_8016679C *t) {
     return r;
 }
 
-NameEnt *fn_8016748C(Node *n, char **key) {
-    Node *p;
-    NameEnt *e;
+NJS_TEXNAME *fn_8016748C(Ent_8015EBF4 *n, NJS_TEXNAME *key) {
+    Ent_8015EBF4 *p;
+    NJS_TEXNAME *e;
     u32 i;
-    for (i = 0; i < n->tab->count; i++) {
-        e = &n->tab->ents[i];
-        if (strncmp(e->name, *key, strlen(e->name)) == 0) return e;
+    for (i = 0; i < n->texlist->nbTexture; i++) {
+        e = &n->texlist->textures[i];
+        if (strncmp(e->filename, key->filename, strlen(e->filename)) == 0) return e;
     }
     for (p = n->parent; p != 0; p = p->parent) {
-        for (i = 0; i < p->tab->count; i++) {
-            e = &p->tab->ents[i];
-            if (strncmp(e->name, *key, strlen(e->name)) == 0) return e;
+        for (i = 0; i < p->texlist->nbTexture; i++) {
+            e = &p->texlist->textures[i];
+            if (strncmp(e->filename, key->filename, strlen(e->filename)) == 0) return e;
         }
     }
     return 0;
