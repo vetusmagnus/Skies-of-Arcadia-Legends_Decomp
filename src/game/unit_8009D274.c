@@ -2166,13 +2166,9 @@ void fn_800A3744(EvObj *obj)
         }
     }
 }
-void bss_order_stub(void);
 
 /* state */
 
-/* Layout stub, NOT part of the merge: MWCC lays the pooled .bss arrays out in order of first use in
- * the file. In the unit, fn_8009C518 (earlier) sets that order; this stub stands in for it here. */
-void bss_order_stub(void) { lbl_803033B0[0] = 0; lbl_803033C8[0] = 0; lbl_803033E0[0] = 0; lbl_803033F8[0] = 0; }
 
 extern void fn_801CE6D0(NJS_TEXLIST* tex, s32 id, VertexTex* v, s32 n, s32 a, s32 flags);
 void fn_800A25E0(Emit_800BA444* e, NJS_POINT3* pos, Angle* ang, s32 flags) {

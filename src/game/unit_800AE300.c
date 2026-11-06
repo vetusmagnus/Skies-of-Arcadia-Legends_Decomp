@@ -43,11 +43,7 @@ extern s32 lbl_803033B0[6];
 extern s32 lbl_803033C8[6];
 extern s32 lbl_803033E0[6];
 extern s32 lbl_803033F8[6];
-s32 lbl_803033B0[6];
 /* count */
-s32 lbl_803033C8[6];
-s32 lbl_803033E0[6];
-s32 lbl_803033F8[6];
 
 static inline EvInfoCount* CountInfo(EvObj* e) {
     return e->ext->info;
@@ -1126,6 +1122,3 @@ void fn_800B2C1C(Task *o) {
 
 /* state */
 
-/* Layout stub, NOT part of the merge: MWCC lays the pooled .bss arrays out in order of first use in
- * the file. In the unit, fn_8009C518 (earlier) sets that order; this stub stands in for it here. */
-void bss_order_stub(void) { lbl_803033B0[0] = 0; lbl_803033C8[0] = 0; lbl_803033E0[0] = 0; lbl_803033F8[0] = 0; }

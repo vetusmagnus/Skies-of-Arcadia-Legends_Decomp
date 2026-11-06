@@ -1349,10 +1349,6 @@ void fn_800AB834(TNode8009D760* t) {
         n->work->s204 = 0;
     }
 }
-void bss_order_stub(void);
 
 /* state */
 
-/* Layout stub, NOT part of the merge: MWCC lays the pooled .bss arrays out in order of first use in
- * the file. In the unit, fn_8009C518 (earlier) sets that order; this stub stands in for it here. */
-void bss_order_stub(void) { lbl_803033B0[0] = 0; lbl_803033C8[0] = 0; lbl_803033E0[0] = 0; lbl_803033F8[0] = 0; }
