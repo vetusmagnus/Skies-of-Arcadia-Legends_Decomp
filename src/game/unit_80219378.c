@@ -5026,6 +5026,22 @@ void fn_80225FDC(void)
     fn_8022291C();
 }
 
+s32 TaskDelete(Task *t) {
+    TaskFunc f;
+    s32 ret = 0;
+    if (t != 0) {
+        if ((t->flags & 8) && (f = t->func) != 0) {
+            t->state = 0xff;
+            f(t);
+            ret = 1;
+        } else if (t->func != 0) {
+            t->flags |= 0x40;
+        }
+        t->flags |= 0x10;
+        return ret;
+    }
+}
+
 void fn_802260E8(void *p)
 {
     if (p) {

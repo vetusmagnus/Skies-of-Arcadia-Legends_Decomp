@@ -6101,6 +6101,25 @@ void fn_8006D080(Node* o, s32 f) {
     fn_801E17E0(o);
 }
 
+static inline s16 AddCount(s32 total, s32 count) {
+    return total + count;
+}
+
+s16 fn_8006D2C4(s32 a) {
+    Node_8006D888 *n = lbl_8034739C;
+    s16 total = 0;
+    if (n == 0) {
+        return 0;
+    }
+    do {
+        if (n->x0 > 0) {
+            total = AddCount(total, n->x4);
+        }
+        n = n->x10;
+    } while (n != 0);
+    return total;
+}
+
 void fn_8006D308(void) {
     char buf[0x20];
     Node_8006D888 *p = lbl_8034739C;

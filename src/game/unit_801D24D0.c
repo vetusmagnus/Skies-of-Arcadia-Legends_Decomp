@@ -5571,9 +5571,10 @@ static inline f32 Dist2(f32 x, f32 z) { return x * x + z * z; }
         } \
     }
 
+extern f32 lbl_80345878[];
+
 #ifdef NONMATCHING
 extern VertexCol lbl_80308DF0[4];
-extern f32 lbl_80345878[];
 extern void GXSetColorUpdate(u8 enable);
 extern void GXSetAlphaUpdate(u8 enable);
 extern void fn_80290ED4(VertexCol* v, s32 count, s32 flag);
@@ -5748,24 +5749,20 @@ void fn_801DBCD4(void) {
 }
 #endif
 
-/* NEAR (18 lines, float register numbering only). Called by draw2d.c as
-   NJS_POINT3 fn_801DCDC0(f32, f32, f32): the struct return is the hidden r3 pointer here. */
-#ifdef NONMATCHING
+/* Called by draw2d.c as NJS_POINT3 fn_801DCDC0(f32, f32, f32): the struct return is the
+   hidden r3 pointer here. */
 void fn_801DCDC0(NJS_POINT3 *out, f32 x, f32 y, f32 z) {
     f32 *t = lbl_80345878;
-    f32 ax, ay;
+    f32 cx = t[2];
+    f32 cy = t[3];
+    f32 sx = t[7];
+    f32 sy = t[8];
+    f32 s = t[6];
     f32 a = -1.0f * z;
-    ax = x - t[2];
-    ay = y - t[3];
-    ax = a * ax;
-    ay = a * ay;
-    ax = ax / (t[6] * t[7]);
-    ay = (-1.0f * ay) / (t[6] * t[8]);
-    out->x = ax;
-    out->y = ay;
+    out->x = (a * (x - cx)) / (s * sx);
+    out->y = (-1.0f * (a * (y - cy))) / (s * sy);
     out->z = z;
 }
-#endif
 
 extern VertexCol lbl_802F6620[4];
 extern void (*lbl_80347490)(s32 a);

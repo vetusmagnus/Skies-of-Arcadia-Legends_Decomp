@@ -3973,8 +3973,7 @@ void fn_801BD644(void) {
     fn_801D6998(lbl_803471A8, fn_801E4984(lbl_803471B0, 1));
 }
 
-inline s8 fn_801BE608(s16 x) {
-    u8 lvl = lbl_803473BE;
+inline s8 GuildRank(s16 x, u8 lvl) {
     int r;
     if (x == -1) {
         return -1;
@@ -3989,6 +3988,10 @@ inline s8 fn_801BE608(s16 x) {
         r = 1;
     }
     return r;
+}
+
+inline s8 fn_801BE608(s16 x) {
+    return GuildRank(x, lbl_803473BE);
 }
 
 s32 fn_801BD748(ShopTask_801BD748* t, ShopEntry_801BD748* tmp, s32 start) {

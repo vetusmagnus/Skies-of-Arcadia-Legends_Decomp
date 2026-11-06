@@ -3735,6 +3735,21 @@ void fn_80296B34(void) {
     GXEnableTexOffsets(0, 0, 0);
 }
 
+#pragma opt_propagation off
+void fn_80296B60(s32 n, u32 argb, s32 flag) {
+    u32 a = argb;
+    a >>= 24;
+    lbl_80347E98.a = a;
+    lbl_80347E98.r = argb >> 16;
+    lbl_80347E98.g = argb >> 8;
+    lbl_80347E98.b = argb;
+    fn_8029B248(2, flag);
+    GXSetChanMatColor(GX_COLOR0A0, lbl_80347E98);
+    GXEnableTexOffsets(0, 0, 1);
+    fn_80298FE4(n);
+}
+#pragma opt_propagation reset
+
 void fn_80296BE4(s16 a, s16 b, s16 c, f32 f) {
     lbl_803457A8.f14 = f;
     lbl_803457A8.f06 = a;

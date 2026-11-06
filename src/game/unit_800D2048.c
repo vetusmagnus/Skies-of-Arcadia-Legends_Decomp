@@ -857,7 +857,7 @@ typedef struct Ent_800D6618 {
 extern void fn_80223628(void *a, void *b, void *c);
 extern void fn_80222838(void *p);
 extern void *fn_80223104(s32 a, void *p);
-extern void fn_800D6580(EvColl *s, void *p);
+extern void fn_800D6580(EvColl *s, EvColl *p);
 extern s32 fn_8020F3D4(s32 id, s32 n, Ent_800D6618 *e, ...);
 extern s32 fn_8020F934(s32 id);
 s32 fn_800CCCA4(u32 a, u32 b, u32 c);
@@ -1011,6 +1011,33 @@ void fn_800D57E8(Task* o) {
         }
         fn_80100B74(o);
         break;
+    }
+}
+
+void fn_800D6580(EvColl *a, EvColl *b)
+{
+    f32 dx;
+    f32 dy;
+    f32 dz;
+    f32 d1;
+    f32 d2;
+
+    dx = a->pos[0] - lbl_80347450->pos.x;
+    dy = a->pos[1] - lbl_80347450->pos.y;
+    dz = a->pos[2] - lbl_80347450->pos.z;
+    d1 = dx * dx + dy * dy + dz * dz;
+    dx = b->pos[0] - lbl_80347450->pos.x;
+    dy = b->pos[1] - lbl_80347450->pos.y;
+    dz = b->pos[2] - lbl_80347450->pos.z;
+    d2 = dx * dx + dy * dy + dz * dz;
+    if (d1 > d2) {
+        a->h16 = 1;
+        b->h16 = 2;
+        a->p4 = b;
+    } else {
+        a->h16 = 2;
+        b->h16 = 1;
+        b->p4 = a;
     }
 }
 
